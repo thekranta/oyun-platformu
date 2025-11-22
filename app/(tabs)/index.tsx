@@ -1,18 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Text, View, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput, Alert } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 // === 1. BURAYA KENDİ GEMINI ANAHTARINIZI YAPIŞTIRIN ===
 // BU KOD ARTIK EXPO'NUN GÜVENLİK KURALINA UYUYOR
 // === BU KOD GİZLİ KALMALIDIR! SADECE VERCEL'DEN OKUNACAKTIR. ===
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY; 
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 // ================================================================// ======================================================
 
-const SUPABASE_URL = "https://rcphrqnrkcntuluwkmzg.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjcGhycW5ya2NudHVsdXdrbXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NjI0NTUsImV4cCI6MjA3OTMzODQ1NX0.BR7elCLuxZR5ns1kTb_NKPm6Q4-repiaWwMaxuhEg8E";
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
 // OYUN VERİLERİ
 const HAFIZA_KARTLARI = ['🐶', '🐱', '🐭', '🐹', '🐶', '🐱', '🐭', '🐹'];
-const SIRALAMA_SAYILARI = [1, 2, 3, 4, 5]; 
+const SIRALAMA_SAYILARI = [1, 2, 3, 4, 5];
 
 // GRUPLAMA OYUNU VERİLERİ
 const GRUPLAMA_SORULARI = [
@@ -25,14 +25,14 @@ const GRUPLAMA_SORULARI = [
 ];
 
 export default function App() {
-  const [asama, setAsama] = useState('giris'); 
+  const [asama, setAsama] = useState('giris');
   const [secilenOyun, setSecilenOyun] = useState('');
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
 
   // ORTAK STATE'LER
-  const [hamle, setHamle] = useState(0);      
-  const [hataSayisi, setHataSayisi] = useState(0); 
+  const [hamle, setHamle] = useState(0);
+  const [hataSayisi, setHataSayisi] = useState(0);
   const [yukleniyor, setYukleniyor] = useState(false);
   const baslangicZamani = useRef(null);
 
@@ -71,7 +71,7 @@ export default function App() {
       setSecilenler([]);
       setEslesenler([]);
       setAsama('hafiza');
-    } 
+    }
     else if (oyunTipi === 'siralama') {
       const karisik = [...SIRALAMA_SAYILARI].sort(() => Math.random() - 0.5)
         .map((sayi, index) => ({ id: index, sayi, tiklandi: false }));
@@ -102,7 +102,7 @@ export default function App() {
     if (yeniSecilenler.length === 2) {
       const yeniHamle = hamle + 1;
       setHamle(yeniHamle);
-      
+
       if (yeniSecilenler[0].emoji === yeniSecilenler[1].emoji) {
         const yeniEslesenler = [...eslesenler, yeniSecilenler[0].index, yeniSecilenler[1].index];
         setEslesenler(yeniEslesenler);
@@ -151,7 +151,7 @@ export default function App() {
       // Doğru
       const yeniDogru = dogruSayisi + 1;
       setDogruSayisi(yeniDogru);
-      
+
       if (suankiSoruIndex + 1 < GRUPLAMA_SORULARI.length) {
         setSuankiSoruIndex(i => i + 1);
       } else {
@@ -175,7 +175,7 @@ export default function App() {
 
   const sessizceAnalizEtVeKaydet = async (sure, finalHamle, finalHata) => {
     setYukleniyor(true);
-    
+
     let oyunAdiTR = '';
     let analizPrompt = '';
 
@@ -189,7 +189,7 @@ export default function App() {
       oyunAdiTR = 'Gruplama (Kategorizasyon)';
       analizPrompt = 'Kavram bilgisi ve soyut düşünme (Meyve/Hayvan ayrımı)';
     }
-    
+
     const prompt = `
       Öğrenci (${yas} ay): ${oyunAdiTR} oyununu oynadı.
       Toplam Süre: ${sure} saniye.
@@ -201,6 +201,13 @@ export default function App() {
     let yapayZekaYorumu = "Yorum alınamadı";
 
     try {
+      if (!GEMINI_API_KEY) {
+        console.error("GEMINI_API_KEY eksik!");
+        return;
+      }
+
+      console.log("AI İsteği Gönderiliyor... (Model: gemini-2.0-flash)", { oyun: oyunAdiTR, sure, hamle: finalHamle, hata: finalHata });
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY.trim()}`,
         {
@@ -209,12 +216,18 @@ export default function App() {
           body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
         }
       );
+
       const data = await response.json();
+      console.log("AI Yanıtı:", JSON.stringify(data, null, 2));
+
       if (data.candidates && data.candidates.length > 0) {
         yapayZekaYorumu = data.candidates[0].content.parts[0].text;
+        console.log("Yorum Alındı:", yapayZekaYorumu);
+      } else {
+        console.warn("AI Yanıtında aday yok:", data);
       }
     } catch (error) {
-      console.log("AI Hatası:", error);
+      console.error("AI Hatası:", error);
     }
 
     try {
@@ -227,7 +240,11 @@ export default function App() {
         ogrenci_yasi: parseInt(yas)
       };
 
-      await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
+      console.log("SUPABASE URL:", SUPABASE_URL);
+      console.log("SUPABASE KEY:", SUPABASE_KEY ? "Mevcut (Gizli)" : "Eksik!");
+      console.log("Supabase Request Body:", JSON.stringify(kayitVerisi, null, 2));
+
+      const supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY,
@@ -237,6 +254,15 @@ export default function App() {
         },
         body: JSON.stringify(kayitVerisi)
       });
+
+      console.log("Supabase Response Status:", supabaseResponse.status);
+      const responseText = await supabaseResponse.text();
+      console.log("Supabase Response:", responseText);
+
+      if (!supabaseResponse.ok) {
+        throw new Error(`Supabase Hatası: ${supabaseResponse.status} - ${responseText}`);
+      }
+
       console.log("Kayıt Başarılı");
     } catch (error) {
       console.log("Kayıt Hatası:", error);
@@ -251,7 +277,7 @@ export default function App() {
       <View style={styles.merkezContainer}>
         <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
         <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
-        <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric"/>
+        <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
         <TouchableOpacity style={styles.buton} onPress={girisYap}><Text style={styles.butonYazi}>Giriş Yap 🚀</Text></TouchableOpacity>
       </View>
     );
@@ -262,18 +288,18 @@ export default function App() {
       <View style={styles.merkezContainer}>
         <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
         <Text style={styles.bilgi}>Hangi oyunu oynayalım?</Text>
-        
-        <TouchableOpacity style={[styles.oyunKarti, {backgroundColor: '#42A5F5'}]} onPress={() => oyunuBaslat('hafiza')}>
+
+        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#42A5F5' }]} onPress={() => oyunuBaslat('hafiza')}>
           <Text style={styles.oyunBaslik}>🧠 Hafıza</Text>
           <Text style={styles.oyunAciklama}>Kartları eşleştir.</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.oyunKarti, {backgroundColor: '#FFA726'}]} onPress={() => oyunuBaslat('siralama')}>
+        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFA726' }]} onPress={() => oyunuBaslat('siralama')}>
           <Text style={styles.oyunBaslik}>🔢 Sıralama</Text>
           <Text style={styles.oyunAciklama}>Sayıları diz.</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.oyunKarti, {backgroundColor: '#66BB6A'}]} onPress={() => oyunuBaslat('gruplama')}>
+        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#66BB6A' }]} onPress={() => oyunuBaslat('gruplama')}>
           <Text style={styles.oyunBaslik}>🍎 Gruplama</Text>
           <Text style={styles.oyunAciklama}>Meyve mi, Hayvan mı?</Text>
         </TouchableOpacity>
@@ -319,19 +345,19 @@ export default function App() {
       <View style={styles.merkezContainer}>
         <View style={styles.header}><Text style={styles.baslik}>🍎 Gruplama</Text></View>
         <Text style={styles.bilgi}>Bu nesne hangisi?</Text>
-        
+
         {/* Ortadaki Nesne */}
         <View style={styles.buyukNesneKutusu}>
-          <Text style={{fontSize: 80}}>{soru.nesne}</Text>
+          <Text style={{ fontSize: 80 }}>{soru.nesne}</Text>
         </View>
 
         {/* Şıklar */}
         <View style={styles.secenekContainer}>
-          <TouchableOpacity style={[styles.secenekButon, {backgroundColor: '#EF5350'}]} onPress={() => kategoriSec('Meyve')}>
+          <TouchableOpacity style={[styles.secenekButon, { backgroundColor: '#EF5350' }]} onPress={() => kategoriSec('Meyve')}>
             <Text style={styles.secenekYazi}>🍎 Meyve</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={[styles.secenekButon, {backgroundColor: '#8D6E63'}]} onPress={() => kategoriSec('Hayvan')}>
+          <TouchableOpacity style={[styles.secenekButon, { backgroundColor: '#8D6E63' }]} onPress={() => kategoriSec('Hayvan')}>
             <Text style={styles.secenekYazi}>🐶 Hayvan</Text>
           </TouchableOpacity>
         </View>
@@ -342,10 +368,10 @@ export default function App() {
   if (asama === 'sonuc') {
     return (
       <View style={styles.merkezContainer}>
-        <Text style={{fontSize: 80}}>🌟</Text>
+        <Text style={{ fontSize: 80 }}>🌟</Text>
         <Text style={styles.sonucBaslik}>AFERİN SANA!</Text>
         <Text style={styles.baslik}>{ad}, Harika İş Çıkardın!</Text>
-        {yukleniyor && <ActivityIndicator size="small" color="#999" style={{marginTop: 20}} />}
+        {yukleniyor && <ActivityIndicator size="small" color="#999" style={{ marginTop: 20 }} />}
         <TouchableOpacity style={styles.buton} onPress={() => setAsama('menu')}>
           <Text style={styles.butonYazi}>Başka Oyun Oyna 🎮</Text>
         </TouchableOpacity>
