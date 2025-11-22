@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput, Alert } from 'react-native';
 
 // === 1. BURAYA KENDİ GEMINI ANAHTARINIZI YAPIŞTIRIN ===
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyAKI5RchgXPPMAhnK7R0_NedukptcoUHeo";
-// ======================================================
+// BU KOD ARTIK EXPO'NUN GÜVENLİK KURALINA UYUYOR
+// === BU KOD GİZLİ KALMALIDIR! SADECE VERCEL'DEN OKUNACAKTIR. ===
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY; 
+// ================================================================// ======================================================
 
 const SUPABASE_URL = "https://rcphrqnrkcntuluwkmzg.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJjcGhycW5ya2NudHVsdXdrbXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3NjI0NTUsImV4cCI6MjA3OTMzODQ1NX0.BR7elCLuxZR5ns1kTb_NKPm6Q4-repiaWwMaxuhEg8E";
