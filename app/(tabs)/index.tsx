@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Text, View, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput, Alert } from 'react-native';
 
 // === 1. BURAYA KENDİ GEMINI ANAHTARINIZI YAPIŞTIRIN ===
-const GEMINI_API_KEY = "AIzaSyAKI5RchgXPPMAhnK7R0_NedukptcoUHeo"; // <-- BURAYA KENDİ ANAHTARINIZI YAPIŞTIRIN
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyAKI5RchgXPPMAhnK7R0_NedukptcoUHeo";
 // ======================================================
 
 const SUPABASE_URL = "https://rcphrqnrkcntuluwkmzg.supabase.co";
