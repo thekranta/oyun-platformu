@@ -60,99 +60,7 @@ export default function AdminPanel() {
             setScores(data);
         } catch (error) {
             console.error(error);
-            alert('Veriler yüklenirken bir hata oluştu.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const renderItem = ({ item }: { item: Score }) => (
-        <View style={styles.card}>
-            <View style={styles.cardHeader}>
-                <Text style={styles.playerName}>{item.ogrenci_adi || 'İsimsiz'} ({item.ogrenci_yasi || '?'} Ay)</Text>
-                <Text style={styles.gameName}>{(item.oyun_turu || 'Bilinmeyen Oyun').toUpperCase()}</Text>
-            </View>
-            <View style={styles.cardBody}>
-                <View style={styles.stat}>
-                    <Ionicons name="time-outline" size={16} color="#555" />
-                    <Text style={styles.statText}>{item.sure || '?'} sn</Text>
-                </View>
-                <View style={styles.stat}>
-                    <Ionicons name="finger-print-outline" size={16} color="#555" />
-                    <Text style={styles.statText}>{item.hamle_sayisi || 0} Hamle</Text>
-                </View>
-                <View style={styles.stat}>
-                    <Ionicons name="alert-circle-outline" size={16} color="#555" />
-                    <Text style={styles.statText}>{item.hata_sayisi || 0} Hata</Text>
-                </View>
-            </View>
-
-            {item.yapay_zeka_yorumu && (
-                <View style={styles.aiCommentBox}>
-                    <Text style={styles.aiCommentTitle}>🤖 AI Yorumu:</Text>
-                    <Text style={styles.aiCommentText}>{item.yapay_zeka_yorumu}</Text>
-                </View>
-            )}
-
-            <Text style={styles.date}>{item.created_at ? new Date(item.created_at).toLocaleString('tr-TR') : 'Tarih Yok'}</Text>
-        </View>
-    );
-
-    if (!isAuthenticated) {
-        return (
-            <DynamicBackground>
-                <View style={styles.centerContainer}>
-                    <View style={styles.loginBox}>
-                        <Text style={styles.loginTitle}>Admin Girişi 🔒</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Kullanıcı Adı"
-                            value={username}
-                            onChangeText={setUsername}
-                            autoCapitalize="none"
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Şifre"
-                            value={password}
-                            onChangeText={setPassword}
-                            secureTextEntry
-                        />
-                        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                            <Text style={styles.loginButtonText}>Giriş Yap</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.backButtonSimple} onPress={() => router.back()}>
-                            <Text style={{ color: '#666' }}>Geri Dön</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </DynamicBackground>
-        );
-    }
-
-    return (
-        <DynamicBackground>
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Admin Paneli 📊</Text>
-                </View>
-
-                {loading ? (
-                    <ActivityIndicator size="large" color="#4CAF50" style={{ marginTop: 50 }} />
-                ) : (
-                    <FlatList
-                        data={scores}
-                        renderItem={renderItem}
-                        keyExtractor={(item) => item.id.toString()}
-                        contentContainerStyle={styles.listContent}
-                        ListEmptyComponent={<Text style={styles.emptyText}>Henüz kayıt yok.</Text>}
-                    />
-                )}
-            </View>
-        </DynamicBackground>
+        </DynamicBackground >
     );
 }
 
@@ -182,7 +90,8 @@ const styles = StyleSheet.create({
     backButtonSimple: { marginTop: 15, alignItems: 'center' },
 
     // AI Comment Styles
-    aiCommentBox: { backgroundColor: '#E8F5E9', padding: 10, borderRadius: 10, marginVertical: 10 },
-    aiCommentTitle: { fontWeight: 'bold', color: '#2E7D32', marginBottom: 5 },
+    aiHeader: { flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
+    aiCommentBox: { backgroundColor: '#E8F5E9', padding: 10, borderRadius: 10, marginBottom: 10 },
+    aiCommentTitle: { fontWeight: 'bold', color: '#2E7D32', marginRight: 5 },
     aiCommentText: { fontSize: 14, color: '#333', fontStyle: 'italic' }
 });

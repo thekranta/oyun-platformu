@@ -124,7 +124,8 @@ export default function App() {
         hata_sayisi: finalHata,
         yapay_zeka_yorumu: yapayZekaYorumu,
         ogrenci_adi: ad,
-        ogrenci_yasi: parseInt(yas)
+        ogrenci_yasi: parseInt(yas),
+        sure: sure
       };
 
       console.log("SUPABASE URL:", SUPABASE_URL);
