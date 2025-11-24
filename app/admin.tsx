@@ -157,13 +157,12 @@ export default function AdminPanel() {
                         )
                     }))
                 );
-                alert('Analiz tamamlandı ve kaydedildi!');
+                console.log('✅ Analiz tamamlandı ve kaydedildi!', { scoreId: score.id, aiComment });
             } else {
-                alert('Yapay zeka yanıt veremedi.');
+                console.error('❌ Yapay zeka yanıt veremedi.');
             }
         } catch (error) {
-            console.error(error);
-            alert('Analiz sırasında hata oluştu.');
+            console.error('❌ Analiz sırasında hata:', error);
         } finally {
             setProcessingId(null);
         }
@@ -171,7 +170,7 @@ export default function AdminPanel() {
 
     const sendEmail = async (score: Score) => {
         if (!score.email) {
-            alert('Bu kayıt için ebeveyn e-postası bulunamadı.');
+            console.warn('⚠️ Bu kayıt için ebeveyn e-postası bulunamadı.', { scoreId: score.id });
             return;
         }
         setProcessingId(score.id);
@@ -202,19 +201,18 @@ export default function AdminPanel() {
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 const result = await response.json();
                 if (response.ok) {
-                    alert('E-posta başarıyla gönderildi!');
+                    console.log('✅ E-posta başarıyla gönderildi!', { email: score.email, scoreId: score.id });
                 } else {
-                    alert(`Hata: ${result.error || 'Bilinmeyen sunucu hatası'}`);
+                    console.error('❌ E-posta hatası:', result.error || 'Bilinmeyen sunucu hatası');
                 }
             } else {
                 const text = await response.text();
-                console.error("API Yanıtı (JSON değil):", text);
-                alert(`Sunucu Hatası: ${response.status} ${response.statusText}. (Detaylar konsolda)`);
+                console.error("❌ API Yanıtı (JSON değil):", text);
+                console.error(`Sunucu Hatası: ${response.status} ${response.statusText}`);
             }
 
         } catch (error: any) {
-            console.error("Fetch Hatası:", error);
-            alert(`E-posta gönderilirken hata oluştu: ${error.message}`);
+            console.error("❌ E-posta gönderilirken hata:", error.message);
         } finally {
             setProcessingId(null);
         }
