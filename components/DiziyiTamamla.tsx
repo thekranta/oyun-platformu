@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { useSound } from '../app/context/SoundContext';
+import { useSound } from './SoundContext';
 
 interface DiziyiTamamlaProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;

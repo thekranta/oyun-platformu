@@ -1,30 +1,31 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+type SoundName = 'background' | 'correct' | 'wrong';
+
 interface SoundContextType {
-    isPlaying: boolean;
-    volume: number;
-    toggleSound: () => Promise<void>;
-    changeVolume: (val: number) => Promise<void>;
+    isMuted: boolean;
+    playSound: (name: SoundName) => Promise<void>;
+    stopSound: (name: SoundName) => Promise<void>;
+    toggleMute: () => Promise<void>;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
-    const [sound, setSound] = useState<Audio.Sound | null>(null);
-    const [isPlaying, setIsPlaying] = useState(true);
-    const [volume, setVolume] = useState(0.5);
+    const [backgroundSound, setBackgroundSound] = useState<Audio.Sound | null>(null);
+    const [isMuted, setIsMuted] = useState(false);
 
     useEffect(() => {
-        loadSound();
+        loadBackgroundSound();
         return () => {
-            if (sound) {
-                sound.unloadAsync();
+            if (backgroundSound) {
+                backgroundSound.unloadAsync();
             }
         };
     }, []);
 
-    const loadSound = async () => {
+    const loadBackgroundSound = async () => {
         try {
             await Audio.setAudioModeAsync({
                 playsInSilentModeIOS: true,
@@ -35,44 +36,71 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
                 playThroughEarpieceAndroid: false,
             });
 
-            const { sound: newSound } = await Audio.Sound.createAsync(
+            const { sound } = await Audio.Sound.createAsync(
                 require('../assets/sounds/background.mp3'),
                 { shouldPlay: false, isLooping: true, volume: 0.5 }
             );
-            setSound(newSound);
+            setBackgroundSound(sound);
+        } catch (error) {
+            console.log("Error loading background sound:", error);
+        }
+    };
 
-            // Try to play immediately
-            try {
-                await newSound.playAsync();
-                setIsPlaying(true);
-            } catch (playError) {
-                console.log("Otomatik oynatma başarısız (Kullanıcı etkileşimi bekleniyor):", playError);
-                setIsPlaying(false); // Show as muted if autoplay fails
+    const playSound = async (name: SoundName) => {
+        if (isMuted) return;
+
+        try {
+            if (name === 'background') {
+                if (backgroundSound) {
+                    await backgroundSound.playAsync();
+                }
+            } else if (name === 'correct') {
+                // SFX logic here (when files are available)
+                // const { sound } = await Audio.Sound.createAsync(require('../assets/sounds/correct.mp3'));
+                // await sound.playAsync();
+                console.log("Playing correct sound (placeholder)");
+            } else if (name === 'wrong') {
+                // SFX logic here
+                // const { sound } = await Audio.Sound.createAsync(require('../assets/sounds/wrong.mp3'));
+                // await sound.playAsync();
+                console.log("Playing wrong sound (placeholder)");
             }
         } catch (error) {
-            console.log("Ses yüklenemedi (Dosya eksik olabilir):", error);
+            console.log(`Error playing sound ${name}:`, error);
         }
     };
 
-    const toggleSound = async () => {
-        if (!sound) return;
-        if (isPlaying) {
-            await sound.pauseAsync();
-        } else {
-            await sound.playAsync();
+    const stopSound = async (name: SoundName) => {
+        try {
+            if (name === 'background') {
+                if (backgroundSound) {
+                    await backgroundSound.pauseAsync();
+                }
+            }
+        } catch (error) {
+            console.log(`Error stopping sound ${name}:`, error);
         }
-        setIsPlaying(!isPlaying);
     };
 
-    const changeVolume = async (val: number) => {
-        setVolume(val);
-        if (sound) {
-            await sound.setVolumeAsync(val);
+    const toggleMute = async () => {
+        try {
+            const newMutedState = !isMuted;
+            setIsMuted(newMutedState);
+
+            if (backgroundSound) {
+                if (newMutedState) {
+                    await backgroundSound.pauseAsync();
+                } else {
+                    await backgroundSound.playAsync();
+                }
+            }
+        } catch (error) {
+            console.log("Error toggling mute:", error);
         }
     };
 
     return (
-        <SoundContext.Provider value={{ isPlaying, volume, toggleSound, changeVolume }}>
+        <SoundContext.Provider value={{ isMuted, playSound, stopSound, toggleMute }}>
             {children}
         </SoundContext.Provider>
     );
