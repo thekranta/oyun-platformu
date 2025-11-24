@@ -148,8 +148,15 @@ export default function AdminPanel() {
                     body: JSON.stringify({ yapay_zeka_yorumu: aiComment })
                 });
 
-                // Refresh Data
-                fetchScores();
+                // Update state directly instead of refetching
+                setStudentGroups(prevGroups =>
+                    prevGroups.map(group => ({
+                        ...group,
+                        scores: group.scores.map(s =>
+                            s.id === score.id ? { ...s, yapay_zeka_yorumu: aiComment } : s
+                        )
+                    }))
+                );
                 alert('Analiz tamamlandı ve kaydedildi!');
             } else {
                 alert('Yapay zeka yanıt veremedi.');
