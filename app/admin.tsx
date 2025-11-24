@@ -19,9 +19,16 @@ interface Score {
     sure?: number;
 }
 
+interface StudentGroup {
+    id: string; // Unique ID based on name-age
+    name: string;
+    age: number;
+    scores: Score[];
+}
+
 export default function AdminPanel() {
     const router = useRouter();
-    const [scores, setScores] = useState<Score[]>([]);
+    const [studentGroups, setStudentGroups] = useState<StudentGroup[]>([]);
     const [loading, setLoading] = useState(true);
 
     // Login State
@@ -56,8 +63,8 @@ export default function AdminPanel() {
                 throw new Error('Veri çekilemedi');
             }
 
-            const data = await response.json();
-            setScores(data);
+            const data: Score[] = await response.json();
+            groupScoresByStudent(data);
         } catch (error) {
             console.error(error);
             alert('Veriler yüklenirken bir hata oluştu.');
@@ -66,44 +73,98 @@ export default function AdminPanel() {
         }
     };
 
-    const ScoreCard = ({ item }: { item: Score }) => {
+    const groupScoresByStudent = (scores: Score[]) => {
+        const groups: { [key: string]: StudentGroup } = {};
+
+        scores.forEach(score => {
+            const key = `${score.ogrenci_adi}-${score.ogrenci_yasi}`;
+            if (!groups[key]) {
+                groups[key] = {
+                    id: key,
+                    name: score.ogrenci_adi,
+                    age: score.ogrenci_yasi,
+                    scores: []
+                };
+            }
+            groups[key].scores.push(score);
+        });
+
+        // Convert object to array and sort by most recent game played (using the first score in the list since they are ordered by date desc)
+        const groupArray = Object.values(groups).sort((a, b) => {
+            const dateA = new Date(a.scores[0].created_at).getTime();
+            const dateB = new Date(b.scores[0].created_at).getTime();
+            return dateB - dateA;
+        });
+
+        setStudentGroups(groupArray);
+    };
+
+    const StudentCard = ({ student }: { student: StudentGroup }) => {
         const [expanded, setExpanded] = useState(false);
 
         return (
-            <View style={styles.card}>
-                <View style={styles.cardHeader}>
-                    <Text style={styles.playerName}>{item.ogrenci_adi || 'İsimsiz'} ({item.ogrenci_yasi || '?'} Ay)</Text>
-                    <Text style={styles.gameName}>{(item.oyun_turu || 'Bilinmeyen Oyun').toUpperCase()}</Text>
+            <View style={styles.studentCard}>
+                <TouchableOpacity onPress={() => setExpanded(!expanded)} style={styles.studentHeader}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <View style={styles.avatar}>
+                            <Text style={styles.avatarText}>{student.name.charAt(0).toUpperCase()}</Text>
+                        </View>
+                        <View>
+                            <Text style={styles.studentName}>{student.name}</Text>
+                            <Text style={styles.studentAge}>{student.age} Ay • {student.scores.length} Oyun</Text>
+                        </View>
+                    </View>
+                    <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={24} color="#555" />
+                </TouchableOpacity>
+
+                {expanded && (
+                    <View style={styles.gamesList}>
+                        {student.scores.map((score, index) => (
+                            <GameRow key={score.id} score={score} isLast={index === student.scores.length - 1} />
+                        ))}
+                    </View>
+                )}
+            </View>
+        );
+    };
+
+    const GameRow = ({ score, isLast }: { score: Score, isLast: boolean }) => {
+        const [showComment, setShowComment] = useState(false);
+
+        return (
+            <View style={[styles.gameRow, !isLast && styles.gameRowBorder]}>
+                <View style={styles.gameHeader}>
+                    <Text style={styles.gameTypeBadge}>{score.oyun_turu.toUpperCase()}</Text>
+                    <Text style={styles.gameDate}>{new Date(score.created_at).toLocaleDateString('tr-TR')} {new Date(score.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</Text>
                 </View>
-                <View style={styles.cardBody}>
-                    <View style={styles.stat}>
-                        <Ionicons name="time-outline" size={16} color="#555" />
-                        <Text style={styles.statText}>{item.sure || '?'} sn</Text>
+
+                <View style={styles.statsRow}>
+                    <View style={styles.statItem}>
+                        <Ionicons name="time-outline" size={14} color="#666" />
+                        <Text style={styles.statValue}>{score.sure || '?'} sn</Text>
                     </View>
-                    <View style={styles.stat}>
-                        <Ionicons name="finger-print-outline" size={16} color="#555" />
-                        <Text style={styles.statText}>{item.hamle_sayisi || 0} Hamle</Text>
+                    <View style={styles.statItem}>
+                        <Ionicons name="finger-print-outline" size={14} color="#666" />
+                        <Text style={styles.statValue}>{score.hamle_sayisi} Hamle</Text>
                     </View>
-                    <View style={styles.stat}>
-                        <Ionicons name="alert-circle-outline" size={16} color="#555" />
-                        <Text style={styles.statText}>{item.hata_sayisi || 0} Hata</Text>
+                    <View style={styles.statItem}>
+                        <Ionicons name="alert-circle-outline" size={14} color="#666" />
+                        <Text style={styles.statValue}>{score.hata_sayisi} Hata</Text>
                     </View>
                 </View>
 
-                {item.yapay_zeka_yorumu && (
+                {score.yapay_zeka_yorumu && (
                     <View>
-                        <TouchableOpacity onPress={() => setExpanded(!expanded)} style={styles.aiHeader}>
-                            <Text style={styles.aiCommentTitle}>🤖 AI Yorumu {expanded ? '▲' : '▼'}</Text>
+                        <TouchableOpacity onPress={() => setShowComment(!showComment)} style={styles.aiToggle}>
+                            <Text style={styles.aiToggleText}>🤖 AI Yorumu {showComment ? 'Gizle' : 'Göster'}</Text>
                         </TouchableOpacity>
-                        {expanded && (
+                        {showComment && (
                             <View style={styles.aiCommentBox}>
-                                <Text style={styles.aiCommentText}>{item.yapay_zeka_yorumu}</Text>
+                                <Text style={styles.aiCommentText}>{score.yapay_zeka_yorumu}</Text>
                             </View>
                         )}
                     </View>
                 )}
-
-                <Text style={styles.date}>{item.created_at ? new Date(item.created_at).toLocaleString('tr-TR') : 'Tarih Yok'}</Text>
             </View>
         );
     };
@@ -147,16 +208,16 @@ export default function AdminPanel() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>Admin Paneli 📊</Text>
+                    <Text style={styles.title}>Öğrenci Gelişim Takibi 📊</Text>
                 </View>
 
                 {loading ? (
                     <ActivityIndicator size="large" color="#4CAF50" style={{ marginTop: 50 }} />
                 ) : (
                     <FlatList
-                        data={scores}
-                        renderItem={({ item }) => <ScoreCard item={item} />}
-                        keyExtractor={(item) => item.id.toString()}
+                        data={studentGroups}
+                        renderItem={({ item }) => <StudentCard student={item} />}
+                        keyExtractor={(item) => item.id}
                         contentContainerStyle={styles.listContent}
                         ListEmptyComponent={<Text style={styles.emptyText}>Henüz kayıt yok.</Text>}
                     />
@@ -171,17 +232,35 @@ const styles = StyleSheet.create({
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
     backButton: { backgroundColor: 'rgba(0,0,0,0.2)', padding: 8, borderRadius: 20, marginRight: 15 },
-    title: { fontSize: 24, fontWeight: 'bold', color: '#333' },
-    listContent: { padding: 20, paddingBottom: 100 },
-    card: { backgroundColor: 'white', borderRadius: 15, padding: 15, marginBottom: 15, elevation: 3 },
-    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 1, borderBottomColor: '#eee', paddingBottom: 8 },
-    playerName: { fontSize: 18, fontWeight: 'bold', color: '#2196F3' },
-    gameName: { fontSize: 14, fontWeight: 'bold', color: '#FF9800', backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-    cardBody: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-    stat: { flexDirection: 'row', alignItems: 'center' },
-    statText: { marginLeft: 5, fontSize: 14, color: '#555' },
-    date: { fontSize: 12, color: '#999', textAlign: 'right' },
+    title: { fontSize: 22, fontWeight: 'bold', color: '#333' },
+    listContent: { padding: 15, paddingBottom: 100 },
     emptyText: { textAlign: 'center', fontSize: 16, color: '#777', marginTop: 50 },
+
+    // Student Card Styles
+    studentCard: { backgroundColor: 'white', borderRadius: 15, marginBottom: 15, elevation: 3, overflow: 'hidden' },
+    studentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
+    avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+    avatarText: { fontSize: 24, fontWeight: 'bold', color: '#2196F3' },
+    studentName: { fontSize: 18, fontWeight: 'bold', color: '#333' },
+    studentAge: { fontSize: 14, color: '#666' },
+
+    // Game List Styles
+    gamesList: { backgroundColor: '#F5F5F5', borderTopWidth: 1, borderTopColor: '#eee' },
+    gameRow: { padding: 15, backgroundColor: '#fff' },
+    gameRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+    gameHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    gameTypeBadge: { fontSize: 12, fontWeight: 'bold', color: '#FF9800', backgroundColor: '#FFF3E0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+    gameDate: { fontSize: 12, color: '#999' },
+
+    statsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+    statItem: { flexDirection: 'row', alignItems: 'center' },
+    statValue: { marginLeft: 5, fontSize: 13, color: '#444', fontWeight: '500' },
+
+    // AI Toggle & Comment
+    aiToggle: { marginTop: 5 },
+    aiToggleText: { fontSize: 12, color: '#2196F3', fontWeight: 'bold' },
+    aiCommentBox: { marginTop: 8, backgroundColor: '#E8F5E9', padding: 10, borderRadius: 8 },
+    aiCommentText: { fontSize: 13, color: '#2E7D32', fontStyle: 'italic', lineHeight: 18 },
 
     // Login Styles
     loginBox: { width: '100%', maxWidth: 350, backgroundColor: 'white', padding: 30, borderRadius: 20, elevation: 5 },
@@ -190,10 +269,4 @@ const styles = StyleSheet.create({
     loginButton: { backgroundColor: '#4CAF50', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 10 },
     loginButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     backButtonSimple: { marginTop: 15, alignItems: 'center' },
-
-    // AI Comment Styles
-    aiHeader: { flexDirection: 'row', alignItems: 'center', marginVertical: 5 },
-    aiCommentBox: { backgroundColor: '#E8F5E9', padding: 10, borderRadius: 10, marginBottom: 10 },
-    aiCommentTitle: { fontWeight: 'bold', color: '#2E7D32', marginRight: 5 },
-    aiCommentText: { fontSize: 14, color: '#333', fontStyle: 'italic' }
 });
