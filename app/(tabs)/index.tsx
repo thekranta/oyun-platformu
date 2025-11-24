@@ -1,5 +1,8 @@
-import React, { useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import GruplamaOyunu from '@/components/GruplamaOyunu';
+import HafizaOyunu from '@/components/HafizaOyunu';
+import SiralamaOyunu from '@/components/SiralamaOyunu';
+import React, { useState } from 'react';
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 // === 1. BURAYA KENDİ GEMINI ANAHTARINIZI YAPIŞTIRIN ===
 // BU KOD ARTIK EXPO'NUN GÜVENLİK KURALINA UYUYOR
@@ -10,44 +13,12 @@ const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
-// OYUN VERİLERİ
-const HAFIZA_KARTLARI = ['🐶', '🐱', '🐭', '🐹', '🐶', '🐱', '🐭', '🐹'];
-const SIRALAMA_SAYILARI = [1, 2, 3, 4, 5];
-
-// GRUPLAMA OYUNU VERİLERİ
-const GRUPLAMA_SORULARI = [
-  { nesne: '🍎', kategori: 'Meyve' },
-  { nesne: '🐶', kategori: 'Hayvan' },
-  { nesne: '🍌', kategori: 'Meyve' },
-  { nesne: '🐱', kategori: 'Hayvan' },
-  { nesne: '🍇', kategori: 'Meyve' },
-  { nesne: '🐭', kategori: 'Hayvan' },
-];
-
 export default function App() {
   const [asama, setAsama] = useState('giris');
   const [secilenOyun, setSecilenOyun] = useState('');
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
-
-  // ORTAK STATE'LER
-  const [hamle, setHamle] = useState(0);
-  const [hataSayisi, setHataSayisi] = useState(0);
   const [yukleniyor, setYukleniyor] = useState(false);
-  const baslangicZamani = useRef(null);
-
-  // HAFIZA STATE
-  const [kartlar, setKartlar] = useState([]);
-  const [secilenler, setSecilenler] = useState([]);
-  const [eslesenler, setEslesenler] = useState([]);
-
-  // SIRALAMA STATE
-  const [karisikSayilar, setKarisikSayilar] = useState([]);
-  const [beklenenSayi, setBeklenenSayi] = useState(1);
-
-  // GRUPLAMA STATE (YENİ)
-  const [suankiSoruIndex, setSuankiSoruIndex] = useState(0);
-  const [dogruSayisi, setDogruSayisi] = useState(0);
 
   const girisYap = () => {
     if (ad.trim() === '' || yas.trim() === '') {
@@ -57,132 +28,27 @@ export default function App() {
     setAsama('menu');
   };
 
-  const oyunuBaslat = (oyunTipi) => {
+  const oyunuBaslat = (oyunTipi: string) => {
     setSecilenOyun(oyunTipi);
     setYukleniyor(false);
-    setHamle(0);
-    setHataSayisi(0);
-    baslangicZamani.current = new Date();
-
-    if (oyunTipi === 'hafiza') {
-      const karisik = [...HAFIZA_KARTLARI].sort(() => Math.random() - 0.5)
-        .map((emoji, index) => ({ id: index, emoji, acik: false }));
-      setKartlar(karisik);
-      setSecilenler([]);
-      setEslesenler([]);
-      setAsama('hafiza');
-    }
-    else if (oyunTipi === 'siralama') {
-      const karisik = [...SIRALAMA_SAYILARI].sort(() => Math.random() - 0.5)
-        .map((sayi, index) => ({ id: index, sayi, tiklandi: false }));
-      setKarisikSayilar(karisik);
-      setBeklenenSayi(1);
-      setAsama('siralama');
-    }
-    else if (oyunTipi === 'gruplama') {
-      // Soruları karıştır
-      GRUPLAMA_SORULARI.sort(() => Math.random() - 0.5);
-      setSuankiSoruIndex(0);
-      setDogruSayisi(0);
-      setAsama('gruplama');
-    }
+    setAsama(oyunTipi);
   };
 
-  // === HAFIZA MANTIĞI ===
-  const kartSec = (index) => {
-    if (secilenler.length === 2 || eslesenler.includes(index)) return;
-    if (kartlar[index].acik) return;
-
-    const yeniKartlar = [...kartlar];
-    yeniKartlar[index].acik = true;
-    setKartlar(yeniKartlar);
-    const yeniSecilenler = [...secilenler, { index, emoji: kartlar[index].emoji }];
-    setSecilenler(yeniSecilenler);
-
-    if (yeniSecilenler.length === 2) {
-      const yeniHamle = hamle + 1;
-      setHamle(yeniHamle);
-
-      if (yeniSecilenler[0].emoji === yeniSecilenler[1].emoji) {
-        const yeniEslesenler = [...eslesenler, yeniSecilenler[0].index, yeniSecilenler[1].index];
-        setEslesenler(yeniEslesenler);
-        setSecilenler([]);
-        if (yeniEslesenler.length === HAFIZA_KARTLARI.length) oyunuBitir(yeniHamle, hataSayisi);
-      } else {
-        const yeniHata = hataSayisi + 1;
-        setHataSayisi(yeniHata);
-        setTimeout(() => {
-          const resetKartlar = [...kartlar];
-          if (resetKartlar[yeniSecilenler[0].index]) resetKartlar[yeniSecilenler[0].index].acik = false;
-          if (resetKartlar[yeniSecilenler[1].index]) resetKartlar[yeniSecilenler[1].index].acik = false;
-          setKartlar(resetKartlar);
-          setSecilenler([]);
-        }, 1000);
-      }
-    }
-  };
-
-  // === SIRALAMA MANTIĞI ===
-  const sayiSec = (index, sayi) => {
-    if (karisikSayilar[index].tiklandi) return;
-    const yeniHamle = hamle + 1;
-    setHamle(yeniHamle);
-
-    if (sayi === beklenenSayi) {
-      const yeniSayilar = [...karisikSayilar];
-      yeniSayilar[index].tiklandi = true;
-      setKarisikSayilar(yeniSayilar);
-      if (beklenenSayi === 5) oyunuBitir(yeniHamle, hataSayisi);
-      else setBeklenenSayi(b => b + 1);
-    } else {
-      const yeniHata = hataSayisi + 1;
-      setHataSayisi(yeniHata);
-      alert("Dikkat! Sıradaki sayı bu değil.");
-    }
-  };
-
-  // === GRUPLAMA MANTIĞI (YENİ) ===
-  const kategoriSec = (secilenKategori) => {
-    const mevcutSoru = GRUPLAMA_SORULARI[suankiSoruIndex];
-    const yeniHamle = hamle + 1;
-    setHamle(yeniHamle);
-
-    if (secilenKategori === mevcutSoru.kategori) {
-      // Doğru
-      const yeniDogru = dogruSayisi + 1;
-      setDogruSayisi(yeniDogru);
-
-      if (suankiSoruIndex + 1 < GRUPLAMA_SORULARI.length) {
-        setSuankiSoruIndex(i => i + 1);
-      } else {
-        oyunuBitir(yeniHamle, hataSayisi);
-      }
-    } else {
-      // Yanlış
-      const yeniHata = hataSayisi + 1;
-      setHataSayisi(yeniHata);
-      alert("Yanlış kutu! Tekrar dene.");
-    }
-  };
-
-  // === BİTİŞ ===
-  const oyunuBitir = (finalHamle, finalHata) => {
-    const bitisZamani = new Date();
-    const sure = Math.round((bitisZamani - baslangicZamani.current) / 1000);
+  const oyunuBitir = (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => {
     setAsama('sonuc');
-    sessizceAnalizEtVeKaydet(sure, finalHamle, finalHata);
+    sessizceAnalizEtVeKaydet(oyunAdi, sure, finalHamle, finalHata);
   };
 
-  const sessizceAnalizEtVeKaydet = async (sure, finalHamle, finalHata) => {
+  const sessizceAnalizEtVeKaydet = async (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => {
     setYukleniyor(true);
 
     let oyunAdiTR = '';
     let analizPrompt = '';
 
-    if (secilenOyun === 'hafiza') {
+    if (oyunAdi === 'hafiza') {
       oyunAdiTR = 'Hafıza Kartları';
       analizPrompt = 'Görsel bellek ve dikkat';
-    } else if (secilenOyun === 'siralama') {
+    } else if (oyunAdi === 'siralama') {
       oyunAdiTR = 'Sayı Sıralama';
       analizPrompt = 'Sayısal algı ve sıralama becerisi';
     } else {
@@ -232,7 +98,7 @@ export default function App() {
 
     try {
       const kayitVerisi = {
-        oyun_turu: secilenOyun,
+        oyun_turu: oyunAdi,
         hamle_sayisi: finalHamle,
         hata_sayisi: finalHata,
         yapay_zeka_yorumu: yapayZekaYorumu,
@@ -308,61 +174,15 @@ export default function App() {
   }
 
   if (asama === 'hafiza') {
-    return (
-      <ScrollView contentContainerStyle={styles.oyunContainer}>
-        <View style={styles.header}><Text style={styles.baslik}>🧠 Hafıza</Text></View>
-        <View style={styles.oyunAlani}>
-          {kartlar.map((kart, index) => (
-            <TouchableOpacity key={index} style={[styles.kart, (kart.acik || eslesenler.includes(index)) ? styles.kartAcik : styles.kartKapali]} onPress={() => kartSec(index)}>
-              <Text style={styles.emoji}>{(kart.acik || eslesenler.includes(index)) ? kart.emoji : '❓'}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-    );
+    return <HafizaOyunu onGameEnd={oyunuBitir} />;
   }
 
   if (asama === 'siralama') {
-    return (
-      <ScrollView contentContainerStyle={styles.oyunContainer}>
-        <View style={styles.header}><Text style={styles.baslik}>🔢 Sıralama</Text></View>
-        <Text style={styles.bilgi}>Sıradaki: {beklenenSayi}</Text>
-        <View style={styles.oyunAlani}>
-          {karisikSayilar.map((item, index) => (
-            <TouchableOpacity key={index} style={[styles.sayiKutu, item.tiklandi ? styles.sayiSecildi : styles.sayiSecilmedi]} onPress={() => sayiSec(index, item.sayi)} disabled={item.tiklandi}>
-              <Text style={styles.sayiYazi}>{item.sayi}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-    );
+    return <SiralamaOyunu onGameEnd={oyunuBitir} />;
   }
 
-  // YENİ OYUN EKRANI: GRUPLAMA
   if (asama === 'gruplama') {
-    const soru = GRUPLAMA_SORULARI[suankiSoruIndex];
-    return (
-      <View style={styles.merkezContainer}>
-        <View style={styles.header}><Text style={styles.baslik}>🍎 Gruplama</Text></View>
-        <Text style={styles.bilgi}>Bu nesne hangisi?</Text>
-
-        {/* Ortadaki Nesne */}
-        <View style={styles.buyukNesneKutusu}>
-          <Text style={{ fontSize: 80 }}>{soru.nesne}</Text>
-        </View>
-
-        {/* Şıklar */}
-        <View style={styles.secenekContainer}>
-          <TouchableOpacity style={[styles.secenekButon, { backgroundColor: '#EF5350' }]} onPress={() => kategoriSec('Meyve')}>
-            <Text style={styles.secenekYazi}>🍎 Meyve</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.secenekButon, { backgroundColor: '#8D6E63' }]} onPress={() => kategoriSec('Hayvan')}>
-            <Text style={styles.secenekYazi}>🐶 Hayvan</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
+    return <GruplamaOyunu onGameEnd={oyunuBitir} />;
   }
 
   if (asama === 'sonuc') {
@@ -383,8 +203,6 @@ export default function App() {
 
 const styles = StyleSheet.create({
   merkezContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#e3f2fd' },
-  oyunContainer: { flexGrow: 1, alignItems: 'center', paddingTop: 40, backgroundColor: '#fff' },
-  header: { marginBottom: 20 },
   girisBaslik: { fontSize: 28, fontWeight: 'bold', marginBottom: 30, color: '#1565C0', textAlign: 'center' },
   baslik: { fontSize: 24, fontWeight: 'bold', marginBottom: 5 },
   bilgi: { fontSize: 18, marginBottom: 20, color: '#555' },
@@ -394,18 +212,5 @@ const styles = StyleSheet.create({
   oyunKarti: { width: '100%', padding: 15, borderRadius: 15, marginBottom: 10, elevation: 3 },
   oyunBaslik: { color: 'white', fontSize: 20, fontWeight: 'bold' },
   oyunAciklama: { color: 'white', fontSize: 12 },
-  oyunAlani: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: 320 },
-  kart: { width: 70, height: 70, margin: 5, justifyContent: 'center', alignItems: 'center', borderRadius: 10 },
-  kartKapali: { backgroundColor: '#2196F3' },
-  kartAcik: { backgroundColor: 'white', borderWidth: 2, borderColor: '#2196F3' },
-  emoji: { fontSize: 32 },
-  sayiKutu: { width: 60, height: 60, margin: 8, justifyContent: 'center', alignItems: 'center', borderRadius: 30, borderWidth: 2 },
-  sayiSecilmedi: { backgroundColor: 'white', borderColor: '#FFA726' },
-  sayiSecildi: { backgroundColor: '#ddd', borderColor: '#ccc' },
-  sayiYazi: { fontSize: 24, fontWeight: 'bold', color: '#333' },
   sonucBaslik: { fontSize: 36, fontWeight: 'bold', color: '#e65100', marginVertical: 10 },
-  buyukNesneKutusu: { width: 150, height: 150, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', borderRadius: 20, marginBottom: 40, elevation: 5 },
-  secenekContainer: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
-  secenekButon: { flex: 0.48, padding: 20, borderRadius: 15, alignItems: 'center', elevation: 3 },
-  secenekYazi: { color: 'white', fontSize: 18, fontWeight: 'bold' }
 });
