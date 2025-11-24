@@ -21,6 +21,7 @@ export default function App() {
   const [secilenOyun, setSecilenOyun] = useState('');
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
+  const [email, setEmail] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
 
   const girisYap = () => {
@@ -49,6 +50,7 @@ export default function App() {
   const cikisYap = () => {
     setAd('');
     setYas('');
+    setEmail('');
     setAsama('giris');
   };
 
@@ -117,6 +119,7 @@ export default function App() {
       console.error("AI Hatası:", error);
     }
 
+    // 1. Supabase Kaydı
     try {
       const kayitVerisi = {
         oyun_turu: oyunAdi,
@@ -125,11 +128,10 @@ export default function App() {
         yapay_zeka_yorumu: yapayZekaYorumu,
         ogrenci_adi: ad,
         ogrenci_yasi: parseInt(yas),
-        sure: sure
+        sure: sure,
+        // email: email // Eğer Supabase'e de kaydetmek isterseniz bu satırı açın ve sütunu ekleyin
       };
 
-      console.log("SUPABASE URL:", SUPABASE_URL);
-      console.log("SUPABASE KEY:", SUPABASE_KEY ? "Mevcut (Gizli)" : "Eksik!");
       console.log("Supabase Request Body:", JSON.stringify(kayitVerisi, null, 2));
 
       const supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
@@ -143,20 +145,44 @@ export default function App() {
         body: JSON.stringify(kayitVerisi)
       });
 
-      console.log("Supabase Response Status:", supabaseResponse.status);
-      const responseText = await supabaseResponse.text();
-      console.log("Supabase Response:", responseText);
-
       if (!supabaseResponse.ok) {
+        const responseText = await supabaseResponse.text();
         throw new Error(`Supabase Hatası: ${supabaseResponse.status} - ${responseText}`);
       }
-
       console.log("Kayıt Başarılı");
     } catch (error) {
       console.log("Kayıt Hatası:", error);
-    } finally {
-      setYukleniyor(false);
     }
+
+    // 2. E-posta Gönderimi
+    if (email && email.includes('@')) {
+      try {
+        console.log("E-posta gönderiliyor...", email);
+        const emailResponse = await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            subject: `🎮 ${ad} - ${oyunAdiTR} Raporu`,
+            message: `Merhaba, ${ad} az önce ${oyunAdiTR} oyununu tamamladı. İşte sonuçlar:`,
+            gameDetails: {
+              game: oyunAdiTR,
+              duration: sure,
+              moves: finalHamle,
+              errors: finalHata,
+              aiComment: yapayZekaYorumu
+            }
+          })
+        });
+
+        const emailResult = await emailResponse.json();
+        console.log("Email Sonucu:", emailResult);
+      } catch (emailError) {
+        console.error("Email Gönderme Hatası:", emailError);
+      }
+    }
+
+    setYukleniyor(false);
   };
 
   // === EKRANLAR ===
@@ -167,6 +193,14 @@ export default function App() {
           <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
           <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
           <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
+          <TextInput
+            style={styles.input}
+            placeholder="Ebeveyn E-posta (İsteğe Bağlı)"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
           <TouchableOpacity style={styles.buton} onPress={girisYap}><Text style={styles.butonYazi}>Giriş Yap 🚀</Text></TouchableOpacity>
 
           <TouchableOpacity
