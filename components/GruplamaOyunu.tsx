@@ -15,9 +15,10 @@ const GRUPLAMA_SORULARI = [
 
 interface GruplamaOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    onExit?: () => void;
 }
 
-export default function GruplamaOyunu({ onGameEnd }: GruplamaOyunuProps) {
+export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps) {
     const [sorular, setSorular] = useState<any[]>([]);
     const [suankiSoruIndex, setSuankiSoruIndex] = useState(0);
     const [dogruSayisi, setDogruSayisi] = useState(0);
@@ -78,7 +79,7 @@ export default function GruplamaOyunu({ onGameEnd }: GruplamaOyunuProps) {
     const soru = sorular[suankiSoruIndex];
 
     return (
-        <DynamicBackground>
+        <DynamicBackground onExit={onExit}>
             <View style={styles.topBar}>
                 <ProgressBar current={suankiSoruIndex + 1} total={sorular.length} />
             </View>

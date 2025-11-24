@@ -1,3 +1,4 @@
+import DynamicBackground from '@/components/DynamicBackground';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
@@ -41,6 +42,12 @@ export default function App() {
   const oyunuBitir = (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => {
     setAsama('sonuc');
     sessizceAnalizEtVeKaydet(oyunAdi, sure, finalHamle, finalHata);
+  };
+
+  const cikisYap = () => {
+    setAd('');
+    setYas('');
+    setAsama('giris');
   };
 
   const sessizceAnalizEtVeKaydet = async (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => {
@@ -152,12 +159,14 @@ export default function App() {
   // === EKRANLAR ===
   if (asama === 'giris') {
     return (
-      <View style={styles.merkezContainer}>
-        <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
-        <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
-        <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
-        <TouchableOpacity style={styles.buton} onPress={girisYap}><Text style={styles.butonYazi}>Giriş Yap 🚀</Text></TouchableOpacity>
-      </View>
+      <DynamicBackground>
+        <View style={styles.merkezContainer}>
+          <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
+          <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
+          <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
+          <TouchableOpacity style={styles.buton} onPress={girisYap}><Text style={styles.butonYazi}>Giriş Yap 🚀</Text></TouchableOpacity>
+        </View>
+      </DynamicBackground>
     );
   }
 
@@ -186,22 +195,16 @@ export default function App() {
   }
 
   if (asama === 'hafiza') {
-    return <HafizaOyunu onGameEnd={oyunuBitir} />;
+    return <HafizaOyunu onGameEnd={oyunuBitir} onExit={cikisYap} />;
   }
 
   if (asama === 'siralama') {
-    return <SiralamaOyunu onGameEnd={oyunuBitir} />;
+    return <SiralamaOyunu onGameEnd={oyunuBitir} onExit={cikisYap} />;
   }
 
   if (asama === 'gruplama') {
-    return <GruplamaOyunu onGameEnd={oyunuBitir} />;
+    return <GruplamaOyunu onGameEnd={oyunuBitir} onExit={cikisYap} />;
   }
-
-  const cikisYap = () => {
-    setAd('');
-    setYas('');
-    setAsama('giris');
-  };
 
   // ... (inside sonuc view)
   if (asama === 'sonuc') {

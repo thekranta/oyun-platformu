@@ -39,6 +39,7 @@ const AŞAMA_AYARLARI = [
 
 interface HafizaOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    onExit?: () => void;
 }
 
 interface Card {
@@ -52,7 +53,7 @@ interface Card {
     shakeValue: Animated.Value;
 }
 
-export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
+export default function HafizaOyunu({ onGameEnd, onExit }: HafizaOyunuProps) {
     const [currentStageIndex, setCurrentStageIndex] = useState(0);
     const [cards, setCards] = useState<Card[]>([]);
     const [selectedCards, setSelectedCards] = useState<Card[]>([]);
@@ -272,7 +273,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
 
     if (stageComplete) {
         return (
-            <DynamicBackground>
+            <DynamicBackground onExit={onExit}>
                 <View style={styles.centerContainer}>
                     <Text style={styles.congratsTitle}>🎉 Harika!</Text>
                     <Text style={styles.congratsText}>
@@ -292,7 +293,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
     }
 
     return (
-        <DynamicBackground>
+        <DynamicBackground onExit={onExit}>
             <View style={styles.topBar}>
                 <ProgressBar current={currentStageIndex + 1} total={AŞAMA_AYARLARI.length} />
             </View>

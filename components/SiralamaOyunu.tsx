@@ -9,9 +9,10 @@ const TOTAL_ROUNDS = 4;
 
 interface SiralamaOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    onExit?: () => void;
 }
 
-export default function SiralamaOyunu({ onGameEnd }: SiralamaOyunuProps) {
+export default function SiralamaOyunu({ onGameEnd, onExit }: SiralamaOyunuProps) {
     const [karisikSayilar, setKarisikSayilar] = useState<any[]>([]);
     const [beklenenSayi, setBeklenenSayi] = useState(1);
 
@@ -85,7 +86,7 @@ export default function SiralamaOyunu({ onGameEnd }: SiralamaOyunuProps) {
     };
 
     return (
-        <DynamicBackground>
+        <DynamicBackground onExit={onExit}>
             <View style={styles.topBar}>
                 <ProgressBar current={currentRound} total={TOTAL_ROUNDS} />
             </View>
