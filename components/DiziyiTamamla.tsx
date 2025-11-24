@@ -1,11 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSound } from './SoundContext';
 
+const { width: screenWidth } = Dimensions.get('window');
+
 interface DiziyiTamamlaProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    onLogout: () => void;
 }
 
 type ShapeType = 'kare' | 'ucgen' | 'daire' | 'yildiz';
@@ -24,31 +27,26 @@ const SHAPES = {
 };
 
 const PATTERNS: Pattern[] = [
-    // Aşama 1: AB pattern (A-B-A-B-A-?)
     {
         sequence: ['kare', 'daire', 'kare', 'daire', 'kare'],
         answer: 'daire',
         options: ['daire', 'kare', 'ucgen', 'yildiz']
     },
-    // Aşama 2: ABB pattern (A-B-B-A-B-?)
     {
         sequence: ['ucgen', 'daire', 'daire', 'ucgen', 'daire'],
         answer: 'daire',
         options: ['daire', 'ucgen', 'kare', 'yildiz']
     },
-    // Aşama 3: AAB pattern (A-A-B-A-A-?)
     {
         sequence: ['kare', 'kare', 'ucgen', 'kare', 'kare'],
         answer: 'ucgen',
         options: ['ucgen', 'kare', 'daire', 'yildiz']
     },
-    // Aşama 4: ABC pattern (A-B-C-A-B-?)
     {
         sequence: ['daire', 'kare', 'ucgen', 'daire', 'kare'],
         answer: 'ucgen',
         options: ['ucgen', 'daire', 'kare', 'yildiz']
     },
-    // Aşama 5: ABC pattern (Farklı varyasyon: B-C-A-B-C-?)
     {
         sequence: ['ucgen', 'daire', 'kare', 'ucgen', 'daire'],
         answer: 'kare',
@@ -56,7 +54,7 @@ const PATTERNS: Pattern[] = [
     }
 ];
 
-export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
+export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProps) {
     const [currentStage, setCurrentStage] = useState(0);
     const [totalMoves, setTotalMoves] = useState(0);
     const [totalErrors, setTotalErrors] = useState(0);
@@ -65,8 +63,10 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
     const [selectedOption, setSelectedOption] = useState<ShapeType | null>(null);
     const [isCorrect, setIsCorrect] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [volumeLevel, setVolumeLevel] = useState(0.5);
+    const [showVolumeControls, setShowVolumeControls] = useState(false);
 
-    const { playSound, stopSound, isMuted, toggleMute } = useSound();
+    const { playSound, stopSound, isMuted, toggleMute, changeVolume } = useSound();
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -81,6 +81,12 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
         };
     }, []);
 
+    const handleVolumeChange = (change: number) => {
+        const newVolume = Math.max(0, Math.min(1, volumeLevel + change));
+        setVolumeLevel(newVolume);
+        changeVolume(newVolume);
+    };
+
     const handleOptionPress = (option: ShapeType) => {
         if (stageCompleted) return;
 
@@ -88,18 +94,15 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
         setTotalMoves(totalMoves + 1);
 
         if (option === currentPattern.answer) {
-            // Doğru cevap
             setIsCorrect(true);
             setStageCompleted(true);
             setShowConfetti(true);
             playSound('correct');
 
-            // Konfeti patlat
             if (confettiRef.current) {
                 confettiRef.current.start();
             }
 
-            // Başarı animasyonu
             Animated.sequence([
                 Animated.timing(scaleAnim, {
                     toValue: 1.2,
@@ -113,17 +116,14 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
                 }),
             ]).start();
 
-            // Otomatik geçiş (1.5 saniye sonra)
             setTimeout(() => {
                 handleNextStage();
             }, 1500);
 
         } else {
-            // Yanlış cevap
             setTotalErrors(totalErrors + 1);
             playSound('wrong');
 
-            // Hata animasyonu (sallama)
             Animated.sequence([
                 Animated.timing(shakeAnim, {
                     toValue: 10,
@@ -155,14 +155,12 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
         setShowConfetti(false);
 
         if (currentStage < PATTERNS.length - 1) {
-            // Sonraki aşamaya geç
             setCurrentStage(prev => prev + 1);
             setStageCompleted(false);
             setSelectedOption(null);
             setIsCorrect(false);
             scaleAnim.setValue(1);
         } else {
-            // Oyun bitti
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
             onGameEnd('diziyi-tamamla', totalTime, totalMoves, totalErrors);
         }
@@ -170,7 +168,6 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
 
     return (
         <View style={styles.container}>
-            {/* Konfeti */}
             {showConfetti && (
                 <ConfettiCannon
                     count={200}
@@ -181,67 +178,90 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
                 />
             )}
 
-            {/* Başlık ve Aşama Bilgisi */}
-            <View style={styles.header}>
-                <Text style={styles.title}>Diziyi Tamamla 🧩</Text>
-                <Text style={styles.stageInfo}>Aşama {currentStage + 1} / {PATTERNS.length}</Text>
-                <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-                    <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="#2C3E50" />
+            {/* Üst Bar: Çıkış, Başlık, Ses */}
+            <View style={styles.topBar}>
+                <TouchableOpacity onPress={onLogout} style={styles.iconButton}>
+                    <Ionicons name="log-out-outline" size={32} color="#E74C3C" />
                 </TouchableOpacity>
-            </View>
 
-            {/* Talimat */}
-            <Text style={styles.instruction}>
-                Soru işaretinin yerine hangi şekil gelmelidir?
-            </Text>
+                <Text style={styles.title}>Diziyi Tamamla 🧩</Text>
 
-            {/* Dizi Gösterimi */}
-            <View style={styles.sequenceContainer}>
-                {currentPattern.sequence.map((shape, index) => (
-                    <View key={index} style={styles.sequenceItem}>
-                        <Image source={SHAPES[shape]} style={styles.sequenceImage} />
-                    </View>
-                ))}
-                {/* Soru işareti */}
-                <View style={[styles.sequenceItem, styles.questionMark]}>
-                    <Text style={styles.questionMarkText}>?</Text>
+                <View style={styles.soundControls}>
+                    <TouchableOpacity onPress={() => setShowVolumeControls(!showVolumeControls)} style={styles.iconButton}>
+                        <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={32} color="#2C3E50" />
+                    </TouchableOpacity>
                 </View>
             </View>
 
-            {/* Seçenekler */}
-            <View style={styles.optionsContainer}>
-                {currentPattern.options.map((option, index) => {
-                    const isSelected = selectedOption === option;
-                    const isSelectedCorrect = isSelected && isCorrect;
-                    const isSelectedWrong = isSelected && !isCorrect && !stageCompleted;
+            {/* Ses Kontrol Paneli (Açılır/Kapanır) */}
+            {showVolumeControls && (
+                <View style={styles.volumePanel}>
+                    <TouchableOpacity onPress={() => handleVolumeChange(-0.1)} style={styles.volumeBtn}>
+                        <Ionicons name="remove" size={24} color="#333" />
+                    </TouchableOpacity>
+                    <View style={styles.volumeBarContainer}>
+                        <View style={[styles.volumeBarFill, { width: `${volumeLevel * 100}%` }]} />
+                    </View>
+                    <TouchableOpacity onPress={() => handleVolumeChange(0.1)} style={styles.volumeBtn}>
+                        <Ionicons name="add" size={24} color="#333" />
+                    </TouchableOpacity>
+                </View>
+            )}
 
-                    return (
-                        <Animated.View
-                            key={index}
-                            style={[
-                                styles.optionWrapper,
-                                {
-                                    transform: [
-                                        { scale: isSelectedCorrect ? scaleAnim : 1 },
-                                        { translateX: isSelectedWrong ? shakeAnim : 0 },
-                                    ],
-                                },
-                            ]}
-                        >
-                            <TouchableOpacity
+            {/* Progress Bar */}
+            <View style={styles.progressContainer}>
+                <View style={[styles.progressBar, { width: `${((currentStage) / PATTERNS.length) * 100}%` }]} />
+            </View>
+
+            {/* Oyun Alanı */}
+            <View style={styles.gameArea}>
+                {/* Dizi Gösterimi */}
+                <View style={styles.sequenceContainer}>
+                    {currentPattern.sequence.map((shape, index) => (
+                        <View key={index} style={styles.sequenceItem}>
+                            <Image source={SHAPES[shape]} style={styles.sequenceImage} />
+                        </View>
+                    ))}
+                    <View style={[styles.sequenceItem, styles.questionMark]}>
+                        <Text style={styles.questionMarkText}>?</Text>
+                    </View>
+                </View>
+
+                {/* Seçenekler */}
+                <View style={styles.optionsContainer}>
+                    {currentPattern.options.map((option, index) => {
+                        const isSelected = selectedOption === option;
+                        const isSelectedCorrect = isSelected && isCorrect;
+                        const isSelectedWrong = isSelected && !isCorrect && !stageCompleted;
+
+                        return (
+                            <Animated.View
+                                key={index}
                                 style={[
-                                    styles.optionButton,
-                                    isSelectedCorrect && styles.optionCorrect,
-                                    isSelectedWrong && styles.optionWrong,
+                                    styles.optionWrapper,
+                                    {
+                                        transform: [
+                                            { scale: isSelectedCorrect ? scaleAnim : 1 },
+                                            { translateX: isSelectedWrong ? shakeAnim : 0 },
+                                        ],
+                                    },
                                 ]}
-                                onPress={() => handleOptionPress(option)}
-                                disabled={stageCompleted}
                             >
-                                <Image source={SHAPES[option]} style={styles.optionImage} />
-                            </TouchableOpacity>
-                        </Animated.View>
-                    );
-                })}
+                                <TouchableOpacity
+                                    style={[
+                                        styles.optionButton,
+                                        isSelectedCorrect && styles.optionCorrect,
+                                        isSelectedWrong && styles.optionWrong,
+                                    ]}
+                                    onPress={() => handleOptionPress(option)}
+                                    disabled={stageCompleted}
+                                >
+                                    <Image source={SHAPES[option]} style={styles.optionImage} />
+                                </TouchableOpacity>
+                            </Animated.View>
+                        );
+                    })}
+                </View>
             </View>
         </View>
     );
@@ -250,104 +270,138 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
         backgroundColor: '#F0F8FF',
-        justifyContent: 'center',
+        paddingTop: 40, // Status bar için boşluk
     },
-    header: {
+    topBar: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
-        position: 'relative',
-        width: '100%',
+        paddingHorizontal: 20,
+        marginBottom: 10,
     },
-    soundButton: {
-        position: 'absolute',
-        right: 0,
-        top: 0,
+    iconButton: {
         padding: 10,
     },
     title: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#2C3E50',
+    },
+    soundControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    volumePanel: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+        marginHorizontal: 20,
+        padding: 10,
+        borderRadius: 15,
         marginBottom: 10,
+        elevation: 3,
     },
-    stageInfo: {
-        fontSize: 18,
-        color: '#7F8C8D',
-        fontWeight: '600',
+    volumeBtn: {
+        padding: 5,
+        backgroundColor: '#eee',
+        borderRadius: 20,
     },
-    instruction: {
-        fontSize: 18,
-        color: '#34495E',
-        textAlign: 'center',
+    volumeBarContainer: {
+        width: 150,
+        height: 10,
+        backgroundColor: '#ddd',
+        borderRadius: 5,
+        marginHorizontal: 15,
+        overflow: 'hidden',
+    },
+    volumeBarFill: {
+        height: '100%',
+        backgroundColor: '#3498DB',
+    },
+    progressContainer: {
+        height: 10,
+        backgroundColor: '#E0E0E0',
+        marginHorizontal: 20,
+        borderRadius: 5,
         marginBottom: 30,
-        fontWeight: '500',
+        overflow: 'hidden',
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: '#2ECC71',
+    },
+    gameArea: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     sequenceContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: 50,
         flexWrap: 'wrap',
     },
     sequenceItem: {
-        width: 60,
-        height: 60,
+        width: 75, // Büyütüldü
+        height: 75, // Büyütüldü
         backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        margin: 5,
+        borderRadius: 15,
+        margin: 6,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 3,
+        elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
     },
     sequenceImage: {
-        width: 45,
-        height: 45,
+        width: 60, // Büyütüldü
+        height: 60, // Büyütüldü
         resizeMode: 'contain',
     },
     questionMark: {
         backgroundColor: '#FFE5B4',
-        borderWidth: 2,
+        borderWidth: 3,
         borderColor: '#FF8C00',
         borderStyle: 'dashed',
     },
     questionMarkText: {
-        fontSize: 36,
+        fontSize: 40,
         fontWeight: 'bold',
         color: '#FF8C00',
     },
     optionsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginBottom: 30,
+        justifyContent: 'center',
         flexWrap: 'wrap',
+        width: '100%',
+        paddingHorizontal: 10,
     },
     optionWrapper: {
-        margin: 10,
+        margin: 12,
     },
     optionButton: {
-        width: 80,
-        height: 80,
+        width: 90, // Büyütüldü
+        height: 90, // Büyütüldü
         backgroundColor: '#FFFFFF',
-        borderRadius: 15,
+        borderRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 5,
+        elevation: 6,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
         borderWidth: 3,
         borderColor: '#BDC3C7',
     },
     optionImage: {
-        width: 60,
-        height: 60,
+        width: 70, // Büyütüldü
+        height: 70, // Büyütüldü
         resizeMode: 'contain',
     },
     optionCorrect: {
@@ -357,23 +411,5 @@ const styles = StyleSheet.create({
     optionWrong: {
         borderColor: '#E74C3C',
         backgroundColor: '#FADBD8',
-    },
-    nextButton: {
-        backgroundColor: '#3498DB',
-        paddingVertical: 15,
-        paddingHorizontal: 30,
-        borderRadius: 25,
-        alignSelf: 'center',
-        marginTop: 20,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-    },
-    nextButtonText: {
-        color: '#FFFFFF',
-        fontSize: 18,
-        fontWeight: 'bold',
     },
 });

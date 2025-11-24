@@ -211,7 +211,10 @@ export default function App() {
   }
 
   if (asama === 'diziyi-tamamla') {
-    return <DiziyiTamamla onGameEnd={oyunuBitir} />;
+    return <DiziyiTamamla
+      onGameEnd={oyunuBitir}
+      onLogout={cikisYap}
+    />;
   }
 
   // ... (inside sonuc view)

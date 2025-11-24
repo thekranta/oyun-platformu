@@ -8,6 +8,7 @@ interface SoundContextType {
     playSound: (name: SoundName) => Promise<void>;
     stopSound: (name: SoundName) => Promise<void>;
     toggleMute: () => Promise<void>;
+    changeVolume: (val: number) => Promise<void>;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -99,8 +100,21 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const changeVolume = async (val: number) => {
+        try {
+            const newVolume = Math.max(0, Math.min(1, val));
+            // setVolume(newVolume); // Eğer global volume state tutulacaksa
+
+            if (backgroundSound) {
+                await backgroundSound.setVolumeAsync(newVolume);
+            }
+        } catch (error) {
+            console.log("Error changing volume:", error);
+        }
+    };
+
     return (
-        <SoundContext.Provider value={{ isMuted, playSound, stopSound, toggleMute }}>
+        <SoundContext.Provider value={{ isMuted, playSound, stopSound, toggleMute, changeVolume }}>
             {children}
         </SoundContext.Provider>
     );
