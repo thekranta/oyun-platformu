@@ -336,26 +336,29 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
             <View style={styles.topBar}>
                 <ProgressBar current={currentStageIndex + 1} total={AŞAMA_AYARLARI.length} />
             </View>
+
+            {/* Music Controls - Absolute Top Right */}
+            <View style={styles.musicControls}>
+                <TouchableOpacity onPress={toggleSound} style={styles.musicButton}>
+                    <Text style={styles.musicButtonText}>{isPlaying ? '🔇' : '🔊'}</Text>
+                </TouchableOpacity>
+                {isPlaying && (
+                    <Slider
+                        style={{ width: 100, height: 40 }}
+                        minimumValue={0}
+                        maximumValue={1}
+                        value={volume}
+                        onValueChange={changeVolume}
+                        minimumTrackTintColor="#4CAF50"
+                        maximumTrackTintColor="#000000"
+                        thumbTintColor="#4CAF50"
+                    />
+                )}
+            </View>
+
             <ScrollView contentContainerStyle={styles.gameContainer}>
                 <View style={styles.header}>
                     <Text style={styles.title}>🧠 Çiftini Bul!</Text>
-
-                    {/* Music Controls */}
-                    <View style={styles.musicControls}>
-                        <TouchableOpacity onPress={toggleSound} style={styles.musicButton}>
-                            <Text style={styles.musicButtonText}>{isPlaying ? '🔇' : '🔊'}</Text>
-                        </TouchableOpacity>
-                        <Slider
-                            style={{ width: 150, height: 40 }}
-                            minimumValue={0}
-                            maximumValue={1}
-                            value={volume}
-                            onValueChange={changeVolume}
-                            minimumTrackTintColor="#4CAF50"
-                            maximumTrackTintColor="#000000"
-                            thumbTintColor="#4CAF50"
-                        />
-                    </View>
                 </View>
 
                 <View style={styles.grid}>
@@ -423,7 +426,22 @@ const styles = StyleSheet.create({
     topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
     header: { marginBottom: 20, alignItems: 'center' },
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#1565C0' },
-    musicControls: { flexDirection: 'row', alignItems: 'center', marginTop: 10, backgroundColor: 'rgba(255,255,255,0.8)', padding: 5, borderRadius: 20 },
+    musicControls: {
+        position: 'absolute',
+        top: 40,
+        right: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        padding: 5,
+        borderRadius: 20,
+        zIndex: 100,
+        elevation: 5,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
     musicButton: { padding: 10 },
     musicButtonText: { fontSize: 24 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 800 },
