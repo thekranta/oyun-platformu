@@ -34,6 +34,11 @@ export default function App() {
       alert("Lütfen yaş alanına sadece rakam giriniz.");
       return;
     }
+    const yasNum = parseInt(yas);
+    if (yasNum < 24 || yasNum > 75) {
+      alert("Yaş 24 ile 75 ay arasında olmalıdır.");
+      return;
+    }
     setAsama('menu');
   };
 

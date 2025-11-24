@@ -1,11 +1,12 @@
 import React, { useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 interface DiziyiTamamlaProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
 }
 
-type ShapeType = 'kare' | 'ucgen' | 'daire';
+type ShapeType = 'kare' | 'ucgen' | 'daire' | 'yildiz';
 
 interface Pattern {
     sequence: ShapeType[];
@@ -17,6 +18,7 @@ const SHAPES = {
     kare: require('../assets/images/kare.png'),
     ucgen: require('../assets/images/ucgen.png'),
     daire: require('../assets/images/daire.png'),
+    yildiz: require('../assets/images/yildiz.png'),
 };
 
 const PATTERNS: Pattern[] = [
@@ -24,31 +26,31 @@ const PATTERNS: Pattern[] = [
     {
         sequence: ['kare', 'daire', 'kare', 'daire', 'kare'],
         answer: 'daire',
-        options: ['daire', 'kare', 'ucgen', 'kare']
+        options: ['daire', 'kare', 'ucgen', 'yildiz']
     },
     // Aşama 2: ABB pattern (A-B-B-A-B-?)
     {
         sequence: ['ucgen', 'daire', 'daire', 'ucgen', 'daire'],
         answer: 'daire',
-        options: ['ucgen', 'daire', 'kare', 'daire']
+        options: ['daire', 'ucgen', 'kare', 'yildiz']
     },
     // Aşama 3: AAB pattern (A-A-B-A-A-?)
     {
-        sequence: ['kare', 'kare', 'ucgen', 'kare', 'kare'],
-        answer: 'ucgen',
-        options: ['kare', 'ucgen', 'daire', 'ucgen']
+        sequence: ['kare', 'kare', 'yildiz', 'kare', 'kare'],
+        answer: 'yildiz',
+        options: ['yildiz', 'kare', 'ucgen', 'daire']
     },
     // Aşama 4: ABC pattern (A-B-C-A-B-?)
     {
         sequence: ['daire', 'kare', 'ucgen', 'daire', 'kare'],
         answer: 'ucgen',
-        options: ['daire', 'kare', 'ucgen', 'daire']
+        options: ['ucgen', 'daire', 'kare', 'yildiz']
     },
     // Aşama 5: AABC pattern (A-A-B-C-A-?)
     {
-        sequence: ['ucgen', 'ucgen', 'daire', 'kare', 'ucgen'],
-        answer: 'ucgen',
-        options: ['kare', 'ucgen', 'daire', 'kare']
+        sequence: ['yildiz', 'yildiz', 'daire', 'kare', 'yildiz'],
+        answer: 'yildiz',
+        options: ['yildiz', 'daire', 'kare', 'ucgen']
     }
 ];
 
@@ -60,9 +62,11 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
     const [stageCompleted, setStageCompleted] = useState(false);
     const [selectedOption, setSelectedOption] = useState<ShapeType | null>(null);
     const [isCorrect, setIsCorrect] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
+    const confettiRef = useRef<ConfettiCannon>(null);
 
     const currentPattern = PATTERNS[currentStage];
 
@@ -76,6 +80,12 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
             // Doğru cevap
             setIsCorrect(true);
             setStageCompleted(true);
+            setShowConfetti(true);
+
+            // Konfeti patlat
+            if (confettiRef.current) {
+                confettiRef.current.start();
+            }
 
             // Başarı animasyonu
             Animated.sequence([
@@ -90,6 +100,12 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
                     useNativeDriver: true,
                 }),
             ]).start();
+
+            // Otomatik geçiş (1.5 saniye sonra)
+            setTimeout(() => {
+                handleNextStage();
+            }, 1500);
+
         } else {
             // Yanlış cevap
             setTotalErrors(totalErrors + 1);
@@ -123,9 +139,11 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
     };
 
     const handleNextStage = () => {
+        setShowConfetti(false);
+
         if (currentStage < PATTERNS.length - 1) {
             // Sonraki aşamaya geç
-            setCurrentStage(currentStage + 1);
+            setCurrentStage(prev => prev + 1);
             setStageCompleted(false);
             setSelectedOption(null);
             setIsCorrect(false);
@@ -139,6 +157,17 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
 
     return (
         <View style={styles.container}>
+            {/* Konfeti */}
+            {showConfetti && (
+                <ConfettiCannon
+                    count={200}
+                    origin={{ x: -10, y: 0 }}
+                    autoStart={true}
+                    ref={confettiRef}
+                    fadeOut={true}
+                />
+            )}
+
             {/* Başlık ve Aşama Bilgisi */}
             <View style={styles.header}>
                 <Text style={styles.title}>Diziyi Tamamla 🧩</Text>
@@ -199,16 +228,8 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
                 })}
             </View>
 
-            {/* Sonraki Aşama Butonu */}
-            {stageCompleted && (
-                <TouchableOpacity style={styles.nextButton} onPress={handleNextStage}>
-                    <Text style={styles.nextButtonText}>
-                        {currentStage < PATTERNS.length - 1 ? '➡️ Sonraki Aşama' : '✅ Oyunu Bitir'}
-                    </Text>
-                </TouchableOpacity>
-            )}
-
-            {/* İstatistikler */}
+            {/* İstatistikler (GİZLENDİ - Sadece geliştirme sırasında görünür olması için yorum satırına alındı) */}
+            {/* 
             <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                     <Text style={styles.statLabel}>Hamle:</Text>
@@ -218,7 +239,8 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
                     <Text style={styles.statLabel}>Hata:</Text>
                     <Text style={styles.statValue}>{totalErrors}</Text>
                 </View>
-            </View>
+            </View> 
+            */}
         </View>
     );
 }
