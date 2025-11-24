@@ -1,3 +1,5 @@
+import Slider from '@react-native-community/slider';
+import { Audio } from 'expo-av';
 import React, { useEffect, useState } from 'react';
 import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
@@ -67,9 +69,49 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
     // Smart Scoring: Track seen card IDs
     const [seenCardIds, setSeenCardIds] = useState<Set<number>>(new Set());
 
+    // Audio State
+    const [sound, setSound] = useState<Audio.Sound | null>(null);
+    const [isPlaying, setIsPlaying] = useState(true);
+    const [volume, setVolume] = useState(0.5);
+
     useEffect(() => {
         startStage(0);
+        loadSound();
+        return () => {
+            if (sound) {
+                sound.unloadAsync();
+            }
+        };
     }, []);
+
+    const loadSound = async () => {
+        try {
+            const { sound } = await Audio.Sound.createAsync(
+                require('../assets/sounds/background.mp3'),
+                { shouldPlay: true, isLooping: true, volume: 0.5 }
+            );
+            setSound(sound);
+        } catch (error) {
+            console.log("Ses yüklenemedi (Dosya eksik olabilir):", error);
+        }
+    };
+
+    const toggleSound = async () => {
+        if (!sound) return;
+        if (isPlaying) {
+            await sound.pauseAsync();
+        } else {
+            await sound.playAsync();
+        }
+        setIsPlaying(!isPlaying);
+    };
+
+    const changeVolume = async (val: number) => {
+        setVolume(val);
+        if (sound) {
+            await sound.setVolumeAsync(val);
+        }
+    };
 
     const startStage = (stageIndex: number) => {
         const config = AŞAMA_AYARLARI[stageIndex];
@@ -296,7 +338,24 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
             </View>
             <ScrollView contentContainerStyle={styles.gameContainer}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>🧠 Hafıza Oyunu</Text>
+                    <Text style={styles.title}>🧠 Çiftini Bul!</Text>
+
+                    {/* Music Controls */}
+                    <View style={styles.musicControls}>
+                        <TouchableOpacity onPress={toggleSound} style={styles.musicButton}>
+                            <Text style={styles.musicButtonText}>{isPlaying ? '🔇' : '🔊'}</Text>
+                        </TouchableOpacity>
+                        <Slider
+                            style={{ width: 150, height: 40 }}
+                            minimumValue={0}
+                            maximumValue={1}
+                            value={volume}
+                            onValueChange={changeVolume}
+                            minimumTrackTintColor="#4CAF50"
+                            maximumTrackTintColor="#000000"
+                            thumbTintColor="#4CAF50"
+                        />
+                    </View>
                 </View>
 
                 <View style={styles.grid}>
@@ -364,6 +423,9 @@ const styles = StyleSheet.create({
     topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
     header: { marginBottom: 20, alignItems: 'center' },
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#1565C0' },
+    musicControls: { flexDirection: 'row', alignItems: 'center', marginTop: 10, backgroundColor: 'rgba(255,255,255,0.8)', padding: 5, borderRadius: 20 },
+    musicButton: { padding: 10 },
+    musicButtonText: { fontSize: 24 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 800 },
     cardContainer: {
         // width & height are dynamic now

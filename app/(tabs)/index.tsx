@@ -168,7 +168,7 @@ export default function App() {
         <Text style={styles.bilgi}>Hangi oyunu oynayalım?</Text>
 
         <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#42A5F5' }]} onPress={() => oyunuBaslat('hafiza')}>
-          <Text style={styles.oyunBaslik}>🧠 Hafıza</Text>
+          <Text style={styles.oyunBaslik}>🧠 Çiftini Bul!</Text>
           <Text style={styles.oyunAciklama}>Kartları eşleştir.</Text>
         </TouchableOpacity>
 
