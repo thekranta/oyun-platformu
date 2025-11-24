@@ -191,15 +191,23 @@ export default function AdminPanel() {
                 })
             });
 
-            const result = await response.json();
-            if (response.ok) {
-                alert('E-posta başarıyla gönderildi!');
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const result = await response.json();
+                if (response.ok) {
+                    alert('E-posta başarıyla gönderildi!');
+                } else {
+                    alert(`Hata: ${result.error || 'Bilinmeyen sunucu hatası'}`);
+                }
             } else {
-                alert(`Hata: ${result.error}`);
+                const text = await response.text();
+                console.error("API Yanıtı (JSON değil):", text);
+                alert(`Sunucu Hatası: ${response.status} ${response.statusText}. (Detaylar konsolda)`);
             }
-        } catch (error) {
-            console.error(error);
-            alert('E-posta gönderilirken hata oluştu.');
+
+        } catch (error: any) {
+            console.error("Fetch Hatası:", error);
+            alert(`E-posta gönderilirken hata oluştu: ${error.message}`);
         } finally {
             setProcessingId(null);
         }
