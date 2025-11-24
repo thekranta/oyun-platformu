@@ -61,11 +61,19 @@ export default function App() {
     }
 
     const prompt = `
-      Öğrenci (${yas} ay): ${oyunAdiTR} oyununu oynadı.
-      Toplam Süre: ${sure} saniye.
-      Toplam Hamle: ${finalHamle}.
-      Yapılan Hata: ${finalHata}.
-      GÖREV: Çocuğun ${analizPrompt} performansı hakkında öğretmene hitaben 1-2 cümlelik akademik Türkçe değerlendirme yap.
+      Sen bir okul öncesi eğitim uzmanısın. Aşağıdaki verilere göre çocuğun gelişimini değerlendir.
+      
+      Öğrenci: ${ad} (${yas} yaşında)
+      Oyun: ${oyunAdi}
+      
+      Performans Verileri (5 Aşamalı Kümülatif Toplam):
+      - Toplam Süre: ${sure} saniye
+      - Toplam Hamle: ${finalHamle}
+      - Toplam Hata: ${finalHata}
+      
+      Lütfen çocuğun dikkat, hafıza veya mantık becerileri hakkında yapıcı, motive edici ve ebeveyne yönelik kısa bir yorum yaz.
+      Bu verilerin 5 farklı zorluk seviyesinin toplamı olduğunu unutma, yani süre ve hamle sayıları tek bir oyun için değil, tüm oturum içindir.
+      Çocuğun odaklanma süresini ve hata oranını (Hata/Hamle) dikkate al.
     `;
 
     let yapayZekaYorumu = "Yorum alınamadı";

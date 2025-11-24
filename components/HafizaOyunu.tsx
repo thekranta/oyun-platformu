@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import DynamicBackground from './DynamicBackground';
+import ProgressBar from './ProgressBar';
 
 // Placeholder images - User needs to add these to assets
 const GORSELLER_SETI = [
@@ -49,6 +51,9 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
     const [startTime, setStartTime] = useState<Date | null>(null);
     const [cumulativeTime, setCumulativeTime] = useState(0); // Seconds from previous stages
 
+    // Smart Scoring: Track seen card IDs
+    const [seenCardIds, setSeenCardIds] = useState<Set<number>>(new Set());
+
     useEffect(() => {
         startStage(0);
     }, []);
@@ -92,6 +97,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
         setSelectedCards([]);
         setIsProcessing(false);
         setStageComplete(false);
+        setSeenCardIds(new Set()); // Reset seen cards for new stage (optional, or keep cumulative?) -> Resetting makes sense per stage usually, but user said "ilk açtığımız kartlar". Let's reset per stage to be fair.
 
         // Start timer only if it's the first stage or resuming
         if (stageIndex === 0) {
@@ -188,7 +194,27 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
 
             } else {
                 // No Match
-                setTotalErrors(e => e + 1);
+
+                // Smart Scoring Logic:
+                // Only count error if we have seen at least one of these cards before (and failed to match).
+                // If both are new, it's just exploration, not an error.
+                // OR: If we pick Card A (seen) and Card B (new/seen) and they don't match -> Error.
+                // Basically: If I picked a card that I SHOULD have known the match for (because I saw the match elsewhere), or if I picked two cards I've seen before.
+                // Simplest interpretation of user request: "ilk açtığımız kartlar yanlış olarak hesaplanmasın".
+                // Implementation: If EITHER card was already in 'seenCardIds', then it's an error.
+
+                const isFirstSeen = seenCardIds.has(firstCard.id);
+                const isSecondSeen = seenCardIds.has(secondCard.id);
+
+                if (isFirstSeen || isSecondSeen) {
+                    setTotalErrors(e => e + 1);
+                }
+
+                // Add to seen
+                const newSeen = new Set(seenCardIds);
+                newSeen.add(firstCard.id);
+                newSeen.add(secondCard.id);
+                setSeenCardIds(newSeen);
 
                 // Error Animation
                 animateError(cards.find(c => c.id === firstCard.id)!);
@@ -206,6 +232,11 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                     setIsProcessing(false);
                 }, 1000);
             }
+        } else {
+            // First card of pair flipped, add to seen?
+            // Usually we add to seen after the pair is closed or matched to avoid "seeing" it while it's open?
+            // Actually, as soon as you flip it, you see it.
+            // But for the logic "don't count first open error", we handle it in the pair check.
         }
     };
 
@@ -215,6 +246,11 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
         setCumulativeTime(prev => prev + stageDuration);
         setStartTime(null); // Stop timer until next stage starts
         setStageComplete(true);
+
+        // Auto transition after 2 seconds
+        setTimeout(() => {
+            handleNextStage();
+        }, 2000);
     };
 
     const handleNextStage = () => {
@@ -228,90 +264,93 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
 
     if (stageComplete) {
         return (
-            <View style={styles.centerContainer}>
-                <Text style={styles.congratsTitle}>🎉 Harika!</Text>
-                <Text style={styles.congratsText}>
-                    {currentStageIndex + 1}. Aşamayı Tamamladın!
-                </Text>
-                <TouchableOpacity style={styles.nextButton} onPress={handleNextStage}>
-                    <Text style={styles.nextButtonText}>
-                        {currentStageIndex + 1 === AŞAMA_AYARLARI.length ? "Sonuçları Gör 🏁" : "Sonraki Aşama ➡️"}
+            <DynamicBackground>
+                <View style={styles.centerContainer}>
+                    <Text style={styles.congratsTitle}>🎉 Harika!</Text>
+                    <Text style={styles.congratsText}>
+                        {currentStageIndex + 1}. Aşamayı Tamamladın!
                     </Text>
-                </TouchableOpacity>
-            </View>
+                    <Text style={styles.autoText}>Sonraki aşamaya geçiliyor...</Text>
+                </View>
+            </DynamicBackground>
         );
     }
 
     return (
-        <ScrollView contentContainerStyle={styles.gameContainer}>
-            <View style={styles.header}>
-                <Text style={styles.title}>🧠 Hafıza - Aşama {currentStageIndex + 1}/{AŞAMA_AYARLARI.length}</Text>
+        <DynamicBackground>
+            <View style={styles.topBar}>
+                <ProgressBar current={currentStageIndex + 1} total={AŞAMA_AYARLARI.length} />
             </View>
+            <ScrollView contentContainerStyle={styles.gameContainer}>
+                <View style={styles.header}>
+                    <Text style={styles.title}>🧠 Hafıza Oyunu</Text>
+                </View>
 
-            <View style={styles.grid}>
-                {cards.map((card, index) => {
-                    const rotateY = card.animValue.interpolate({
-                        inputRange: [0, 180],
-                        outputRange: ['0deg', '180deg'],
-                    });
+                <View style={styles.grid}>
+                    {cards.map((card, index) => {
+                        const rotateY = card.animValue.interpolate({
+                            inputRange: [0, 180],
+                            outputRange: ['0deg', '180deg'],
+                        });
 
-                    const backRotateY = card.animValue.interpolate({
-                        inputRange: [0, 180],
-                        outputRange: ['180deg', '360deg'],
-                    });
+                        const backRotateY = card.animValue.interpolate({
+                            inputRange: [0, 180],
+                            outputRange: ['180deg', '360deg'],
+                        });
 
-                    return (
-                        <View key={card.id} style={styles.cardContainer}>
-                            {/* Front Face (Hidden initially) */}
-                            <Animated.View style={[
-                                styles.card,
-                                styles.cardFront,
-                                {
-                                    transform: [
-                                        { rotateY: backRotateY },
-                                        { scale: card.scaleValue },
-                                        { translateX: card.shakeValue }
-                                    ]
-                                }
-                            ]}>
-                                <Image source={card.source} style={styles.cardImage} resizeMode="contain" />
-                            </Animated.View>
+                        return (
+                            <View key={card.id} style={styles.cardContainer}>
+                                {/* Front Face (Hidden initially) */}
+                                <Animated.View style={[
+                                    styles.card,
+                                    styles.cardFront,
+                                    {
+                                        transform: [
+                                            { rotateY: backRotateY },
+                                            { scale: card.scaleValue },
+                                            { translateX: card.shakeValue }
+                                        ]
+                                    }
+                                ]}>
+                                    <Image source={card.source} style={styles.cardImage} resizeMode="contain" />
+                                </Animated.View>
 
-                            {/* Back Face (Visible initially) */}
-                            <Animated.View style={[
-                                styles.card,
-                                styles.cardBack,
-                                {
-                                    transform: [
-                                        { rotateY: rotateY },
-                                        { scale: card.scaleValue },
-                                        { translateX: card.shakeValue }
-                                    ]
-                                }
-                            ]}>
-                                <Text style={styles.questionMark}>❓</Text>
-                            </Animated.View>
+                                {/* Back Face (Visible initially) */}
+                                <Animated.View style={[
+                                    styles.card,
+                                    styles.cardBack,
+                                    {
+                                        transform: [
+                                            { rotateY: rotateY },
+                                            { scale: card.scaleValue },
+                                            { translateX: card.shakeValue }
+                                        ]
+                                    }
+                                ]}>
+                                    <Text style={styles.questionMark}>❓</Text>
+                                </Animated.View>
 
-                            {/* Touch Handler */}
-                            <TouchableOpacity
-                                style={styles.touchable}
-                                onPress={() => handleCardPress(index)}
-                                activeOpacity={1}
-                            />
-                        </View>
-                    );
-                })}
-            </View>
-        </ScrollView>
+                                {/* Touch Handler */}
+                                <TouchableOpacity
+                                    style={styles.touchable}
+                                    onPress={() => handleCardPress(index)}
+                                    activeOpacity={1}
+                                />
+                            </View>
+                        );
+                    })}
+                </View>
+            </ScrollView>
+        </DynamicBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    gameContainer: { flexGrow: 1, alignItems: 'center', paddingTop: 40, backgroundColor: '#fff' },
-    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#E3F2FD' },
+    gameContainer: { flexGrow: 1, alignItems: 'center', paddingTop: 20 },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
     header: { marginBottom: 20, alignItems: 'center' },
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#1565C0' },
-    stats: { fontSize: 16, color: '#555' },
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: 340 },
     cardContainer: { width: 70, height: 70, margin: 5 },
     touchable: { position: 'absolute', width: '100%', height: '100%', zIndex: 10 },
@@ -325,6 +364,12 @@ const styles = StyleSheet.create({
         backfaceVisibility: 'hidden',
         borderWidth: 2,
         borderColor: '#ddd',
+        backgroundColor: 'white',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     cardBack: {
         backgroundColor: '#2196F3',
@@ -337,7 +382,6 @@ const styles = StyleSheet.create({
     questionMark: { fontSize: 32, color: 'white' },
     cardImage: { width: 40, height: 40 },
     congratsTitle: { fontSize: 32, fontWeight: 'bold', color: '#4CAF50', marginBottom: 10 },
-    congratsText: { fontSize: 20, color: '#333', marginBottom: 30 },
-    nextButton: { backgroundColor: '#2196F3', paddingVertical: 15, paddingHorizontal: 40, borderRadius: 25, elevation: 5 },
-    nextButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+    congratsText: { fontSize: 20, color: '#333', marginBottom: 10 },
+    autoText: { fontSize: 16, color: '#666', fontStyle: 'italic' },
 });
