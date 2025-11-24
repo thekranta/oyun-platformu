@@ -72,7 +72,7 @@ export default function App() {
 
       console.log("Supabase Request Body:", JSON.stringify(kayitVerisi, null, 2));
 
-      const supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
+      let supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
         method: 'POST',
         headers: {
           'apikey': SUPABASE_KEY || '',
@@ -83,10 +83,33 @@ export default function App() {
         body: JSON.stringify(kayitVerisi)
       });
 
+      // Eğer email sütunu yoksa hata verir, bu durumda emailsiz tekrar deneriz
       if (!supabaseResponse.ok) {
         const responseText = await supabaseResponse.text();
-        throw new Error(`Supabase Hatası: ${supabaseResponse.status} - ${responseText}`);
+        if (responseText.includes("Could not find the 'email' column")) {
+          console.warn("Email sütunu eksik, emailsiz kayıt deneniyor...");
+          const { email, ...kayitVerisiEmailsiz } = kayitVerisi;
+
+          supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY || '',
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            } as any,
+            body: JSON.stringify(kayitVerisiEmailsiz)
+          });
+        } else {
+          throw new Error(`Supabase Hatası: ${supabaseResponse.status} - ${responseText}`);
+        }
       }
+
+      if (!supabaseResponse.ok) {
+        const responseText = await supabaseResponse.text();
+        throw new Error(`Supabase Hatası (Tekrar): ${supabaseResponse.status} - ${responseText}`);
+      }
+
       console.log("Kayıt Başarılı");
     } catch (error) {
       console.log("Kayıt Hatası:", error);
