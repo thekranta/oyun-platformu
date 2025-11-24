@@ -15,6 +15,7 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
 export default function App() {
+  const router = useRouter();
   const [asama, setAsama] = useState('giris');
   const [secilenOyun, setSecilenOyun] = useState('');
   const [ad, setAd] = useState('');
@@ -165,6 +166,13 @@ export default function App() {
           <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
           <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
           <TouchableOpacity style={styles.buton} onPress={girisYap}><Text style={styles.butonYazi}>Giriş Yap 🚀</Text></TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.buton, { backgroundColor: '#607D8B', marginTop: 20, paddingVertical: 10 }]}
+            onPress={() => router.push('/admin')}
+          >
+            <Text style={[styles.butonYazi, { fontSize: 14 }]}>Admin Paneli 🔒</Text>
+          </TouchableOpacity>
         </View>
       </DynamicBackground>
     );

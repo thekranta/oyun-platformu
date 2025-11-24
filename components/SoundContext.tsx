@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 interface SoundContextType {
@@ -30,6 +30,9 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
                 playsInSilentModeIOS: true,
                 staysActiveInBackground: true,
                 shouldDuckAndroid: true,
+                interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+                interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+                playThroughEarpieceAndroid: false,
             });
 
             const { sound: newSound } = await Audio.Sound.createAsync(
