@@ -240,56 +240,69 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                 </TouchableOpacity>
             </View>
         );
-    });
-
-    const backRotateY = card.animValue.interpolate({
-        inputRange: [0, 180],
-        outputRange: ['180deg', '360deg'],
-    });
+    }
 
     return (
-        <View key={card.id} style={styles.cardContainer}>
-            {/* Front Face (Hidden initially) */}
-            <Animated.View style={[
-                styles.card,
-                styles.cardFront,
-                {
-                    transform: [
-                        { rotateY: backRotateY },
-                        { scale: card.scaleValue },
-                        { translateX: card.shakeValue }
-                    ]
-                }
-            ]}>
-                <Image source={card.source} style={styles.cardImage} resizeMode="contain" />
-            </Animated.View>
+        <ScrollView contentContainerStyle={styles.gameContainer}>
+            <View style={styles.header}>
+                <Text style={styles.title}>🧠 Hafıza - Aşama {currentStageIndex + 1}/{AŞAMA_AYARLARI.length}</Text>
+            </View>
 
-            {/* Back Face (Visible initially) */}
-            <Animated.View style={[
-                styles.card,
-                styles.cardBack,
-                {
-                    transform: [
-                        { rotateY: rotateY },
-                        { scale: card.scaleValue },
-                        { translateX: card.shakeValue }
-                    ]
-                }
-            ]}>
-                <Text style={styles.questionMark}>❓</Text>
-            </Animated.View>
+            <View style={styles.grid}>
+                {cards.map((card, index) => {
+                    const rotateY = card.animValue.interpolate({
+                        inputRange: [0, 180],
+                        outputRange: ['0deg', '180deg'],
+                    });
 
-            {/* Touch Handler */}
-            <TouchableOpacity
-                style={styles.touchable}
-                onPress={() => handleCardPress(index)}
-                activeOpacity={1}
-            />
-        </View>
-    );
-})}
-            </View >
-        </ScrollView >
+                    const backRotateY = card.animValue.interpolate({
+                        inputRange: [0, 180],
+                        outputRange: ['180deg', '360deg'],
+                    });
+
+                    return (
+                        <View key={card.id} style={styles.cardContainer}>
+                            {/* Front Face (Hidden initially) */}
+                            <Animated.View style={[
+                                styles.card,
+                                styles.cardFront,
+                                {
+                                    transform: [
+                                        { rotateY: backRotateY },
+                                        { scale: card.scaleValue },
+                                        { translateX: card.shakeValue }
+                                    ]
+                                }
+                            ]}>
+                                <Image source={card.source} style={styles.cardImage} resizeMode="contain" />
+                            </Animated.View>
+
+                            {/* Back Face (Visible initially) */}
+                            <Animated.View style={[
+                                styles.card,
+                                styles.cardBack,
+                                {
+                                    transform: [
+                                        { rotateY: rotateY },
+                                        { scale: card.scaleValue },
+                                        { translateX: card.shakeValue }
+                                    ]
+                                }
+                            ]}>
+                                <Text style={styles.questionMark}>❓</Text>
+                            </Animated.View>
+
+                            {/* Touch Handler */}
+                            <TouchableOpacity
+                                style={styles.touchable}
+                                onPress={() => handleCardPress(index)}
+                                activeOpacity={1}
+                            />
+                        </View>
+                    );
+                })}
+            </View>
+        </ScrollView>
     );
 }
 
@@ -328,4 +341,3 @@ const styles = StyleSheet.create({
     nextButton: { backgroundColor: '#2196F3', paddingVertical: 15, paddingHorizontal: 40, borderRadius: 25, elevation: 5 },
     nextButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
 });
-
