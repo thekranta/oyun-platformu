@@ -2,21 +2,23 @@ import React, { useEffect, useState } from 'react';
 import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Placeholder images - User needs to add these to assets
-const CARD_IMAGES = [
-    require('../assets/images/icon.png'), // Placeholder 1
-    require('../assets/images/icon.png'), // Placeholder 2
-    require('../assets/images/icon.png'), // Placeholder 3
-    require('../assets/images/icon.png'), // Placeholder 4
-    require('../assets/images/icon.png'), // Placeholder 5
+const GORSELLER_SETI = [
+    // Her obje, bir benzersiz kart çiftini temsil eder
+    { id: 1, source: require('../assets/images/cilek.png'), name: 'Çilek' },
+    { id: 2, source: require('../assets/images/elma.png'), name: 'Elma' },
+    { id: 3, source: require('../assets/images/nar.png'), name: 'Nar' },
+    { id: 4, source: require('../assets/images/kiraz.png'), name: 'Kiraz' },
+    { id: 5, source: require('../assets/images/avokado.png'), name: 'Avokado' },
+    //...
 ];
 
-// Stage configurations
-const STAGES = [
-    { level: 1, pairCount: 2 }, // 4 cards
-    { level: 2, pairCount: 3 }, // 6 cards
-    { level: 3, pairCount: 4 }, // 8 cards
-    { level: 4, pairCount: 5 }, // 10 cards
-    { level: 5, pairCount: 5 }, // 10 cards
+// Bu set, 5 aşamanın tamamı için yeterli benzersiz görsele sahiptir.
+const AŞAMA_AYARLARI = [
+    { pairs: 2, totalCards: 4, images: GORSELLER_SETI.slice(0, 2) }, // Aşama 1: 4 Kart
+    { pairs: 3, totalCards: 6, images: GORSELLER_SETI.slice(0, 3) }, // Aşama 2: 6 Kart
+    { pairs: 4, totalCards: 8, images: GORSELLER_SETI.slice(0, 4) }, // Aşama 3: 8 Kart
+    { pairs: 5, totalCards: 10, images: GORSELLER_SETI.slice(0, 5) }, // Aşama 4: 10 Kart
+    { pairs: 5, totalCards: 10, images: GORSELLER_SETI.slice(0, 5) }, // Aşama 5: 10 Kart
 ];
 
 interface HafizaOyunuProps {
