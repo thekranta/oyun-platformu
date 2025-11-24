@@ -3,6 +3,7 @@ import DynamicBackground from '@/components/DynamicBackground';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
+import Toast from '@/components/Toast';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -24,19 +25,24 @@ export default function App() {
   const [yas, setYas] = useState('');
   const [email, setEmail] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ visible: true, message, type });
+  };
 
   const girisYap = () => {
     if (ad.trim() === '' || yas.trim() === '') {
-      alert("Lütfen isim ve yaş giriniz.");
+      showToast("Lütfen isim ve yaş giriniz.", "error");
       return;
     }
     if (!/^\d+$/.test(yas)) {
-      alert("Lütfen yaş alanına sadece rakam giriniz.");
+      showToast("Lütfen yaş alanına sadece rakam giriniz.", "error");
       return;
     }
     const yasNum = parseInt(yas);
     if (yasNum < 24 || yasNum > 75) {
-      alert("Yaş 24 ile 75 ay arasında olmalıdır.");
+      showToast("Yaş 24 ile 75 ay arasında olmalıdır.", "error");
       return;
     }
     setAsama('menu');
@@ -149,7 +155,13 @@ export default function App() {
             <Text style={[styles.butonYazi, { fontSize: 14 }]}>Admin Paneli 🔒</Text>
           </TouchableOpacity>
         </View>
-      </DynamicBackground>
+        <Toast
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onHide={() => setToast({ ...toast, visible: false })}
+        />
+      </DynamicBackground >
     );
   }
 

@@ -36,9 +36,9 @@ const PATTERNS: Pattern[] = [
     },
     // Aşama 3: AAB pattern (A-A-B-A-A-?)
     {
-        sequence: ['kare', 'kare', 'yildiz', 'kare', 'kare'],
-        answer: 'yildiz',
-        options: ['yildiz', 'kare', 'ucgen', 'daire']
+        sequence: ['kare', 'kare', 'ucgen', 'kare', 'kare'],
+        answer: 'ucgen',
+        options: ['ucgen', 'kare', 'daire', 'yildiz']
     },
     // Aşama 4: ABC pattern (A-B-C-A-B-?)
     {
@@ -46,11 +46,11 @@ const PATTERNS: Pattern[] = [
         answer: 'ucgen',
         options: ['ucgen', 'daire', 'kare', 'yildiz']
     },
-    // Aşama 5: AABC pattern (A-A-B-C-A-?)
+    // Aşama 5: ABC pattern (Farklı varyasyon: B-C-A-B-C-?)
     {
-        sequence: ['yildiz', 'yildiz', 'daire', 'kare', 'yildiz'],
-        answer: 'yildiz',
-        options: ['yildiz', 'daire', 'kare', 'ucgen']
+        sequence: ['ucgen', 'daire', 'kare', 'ucgen', 'daire'],
+        answer: 'kare',
+        options: ['kare', 'ucgen', 'daire', 'yildiz']
     }
 ];
 
