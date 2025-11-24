@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
-
+import StudentStatsModal from '../components/StudentStatsModal';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -220,8 +220,17 @@ export default function AdminPanel() {
 
     const StudentCard = ({ student }: { student: StudentGroup }) => {
         const [expanded, setExpanded] = useState(false);
+        const [showStats, setShowStats] = useState(false);  
 
         return (
+            <>
+            <StudentStatsModal 
+                visible={showStats}
+                onClose={() => setShowStats(false)}
+                studentName={student.name}
+                studentAge={student.age}
+                scores={student.scores}
+            />
             <View style={styles.studentCard}>
                 <TouchableOpacity onPress={() => setExpanded(!expanded)} style={styles.studentHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -233,7 +242,12 @@ export default function AdminPanel() {
                             <Text style={styles.studentAge}>{student.age} Ay • {student.scores.length} Oyun</Text>
                         </View>
                     </View>
-                    <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={24} color="#555" />
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                        <TouchableOpacity onPress={() => setShowStats(true)} style={{ padding: 4 }}>
+                            <Ionicons name="stats-chart" size={20} color="#2196F3" />
+                        </TouchableOpacity>
+                        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={24} color="#555" />
+                    </View>
                 </TouchableOpacity>
 
                 {expanded && (
@@ -244,6 +258,7 @@ export default function AdminPanel() {
                     </View>
                 )}
             </View>
+            </>
         );
     };
 
