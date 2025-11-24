@@ -25,6 +25,10 @@ export default function App() {
       alert("Lütfen isim ve yaş giriniz.");
       return;
     }
+    if (!/^\d+$/.test(yas)) {
+      alert("Lütfen yaş alanına sadece rakam giriniz.");
+      return;
+    }
     setAsama('menu');
   };
 
