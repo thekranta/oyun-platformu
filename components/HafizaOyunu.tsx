@@ -27,7 +27,8 @@ interface HafizaOyunuProps {
 
 interface Card {
     id: number;
-    imageId: number;
+    matchId: number; // Used for matching logic (corresponds to image ID)
+    source: any;     // Image source
     isFlipped: boolean;
     isMatched: boolean;
     animValue: Animated.Value;
@@ -53,19 +54,17 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
     }, []);
 
     const startStage = (stageIndex: number) => {
-        const config = STAGES[stageIndex];
-        const pairCount = config.pairCount;
-
-        // Select images for this stage
-        const stageImages = CARD_IMAGES.slice(0, pairCount);
+        const config = AŞAMA_AYARLARI[stageIndex];
+        const stageImages = config.images;
 
         // Create pairs
         let newCards: Card[] = [];
-        stageImages.forEach((img, idx) => {
+        stageImages.forEach((imgObj, idx) => {
             // Card 1
             newCards.push({
                 id: idx * 2,
-                imageId: idx,
+                matchId: imgObj.id,
+                source: imgObj.source,
                 isFlipped: false,
                 isMatched: false,
                 animValue: new Animated.Value(0),
@@ -75,7 +74,8 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
             // Card 2
             newCards.push({
                 id: idx * 2 + 1,
-                imageId: idx,
+                matchId: imgObj.id,
+                source: imgObj.source,
                 isFlipped: false,
                 isMatched: false,
                 animValue: new Animated.Value(0),
@@ -168,7 +168,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
 
             const [firstCard, secondCard] = newSelected;
 
-            if (firstCard.imageId === secondCard.imageId) {
+            if (firstCard.matchId === secondCard.matchId) {
                 // Match!
                 const matchedCards = newCards.map(c =>
                     (c.id === firstCard.id || c.id === secondCard.id) ? { ...c, isMatched: true } : c
@@ -218,7 +218,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
     };
 
     const handleNextStage = () => {
-        if (currentStageIndex + 1 < STAGES.length) {
+        if (currentStageIndex + 1 < AŞAMA_AYARLARI.length) {
             startStage(currentStageIndex + 1);
         } else {
             // Game Over
@@ -235,7 +235,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                 </Text>
                 <TouchableOpacity style={styles.nextButton} onPress={handleNextStage}>
                     <Text style={styles.nextButtonText}>
-                        {currentStageIndex + 1 === STAGES.length ? "Sonuçları Gör 🏁" : "Sonraki Aşama ➡️"}
+                        {currentStageIndex + 1 === AŞAMA_AYARLARI.length ? "Sonuçları Gör 🏁" : "Sonraki Aşama ➡️"}
                     </Text>
                 </TouchableOpacity>
             </View>
@@ -245,7 +245,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
     return (
         <ScrollView contentContainerStyle={styles.gameContainer}>
             <View style={styles.header}>
-                <Text style={styles.title}>🧠 Hafıza - Aşama {currentStageIndex + 1}/{STAGES.length}</Text>
+                <Text style={styles.title}>🧠 Hafıza - Aşama {currentStageIndex + 1}/{AŞAMA_AYARLARI.length}</Text>
                 <Text style={styles.stats}>Hamle: {totalMoves} | Hata: {totalErrors}</Text>
             </View>
 
@@ -275,7 +275,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                                     ]
                                 }
                             ]}>
-                                <Image source={CARD_IMAGES[card.imageId]} style={styles.cardImage} resizeMode="contain" />
+                                <Image source={card.source} style={styles.cardImage} resizeMode="contain" />
                             </Animated.View>
 
                             {/* Back Face (Visible initially) */}
@@ -342,3 +342,4 @@ const styles = StyleSheet.create({
     nextButton: { backgroundColor: '#2196F3', paddingVertical: 15, paddingHorizontal: 40, borderRadius: 25, elevation: 5 },
     nextButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
 });
+
