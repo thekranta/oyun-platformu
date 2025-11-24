@@ -57,79 +57,17 @@ export default function App() {
   const sessizceAnalizEtVeKaydet = async (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => {
     setYukleniyor(true);
 
-    let oyunAdiTR = '';
-    let analizPrompt = '';
-
-    if (oyunAdi === 'hafiza') {
-      oyunAdiTR = 'Hafıza Kartları';
-      analizPrompt = 'Görsel bellek ve dikkat';
-    } else if (oyunAdi === 'siralama') {
-      oyunAdiTR = 'Sayı Sıralama';
-      analizPrompt = 'Sayısal algı ve sıralama becerisi';
-    } else {
-      oyunAdiTR = 'Gruplama (Kategorizasyon)';
-      analizPrompt = 'Kavram bilgisi ve soyut düşünme (Meyve/Hayvan ayrımı)';
-    }
-
-    const prompt = `
-      Sen bir okul öncesi eğitim uzmanısın. Aşağıdaki verilere göre çocuğun gelişimini değerlendir.
-      
-      Öğrenci: ${ad} (${yas} yaşında)
-      Oyun: ${oyunAdi}
-      
-      Performans Verileri (5 Aşamalı Kümülatif Toplam):
-      - Toplam Süre: ${sure} saniye
-      - Toplam Hamle: ${finalHamle}
-      - Toplam Hata: ${finalHata}
-      
-      Lütfen çocuğun dikkat, hafıza veya mantık becerileri hakkında yapıcı, motive edici ve ebeveyne yönelik kısa bir yorum yaz.
-      Bu verilerin 5 farklı zorluk seviyesinin toplamı olduğunu unutma, yani süre ve hamle sayıları tek bir oyun için değil, tüm oturum içindir.
-      Çocuğun odaklanma süresini ve hata oranını (Hata/Hamle) dikkate al.
-    `;
-
-    let yapayZekaYorumu = "Yorum alınamadı";
-
-    try {
-      if (!GEMINI_API_KEY) {
-        console.error("GEMINI_API_KEY eksik!");
-        return;
-      }
-
-      console.log("AI İsteği Gönderiliyor... (Model: gemini-2.0-flash)", { oyun: oyunAdiTR, sure, hamle: finalHamle, hata: finalHata });
-
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY.trim()}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        }
-      );
-
-      const data = await response.json();
-      console.log("AI Yanıtı:", JSON.stringify(data, null, 2));
-
-      if (data.candidates && data.candidates.length > 0) {
-        yapayZekaYorumu = data.candidates[0].content.parts[0].text;
-        console.log("Yorum Alındı:", yapayZekaYorumu);
-      } else {
-        console.warn("AI Yanıtında aday yok:", data);
-      }
-    } catch (error) {
-      console.error("AI Hatası:", error);
-    }
-
-    // 1. Supabase Kaydı
+    // 1. Supabase Kaydı (Sadece ham veri ve email kaydedilir)
     try {
       const kayitVerisi = {
         oyun_turu: oyunAdi,
         hamle_sayisi: finalHamle,
         hata_sayisi: finalHata,
-        yapay_zeka_yorumu: yapayZekaYorumu,
+        // yapay_zeka_yorumu: ..., // Artık admin panelinde yapılacak
         ogrenci_adi: ad,
         ogrenci_yasi: parseInt(yas),
         sure: sure,
-        // email: email // Eğer Supabase'e de kaydetmek isterseniz bu satırı açın ve sütunu ekleyin
+        email: email // Ebeveyn emaili kaydediliyor
       };
 
       console.log("Supabase Request Body:", JSON.stringify(kayitVerisi, null, 2));
@@ -152,37 +90,9 @@ export default function App() {
       console.log("Kayıt Başarılı");
     } catch (error) {
       console.log("Kayıt Hatası:", error);
+    } finally {
+      setYukleniyor(false);
     }
-
-    // 2. E-posta Gönderimi
-    if (email && email.includes('@')) {
-      try {
-        console.log("E-posta gönderiliyor...", email);
-        const emailResponse = await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: email,
-            subject: `🎮 ${ad} - ${oyunAdiTR} Raporu`,
-            message: `Merhaba, ${ad} az önce ${oyunAdiTR} oyununu tamamladı. İşte sonuçlar:`,
-            gameDetails: {
-              game: oyunAdiTR,
-              duration: sure,
-              moves: finalHamle,
-              errors: finalHata,
-              aiComment: yapayZekaYorumu
-            }
-          })
-        });
-
-        const emailResult = await emailResponse.json();
-        console.log("Email Sonucu:", emailResult);
-      } catch (emailError) {
-        console.error("Email Gönderme Hatası:", emailError);
-      }
-    }
-
-    setYukleniyor(false);
   };
 
   // === EKRANLAR ===
