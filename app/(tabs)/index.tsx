@@ -1,3 +1,4 @@
+import DiziyiTamamla from '@/components/DiziyiTamamla';
 import DynamicBackground from '@/components/DynamicBackground';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
@@ -167,6 +168,11 @@ export default function App() {
           <Text style={styles.oyunBaslik}>🍎 Gruplama</Text>
           <Text style={styles.oyunAciklama}>Meyve mi, Hayvan mı?</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#AB47BC' }]} onPress={() => oyunuBaslat('diziyi-tamamla')}>
+          <Text style={styles.oyunBaslik}>🧩 Diziyi Tamamla</Text>
+          <Text style={styles.oyunAciklama}>Örüntüyü devam ettir!</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -181,6 +187,10 @@ export default function App() {
 
   if (asama === 'gruplama') {
     return <GruplamaOyunu onGameEnd={oyunuBitir} onExit={cikisYap} />;
+  }
+
+  if (asama === 'diziyi-tamamla') {
+    return <DiziyiTamamla onGameEnd={oyunuBitir} />;
   }
 
   // ... (inside sonuc view)
