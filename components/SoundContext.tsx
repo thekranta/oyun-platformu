@@ -26,6 +26,12 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
     const loadSound = async () => {
         try {
+            await Audio.setAudioModeAsync({
+                playsInSilentModeIOS: true,
+                staysActiveInBackground: true,
+                shouldDuckAndroid: true,
+            });
+
             const { sound: newSound } = await Audio.Sound.createAsync(
                 require('../assets/sounds/background.mp3'),
                 { shouldPlay: true, isLooping: true, volume: 0.5 }
