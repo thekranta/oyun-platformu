@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
+import DynamicBackground from './DynamicBackground';
+import ProgressBar from './ProgressBar';
 
 const SIRALAMA_SAYILARI = [1, 2, 3, 4, 5];
 const TOTAL_ROUNDS = 4;
@@ -20,6 +23,9 @@ export default function SiralamaOyunu({ onGameEnd }: SiralamaOyunuProps) {
     const [totalHata, setTotalHata] = useState(0);
     const [startTime, setStartTime] = useState<Date | null>(null);
     const [cumulativeTime, setCumulativeTime] = useState(0);
+
+    // Confetti Ref
+    const confettiRef = useRef<ConfettiCannon>(null);
 
     useEffect(() => {
         baslat(true);
@@ -52,17 +58,23 @@ export default function SiralamaOyunu({ onGameEnd }: SiralamaOyunuProps) {
 
             if (beklenenSayi === 5) {
                 // Round Complete
+                if (confettiRef.current) {
+                    confettiRef.current.start();
+                }
+
                 if (currentRound < TOTAL_ROUNDS) {
                     // Next Round
                     setTimeout(() => {
                         setCurrentRound(r => r + 1);
                         baslat(false);
-                    }, 500);
+                    }, 2000); // Increased delay for confetti
                 } else {
                     // Game Complete
-                    const now = new Date();
-                    const totalDuration = startTime ? Math.round((now.getTime() - startTime.getTime()) / 1000) : 0;
-                    onGameEnd('siralama', totalDuration, totalHamle + 1, totalHata);
+                    setTimeout(() => {
+                        const now = new Date();
+                        const totalDuration = startTime ? Math.round((now.getTime() - startTime.getTime()) / 1000) : 0;
+                        onGameEnd('siralama', totalDuration, totalHamle + 1, totalHata);
+                    }, 2000);
                 }
             }
             else setBeklenenSayi(b => b + 1);
@@ -73,35 +85,49 @@ export default function SiralamaOyunu({ onGameEnd }: SiralamaOyunuProps) {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.oyunContainer}>
-            <View style={styles.header}>
-                <Text style={styles.baslik}>🔢 Sıralama</Text>
-                <Text style={styles.roundText}>Tur: {currentRound} / {TOTAL_ROUNDS}</Text>
+        <DynamicBackground>
+            <View style={styles.topBar}>
+                <ProgressBar current={currentRound} total={TOTAL_ROUNDS} />
             </View>
 
-            <Text style={styles.bilgi}>Sıradaki: {beklenenSayi}</Text>
+            <ScrollView contentContainerStyle={styles.oyunContainer}>
+                <View style={styles.header}>
+                    <Text style={styles.baslik}>🔢 Sıralama</Text>
+                    {/* Removed redundant round text since we have ProgressBar */}
+                </View>
 
-            <View style={styles.oyunAlani}>
-                {karisikSayilar.map((item, index) => (
-                    <TouchableOpacity
-                        key={index}
-                        style={[styles.sayiKutu, item.tiklandi ? styles.sayiSecildi : styles.sayiSecilmedi]}
-                        onPress={() => sayiSec(index, item.sayi)}
-                        disabled={item.tiklandi}
-                    >
-                        <Text style={styles.sayiYazi}>{item.sayi}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </ScrollView>
+                <Text style={styles.bilgi}>Sıradaki: {beklenenSayi}</Text>
+
+                <View style={styles.oyunAlani}>
+                    {karisikSayilar.map((item, index) => (
+                        <TouchableOpacity
+                            key={index}
+                            style={[styles.sayiKutu, item.tiklandi ? styles.sayiSecildi : styles.sayiSecilmedi]}
+                            onPress={() => sayiSec(index, item.sayi)}
+                            disabled={item.tiklandi}
+                        >
+                            <Text style={styles.sayiYazi}>{item.sayi}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </ScrollView>
+
+            <ConfettiCannon
+                count={200}
+                origin={{ x: -10, y: 0 }}
+                autoStart={false}
+                ref={confettiRef}
+                fadeOut={true}
+            />
+        </DynamicBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    oyunContainer: { flexGrow: 1, alignItems: 'center', paddingTop: 40, backgroundColor: '#fff' },
+    topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
+    oyunContainer: { flexGrow: 1, alignItems: 'center', paddingTop: 20 },
     header: { marginBottom: 20, alignItems: 'center' },
     baslik: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#1565C0' },
-    roundText: { fontSize: 16, color: '#666', fontWeight: 'bold' },
     bilgi: { fontSize: 18, marginBottom: 20, color: '#555' },
     oyunAlani: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: 320 },
     sayiKutu: { width: 60, height: 60, margin: 8, justifyContent: 'center', alignItems: 'center', borderRadius: 30, borderWidth: 2 },

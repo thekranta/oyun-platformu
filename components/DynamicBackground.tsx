@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, StyleSheet, View } from 'react-native';
+import SoundControls from './SoundControls';
 
 const { width, height } = Dimensions.get('window');
 
@@ -59,6 +60,12 @@ export default function DynamicBackground({ children }: { children: React.ReactN
                     <View style={[styles.square, { backgroundColor: 'rgba(255, 200, 255, 0.4)' }]} />
                 </FloatingItem>
             </View>
+
+            {/* Global Sound Controls */}
+            <View style={styles.soundControlsContainer}>
+                <SoundControls />
+            </View>
+
             <View style={styles.content}>
                 {children}
             </View>
@@ -99,5 +106,11 @@ const styles = StyleSheet.create({
         borderBottomWidth: 40,
         borderLeftColor: 'transparent',
         borderRightColor: 'transparent',
+    },
+    soundControlsContainer: {
+        position: 'absolute',
+        top: 50, // Moved down as requested
+        right: 20,
+        zIndex: 100,
     },
 });

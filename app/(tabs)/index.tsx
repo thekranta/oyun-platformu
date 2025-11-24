@@ -197,6 +197,13 @@ export default function App() {
     return <GruplamaOyunu onGameEnd={oyunuBitir} />;
   }
 
+  const cikisYap = () => {
+    setAd('');
+    setYas('');
+    setAsama('giris');
+  };
+
+  // ... (inside sonuc view)
   if (asama === 'sonuc') {
     return (
       <View style={styles.merkezContainer}>
@@ -204,8 +211,13 @@ export default function App() {
         <Text style={styles.sonucBaslik}>AFERİN SANA!</Text>
         <Text style={styles.baslik}>{ad}, Harika İş Çıkardın!</Text>
         {yukleniyor && <ActivityIndicator size="small" color="#999" style={{ marginTop: 20 }} />}
+
         <TouchableOpacity style={styles.buton} onPress={() => setAsama('menu')}>
           <Text style={styles.butonYazi}>Başka Oyun Oyna 🎮</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 15 }]} onPress={cikisYap}>
+          <Text style={styles.butonYazi}>Oturumu Kapat 🚪</Text>
         </TouchableOpacity>
       </View>
     );

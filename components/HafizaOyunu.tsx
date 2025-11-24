@@ -1,7 +1,6 @@
-import Slider from '@react-native-community/slider';
-import { Audio } from 'expo-av';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
@@ -69,49 +68,12 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
     // Smart Scoring: Track seen card IDs
     const [seenCardIds, setSeenCardIds] = useState<Set<number>>(new Set());
 
-    // Audio State
-    const [sound, setSound] = useState<Audio.Sound | null>(null);
-    const [isPlaying, setIsPlaying] = useState(true);
-    const [volume, setVolume] = useState(0.5);
+    // Confetti Ref
+    const confettiRef = useRef<ConfettiCannon>(null);
 
     useEffect(() => {
         startStage(0);
-        loadSound();
-        return () => {
-            if (sound) {
-                sound.unloadAsync();
-            }
-        };
     }, []);
-
-    const loadSound = async () => {
-        try {
-            const { sound } = await Audio.Sound.createAsync(
-                require('../assets/sounds/background.mp3'),
-                { shouldPlay: true, isLooping: true, volume: 0.5 }
-            );
-            setSound(sound);
-        } catch (error) {
-            console.log("Ses yüklenemedi (Dosya eksik olabilir):", error);
-        }
-    };
-
-    const toggleSound = async () => {
-        if (!sound) return;
-        if (isPlaying) {
-            await sound.pauseAsync();
-        } else {
-            await sound.playAsync();
-        }
-        setIsPlaying(!isPlaying);
-    };
-
-    const changeVolume = async (val: number) => {
-        setVolume(val);
-        if (sound) {
-            await sound.setVolumeAsync(val);
-        }
-    };
 
     const startStage = (stageIndex: number) => {
         const config = AŞAMA_AYARLARI[stageIndex];
@@ -152,7 +114,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
         setSelectedCards([]);
         setIsProcessing(false);
         setStageComplete(false);
-        setSeenCardIds(new Set()); // Reset seen cards for new stage (optional, or keep cumulative?) -> Resetting makes sense per stage usually, but user said "ilk açtığımız kartlar". Let's reset per stage to be fair.
+        setSeenCardIds(new Set());
 
         // Start timer only if it's the first stage or resuming
         if (stageIndex === 0) {
@@ -249,15 +211,6 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
 
             } else {
                 // No Match
-
-                // Smart Scoring Logic:
-                // Only count error if we have seen at least one of these cards before (and failed to match).
-                // If both are new, it's just exploration, not an error.
-                // OR: If we pick Card A (seen) and Card B (new/seen) and they don't match -> Error.
-                // Basically: If I picked a card that I SHOULD have known the match for (because I saw the match elsewhere), or if I picked two cards I've seen before.
-                // Simplest interpretation of user request: "ilk açtığımız kartlar yanlış olarak hesaplanmasın".
-                // Implementation: If EITHER card was already in 'seenCardIds', then it's an error.
-
                 const isFirstSeen = seenCardIds.has(firstCard.id);
                 const isSecondSeen = seenCardIds.has(secondCard.id);
 
@@ -287,11 +240,6 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                     setIsProcessing(false);
                 }, 1000);
             }
-        } else {
-            // First card of pair flipped, add to seen?
-            // Usually we add to seen after the pair is closed or matched to avoid "seeing" it while it's open?
-            // Actually, as soon as you flip it, you see it.
-            // But for the logic "don't count first open error", we handle it in the pair check.
         }
     };
 
@@ -302,10 +250,15 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
         setStartTime(null); // Stop timer until next stage starts
         setStageComplete(true);
 
-        // Auto transition after 2 seconds
+        // Trigger Confetti
+        if (confettiRef.current) {
+            confettiRef.current.start();
+        }
+
+        // Auto transition after 3 seconds (increased for confetti)
         setTimeout(() => {
             handleNextStage();
-        }, 2000);
+        }, 3000);
     };
 
     const handleNextStage = () => {
@@ -327,6 +280,13 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                     </Text>
                     <Text style={styles.autoText}>Sonraki aşamaya geçiliyor...</Text>
                 </View>
+                <ConfettiCannon
+                    count={200}
+                    origin={{ x: -10, y: 0 }}
+                    autoStart={true}
+                    ref={confettiRef}
+                    fadeOut={true}
+                />
             </DynamicBackground>
         );
     }
@@ -335,25 +295,6 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
         <DynamicBackground>
             <View style={styles.topBar}>
                 <ProgressBar current={currentStageIndex + 1} total={AŞAMA_AYARLARI.length} />
-            </View>
-
-            {/* Music Controls - Absolute Top Right */}
-            <View style={styles.musicControls}>
-                <TouchableOpacity onPress={toggleSound} style={styles.musicButton}>
-                    <Text style={styles.musicButtonText}>{isPlaying ? '🔇' : '🔊'}</Text>
-                </TouchableOpacity>
-                {isPlaying && (
-                    <Slider
-                        style={{ width: 100, height: 40 }}
-                        minimumValue={0}
-                        maximumValue={1}
-                        value={volume}
-                        onValueChange={changeVolume}
-                        minimumTrackTintColor="#4CAF50"
-                        maximumTrackTintColor="#000000"
-                        thumbTintColor="#4CAF50"
-                    />
-                )}
             </View>
 
             <ScrollView contentContainerStyle={styles.gameContainer}>
@@ -426,24 +367,6 @@ const styles = StyleSheet.create({
     topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
     header: { marginBottom: 20, alignItems: 'center' },
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#1565C0' },
-    musicControls: {
-        position: 'absolute',
-        top: 40,
-        right: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        padding: 5,
-        borderRadius: 20,
-        zIndex: 100,
-        elevation: 5,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-    },
-    musicButton: { padding: 10 },
-    musicButtonText: { fontSize: 24 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 800 },
     cardContainer: {
         // width & height are dynamic now

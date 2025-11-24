@@ -1,5 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
+import DynamicBackground from './DynamicBackground';
+import ProgressBar from './ProgressBar';
 
 const GRUPLAMA_SORULARI = [
     { nesne: '🍎', kategori: 'Meyve' },
@@ -21,6 +24,9 @@ export default function GruplamaOyunu({ onGameEnd }: GruplamaOyunuProps) {
     const [hamle, setHamle] = useState(0);
     const [hataSayisi, setHataSayisi] = useState(0);
     const [baslangicZamani] = useState(new Date());
+
+    // Confetti Ref
+    const confettiRef = useRef<ConfettiCannon>(null);
 
     useEffect(() => {
         baslat();
@@ -48,9 +54,16 @@ export default function GruplamaOyunu({ onGameEnd }: GruplamaOyunuProps) {
             if (suankiSoruIndex + 1 < sorular.length) {
                 setSuankiSoruIndex(i => i + 1);
             } else {
-                const bitisZamani = new Date();
-                const sure = Math.round((bitisZamani.getTime() - baslangicZamani.getTime()) / 1000);
-                onGameEnd('gruplama', sure, yeniHamle, hataSayisi);
+                // Game Complete
+                if (confettiRef.current) {
+                    confettiRef.current.start();
+                }
+
+                setTimeout(() => {
+                    const bitisZamani = new Date();
+                    const sure = Math.round((bitisZamani.getTime() - baslangicZamani.getTime()) / 1000);
+                    onGameEnd('gruplama', sure, yeniHamle, hataSayisi);
+                }, 2000);
             }
         } else {
             // Yanlış
@@ -65,31 +78,46 @@ export default function GruplamaOyunu({ onGameEnd }: GruplamaOyunuProps) {
     const soru = sorular[suankiSoruIndex];
 
     return (
-        <View style={styles.merkezContainer}>
-            <View style={styles.header}><Text style={styles.baslik}>🍎 Gruplama</Text></View>
-            <Text style={styles.bilgi}>Bu nesne hangisi?</Text>
-
-            {/* Ortadaki Nesne */}
-            <View style={styles.buyukNesneKutusu}>
-                <Text style={{ fontSize: 80 }}>{soru.nesne}</Text>
+        <DynamicBackground>
+            <View style={styles.topBar}>
+                <ProgressBar current={suankiSoruIndex + 1} total={sorular.length} />
             </View>
 
-            {/* Şıklar */}
-            <View style={styles.secenekContainer}>
-                <TouchableOpacity style={[styles.secenekButon, { backgroundColor: '#EF5350' }]} onPress={() => kategoriSec('Meyve')}>
-                    <Text style={styles.secenekYazi}>🍎 Meyve</Text>
-                </TouchableOpacity>
+            <View style={styles.merkezContainer}>
+                <View style={styles.header}><Text style={styles.baslik}>🍎 Gruplama</Text></View>
+                <Text style={styles.bilgi}>Bu nesne hangisi?</Text>
 
-                <TouchableOpacity style={[styles.secenekButon, { backgroundColor: '#8D6E63' }]} onPress={() => kategoriSec('Hayvan')}>
-                    <Text style={styles.secenekYazi}>🐶 Hayvan</Text>
-                </TouchableOpacity>
+                {/* Ortadaki Nesne */}
+                <View style={styles.buyukNesneKutusu}>
+                    <Text style={{ fontSize: 80 }}>{soru.nesne}</Text>
+                </View>
+
+                {/* Şıklar */}
+                <View style={styles.secenekContainer}>
+                    <TouchableOpacity style={[styles.secenekButon, { backgroundColor: '#EF5350' }]} onPress={() => kategoriSec('Meyve')}>
+                        <Text style={styles.secenekYazi}>🍎 Meyve</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.secenekButon, { backgroundColor: '#8D6E63' }]} onPress={() => kategoriSec('Hayvan')}>
+                        <Text style={styles.secenekYazi}>🐶 Hayvan</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+
+            <ConfettiCannon
+                count={200}
+                origin={{ x: -10, y: 0 }}
+                autoStart={false}
+                ref={confettiRef}
+                fadeOut={true}
+            />
+        </DynamicBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    merkezContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#e3f2fd' },
+    topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
+    merkezContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
     header: { marginBottom: 20 },
     baslik: { fontSize: 24, fontWeight: 'bold', marginBottom: 5 },
     bilgi: { fontSize: 18, marginBottom: 20, color: '#555' },
