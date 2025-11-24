@@ -1,6 +1,8 @@
-import React, { useRef, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { useSound } from '../app/context/SoundContext';
 
 interface DiziyiTamamlaProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
@@ -64,11 +66,20 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
     const [isCorrect, setIsCorrect] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
 
+    const { playSound, stopSound, isMuted, toggleMute } = useSound();
+
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const confettiRef = useRef<ConfettiCannon>(null);
 
     const currentPattern = PATTERNS[currentStage];
+
+    useEffect(() => {
+        playSound('background');
+        return () => {
+            stopSound('background');
+        };
+    }, []);
 
     const handleOptionPress = (option: ShapeType) => {
         if (stageCompleted) return;
@@ -81,6 +92,7 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
             setIsCorrect(true);
             setStageCompleted(true);
             setShowConfetti(true);
+            playSound('correct');
 
             // Konfeti patlat
             if (confettiRef.current) {
@@ -109,6 +121,7 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
         } else {
             // Yanlış cevap
             setTotalErrors(totalErrors + 1);
+            playSound('wrong');
 
             // Hata animasyonu (sallama)
             Animated.sequence([
@@ -172,6 +185,9 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
             <View style={styles.header}>
                 <Text style={styles.title}>Diziyi Tamamla 🧩</Text>
                 <Text style={styles.stageInfo}>Aşama {currentStage + 1} / {PATTERNS.length}</Text>
+                <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
+                    <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="#2C3E50" />
+                </TouchableOpacity>
             </View>
 
             {/* Talimat */}
@@ -227,20 +243,6 @@ export default function DiziyiTamamla({ onGameEnd }: DiziyiTamamlaProps) {
                     );
                 })}
             </View>
-
-            {/* İstatistikler (GİZLENDİ - Sadece geliştirme sırasında görünür olması için yorum satırına alındı) */}
-            {/* 
-            <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Hamle:</Text>
-                    <Text style={styles.statValue}>{totalMoves}</Text>
-                </View>
-                <View style={styles.statItem}>
-                    <Text style={styles.statLabel}>Hata:</Text>
-                    <Text style={styles.statValue}>{totalErrors}</Text>
-                </View>
-            </View> 
-            */}
         </View>
     );
 }
@@ -255,6 +257,14 @@ const styles = StyleSheet.create({
     header: {
         alignItems: 'center',
         marginBottom: 20,
+        position: 'relative',
+        width: '100%',
+    },
+    soundButton: {
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        padding: 10,
     },
     title: {
         fontSize: 28,
@@ -365,26 +375,5 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         fontSize: 18,
         fontWeight: 'bold',
-    },
-    statsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 30,
-        paddingTop: 20,
-        borderTopWidth: 1,
-        borderTopColor: '#BDC3C7',
-    },
-    statItem: {
-        alignItems: 'center',
-    },
-    statLabel: {
-        fontSize: 16,
-        color: '#7F8C8D',
-        marginBottom: 5,
-    },
-    statValue: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#2C3E50',
     },
 });

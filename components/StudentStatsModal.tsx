@@ -62,7 +62,7 @@ export default function StudentStatsModal({ visible, onClose, studentName, stude
                                     ]}
                                 />
                             </View>
-                            <Text style={styles.barLabel}>{index + 1}</Text>
+                            <Text style={styles.barLabel}>Oyun {index + 1}</Text>
                             <Text style={styles.barValue}>{value}</Text>
                         </View>
                     ))}
@@ -113,17 +113,18 @@ export default function StudentStatsModal({ visible, onClose, studentName, stude
                     {/* Game Types Breakdown */}
                     <View style={styles.breakdownContainer}>
                         <Text style={styles.breakdownTitle}>🎮 Oyun Türleri</Text>
-                        {['hafiza', 'siralama', 'gruplama'].map(type => {
+                        {['hafiza', 'siralama', 'gruplama', 'diziyi-tamamla'].map(type => {
                             const count = scores.filter(s => s.oyun_turu === type).length;
                             const typeNames: { [key: string]: string } = {
                                 'hafiza': 'Çiftini Bul!',
                                 'siralama': 'Sayı Sıralama',
-                                'gruplama': 'Gruplama'
+                                'gruplama': 'Gruplama',
+                                'diziyi-tamamla': 'Diziyi Tamamla'
                             };
                             if (count === 0) return null;
                             return (
                                 <View key={type} style={styles.breakdownItem}>
-                                    <Text style={styles.breakdownLabel}>{typeNames[type]}</Text>
+                                    <Text style={styles.breakdownLabel}>{typeNames[type] || type}</Text>
                                     <Text style={styles.breakdownValue}>{count} Oyun</Text>
                                 </View>
                             );

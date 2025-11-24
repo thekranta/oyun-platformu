@@ -190,6 +190,10 @@ export default function App() {
           <Text style={styles.oyunBaslik}>🧩 Diziyi Tamamla</Text>
           <Text style={styles.oyunAciklama}>Örüntüyü devam ettir!</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={cikisYap}>
+          <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
+        </TouchableOpacity>
       </View>
     );
   }
