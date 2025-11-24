@@ -37,9 +37,18 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
             const { sound: newSound } = await Audio.Sound.createAsync(
                 require('../assets/sounds/background.mp3'),
-                { shouldPlay: true, isLooping: true, volume: 0.5 }
+                { shouldPlay: false, isLooping: true, volume: 0.5 }
             );
             setSound(newSound);
+
+            // Try to play immediately
+            try {
+                await newSound.playAsync();
+                setIsPlaying(true);
+            } catch (playError) {
+                console.log("Otomatik oynatma başarısız (Kullanıcı etkileşimi bekleniyor):", playError);
+                setIsPlaying(false); // Show as muted if autoplay fails
+            }
         } catch (error) {
             console.log("Ses yüklenemedi (Dosya eksik olabilir):", error);
         }

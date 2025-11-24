@@ -2,6 +2,7 @@ import DynamicBackground from '@/components/DynamicBackground';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -133,11 +134,11 @@ export default function App() {
       const supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
         method: 'POST',
         headers: {
-          'apikey': SUPABASE_KEY,
+          'apikey': SUPABASE_KEY || '',
           'Authorization': `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
-        },
+        } as any,
         body: JSON.stringify(kayitVerisi)
       });
 
@@ -169,7 +170,7 @@ export default function App() {
 
           <TouchableOpacity
             style={[styles.buton, { backgroundColor: '#607D8B', marginTop: 20, paddingVertical: 10 }]}
-            onPress={() => router.push('/admin')}
+            onPress={() => router.push('/admin' as any)}
           >
             <Text style={[styles.butonYazi, { fontSize: 14 }]}>Admin Paneli 🔒</Text>
           </TouchableOpacity>
