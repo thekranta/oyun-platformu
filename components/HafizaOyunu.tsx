@@ -1,7 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
+
+// Get screen dimensions
+const { width, height } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
+
+// Calculate card size dynamically
+// On mobile, we want 3 cards per row roughly (width / 3.5)
+// On web, we want larger cards but capped
+const CARD_MARGIN = 10;
+const COLUMNS = isWeb ? 4 : 3;
+const CONTAINER_PADDING = 20;
+const AVAILABLE_WIDTH = Math.min(width, 800) - (CONTAINER_PADDING * 2); // Cap max width for web
+const CARD_SIZE = (AVAILABLE_WIDTH / COLUMNS) - (CARD_MARGIN * 2);
 
 // Placeholder images - User needs to add these to assets
 const GORSELLER_SETI = [
@@ -299,7 +312,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                         });
 
                         return (
-                            <View key={card.id} style={styles.cardContainer}>
+                            <View key={card.id} style={[styles.cardContainer, { width: CARD_SIZE, height: CARD_SIZE, margin: CARD_MARGIN }]}>
                                 {/* Front Face (Hidden initially) */}
                                 <Animated.View style={[
                                     styles.card,
@@ -312,7 +325,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                                         ]
                                     }
                                 ]}>
-                                    <Image source={card.source} style={styles.cardImage} resizeMode="contain" />
+                                    <Image source={card.source} style={[styles.cardImage, { width: CARD_SIZE * 0.6, height: CARD_SIZE * 0.6 }]} resizeMode="contain" />
                                 </Animated.View>
 
                                 {/* Back Face (Visible initially) */}
@@ -327,7 +340,7 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
                                         ]
                                     }
                                 ]}>
-                                    <Text style={styles.questionMark}>❓</Text>
+                                    <Text style={[styles.questionMark, { fontSize: CARD_SIZE * 0.5 }]}>❓</Text>
                                 </Animated.View>
 
                                 {/* Touch Handler */}
@@ -346,30 +359,32 @@ export default function HafizaOyunu({ onGameEnd }: HafizaOyunuProps) {
 }
 
 const styles = StyleSheet.create({
-    gameContainer: { flexGrow: 1, alignItems: 'center', paddingTop: 20 },
+    gameContainer: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', minHeight: height - 100 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
     header: { marginBottom: 20, alignItems: 'center' },
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#1565C0' },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: 340 },
-    cardContainer: { width: 70, height: 70, margin: 5 },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 800 },
+    cardContainer: {
+        // width & height are dynamic now
+    },
     touchable: { position: 'absolute', width: '100%', height: '100%', zIndex: 10 },
     card: {
         width: '100%',
         height: '100%',
-        borderRadius: 10,
+        borderRadius: 15, // More rounded
         justifyContent: 'center',
         alignItems: 'center',
         position: 'absolute',
         backfaceVisibility: 'hidden',
-        borderWidth: 2,
+        borderWidth: 3, // Thicker border
         borderColor: '#ddd',
         backgroundColor: 'white',
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        elevation: 8,
     },
     cardBack: {
         backgroundColor: '#2196F3',
@@ -379,8 +394,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         borderColor: '#4CAF50',
     },
-    questionMark: { fontSize: 32, color: 'white' },
-    cardImage: { width: 40, height: 40 },
+    questionMark: { color: 'white', fontWeight: 'bold' },
+    cardImage: {},
     congratsTitle: { fontSize: 32, fontWeight: 'bold', color: '#4CAF50', marginBottom: 10 },
     congratsText: { fontSize: 20, color: '#333', marginBottom: 10 },
     autoText: { fontSize: 16, color: '#666', fontStyle: 'italic' },
