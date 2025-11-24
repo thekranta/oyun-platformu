@@ -53,24 +53,24 @@ export default function AdminPanel() {
     const renderItem = ({ item }: { item: Score }) => (
         <View style={styles.card}>
             <View style={styles.cardHeader}>
-                <Text style={styles.playerName}>{item.oyuncu_adi} ({item.oyuncu_yasi} Ay)</Text>
-                <Text style={styles.gameName}>{item.oyun_adi.toUpperCase()}</Text>
+                <Text style={styles.playerName}>{item.oyuncu_adi || 'İsimsiz'} ({item.oyuncu_yasi || '?'} Ay)</Text>
+                <Text style={styles.gameName}>{(item.oyun_adi || 'Bilinmeyen Oyun').toUpperCase()}</Text>
             </View>
             <View style={styles.cardBody}>
                 <View style={styles.stat}>
                     <Ionicons name="time-outline" size={16} color="#555" />
-                    <Text style={styles.statText}>{item.sure} sn</Text>
+                    <Text style={styles.statText}>{item.sure || 0} sn</Text>
                 </View>
                 <View style={styles.stat}>
                     <Ionicons name="finger-print-outline" size={16} color="#555" />
-                    <Text style={styles.statText}>{item.hamle_sayisi} Hamle</Text>
+                    <Text style={styles.statText}>{item.hamle_sayisi || 0} Hamle</Text>
                 </View>
                 <View style={styles.stat}>
                     <Ionicons name="alert-circle-outline" size={16} color="#555" />
-                    <Text style={styles.statText}>{item.hata_sayisi} Hata</Text>
+                    <Text style={styles.statText}>{item.hata_sayisi || 0} Hata</Text>
                 </View>
             </View>
-            <Text style={styles.date}>{new Date(item.created_at).toLocaleString('tr-TR')}</Text>
+            <Text style={styles.date}>{item.created_at ? new Date(item.created_at).toLocaleString('tr-TR') : 'Tarih Yok'}</Text>
         </View>
     );
 
