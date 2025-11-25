@@ -28,7 +28,10 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const [errors, setErrors] = useState(0);
     const [allTranscripts, setAllTranscripts] = useState<string[]>([]);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
-    const [recording, setRecording] = useState<Audio.Recording | null>(null);
+
+    // Recording Ref: Asenkron işlemlerde state'in güncel olmama sorununu çözmek için
+    const recordingRef = useRef<Audio.Recording | null>(null);
+
     const [audioLevels, setAudioLevels] = useState<number[]>([0, 0, 0, 0, 0]);
     const [maxAudioLevel, setMaxAudioLevel] = useState(-160);
 
@@ -55,18 +58,31 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
     // Aşama değiştiğinde otomatik başlat
     useEffect(() => {
+        let isMounted = true;
+
         const initStage = async () => {
+            // Önceki kaydı temizle
             await stopRecording(false);
-            setTimeout(() => {
-                startRecording();
-            }, 500);
+
+            if (isMounted) {
+                // Kısa bir gecikme ile yeni kaydı başlat (Race condition önlemek için)
+                setTimeout(() => {
+                    if (isMounted) startRecording();
+                }, 500);
+            }
         };
 
         initStage();
 
         return () => {
+            isMounted = false;
             if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
-            stopRecording(false);
+            // Cleanup sırasında asenkron durdurma yapıyoruz ama await edemeyiz
+            // Bu yüzden best-effort durdurma yapıyoruz
+            if (recordingRef.current) {
+                recordingRef.current.stopAndUnloadAsync().catch(() => { });
+                recordingRef.current = null;
+            }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStage]);
@@ -97,8 +113,14 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
     const startRecording = async () => {
         try {
-            if (recording) {
-                await recording.stopAndUnloadAsync();
+            // Mevcut kayıt varsa temizle
+            if (recordingRef.current) {
+                try {
+                    await recordingRef.current.stopAndUnloadAsync();
+                } catch (e) {
+                    // Zaten durmuşsa sorun yok
+                }
+                recordingRef.current = null;
             }
 
             if (permissionResponse?.status !== 'granted') {
@@ -112,10 +134,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 playsInSilentModeIOS: true,
             });
 
-            // Kayıt ayarları - Metering'i açıkça etkinleştir
             const recordingOptions = {
                 ...Audio.RecordingOptionsPresets.HIGH_QUALITY,
-                isMeteringEnabled: true, // Android/iOS için kritik
+                isMeteringEnabled: true,
             };
 
             const { recording: newRecording } = await Audio.Recording.createAsync(
@@ -124,21 +145,14 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     if (status.isRecording) {
                         let metering = status.metering;
 
-                        // WEB DÜZELTMESİ: Web'de metering genellikle desteklenmez (undefined döner)
-                        // Bu durumda simülasyon yapıyoruz ki kullanıcı "çalışmıyor" sanmasın
+                        // WEB SİMÜLASYONU
                         if (Platform.OS === 'web' || metering === undefined) {
-                            // -40 ile -10 arasında rastgele değerler üret (Ses var gibi davran)
                             metering = -40 + Math.random() * 30;
                         }
 
-                        // Metering -160 (sessiz) ile 0 (yüksek) arasında
-                        // Bunu 0-1 arasına normalize et
                         const level = Math.max(0, (metering + 160) / 160);
-
-                        // Maksimum seviyeyi güncelle
                         setMaxAudioLevel(prev => Math.max(prev, metering));
 
-                        // 5 bar için yapay frekans dağılımı
                         setAudioLevels([
                             level * 0.8,
                             level * 1.2,
@@ -151,7 +165,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 100
             );
 
-            setRecording(newRecording);
+            recordingRef.current = newRecording;
             setIsRecording(true);
             setRecordingStatus('SİSTEM DİNLİYOR...');
             setMaxAudioLevel(-160);
@@ -163,7 +177,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
         } catch (err) {
             console.error('Kayıt başlatılamadı', err);
-            setRecordingStatus('Hata Oluştu');
+            // Hata olsa bile kullanıcıya tekrar deneme şansı ver
+            setIsRecording(false);
+            setRecordingStatus('Tekrar Dene ❌');
         }
     };
 
@@ -171,12 +187,13 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
 
         try {
-            if (recording) {
-                await recording.stopAndUnloadAsync();
-                setRecording(null);
+            if (recordingRef.current) {
+                await recordingRef.current.stopAndUnloadAsync();
+                recordingRef.current = null;
             }
         } catch (error) {
-            console.log("Durdurma hatası (önemsiz):", error);
+            // Hata önemsiz, zaten durmuş olabilir
+            console.log("Durdurma hatası (handle edildi):", error);
         }
 
         setIsRecording(false);
@@ -193,11 +210,8 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
     const analyzeSpeech = (beklenenKelime: string) => {
         // SESSİZLİK KONTROLÜ
-        // Web'de simüle ettiğimiz için bu kontrolü geçer.
-        // Mobilde gerçek sessizlik varsa yakalar.
         console.log("Maksimum Ses Seviyesi:", maxAudioLevel);
 
-        // Eşik değeri biraz daha düşürdük (-50dB) ki hassas mikrofonlarda sorun olmasın
         if (maxAudioLevel < -50) {
             setRecordingStatus('Ses Algılanmadı 🔇');
             setErrors(e => e + 1);
