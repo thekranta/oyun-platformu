@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Audio } from 'expo-av';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
@@ -14,7 +15,6 @@ const STAGES = [
 ];
 
 interface BunuSoyleProps {
-    // III. Veri Kaydı Düzeltmesi: algilananKelime parametresi eklendi
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime: string) => void;
     onExit: () => void;
 }
@@ -26,110 +26,206 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const [startTime] = useState(Date.now());
     const [moves, setMoves] = useState(0);
     const [errors, setErrors] = useState(0);
-
-    // III. Veri Kaydı: Tüm denemelerin transcriptlerini tutmak için
     const [allTranscripts, setAllTranscripts] = useState<string[]>([]);
+    const [permissionResponse, requestPermission] = Audio.usePermissions();
+    const [recording, setRecording] = useState<Audio.Recording | null>(null);
+    const [audioLevels, setAudioLevels] = useState<number[]>([0, 0, 0, 0, 0]); // 5 bar için seviyeler
+    const [maxAudioLevel, setMaxAudioLevel] = useState(-160); // Sessizlik kontrolü için
 
-    // I. Kayıt Yönetimi: Zamanlayıcı Durumu (State)
-    const [autoStopTimer, setAutoStopTimer] = useState<NodeJS.Timeout | null>(null);
+    // Animasyon değerleri (5 bar için)
+    const barAnims = useRef([
+        new Animated.Value(10),
+        new Animated.Value(10),
+        new Animated.Value(10),
+        new Animated.Value(10),
+        new Animated.Value(10)
+    ]).current;
 
+    const autoStopTimer = useRef<NodeJS.Timeout | null>(null);
     const currentItem = STAGES[currentStage];
 
-    // I. Otomatik Kayıt Başlatma: Aşama değiştiğinde veya bileşen yüklendiğinde
+    // İzin kontrolü ve ilk başlatma
     useEffect(() => {
-        startRecording();
-
-        // Cleanup
-        return () => {
-            if (autoStopTimer) {
-                clearTimeout(autoStopTimer);
+        (async () => {
+            if (!permissionResponse) {
+                await requestPermission();
             }
+        })();
+    }, []);
+
+    // Aşama değiştiğinde otomatik başlat
+    useEffect(() => {
+        // Önceki kaydı temizle ve yenisine başla
+        const initStage = async () => {
+            await stopRecording(false); // Analiz yapmadan durdur
+            setTimeout(() => {
+                startRecording();
+            }, 500); // Kısa bir gecikme ile başlat
+        };
+
+        initStage();
+
+        return () => {
+            if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
+            stopRecording(false);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStage]);
 
-    const startRecording = () => {
-        setIsRecording(true);
-        setRecordingStatus('SİSTEM DİNLİYOR...'); // I. Görsel Geribildirim
-        console.log("Kayıt Başladı (Otomatik)");
+    // Ses seviyesi görselleştirmesi
+    useEffect(() => {
+        if (isRecording) {
+            // Her bar için animasyon
+            const animations = barAnims.map((anim, index) => {
+                // Rastgelelik ekle ama ana seviyeye bağlı kal
+                const targetHeight = 20 + (audioLevels[index] * 100) + (Math.random() * 30);
+                return Animated.timing(anim, {
+                    toValue: Math.min(targetHeight, 120), // Max yükseklik sınırı
+                    duration: 100,
+                    useNativeDriver: false,
+                });
+            });
+            Animated.parallel(animations).start();
+        } else {
+            // Kayıt durduğunda barları sıfırla
+            const animations = barAnims.map(anim =>
+                Animated.timing(anim, {
+                    toValue: 10,
+                    duration: 200,
+                    useNativeDriver: false,
+                })
+            );
+            Animated.parallel(animations).start();
+        }
+    }, [audioLevels, isRecording]);
 
-        // II. Kayıt Akışı: 3 Saniye Sonra Otomatik Durdurma
-        if (autoStopTimer) clearTimeout(autoStopTimer);
+    const startRecording = async () => {
+        try {
+            if (recording) {
+                await recording.stopAndUnloadAsync();
+            }
 
-        const timer = setTimeout(() => {
-            console.log("Süre doldu, otomatik durduruluyor...");
-            stopRecording();
-        }, 3000);
+            // İzin kontrolü
+            if (permissionResponse?.status !== 'granted') {
+                console.log('Mikrofon izni yok');
+                await requestPermission();
+                return;
+            }
 
-        setAutoStopTimer(timer);
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+            });
+
+            const { recording: newRecording } = await Audio.Recording.createAsync(
+                Audio.RecordingOptionsPresets.HIGH_QUALITY,
+                (status) => {
+                    if (status.isRecording && status.metering !== undefined) {
+                        // Metering -160 (sessiz) ile 0 (yüksek) arasında
+                        // Bunu 0-1 arasına normalize et
+                        const level = Math.max(0, (status.metering + 160) / 160);
+
+                        // Maksimum seviyeyi güncelle (Sessizlik kontrolü için)
+                        setMaxAudioLevel(prev => Math.max(prev, status.metering || -160));
+
+                        // 5 bar için yapay frekans dağılımı oluştur
+                        setAudioLevels([
+                            level * 0.8,
+                            level * 1.2,
+                            level * 1.5, // Orta bar en yüksek
+                            level * 1.2,
+                            level * 0.8
+                        ]);
+                    }
+                },
+                100 // 100ms update interval
+            );
+
+            setRecording(newRecording);
+            setIsRecording(true);
+            setRecordingStatus('SİSTEM DİNLİYOR...');
+            setMaxAudioLevel(-160); // Reset max level
+
+            // Otomatik durdurma zamanlayıcısı
+            if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
+            autoStopTimer.current = setTimeout(() => {
+                stopRecording(true); // Analiz yaparak durdur
+            }, 3000);
+
+        } catch (err) {
+            console.error('Kayıt başlatılamadı', err);
+            setRecordingStatus('Hata Oluştu');
+        }
     };
 
-    const stopRecording = () => {
-        // Zamanlayıcıyı temizle
-        if (autoStopTimer) {
-            clearTimeout(autoStopTimer);
-            setAutoStopTimer(null);
+    const stopRecording = async (shouldAnalyze = true) => {
+        if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
+
+        try {
+            if (recording) {
+                await recording.stopAndUnloadAsync();
+                setRecording(null);
+            }
+        } catch (error) {
+            // Hata olsa bile devam et
+            console.log("Durdurma hatası (önemsiz):", error);
         }
 
         setIsRecording(false);
-        setRecordingStatus('Analiz Ediliyor...');
 
-        // Analizi Başlat
-        analyzeSpeech(currentItem.word);
+        if (shouldAnalyze) {
+            setRecordingStatus('Analiz Ediliyor...');
+            analyzeSpeech(currentItem.word);
+        }
     };
 
-    // II. Tekrar Deneme Butonu için
     const handleRetry = () => {
         startRecording();
     };
 
     const analyzeSpeech = (beklenenKelime: string) => {
-        // API Simülasyonu: %80 ihtimalle doğru bildiğini varsayalım
-        const randomSuccess = Math.random() > 0.2;
-        const simulatedTranscript = randomSuccess ? beklenenKelime : "Yanlış";
+        // SESSİZLİK KONTROLÜ
+        // -50dB altı genellikle sessizlik veya arka plan gürültüsüdür
+        console.log("Maksimum Ses Seviyesi:", maxAudioLevel);
 
-        console.log(`Analiz Sonucu - Beklenen: "${beklenenKelime}", Algılanan: "${simulatedTranscript}"`);
+        if (maxAudioLevel < -40) {
+            setRecordingStatus('Ses Algılanmadı 🔇');
+            setErrors(e => e + 1);
+            setAllTranscripts(prev => [...prev, "(Sessiz)"]);
 
-        // III. Veri Kaydı: Transcripti kaydet
+            setTimeout(() => {
+                setRecordingStatus('Tekrar Dene ❌');
+            }, 1500);
+            return;
+        }
+
+        // API Simülasyonu (Artık sessizlik kontrolünü geçtiği için başarı şansı var)
+        // Kullanıcı "hiçbir şey söylemiyorum" dediği için, eğer ses varsa %90 başarı verelim
+        // Gerçek hayatta burada API çağrısı olacak
+        const randomSuccess = Math.random() > 0.1; // %90 başarı (eğer ses varsa)
+        const simulatedTranscript = randomSuccess ? beklenenKelime : "Anlaşılamadı";
+
         setAllTranscripts(prev => [...prev, simulatedTranscript]);
 
-        // Karşılaştırma Zorlaması: toLowerCase() ve trim()
         const temizlenenTranscript = simulatedTranscript.toLowerCase().trim();
         const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
 
         if (temizlenenTranscript === temizlenenBeklenen) {
-            // BAŞARILI
             setRecordingStatus('Harika! 🎉');
             setMoves(m => m + 1);
-
-            setTimeout(() => {
-                handleNextStage();
-            }, 1000);
+            setTimeout(() => handleNextStage(), 1000);
         } else {
-            // HATALI
             setErrors(e => e + 1);
             setRecordingStatus('Tekrar Dene ❌');
-
-            // II. Tekrar Deneme: Butonu geri getir (isRecording false olduğu için buton görünür olacak)
-            // Kullanıcı butona basarak handleRetry'i çağıracak
         }
     };
 
     const handleNextStage = () => {
         if (currentStage < STAGES.length - 1) {
             setCurrentStage(prev => prev + 1);
-            // startRecording useEffect tarafından çağrılacak
         } else {
-            // Oyun Bitti
-            const duration = Math.floor((Date.now() - startTime) / 1000);
-
-            // III. Veri Kaydı: Tüm transcriptleri birleştirip gönder
-            // Son eklenen transcript state update'inden hemen sonra gelmeyebilir, bu yüzden buradaki logic'e dikkat.
-            // React state update asenkron olduğu için, son transcript'i manuel ekleyebiliriz veya
-            // analyzeSpeech içinde oyun bitimi kontrolü yapabiliriz.
-            // Ancak basitlik adına, mevcut state'i kullanacağız.
+            const duration = Math.floor((Date.now() - startTime[0]) / 1000);
             const finalTranscriptString = allTranscripts.join(", ");
-
             onGameEnd('bunu-soyle', duration, moves + 1, errors, finalTranscriptString);
         }
     };
@@ -148,19 +244,26 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     <View style={styles.imageContainer}>
                         <Image source={currentItem.image} style={styles.image} resizeMode="contain" />
                     </View>
-
                     <Text style={styles.targetWord}>{currentItem.word}</Text>
                 </View>
 
                 <View style={styles.controlsContainer}>
-                    {/* I. Görsel Geribildirim: Kayıt sırasında büyük yazı */}
                     {isRecording ? (
-                        <View style={styles.listeningContainer}>
-                            <View style={styles.pulseCircle} />
+                        <View style={styles.visualizerContainer}>
+                            <View style={styles.barsContainer}>
+                                {barAnims.map((anim, index) => (
+                                    <Animated.View
+                                        key={index}
+                                        style={[
+                                            styles.visualizerBar,
+                                            { height: anim }
+                                        ]}
+                                    />
+                                ))}
+                            </View>
                             <Text style={styles.listeningText}>SİSTEM DİNLİYOR...</Text>
                         </View>
                     ) : (
-                        /* II. Buton Kaldırma: Sadece kayıt yapmıyorken (veya hata durumunda) buton göster */
                         <TouchableOpacity
                             style={styles.recordButton}
                             onPress={handleRetry}
@@ -175,7 +278,8 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                         isRecording && styles.statusRecording,
                         recordingStatus === 'Analiz Ediliyor...' && styles.statusProcessing,
                         recordingStatus === 'Harika! 🎉' && styles.statusSuccess,
-                        recordingStatus === 'Tekrar Dene ❌' && styles.statusError
+                        recordingStatus === 'Tekrar Dene ❌' && styles.statusError,
+                        recordingStatus === 'Ses Algılanmadı 🔇' && styles.statusError
                     ]}>
                         {recordingStatus}
                     </Text>
@@ -204,9 +308,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#2C3E50',
         marginBottom: 5,
-        textShadowColor: 'rgba(0, 0, 0, 0.1)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
     },
     subtitle: {
         fontSize: 18,
@@ -224,11 +325,11 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
         shadowRadius: 5,
-        marginBottom: 40,
+        marginBottom: 30,
     },
     imageContainer: {
-        width: 200,
-        height: 200,
+        width: 180,
+        height: 180,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 20,
@@ -249,13 +350,13 @@ const styles = StyleSheet.create({
     controlsContainer: {
         alignItems: 'center',
         width: '100%',
-        height: 150, // Sabit yükseklik, layout kaymasını önlemek için
+        height: 180,
         justifyContent: 'flex-start',
     },
     recordButton: {
-        width: 100,
-        height: 100,
-        borderRadius: 50,
+        width: 90,
+        height: 90,
+        borderRadius: 45,
         backgroundColor: '#3498DB',
         justifyContent: 'center',
         alignItems: 'center',
@@ -268,44 +369,39 @@ const styles = StyleSheet.create({
         borderWidth: 4,
         borderColor: 'white',
     },
-    listeningContainer: {
+    visualizerContainer: {
         alignItems: 'center',
         justifyContent: 'center',
-        height: 100,
-        marginBottom: 20,
+        height: 120,
+        marginBottom: 10,
+    },
+    barsContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        justifyContent: 'center',
+        height: 80,
+        marginBottom: 10,
+        gap: 8,
+    },
+    visualizerBar: {
+        width: 12,
+        backgroundColor: '#E74C3C',
+        borderRadius: 6,
     },
     listeningText: {
-        fontSize: 24,
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#E74C3C',
-        marginTop: 10,
         letterSpacing: 1,
-    },
-    pulseCircle: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        backgroundColor: '#E74C3C',
     },
     statusText: {
         fontSize: 20,
         fontWeight: '600',
         color: '#7F8C8D',
+        textAlign: 'center',
     },
-    statusRecording: {
-        color: '#E74C3C',
-        fontWeight: 'bold',
-    },
-    statusProcessing: {
-        color: '#F39C12',
-        fontWeight: 'bold',
-    },
-    statusSuccess: {
-        color: '#2ECC71',
-        fontWeight: 'bold',
-    },
-    statusError: {
-        color: '#E74C3C',
-        fontWeight: 'bold',
-    }
+    statusRecording: { color: '#E74C3C', fontWeight: 'bold' },
+    statusProcessing: { color: '#F39C12', fontWeight: 'bold' },
+    statusSuccess: { color: '#2ECC71', fontWeight: 'bold' },
+    statusError: { color: '#E74C3C', fontWeight: 'bold' }
 });
