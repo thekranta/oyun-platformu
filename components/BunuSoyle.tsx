@@ -195,6 +195,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     };
 
     const stopRecording = async (shouldAnalyze = true) => {
+        console.log('🛑 stopRecording çağrıldı. Analiz:', shouldAnalyze);
         if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
 
         let audioUri: string | null = null;
@@ -205,11 +206,18 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 audioUri = recordingRef.current.getURI();
                 console.log('📁 Audio URI:', audioUri);
 
-                await recordingRef.current.stopAndUnloadAsync();
+                // Timeout ile stop işlemini sarmala
+                const stopPromise = recordingRef.current.stopAndUnloadAsync();
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Stop timeout')), 1000)
+                );
+
+                await Promise.race([stopPromise, timeoutPromise]);
                 recordingRef.current = null;
             }
         } catch (error) {
             console.log("Durdurma hatası (handle edildi):", error);
+            recordingRef.current = null;
         }
 
         setIsRecording(false);
@@ -219,6 +227,8 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             analyzeSpeech(currentItem.word, audioUri);
         } else if (shouldAnalyze && !audioUri) {
             console.log('⚠️ Audio URI bulunamadı, analiz atlanıyor');
+            setRecordingStatus('Ses Dosyası Hatası ⚠️');
+            setTimeout(() => handleNextStage(), 2000);
         }
     };
 
@@ -279,58 +289,73 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             }
 
             console.log('🎤 Google Speech-to-Text API çağrılıyor...');
-            const response = await fetch(
-                `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        config: {
-                            encoding: Platform.OS === 'web' ? 'WEBM_OPUS' : 'LINEAR16',
-                            sampleRateHertz: Platform.OS === 'web' ? 48000 : 44100,
-                            languageCode: 'tr-TR',
+
+            // API çağrısı için AbortController ile timeout ekle
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 saniye timeout
+
+            try {
+                const response = await fetch(
+                    `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
                         },
-                        audio: {
-                            content: base64Audio,
-                        },
-                    }),
+                        body: JSON.stringify({
+                            config: {
+                                encoding: Platform.OS === 'web' ? 'WEBM_OPUS' : 'LINEAR16',
+                                sampleRateHertz: Platform.OS === 'web' ? 48000 : 44100,
+                                languageCode: 'tr-TR',
+                            },
+                            audio: {
+                                content: base64Audio,
+                            },
+                        }),
+                        signal: controller.signal
+                    }
+                );
+                clearTimeout(timeoutId);
+
+                const data = await response.json();
+                console.log('📥 API Yanıtı:', data);
+
+                // Transcript'i çıkar
+                let transcript = '';
+                if (data.results && data.results.length > 0) {
+                    transcript = data.results[0].alternatives[0].transcript || '';
                 }
-            );
 
-            const data = await response.json();
-            console.log('📥 API Yanıtı:', data);
+                if (!transcript) {
+                    transcript = '(Anlaşılamadı)';
+                }
 
-            // Transcript'i çıkar
-            let transcript = '';
-            if (data.results && data.results.length > 0) {
-                transcript = data.results[0].alternatives[0].transcript || '';
-            }
+                console.log('✅ Algılanan kelime:', transcript);
+                setAllTranscripts(prev => [...prev, transcript]);
 
-            if (!transcript) {
-                transcript = '(Anlaşılamadı)';
-            }
+                const temizlenenTranscript = transcript.toLowerCase().trim();
+                const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
 
-            console.log('✅ Algılanan kelime:', transcript);
-            setAllTranscripts(prev => [...prev, transcript]);
+                // Her durumda hareketi kaydet
+                setMoves(m => m + 1);
 
-            const temizlenenTranscript = transcript.toLowerCase().trim();
-            const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
-
-            // Her durumda hareketi kaydet
-            setMoves(m => m + 1);
-
-            if (temizlenenTranscript === temizlenenBeklenen) {
-                // Doğru cevap - hata yok
-                setRecordingStatus('Harika! 🎉');
-                setTimeout(() => handleNextStage(), 2000);
-            } else {
-                // Yanlış cevap - hata kaydet ve yine de devam et
-                setErrors(e => e + 1);
-                setRecordingStatus(`Tekrar Dene ❌ ("${transcript}")`);
-                // Otomatik olarak bir sonraki aşamaya geç
-                setTimeout(() => handleNextStage(), 2000);
+                if (temizlenenTranscript === temizlenenBeklenen) {
+                    // Doğru cevap - hata yok
+                    setRecordingStatus('Harika! 🎉');
+                    setTimeout(() => handleNextStage(), 2000);
+                } else {
+                    // Yanlış cevap - hata kaydet ve yine de devam et
+                    setErrors(e => e + 1);
+                    setRecordingStatus(`Tekrar Dene ❌ ("${transcript}")`);
+                    // Otomatik olarak bir sonraki aşamaya geç
+                    setTimeout(() => handleNextStage(), 2000);
+                }
+            } catch (fetchError: any) {
+                clearTimeout(timeoutId);
+                if (fetchError.name === 'AbortError') {
+                    throw new Error('API isteği zaman aşımına uğradı');
+                }
+                throw fetchError;
             }
         } catch (error) {
             console.error('❌ Speech API hatası:', error);
@@ -372,7 +397,11 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
                 <View style={styles.controlsContainer}>
                     {isRecording ? (
-                        <View style={styles.recordingFeedback}>
+                        <TouchableOpacity
+                            style={styles.recordingFeedback}
+                            onPress={() => stopRecording(true)}
+                            activeOpacity={0.9}
+                        >
                             <Text style={styles.promptText}>ŞİMDİ SÖYLE: {currentItem.word}</Text>
                             <View style={styles.visualizerContainer}>
                                 <View style={styles.barsContainer}>
@@ -386,9 +415,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                                         />
                                     ))}
                                 </View>
-                                <Text style={styles.listeningText}>SİSTEM DİNLİYOR...</Text>
+                                <Text style={styles.listeningText}>SİSTEM DİNLİYOR... (Durdur)</Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
                             style={styles.recordButton}
