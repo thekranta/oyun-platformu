@@ -1,7 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Platform, StyleSheet, Text, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
@@ -216,10 +215,12 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             setRecordingStatus('Ses Algılanmadı 🔇');
             setErrors(e => e + 1);
             setAllTranscripts(prev => [...prev, "(Sessiz)"]);
+            setMoves(m => m + 1);
 
+            // Otomatik olarak bir sonraki aşamaya geç
             setTimeout(() => {
-                setRecordingStatus('Tekrar Dene ❌');
-            }, 1500);
+                handleNextStage();
+            }, 2000);
             return;
         }
 
@@ -232,13 +233,19 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         const temizlenenTranscript = simulatedTranscript.toLowerCase().trim();
         const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
 
+        // Her durumda hareketi kaydet
+        setMoves(m => m + 1);
+
         if (temizlenenTranscript === temizlenenBeklenen) {
+            // Doğru cevap - hata yok
             setRecordingStatus('Harika! 🎉');
-            setMoves(m => m + 1);
-            setTimeout(() => handleNextStage(), 1000);
+            setTimeout(() => handleNextStage(), 2000);
         } else {
+            // Yanlış cevap - hata kaydet ve yine de devam et
             setErrors(e => e + 1);
             setRecordingStatus('Tekrar Dene ❌');
+            // Otomatik olarak bir sonraki aşamaya geç
+            setTimeout(() => handleNextStage(), 2000);
         }
     };
 
@@ -246,9 +253,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         if (currentStage < STAGES.length - 1) {
             setCurrentStage(prev => prev + 1);
         } else {
-            const duration = Math.floor((Date.now() - startTime[0]) / 1000);
+            const duration = Math.floor((Date.now() - startTime) / 1000);
             const finalTranscriptString = allTranscripts.join(", ");
-            onGameEnd('bunu-soyle', duration, moves + 1, errors, finalTranscriptString);
+            onGameEnd('bunu-soyle', duration, moves, errors, finalTranscriptString);
         }
     };
 
@@ -271,28 +278,27 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
                 <View style={styles.controlsContainer}>
                     {isRecording ? (
-                        <View style={styles.visualizerContainer}>
-                            <View style={styles.barsContainer}>
-                                {barAnims.map((anim, index) => (
-                                    <Animated.View
-                                        key={index}
-                                        style={[
-                                            styles.visualizerBar,
-                                            { height: anim }
-                                        ]}
-                                    />
-                                ))}
+                        <View style={styles.recordingFeedback}>
+                            <Text style={styles.promptText}>ŞİMDİ SÖYLE: {currentItem.word}</Text>
+                            <View style={styles.visualizerContainer}>
+                                <View style={styles.barsContainer}>
+                                    {barAnims.map((anim, index) => (
+                                        <Animated.View
+                                            key={index}
+                                            style={[
+                                                styles.visualizerBar,
+                                                { height: anim }
+                                            ]}
+                                        />
+                                    ))}
+                                </View>
+                                <Text style={styles.listeningText}>SİSTEM DİNLİYOR...</Text>
                             </View>
-                            <Text style={styles.listeningText}>SİSTEM DİNLİYOR...</Text>
                         </View>
                     ) : (
-                        <TouchableOpacity
-                            style={styles.recordButton}
-                            onPress={handleRetry}
-                            activeOpacity={0.7}
-                        >
-                            <Ionicons name="mic" size={50} color="white" />
-                        </TouchableOpacity>
+                        <View style={styles.waitingContainer}>
+                            <Text style={styles.waitingText}>⏳ Hazırlanıyor...</Text>
+                        </View>
                     )}
 
                     <Text style={[
@@ -372,24 +378,32 @@ const styles = StyleSheet.create({
     controlsContainer: {
         alignItems: 'center',
         width: '100%',
-        height: 180,
+        height: 200,
         justifyContent: 'flex-start',
     },
-    recordButton: {
-        width: 90,
-        height: 90,
-        borderRadius: 45,
-        backgroundColor: '#3498DB',
-        justifyContent: 'center',
+    recordingFeedback: {
         alignItems: 'center',
-        elevation: 10,
-        shadowColor: '#3498DB',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
+        width: '100%',
+    },
+    promptText: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#E74C3C',
         marginBottom: 20,
-        borderWidth: 4,
-        borderColor: 'white',
+        textAlign: 'center',
+        letterSpacing: 0.5,
+    },
+    waitingContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 120,
+        marginBottom: 10,
+    },
+    waitingText: {
+        fontSize: 22,
+        fontWeight: '600',
+        color: '#95A5A6',
+        letterSpacing: 1,
     },
     visualizerContainer: {
         alignItems: 'center',
