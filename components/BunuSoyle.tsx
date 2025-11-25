@@ -112,6 +112,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
     const startRecording = async () => {
         try {
+            console.log('🎙️ Kayıt başlatılıyor...');
+            console.log('İzin durumu:', permissionResponse?.status);
+
             // Mevcut kayıt varsa temizle
             if (recordingRef.current) {
                 try {
@@ -123,9 +126,14 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             }
 
             if (permissionResponse?.status !== 'granted') {
-                console.log('Mikrofon izni yok');
-                await requestPermission();
-                return;
+                console.log('❌ Mikrofon izni yok, izin isteniyor...');
+                const newPermission = await requestPermission();
+                console.log('Yeni izin durumu:', newPermission?.status);
+                if (newPermission?.status !== 'granted') {
+                    setRecordingStatus('Mikrofon İzni Gerekli 🎤');
+                    setIsRecording(false);
+                    return;
+                }
             }
 
             await Audio.setAudioModeAsync({
@@ -138,6 +146,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 isMeteringEnabled: true,
             };
 
+            console.log('📝 Audio.Recording.createAsync çağrılıyor...');
             const { recording: newRecording } = await Audio.Recording.createAsync(
                 recordingOptions,
                 (status) => {
@@ -164,6 +173,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 100
             );
 
+            console.log('✅ Kayıt başarıyla oluşturuldu');
             recordingRef.current = newRecording;
             setIsRecording(true);
             setRecordingStatus('SİSTEM DİNLİYOR...');
@@ -175,10 +185,10 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             }, 3000);
 
         } catch (err) {
-            console.error('Kayıt başlatılamadı', err);
+            console.error('❌ Kayıt başlatılamadı:', err);
             // Hata olsa bile kullanıcıya tekrar deneme şansı ver
             setIsRecording(false);
-            setRecordingStatus('Tekrar Dene ❌');
+            setRecordingStatus('Mikrofona Dokun 🔴');
         }
     };
 
@@ -296,9 +306,13 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                             </View>
                         </View>
                     ) : (
-                        <View style={styles.waitingContainer}>
-                            <Text style={styles.waitingText}>⏳ Hazırlanıyor...</Text>
-                        </View>
+                        <TouchableOpacity
+                            style={styles.recordButton}
+                            onPress={handleRetry}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="mic" size={50} color="white" />
+                        </TouchableOpacity>
                     )}
 
                     <Text style={[
@@ -380,6 +394,22 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 200,
         justifyContent: 'flex-start',
+    },
+    recordButton: {
+        width: 90,
+        height: 90,
+        borderRadius: 45,
+        backgroundColor: '#E74C3C',
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 10,
+        shadowColor: '#E74C3C',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        marginBottom: 20,
+        borderWidth: 4,
+        borderColor: 'white',
     },
     recordingFeedback: {
         alignItems: 'center',
