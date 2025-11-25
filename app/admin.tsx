@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
+import { useSound } from '../components/SoundContext';
 import StudentStatsModal from '../components/StudentStatsModal';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -33,6 +34,7 @@ export default function AdminPanel() {
     const [studentGroups, setStudentGroups] = useState<StudentGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<number | null>(null);
+    const { isMuted, toggleMute } = useSound();
 
     // Login State
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -220,44 +222,44 @@ export default function AdminPanel() {
 
     const StudentCard = ({ student }: { student: StudentGroup }) => {
         const [expanded, setExpanded] = useState(false);
-        const [showStats, setShowStats] = useState(false);  
+        const [showStats, setShowStats] = useState(false);
 
         return (
             <>
-            <StudentStatsModal 
-                visible={showStats}
-                onClose={() => setShowStats(false)}
-                studentName={student.name}
-                studentAge={student.age}
-                scores={student.scores}
-            />
-            <View style={styles.studentCard}>
-                <TouchableOpacity onPress={() => setExpanded(!expanded)} style={styles.studentHeader}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View style={styles.avatar}>
-                            <Text style={styles.avatarText}>{student.name.charAt(0).toUpperCase()}</Text>
+                <StudentStatsModal
+                    visible={showStats}
+                    onClose={() => setShowStats(false)}
+                    studentName={student.name}
+                    studentAge={student.age}
+                    scores={student.scores}
+                />
+                <View style={styles.studentCard}>
+                    <TouchableOpacity onPress={() => setExpanded(!expanded)} style={styles.studentHeader}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <View style={styles.avatar}>
+                                <Text style={styles.avatarText}>{student.name.charAt(0).toUpperCase()}</Text>
+                            </View>
+                            <View>
+                                <Text style={styles.studentName}>{student.name}</Text>
+                                <Text style={styles.studentAge}>{student.age} Ay • {student.scores.length} Oyun</Text>
+                            </View>
                         </View>
-                        <View>
-                            <Text style={styles.studentName}>{student.name}</Text>
-                            <Text style={styles.studentAge}>{student.age} Ay • {student.scores.length} Oyun</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                            <TouchableOpacity onPress={() => setShowStats(true)} style={{ padding: 4 }}>
+                                <Ionicons name="stats-chart" size={20} color="#2196F3" />
+                            </TouchableOpacity>
+                            <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={24} color="#555" />
                         </View>
-                    </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                        <TouchableOpacity onPress={() => setShowStats(true)} style={{ padding: 4 }}>
-                            <Ionicons name="stats-chart" size={20} color="#2196F3" />
-                        </TouchableOpacity>
-                        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={24} color="#555" />
-                    </View>
-                </TouchableOpacity>
+                    </TouchableOpacity>
 
-                {expanded && (
-                    <View style={styles.gamesList}>
-                        {student.scores.map((score, index) => (
-                            <GameRow key={score.id} score={score} isLast={index === student.scores.length - 1} />
-                        ))}
-                    </View>
-                )}
-            </View>
+                    {expanded && (
+                        <View style={styles.gamesList}>
+                            {student.scores.map((score, index) => (
+                                <GameRow key={score.id} score={score} isLast={index === student.scores.length - 1} />
+                            ))}
+                        </View>
+                    )}
+                </View>
             </>
         );
     };
@@ -366,6 +368,9 @@ export default function AdminPanel() {
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
                     <Text style={styles.title}>Öğrenci Gelişim Takibi 📊</Text>
+                    <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
+                        <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="white" />
+                    </TouchableOpacity>
                 </View>
 
                 {loading ? (
@@ -389,7 +394,8 @@ const styles = StyleSheet.create({
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
     backButton: { backgroundColor: 'rgba(0,0,0,0.2)', padding: 8, borderRadius: 20, marginRight: 15 },
-    title: { fontSize: 22, fontWeight: 'bold', color: '#333' },
+    title: { flex: 1, fontSize: 22, fontWeight: 'bold', color: '#333' },
+    soundButton: { backgroundColor: 'rgba(0,0,0,0.2)', padding: 8, borderRadius: 20, marginLeft: 15 },
     listContent: { padding: 15, paddingBottom: 100 },
     emptyText: { textAlign: 'center', fontSize: 16, color: '#777', marginTop: 50 },
 

@@ -178,32 +178,32 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
                 />
             )}
 
-            {/* Üst Bar: Çıkış, Başlık, Ses */}
+            {/* Üst Bar: Başlık ve Ses */}
             <View style={styles.topBar}>
-                <TouchableOpacity onPress={onLogout} style={styles.iconButton}>
-                    <Ionicons name="log-out-outline" size={32} color="#E74C3C" />
-                </TouchableOpacity>
-
+                <View style={{ width: 40 }} /> {/* Spacer for centering title */}
                 <Text style={styles.title}>Diziyi Tamamla 🧩</Text>
 
-                <View style={styles.soundControls}>
-                    <TouchableOpacity onPress={() => setShowVolumeControls(!showVolumeControls)} style={styles.iconButton}>
-                        <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={32} color="#2C3E50" />
+                <View style={styles.soundContainer}>
+                    <TouchableOpacity
+                        onPress={() => setShowVolumeControls(!showVolumeControls)}
+                        style={styles.modernSoundButton}
+                    >
+                        <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="#2C3E50" />
                     </TouchableOpacity>
                 </View>
             </View>
 
-            {/* Ses Kontrol Paneli (Açılır/Kapanır) */}
+            {/* Ses Kontrol Paneli (Modern) */}
             {showVolumeControls && (
-                <View style={styles.volumePanel}>
+                <View style={styles.modernVolumePanel}>
                     <TouchableOpacity onPress={() => handleVolumeChange(-0.1)} style={styles.volumeBtn}>
-                        <Ionicons name="remove" size={24} color="#333" />
+                        <Ionicons name="remove" size={20} color="#555" />
                     </TouchableOpacity>
                     <View style={styles.volumeBarContainer}>
                         <View style={[styles.volumeBarFill, { width: `${volumeLevel * 100}%` }]} />
                     </View>
                     <TouchableOpacity onPress={() => handleVolumeChange(0.1)} style={styles.volumeBtn}>
-                        <Ionicons name="add" size={24} color="#333" />
+                        <Ionicons name="add" size={20} color="#555" />
                     </TouchableOpacity>
                 </View>
             )}
@@ -263,6 +263,12 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
                     })}
                 </View>
             </View>
+
+            {/* Çıkış Butonu (Sol Alt) */}
+            <TouchableOpacity onPress={onLogout} style={styles.logoutButton}>
+                <Ionicons name="log-out-outline" size={28} color="#fff" />
+                <Text style={styles.logoutText}>Çıkış</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -271,7 +277,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#F0F8FF',
-        paddingTop: 40, // Status bar için boşluk
+        paddingTop: 40,
     },
     topBar: {
         flexDirection: 'row',
@@ -279,63 +285,85 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 20,
         marginBottom: 10,
-    },
-    iconButton: {
-        padding: 10,
+        position: 'relative',
+        zIndex: 10,
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
         color: '#2C3E50',
     },
-    soundControls: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    soundContainer: {
+        position: 'relative',
     },
-    volumePanel: {
+    modernSoundButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 3.84,
+    },
+    modernVolumePanel: {
+        position: 'absolute',
+        top: 90,
+        right: 20,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#fff',
-        marginHorizontal: 20,
-        padding: 10,
-        borderRadius: 15,
-        marginBottom: 10,
-        elevation: 3,
+        backgroundColor: 'white',
+        padding: 12,
+        borderRadius: 20,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        zIndex: 20,
     },
     volumeBtn: {
-        padding: 5,
-        backgroundColor: '#eee',
-        borderRadius: 20,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     volumeBarContainer: {
-        width: 150,
-        height: 10,
-        backgroundColor: '#ddd',
-        borderRadius: 5,
-        marginHorizontal: 15,
+        width: 100,
+        height: 6,
+        backgroundColor: '#E0E0E0',
+        borderRadius: 3,
+        marginHorizontal: 12,
         overflow: 'hidden',
     },
     volumeBarFill: {
         height: '100%',
         backgroundColor: '#3498DB',
+        borderRadius: 3,
     },
     progressContainer: {
-        height: 10,
+        height: 8,
         backgroundColor: '#E0E0E0',
         marginHorizontal: 20,
-        borderRadius: 5,
+        borderRadius: 4,
         marginBottom: 30,
         overflow: 'hidden',
     },
     progressBar: {
         height: '100%',
         backgroundColor: '#2ECC71',
+        borderRadius: 4,
     },
     gameArea: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingBottom: 60, // Çıkış butonu için boşluk
     },
     sequenceContainer: {
         flexDirection: 'row',
@@ -345,8 +373,8 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     sequenceItem: {
-        width: 75, // Büyütüldü
-        height: 75, // Büyütüldü
+        width: 75,
+        height: 75,
         backgroundColor: '#FFFFFF',
         borderRadius: 15,
         margin: 6,
@@ -359,8 +387,8 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
     },
     sequenceImage: {
-        width: 60, // Büyütüldü
-        height: 60, // Büyütüldü
+        width: 60,
+        height: 60,
         resizeMode: 'contain',
     },
     questionMark: {
@@ -385,8 +413,8 @@ const styles = StyleSheet.create({
         margin: 12,
     },
     optionButton: {
-        width: 90, // Büyütüldü
-        height: 90, // Büyütüldü
+        width: 90,
+        height: 90,
         backgroundColor: '#FFFFFF',
         borderRadius: 20,
         justifyContent: 'center',
@@ -400,8 +428,8 @@ const styles = StyleSheet.create({
         borderColor: '#BDC3C7',
     },
     optionImage: {
-        width: 70, // Büyütüldü
-        height: 70, // Büyütüldü
+        width: 70,
+        height: 70,
         resizeMode: 'contain',
     },
     optionCorrect: {
@@ -411,5 +439,27 @@ const styles = StyleSheet.create({
     optionWrong: {
         borderColor: '#E74C3C',
         backgroundColor: '#FADBD8',
+    },
+    logoutButton: {
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#E74C3C',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 25,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    logoutText: {
+        color: 'white',
+        fontWeight: 'bold',
+        marginLeft: 8,
+        fontSize: 16,
     },
 });
