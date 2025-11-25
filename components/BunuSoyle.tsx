@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
@@ -26,45 +26,45 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const [moves, setMoves] = useState(0);
     const [errors, setErrors] = useState(0);
 
-    // Timer Ref'i (Otomatik durdurma için)
-    const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // I. Kayıt Yönetimi: Zamanlayıcı Durumu (State)
+    const [autoStopTimer, setAutoStopTimer] = useState<NodeJS.Timeout | null>(null);
 
     const currentItem = STAGES[currentStage];
 
     // Bileşen unmount olduğunda timer'ı temizle
     useEffect(() => {
         return () => {
-            if (recordingTimeoutRef.current) {
-                clearTimeout(recordingTimeoutRef.current);
+            if (autoStopTimer) {
+                clearTimeout(autoStopTimer);
             }
         };
-    }, []);
+    }, [autoStopTimer]);
 
     const startRecording = () => {
         setIsRecording(true);
         setRecordingStatus('Kayıt Yapılıyor...');
-        console.log("Kayıt Başladı (Simülasyon)");
+        console.log("Kayıt Başladı");
 
-        // 1. KRİTİK DÜZELTME: 3 Saniye sonra otomatik durdurma
-        if (recordingTimeoutRef.current) clearTimeout(recordingTimeoutRef.current);
-
-        recordingTimeoutRef.current = setTimeout(() => {
+        // I. Kayıt Yönetimi: Otomatik Durdurma Zamanlayıcısı
+        const timer = setTimeout(() => {
             console.log("Süre doldu, otomatik durduruluyor...");
-            stopRecordingAndAnalyze();
+            stopRecording();
         }, 3000);
+
+        setAutoStopTimer(timer);
     };
 
-    const stopRecordingAndAnalyze = () => {
-        // Eğer zaten durmuşsa işlem yapma
-        if (!isRecording) return;
-
-        // Timer'ı temizle (Manuel durdurulursa çalışmasın diye)
-        if (recordingTimeoutRef.current) clearTimeout(recordingTimeoutRef.current);
+    const stopRecording = () => {
+        // I. Kayıt Yönetimi: Zamanlayıcıyı İptal Et
+        if (autoStopTimer) {
+            clearTimeout(autoStopTimer);
+            setAutoStopTimer(null);
+        }
 
         setIsRecording(false);
         setRecordingStatus('Analiz Ediliyor...');
 
-        // Simüle edilmiş analiz süreci
+        // Analizi Başlat
         analyzeSpeech(currentItem.word);
     };
 
@@ -72,21 +72,21 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         if (!isRecording) {
             startRecording();
         } else {
-            stopRecordingAndAnalyze();
+            stopRecording();
         }
     };
 
     const analyzeSpeech = (beklenenKelime: string) => {
         // API Simülasyonu: %80 ihtimalle doğru bildiğini varsayalım
-        // Gerçek API entegrasyonunda buraya API'den gelen transcript gelecek
         const randomSuccess = Math.random() > 0.2;
-        const simulatedTranscript = randomSuccess ? beklenenKelime : "Yanlış Kelime";
+        const simulatedTranscript = randomSuccess ? beklenenKelime : "Yanlış";
 
         console.log(`Analiz Sonucu - Beklenen: "${beklenenKelime}", Algılanan: "${simulatedTranscript}"`);
 
-        // 2. KRİTİK DÜZELTME: Karşılaştırma Mantığı
-        const temizlenenTranscript = simulatedTranscript.trim().toLowerCase();
-        const temizlenenBeklenen = beklenenKelime.trim().toLowerCase();
+        // II. Analiz ve Puanlama Mantığı Düzeltmesi
+        // Karşılaştırma Zorlaması: toLowerCase() ve trim()
+        const temizlenenTranscript = simulatedTranscript.toLowerCase().trim();
+        const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
 
         if (temizlenenTranscript === temizlenenBeklenen) {
             // BAŞARILI
@@ -98,8 +98,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             }, 1000);
         } else {
             // HATALI
-            setRecordingStatus('Tekrar Dene ❌');
+            // Hata Puanlaması: Kesinlikle 1 artır
             setErrors(e => e + 1);
+            setRecordingStatus('Tekrar Dene ❌');
 
             // Kullanıcıya tekrar deneme şansı ver
             setTimeout(() => {
