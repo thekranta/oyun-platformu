@@ -201,13 +201,14 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
         try {
             if (recordingRef.current) {
-                const uri = recordingRef.current.getURI();
-                audioUri = uri;
+                // CRITICAL: Get URI BEFORE stopping/unloading
+                audioUri = recordingRef.current.getURI();
+                console.log('📁 Audio URI:', audioUri);
+
                 await recordingRef.current.stopAndUnloadAsync();
                 recordingRef.current = null;
             }
         } catch (error) {
-            // Hata önemsiz, zaten durmuş olabilir
             console.log("Durdurma hatası (handle edildi):", error);
         }
 
@@ -216,6 +217,8 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         if (shouldAnalyze && audioUri) {
             setRecordingStatus('Analiz Ediliyor...');
             analyzeSpeech(currentItem.word, audioUri);
+        } else if (shouldAnalyze && !audioUri) {
+            console.log('⚠️ Audio URI bulunamadı, analiz atlanıyor');
         }
     };
 
