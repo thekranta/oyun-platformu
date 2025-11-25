@@ -209,17 +209,20 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
         try {
             if (recordingRef.current) {
-                // CRITICAL: Get URI BEFORE stopping/unloading
-                audioUri = recordingRef.current.getURI();
-                console.log('📁 Audio URI:', audioUri);
+                // USER REQUEST: Önce durdur, sonra URI al
+                console.log('🛑 Kayıt durduruluyor...');
 
-                // Timeout ile stop işlemini sarmala
                 const stopPromise = recordingRef.current.stopAndUnloadAsync();
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Stop timeout')), 1000)
                 );
 
                 await Promise.race([stopPromise, timeoutPromise]);
+
+                // URI'yi durdurduktan SONRA al
+                audioUri = recordingRef.current.getURI();
+                console.log("✅ Kayıt Durduruldu. URI:", audioUri);
+
                 recordingRef.current = null;
             }
         } catch (error) {
@@ -236,7 +239,12 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             setRecordingStatus('Analiz Ediliyor...');
             analyzeSpeech(currentItem.word, audioUri);
         } else if (shouldAnalyze && !audioUri) {
-            console.log('⚠️ Audio URI bulunamadı, analiz atlanıyor');
+            console.log('⚠️ Audio URI bulunamadı (null), analiz atlanıyor');
+
+            if (Platform.OS === 'web') {
+                console.log('🌐 Web için ek kontrol: URI null geldi.');
+            }
+
             setRecordingStatus('Ses Dosyası Hatası ⚠️');
             setTimeout(() => handleNextStage(), 2000);
         }
