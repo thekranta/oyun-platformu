@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSound } from './SoundContext';
 
@@ -74,18 +74,29 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
 
     const currentPattern = PATTERNS[currentStage];
 
+    const SLIDER_WIDTH = 120;
+
+    // PanResponder for slider
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: () => { },
+            onPanResponderMove: (evt, gestureState) => {
+                const newVolume = Math.max(0, Math.min(1, (gestureState.moveX - (screenWidth - SLIDER_WIDTH - 60)) / SLIDER_WIDTH));
+                setVolumeLevel(newVolume);
+                changeVolume(newVolume);
+            },
+            onPanResponderRelease: () => { },
+        })
+    ).current;
+
     useEffect(() => {
         playSound('background');
         return () => {
             stopSound('background');
         };
     }, []);
-
-    const handleVolumeChange = (change: number) => {
-        const newVolume = Math.max(0, Math.min(1, volumeLevel + change));
-        setVolumeLevel(newVolume);
-        changeVolume(newVolume);
-    };
 
     const handleOptionPress = (option: ShapeType) => {
         if (stageCompleted) return;
@@ -193,18 +204,17 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
                 </View>
             </View>
 
-            {/* Ses Kontrol Paneli (Modern) */}
+            {/* Ses Kontrol Paneli (Slider) */}
             {showVolumeControls && (
                 <View style={styles.modernVolumePanel}>
-                    <TouchableOpacity onPress={() => handleVolumeChange(-0.1)} style={styles.volumeBtn}>
-                        <Ionicons name="remove" size={20} color="#555" />
-                    </TouchableOpacity>
-                    <View style={styles.volumeBarContainer}>
-                        <View style={[styles.volumeBarFill, { width: `${volumeLevel * 100}%` }]} />
+                    <Ionicons name="volume-low" size={20} color="#555" />
+                    <View style={styles.sliderContainer} {...panResponder.panHandlers}>
+                        <View style={styles.sliderTrack}>
+                            <View style={[styles.sliderFill, { width: `${volumeLevel * 100}%` }]} />
+                            <View style={[styles.sliderThumb, { left: `${volumeLevel * 100}%` }]} />
+                        </View>
                     </View>
-                    <TouchableOpacity onPress={() => handleVolumeChange(0.1)} style={styles.volumeBtn}>
-                        <Ionicons name="add" size={20} color="#555" />
-                    </TouchableOpacity>
+                    <Ionicons name="volume-high" size={20} color="#555" />
                 </View>
             )}
 
@@ -316,7 +326,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'white',
-        padding: 12,
+        padding: 15,
         borderRadius: 20,
         elevation: 5,
         shadowColor: '#000',
@@ -325,26 +335,37 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         zIndex: 20,
     },
-    volumeBtn: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#F5F5F5',
+    sliderContainer: {
+        width: 120,
+        height: 30,
         justifyContent: 'center',
-        alignItems: 'center',
+        marginHorizontal: 10,
     },
-    volumeBarContainer: {
-        width: 100,
+    sliderTrack: {
+        width: '100%',
         height: 6,
         backgroundColor: '#E0E0E0',
         borderRadius: 3,
-        marginHorizontal: 12,
-        overflow: 'hidden',
+        position: 'relative',
     },
-    volumeBarFill: {
+    sliderFill: {
         height: '100%',
         backgroundColor: '#3498DB',
         borderRadius: 3,
+    },
+    sliderThumb: {
+        position: 'absolute',
+        top: -7,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: '#3498DB',
+        marginLeft: -10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.3,
+        shadowRadius: 2,
     },
     progressContainer: {
         height: 8,
@@ -363,7 +384,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingBottom: 60, // Çıkış butonu için boşluk
+        paddingBottom: 60,
     },
     sequenceContainer: {
         flexDirection: 'row',
@@ -373,8 +394,8 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     sequenceItem: {
-        width: 75,
-        height: 75,
+        width: 85, // Büyütüldü
+        height: 85, // Büyütüldü
         backgroundColor: '#FFFFFF',
         borderRadius: 15,
         margin: 6,
@@ -387,8 +408,8 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
     },
     sequenceImage: {
-        width: 60,
-        height: 60,
+        width: 70, // Büyütüldü
+        height: 70, // Büyütüldü
         resizeMode: 'contain',
     },
     questionMark: {
@@ -398,7 +419,7 @@ const styles = StyleSheet.create({
         borderStyle: 'dashed',
     },
     questionMarkText: {
-        fontSize: 40,
+        fontSize: 45,
         fontWeight: 'bold',
         color: '#FF8C00',
     },

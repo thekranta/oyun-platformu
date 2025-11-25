@@ -39,7 +39,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
             const { sound } = await Audio.Sound.createAsync(
                 require('../assets/sounds/background.mp3'),
-                { shouldPlay: false, isLooping: true, volume: 0.5 }
+                { shouldPlay: true, isLooping: true, volume: 0.5 }
             );
             setBackgroundSound(sound);
         } catch (error) {

@@ -3,7 +3,9 @@ import DynamicBackground from '@/components/DynamicBackground';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
+import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -19,6 +21,7 @@ const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
 export default function App() {
   const router = useRouter();
+  const { isMuted, toggleMute } = useSound();
   const [asama, setAsama] = useState('giris');
   const [secilenOyun, setSecilenOyun] = useState('');
   const [ad, setAd] = useState('');
@@ -134,6 +137,9 @@ export default function App() {
   if (asama === 'giris') {
     return (
       <DynamicBackground>
+        <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
+          <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={28} color="#fff" />
+        </TouchableOpacity>
         <View style={styles.merkezContainer}>
           <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
           <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
