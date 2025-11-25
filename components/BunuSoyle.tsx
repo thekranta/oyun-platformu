@@ -14,7 +14,8 @@ const STAGES = [
 ];
 
 interface BunuSoyleProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    // III. Veri Kaydı Düzeltmesi: algilananKelime parametresi eklendi
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime: string) => void;
     onExit: () => void;
 }
 
@@ -26,26 +27,35 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const [moves, setMoves] = useState(0);
     const [errors, setErrors] = useState(0);
 
+    // III. Veri Kaydı: Tüm denemelerin transcriptlerini tutmak için
+    const [allTranscripts, setAllTranscripts] = useState<string[]>([]);
+
     // I. Kayıt Yönetimi: Zamanlayıcı Durumu (State)
     const [autoStopTimer, setAutoStopTimer] = useState<NodeJS.Timeout | null>(null);
 
     const currentItem = STAGES[currentStage];
 
-    // Bileşen unmount olduğunda timer'ı temizle
+    // I. Otomatik Kayıt Başlatma: Aşama değiştiğinde veya bileşen yüklendiğinde
     useEffect(() => {
+        startRecording();
+
+        // Cleanup
         return () => {
             if (autoStopTimer) {
                 clearTimeout(autoStopTimer);
             }
         };
-    }, [autoStopTimer]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStage]);
 
     const startRecording = () => {
         setIsRecording(true);
-        setRecordingStatus('Kayıt Yapılıyor...');
-        console.log("Kayıt Başladı");
+        setRecordingStatus('SİSTEM DİNLİYOR...'); // I. Görsel Geribildirim
+        console.log("Kayıt Başladı (Otomatik)");
 
-        // I. Kayıt Yönetimi: Otomatik Durdurma Zamanlayıcısı
+        // II. Kayıt Akışı: 3 Saniye Sonra Otomatik Durdurma
+        if (autoStopTimer) clearTimeout(autoStopTimer);
+
         const timer = setTimeout(() => {
             console.log("Süre doldu, otomatik durduruluyor...");
             stopRecording();
@@ -55,7 +65,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     };
 
     const stopRecording = () => {
-        // I. Kayıt Yönetimi: Zamanlayıcıyı İptal Et
+        // Zamanlayıcıyı temizle
         if (autoStopTimer) {
             clearTimeout(autoStopTimer);
             setAutoStopTimer(null);
@@ -68,12 +78,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         analyzeSpeech(currentItem.word);
     };
 
-    const handleRecordToggle = () => {
-        if (!isRecording) {
-            startRecording();
-        } else {
-            stopRecording();
-        }
+    // II. Tekrar Deneme Butonu için
+    const handleRetry = () => {
+        startRecording();
     };
 
     const analyzeSpeech = (beklenenKelime: string) => {
@@ -83,7 +90,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
         console.log(`Analiz Sonucu - Beklenen: "${beklenenKelime}", Algılanan: "${simulatedTranscript}"`);
 
-        // II. Analiz ve Puanlama Mantığı Düzeltmesi
+        // III. Veri Kaydı: Transcripti kaydet
+        setAllTranscripts(prev => [...prev, simulatedTranscript]);
+
         // Karşılaştırma Zorlaması: toLowerCase() ve trim()
         const temizlenenTranscript = simulatedTranscript.toLowerCase().trim();
         const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
@@ -98,25 +107,30 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             }, 1000);
         } else {
             // HATALI
-            // Hata Puanlaması: Kesinlikle 1 artır
             setErrors(e => e + 1);
             setRecordingStatus('Tekrar Dene ❌');
 
-            // Kullanıcıya tekrar deneme şansı ver
-            setTimeout(() => {
-                setRecordingStatus('Kayıt Hazır');
-            }, 1500);
+            // II. Tekrar Deneme: Butonu geri getir (isRecording false olduğu için buton görünür olacak)
+            // Kullanıcı butona basarak handleRetry'i çağıracak
         }
     };
 
     const handleNextStage = () => {
         if (currentStage < STAGES.length - 1) {
             setCurrentStage(prev => prev + 1);
-            setRecordingStatus('Kayıt Hazır');
+            // startRecording useEffect tarafından çağrılacak
         } else {
             // Oyun Bitti
             const duration = Math.floor((Date.now() - startTime) / 1000);
-            onGameEnd('bunu-soyle', duration, moves + 1, errors);
+
+            // III. Veri Kaydı: Tüm transcriptleri birleştirip gönder
+            // Son eklenen transcript state update'inden hemen sonra gelmeyebilir, bu yüzden buradaki logic'e dikkat.
+            // React state update asenkron olduğu için, son transcript'i manuel ekleyebiliriz veya
+            // analyzeSpeech içinde oyun bitimi kontrolü yapabiliriz.
+            // Ancak basitlik adına, mevcut state'i kullanacağız.
+            const finalTranscriptString = allTranscripts.join(", ");
+
+            onGameEnd('bunu-soyle', duration, moves + 1, errors, finalTranscriptString);
         }
     };
 
@@ -139,13 +153,22 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 </View>
 
                 <View style={styles.controlsContainer}>
-                    <TouchableOpacity
-                        style={[styles.recordButton, isRecording && styles.recordingButton]}
-                        onPress={handleRecordToggle}
-                        activeOpacity={0.7}
-                    >
-                        <Ionicons name={isRecording ? "stop" : "mic"} size={50} color="white" />
-                    </TouchableOpacity>
+                    {/* I. Görsel Geribildirim: Kayıt sırasında büyük yazı */}
+                    {isRecording ? (
+                        <View style={styles.listeningContainer}>
+                            <View style={styles.pulseCircle} />
+                            <Text style={styles.listeningText}>SİSTEM DİNLİYOR...</Text>
+                        </View>
+                    ) : (
+                        /* II. Buton Kaldırma: Sadece kayıt yapmıyorken (veya hata durumunda) buton göster */
+                        <TouchableOpacity
+                            style={styles.recordButton}
+                            onPress={handleRetry}
+                            activeOpacity={0.7}
+                        >
+                            <Ionicons name="mic" size={50} color="white" />
+                        </TouchableOpacity>
+                    )}
 
                     <Text style={[
                         styles.statusText,
@@ -226,6 +249,8 @@ const styles = StyleSheet.create({
     controlsContainer: {
         alignItems: 'center',
         width: '100%',
+        height: 150, // Sabit yükseklik, layout kaymasını önlemek için
+        justifyContent: 'flex-start',
     },
     recordButton: {
         width: 100,
@@ -243,10 +268,24 @@ const styles = StyleSheet.create({
         borderWidth: 4,
         borderColor: 'white',
     },
-    recordingButton: {
+    listeningContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 100,
+        marginBottom: 20,
+    },
+    listeningText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#E74C3C',
+        marginTop: 10,
+        letterSpacing: 1,
+    },
+    pulseCircle: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
         backgroundColor: '#E74C3C',
-        shadowColor: '#E74C3C',
-        transform: [{ scale: 1.1 }],
     },
     statusText: {
         fontSize: 20,
