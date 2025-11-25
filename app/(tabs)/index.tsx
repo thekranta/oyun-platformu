@@ -58,9 +58,9 @@ export default function App() {
     setAsama(oyunTipi);
   };
 
-  const oyunuBitir = (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => {
+  const oyunuBitir = (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string) => {
     setAsama('sonuc');
-    sessizceAnalizEtVeKaydet(oyunAdi, sure, finalHamle, finalHata);
+    sessizceAnalizEtVeKaydet(oyunAdi, sure, finalHamle, finalHata, algilananKelime);
   };
 
   const cikisYap = () => {
@@ -70,7 +70,7 @@ export default function App() {
     setAsama('giris');
   };
 
-  const sessizceAnalizEtVeKaydet = async (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => {
+  const sessizceAnalizEtVeKaydet = async (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string) => {
     setYukleniyor(true);
 
     // 1. Supabase Kaydı (Sadece ham veri ve email kaydedilir)
@@ -83,7 +83,8 @@ export default function App() {
         ogrenci_adi: ad,
         ogrenci_yasi: parseInt(yas),
         sure: sure,
-        email: email // Ebeveyn emaili kaydediliyor
+        email: email, // Ebeveyn emaili kaydediliyor
+        algilanan_kelime: algilananKelime || "" // Yeni eklenen alan
       };
 
       console.log("Supabase Request Body:", JSON.stringify(kayitVerisi, null, 2));
