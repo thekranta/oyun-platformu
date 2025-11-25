@@ -9,6 +9,9 @@ interface SoundContextType {
     stopSound: (name: SoundName) => Promise<void>;
     toggleMute: () => Promise<void>;
     changeVolume: (val: number) => Promise<void>;
+    isPlaying: boolean;
+    volume: number;
+    toggleSound: () => Promise<void>;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -16,6 +19,7 @@ const SoundContext = createContext<SoundContextType | undefined>(undefined);
 export function SoundProvider({ children }: { children: React.ReactNode }) {
     const [backgroundSound, setBackgroundSound] = useState<Audio.Sound | null>(null);
     const [isMuted, setIsMuted] = useState(false);
+    const [volume, setVolume] = useState(0.5);
 
     useEffect(() => {
         loadBackgroundSound();
@@ -48,7 +52,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     };
 
     const playSound = async (name: SoundName) => {
-        if (isMuted) return;
+        if (isMuted && name === 'background') return;
 
         try {
             if (name === 'background') {
@@ -56,14 +60,10 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
                     await backgroundSound.playAsync();
                 }
             } else if (name === 'correct') {
-                // SFX logic here (when files are available)
-                // const { sound } = await Audio.Sound.createAsync(require('../assets/sounds/correct.mp3'));
-                // await sound.playAsync();
+                // SFX logic here
                 console.log("Playing correct sound (placeholder)");
             } else if (name === 'wrong') {
                 // SFX logic here
-                // const { sound } = await Audio.Sound.createAsync(require('../assets/sounds/wrong.mp3'));
-                // await sound.playAsync();
                 console.log("Playing wrong sound (placeholder)");
             }
         } catch (error) {
@@ -103,7 +103,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     const changeVolume = async (val: number) => {
         try {
             const newVolume = Math.max(0, Math.min(1, val));
-            // setVolume(newVolume); // Eğer global volume state tutulacaksa
+            setVolume(newVolume);
 
             if (backgroundSound) {
                 await backgroundSound.setVolumeAsync(newVolume);
@@ -114,7 +114,17 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <SoundContext.Provider value={{ isMuted, playSound, stopSound, toggleMute, changeVolume }}>
+        <SoundContext.Provider value={{
+            isMuted,
+            playSound,
+            stopSound,
+            toggleMute,
+            changeVolume,
+            // SoundControls uyumluluğu için eklenenler:
+            isPlaying: !isMuted,
+            volume,
+            toggleSound: toggleMute
+        } as any}>
             {children}
         </SoundContext.Provider>
     );

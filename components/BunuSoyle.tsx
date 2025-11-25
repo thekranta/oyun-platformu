@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
+import { useSound } from './SoundContext';
 
 // Aşama Verileri
 const STAGES = [
@@ -21,6 +22,7 @@ interface BunuSoyleProps {
 }
 
 export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
+    const { stopSound, playSound } = useSound();
     const [currentStage, setCurrentStage] = useState(0);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingStatus, setRecordingStatus] = useState('Kayıt Hazır');
@@ -84,6 +86,8 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 recordingRef.current.stopAndUnloadAsync().catch(() => { });
                 recordingRef.current = null;
             }
+            // Çıkışta müziği tekrar başlat (eğer durdurulmuşsa)
+            playSound('background');
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStage]);
@@ -114,6 +118,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
     const startRecording = async () => {
         try {
+            // Kayıt başlarken arka plan müziğini durdur
+            await stopSound('background');
+
             console.log('🎙️ Kayıt başlatılıyor...');
             console.log('İzin durumu:', permissionResponse?.status);
 
@@ -221,6 +228,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         }
 
         setIsRecording(false);
+
+        // Kayıt bitince arka plan müziğini tekrar başlat
+        playSound('background');
 
         if (shouldAnalyze && audioUri) {
             setRecordingStatus('Analiz Ediliyor...');
