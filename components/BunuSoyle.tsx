@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
+import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
@@ -196,8 +197,12 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const stopRecording = async (shouldAnalyze = true) => {
         if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
 
+        let audioUri: string | null = null;
+
         try {
             if (recordingRef.current) {
+                const uri = recordingRef.current.getURI();
+                audioUri = uri;
                 await recordingRef.current.stopAndUnloadAsync();
                 recordingRef.current = null;
             }
@@ -208,9 +213,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
         setIsRecording(false);
 
-        if (shouldAnalyze) {
+        if (shouldAnalyze && audioUri) {
             setRecordingStatus('Analiz Ediliyor...');
-            analyzeSpeech(currentItem.word);
+            analyzeSpeech(currentItem.word, audioUri);
         }
     };
 
@@ -218,7 +223,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         startRecording();
     };
 
-    const analyzeSpeech = (beklenenKelime: string) => {
+    const analyzeSpeech = async (beklenenKelime: string, audioUri: string) => {
         // SESSİZLİK KONTROLÜ
         console.log("Maksimum Ses Seviyesi:", maxAudioLevel);
 
@@ -235,27 +240,102 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             return;
         }
 
-        // API Simülasyonu
-        const randomSuccess = Math.random() > 0.1;
-        const simulatedTranscript = randomSuccess ? beklenenKelime : "Anlaşılamadı";
+        try {
+            // Platform-specific Base64 encoding
+            let base64Audio: string;
 
-        setAllTranscripts(prev => [...prev, simulatedTranscript]);
+            if (Platform.OS === 'web') {
+                // WEB: fetch + FileReader kullan
+                console.log('🌐 Web platformu tespit edildi, fetch kullanılıyor...');
+                const response = await fetch(audioUri);
+                const blob = await response.blob();
 
-        const temizlenenTranscript = simulatedTranscript.toLowerCase().trim();
-        const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
+                base64Audio = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const result = reader.result as string;
+                        // "data:audio/...;base64," başlığını temizle
+                        const base64 = result.split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            } else {
+                // MOBILE: expo-file-system kullan
+                console.log('📱 Mobil platform tespit edildi, FileSystem kullanılıyor...');
+                base64Audio = await FileSystem.readAsStringAsync(audioUri, {
+                    encoding: 'base64',
+                });
+            }
 
-        // Her durumda hareketi kaydet
-        setMoves(m => m + 1);
+            // Google Speech-to-Text API çağrısı
+            const apiKey = process.env.EXPO_PUBLIC_SPEECH_API_KEY;
+            if (!apiKey) {
+                throw new Error('API key bulunamadı');
+            }
 
-        if (temizlenenTranscript === temizlenenBeklenen) {
-            // Doğru cevap - hata yok
-            setRecordingStatus('Harika! 🎉');
-            setTimeout(() => handleNextStage(), 2000);
-        } else {
-            // Yanlış cevap - hata kaydet ve yine de devam et
+            console.log('🎤 Google Speech-to-Text API çağrılıyor...');
+            const response = await fetch(
+                `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        config: {
+                            encoding: Platform.OS === 'web' ? 'WEBM_OPUS' : 'LINEAR16',
+                            sampleRateHertz: Platform.OS === 'web' ? 48000 : 44100,
+                            languageCode: 'tr-TR',
+                        },
+                        audio: {
+                            content: base64Audio,
+                        },
+                    }),
+                }
+            );
+
+            const data = await response.json();
+            console.log('📥 API Yanıtı:', data);
+
+            // Transcript'i çıkar
+            let transcript = '';
+            if (data.results && data.results.length > 0) {
+                transcript = data.results[0].alternatives[0].transcript || '';
+            }
+
+            if (!transcript) {
+                transcript = '(Anlaşılamadı)';
+            }
+
+            console.log('✅ Algılanan kelime:', transcript);
+            setAllTranscripts(prev => [...prev, transcript]);
+
+            const temizlenenTranscript = transcript.toLowerCase().trim();
+            const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
+
+            // Her durumda hareketi kaydet
+            setMoves(m => m + 1);
+
+            if (temizlenenTranscript === temizlenenBeklenen) {
+                // Doğru cevap - hata yok
+                setRecordingStatus('Harika! 🎉');
+                setTimeout(() => handleNextStage(), 2000);
+            } else {
+                // Yanlış cevap - hata kaydet ve yine de devam et
+                setErrors(e => e + 1);
+                setRecordingStatus(`Tekrar Dene ❌ ("${transcript}")`);
+                // Otomatik olarak bir sonraki aşamaya geç
+                setTimeout(() => handleNextStage(), 2000);
+            }
+        } catch (error) {
+            console.error('❌ Speech API hatası:', error);
+            // Hata durumunda bile kaydet ve devam et
+            setAllTranscripts(prev => [...prev, '(API Hatası)']);
             setErrors(e => e + 1);
-            setRecordingStatus('Tekrar Dene ❌');
-            // Otomatik olarak bir sonraki aşamaya geç
+            setMoves(m => m + 1);
+            setRecordingStatus('API Hatası ⚠️');
             setTimeout(() => handleNextStage(), 2000);
         }
     };
