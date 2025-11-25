@@ -109,7 +109,10 @@ export default function AdminPanel() {
             let oyunAdiTR = '';
             if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
             else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
-            else oyunAdiTR = 'Gruplama (Kategorizasyon)';
+            else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
+            else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
+            else if (score.oyun_turu === 'bunu-soyle') oyunAdiTR = 'Bunu Söyle (Telaffuz)';
+            else oyunAdiTR = score.oyun_turu;
 
             const prompt = `
                 Sen bir okul öncesi eğitim uzmanısın. Aşağıdaki verilere göre çocuğun gelişimini değerlendir.
@@ -180,7 +183,10 @@ export default function AdminPanel() {
             let oyunAdiTR = '';
             if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
             else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
-            else oyunAdiTR = 'Gruplama (Kategorizasyon)';
+            else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
+            else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
+            else if (score.oyun_turu === 'bunu-soyle') oyunAdiTR = 'Bunu Söyle (Telaffuz)';
+            else oyunAdiTR = score.oyun_turu;
 
             const response = await fetch('/api/send-email', {
                 method: 'POST',

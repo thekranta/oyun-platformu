@@ -1,3 +1,4 @@
+import BunuSoyle from '@/components/BunuSoyle';
 import DiziyiTamamla from '@/components/DiziyiTamamla';
 import DynamicBackground from '@/components/DynamicBackground';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
@@ -94,7 +95,7 @@ export default function App() {
           'Authorization': `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
-        } as any,
+        },
         body: JSON.stringify(kayitVerisi)
       });
 
@@ -112,7 +113,7 @@ export default function App() {
               'Authorization': `Bearer ${SUPABASE_KEY}`,
               'Content-Type': 'application/json',
               'Prefer': 'return=minimal'
-            } as any,
+            },
             body: JSON.stringify(kayitVerisiEmailsiz)
           });
         } else {
@@ -197,6 +198,11 @@ export default function App() {
           <Text style={styles.oyunAciklama}>Örüntüyü devam ettir!</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#EC407A' }]} onPress={() => oyunuBaslat('bunu-soyle')}>
+          <Text style={styles.oyunBaslik}>🎙️ Bunu Söyle!</Text>
+          <Text style={styles.oyunAciklama}>Resimdeki nedir?</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={cikisYap}>
           <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
         </TouchableOpacity>
@@ -221,6 +227,10 @@ export default function App() {
       onGameEnd={oyunuBitir}
       onLogout={cikisYap}
     />;
+  }
+
+  if (asama === 'bunu-soyle') {
+    return <BunuSoyle onGameEnd={oyunuBitir} onExit={cikisYap} />;
   }
 
   // ... (inside sonuc view)
@@ -257,4 +267,5 @@ const styles = StyleSheet.create({
   oyunBaslik: { color: 'white', fontSize: 20, fontWeight: 'bold' },
   oyunAciklama: { color: 'white', fontSize: 12 },
   sonucBaslik: { fontSize: 36, fontWeight: 'bold', color: '#e65100', marginVertical: 10 },
+  soundButton: { position: 'absolute', top: 50, right: 20, backgroundColor: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 25, zIndex: 10 },
 });

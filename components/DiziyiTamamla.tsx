@@ -1,10 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSound } from './SoundContext';
-
-const { width: screenWidth } = Dimensions.get('window');
 
 interface DiziyiTamamlaProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
@@ -63,33 +61,14 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
     const [selectedOption, setSelectedOption] = useState<ShapeType | null>(null);
     const [isCorrect, setIsCorrect] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
-    const [volumeLevel, setVolumeLevel] = useState(0.5);
-    const [showVolumeControls, setShowVolumeControls] = useState(false);
 
-    const { playSound, stopSound, isMuted, toggleMute, changeVolume } = useSound();
+    const { playSound, stopSound, isMuted, toggleMute } = useSound();
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const confettiRef = useRef<ConfettiCannon>(null);
 
     const currentPattern = PATTERNS[currentStage];
-
-    const SLIDER_WIDTH = 120;
-
-    // PanResponder for slider
-    const panResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => true,
-            onMoveShouldSetPanResponder: () => true,
-            onPanResponderGrant: () => { },
-            onPanResponderMove: (evt, gestureState) => {
-                const newVolume = Math.max(0, Math.min(1, (gestureState.moveX - (screenWidth - SLIDER_WIDTH - 60)) / SLIDER_WIDTH));
-                setVolumeLevel(newVolume);
-                changeVolume(newVolume);
-            },
-            onPanResponderRelease: () => { },
-        })
-    ).current;
 
     useEffect(() => {
         playSound('background');
@@ -196,27 +175,13 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
 
                 <View style={styles.soundContainer}>
                     <TouchableOpacity
-                        onPress={() => setShowVolumeControls(!showVolumeControls)}
+                        onPress={toggleMute}
                         style={styles.modernSoundButton}
                     >
                         <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="#2C3E50" />
                     </TouchableOpacity>
                 </View>
             </View>
-
-            {/* Ses Kontrol Paneli (Slider) */}
-            {showVolumeControls && (
-                <View style={styles.modernVolumePanel}>
-                    <Ionicons name="volume-low" size={20} color="#555" />
-                    <View style={styles.sliderContainer} {...panResponder.panHandlers}>
-                        <View style={styles.sliderTrack}>
-                            <View style={[styles.sliderFill, { width: `${volumeLevel * 100}%` }]} />
-                            <View style={[styles.sliderThumb, { left: `${volumeLevel * 100}%` }]} />
-                        </View>
-                    </View>
-                    <Ionicons name="volume-high" size={20} color="#555" />
-                </View>
-            )}
 
             {/* Progress Bar */}
             <View style={styles.progressContainer}>
@@ -318,54 +283,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 3.84,
-    },
-    modernVolumePanel: {
-        position: 'absolute',
-        top: 90,
-        right: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'white',
-        padding: 15,
-        borderRadius: 20,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        zIndex: 20,
-    },
-    sliderContainer: {
-        width: 120,
-        height: 30,
-        justifyContent: 'center',
-        marginHorizontal: 10,
-    },
-    sliderTrack: {
-        width: '100%',
-        height: 6,
-        backgroundColor: '#E0E0E0',
-        borderRadius: 3,
-        position: 'relative',
-    },
-    sliderFill: {
-        height: '100%',
-        backgroundColor: '#3498DB',
-        borderRadius: 3,
-    },
-    sliderThumb: {
-        position: 'absolute',
-        top: -7,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-        backgroundColor: '#3498DB',
-        marginLeft: -10,
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.3,
-        shadowRadius: 2,
     },
     progressContainer: {
         height: 8,
