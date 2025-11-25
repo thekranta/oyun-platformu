@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
@@ -24,24 +24,87 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const [recordingStatus, setRecordingStatus] = useState('Kayıt Hazır');
     const [startTime] = useState(Date.now());
     const [moves, setMoves] = useState(0);
+    const [errors, setErrors] = useState(0);
+
+    // Timer Ref'i (Otomatik durdurma için)
+    const recordingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    const currentItem = STAGES[currentStage];
+
+    // Bileşen unmount olduğunda timer'ı temizle
+    useEffect(() => {
+        return () => {
+            if (recordingTimeoutRef.current) {
+                clearTimeout(recordingTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const startRecording = () => {
+        setIsRecording(true);
+        setRecordingStatus('Kayıt Yapılıyor...');
+        console.log("Kayıt Başladı (Simülasyon)");
+
+        // 1. KRİTİK DÜZELTME: 3 Saniye sonra otomatik durdurma
+        if (recordingTimeoutRef.current) clearTimeout(recordingTimeoutRef.current);
+
+        recordingTimeoutRef.current = setTimeout(() => {
+            console.log("Süre doldu, otomatik durduruluyor...");
+            stopRecordingAndAnalyze();
+        }, 3000);
+    };
+
+    const stopRecordingAndAnalyze = () => {
+        // Eğer zaten durmuşsa işlem yapma
+        if (!isRecording) return;
+
+        // Timer'ı temizle (Manuel durdurulursa çalışmasın diye)
+        if (recordingTimeoutRef.current) clearTimeout(recordingTimeoutRef.current);
+
+        setIsRecording(false);
+        setRecordingStatus('Analiz Ediliyor...');
+
+        // Simüle edilmiş analiz süreci
+        analyzeSpeech(currentItem.word);
+    };
 
     const handleRecordToggle = () => {
-        console.log("Kayıt butonu basıldı. Kayıt mantığı burada yer alacak.");
-
         if (!isRecording) {
-            // Kaydı Başlat
-            setIsRecording(true);
-            setRecordingStatus('Kayıt Yapılıyor...');
+            startRecording();
         } else {
-            // Kaydı Bitir ve İlerle
-            setIsRecording(false);
-            setRecordingStatus('Analiz Ediliyor...');
+            stopRecordingAndAnalyze();
+        }
+    };
+
+    const analyzeSpeech = (beklenenKelime: string) => {
+        // API Simülasyonu: %80 ihtimalle doğru bildiğini varsayalım
+        // Gerçek API entegrasyonunda buraya API'den gelen transcript gelecek
+        const randomSuccess = Math.random() > 0.2;
+        const simulatedTranscript = randomSuccess ? beklenenKelime : "Yanlış Kelime";
+
+        console.log(`Analiz Sonucu - Beklenen: "${beklenenKelime}", Algılanan: "${simulatedTranscript}"`);
+
+        // 2. KRİTİK DÜZELTME: Karşılaştırma Mantığı
+        const temizlenenTranscript = simulatedTranscript.trim().toLowerCase();
+        const temizlenenBeklenen = beklenenKelime.trim().toLowerCase();
+
+        if (temizlenenTranscript === temizlenenBeklenen) {
+            // BAŞARILI
+            setRecordingStatus('Harika! 🎉');
             setMoves(m => m + 1);
 
-            // Başarılı kabul edip sonraki aşamaya geçiş simülasyonu
             setTimeout(() => {
                 handleNextStage();
             }, 1000);
+        } else {
+            // HATALI
+            setRecordingStatus('Tekrar Dene ❌');
+            setErrors(e => e + 1);
+
+            // Kullanıcıya tekrar deneme şansı ver
+            setTimeout(() => {
+                setRecordingStatus('Kayıt Hazır');
+            }, 1500);
         }
     };
 
@@ -52,11 +115,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         } else {
             // Oyun Bitti
             const duration = Math.floor((Date.now() - startTime) / 1000);
-            onGameEnd('bunu-soyle', duration, moves + 1, 0);
+            onGameEnd('bunu-soyle', duration, moves + 1, errors);
         }
     };
-
-    const currentItem = STAGES[currentStage];
 
     return (
         <DynamicBackground onExit={onExit}>
@@ -70,9 +131,6 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
                 <View style={styles.card}>
                     <View style={styles.imageContainer}>
-                        {/* Not: Eğer görseller yoksa uygulama hata verebilir. 
-                            Bu durumda geçici olarak uri kullanılması gerekebilir. 
-                            Şimdilik istenildiği gibi require kullanıldı. */}
                         <Image source={currentItem.image} style={styles.image} resizeMode="contain" />
                     </View>
 
@@ -91,7 +149,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     <Text style={[
                         styles.statusText,
                         isRecording && styles.statusRecording,
-                        recordingStatus === 'Analiz Ediliyor...' && styles.statusProcessing
+                        recordingStatus === 'Analiz Ediliyor...' && styles.statusProcessing,
+                        recordingStatus === 'Harika! 🎉' && styles.statusSuccess,
+                        recordingStatus === 'Tekrar Dene ❌' && styles.statusError
                     ]}>
                         {recordingStatus}
                     </Text>
@@ -198,6 +258,14 @@ const styles = StyleSheet.create({
     },
     statusProcessing: {
         color: '#F39C12',
+        fontWeight: 'bold',
+    },
+    statusSuccess: {
+        color: '#2ECC71',
+        fontWeight: 'bold',
+    },
+    statusError: {
+        color: '#E74C3C',
         fontWeight: 'bold',
     }
 });
