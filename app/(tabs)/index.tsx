@@ -1,4 +1,5 @@
 import BunuSoyle from '@/components/BunuSoyle';
+import CevizMacera from '@/components/CevizMacera';
 import DiziyiTamamla from '@/components/DiziyiTamamla';
 import DynamicBackground from '@/components/DynamicBackground';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
@@ -204,6 +205,11 @@ export default function App() {
           <Text style={styles.oyunAciklama}>Resimdeki nedir?</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548' }]} onPress={() => oyunuBaslat('ceviz-macera')}>
+          <Text style={styles.oyunBaslik}>🌰 Ceviz Macerası</Text>
+          <Text style={styles.oyunAciklama}>İnteraktif Hikaye</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={cikisYap}>
           <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
         </TouchableOpacity>
@@ -232,6 +238,10 @@ export default function App() {
 
   if (asama === 'bunu-soyle') {
     return <BunuSoyle onGameEnd={oyunuBitir} onExit={cikisYap} />;
+  }
+
+  if (asama === 'ceviz-macera') {
+    return <CevizMacera onExit={() => setAsama('menu')} userId={ad} userEmail={email} />;
   }
 
   // ... (inside sonuc view)
