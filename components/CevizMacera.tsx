@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
-import { Audio } from 'expo-av';
+import { Audio, AVPlaybackStatus } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 
@@ -205,6 +205,7 @@ interface CevizMaceraProps {
 
 export default function CevizMacera({ onExit, userId, userEmail, userAge }: CevizMaceraProps) {
     const [currentNodeId, setCurrentNodeId] = useState<string>('intro');
+    const [viewState, setViewState] = useState<'story' | 'options'>('story');
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
 
@@ -233,6 +234,9 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     }, [storyVolume]);
 
     useEffect(() => {
+        // Reset state for new node
+        setViewState('story');
+
         fadeAnim.setValue(0);
         Animated.timing(fadeAnim, {
             toValue: 1,
@@ -272,13 +276,33 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
             }
 
             if (currentNode.audio) {
-                const { sound } = await Audio.Sound.createAsync(currentNode.audio);
+                const { sound } = await Audio.Sound.createAsync(
+                    currentNode.audio,
+                    { shouldPlay: true },
+                    onPlaybackStatusUpdate
+                );
                 soundRef.current = sound;
                 await sound.setVolumeAsync(storyVolume);
-                await sound.playAsync();
+            } else {
+                // If no audio (like in choice scenes), go directly to options
+                if (!currentNode.isFinal) {
+                    setViewState('options');
+                }
             }
         } catch (error) {
             console.log("Ses çalma hatası:", error);
+            // Fallback: if audio fails, show options anyway
+            if (!currentNode.isFinal) {
+                setViewState('options');
+            }
+        }
+    };
+
+    const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+        if (status.isLoaded && status.didJustFinish) {
+            if (!currentNode.isFinal) {
+                setViewState('options');
+            }
         }
     };
 
@@ -335,37 +359,33 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
 
     return (
         <DynamicBackground onExit={onExit}>
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-
-                    <View style={styles.header}>
-                        <Text style={styles.headerTitle}>CEVIZ MACERASI</Text>
-
-                        <View style={styles.volumeControl}>
-                            <Ionicons name="volume-low" size={24} color="white" />
-                            <Slider
-                                style={{ width: 120, height: 40 }}
-                                minimumValue={0}
-                                maximumValue={1}
-                                value={storyVolume}
-                                onValueChange={setStoryVolume}
-                                minimumTrackTintColor="#FFFFFF"
-                                maximumTrackTintColor="#000000"
-                                thumbTintColor="#FFFFFF"
-                            />
-                            <Ionicons name="volume-high" size={24} color="white" />
-                        </View>
+            <View style={styles.mainContainer}>
+                <View style={styles.header}>
+                    <Text style={styles.headerTitle}>CEVIZ MACERASI</Text>
+                    <View style={styles.volumeControl}>
+                        <Ionicons name="volume-low" size={24} color="white" />
+                        <Slider
+                            style={{ width: 120, height: 40 }}
+                            minimumValue={0}
+                            maximumValue={1}
+                            value={storyVolume}
+                            onValueChange={setStoryVolume}
+                            minimumTrackTintColor="#FFFFFF"
+                            maximumTrackTintColor="#000000"
+                            thumbTintColor="#FFFFFF"
+                        />
+                        <Ionicons name="volume-high" size={24} color="white" />
                     </View>
+                </View>
 
-                    <View style={styles.card}>
-
-                        <View style={styles.imageContainer}>
+                <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
+                    {viewState === 'story' ? (
+                        <View style={styles.storyView}>
                             <Image
                                 source={currentNode.bgImage}
-                                style={styles.mainImage}
+                                style={styles.storyImage}
                                 resizeMode="contain"
                             />
-
                             {currentNode.isFinal && currentNode.badgeImage && (
                                 <Animated.View style={[styles.badgeWrapper, { transform: [{ scale: badgeScale }] }]}>
                                     <Image
@@ -375,72 +395,46 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                                     />
                                 </Animated.View>
                             )}
-                        </View>
-
-                        <Text style={styles.storyText}>{currentNode.text}</Text>
-
-                        <View style={styles.optionsContainer}>
-                            {currentNode.isFinal ? (
+                            {currentNode.isFinal && (
                                 <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-                                    <Text style={styles.resetButtonText}>TEKRAR OYNA</Text>
+                                    <Ionicons name="refresh" size={40} color="#FFF" />
                                 </TouchableOpacity>
-                            ) : (
-                                <View style={styles.choicesRow}>
-                                    {currentNode.options?.map((opt) => {
-                                        if (opt.type === 'image_button') {
-                                            return (
-                                                <TouchableOpacity
-                                                    key={opt.id}
-                                                    style={styles.imageOptionButton}
-                                                    onPress={() => handleOptionClick(opt.next)}
-                                                    activeOpacity={0.8}
-                                                >
-                                                    <Image
-                                                        source={opt.image}
-                                                        style={styles.optionImage}
-                                                        resizeMode="contain"
-                                                    />
-                                                </TouchableOpacity>
-                                            );
-                                        } else {
-                                            return (
-                                                <TouchableOpacity
-                                                    key={opt.id}
-                                                    style={styles.textOptionButton}
-                                                    onPress={() => handleOptionClick(opt.next)}
-                                                    activeOpacity={0.8}
-                                                >
-                                                    <Text style={styles.textOptionLabel}>{opt.label}</Text>
-                                                </TouchableOpacity>
-                                            );
-                                        }
-                                    })}
-                                </View>
                             )}
                         </View>
-
-                    </View>
+                    ) : (
+                        <View style={styles.optionsView}>
+                            {currentNode.options?.map((opt) => (
+                                <TouchableOpacity
+                                    key={opt.id}
+                                    style={styles.largeOptionButton}
+                                    onPress={() => handleOptionClick(opt.next)}
+                                    activeOpacity={0.8}
+                                >
+                                    <Image
+                                        source={opt.image}
+                                        style={styles.largeOptionImage}
+                                        resizeMode="contain"
+                                    />
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    )}
                 </Animated.View>
-            </ScrollView>
+            </View>
         </DynamicBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    scrollContainer: {
-        flexGrow: 1,
-        paddingVertical: 20,
-        paddingHorizontal: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    container: {
+    mainContainer: {
+        flex: 1,
         width: '100%',
-        maxWidth: 900,
         alignItems: 'center',
+        paddingTop: 20,
     },
     header: {
-        width: '100%',
+        width: '90%',
+        maxWidth: 800,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -452,8 +446,7 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: '#8D6E63',
         elevation: 5,
-        flexWrap: 'wrap',
-        gap: 10
+        zIndex: 100,
     },
     headerTitle: {
         color: '#FFF',
@@ -468,41 +461,29 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         paddingHorizontal: 10,
     },
-    card: {
-        backgroundColor: '#FFF',
-        borderRadius: 30,
-        padding: 20,
+    contentContainer: {
+        flex: 1,
         width: '100%',
         alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
-        elevation: 10,
-        borderWidth: 4,
-        borderColor: '#EFEBE9',
-    },
-    imageContainer: {
-        width: '100%',
-        height: Platform.OS === 'web' ? 450 : 350,
-        borderRadius: 20,
-        overflow: 'hidden',
-        marginBottom: 20,
-        backgroundColor: '#F5F5F5',
-        borderWidth: 2,
-        borderColor: '#D7CCC8',
-        position: 'relative',
         justifyContent: 'center',
-        alignItems: 'center',
     },
-    mainImage: {
+    storyView: {
         width: '100%',
         height: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+    },
+    storyImage: {
+        width: '90%',
+        height: '80%',
+        maxWidth: 800,
+        borderRadius: 30,
     },
     badgeWrapper: {
         position: 'absolute',
-        bottom: 20,
-        right: 20,
+        bottom: '15%',
+        right: '10%',
         zIndex: 10,
         shadowColor: "#FFD700",
         shadowOffset: { width: 0, height: 0 },
@@ -511,75 +492,53 @@ const styles = StyleSheet.create({
         elevation: 15,
     },
     badgeImage: {
-        width: 120,
-        height: 120,
+        width: 150,
+        height: 150,
     },
-    storyText: {
-        fontSize: 18,
-        lineHeight: 26,
-        color: '#333',
-        textAlign: 'center',
-        marginBottom: 20,
-        paddingHorizontal: 10,
-    },
-    optionsContainer: {
-        width: '100%',
-        alignItems: 'center',
-    },
-    choicesRow: {
+    optionsView: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 20,
-        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: 50,
+        width: '100%',
+        height: '100%',
+        paddingHorizontal: 20,
     },
-    imageOptionButton: {
-        width: Platform.OS === 'web' ? 280 : 150,
-        height: Platform.OS === 'web' ? 180 : 100,
-        borderRadius: 20,
-        overflow: 'hidden',
-        elevation: 6,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        borderWidth: 3,
-        borderColor: '#FFB300',
+    largeOptionButton: {
+        width: Platform.OS === 'web' ? 350 : 160,
+        height: Platform.OS === 'web' ? 350 : 160,
+        borderRadius: 40,
         backgroundColor: '#FFF',
+        elevation: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        borderWidth: 5,
+        borderColor: '#FFB300',
+        padding: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    optionImage: {
+    largeOptionImage: {
         width: '100%',
         height: '100%',
     },
-    textOptionButton: {
-        backgroundColor: '#4CAF50',
-        paddingVertical: 15,
-        paddingHorizontal: 30,
-        borderRadius: 15,
-        borderBottomWidth: 4,
-        borderBottomColor: '#2E7D32',
-        elevation: 5,
-        minWidth: 200,
-    },
-    textOptionLabel: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: 'bold',
-        textAlign: 'center',
-    },
     resetButton: {
+        position: 'absolute',
+        bottom: 30,
         backgroundColor: '#FF5722',
-        paddingVertical: 15,
-        paddingHorizontal: 40,
-        borderRadius: 30,
+        width: 80,
+        height: 80,
+        borderRadius: 40,
         alignItems: 'center',
-        borderBottomWidth: 5,
-        borderBottomColor: '#BF360C',
-        elevation: 5,
-        marginTop: 20
-    },
-    resetButtonText: {
-        color: '#FFF',
-        fontSize: 22,
-        fontWeight: 'bold',
+        justifyContent: 'center',
+        borderWidth: 4,
+        borderColor: '#BF360C',
+        elevation: 10,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
     }
 });
