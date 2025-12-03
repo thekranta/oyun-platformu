@@ -106,27 +106,51 @@ export default function AdminPanel() {
     const analyzeGame = async (score: Score) => {
         setProcessingId(score.id);
         try {
-            let oyunAdiTR = '';
-            if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
-            else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
-            else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
-            else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
-            else if (score.oyun_turu === 'bunu-soyle') oyunAdiTR = 'Bunu Söyle (Telaffuz)';
-            else oyunAdiTR = score.oyun_turu;
+            let prompt = '';
 
-            const prompt = `
-                Sen bir okul öncesi eğitim uzmanısın. Aşağıdaki verilere göre çocuğun gelişimini değerlendir.
-                
-                Öğrenci: ${score.ogrenci_adi} (${score.ogrenci_yasi} yaşında)
-                Oyun: ${oyunAdiTR}
-                
-                Performans Verileri:
-                - Süre: ${score.sure || '?'} saniye
-                - Hamle: ${score.hamle_sayisi}
-                - Hata: ${score.hata_sayisi}
-                
-                Lütfen çocuğun dikkat, hafıza veya mantık becerileri hakkında yapıcı, motive edici ve ebeveyne yönelik kısa bir yorum yaz.
-            `;
+            if (score.oyun_turu === 'ceviz_macera') {
+                // --- MİZAÇ ANALİZİ PROMPTU (Ceviz Macera İçin) ---
+                // Ceviz Macera oyununda 'yapay_zeka_yorumu' alanına başlangıçta pathTag (örn: 'Fiziksel-Cozum-Kopru') kaydediliyor.
+                const aiContext = score.yapay_zeka_yorumu || 'Bilinmiyor';
+
+                prompt = `
+                    Sen bir Okul Öncesi Gelişim Uzmanısın. Görevin, 'Ceviz Taşıma Macerası' oyununu oynayan çocuğun yaptığı seçime göre ebeveynine pedagojik bir analiz maili yazmaktır.
+   
+                    Çocuk Bilgisi: ${score.ogrenci_adi}, ${score.ogrenci_yasi} aylık.
+                    Seçilen Yol (Data): ${aiContext} (Örn: 'Fiziksel-Cozum-Kopru' veya 'Sosyal-Cozum-Isbirligi')
+
+                    ANALİZ KURALLARI:
+                    - Eğer Data 'Fiziksel-Cozum-Kopru' ise: Çocuğun somut araçları (kütük) kullanarak pratik çözüm üretmeye yatkın olduğunu, mühendisvari bir neden-sonuç ilişkisi kurduğunu vurgula.
+                    - Eğer Data 'Fiziksel-Cozum-Destek' ise: Çocuğun zorlandığında güvenilir birinden (Fil) yardım istemeyi bildiğini, bunun sağlıklı bir güven bağı göstergesi olduğunu vurgula.
+                    - Eğer Data 'Sosyal-Cozum-Isbirligi' ise: Çocuğun bireysel çaba yerine topluluğu (kuş sürüsü) organize etmeyi seçtiğini, sosyal zekasının ve liderlik potansiyelinin yüksek olduğunu vurgula.
+                    - Eğer Data 'Bilissel-Cozum-Yaraticilik' ise: Çocuğun standart taşımak yerine yaprakları kızak yaparak eğlenceli ve inovatif bir yol bulduğunu, 'kutunun dışında' düşünebildiğini vurgula.
+
+                    Maili samimi, profesyonel ve cesaretlendirici bir dille yaz. Hata sayısından veya puandan ASLA bahsetme.
+                `;
+            } else {
+                // --- STANDART PERFORMANS PROMPTU (Diğer Oyunlar İçin) ---
+                let oyunAdiTR = '';
+                if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
+                else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
+                else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
+                else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
+                else if (score.oyun_turu === 'bunu-soyle') oyunAdiTR = 'Bunu Söyle (Telaffuz)';
+                else oyunAdiTR = score.oyun_turu;
+
+                prompt = `
+                    Sen bir okul öncesi eğitim uzmanısın. Aşağıdaki verilere göre çocuğun gelişimini değerlendir.
+                    
+                    Öğrenci: ${score.ogrenci_adi} (${score.ogrenci_yasi} yaşında)
+                    Oyun: ${oyunAdiTR}
+                    
+                    Performans Verileri:
+                    - Süre: ${score.sure || '?'} saniye
+                    - Hamle: ${score.hamle_sayisi}
+                    - Hata: ${score.hata_sayisi}
+                    
+                    Lütfen çocuğun dikkat, hafıza veya mantık becerileri hakkında yapıcı, motive edici ve ebeveyne yönelik kısa bir yorum yaz.
+                `;
+            }
 
             const response = await fetch(
                 `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY?.trim()}`,
