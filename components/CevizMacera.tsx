@@ -78,7 +78,6 @@ const storyData = {
         id: 'choice_a1',
         bgImage: require('../assets/images/end_a1_scene.png'),
         text: "Kütükten köprü yapmaya karar verdiler! Peki köprüyü nasıl inşa etsinler?",
-        audio: require('../assets/sounds/audio_scene_a.mp3'),
         options: [
             {
                 id: 'A1_1',
@@ -100,7 +99,6 @@ const storyData = {
         id: 'choice_a2',
         bgImage: require('../assets/images/end_a2_scene.png'),
         text: "Filo'nun sırtına binmeye karar verdiler! Peki nasıl binsin Pıtır?",
-        audio: require('../assets/sounds/audio_scene_a.mp3'),
         options: [
             {
                 id: 'A2_1',
@@ -122,7 +120,6 @@ const storyData = {
         id: 'choice_b1',
         bgImage: require('../assets/images/end_b1_scene.png'),
         text: "Kuş arkadaşlarını çağırmaya karar verdiler! Nasıl çağırsınlar?",
-        audio: require('../assets/sounds/audio_scene_b.mp3'),
         options: [
             {
                 id: 'B1_1',
@@ -144,7 +141,6 @@ const storyData = {
         id: 'choice_b2',
         bgImage: require('../assets/images/end_b2_scene.png'),
         text: "Yaprak kızak yapmaya karar verdiler! Hangi yaprakları kullansınlar?",
-        audio: require('../assets/sounds/audio_scene_b.mp3'),
         options: [
             {
                 id: 'B2_1',
