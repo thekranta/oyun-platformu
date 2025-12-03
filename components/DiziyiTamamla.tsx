@@ -70,6 +70,15 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
 
     const currentPattern = PATTERNS[currentStage];
 
+    const shuffledOptions = React.useMemo(() => {
+        const options = [...currentPattern.options];
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
+        return options;
+    }, [currentPattern]);
+
     useEffect(() => {
         playSound('background');
         return () => {
@@ -204,7 +213,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
 
                 {/* Seçenekler */}
                 <View style={styles.optionsContainer}>
-                    {currentPattern.options.map((option, index) => {
+                    {shuffledOptions.map((option, index) => {
                         const isSelected = selectedOption === option;
                         const isSelectedCorrect = isSelected && isCorrect;
                         const isSelectedWrong = isSelected && !isCorrect && !stageCompleted;
