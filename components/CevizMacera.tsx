@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 
@@ -10,7 +12,7 @@ type StoryNodeId = 'intro' | 'scene_a' | 'scene_b' | 'end_a1' | 'end_a2' | 'end_
 
 interface Option {
     id: string;
-    imageBtn: string; // Artık zorunlu ve görsel ismi
+    imageBtn: string;
     nextNode: StoryNodeId;
 }
 
@@ -63,16 +65,15 @@ const storyNodes: Record<StoryNodeId, StoryNode> = {
     scene_a: {
         image: 'scene_a_river.png',
         options: [
-            // Metin yerine görsel kullanıyoruz: Sonuç sahnelerinin görselleri ipucu olarak
-            { id: 'A1', imageBtn: 'end_a1_scene.png', nextNode: 'end_a1' }, // Köprü
-            { id: 'A2', imageBtn: 'end_a2_scene.png', nextNode: 'end_a2' }  // Sırt
+            { id: 'A1', imageBtn: 'end_a1_scene.png', nextNode: 'end_a1' },
+            { id: 'A2', imageBtn: 'end_a2_scene.png', nextNode: 'end_a2' }
         ]
     },
     scene_b: {
         image: 'scene_b_thinking.png',
         options: [
-            { id: 'B1', imageBtn: 'end_b1_scene.png', nextNode: 'end_b1' }, // Kuşlar
-            { id: 'B2', imageBtn: 'end_b2_scene.png', nextNode: 'end_b2' }  // Yaprak
+            { id: 'B1', imageBtn: 'end_b1_scene.png', nextNode: 'end_b1' },
+            { id: 'B2', imageBtn: 'end_b2_scene.png', nextNode: 'end_b2' }
         ]
     },
     end_a1: {
@@ -114,35 +115,42 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
 
-    // Global ses kontrolü
-    const { isMuted, toggleMute } = useSound();
-
-    // Yerel ses referansı (Hikaye anlatımı için)
+    // Ses Kontrolleri
+    const { stopSound } = useSound(); // Global sesi durdurmak için
+    const [storyVolume, setStoryVolume] = useState(1.0);
     const soundRef = useRef<Audio.Sound | null>(null);
 
     // Animasyon Değerleri
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const badgeScaleAnim = useRef(new Animated.Value(0)).current;
-    const badgeGlowAnim = useRef(new Animated.Value(1)).current;
+
+    // Konfeti
+    const confettiRef = useRef<ConfettiCannon>(null);
 
     const currentNode = storyNodes[currentNodeId];
-    const { width } = Dimensions.get('window');
     const isWeb = Platform.OS === 'web';
 
-    // Mute durumu değiştiğinde sesi yönet
+    // 1. Başlangıçta Arka Plan Müziğini Durdur
+    useEffect(() => {
+        stopSound('background');
+
+        return () => {
+            // Çıkışta temizlik
+            if (soundRef.current) {
+                soundRef.current.unloadAsync();
+            }
+        };
+    }, []);
+
+    // 2. Ses Seviyesi Değişince Uygula
     useEffect(() => {
         if (soundRef.current) {
-            if (isMuted) {
-                soundRef.current.pauseAsync();
-            } else {
-                soundRef.current.playAsync();
-            }
+            soundRef.current.setVolumeAsync(storyVolume);
         }
-    }, [isMuted]);
+    }, [storyVolume]);
 
-    // Sahne Değişimi Efektleri
+    // 3. Sahne Değişimi Mantığı
     useEffect(() => {
-        // 1. Sahne Geçiş Animasyonu
+        // Animasyon
         fadeAnim.setValue(0);
         Animated.timing(fadeAnim, {
             toValue: 1,
@@ -150,44 +158,19 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
             useNativeDriver: true,
         }).start();
 
-        // 2. Ses Çalma
+        // Ses Çalma
         playSceneAudio(currentNodeId);
 
-        // 3. Final Ekranı Animasyonları ve Loglama
+        // Final İşlemleri
         if (currentNode.isFinal) {
-            // Badge Animasyonu
-            badgeScaleAnim.setValue(0);
-            Animated.spring(badgeScaleAnim, {
-                toValue: 1,
-                friction: 6,
-                tension: 40,
-                useNativeDriver: true,
-                delay: 500
-            }).start();
-
-            // Badge Glow
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(badgeGlowAnim, { toValue: 1.1, duration: 1000, useNativeDriver: true }),
-                    Animated.timing(badgeGlowAnim, { toValue: 1, duration: 1000, useNativeDriver: true })
-                ])
-            ).start();
-
-            // Loglama
+            if (confettiRef.current) {
+                confettiRef.current.start();
+            }
             if (!isLogging) {
                 logGameResult(currentNode.pathTag || 'Unknown');
             }
         }
     }, [currentNodeId]);
-
-    // Component Unmount Temizliği
-    useEffect(() => {
-        return () => {
-            if (soundRef.current) {
-                soundRef.current.unloadAsync();
-            }
-        };
-    }, []);
 
     const playSceneAudio = async (nodeId: string) => {
         try {
@@ -200,10 +183,8 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
             if (soundSource) {
                 const { sound } = await Audio.Sound.createAsync(soundSource);
                 soundRef.current = sound;
-
-                if (!isMuted) {
-                    await sound.playAsync();
-                }
+                await sound.setVolumeAsync(storyVolume);
+                await sound.playAsync();
             }
         } catch (error) {
             console.log("Ses çalma hatası:", error);
@@ -230,19 +211,16 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
         if (!SUPABASE_URL || !SUPABASE_KEY) return;
 
         try {
-            // Admin panelinde görünmesi için 'oyun_skorlari' tablosunu kullanıyoruz
             const logData = {
                 ogrenci_adi: userId || 'Misafir',
-                ogrenci_yasi: 0, // Varsayılan
-                oyun_turu: 'ceviz_macera', // Admin panelinde bu isimle görünecek
-                hamle_sayisi: 1, // Sembolik
-                hata_sayisi: 0, // İstenen kural
+                ogrenci_yasi: 0,
+                oyun_turu: 'ceviz_macera',
+                hamle_sayisi: 1,
+                hata_sayisi: 0,
                 sure: durationSeconds,
-                yapay_zeka_yorumu: pathTag, // Yol bilgisini buraya kaydediyoruz ki admin panelinde görünsün
+                yapay_zeka_yorumu: pathTag,
                 email: userEmail
             };
-
-            console.log("📤 Supabase Log (oyun_skorlari):", logData);
 
             await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
                 method: 'POST',
@@ -264,51 +242,67 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
 
-                    {/* HEADER */}
+                    {/* HEADER & SES KONTROLÜ */}
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>CEVİZ MACERASI</Text>
-                        <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-                            <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={32} color="white" />
-                        </TouchableOpacity>
+
+                        <View style={styles.volumeControl}>
+                            <Ionicons name="volume-low" size={24} color="white" />
+                            <Slider
+                                style={{ width: 120, height: 40 }}
+                                minimumValue={0}
+                                maximumValue={1}
+                                value={storyVolume}
+                                onValueChange={setStoryVolume}
+                                minimumTrackTintColor="#FFFFFF"
+                                maximumTrackTintColor="#000000"
+                                thumbTintColor="#FFFFFF"
+                            />
+                            <Ionicons name="volume-high" size={24} color="white" />
+                        </View>
                     </View>
 
                     {/* SAHNE KARTI */}
                     <View style={styles.card}>
 
                         {/* GÖRSEL ALANI */}
-                        <View style={styles.imageContainer}>
+                        <View style={[
+                            styles.imageContainer,
+                            currentNode.isFinal && styles.finalImageContainer // Finalde daha büyük
+                        ]}>
                             <Image
                                 source={ASSETS[currentNode.image]}
                                 style={styles.mainImage}
-                                resizeMode="cover"
+                                resizeMode="contain" // Kırpılmayı önlemek için contain
                             />
 
-                            {/* FINAL BADGE */}
+                            {/* FINAL BADGE (Animasyonsuz, sabit ve net) */}
                             {currentNode.isFinal && currentNode.badge && (
-                                <Animated.View style={[
-                                    styles.badgeWrapper,
-                                    {
-                                        transform: [
-                                            { scale: badgeScaleAnim },
-                                            { scale: badgeGlowAnim }
-                                        ]
-                                    }
-                                ]}>
+                                <View style={styles.badgeWrapper}>
                                     <Image
                                         source={ASSETS[currentNode.badge]}
                                         style={styles.badgeImage}
                                         resizeMode="contain"
                                     />
-                                </Animated.View>
+                                </View>
                             )}
                         </View>
 
-                        {/* SEÇENEKLER (GÖRSEL BUTONLAR) */}
+                        {/* SEÇENEKLER */}
                         <View style={styles.optionsContainer}>
                             {currentNode.isFinal ? (
-                                <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-                                    <Text style={styles.resetButtonText}>TEKRAR OYNA</Text>
-                                </TouchableOpacity>
+                                <View style={{ width: '100%', alignItems: 'center' }}>
+                                    <ConfettiCannon
+                                        count={200}
+                                        origin={{ x: -10, y: 0 }}
+                                        autoStart={true}
+                                        ref={confettiRef}
+                                        fadeOut={true}
+                                    />
+                                    <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+                                        <Text style={styles.resetButtonText}>TEKRAR OYNA</Text>
+                                    </TouchableOpacity>
+                                </View>
                             ) : (
                                 <View style={styles.choicesRow}>
                                     {currentNode.options?.map((opt) => (
@@ -321,7 +315,7 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
                                             <Image
                                                 source={ASSETS[opt.imageBtn]}
                                                 style={styles.optionImage}
-                                                resizeMode="cover"
+                                                resizeMode="contain" // Görselin tamamı görünsün
                                             />
                                         </TouchableOpacity>
                                     ))}
@@ -346,7 +340,7 @@ const styles = StyleSheet.create({
     },
     container: {
         width: '100%',
-        maxWidth: 800, // Web için genişletildi
+        maxWidth: 900,
         alignItems: 'center',
     },
     header: {
@@ -355,28 +349,28 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: '#5D4037',
-        paddingVertical: 15,
-        paddingHorizontal: 30,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
         borderRadius: 20,
         marginBottom: 20,
         borderWidth: 2,
         borderColor: '#8D6E63',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
         elevation: 5,
+        flexWrap: 'wrap',
+        gap: 10
     },
     headerTitle: {
         color: '#FFF',
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: 'bold',
         letterSpacing: 1,
     },
-    soundButton: {
+    volumeControl: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: 'rgba(255,255,255,0.2)',
-        padding: 10,
-        borderRadius: 50,
+        borderRadius: 25,
+        paddingHorizontal: 10,
     },
     card: {
         backgroundColor: '#FFF',
@@ -394,7 +388,7 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         width: '100%',
-        height: Platform.OS === 'web' ? 400 : 300, // Web'de daha büyük
+        height: Platform.OS === 'web' ? 400 : 300,
         borderRadius: 20,
         overflow: 'hidden',
         marginBottom: 30,
@@ -405,12 +399,17 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    finalImageContainer: {
+        height: Platform.OS === 'web' ? 550 : 400, // Finalde daha büyük alan
+    },
     mainImage: {
         width: '100%',
         height: '100%',
     },
     badgeWrapper: {
         position: 'absolute',
+        bottom: 20,
+        right: 20,
         zIndex: 10,
         shadowColor: "#FFD700",
         shadowOffset: { width: 0, height: 0 },
@@ -419,8 +418,8 @@ const styles = StyleSheet.create({
         elevation: 15,
     },
     badgeImage: {
-        width: 250, // Rozet büyütüldü
-        height: 250,
+        width: 150,
+        height: 150,
     },
     optionsContainer: {
         width: '100%',
@@ -429,22 +428,22 @@ const styles = StyleSheet.create({
     choicesRow: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 30, // Seçenekler arası boşluk arttırıldı
+        gap: 20,
         flexWrap: 'wrap',
     },
     imageOptionButton: {
-        width: Platform.OS === 'web' ? 250 : 160, // Butonlar büyütüldü
-        height: Platform.OS === 'web' ? 250 : 160,
-        borderRadius: 25,
+        width: Platform.OS === 'web' ? 300 : 160, // Genişlik arttırıldı
+        height: Platform.OS === 'web' ? 200 : 120, // Yükseklik ayarlandı (Dikdörtgen)
+        borderRadius: 20,
         overflow: 'hidden',
-        elevation: 8,
+        elevation: 6,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.3,
-        shadowRadius: 5,
-        borderWidth: 4,
-        borderColor: '#FFB300', // Altın çerçeve
-        backgroundColor: '#FFF8E1',
+        shadowRadius: 4,
+        borderWidth: 3,
+        borderColor: '#FFB300',
+        backgroundColor: '#FFF',
     },
     optionImage: {
         width: '100%',
@@ -452,17 +451,18 @@ const styles = StyleSheet.create({
     },
     resetButton: {
         backgroundColor: '#FF5722',
-        paddingVertical: 20,
+        paddingVertical: 15,
         paddingHorizontal: 40,
         borderRadius: 30,
         alignItems: 'center',
-        borderBottomWidth: 6,
+        borderBottomWidth: 5,
         borderBottomColor: '#BF360C',
         elevation: 5,
+        marginTop: 20
     },
     resetButtonText: {
         color: '#FFF',
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
     }
 });
