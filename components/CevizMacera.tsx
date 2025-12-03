@@ -36,8 +36,20 @@ const storyData = {
         text: "Filo çuvalı kaldırdı ama dere kenarındaki köprü yıkılmış! Karşıya nasıl geçsinler?",
         audio: require('../assets/sounds/audio_scene_a.mp3'),
         options: [
-            { id: 'A1', type: 'text_button', label: 'Kütükten Köprü Yap', next: 'end_a1' },
-            { id: 'A2', type: 'text_button', label: 'Filo\'nun Sırtına Bin', next: 'end_a2' }
+            {
+                id: 'A1',
+                type: 'image_button',
+                image: require('../assets/images/end_a1_badge.png'),
+                label: 'Kütükten Köprü Yap',
+                next: 'end_a1'
+            },
+            {
+                id: 'A2',
+                type: 'image_button',
+                image: require('../assets/images/end_a2_badge.png'),
+                label: 'Filo\'nun Sırtına Bin',
+                next: 'end_a2'
+            }
         ]
     },
     scene_b: {
@@ -46,8 +58,20 @@ const storyData = {
         text: "Maviş çuvalı kaldıramaz ama harika bir fikri var! Sence ne yapsınlar?",
         audio: require('../assets/sounds/audio_scene_b.mp3'),
         options: [
-            { id: 'B1', type: 'text_button', label: 'Kuş Arkadaşları Çağır', next: 'end_b1' },
-            { id: 'B2', type: 'text_button', label: 'Yaprak Kızak Yap', next: 'end_b2' }
+            {
+                id: 'B1',
+                type: 'image_button',
+                image: require('../assets/images/end_b1_badge.png'),
+                label: 'Kuş Arkadaşları Çağır',
+                next: 'end_b1'
+            },
+            {
+                id: 'B2',
+                type: 'image_button',
+                image: require('../assets/images/end_b2_badge.png'),
+                label: 'Yaprak Kızak Yap',
+                next: 'end_b2'
+            }
         ]
     },
     end_a1: {
