@@ -108,9 +108,10 @@ interface CevizMaceraProps {
     onExit: () => void;
     userId?: string;
     userEmail?: string;
+    userAge?: number;
 }
 
-export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraProps) {
+export default function CevizMacera({ onExit, userId, userEmail, userAge }: CevizMaceraProps) {
     const [currentNodeId, setCurrentNodeId] = useState<StoryNodeId>('intro');
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
@@ -213,7 +214,7 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
         try {
             const logData = {
                 ogrenci_adi: userId || 'Misafir',
-                ogrenci_yasi: 0,
+                ogrenci_yasi: userAge || 0,
                 oyun_turu: 'ceviz_macera',
                 hamle_sayisi: 1,
                 hata_sayisi: 0,

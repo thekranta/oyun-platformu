@@ -351,7 +351,14 @@ export default function AdminPanel() {
 
                 {showComment && score.yapay_zeka_yorumu && (
                     <View style={styles.aiCommentBox}>
-                        <Text style={styles.aiCommentText}>{score.yapay_zeka_yorumu}</Text>
+                        <Text style={styles.aiCommentText}>
+                            {score.yapay_zeka_yorumu.split(/(\*\*.*?\*\*)/g).map((part, index) => {
+                                if (part.startsWith('**') && part.endsWith('**')) {
+                                    return <Text key={index} style={{ fontWeight: 'bold' }}>{part.slice(2, -2)}</Text>;
+                                }
+                                return <Text key={index}>{part}</Text>;
+                            })}
+                        </Text>
                     </View>
                 )}
             </View>

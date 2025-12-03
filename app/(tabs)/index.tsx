@@ -241,7 +241,7 @@ export default function App() {
   }
 
   if (asama === 'ceviz-macera') {
-    return <CevizMacera onExit={() => setAsama('menu')} userId={ad} userEmail={email} />;
+    return <CevizMacera onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
   }
 
   // ... (inside sonuc view)
