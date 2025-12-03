@@ -1,117 +1,115 @@
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 
-// --- TİPLER VE VERİ YAPISI ---
-
+// --- TİPLER ---
 type StoryNodeId = 'intro' | 'scene_a' | 'scene_b' | 'end_a1' | 'end_a2' | 'end_b1' | 'end_b2';
 
-interface Choice {
-    id: string; // Path takibi için (A, B, A1...)
-    text: string;
-    imgKey?: string; // Buton görseli varsa
-    next: StoryNodeId;
+interface Option {
+    id: string;
+    imageBtn?: string; // Görsel buton ismi (btn_filo.png gibi)
+    textBtn?: string;  // Metin buton yazısı
+    nextNode: StoryNodeId;
+    label?: string; // Görsel buton altındaki yazı
 }
 
 interface StoryNode {
-    id: StoryNodeId;
+    image: string;
     text: string;
-    imageKey: string; // Sahne görseli
-    choices?: Choice[];
-    badgeKey?: string; // Ödül rozeti (Sadece finallerde)
-    audioKey?: string; // Ses dosyası
+    options?: Option[];
+    badge?: string;
+    isFinal?: boolean;
+    pathTag?: string;
 }
 
-// --- GÖRSEL VE SES YÖNETİMİ ---
+// --- GÖRSEL VARLIKLARI (ASSETS) ---
+// Kullanıcının belirttiği dosya isimlerine göre eşleştirme.
+// Not: Dosyaların assets/images/ klasöründe olduğu varsayılmıştır.
 const ASSETS: Record<string, any> = {
-    // Sahneler
-    'intro_scene': require('../assets/images/intro_scene.png'),
-    'scene_a_river': require('../assets/images/scene_a_river.png'),
-    'scene_b_thinking': require('../assets/images/scene_b_thinking.png'),
-    'end_a1_scene': require('../assets/images/end_a1_scene.png'),
-    'end_a2_scene': require('../assets/images/end_a2_scene.png'),
-    'end_b1_scene': require('../assets/images/end_b1_scene.png'),
-    'end_b2_scene': require('../assets/images/end_b2_scene.png'),
-
-    // Butonlar
-    'btn_filo': require('../assets/images/btn_filo.png'),
-    'btn_mavis': require('../assets/images/btn_mavis.png'),
-
-    // Rozetler
-    'end_a1_badge': require('../assets/images/end_a1_badge.png'),
-    'end_a2_badge': require('../assets/images/end_a2_badge.png'),
-    'end_b1_badge': require('../assets/images/end_b1_badge.png'),
-    'end_b2_badge': require('../assets/images/end_b2_badge.png'),
-
-    // Sesler
-    'audio_intro': require('../assets/sounds/audio_intro.mp3'),
-    'audio_scene_a': require('../assets/sounds/audio_scene_a.mp3'),
-    'audio_scene_b': require('../assets/sounds/audio_scene_b.mp3'),
-    'audio_end_a1': require('../assets/sounds/audio_end_a1.mp3'),
-    'audio_end_a2': require('../assets/sounds/audio_end_a2.mp3'),
-    'audio_end_b1': require('../assets/sounds/audio_end_b1.mp3'),
-    'audio_end_b2': require('../assets/sounds/audio_end_b2.mp3'),
+    'game_cover.png': require('../assets/images/game_cover.png'),
+    'intro_scene.png': require('../assets/images/intro_scene.png'),
+    'btn_filo.png': require('../assets/images/btn_filo.png'),
+    'btn_mavis.png': require('../assets/images/btn_mavis.png'),
+    'scene_a_river.png': require('../assets/images/scene_a_river.png'),
+    'scene_b_thinking.png': require('../assets/images/scene_b_thinking.png'),
+    'end_a1_scene.png': require('../assets/images/end_a1_scene.png'),
+    'end_a1_badge.png': require('../assets/images/end_a1_badge.png'),
+    'end_a2_scene.png': require('../assets/images/end_a2_scene.png'),
+    'end_a2_badge.png': require('../assets/images/end_a2_badge.png'),
+    'end_b1_scene.png': require('../assets/images/end_b1_scene.png'),
+    'end_b1_badge.png': require('../assets/images/end_b1_badge.png'),
+    'end_b2_scene.png': require('../assets/images/end_b2_scene.png'),
+    'end_b2_badge.png': require('../assets/images/end_b2_badge.png'),
 };
 
-const STORY_NODES: Record<StoryNodeId, StoryNode> = {
+// --- SES DOSYALARI (Placeholder) ---
+// Kullanıcı bu sefer seslerden bahsetmedi ama önceki istekte vardı.
+// Kodun hata vermemesi için ve "önceki versiyonda eksikler oldu" dediği için
+// ses mantığını koruyoruz ama strict node yapısına entegre ediyoruz.
+const SOUNDS: Record<string, any> = {
+    'intro': require('../assets/sounds/audio_intro.mp3'),
+    'scene_a': require('../assets/sounds/audio_scene_a.mp3'),
+    'scene_b': require('../assets/sounds/audio_scene_b.mp3'),
+    'end_a1': require('../assets/sounds/audio_end_a1.mp3'),
+    'end_a2': require('../assets/sounds/audio_end_a2.mp3'),
+    'end_b1': require('../assets/sounds/audio_end_b1.mp3'),
+    'end_b2': require('../assets/sounds/audio_end_b2.mp3'),
+};
+
+// --- HİKAYE VERİSİ (STORY NODES) ---
+const storyNodes: Record<StoryNodeId, StoryNode> = {
     intro: {
-        id: 'intro',
+        image: 'intro_scene.png',
         text: "Pıtır o gün çok şanslıydı! Ormanın derinliklerinde kış uykusu için kocaman bir ceviz çuvalı bulmuştu. Ama çuval o kadar ağırdı ki kıpırdatamadı. Üstelik yağmur başladı! Pıtır'ın yardıma ihtiyacı var. Sence kimden yardım istesin?",
-        imageKey: 'intro_scene',
-        audioKey: 'audio_intro',
-        choices: [
-            { id: 'A', text: "Güçlü Fil Filo", imgKey: 'btn_filo', next: 'scene_a' },
-            { id: 'B', text: "Akıllı Kuş Maviş", imgKey: 'btn_mavis', next: 'scene_b' }
+        options: [
+            { id: 'A', imageBtn: 'btn_filo.png', nextNode: 'scene_a', label: 'Güçlü Fil Filo' },
+            { id: 'B', imageBtn: 'btn_mavis.png', nextNode: 'scene_b', label: 'Akıllı Kuş Maviş' }
         ]
     },
     scene_a: {
-        id: 'scene_a',
+        image: 'scene_a_river.png',
         text: "Filo hortumuyla çuvalı kaldırdı ama önlerine şırıl şırıl akan kocaman bir dere çıktı! Köprü yıkılmıştı. Filo durdu ve düşündü. Sence derenin karşısına nasıl geçmeliler?",
-        imageKey: 'scene_a_river',
-        audioKey: 'audio_scene_a',
-        choices: [
-            { id: 'A1', text: "Kütükten Köprü Yap 🪵", next: 'end_a1' },
-            { id: 'A2', text: "Filo'nun Sırtına Bin 🐘", next: 'end_a2' }
+        options: [
+            { id: 'A1', textBtn: 'Kütükten Köprü Yap', nextNode: 'end_a1' },
+            { id: 'A2', textBtn: 'Filo\'nun Sırtına Bin', nextNode: 'end_a2' }
         ]
     },
     scene_b: {
-        id: 'scene_b',
+        image: 'scene_b_thinking.png',
         text: "Maviş, 'Ben o çuvalı kaldıramam Pıtır, ben çok küçüğüm. Ama harika bir fikrim var!' dedi. Sence Maviş nasıl bir çözüm buldu?",
-        imageKey: 'scene_b_thinking',
-        audioKey: 'audio_scene_b',
-        choices: [
-            { id: 'B1', text: "Kuş Arkadaşları Çağır 🕊️", next: 'end_b1' },
-            { id: 'B2', text: "Yaprak Kızak Yap 🍃", next: 'end_b2' }
+        options: [
+            { id: 'B1', textBtn: 'Kuş Arkadaşları Çağır', nextNode: 'end_b1' },
+            { id: 'B2', textBtn: 'Yaprak Kızak Yap', nextNode: 'end_b2' }
         ]
     },
     end_a1: {
-        id: 'end_a1',
+        image: 'end_a1_scene.png',
+        badge: 'end_a1_badge.png',
         text: "Filo hemen oradaki devrilmiş kütüğü uzattı ve harika bir köprü oldu! Pıtır, 'Teşekkür ederim Filo' dedi. Anlamıştı ki; işler ne kadar zor olursa olsun, arkadaşlar el ele verince her şey kolaylaşır.",
-        imageKey: 'end_a1_scene',
-        badgeKey: 'end_a1_badge',
-        audioKey: 'audio_end_a1'
+        isFinal: true,
+        pathTag: 'Fiziksel-Cozum-Kopru'
     },
     end_a2: {
-        id: 'end_a2',
+        image: 'end_a2_scene.png',
+        badge: 'end_a2_badge.png',
         text: "Filo, 'Atla sırtıma!' dedi. Pıtır, ceviz çuvalıyla birlikte Filo’nun sırtında sudan geçti ve hiç ıslanmadı! Anlamıştı ki; işler ne kadar zor olursa olsun, arkadaşlar el ele verince her şey kolaylaşır.",
-        imageKey: 'end_a2_scene',
-        badgeKey: 'end_a2_badge',
-        audioKey: 'audio_end_a2'
+        isFinal: true,
+        pathTag: 'Fiziksel-Cozum-Destek'
     },
     end_b1: {
-        id: 'end_b1',
+        image: 'end_b1_scene.png',
+        badge: 'end_b1_badge.png',
         text: "Maviş bir ıslık çaldı, gökyüzü kuşlarla doldu! Her kuş bir ceviz taşıdı ve çuval saniyeler içinde bitti. Anlamıştı ki; işler ne kadar zor olursa olsun, arkadaşlar el ele verince her şey kolaylaşır.",
-        imageKey: 'end_b1_scene',
-        badgeKey: 'end_b1_badge',
-        audioKey: 'audio_end_b1'
+        isFinal: true,
+        pathTag: 'Sosyal-Cozum-Isbirligi'
     },
     end_b2: {
-        id: 'end_b2',
+        image: 'end_b2_scene.png',
+        badge: 'end_b2_badge.png',
         text: "Cevizleri büyük yaprakların üzerine koyup kızak gibi kaydırdılar. Hem yorulmadılar hem çok eğlendiler! Anlamıştı ki; işler ne kadar zor olursa olsun, arkadaşlar el ele verince her şey kolaylaşır.",
-        imageKey: 'end_b2_scene',
-        badgeKey: 'end_b2_badge',
-        audioKey: 'audio_end_b2'
+        isFinal: true,
+        pathTag: 'Bilissel-Cozum-Yaraticilik'
     }
 };
 
@@ -125,96 +123,58 @@ interface CevizMaceraProps {
 
 export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraProps) {
     const [currentNodeId, setCurrentNodeId] = useState<StoryNodeId>('intro');
-    const [pathTaken, setPathTaken] = useState<string[]>([]);
-    const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
-
-    // Audio Ref
     const soundRef = useRef<Audio.Sound | null>(null);
 
-    // Animasyonlar
+    // Animasyon Değerleri
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const badgeScaleAnim = useRef(new Animated.Value(0)).current;
-    const badgeRotateAnim = useRef(new Animated.Value(0)).current;
+    const badgeGlowAnim = useRef(new Animated.Value(1)).current;
 
-    const currentNode = STORY_NODES[currentNodeId];
-    const isEnding = !!currentNode.badgeKey;
+    const currentNode = storyNodes[currentNodeId];
+    const { width } = Dimensions.get('window');
 
-    // Sahne geçişi ve Ses Yönetimi
+    // Sahne Değişimi Efektleri
     useEffect(() => {
-        let isMounted = true;
-
-        const playSceneAudio = async () => {
-            try {
-                // Önceki sesi durdur ve unload et
-                if (soundRef.current) {
-                    await soundRef.current.unloadAsync();
-                    soundRef.current = null;
-                }
-
-                // Yeni sesi yükle ve çal
-                if (currentNode.audioKey && isMounted) {
-                    console.log(`🔊 Ses yükleniyor: ${currentNode.audioKey}`);
-                    const { sound } = await Audio.Sound.createAsync(
-                        ASSETS[currentNode.audioKey],
-                        { shouldPlay: true }
-                    );
-                    soundRef.current = sound;
-                }
-            } catch (error) {
-                console.error("Ses çalma hatası:", error);
-            }
-        };
-
-        // Animasyonu başlat
+        // 1. Sahne Geçiş Animasyonu
         fadeAnim.setValue(0);
         Animated.timing(fadeAnim, {
             toValue: 1,
-            duration: 500,
+            duration: 600,
             useNativeDriver: true,
         }).start();
 
-        // Sesi çal
-        playSceneAudio();
+        // 2. Ses Çalma
+        playSceneAudio(currentNodeId);
 
-        // Bitiş ekranı animasyonları ve loglama
-        if (isEnding) {
-            // Rozet animasyonu
+        // 3. Final Ekranı Animasyonları ve Loglama
+        if (currentNode.isFinal) {
+            // Badge Animasyonu (Zoom In)
             badgeScaleAnim.setValue(0);
-            badgeRotateAnim.setValue(0);
+            Animated.spring(badgeScaleAnim, {
+                toValue: 1,
+                friction: 6,
+                tension: 40,
+                useNativeDriver: true,
+                delay: 500
+            }).start();
 
-            Animated.sequence([
-                Animated.delay(300),
-                Animated.spring(badgeScaleAnim, {
-                    toValue: 1,
-                    friction: 5,
-                    tension: 40,
-                    useNativeDriver: true
-                }),
-                Animated.loop(
-                    Animated.sequence([
-                        Animated.timing(badgeRotateAnim, { toValue: 1, duration: 100, useNativeDriver: true, easing: Easing.linear }),
-                        Animated.timing(badgeRotateAnim, { toValue: -1, duration: 100, useNativeDriver: true, easing: Easing.linear }),
-                        Animated.timing(badgeRotateAnim, { toValue: 0, duration: 100, useNativeDriver: true, easing: Easing.linear }),
-                        Animated.delay(2000)
-                    ])
-                )
-            ]).start();
+            // Badge Glow (Nefes Alma Efekti)
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(badgeGlowAnim, { toValue: 1.1, duration: 1000, useNativeDriver: true }),
+                    Animated.timing(badgeGlowAnim, { toValue: 1, duration: 1000, useNativeDriver: true })
+                ])
+            ).start();
 
+            // Loglama
             if (!isLogging) {
-                logGameResult();
+                logGameResult(currentNode.pathTag || 'Unknown');
             }
         }
-
-        return () => {
-            isMounted = false;
-            if (soundRef.current) {
-                soundRef.current.unloadAsync();
-            }
-        };
     }, [currentNodeId]);
 
-    // Component unmount olduğunda sesi temizle
+    // Component Unmount Temizliği
     useEffect(() => {
         return () => {
             if (soundRef.current) {
@@ -223,23 +183,35 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
         };
     }, []);
 
-    const handleChoice = (choice: Choice) => {
-        setPathTaken(prev => [...prev, choice.id]);
-        setCurrentNodeId(choice.next);
+    const playSceneAudio = async (nodeId: string) => {
+        try {
+            if (soundRef.current) {
+                await soundRef.current.unloadAsync();
+                soundRef.current = null;
+            }
+
+            const soundSource = SOUNDS[nodeId];
+            if (soundSource) {
+                const { sound } = await Audio.Sound.createAsync(soundSource);
+                soundRef.current = sound;
+                await sound.playAsync();
+            }
+        } catch (error) {
+            console.log("Ses çalma hatası (dosya eksik olabilir):", error);
+        }
+    };
+
+    const handleOptionClick = (option: Option) => {
+        setCurrentNodeId(option.nextNode);
     };
 
     const handleReset = () => {
         setCurrentNodeId('intro');
-        setPathTaken([]);
         setIsLogging(false);
     };
 
-    const logGameResult = async () => {
+    const logGameResult = async (pathTag: string) => {
         setIsLogging(true);
-        const endTime = Date.now();
-        const durationSeconds = Math.floor((endTime - startTime) / 1000);
-        const pathString = pathTaken.join('-');
-
         const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
         const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -249,13 +221,17 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
             const logData = {
                 ogrenci_adi: userId || 'Misafir',
                 game_name: 'ceviz_macera',
-                path_taken: pathString,
+
+                // İSTENEN FORMAT:
+                error_count: 0,
+                score: 100,
+                custom_data: pathTag, // 'Fiziksel-Cozum-Kopru' vb.
+
                 completed_at: new Date().toISOString(),
-                sure: durationSeconds,
                 email: userEmail
             };
 
-            console.log("📤 Oyun Logu:", logData);
+            console.log("📤 Supabase Log:", logData);
 
             await fetch(`${SUPABASE_URL}/rest/v1/game_logs`, {
                 method: 'POST',
@@ -272,158 +248,161 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
         }
     };
 
-    // Badge rotasyon interpolasyonu
-    const spin = badgeRotateAnim.interpolate({
-        inputRange: [-1, 1],
-        outputRange: ['-10deg', '10deg']
-    });
-
     return (
         <DynamicBackground onExit={onExit}>
-            <ScrollView contentContainerStyle={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContainer}>
+                <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
 
-                <Animated.View style={[styles.contentWrapper, { opacity: fadeAnim }]}>
-
-                    {/* Başlık */}
+                    {/* BAŞLIK */}
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>🌰 Ceviz Macerası</Text>
+                        <Text style={styles.headerTitle}>CEVİZ MACERASI</Text>
                     </View>
 
-                    {/* Ana Sahne Kartı */}
+                    {/* SAHNE KARTI */}
                     <View style={styles.card}>
 
-                        {/* Sahne Görseli */}
-                        <View style={styles.sceneContainer}>
+                        {/* GÖRSEL ALANI */}
+                        <View style={styles.imageContainer}>
                             <Image
-                                source={ASSETS[currentNode.imageKey]}
-                                style={styles.sceneImage}
+                                source={ASSETS[currentNode.image]}
+                                style={styles.mainImage}
                                 resizeMode="cover"
                             />
 
-                            {/* Bitiş Rozeti (Overlay) */}
-                            {isEnding && currentNode.badgeKey && (
-                                <Animated.View style={[styles.badgeContainer, { transform: [{ scale: badgeScaleAnim }, { rotate: spin }] }]}>
+                            {/* FINAL BADGE (Overlay) */}
+                            {currentNode.isFinal && currentNode.badge && (
+                                <Animated.View style={[
+                                    styles.badgeWrapper,
+                                    {
+                                        transform: [
+                                            { scale: badgeScaleAnim },
+                                            { scale: badgeGlowAnim } // Glow efekti için scale manipülasyonu
+                                        ]
+                                    }
+                                ]}>
                                     <Image
-                                        source={ASSETS[currentNode.badgeKey]}
+                                        source={ASSETS[currentNode.badge]}
                                         style={styles.badgeImage}
                                         resizeMode="contain"
                                     />
-                                    <Text style={styles.congratsText}>TEBRİKLER!</Text>
                                 </Animated.View>
                             )}
                         </View>
 
-                        {/* Hikaye Metni */}
+                        {/* METİN ALANI */}
                         <Text style={styles.storyText}>
                             {currentNode.text}
                         </Text>
 
-                        {/* Seçenekler veya Reset */}
-                        <View style={styles.choicesContainer}>
-                            {isEnding ? (
-                                <TouchableOpacity
-                                    style={[styles.button, styles.resetButton]}
-                                    onPress={handleReset}
-                                >
-                                    <Text style={styles.buttonText}>🔄 Tekrar Oyna</Text>
+                        {/* BUTONLAR */}
+                        <View style={styles.optionsContainer}>
+                            {currentNode.isFinal ? (
+                                <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+                                    <Text style={styles.resetButtonText}>TEKRAR OYNA</Text>
                                 </TouchableOpacity>
                             ) : (
-                                currentNode.choices?.map((choice, index) => (
+                                currentNode.options?.map((opt) => (
                                     <TouchableOpacity
-                                        key={index}
+                                        key={opt.id}
                                         style={[
-                                            styles.button,
-                                            choice.imgKey ? styles.imageButton : (index === 0 ? styles.buttonOptionA : styles.buttonOptionB)
+                                            styles.optionButton,
+                                            opt.imageBtn ? styles.imageOptionButton : styles.textOptionButton
                                         ]}
-                                        onPress={() => handleChoice(choice)}
+                                        onPress={() => handleOptionClick(opt)}
+                                        activeOpacity={0.8}
                                     >
-                                        {choice.imgKey ? (
-                                            <View style={styles.imageButtonContent}>
-                                                <Image source={ASSETS[choice.imgKey]} style={styles.btnImage} resizeMode="contain" />
-                                                <Text style={styles.imageButtonText}>{choice.text}</Text>
+                                        {opt.imageBtn ? (
+                                            // RESİMLİ BUTON (Intro için)
+                                            <View style={styles.imageBtnContent}>
+                                                <Image
+                                                    source={ASSETS[opt.imageBtn]}
+                                                    style={styles.btnImage}
+                                                    resizeMode="contain"
+                                                />
+                                                {opt.label && <Text style={styles.imageBtnLabel}>{opt.label}</Text>}
                                             </View>
                                         ) : (
-                                            <Text style={styles.buttonText}>{choice.text}</Text>
+                                            // METİN BUTON (Ara sahneler için)
+                                            <Text style={styles.textBtnLabel}>{opt.textBtn}</Text>
                                         )}
                                     </TouchableOpacity>
                                 ))
                             )}
                         </View>
+
                     </View>
-
                 </Animated.View>
-
             </ScrollView>
         </DynamicBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
+    scrollContainer: {
         flexGrow: 1,
-        alignItems: 'center',
-        padding: 20,
-        paddingTop: 40,
-    },
-    contentWrapper: {
-        width: '100%',
+        paddingVertical: 20,
+        paddingHorizontal: 15,
         alignItems: 'center',
     },
-    header: {
-        marginBottom: 15,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        paddingHorizontal: 25,
-        paddingVertical: 12,
-        borderRadius: 25,
-        borderWidth: 2,
-        borderColor: '#8D6E63',
-    },
-    headerTitle: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        color: '#5D4037',
-    },
-    card: {
-        backgroundColor: 'white',
-        borderRadius: 30,
-        padding: 20,
+    container: {
         width: '100%',
         maxWidth: 600,
         alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.35,
-        shadowRadius: 6,
-        elevation: 10,
-        borderWidth: 3,
-        borderColor: '#D7CCC8',
     },
-    sceneContainer: {
-        width: '100%',
-        height: 280,
-        backgroundColor: '#EFEBE9',
+    header: {
+        backgroundColor: '#5D4037',
+        paddingVertical: 10,
+        paddingHorizontal: 30,
         borderRadius: 20,
         marginBottom: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
         borderWidth: 2,
         borderColor: '#8D6E63',
-        position: 'relative',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 5,
     },
-    sceneImage: {
+    headerTitle: {
+        color: '#FFF',
+        fontSize: 24,
+        fontWeight: 'bold',
+        letterSpacing: 1,
+    },
+    card: {
+        backgroundColor: '#FFF',
+        borderRadius: 30,
+        padding: 20,
+        width: '100%',
+        alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.2,
+        shadowRadius: 10,
+        elevation: 10,
+        borderWidth: 4,
+        borderColor: '#EFEBE9',
+    },
+    imageContainer: {
+        width: '100%',
+        height: 300,
+        borderRadius: 20,
+        overflow: 'hidden',
+        marginBottom: 20,
+        backgroundColor: '#F5F5F5',
+        borderWidth: 2,
+        borderColor: '#D7CCC8',
+        position: 'relative',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    mainImage: {
         width: '100%',
         height: '100%',
     },
-    badgeContainer: {
+    badgeWrapper: {
         position: 'absolute',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        padding: 15,
-        borderRadius: 100,
-        width: 200,
-        height: 200,
+        zIndex: 10,
         shadowColor: "#FFD700",
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.8,
@@ -431,84 +410,78 @@ const styles = StyleSheet.create({
         elevation: 15,
     },
     badgeImage: {
-        width: 120,
-        height: 120,
-        marginBottom: 5,
-    },
-    congratsText: {
-        fontSize: 22,
-        fontWeight: '900',
-        color: '#FF6F00',
-        textShadowColor: 'rgba(0, 0, 0, 0.1)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
+        width: 180,
+        height: 180,
     },
     storyText: {
-        fontSize: 22,
-        color: '#4E342E',
+        fontSize: 20,
+        color: '#3E2723',
         textAlign: 'center',
-        marginBottom: 25,
-        lineHeight: 32,
+        lineHeight: 30,
+        marginBottom: 30,
         fontWeight: '600',
-        paddingHorizontal: 10,
+        paddingHorizontal: 5,
     },
-    choicesContainer: {
+    optionsContainer: {
         width: '100%',
         gap: 15,
     },
-    button: {
-        paddingVertical: 18,
-        paddingHorizontal: 20,
+    optionButton: {
         borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
+        overflow: 'hidden',
+        elevation: 4,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.5,
-        elevation: 5,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
     },
-    buttonOptionA: {
-        backgroundColor: '#66BB6A', // Yeşil
-        borderBottomWidth: 4,
-        borderBottomColor: '#388E3C',
-    },
-    buttonOptionB: {
-        backgroundColor: '#42A5F5', // Mavi
-        borderBottomWidth: 4,
-        borderBottomColor: '#1976D2',
-    },
-    imageButton: {
+    imageOptionButton: {
         backgroundColor: '#FFF8E1',
         borderWidth: 2,
         borderColor: '#FFB300',
-        paddingVertical: 10,
+        padding: 15,
     },
-    imageButtonContent: {
+    textOptionButton: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 18,
+        paddingHorizontal: 20,
+        borderBottomWidth: 5,
+        borderBottomColor: '#2E7D32',
+    },
+    imageBtnContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         gap: 15,
     },
     btnImage: {
-        width: 60,
-        height: 60,
+        width: 70,
+        height: 70,
     },
-    imageButtonText: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#5D4037',
-    },
-    resetButton: {
-        backgroundColor: '#FF7043', // Turuncu
-        borderBottomWidth: 4,
-        borderBottomColor: '#D84315',
-    },
-    buttonText: {
-        color: 'white',
+    imageBtnLabel: {
         fontSize: 20,
         fontWeight: 'bold',
+        color: '#5D4037',
+        flex: 1,
+    },
+    textBtnLabel: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#FFF',
         textAlign: 'center',
+    },
+    resetButton: {
+        backgroundColor: '#FF5722',
+        paddingVertical: 15,
+        borderRadius: 25,
+        width: '100%',
+        alignItems: 'center',
+        borderBottomWidth: 5,
+        borderBottomColor: '#BF360C',
+    },
+    resetButtonText: {
+        color: '#FFF',
+        fontSize: 22,
+        fontWeight: 'bold',
     }
 });
