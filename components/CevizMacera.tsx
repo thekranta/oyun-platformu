@@ -3,106 +3,86 @@ import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 
-// --- TİPLER ---
-type StoryNodeId = 'intro' | 'scene_a' | 'scene_b' | 'end_a1' | 'end_a2' | 'end_b1' | 'end_b2';
-
-interface Option {
-    id: string;
-    imageBtn: string;
-    nextNode: StoryNodeId;
-}
-
-interface StoryNode {
-    image: string;
-    options?: Option[];
-    badge?: string;
-    isFinal?: boolean;
-    pathTag?: string;
-}
-
-// --- GÖRSEL VARLIKLARI (ASSETS) ---
-const ASSETS: Record<string, any> = {
-    'game_cover.png': require('../assets/images/game_cover.png'),
-    'intro_scene.png': require('../assets/images/intro_scene.png'),
-    'btn_filo.png': require('../assets/images/btn_filo.png'),
-    'btn_mavis.png': require('../assets/images/btn_mavis.png'),
-    'scene_a_river.png': require('../assets/images/scene_a_river.png'),
-    'scene_b_thinking.png': require('../assets/images/scene_b_thinking.png'),
-    'end_a1_scene.png': require('../assets/images/end_a1_scene.png'),
-    'end_a1_badge.png': require('../assets/images/end_a1_badge.png'),
-    'end_a2_scene.png': require('../assets/images/end_a2_scene.png'),
-    'end_a2_badge.png': require('../assets/images/end_a2_badge.png'),
-    'end_b1_scene.png': require('../assets/images/end_b1_scene.png'),
-    'end_b1_badge.png': require('../assets/images/end_b1_badge.png'),
-    'end_b2_scene.png': require('../assets/images/end_b2_scene.png'),
-    'end_b2_badge.png': require('../assets/images/end_b2_badge.png'),
-};
-
-// --- SES DOSYALARI ---
-const SOUNDS: Record<string, any> = {
-    'intro': require('../assets/sounds/audio_intro.mp3'),
-    'scene_a': require('../assets/sounds/audio_scene_a.mp3'),
-    'scene_b': require('../assets/sounds/audio_scene_b.mp3'),
-    'end_a1': require('../assets/sounds/audio_end_a1.mp3'),
-    'end_a2': require('../assets/sounds/audio_end_a2.mp3'),
-    'end_b1': require('../assets/sounds/audio_end_b1.mp3'),
-    'end_b2': require('../assets/sounds/audio_end_b2.mp3'),
-};
-
-// --- HİKAYE VERİSİ ---
-const storyNodes: Record<StoryNodeId, StoryNode> = {
+// STORY DATA - KEsin Yapı
+const storyData = {
     intro: {
-        image: 'intro_scene.png',
+        id: 'intro',
+        bgImage: require('../assets/images/intro_scene.png'),
+        text: "Pıtır o gün çok şanslıydı! Kış uykusu için kocaman bir ceviz çuvalı bulmuştu ama kaldıramıyordu. Üstelik yağmur başladı! Sence kimden yardım istesin?",
+        audio: require('../assets/sounds/audio_intro.mp3'),
         options: [
-            { id: 'A', imageBtn: 'btn_filo.png', nextNode: 'scene_a' },
-            { id: 'B', imageBtn: 'btn_mavis.png', nextNode: 'scene_b' }
+            {
+                id: 'A',
+                type: 'image_button',
+                image: require('../assets/images/btn_filo.png'),
+                label: 'Güçlü Fil Filo',
+                next: 'scene_a'
+            },
+            {
+                id: 'B',
+                type: 'image_button',
+                image: require('../assets/images/btn_mavis.png'),
+                label: 'Akıllı Kuş Maviş',
+                next: 'scene_b'
+            }
         ]
     },
     scene_a: {
-        image: 'scene_a_river.png',
+        id: 'scene_a',
+        bgImage: require('../assets/images/scene_a_river.png'),
+        text: "Filo çuvalı kaldırdı ama dere kenarındaki köprü yıkılmış! Karşıya nasıl geçsinler?",
+        audio: require('../assets/sounds/audio_scene_a.mp3'),
         options: [
-            { id: 'A1', imageBtn: 'end_a1_scene.png', nextNode: 'end_a1' },
-            { id: 'A2', imageBtn: 'end_a2_scene.png', nextNode: 'end_a2' }
+            { id: 'A1', type: 'text_button', label: 'Kütükten Köprü Yap', next: 'end_a1' },
+            { id: 'A2', type: 'text_button', label: 'Filo\'nun Sırtına Bin', next: 'end_a2' }
         ]
     },
     scene_b: {
-        image: 'scene_b_thinking.png',
+        id: 'scene_b',
+        bgImage: require('../assets/images/scene_b_thinking.png'),
+        text: "Maviş çuvalı kaldıramaz ama harika bir fikri var! Sence ne yapsınlar?",
+        audio: require('../assets/sounds/audio_scene_b.mp3'),
         options: [
-            { id: 'B1', imageBtn: 'end_b1_scene.png', nextNode: 'end_b1' },
-            { id: 'B2', imageBtn: 'end_b2_scene.png', nextNode: 'end_b2' }
+            { id: 'B1', type: 'text_button', label: 'Kuş Arkadaşları Çağır', next: 'end_b1' },
+            { id: 'B2', type: 'text_button', label: 'Yaprak Kızak Yap', next: 'end_b2' }
         ]
     },
     end_a1: {
-        image: 'end_a1_scene.png',
-        badge: 'end_a1_badge.png',
+        id: 'end_a1',
         isFinal: true,
-        pathTag: 'Fiziksel-Cozum-Kopru'
+        bgImage: require('../assets/images/end_a1_scene.png'),
+        badgeImage: require('../assets/images/end_a1_badge.png'),
+        text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
+        analysisTag: 'Fiziksel-Cozum-Kopru'
     },
     end_a2: {
-        image: 'end_a2_scene.png',
-        badge: 'end_a2_badge.png',
+        id: 'end_a2',
         isFinal: true,
-        pathTag: 'Fiziksel-Cozum-Destek'
+        bgImage: require('../assets/images/end_a2_scene.png'),
+        badgeImage: require('../assets/images/end_a2_badge.png'),
+        text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
+        analysisTag: 'Fiziksel-Cozum-Destek'
     },
     end_b1: {
-        image: 'end_b1_scene.png',
-        badge: 'end_b1_badge.png',
+        id: 'end_b1',
         isFinal: true,
-        pathTag: 'Sosyal-Cozum-Isbirligi'
+        bgImage: require('../assets/images/end_b1_scene.png'),
+        badgeImage: require('../assets/images/end_b1_badge.png'),
+        text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
+        analysisTag: 'Sosyal-Cozum-Isbirligi'
     },
     end_b2: {
-        image: 'end_b2_scene.png',
-        badge: 'end_b2_badge.png',
+        id: 'end_b2',
         isFinal: true,
-        pathTag: 'Bilissel-Cozum-Yaraticilik'
+        bgImage: require('../assets/images/end_b2_scene.png'),
+        badgeImage: require('../assets/images/end_b2_badge.png'),
+        text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar!",
+        analysisTag: 'Bilissel-Cozum-Yaraticilik'
     }
 };
-
-// --- COMPONENT ---
 
 interface CevizMaceraProps {
     onExit: () => void;
@@ -112,46 +92,35 @@ interface CevizMaceraProps {
 }
 
 export default function CevizMacera({ onExit, userId, userEmail, userAge }: CevizMaceraProps) {
-    const [currentNodeId, setCurrentNodeId] = useState<StoryNodeId>('intro');
+    const [currentNodeId, setCurrentNodeId] = useState<string>('intro');
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
 
-    // Ses Kontrolleri
-    const { stopSound } = useSound(); // Global sesi durdurmak için
+    const { stopSound } = useSound();
     const [storyVolume, setStoryVolume] = useState(1.0);
     const soundRef = useRef<Audio.Sound | null>(null);
 
-    // Animasyon Değerleri
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const badgeBounce = useRef(new Animated.Value(0)).current;
 
-    // Konfeti
-    const confettiRef = useRef<ConfettiCannon>(null);
+    const currentNode = storyData[currentNodeId as keyof typeof storyData];
 
-    const currentNode = storyNodes[currentNodeId];
-    const isWeb = Platform.OS === 'web';
-
-    // 1. Başlangıçta Arka Plan Müziğini Durdur
     useEffect(() => {
         stopSound('background');
-
         return () => {
-            // Çıkışta temizlik
             if (soundRef.current) {
                 soundRef.current.unloadAsync();
             }
         };
     }, []);
 
-    // 2. Ses Seviyesi Değişince Uygula
     useEffect(() => {
         if (soundRef.current) {
             soundRef.current.setVolumeAsync(storyVolume);
         }
     }, [storyVolume]);
 
-    // 3. Sahne Değişimi Mantığı
     useEffect(() => {
-        // Animasyon
         fadeAnim.setValue(0);
         Animated.timing(fadeAnim, {
             toValue: 1,
@@ -159,30 +128,39 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
             useNativeDriver: true,
         }).start();
 
-        // Ses Çalma
-        playSceneAudio(currentNodeId);
+        playSceneAudio();
 
-        // Final İşlemleri
         if (currentNode.isFinal) {
-            if (confettiRef.current) {
-                confettiRef.current.start();
-            }
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(badgeBounce, {
+                        toValue: 1,
+                        duration: 800,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(badgeBounce, {
+                        toValue: 0,
+                        duration: 800,
+                        useNativeDriver: true,
+                    }),
+                ])
+            ).start();
+
             if (!isLogging) {
-                logGameResult(currentNode.pathTag || 'Unknown');
+                logGameResult(currentNode.analysisTag || 'Unknown');
             }
         }
     }, [currentNodeId]);
 
-    const playSceneAudio = async (nodeId: string) => {
+    const playSceneAudio = async () => {
         try {
             if (soundRef.current) {
                 await soundRef.current.unloadAsync();
                 soundRef.current = null;
             }
 
-            const soundSource = SOUNDS[nodeId];
-            if (soundSource) {
-                const { sound } = await Audio.Sound.createAsync(soundSource);
+            if (currentNode.audio) {
+                const { sound } = await Audio.Sound.createAsync(currentNode.audio);
                 soundRef.current = sound;
                 await sound.setVolumeAsync(storyVolume);
                 await sound.playAsync();
@@ -192,8 +170,8 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         }
     };
 
-    const handleOptionClick = (option: Option) => {
-        setCurrentNodeId(option.nextNode);
+    const handleOptionClick = (nextNodeId: string) => {
+        setCurrentNodeId(nextNodeId);
     };
 
     const handleReset = () => {
@@ -201,7 +179,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         setIsLogging(false);
     };
 
-    const logGameResult = async (pathTag: string) => {
+    const logGameResult = async (analysisTag: string) => {
         setIsLogging(true);
         const endTime = Date.now();
         const durationSeconds = Math.floor((endTime - startTime) / 1000);
@@ -219,7 +197,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                 hamle_sayisi: 1,
                 hata_sayisi: 0,
                 sure: durationSeconds,
-                yapay_zeka_yorumu: pathTag,
+                yapay_zeka_yorumu: analysisTag,
                 email: userEmail
             };
 
@@ -238,14 +216,18 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         }
     };
 
+    const badgeScale = badgeBounce.interpolate({
+        inputRange: [0, 1],
+        outputRange: [1, 1.15]
+    });
+
     return (
         <DynamicBackground onExit={onExit}>
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
 
-                    {/* HEADER & SES KONTROLÜ */}
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>CEVİZ MACERASI</Text>
+                        <Text style={styles.headerTitle}>CEVIZ MACERASI</Text>
 
                         <View style={styles.volumeControl}>
                             <Ionicons name="volume-low" size={24} color="white" />
@@ -263,63 +245,64 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                         </View>
                     </View>
 
-                    {/* SAHNE KARTI */}
                     <View style={styles.card}>
 
-                        {/* GÖRSEL ALANI */}
-                        <View style={[
-                            styles.imageContainer,
-                            currentNode.isFinal && styles.finalImageContainer // Finalde daha büyük
-                        ]}>
+                        <View style={styles.imageContainer}>
                             <Image
-                                source={ASSETS[currentNode.image]}
+                                source={currentNode.bgImage}
                                 style={styles.mainImage}
-                                resizeMode="contain" // Kırpılmayı önlemek için contain
+                                resizeMode="contain"
                             />
 
-                            {/* FINAL BADGE (Animasyonsuz, sabit ve net) */}
-                            {currentNode.isFinal && currentNode.badge && (
-                                <View style={styles.badgeWrapper}>
+                            {currentNode.isFinal && currentNode.badgeImage && (
+                                <Animated.View style={[styles.badgeWrapper, { transform: [{ scale: badgeScale }] }]}>
                                     <Image
-                                        source={ASSETS[currentNode.badge]}
+                                        source={currentNode.badgeImage}
                                         style={styles.badgeImage}
                                         resizeMode="contain"
                                     />
-                                </View>
+                                </Animated.View>
                             )}
                         </View>
 
-                        {/* SEÇENEKLER */}
+                        <Text style={styles.storyText}>{currentNode.text}</Text>
+
                         <View style={styles.optionsContainer}>
                             {currentNode.isFinal ? (
-                                <View style={{ width: '100%', alignItems: 'center' }}>
-                                    <ConfettiCannon
-                                        count={200}
-                                        origin={{ x: -10, y: 0 }}
-                                        autoStart={true}
-                                        ref={confettiRef}
-                                        fadeOut={true}
-                                    />
-                                    <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-                                        <Text style={styles.resetButtonText}>TEKRAR OYNA</Text>
-                                    </TouchableOpacity>
-                                </View>
+                                <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+                                    <Text style={styles.resetButtonText}>TEKRAR OYNA</Text>
+                                </TouchableOpacity>
                             ) : (
                                 <View style={styles.choicesRow}>
-                                    {currentNode.options?.map((opt) => (
-                                        <TouchableOpacity
-                                            key={opt.id}
-                                            style={styles.imageOptionButton}
-                                            onPress={() => handleOptionClick(opt)}
-                                            activeOpacity={0.8}
-                                        >
-                                            <Image
-                                                source={ASSETS[opt.imageBtn]}
-                                                style={styles.optionImage}
-                                                resizeMode="contain" // Görselin tamamı görünsün
-                                            />
-                                        </TouchableOpacity>
-                                    ))}
+                                    {currentNode.options?.map((opt) => {
+                                        if (opt.type === 'image_button') {
+                                            return (
+                                                <TouchableOpacity
+                                                    key={opt.id}
+                                                    style={styles.imageOptionButton}
+                                                    onPress={() => handleOptionClick(opt.next)}
+                                                    activeOpacity={0.8}
+                                                >
+                                                    <Image
+                                                        source={opt.image}
+                                                        style={styles.optionImage}
+                                                        resizeMode="contain"
+                                                    />
+                                                </TouchableOpacity>
+                                            );
+                                        } else {
+                                            return (
+                                                <TouchableOpacity
+                                                    key={opt.id}
+                                                    style={styles.textOptionButton}
+                                                    onPress={() => handleOptionClick(opt.next)}
+                                                    activeOpacity={0.8}
+                                                >
+                                                    <Text style={styles.textOptionLabel}>{opt.label}</Text>
+                                                </TouchableOpacity>
+                                            );
+                                        }
+                                    })}
                                 </View>
                             )}
                         </View>
@@ -389,19 +372,16 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         width: '100%',
-        height: Platform.OS === 'web' ? 400 : 300,
+        height: Platform.OS === 'web' ? 450 : 350,
         borderRadius: 20,
         overflow: 'hidden',
-        marginBottom: 30,
+        marginBottom: 20,
         backgroundColor: '#F5F5F5',
         borderWidth: 2,
         borderColor: '#D7CCC8',
         position: 'relative',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    finalImageContainer: {
-        height: Platform.OS === 'web' ? 550 : 400, // Finalde daha büyük alan
     },
     mainImage: {
         width: '100%',
@@ -419,8 +399,16 @@ const styles = StyleSheet.create({
         elevation: 15,
     },
     badgeImage: {
-        width: 150,
-        height: 150,
+        width: 120,
+        height: 120,
+    },
+    storyText: {
+        fontSize: 18,
+        lineHeight: 26,
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: 20,
+        paddingHorizontal: 10,
     },
     optionsContainer: {
         width: '100%',
@@ -433,8 +421,8 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
     },
     imageOptionButton: {
-        width: Platform.OS === 'web' ? 300 : 160, // Genişlik arttırıldı
-        height: Platform.OS === 'web' ? 200 : 120, // Yükseklik ayarlandı (Dikdörtgen)
+        width: Platform.OS === 'web' ? 280 : 150,
+        height: Platform.OS === 'web' ? 180 : 100,
         borderRadius: 20,
         overflow: 'hidden',
         elevation: 6,
@@ -449,6 +437,22 @@ const styles = StyleSheet.create({
     optionImage: {
         width: '100%',
         height: '100%',
+    },
+    textOptionButton: {
+        backgroundColor: '#4CAF50',
+        paddingVertical: 15,
+        paddingHorizontal: 30,
+        borderRadius: 15,
+        borderBottomWidth: 4,
+        borderBottomColor: '#2E7D32',
+        elevation: 5,
+        minWidth: 200,
+    },
+    textOptionLabel: {
+        color: '#FFF',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
     resetButton: {
         backgroundColor: '#FF5722',
