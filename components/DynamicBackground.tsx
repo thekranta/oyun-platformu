@@ -1,37 +1,56 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import SoundControls from './SoundControls';
 
 const { width, height } = Dimensions.get('window');
 
-// Simple shapes/icons represented by views or text
-const FloatingItem = ({ delay, duration, startX, size, color, children }: any) => {
+// Floating Item with Icons
+const FloatingItem = ({ delay, duration, startX, size, children }: any) => {
     const translateY = useRef(new Animated.Value(height + 100)).current;
     const translateX = useRef(new Animated.Value(startX)).current;
+    const rotate = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         const animate = () => {
             translateY.setValue(height + 100);
-            Animated.timing(translateY, {
-                toValue: -100,
-                duration: duration,
-                delay: delay,
-                easing: Easing.linear,
-                useNativeDriver: true,
-            }).start(() => animate());
+            rotate.setValue(0);
+
+            Animated.parallel([
+                Animated.timing(translateY, {
+                    toValue: -100,
+                    duration: duration,
+                    delay: delay,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(rotate, {
+                    toValue: 1,
+                    duration: duration,
+                    delay: delay,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                })
+            ]).start(() => animate());
         };
         animate();
     }, []);
+
+    const spin = rotate.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg']
+    });
 
     return (
         <Animated.View
             style={{
                 position: 'absolute',
-                transform: [{ translateY }, { translateX }],
+                transform: [{ translateY }, { translateX }, { rotate: spin }],
                 width: size,
                 height: size,
                 justifyContent: 'center',
                 alignItems: 'center',
+                opacity: 0.6
             }}
         >
             {children}
@@ -48,21 +67,24 @@ export default function DynamicBackground({ children, onExit }: DynamicBackgroun
     return (
         <View style={styles.container}>
             <View style={styles.background}>
-                {/* Floating Items */}
+                {/* Floating Icons - More Playful */}
                 <FloatingItem delay={0} duration={15000} startX={width * 0.1} size={50}>
-                    <View style={[styles.circle, { backgroundColor: 'rgba(255, 200, 200, 0.4)' }]} />
+                    <Ionicons name="star" size={40} color="#FFD700" />
                 </FloatingItem>
                 <FloatingItem delay={2000} duration={18000} startX={width * 0.8} size={80}>
-                    <View style={[styles.square, { backgroundColor: 'rgba(200, 255, 200, 0.4)' }]} />
+                    <Ionicons name="cloud" size={70} color="#B3E5FC" />
                 </FloatingItem>
                 <FloatingItem delay={5000} duration={20000} startX={width * 0.4} size={60}>
-                    <View style={[styles.circle, { backgroundColor: 'rgba(200, 200, 255, 0.4)' }]} />
+                    <Ionicons name="heart" size={50} color="#FFCDD2" />
                 </FloatingItem>
                 <FloatingItem delay={1000} duration={12000} startX={width * 0.6} size={40}>
-                    <View style={[styles.triangle, { borderBottomColor: 'rgba(255, 255, 200, 0.4)' }]} />
+                    <Ionicons name="musical-note" size={35} color="#E1BEE7" />
                 </FloatingItem>
                 <FloatingItem delay={8000} duration={22000} startX={width * 0.2} size={70}>
-                    <View style={[styles.square, { backgroundColor: 'rgba(255, 200, 255, 0.4)' }]} />
+                    <Ionicons name="sunny" size={60} color="#FFF176" />
+                </FloatingItem>
+                <FloatingItem delay={12000} duration={19000} startX={width * 0.9} size={45}>
+                    <Ionicons name="planet" size={40} color="#C5CAE9" />
                 </FloatingItem>
             </View>
 
@@ -88,7 +110,7 @@ export default function DynamicBackground({ children, onExit }: DynamicBackgroun
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F0F8FF', // AliceBlue
+        backgroundColor: '#FFF8E1', // Soft Yellow / Papaya Whip - Warmer tone
     },
     background: {
         ...StyleSheet.absoluteFillObject,
@@ -98,30 +120,9 @@ const styles = StyleSheet.create({
         flex: 1,
         zIndex: 1,
     },
-    circle: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 50,
-    },
-    square: {
-        width: '100%',
-        height: '100%',
-        borderRadius: 10,
-    },
-    triangle: {
-        width: 0,
-        height: 0,
-        backgroundColor: 'transparent',
-        borderStyle: 'solid',
-        borderLeftWidth: 20,
-        borderRightWidth: 20,
-        borderBottomWidth: 40,
-        borderLeftColor: 'transparent',
-        borderRightColor: 'transparent',
-    },
     soundControlsContainer: {
         position: 'absolute',
-        top: 50, // Moved down as requested
+        top: 50,
         right: 20,
         zIndex: 100,
     },
@@ -130,20 +131,22 @@ const styles = StyleSheet.create({
         bottom: 30,
         left: 20,
         backgroundColor: '#FF5252',
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 100,
-        elevation: 5,
+        elevation: 8,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
     },
     exitIcon: {
-        fontSize: 24,
+        fontSize: 30,
         color: 'white',
     },
 });

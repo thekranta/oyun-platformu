@@ -10,13 +10,7 @@ import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-
-// === 1. BURAYA KENDİ GEMINI ANAHTARINIZI YAPIŞTIRIN ===
-// BU KOD ARTIK EXPO'NUN GÜVENLİK KURALINA UYUYOR
-// === BU KOD GİZLİ KALMALIDIR! SADECE VERCEL'DEN OKUNACAKTIR. ===
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
-// ================================================================// ======================================================
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -73,22 +67,17 @@ export default function App() {
 
   const sessizceAnalizEtVeKaydet = async (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string) => {
     setYukleniyor(true);
-
-    // 1. Supabase Kaydı (Sadece ham veri ve email kaydedilir)
     try {
       const kayitVerisi = {
         oyun_turu: oyunAdi,
         hamle_sayisi: finalHamle,
         hata_sayisi: finalHata,
-        // yapay_zeka_yorumu: ..., // Artık admin panelinde yapılacak
         ogrenci_adi: ad,
         ogrenci_yasi: parseInt(yas),
         sure: sure,
-        email: email, // Ebeveyn emaili kaydediliyor
-        algilanan_kelime: algilananKelime || "" // Yeni eklenen alan
+        email: email,
+        algilanan_kelime: algilananKelime || ""
       };
-
-      console.log("Supabase Request Body:", JSON.stringify(kayitVerisi, null, 2));
 
       let supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
         method: 'POST',
@@ -101,13 +90,10 @@ export default function App() {
         body: JSON.stringify(kayitVerisi)
       });
 
-      // Eğer email sütunu yoksa hata verir, bu durumda emailsiz tekrar deneriz
       if (!supabaseResponse.ok) {
         const responseText = await supabaseResponse.text();
         if (responseText.includes("Could not find the 'email' column")) {
-          console.warn("Email sütunu eksik, emailsiz kayıt deneniyor...");
           const { email, ...kayitVerisiEmailsiz } = kayitVerisi;
-
           supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
             method: 'POST',
             headers: {
@@ -118,17 +104,8 @@ export default function App() {
             },
             body: JSON.stringify(kayitVerisiEmailsiz)
           });
-        } else {
-          throw new Error(`Supabase Hatası: ${supabaseResponse.status} - ${responseText}`);
         }
       }
-
-      if (!supabaseResponse.ok) {
-        const responseText = await supabaseResponse.text();
-        throw new Error(`Supabase Hatası (Tekrar): ${supabaseResponse.status} - ${responseText}`);
-      }
-
-      console.log("Kayıt Başarılı");
     } catch (error) {
       console.log("Kayıt Hatası:", error);
     } finally {
@@ -144,25 +121,29 @@ export default function App() {
           <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={28} color="#fff" />
         </TouchableOpacity>
         <View style={styles.merkezContainer}>
-          <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
-          <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
-          <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
-          <TextInput
-            style={styles.input}
-            placeholder="Ebeveyn E-posta (İsteğe Bağlı)"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TouchableOpacity style={styles.buton} onPress={girisYap}><Text style={styles.butonYazi}>Giriş Yap 🚀</Text></TouchableOpacity>
+          <View style={styles.card}>
+            <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
+            <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
+            <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
+            <TextInput
+              style={styles.input}
+              placeholder="Ebeveyn E-posta (İsteğe Bağlı)"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            <TouchableOpacity style={styles.buton} onPress={girisYap}>
+              <Text style={styles.butonYazi}>Giriş Yap 🚀</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.buton, { backgroundColor: '#607D8B', marginTop: 20, paddingVertical: 10 }]}
-            onPress={() => router.push('/admin' as any)}
-          >
-            <Text style={[styles.butonYazi, { fontSize: 14 }]}>Admin Paneli 🔒</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.buton, { backgroundColor: '#90A4AE', marginTop: 20, paddingVertical: 10 }]}
+              onPress={() => router.push('/admin' as any)}
+            >
+              <Text style={[styles.butonYazi, { fontSize: 14 }]}>Admin Paneli 🔒</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <Toast
           visible={toast.visible}
@@ -176,62 +157,79 @@ export default function App() {
 
   if (asama === 'menu') {
     return (
-      <View style={styles.merkezContainer}>
-        <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
-        <Text style={styles.bilgi}>Hangi oyunu oynayalım?</Text>
+      <DynamicBackground>
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
+            <Text style={styles.bilgi}>Bugün ne oynamak istersin?</Text>
+          </View>
 
-        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#42A5F5' }]} onPress={() => oyunuBaslat('hafiza')}>
-          <Text style={styles.oyunBaslik}>🧠 Çiftini Bul!</Text>
-          <Text style={styles.oyunAciklama}>Kartları eşleştir.</Text>
-        </TouchableOpacity>
+          <View style={styles.gridContainer}>
+            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#64B5F6' }]} onPress={() => oyunuBaslat('hafiza')}>
+              <Ionicons name="grid" size={40} color="white" style={{ marginBottom: 10 }} />
+              <Text style={styles.oyunBaslik}>Çiftini Bul!</Text>
+              <Text style={styles.oyunAciklama}>Hafıza Oyunu</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFA726' }]} onPress={() => oyunuBaslat('siralama')}>
-          <Text style={styles.oyunBaslik}>🔢 Sıralama</Text>
-          <Text style={styles.oyunAciklama}>Sayıları diz.</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFB74D' }]} onPress={() => oyunuBaslat('siralama')}>
+              <Ionicons name="list" size={40} color="white" style={{ marginBottom: 10 }} />
+              <Text style={styles.oyunBaslik}>Sıralama</Text>
+              <Text style={styles.oyunAciklama}>Sayıları Diz</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#66BB6A' }]} onPress={() => oyunuBaslat('gruplama')}>
-          <Text style={styles.oyunBaslik}>🍎 Gruplama</Text>
-          <Text style={styles.oyunAciklama}>Meyve mi, Hayvan mı?</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#81C784' }]} onPress={() => oyunuBaslat('gruplama')}>
+              <Ionicons name="basket" size={40} color="white" style={{ marginBottom: 10 }} />
+              <Text style={styles.oyunBaslik}>Gruplama</Text>
+              <Text style={styles.oyunAciklama}>Meyve mi Hayvan mı?</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#AB47BC' }]} onPress={() => oyunuBaslat('diziyi-tamamla')}>
-          <Text style={styles.oyunBaslik}>🧩 Diziyi Tamamla</Text>
-          <Text style={styles.oyunAciklama}>Örüntüyü devam ettir!</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#BA68C8' }]} onPress={() => oyunuBaslat('diziyi-tamamla')}>
+              <Ionicons name="extension-puzzle" size={40} color="white" style={{ marginBottom: 10 }} />
+              <Text style={styles.oyunBaslik}>Diziyi Tamamla</Text>
+              <Text style={styles.oyunAciklama}>Örüntü Oyunu</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#EC407A' }]} onPress={() => oyunuBaslat('bunu-soyle')}>
-          <Text style={styles.oyunBaslik}>🎙️ Bunu Söyle!</Text>
-          <Text style={styles.oyunAciklama}>Resimdeki nedir?</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#F06292' }]} onPress={() => oyunuBaslat('bunu-soyle')}>
+              <Ionicons name="mic" size={40} color="white" style={{ marginBottom: 10 }} />
+              <Text style={styles.oyunBaslik}>Bunu Söyle!</Text>
+              <Text style={styles.oyunAciklama}>Kelime Oyunu</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548' }]} onPress={() => setAsama('hikayeler')}>
-          <Text style={styles.oyunBaslik}>📚 Hikayeler</Text>
-          <Text style={styles.oyunAciklama}>Masal Dünyası</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8D6E63' }]} onPress={() => setAsama('hikayeler')}>
+              <Ionicons name="book" size={40} color="white" style={{ marginBottom: 10 }} />
+              <Text style={styles.oyunBaslik}>Hikayeler</Text>
+              <Text style={styles.oyunAciklama}>Masal Dünyası</Text>
+            </TouchableOpacity>
+          </View>
 
-        <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={cikisYap}>
-          <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 30, alignSelf: 'center' }]} onPress={cikisYap}>
+            <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </DynamicBackground>
     );
   }
 
   if (asama === 'hikayeler') {
     return (
-      <View style={styles.merkezContainer}>
-        <Text style={styles.baslik}>Masal Dünyası 📚</Text>
-        <Text style={styles.bilgi}>Hangi hikayeyi dinleyelim?</Text>
+      <DynamicBackground>
+        <View style={styles.merkezContainer}>
+          <Text style={styles.baslik}>Masal Dünyası 📚</Text>
+          <Text style={styles.bilgi}>Hangi hikayeyi dinleyelim?</Text>
 
-        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8D6E63' }]} onPress={() => oyunuBaslat('ceviz-macera')}>
-          <Text style={styles.oyunBaslik}>🌰 Ceviz Macerası</Text>
-          <Text style={styles.oyunAciklama}>Pıtır'ın yardımsever dostları.</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548', width: '90%', maxWidth: 400, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', paddingHorizontal: 30 }]} onPress={() => oyunuBaslat('ceviz-macera')}>
+            <Ionicons name="leaf" size={40} color="white" style={{ marginRight: 20 }} />
+            <View>
+              <Text style={styles.oyunBaslik}>Ceviz Macerası</Text>
+              <Text style={styles.oyunAciklama}>Pıtır'ın yardımsever dostları.</Text>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={() => setAsama('menu')}>
-          <Text style={styles.butonYazi}>Geri Dön 🔙</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={() => setAsama('menu')}>
+            <Text style={styles.butonYazi}>Geri Dön 🔙</Text>
+          </TouchableOpacity>
+        </View>
+      </DynamicBackground>
     );
   }
 
@@ -262,39 +260,49 @@ export default function App() {
     return <CevizMacera onExit={() => setAsama('hikayeler')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
   }
 
-  // ... (inside sonuc view)
   if (asama === 'sonuc') {
     return (
-      <View style={styles.merkezContainer}>
-        <Text style={{ fontSize: 80 }}>🌟</Text>
-        <Text style={styles.sonucBaslik}>AFERİN SANA!</Text>
-        <Text style={styles.baslik}>{ad}, Harika İş Çıkardın!</Text>
-        {yukleniyor && <ActivityIndicator size="small" color="#999" style={{ marginTop: 20 }} />}
+      <DynamicBackground>
+        <View style={styles.merkezContainer}>
+          <View style={styles.card}>
+            <Text style={{ fontSize: 80, textAlign: 'center' }}>🌟</Text>
+            <Text style={styles.sonucBaslik}>AFERİN SANA!</Text>
+            <Text style={[styles.baslik, { textAlign: 'center' }]}>{ad}, Harika İş Çıkardın!</Text>
+            {yukleniyor && <ActivityIndicator size="small" color="#999" style={{ marginTop: 20 }} />}
 
-        <TouchableOpacity style={styles.buton} onPress={() => setAsama('menu')}>
-          <Text style={styles.butonYazi}>Başka Oyun Oyna 🎮</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={styles.buton} onPress={() => setAsama('menu')}>
+              <Text style={styles.butonYazi}>Başka Oyun Oyna 🎮</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 15 }]} onPress={cikisYap}>
-          <Text style={styles.butonYazi}>Oturumu Kapat 🚪</Text>
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 15 }]} onPress={cikisYap}>
+              <Text style={styles.butonYazi}>Oturumu Kapat 🚪</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </DynamicBackground>
     );
   }
   return null;
 }
 
 const styles = StyleSheet.create({
-  merkezContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#e3f2fd' },
+  merkezContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  headerContainer: { alignItems: 'center', marginBottom: 30, marginTop: 40 },
+  card: { backgroundColor: 'white', padding: 30, borderRadius: 25, width: '100%', maxWidth: 400, alignItems: 'center', elevation: 5, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   girisBaslik: { fontSize: 28, fontWeight: 'bold', marginBottom: 30, color: '#1565C0', textAlign: 'center' },
-  baslik: { fontSize: 24, fontWeight: 'bold', marginBottom: 5 },
-  bilgi: { fontSize: 18, marginBottom: 20, color: '#555' },
-  input: { width: '100%', backgroundColor: 'white', padding: 15, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: '#ddd' },
-  buton: { backgroundColor: '#4CAF50', padding: 15, borderRadius: 10, marginTop: 30, width: 220, alignItems: 'center' },
+  baslik: { fontSize: 28, fontWeight: 'bold', marginBottom: 5, color: '#37474F' },
+  bilgi: { fontSize: 18, marginBottom: 20, color: '#546E7A' },
+  input: { width: '100%', backgroundColor: '#F5F5F5', padding: 15, borderRadius: 15, marginBottom: 15, borderWidth: 1, borderColor: '#E0E0E0' },
+  buton: { backgroundColor: '#66BB6A', padding: 15, borderRadius: 15, marginTop: 20, width: 220, alignItems: 'center', elevation: 3 },
   butonYazi: { color: 'white', fontSize: 18, fontWeight: 'bold' },
-  oyunKarti: { width: '100%', padding: 15, borderRadius: 15, marginBottom: 10, elevation: 3 },
-  oyunBaslik: { color: 'white', fontSize: 20, fontWeight: 'bold' },
-  oyunAciklama: { color: 'white', fontSize: 12 },
-  sonucBaslik: { fontSize: 36, fontWeight: 'bold', color: '#e65100', marginVertical: 10 },
+
+  // Grid Layout for Menu
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15 },
+  oyunKarti: { width: 160, height: 160, padding: 15, borderRadius: 25, justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 3 },
+  oyunBaslik: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginTop: 5 },
+  oyunAciklama: { color: 'rgba(255,255,255,0.9)', fontSize: 12, textAlign: 'center' },
+
+  sonucBaslik: { fontSize: 36, fontWeight: 'bold', color: '#FF9800', marginVertical: 10, textAlign: 'center' },
   soundButton: { position: 'absolute', top: 50, right: 20, backgroundColor: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 25, zIndex: 10 },
 });

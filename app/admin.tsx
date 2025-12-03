@@ -36,6 +36,10 @@ export default function AdminPanel() {
     const [processingId, setProcessingId] = useState<number | null>(null);
     const { isMuted, toggleMute } = useSound();
 
+    // UI State - Lifted to prevent collapse on re-render
+    const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(new Set());
+    const [visibleCommentIds, setVisibleCommentIds] = useState<Set<number>>(new Set());
+
     // Login State
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState('');
@@ -53,6 +57,30 @@ export default function AdminPanel() {
         } else {
             alert('Hatalı kullanıcı adı veya şifre!');
         }
+    };
+
+    const toggleGroupExpansion = (groupId: string) => {
+        setExpandedGroupIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(groupId)) {
+                newSet.delete(groupId);
+            } else {
+                newSet.add(groupId);
+            }
+            return newSet;
+        });
+    };
+
+    const toggleCommentVisibility = (scoreId: number) => {
+        setVisibleCommentIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(scoreId)) {
+                newSet.delete(scoreId);
+            } else {
+                newSet.add(scoreId);
+            }
+            return newSet;
+        });
     };
 
     const fetchScores = async () => {
@@ -110,7 +138,6 @@ export default function AdminPanel() {
             let prompt = '';
 
             if (score.oyun_turu === 'ceviz_macera') {
-                // --- GELİŞİMSEL DÖNEM BAZLI MİZAÇ ANALİZİ (Ceviz Macera İçin) ---
                 const aiContext = score.yapay_zeka_yorumu || 'Bilinmiyor';
                 const ageMonths = score.ogrenci_yasi;
 
@@ -123,30 +150,11 @@ export default function AdminPanel() {
                     - Seçilen Yol: ${aiContext} (Örn: 'Sosyal-Cozum-Isbirligi', 'Fiziksel-Cozum-Destek', 'Bilissel-Cozum-Yaraticilik')
 
                     GÖREVİN:
-                    Çocuğun yaptığı seçimi, YAŞINA GÖRE (Gelişimsel Dönem Özellikleri bağlamında) yorumla. Aşağıdaki matrisi referans al:
-
-                    1. GRUP: KÜÇÜKLER (30-48 Ay Arası) - Odak: Güven, Somut Düşünce, Benmerkezcilik.
-                       - Eğer 'Fiziksel-Cozum-Destek' (Fil Sırtı) seçtiyse: Bunu 'Bağımlılık' olarak değil, 'Güvenli Bağlanma ve Destek Alma İhtiyacı' olarak yorumla. Bu yaşta yardım istemek çok doğaldır.
-                       - Eğer 'Sosyal-Cozum-Isbirligi' (Kuşlar) seçtiyse: Bunu 'Liderlik' olarak değil, 'Sosyal Farkındalığın Başlangıcı ve Taklit Yeteneği' olarak yorumla.
-                       - Eğer 'Bilissel-Cozum-Yaraticilik' (Kızak) seçtiyse: Bunu 'Oyunsu Keşif ve Hayal Gücü' olarak yorumla.
-                       - Eğer 'Fiziksel-Cozum-Kopru' (Kütük) seçtiyse: Bunu 'Somut Problem Çözme ve Neden-Sonuç İlişkisi Kurma' olarak yorumla.
-
-                    2. GRUP: BÜYÜKLER (49-72+ Ay Arası) - Odak: Strateji, Sosyal Kurallar, Problem Çözme.
-                       - Eğer 'Fiziksel-Cozum-Destek' (Fil Sırtı) seçtiyse: Bunu 'Pragmatik (Faydacı) Çözüm ve Enerji Tasarrufu' olarak yorumla.
-                       - Eğer 'Sosyal-Cozum-Isbirligi' (Kuşlar) seçtiyse: Bunu doğrudan 'Liderlik, Organizasyon Yeteneği ve İş Bölümü Bilinci' olarak öv.
-                       - Eğer 'Bilissel-Cozum-Yaraticilik' (Kızak) seçtiyse: Bunu 'İnovatif Düşünme, Mühendislik Becerisi ve Alternatif Çözüm Üretme' olarak yorumla.
-                       - Eğer 'Fiziksel-Cozum-Kopru' (Kütük) seçtiyse: Bunu 'Stratejik Planlama ve Sistematik Düşünme' olarak yorumla.
-
-                    ANALİZİ YAZARKEN:
-                    - Asla '1. Grup', 'Matris', 'KÜÇÜKLER' veya 'BÜYÜKLER' gibi teknik terimler kullanma.
-                    - Ebeveyne doğrudan, sıcak ve çocuğun gelişim seviyesine uygun bir dille hitap et.
-                    - Örneğin küçük çocuk için: 'Henüz çok küçük olduğu için bu desteği araması harika...' de.
-                    - Büyük çocuk için: 'Bu yaşta böyle bir strateji geliştirmesi onun zekasını gösterir...' de.
-                    - Maili samimi, profesyonel ve cesaretlendirici bir dille yaz.
-                    - Hata sayısından veya puandan ASLA bahsetme.
+                    Çocuğun yaptığı seçimi, YAŞINA GÖRE (Gelişimsel Dönem Özellikleri bağlamında) yorumla.
+                    Ebeveyne doğrudan, sıcak ve çocuğun gelişim seviyesine uygun bir dille hitap et.
+                    Maili samimi, profesyonel ve cesaretlendirici bir dille yaz.
                 `;
             } else {
-                // --- STANDART PERFORMANS PROMPTU (Diğer Oyunlar İçin) ---
                 let oyunAdiTR = '';
                 if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
                 else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
@@ -195,7 +203,7 @@ export default function AdminPanel() {
                     body: JSON.stringify({ yapay_zeka_yorumu: aiComment })
                 });
 
-                // Update state directly instead of refetching
+                // Update state directly
                 setStudentGroups(prevGroups =>
                     prevGroups.map(group => ({
                         ...group,
@@ -204,10 +212,11 @@ export default function AdminPanel() {
                         )
                     }))
                 );
-                console.log('✅ Analiz tamamlandı ve kaydedildi!', { scoreId: score.id, aiComment });
 
-                // Force refresh to ensure UI updates
-                fetchScores();
+                // Auto-show comment
+                setVisibleCommentIds(prev => new Set(prev).add(score.id));
+
+                console.log('✅ Analiz tamamlandı ve kaydedildi!', { scoreId: score.id, aiComment });
             } else {
                 console.error('❌ Yapay zeka yanıt veremedi.');
             }
@@ -250,18 +259,12 @@ export default function AdminPanel() {
                 })
             });
 
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                const result = await response.json();
-                if (response.ok) {
-                    console.log('✅ E-posta başarıyla gönderildi!', { email: score.email, scoreId: score.id });
-                } else {
-                    console.error('❌ E-posta hatası:', result.error || 'Bilinmeyen sunucu hatası');
-                }
+            if (response.ok) {
+                console.log('✅ E-posta başarıyla gönderildi!', { email: score.email, scoreId: score.id });
+                alert('E-posta gönderildi!');
             } else {
-                const text = await response.text();
-                console.error("❌ API Yanıtı (JSON değil):", text);
-                console.error(`Sunucu Hatası: ${response.status} ${response.statusText}`);
+                console.error('❌ E-posta hatası');
+                alert('E-posta gönderilemedi.');
             }
 
         } catch (error: any) {
@@ -272,7 +275,7 @@ export default function AdminPanel() {
     };
 
     const StudentCard = ({ student }: { student: StudentGroup }) => {
-        const [expanded, setExpanded] = useState(false);
+        const isExpanded = expandedGroupIds.has(student.id);
         const [showStats, setShowStats] = useState(false);
 
         return (
@@ -285,7 +288,7 @@ export default function AdminPanel() {
                     scores={student.scores}
                 />
                 <View style={styles.studentCard}>
-                    <TouchableOpacity onPress={() => setExpanded(!expanded)} style={styles.studentHeader}>
+                    <TouchableOpacity onPress={() => toggleGroupExpansion(student.id)} style={styles.studentHeader}>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <View style={styles.avatar}>
                                 <Text style={styles.avatarText}>{student.name.charAt(0).toUpperCase()}</Text>
@@ -299,11 +302,11 @@ export default function AdminPanel() {
                             <TouchableOpacity onPress={() => setShowStats(true)} style={{ padding: 4 }}>
                                 <Ionicons name="stats-chart" size={20} color="#2196F3" />
                             </TouchableOpacity>
-                            <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={24} color="#555" />
+                            <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={24} color="#555" />
                         </View>
                     </TouchableOpacity>
 
-                    {expanded && (
+                    {isExpanded && (
                         <View style={styles.gamesList}>
                             {student.scores.map((score, index) => (
                                 <GameRow key={score.id} score={score} isLast={index === student.scores.length - 1} />
@@ -316,7 +319,7 @@ export default function AdminPanel() {
     };
 
     const GameRow = ({ score, isLast }: { score: Score, isLast: boolean }) => {
-        const [showComment, setShowComment] = useState(false);
+        const showComment = visibleCommentIds.has(score.id);
         const isProcessing = processingId === score.id;
 
         return (
@@ -353,7 +356,7 @@ export default function AdminPanel() {
                         </TouchableOpacity>
                     ) : (
                         <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <TouchableOpacity onPress={() => setShowComment(!showComment)} style={styles.aiToggle}>
+                            <TouchableOpacity onPress={() => toggleCommentVisibility(score.id)} style={styles.aiToggle}>
                                 <Text style={styles.aiToggleText}>🤖 Yorumu {showComment ? 'Gizle' : 'Göster'}</Text>
                             </TouchableOpacity>
 
@@ -456,14 +459,14 @@ const styles = StyleSheet.create({
     container: { flex: 1, paddingTop: 50 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
-    backButton: { backgroundColor: 'rgba(0,0,0,0.2)', padding: 8, borderRadius: 20, marginRight: 15 },
+    backButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginRight: 15 },
     title: { flex: 1, fontSize: 22, fontWeight: 'bold', color: '#333' },
-    soundButton: { backgroundColor: 'rgba(0,0,0,0.2)', padding: 8, borderRadius: 20, marginLeft: 15 },
+    soundButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginLeft: 15 },
     listContent: { padding: 15, paddingBottom: 100 },
     emptyText: { textAlign: 'center', fontSize: 16, color: '#777', marginTop: 50 },
 
     // Student Card Styles
-    studentCard: { backgroundColor: 'white', borderRadius: 15, marginBottom: 15, elevation: 3, overflow: 'hidden' },
+    studentCard: { backgroundColor: 'white', borderRadius: 20, marginBottom: 15, elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, overflow: 'hidden' },
     studentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
     avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
     avatarText: { fontSize: 24, fontWeight: 'bold', color: '#2196F3' },
@@ -471,7 +474,7 @@ const styles = StyleSheet.create({
     studentAge: { fontSize: 14, color: '#666' },
 
     // Game List Styles
-    gamesList: { backgroundColor: '#F5F5F5', borderTopWidth: 1, borderTopColor: '#eee' },
+    gamesList: { backgroundColor: '#FAFAFA', borderTopWidth: 1, borderTopColor: '#eee' },
     gameRow: { padding: 15, backgroundColor: '#fff' },
     gameRowBorder: { borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
     gameHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
@@ -484,20 +487,20 @@ const styles = StyleSheet.create({
 
     // Action Buttons
     actionRow: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
-    actionButton: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 6, flexDirection: 'row', alignItems: 'center' },
+    actionButton: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center' },
     actionButtonText: { color: 'white', fontSize: 12, fontWeight: 'bold' },
 
     // AI Toggle & Comment
-    aiToggle: { paddingVertical: 5, paddingHorizontal: 8, backgroundColor: '#E3F2FD', borderRadius: 6 },
+    aiToggle: { paddingVertical: 6, paddingHorizontal: 10, backgroundColor: '#E3F2FD', borderRadius: 8 },
     aiToggleText: { fontSize: 12, color: '#2196F3', fontWeight: 'bold' },
-    aiCommentBox: { marginTop: 8, backgroundColor: '#E8F5E9', padding: 10, borderRadius: 8 },
-    aiCommentText: { fontSize: 13, color: '#2E7D32', fontStyle: 'italic', lineHeight: 18 },
+    aiCommentBox: { marginTop: 10, backgroundColor: '#E8F5E9', padding: 12, borderRadius: 10 },
+    aiCommentText: { fontSize: 13, color: '#2E7D32', fontStyle: 'italic', lineHeight: 20 },
 
     // Login Styles
-    loginBox: { width: '100%', maxWidth: 350, backgroundColor: 'white', padding: 30, borderRadius: 20, elevation: 5 },
+    loginBox: { width: '100%', maxWidth: 350, backgroundColor: 'white', padding: 30, borderRadius: 25, elevation: 5 },
     loginTitle: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#333' },
-    input: { width: '100%', backgroundColor: '#f5f5f5', padding: 15, borderRadius: 10, marginBottom: 15, borderWidth: 1, borderColor: '#ddd' },
-    loginButton: { backgroundColor: '#4CAF50', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 10 },
+    input: { width: '100%', backgroundColor: '#f5f5f5', padding: 15, borderRadius: 15, marginBottom: 15, borderWidth: 1, borderColor: '#ddd' },
+    loginButton: { backgroundColor: '#4CAF50', padding: 15, borderRadius: 15, alignItems: 'center', marginTop: 10 },
     loginButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     backButtonSimple: { marginTop: 15, alignItems: 'center' },
 });
