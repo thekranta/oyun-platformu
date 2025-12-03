@@ -41,14 +41,14 @@ const storyData = {
                 type: 'image_button',
                 image: require('../assets/images/end_a1_badge.png'),
                 label: 'Kütükten Köprü Yap',
-                next: 'end_a1'
+                next: 'choice_a1'
             },
             {
                 id: 'A2',
                 type: 'image_button',
                 image: require('../assets/images/end_a2_badge.png'),
                 label: 'Filo\'nun Sırtına Bin',
-                next: 'end_a2'
+                next: 'choice_a2'
             }
         ]
     },
@@ -63,13 +63,101 @@ const storyData = {
                 type: 'image_button',
                 image: require('../assets/images/end_b1_badge.png'),
                 label: 'Kuş Arkadaşları Çağır',
-                next: 'end_b1'
+                next: 'choice_b1'
             },
             {
                 id: 'B2',
                 type: 'image_button',
                 image: require('../assets/images/end_b2_badge.png'),
                 label: 'Yaprak Kızak Yap',
+                next: 'choice_b2'
+            }
+        ]
+    },
+    choice_a1: {
+        id: 'choice_a1',
+        bgImage: require('../assets/images/end_a1_scene.png'),
+        text: "Kütükten köprü yapmaya karar verdiler! Peki köprüyü nasıl inşa etsinler?",
+        audio: require('../assets/sounds/audio_scene_a.mp3'),
+        options: [
+            {
+                id: 'A1_1',
+                type: 'image_button',
+                image: require('../assets/images/btn_filo.png'),
+                label: 'Filo Hortumu İle',
+                next: 'end_a1'
+            },
+            {
+                id: 'A1_2',
+                type: 'image_button',
+                image: require('../assets/images/btn_mavis.png'),
+                label: 'İkisi Birlikte',
+                next: 'end_a1'
+            }
+        ]
+    },
+    choice_a2: {
+        id: 'choice_a2',
+        bgImage: require('../assets/images/end_a2_scene.png'),
+        text: "Filo'nun sırtına binmeye karar verdiler! Peki nasıl binsin Pıtır?",
+        audio: require('../assets/sounds/audio_scene_a.mp3'),
+        options: [
+            {
+                id: 'A2_1',
+                type: 'image_button',
+                image: require('../assets/images/btn_filo.png'),
+                label: 'Filo Yardım Etsin',
+                next: 'end_a2'
+            },
+            {
+                id: 'A2_2',
+                type: 'image_button',
+                image: require('../assets/images/btn_mavis.png'),
+                label: 'Maviş Taşısın',
+                next: 'end_a2'
+            }
+        ]
+    },
+    choice_b1: {
+        id: 'choice_b1',
+        bgImage: require('../assets/images/end_b1_scene.png'),
+        text: "Kuş arkadaşlarını çağırmaya karar verdiler! Nasıl çağırsınlar?",
+        audio: require('../assets/sounds/audio_scene_b.mp3'),
+        options: [
+            {
+                id: 'B1_1',
+                type: 'image_button',
+                image: require('../assets/images/btn_mavis.png'),
+                label: 'Maviş Islık Çalsın',
+                next: 'end_b1'
+            },
+            {
+                id: 'B1_2',
+                type: 'image_button',
+                image: require('../assets/images/btn_filo.png'),
+                label: 'Filo Ses Yapsın',
+                next: 'end_b1'
+            }
+        ]
+    },
+    choice_b2: {
+        id: 'choice_b2',
+        bgImage: require('../assets/images/end_b2_scene.png'),
+        text: "Yaprak kızak yapmaya karar verdiler! Hangi yaprakları kullansınlar?",
+        audio: require('../assets/sounds/audio_scene_b.mp3'),
+        options: [
+            {
+                id: 'B2_1',
+                type: 'image_button',
+                image: require('../assets/images/btn_mavis.png'),
+                label: 'Maviş Bulsun',
+                next: 'end_b2'
+            },
+            {
+                id: 'B2_2',
+                type: 'image_button',
+                image: require('../assets/images/btn_filo.png'),
+                label: 'İkisi Birlikte',
                 next: 'end_b2'
             }
         ]
@@ -79,6 +167,7 @@ const storyData = {
         isFinal: true,
         bgImage: require('../assets/images/end_a1_scene.png'),
         badgeImage: require('../assets/images/end_a1_badge.png'),
+        audio: require('../assets/sounds/audio_end_a1.mp3'),
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru'
     },
@@ -87,6 +176,7 @@ const storyData = {
         isFinal: true,
         bgImage: require('../assets/images/end_a2_scene.png'),
         badgeImage: require('../assets/images/end_a2_badge.png'),
+        audio: require('../assets/sounds/audio_end_a2.mp3'),
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek'
     },
@@ -95,6 +185,7 @@ const storyData = {
         isFinal: true,
         bgImage: require('../assets/images/end_b1_scene.png'),
         badgeImage: require('../assets/images/end_b1_badge.png'),
+        audio: require('../assets/sounds/audio_end_b1.mp3'),
         text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
         analysisTag: 'Sosyal-Cozum-Isbirligi'
     },
@@ -103,6 +194,7 @@ const storyData = {
         isFinal: true,
         bgImage: require('../assets/images/end_b2_scene.png'),
         badgeImage: require('../assets/images/end_b2_badge.png'),
+        audio: require('../assets/sounds/audio_end_b2.mp3'),
         text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar!",
         analysisTag: 'Bilissel-Cozum-Yaraticilik'
     }
