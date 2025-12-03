@@ -205,13 +205,31 @@ export default function App() {
           <Text style={styles.oyunAciklama}>Resimdeki nedir?</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548' }]} onPress={() => oyunuBaslat('ceviz-macera')}>
-          <Text style={styles.oyunBaslik}>🌰 Ceviz Macerası</Text>
-          <Text style={styles.oyunAciklama}>İnteraktif Hikaye</Text>
+        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548' }]} onPress={() => setAsama('hikayeler')}>
+          <Text style={styles.oyunBaslik}>📚 Hikayeler</Text>
+          <Text style={styles.oyunAciklama}>Masal Dünyası</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={cikisYap}>
           <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (asama === 'hikayeler') {
+    return (
+      <View style={styles.merkezContainer}>
+        <Text style={styles.baslik}>Masal Dünyası 📚</Text>
+        <Text style={styles.bilgi}>Hangi hikayeyi dinleyelim?</Text>
+
+        <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8D6E63' }]} onPress={() => oyunuBaslat('ceviz-macera')}>
+          <Text style={styles.oyunBaslik}>🌰 Ceviz Macerası</Text>
+          <Text style={styles.oyunAciklama}>Pıtır'ın yardımsever dostları.</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={() => setAsama('menu')}>
+          <Text style={styles.butonYazi}>Geri Dön 🔙</Text>
         </TouchableOpacity>
       </View>
     );
@@ -241,7 +259,7 @@ export default function App() {
   }
 
   if (asama === 'ceviz-macera') {
-    return <CevizMacera onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
+    return <CevizMacera onExit={() => setAsama('hikayeler')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
   }
 
   // ... (inside sonuc view)

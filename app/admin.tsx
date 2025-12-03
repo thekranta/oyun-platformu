@@ -56,6 +56,7 @@ export default function AdminPanel() {
     };
 
     const fetchScores = async () => {
+        setLoading(true);
         try {
             const response = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari?select=*&order=created_at.desc`, {
                 headers: {
@@ -204,6 +205,9 @@ export default function AdminPanel() {
                     }))
                 );
                 console.log('✅ Analiz tamamlandı ve kaydedildi!', { scoreId: score.id, aiComment });
+
+                // Force refresh to ensure UI updates
+                fetchScores();
             } else {
                 console.error('❌ Yapay zeka yanıt veremedi.');
             }
@@ -422,9 +426,14 @@ export default function AdminPanel() {
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
                     <Text style={styles.title}>Öğrenci Gelişim Takibi 📊</Text>
-                    <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-                        <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="white" />
-                    </TouchableOpacity>
+                    <View style={{ flexDirection: 'row' }}>
+                        <TouchableOpacity onPress={fetchScores} style={styles.soundButton}>
+                            <Ionicons name="refresh" size={24} color="white" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
+                            <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="white" />
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 {loading ? (

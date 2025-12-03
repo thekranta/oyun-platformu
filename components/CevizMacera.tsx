@@ -3,6 +3,7 @@ import Slider from '@react-native-community/slider';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 
@@ -124,6 +125,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     const [viewState, setViewState] = useState<'story' | 'options'>('story');
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
 
     const { stopSound } = useSound();
     const [storyVolume, setStoryVolume] = useState(1.0);
@@ -152,6 +154,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     useEffect(() => {
         // Reset state for new node
         setViewState('story');
+        setShowConfetti(false);
 
         fadeAnim.setValue(0);
         Animated.timing(fadeAnim, {
@@ -218,6 +221,12 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         if (status.isLoaded && status.didJustFinish) {
             if (!currentNode.isFinal) {
                 setViewState('options');
+            } else {
+                // Final scene audio finished
+                setShowConfetti(true);
+                setTimeout(() => {
+                    onExit();
+                }, 4000);
             }
         }
     };
@@ -229,6 +238,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     const handleReset = () => {
         setCurrentNodeId('intro');
         setIsLogging(false);
+        setShowConfetti(false);
     };
 
     const logGameResult = async (analysisTag: string) => {
@@ -311,7 +321,13 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                                     />
                                 </Animated.View>
                             )}
-                            {currentNode.isFinal && (
+                            {showConfetti && (
+                                <View style={styles.congratsOverlay}>
+                                    <Text style={styles.congratsText}>TEBRİKLER!</Text>
+                                    <ConfettiCannon count={200} origin={{ x: -10, y: 0 }} fadeOut={true} />
+                                </View>
+                            )}
+                            {currentNode.isFinal && !showConfetti && (
                                 <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
                                     <Ionicons name="refresh" size={40} color="#FFF" />
                                 </TouchableOpacity>
@@ -456,5 +472,24 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 0.3,
         shadowRadius: 5,
+    },
+    congratsOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 100,
+    },
+    congratsText: {
+        fontSize: 60,
+        fontWeight: 'bold',
+        color: '#FFD700',
+        textShadowColor: 'rgba(0, 0, 0, 0.75)',
+        textShadowOffset: { width: -1, height: 1 },
+        textShadowRadius: 10,
+        marginBottom: 50,
     }
 });
