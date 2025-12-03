@@ -322,7 +322,7 @@ export default function AdminPanel() {
 
                 {/* Action Buttons */}
                 <View style={styles.actionRow}>
-                    {!score.yapay_zeka_yorumu ? (
+                    {(!score.yapay_zeka_yorumu || score.yapay_zeka_yorumu.includes('-Cozum-')) ? (
                         <TouchableOpacity
                             style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
                             onPress={() => analyzeGame(score)}
