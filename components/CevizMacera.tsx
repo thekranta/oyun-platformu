@@ -78,36 +78,36 @@ const storyData = {
     end_a1: {
         id: 'end_a1',
         isFinal: true,
-        bgImage: require('../assets/images/end_a1_scene.png'),
-        badgeImage: require('../assets/images/end_a2_badge.png'), // SWAPPED to match option
-        audio: require('../assets/sounds/audio_end_a1.mp3'),
+        bgImage: require('../assets/images/end_a2_scene.png'), // SWAPPED to match text (Bridge)
+        badgeImage: require('../assets/images/end_a2_badge.png'), // SWAPPED
+        audio: require('../assets/sounds/audio_end_a2.mp3'), // SWAPPED
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru'
     },
     end_a2: {
         id: 'end_a2',
         isFinal: true,
-        bgImage: require('../assets/images/end_a2_scene.png'),
-        badgeImage: require('../assets/images/end_a1_badge.png'), // SWAPPED to match option
-        audio: require('../assets/sounds/audio_end_a2.mp3'),
+        bgImage: require('../assets/images/end_a1_scene.png'), // SWAPPED to match text (Ride)
+        badgeImage: require('../assets/images/end_a1_badge.png'), // SWAPPED
+        audio: require('../assets/sounds/audio_end_a1.mp3'), // SWAPPED
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek'
     },
     end_b1: {
         id: 'end_b1',
         isFinal: true,
-        bgImage: require('../assets/images/end_b1_scene.png'),
-        badgeImage: require('../assets/images/end_b2_badge.png'), // SWAPPED to match option
-        audio: require('../assets/sounds/audio_end_b1.mp3'),
+        bgImage: require('../assets/images/end_b2_scene.png'), // SWAPPED to match text (Birds)
+        badgeImage: require('../assets/images/end_b2_badge.png'), // SWAPPED
+        audio: require('../assets/sounds/audio_end_b2.mp3'), // SWAPPED
         text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
         analysisTag: 'Sosyal-Cozum-Isbirligi'
     },
     end_b2: {
         id: 'end_b2',
         isFinal: true,
-        bgImage: require('../assets/images/end_b2_scene.png'),
-        badgeImage: require('../assets/images/end_b1_badge.png'), // SWAPPED to match option
-        audio: require('../assets/sounds/audio_end_b2.mp3'),
+        bgImage: require('../assets/images/end_b1_scene.png'), // SWAPPED to match text (Sled)
+        badgeImage: require('../assets/images/end_b1_badge.png'), // SWAPPED
+        audio: require('../assets/sounds/audio_end_b1.mp3'), // SWAPPED
         text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar!",
         analysisTag: 'Bilissel-Cozum-Yaraticilik'
     }
@@ -132,7 +132,6 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     const soundRef = useRef<Audio.Sound | null>(null);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    // Removed badgeBounce animated value
 
     const currentNode = storyData[currentNodeId as keyof typeof storyData];
 
@@ -166,7 +165,6 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         playSceneAudio();
 
         if (currentNode.isFinal) {
-            // Removed animation loop logic
             if (!isLogging) {
                 logGameResult(currentNode.analysisTag || 'Unknown');
             }
@@ -263,8 +261,6 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
             console.error("Log hatası:", error);
         }
     };
-
-    // Removed badgeScale interpolation
 
     return (
         <DynamicBackground onExit={onExit}>
