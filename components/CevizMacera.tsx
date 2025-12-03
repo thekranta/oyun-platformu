@@ -40,14 +40,14 @@ const storyData = {
             {
                 id: 'A1',
                 type: 'image_button',
-                image: require('../assets/images/end_a1_badge.png'),
+                image: require('../assets/images/end_a2_badge.png'), // SWAPPED
                 label: 'Kütükten Köprü Yap',
                 next: 'end_a1'
             },
             {
                 id: 'A2',
                 type: 'image_button',
-                image: require('../assets/images/end_a2_badge.png'),
+                image: require('../assets/images/end_a1_badge.png'), // SWAPPED
                 label: 'Filo\'nun Sırtına Bin',
                 next: 'end_a2'
             }
@@ -62,14 +62,14 @@ const storyData = {
             {
                 id: 'B1',
                 type: 'image_button',
-                image: require('../assets/images/end_b1_badge.png'),
+                image: require('../assets/images/end_b2_badge.png'), // SWAPPED
                 label: 'Kuş Arkadaşları Çağır',
                 next: 'end_b1'
             },
             {
                 id: 'B2',
                 type: 'image_button',
-                image: require('../assets/images/end_b2_badge.png'),
+                image: require('../assets/images/end_b1_badge.png'), // SWAPPED
                 label: 'Yaprak Kızak Yap',
                 next: 'end_b2'
             }
@@ -79,7 +79,7 @@ const storyData = {
         id: 'end_a1',
         isFinal: true,
         bgImage: require('../assets/images/end_a1_scene.png'),
-        badgeImage: require('../assets/images/end_a1_badge.png'),
+        badgeImage: require('../assets/images/end_a2_badge.png'), // SWAPPED to match option
         audio: require('../assets/sounds/audio_end_a1.mp3'),
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru'
@@ -88,7 +88,7 @@ const storyData = {
         id: 'end_a2',
         isFinal: true,
         bgImage: require('../assets/images/end_a2_scene.png'),
-        badgeImage: require('../assets/images/end_a2_badge.png'),
+        badgeImage: require('../assets/images/end_a1_badge.png'), // SWAPPED to match option
         audio: require('../assets/sounds/audio_end_a2.mp3'),
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek'
@@ -97,7 +97,7 @@ const storyData = {
         id: 'end_b1',
         isFinal: true,
         bgImage: require('../assets/images/end_b1_scene.png'),
-        badgeImage: require('../assets/images/end_b1_badge.png'),
+        badgeImage: require('../assets/images/end_b2_badge.png'), // SWAPPED to match option
         audio: require('../assets/sounds/audio_end_b1.mp3'),
         text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
         analysisTag: 'Sosyal-Cozum-Isbirligi'
@@ -106,7 +106,7 @@ const storyData = {
         id: 'end_b2',
         isFinal: true,
         bgImage: require('../assets/images/end_b2_scene.png'),
-        badgeImage: require('../assets/images/end_b2_badge.png'),
+        badgeImage: require('../assets/images/end_b1_badge.png'), // SWAPPED to match option
         audio: require('../assets/sounds/audio_end_b2.mp3'),
         text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar!",
         analysisTag: 'Bilissel-Cozum-Yaraticilik'
@@ -132,7 +132,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     const soundRef = useRef<Audio.Sound | null>(null);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const badgeBounce = useRef(new Animated.Value(0)).current;
+    // Removed badgeBounce animated value
 
     const currentNode = storyData[currentNodeId as keyof typeof storyData];
 
@@ -166,21 +166,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         playSceneAudio();
 
         if (currentNode.isFinal) {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(badgeBounce, {
-                        toValue: 1,
-                        duration: 800,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(badgeBounce, {
-                        toValue: 0,
-                        duration: 800,
-                        useNativeDriver: true,
-                    }),
-                ])
-            ).start();
-
+            // Removed animation loop logic
             if (!isLogging) {
                 logGameResult(currentNode.analysisTag || 'Unknown');
             }
@@ -278,10 +264,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         }
     };
 
-    const badgeScale = badgeBounce.interpolate({
-        inputRange: [0, 1],
-        outputRange: [1, 1.15]
-    });
+    // Removed badgeScale interpolation
 
     return (
         <DynamicBackground onExit={onExit}>
@@ -313,13 +296,13 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                                 resizeMode="contain"
                             />
                             {currentNode.isFinal && currentNode.badgeImage && (
-                                <Animated.View style={[styles.badgeWrapper, { transform: [{ scale: badgeScale }] }]}>
+                                <View style={styles.badgeWrapper}>
                                     <Image
                                         source={currentNode.badgeImage}
                                         style={styles.badgeImage}
                                         resizeMode="contain"
                                     />
-                                </Animated.View>
+                                </View>
                             )}
                             {showConfetti && (
                                 <View style={styles.congratsOverlay}>
