@@ -1,3 +1,4 @@
+import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
@@ -19,40 +20,44 @@ interface StoryNode {
     imageKey: string; // Sahne görseli
     choices?: Choice[];
     badgeKey?: string; // Ödül rozeti (Sadece finallerde)
-    audioKey?: string; // Ses dosyası placeholder
+    audioKey?: string; // Ses dosyası
 }
 
-// --- GÖRSEL YÖNETİMİ ---
-// Not: Gerçek projede bu dosyaların assets/story/ klasöründe olması gerekir.
-// Şimdilik hata vermemesi için hepsini mevcut icon.png'ye yönlendiriyoruz.
-// Kullanıcı dosyaları eklediğinde burayı güncelleyebilir.
-const PLACEHOLDER_IMG = require('../assets/images/icon.png');
-
+// --- GÖRSEL VE SES YÖNETİMİ ---
 const ASSETS: Record<string, any> = {
     // Sahneler
-    'intro_scene': PLACEHOLDER_IMG, // require('../assets/story/intro_scene.png')
-    'scene_a_river': PLACEHOLDER_IMG, // require('../assets/story/scene_a_river.png')
-    'scene_b_thinking': PLACEHOLDER_IMG, // require('../assets/story/scene_b_thinking.png')
-    'end_a1_scene': PLACEHOLDER_IMG, // require('../assets/story/end_a1_scene.png')
-    'end_a2_scene': PLACEHOLDER_IMG, // require('../assets/story/end_a2_scene.png')
-    'end_b1_scene': PLACEHOLDER_IMG, // require('../assets/story/end_b1_scene.png')
-    'end_b2_scene': PLACEHOLDER_IMG, // require('../assets/story/end_b2_scene.png')
+    'intro_scene': require('../assets/images/intro_scene.png'),
+    'scene_a_river': require('../assets/images/scene_a_river.png'),
+    'scene_b_thinking': require('../assets/images/scene_b_thinking.png'),
+    'end_a1_scene': require('../assets/images/end_a1_scene.png'),
+    'end_a2_scene': require('../assets/images/end_a2_scene.png'),
+    'end_b1_scene': require('../assets/images/end_b1_scene.png'),
+    'end_b2_scene': require('../assets/images/end_b2_scene.png'),
 
     // Butonlar
-    'btn_filo': PLACEHOLDER_IMG, // require('../assets/story/btn_filo.png')
-    'btn_mavis': PLACEHOLDER_IMG, // require('../assets/story/btn_mavis.png')
+    'btn_filo': require('../assets/images/btn_filo.png'),
+    'btn_mavis': require('../assets/images/btn_mavis.png'),
 
     // Rozetler
-    'end_a1_badge': PLACEHOLDER_IMG, // require('../assets/story/end_a1_badge.png')
-    'end_a2_badge': PLACEHOLDER_IMG, // require('../assets/story/end_a2_badge.png')
-    'end_b1_badge': PLACEHOLDER_IMG, // require('../assets/story/end_b1_badge.png')
-    'end_b2_badge': PLACEHOLDER_IMG, // require('../assets/story/end_b2_badge.png')
+    'end_a1_badge': require('../assets/images/end_a1_badge.png'),
+    'end_a2_badge': require('../assets/images/end_a2_badge.png'),
+    'end_b1_badge': require('../assets/images/end_b1_badge.png'),
+    'end_b2_badge': require('../assets/images/end_b2_badge.png'),
+
+    // Sesler
+    'audio_intro': require('../assets/sounds/audio_intro.mp3'),
+    'audio_scene_a': require('../assets/sounds/audio_scene_a.mp3'),
+    'audio_scene_b': require('../assets/sounds/audio_scene_b.mp3'),
+    'audio_end_a1': require('../assets/sounds/audio_end_a1.mp3'),
+    'audio_end_a2': require('../assets/sounds/audio_end_a2.mp3'),
+    'audio_end_b1': require('../assets/sounds/audio_end_b1.mp3'),
+    'audio_end_b2': require('../assets/sounds/audio_end_b2.mp3'),
 };
 
 const STORY_NODES: Record<StoryNodeId, StoryNode> = {
     intro: {
         id: 'intro',
-        text: "Pıtır ormanda dev bir ceviz çuvalı buldu ama taşıyamıyor. Yağmur başladı! Pıtır kimden yardım istesin?",
+        text: "Pıtır o gün çok şanslıydı! Ormanın derinliklerinde kış uykusu için kocaman bir ceviz çuvalı bulmuştu. Ama çuval o kadar ağırdı ki kıpırdatamadı. Üstelik yağmur başladı! Pıtır'ın yardıma ihtiyacı var. Sence kimden yardım istesin?",
         imageKey: 'intro_scene',
         audioKey: 'audio_intro',
         choices: [
@@ -62,7 +67,7 @@ const STORY_NODES: Record<StoryNodeId, StoryNode> = {
     },
     scene_a: {
         id: 'scene_a',
-        text: "Filo çuvalı kaldırdı ama dere kenarındaki köprü yıkılmış! Karşıya nasıl geçsinler?",
+        text: "Filo hortumuyla çuvalı kaldırdı ama önlerine şırıl şırıl akan kocaman bir dere çıktı! Köprü yıkılmıştı. Filo durdu ve düşündü. Sence derenin karşısına nasıl geçmeliler?",
         imageKey: 'scene_a_river',
         audioKey: 'audio_scene_a',
         choices: [
@@ -72,7 +77,7 @@ const STORY_NODES: Record<StoryNodeId, StoryNode> = {
     },
     scene_b: {
         id: 'scene_b',
-        text: "Maviş çuvalı kaldıramaz ama harika bir fikri var! Sence ne yapsınlar?",
+        text: "Maviş, 'Ben o çuvalı kaldıramam Pıtır, ben çok küçüğüm. Ama harika bir fikrim var!' dedi. Sence Maviş nasıl bir çözüm buldu?",
         imageKey: 'scene_b_thinking',
         audioKey: 'audio_scene_b',
         choices: [
@@ -82,28 +87,28 @@ const STORY_NODES: Record<StoryNodeId, StoryNode> = {
     },
     end_a1: {
         id: 'end_a1',
-        text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
+        text: "Filo hemen oradaki devrilmiş kütüğü uzattı ve harika bir köprü oldu! Pıtır, 'Teşekkür ederim Filo' dedi. Anlamıştı ki; işler ne kadar zor olursa olsun, arkadaşlar el ele verince her şey kolaylaşır.",
         imageKey: 'end_a1_scene',
         badgeKey: 'end_a1_badge',
         audioKey: 'audio_end_a1'
     },
     end_a2: {
         id: 'end_a2',
-        text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
+        text: "Filo, 'Atla sırtıma!' dedi. Pıtır, ceviz çuvalıyla birlikte Filo’nun sırtında sudan geçti ve hiç ıslanmadı! Anlamıştı ki; işler ne kadar zor olursa olsun, arkadaşlar el ele verince her şey kolaylaşır.",
         imageKey: 'end_a2_scene',
         badgeKey: 'end_a2_badge',
         audioKey: 'audio_end_a2'
     },
     end_b1: {
         id: 'end_b1',
-        text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
+        text: "Maviş bir ıslık çaldı, gökyüzü kuşlarla doldu! Her kuş bir ceviz taşıdı ve çuval saniyeler içinde bitti. Anlamıştı ki; işler ne kadar zor olursa olsun, arkadaşlar el ele verince her şey kolaylaşır.",
         imageKey: 'end_b1_scene',
         badgeKey: 'end_b1_badge',
         audioKey: 'audio_end_b1'
     },
     end_b2: {
         id: 'end_b2',
-        text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar.",
+        text: "Cevizleri büyük yaprakların üzerine koyup kızak gibi kaydırdılar. Hem yorulmadılar hem çok eğlendiler! Anlamıştı ki; işler ne kadar zor olursa olsun, arkadaşlar el ele verince her şey kolaylaşır.",
         imageKey: 'end_b2_scene',
         badgeKey: 'end_b2_badge',
         audioKey: 'audio_end_b2'
@@ -124,6 +129,9 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
 
+    // Audio Ref
+    const soundRef = useRef<Audio.Sound | null>(null);
+
     // Animasyonlar
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const badgeScaleAnim = useRef(new Animated.Value(0)).current;
@@ -132,8 +140,33 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
     const currentNode = STORY_NODES[currentNodeId];
     const isEnding = !!currentNode.badgeKey;
 
-    // Sahne geçiş animasyonu
+    // Sahne geçişi ve Ses Yönetimi
     useEffect(() => {
+        let isMounted = true;
+
+        const playSceneAudio = async () => {
+            try {
+                // Önceki sesi durdur ve unload et
+                if (soundRef.current) {
+                    await soundRef.current.unloadAsync();
+                    soundRef.current = null;
+                }
+
+                // Yeni sesi yükle ve çal
+                if (currentNode.audioKey && isMounted) {
+                    console.log(`🔊 Ses yükleniyor: ${currentNode.audioKey}`);
+                    const { sound } = await Audio.Sound.createAsync(
+                        ASSETS[currentNode.audioKey],
+                        { shouldPlay: true }
+                    );
+                    soundRef.current = sound;
+                }
+            } catch (error) {
+                console.error("Ses çalma hatası:", error);
+            }
+        };
+
+        // Animasyonu başlat
         fadeAnim.setValue(0);
         Animated.timing(fadeAnim, {
             toValue: 1,
@@ -141,11 +174,8 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
             useNativeDriver: true,
         }).start();
 
-        // Ses çalma (Placeholder)
-        if (currentNode.audioKey) {
-            console.log(`🔊 Ses çalınıyor: ${currentNode.audioKey}`);
-            // playSound(currentNode.audioKey);
-        }
+        // Sesi çal
+        playSceneAudio();
 
         // Bitiş ekranı animasyonları ve loglama
         if (isEnding) {
@@ -175,7 +205,23 @@ export default function CevizMacera({ onExit, userId, userEmail }: CevizMaceraPr
                 logGameResult();
             }
         }
+
+        return () => {
+            isMounted = false;
+            if (soundRef.current) {
+                soundRef.current.unloadAsync();
+            }
+        };
     }, [currentNodeId]);
+
+    // Component unmount olduğunda sesi temizle
+    useEffect(() => {
+        return () => {
+            if (soundRef.current) {
+                soundRef.current.unloadAsync();
+            }
+        };
+    }, []);
 
     const handleChoice = (choice: Choice) => {
         setPathTaken(prev => [...prev, choice.id]);
