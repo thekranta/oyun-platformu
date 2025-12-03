@@ -109,23 +109,40 @@ export default function AdminPanel() {
             let prompt = '';
 
             if (score.oyun_turu === 'ceviz_macera') {
-                // --- MİZAÇ ANALİZİ PROMPTU (Ceviz Macera İçin) ---
-                // Ceviz Macera oyununda 'yapay_zeka_yorumu' alanına başlangıçta pathTag (örn: 'Fiziksel-Cozum-Kopru') kaydediliyor.
+                // --- GELİŞİMSEL DÖNEM BAZLI MİZAÇ ANALİZİ (Ceviz Macera İçin) ---
                 const aiContext = score.yapay_zeka_yorumu || 'Bilinmiyor';
+                const ageMonths = score.ogrenci_yasi;
 
                 prompt = `
-                    Sen bir Okul Öncesi Gelişim Uzmanısın. Görevin, 'Ceviz Taşıma Macerası' oyununu oynayan çocuğun yaptığı seçime göre ebeveynine pedagojik bir analiz maili yazmaktır.
-   
-                    Çocuk Bilgisi: ${score.ogrenci_adi}, ${score.ogrenci_yasi} aylık.
-                    Seçilen Yol (Data): ${aiContext} (Örn: 'Fiziksel-Cozum-Kopru' veya 'Sosyal-Cozum-Isbirligi')
+                    Sen uzman bir Gelişim Psikoloğusun. Aşağıdaki verileri kullanarak ebeveyne özel bir analiz yazacaksın.
 
-                    ANALİZ KURALLARI:
-                    - Eğer Data 'Fiziksel-Cozum-Kopru' ise: Çocuğun somut araçları (kütük) kullanarak pratik çözüm üretmeye yatkın olduğunu, mühendisvari bir neden-sonuç ilişkisi kurduğunu vurgula.
-                    - Eğer Data 'Fiziksel-Cozum-Destek' ise: Çocuğun zorlandığında güvenilir birinden (Fil) yardım istemeyi bildiğini, bunun sağlıklı bir güven bağı göstergesi olduğunu vurgula.
-                    - Eğer Data 'Sosyal-Cozum-Isbirligi' ise: Çocuğun bireysel çaba yerine topluluğu (kuş sürüsü) organize etmeyi seçtiğini, sosyal zekasının ve liderlik potansiyelinin yüksek olduğunu vurgula.
-                    - Eğer Data 'Bilissel-Cozum-Yaraticilik' ise: Çocuğun standart taşımak yerine yaprakları kızak yaparak eğlenceli ve inovatif bir yol bulduğunu, 'kutunun dışında' düşünebildiğini vurgula.
+                    GİRDİLER:
+                    - Çocuk Adı: ${score.ogrenci_adi}
+                    - Çocuk Yaşı: ${ageMonths} Ay
+                    - Seçilen Yol: ${aiContext} (Örn: 'Sosyal-Cozum-Isbirligi', 'Fiziksel-Cozum-Destek', 'Bilissel-Cozum-Yaraticilik')
 
-                    Maili samimi, profesyonel ve cesaretlendirici bir dille yaz. Hata sayısından veya puandan ASLA bahsetme.
+                    GÖREVİN:
+                    Çocuğun yaptığı seçimi, YAŞINA GÖRE (Gelişimsel Dönem Özellikleri bağlamında) yorumla. Aşağıdaki matrisi referans al:
+
+                    1. GRUP: KÜÇÜKLER (30-48 Ay Arası) - Odak: Güven, Somut Düşünce, Benmerkezcilik.
+                       - Eğer 'Fiziksel-Cozum-Destek' (Fil Sırtı) seçtiyse: Bunu 'Bağımlılık' olarak değil, 'Güvenli Bağlanma ve Destek Alma İhtiyacı' olarak yorumla. Bu yaşta yardım istemek çok doğaldır.
+                       - Eğer 'Sosyal-Cozum-Isbirligi' (Kuşlar) seçtiyse: Bunu 'Liderlik' olarak değil, 'Sosyal Farkındalığın Başlangıcı ve Taklit Yeteneği' olarak yorumla.
+                       - Eğer 'Bilissel-Cozum-Yaraticilik' (Kızak) seçtiyse: Bunu 'Oyunsu Keşif ve Hayal Gücü' olarak yorumla.
+                       - Eğer 'Fiziksel-Cozum-Kopru' (Kütük) seçtiyse: Bunu 'Somut Problem Çözme ve Neden-Sonuç İlişkisi Kurma' olarak yorumla.
+
+                    2. GRUP: BÜYÜKLER (49-72+ Ay Arası) - Odak: Strateji, Sosyal Kurallar, Problem Çözme.
+                       - Eğer 'Fiziksel-Cozum-Destek' (Fil Sırtı) seçtiyse: Bunu 'Pragmatik (Faydacı) Çözüm ve Enerji Tasarrufu' olarak yorumla.
+                       - Eğer 'Sosyal-Cozum-Isbirligi' (Kuşlar) seçtiyse: Bunu doğrudan 'Liderlik, Organizasyon Yeteneği ve İş Bölümü Bilinci' olarak öv.
+                       - Eğer 'Bilissel-Cozum-Yaraticilik' (Kızak) seçtiyse: Bunu 'İnovatif Düşünme, Mühendislik Becerisi ve Alternatif Çözüm Üretme' olarak yorumla.
+                       - Eğer 'Fiziksel-Cozum-Kopru' (Kütük) seçtiyse: Bunu 'Stratejik Planlama ve Sistematik Düşünme' olarak yorumla.
+
+                    ANALİZİ YAZARKEN:
+                    - Asla '1. Grup', 'Matris', 'KÜÇÜKLER' veya 'BÜYÜKLER' gibi teknik terimler kullanma.
+                    - Ebeveyne doğrudan, sıcak ve çocuğun gelişim seviyesine uygun bir dille hitap et.
+                    - Örneğin küçük çocuk için: 'Henüz çok küçük olduğu için bu desteği araması harika...' de.
+                    - Büyük çocuk için: 'Bu yaşta böyle bir strateji geliştirmesi onun zekasını gösterir...' de.
+                    - Maili samimi, profesyonel ve cesaretlendirici bir dille yaz.
+                    - Hata sayısından veya puandan ASLA bahsetme.
                 `;
             } else {
                 // --- STANDART PERFORMANS PROMPTU (Diğer Oyunlar İçin) ---
