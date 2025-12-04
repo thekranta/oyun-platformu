@@ -30,6 +30,24 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
+    // Update volume when it changes
+    useEffect(() => {
+        if (backgroundSound) {
+            backgroundSound.setVolumeAsync(volume);
+        }
+    }, [volume, backgroundSound]);
+
+    // Update play state when mute changes
+    useEffect(() => {
+        if (backgroundSound) {
+            if (isMuted) {
+                backgroundSound.pauseAsync();
+            } else {
+                backgroundSound.playAsync();
+            }
+        }
+    }, [isMuted, backgroundSound]);
+
     const loadBackgroundSound = async () => {
         try {
             await Audio.setAudioModeAsync({
@@ -56,8 +74,20 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
         try {
             if (name === 'background') {
+                // Background sound is already playing from loadBackgroundSound
+                // Just ensure it's playing if not muted
                 if (backgroundSound) {
-                    await backgroundSound.playAsync();
+                    const status = await backgroundSound.getStatusAsync();
+                    if (status.isLoaded && !status.isPlaying && !isMuted) {
+                        await backgroundSound.playAsync();
+                    }
+                } else {
+                    // If sound not loaded yet, wait a bit and try again
+                    setTimeout(async () => {
+                        if (backgroundSound && !isMuted) {
+                            await backgroundSound.playAsync();
+                        }
+                    }, 500);
                 }
             } else if (name === 'correct') {
                 // SFX logic here

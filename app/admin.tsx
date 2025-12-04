@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
 import { useSound } from '../components/SoundContext';
 import StudentStatsModal from '../components/StudentStatsModal';
@@ -31,6 +31,8 @@ interface StudentGroup {
 
 export default function AdminPanel() {
     const router = useRouter();
+    const { width, height } = useWindowDimensions();
+    const isLandscape = width > height;
     const [studentGroups, setStudentGroups] = useState<StudentGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<number | null>(null);
@@ -434,12 +436,12 @@ export default function AdminPanel() {
 
     return (
         <DynamicBackground>
-            <View style={styles.container}>
-                <View style={styles.header}>
+            <View style={[styles.container, isLandscape && styles.containerLandscape]}>
+                <View style={[styles.header, isLandscape && styles.headerLandscape]}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>Öğrenci Gelişim Takibi 📊</Text>
+                    <Text style={[styles.title, isLandscape && styles.titleLandscape]}>Öğrenci Gelişim Takibi 📊</Text>
                     <View style={{ flexDirection: 'row' }}>
                         <TouchableOpacity onPress={fetchScores} style={styles.soundButton}>
                             <Ionicons name="refresh" size={24} color="white" />
@@ -457,7 +459,7 @@ export default function AdminPanel() {
                         data={studentGroups}
                         renderItem={({ item }) => <StudentCard student={item} />}
                         keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContent}
+                        contentContainerStyle={[styles.listContent, isLandscape && styles.listContentLandscape]}
                         ListEmptyComponent={<Text style={styles.emptyText}>Henüz kayıt yok.</Text>}
                     />
                 )}
@@ -468,16 +470,20 @@ export default function AdminPanel() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, paddingTop: 20 },
+    containerLandscape: { maxWidth: 1400, alignSelf: 'center', width: '100%' },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 10 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 10 },
+    headerLandscape: { maxWidth: 1400, alignSelf: 'center', width: '100%' },
     backButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginRight: 15 },
     title: { flex: 1, fontSize: 22, fontWeight: 'bold', color: '#333' },
+    titleLandscape: { fontSize: 24 },
     soundButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginLeft: 15 },
     listContent: { padding: 15, paddingBottom: 50 },
+    listContentLandscape: { maxWidth: 1400, alignSelf: 'center', width: '100%' },
     emptyText: { textAlign: 'center', fontSize: 16, color: '#777', marginTop: 50 },
 
     // Student Card Styles
-    studentCard: { backgroundColor: 'white', borderRadius: 20, marginBottom: 15, elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, overflow: 'hidden' },
+    studentCard: { backgroundColor: 'white', borderRadius: 20, marginBottom: 15, elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, overflow: 'hidden', maxWidth: '100%' },
     studentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
     avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
     avatarText: { fontSize: 24, fontWeight: 'bold', color: '#2196F3' },

@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
@@ -14,7 +14,7 @@ const storyData = {
         bgImage: require('../assets/images/intro_scene.png'),
         text: "Pıtır o gün çok şanslıydı! Kış uykusu için kocaman bir ceviz çuvalı bulmuştu ama kaldıramıyordu. Üstelik yağmur başladı! Sence kimden yardım istesin?",
         audio: require('../assets/sounds/audio_intro.mp3'),
-        questionAudio: require('../assets/sounds/ceviz_macera/question_intro.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_intro.mp3.mp3'),
         options: [
             {
                 id: 'A',
@@ -39,7 +39,7 @@ const storyData = {
         bgImage: require('../assets/images/scene_a_river.png'),
         text: "Filo çuvalı kaldırdı ama dere kenarındaki köprü yıkılmış! Karşıya nasıl geçsinler?",
         audio: require('../assets/sounds/audio_scene_a.mp3'),
-        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_a.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_a.mp3.mp3'),
         options: [
             {
                 id: 'A1',
@@ -64,7 +64,7 @@ const storyData = {
         bgImage: require('../assets/images/scene_b_thinking.png'),
         text: "Maviş çuvalı kaldıramaz ama harika bir fikri var! Sence ne yapsınlar?",
         audio: require('../assets/sounds/audio_scene_b.mp3'),
-        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_b.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_b.mp3.mp3'),
         options: [
             {
                 id: 'B1',
@@ -167,7 +167,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     const currentNode = storyData[currentNodeId as keyof typeof storyData] as StoryNode;
 
     useEffect(() => {
-        playSound('background');
+        // Background music is handled by SoundContext, no need to play it here
         return () => {
             if (soundRef.current) {
                 soundRef.current.unloadAsync();
@@ -338,13 +338,22 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                             )}
                         </View>
                     ) : (
-                        <View style={[styles.optionsView, { flexDirection: isPortrait && isMobile ? 'column' : 'row', gap: isPortrait && isMobile ? 20 : 50 }]}>
+                        <ScrollView 
+                            contentContainerStyle={[styles.optionsView, { 
+                                flexDirection: isPortrait && isMobile ? 'column' : 'row',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                paddingVertical: isPortrait && isMobile ? 20 : 0
+                            }]}
+                            showsVerticalScrollIndicator={false}
+                        >
                             {currentNode.options?.map((opt) => (
                                 <TouchableOpacity
                                     key={opt.id}
                                     style={[styles.largeOptionButton, {
-                                        width: isMobile ? (isPortrait ? 180 : 200) : 400,
-                                        height: isMobile ? (isPortrait ? 180 : 200) : 400
+                                        width: isMobile ? (isPortrait ? Math.min(width * 0.7, 250) : 200) : 400,
+                                        height: isMobile ? (isPortrait ? Math.min(width * 0.7, 250) : 200) : 400,
+                                        marginBottom: isPortrait && isMobile ? 15 : 0
                                     }]}
                                     onPress={() => handleOptionSelect(opt)}
                                     activeOpacity={0.8}
@@ -352,7 +361,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                                     <Image source={opt.image} style={styles.largeOptionImage} resizeMode="contain" />
                                 </TouchableOpacity>
                             ))}
-                        </View>
+                        </ScrollView>
                     )}
                 </Animated.View>
             </View>
@@ -370,7 +379,7 @@ const styles = StyleSheet.create({
     storyImage: { width: '90%', height: '80%', maxWidth: 800, borderRadius: 30 },
     badgeWrapper: { position: 'absolute', bottom: '15%', right: '10%', zIndex: 10, shadowColor: '#FFD700', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 20, elevation: 15 },
     badgeImage: { width: 150, height: 150 },
-    optionsView: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 50, width: '100%', height: '100%', paddingHorizontal: 20 },
+    optionsView: { width: '100%', paddingHorizontal: 20, minHeight: '100%' },
     largeOptionButton: {
         width: Platform.OS === 'web' ? 400 : 200,
         height: Platform.OS === 'web' ? 400 : 200,
