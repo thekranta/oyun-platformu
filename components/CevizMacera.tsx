@@ -14,6 +14,7 @@ const storyData = {
         bgImage: require('../assets/images/intro_scene.png'),
         text: "Pıtır o gün çok şanslıydı! Kış uykusu için kocaman bir ceviz çuvalı bulmuştu ama kaldıramıyordu. Üstelik yağmur başladı! Sence kimden yardım istesin?",
         audio: require('../assets/sounds/audio_intro.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_intro.mp3.mp3'),
         options: [
             {
                 id: 'A',
@@ -38,11 +39,13 @@ const storyData = {
         bgImage: require('../assets/images/scene_a_river.png'),
         text: "Filo çuvalı kaldırdı ama dere kenarındaki köprü yıkılmış! Karşıya nasıl geçsinler?",
         audio: require('../assets/sounds/audio_scene_a.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_a.mp3.mp3'),
         options: [
             {
                 id: 'A1',
                 type: 'image_button',
-                image: require('../assets/images/end_a1_badge.png'),
+                image: require('../assets/images/end_a2_badge.png'), // Corrected: Bridge option uses Bridge badge (which is apparently named a2 or a1 depending on the mixup, but user said previous was wrong. Reverting to original mix.)
+                // Wait, if end_a1 (Bridge) uses end_a2_scene (Bridge Image), then Option A1 (Bridge) should probably use end_a2_badge.
                 label: 'Kütükten Köprü Yap',
                 next: 'end_a1',
                 audio: null,
@@ -50,7 +53,7 @@ const storyData = {
             {
                 id: 'A2',
                 type: 'image_button',
-                image: require('../assets/images/end_a2_badge.png'),
+                image: require('../assets/images/end_a1_badge.png'),
                 label: "Filo'nun Sırtına Bin",
                 next: 'end_a2',
                 audio: null,
@@ -62,11 +65,12 @@ const storyData = {
         bgImage: require('../assets/images/scene_b_thinking.png'),
         text: "Maviş çuvalı kaldıramaz ama harika bir fikri var! Sence ne yapsınlar?",
         audio: require('../assets/sounds/audio_scene_b.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_b.mp3.mp3'),
         options: [
             {
                 id: 'B1',
                 type: 'image_button',
-                image: require('../assets/images/end_b2_badge.png'), // SWAPPED
+                image: require('../assets/images/end_b2_badge.png'),
                 label: 'Kuş Arkadaşları Çağır',
                 next: 'end_b1',
                 audio: null,
@@ -74,7 +78,7 @@ const storyData = {
             {
                 id: 'B2',
                 type: 'image_button',
-                image: require('../assets/images/end_b1_badge.png'), // SWAPPED
+                image: require('../assets/images/end_b1_badge.png'),
                 label: 'Yaprak Kızak Yap',
                 next: 'end_b2',
                 audio: null,
@@ -84,36 +88,36 @@ const storyData = {
     end_a1: {
         id: 'end_a1',
         isFinal: true,
-        bgImage: require('../assets/images/end_a1_scene.png'),
-        badgeImage: require('../assets/images/end_a1_badge.png'),
-        audio: require('../assets/sounds/audio_end_a2.mp3'), // SWAPPED
+        bgImage: require('../assets/images/end_a2_scene.png'), // Reverted: Bridge text uses Bridge image (named a2)
+        badgeImage: require('../assets/images/end_a2_badge.png'),
+        audio: require('../assets/sounds/audio_end_a2.mp3'),
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru',
     },
     end_a2: {
         id: 'end_a2',
         isFinal: true,
-        bgImage: require('../assets/images/end_a2_scene.png'),
-        badgeImage: require('../assets/images/end_a2_badge.png'),
-        audio: require('../assets/sounds/audio_end_a1.mp3'), // SWAPPED
+        bgImage: require('../assets/images/end_a1_scene.png'), // Reverted: Ride text uses Ride image (named a1)
+        badgeImage: require('../assets/images/end_a1_badge.png'),
+        audio: require('../assets/sounds/audio_end_a1.mp3'),
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek',
     },
     end_b1: {
         id: 'end_b1',
         isFinal: true,
-        bgImage: require('../assets/images/end_b2_scene.png'), // SWAPPED to match text (Birds)
-        badgeImage: require('../assets/images/end_b2_badge.png'), // SWAPPED
-        audio: require('../assets/sounds/audio_end_b2.mp3'), // SWAPPED
+        bgImage: require('../assets/images/end_b2_scene.png'),
+        badgeImage: require('../assets/images/end_b2_badge.png'),
+        audio: require('../assets/sounds/audio_end_b2.mp3'),
         text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
         analysisTag: 'Sosyal-Cozum-Isbirligi',
     },
     end_b2: {
         id: 'end_b2',
         isFinal: true,
-        bgImage: require('../assets/images/end_b1_scene.png'), // SWAPPED to match text (Sled)
-        badgeImage: require('../assets/images/end_b1_badge.png'), // SWAPPED
-        audio: require('../assets/sounds/audio_end_b1.mp3'), // SWAPPED
+        bgImage: require('../assets/images/end_b1_scene.png'),
+        badgeImage: require('../assets/images/end_b1_badge.png'),
+        audio: require('../assets/sounds/audio_end_b1.mp3'),
         text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar!",
         analysisTag: 'Bilissel-Cozum-Yaraticilik',
     },
@@ -133,6 +137,7 @@ type StoryNode = {
     bgImage: any;
     text: string;
     audio: any;
+    questionAudio?: any;
     isFinal?: boolean;
     badgeImage?: any;
     analysisTag?: string;
@@ -184,6 +189,13 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         }
     }, [currentNodeId]);
 
+    // New effect to handle viewState changes for question audio
+    useEffect(() => {
+        if (viewState === 'options' && currentNode.questionAudio) {
+            playQuestionAudio();
+        }
+    }, [viewState]);
+
     const playSceneAudio = async () => {
         try {
             if (soundRef.current) {
@@ -200,6 +212,20 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         } catch (e) {
             console.log('Ses çalma hatası:', e);
             if (!currentNode.isFinal) setViewState('options');
+        }
+    };
+
+    const playQuestionAudio = async () => {
+        try {
+            if (soundRef.current) {
+                await soundRef.current.unloadAsync();
+                soundRef.current = null;
+            }
+            const { sound } = await Audio.Sound.createAsync(currentNode.questionAudio, { shouldPlay: true });
+            soundRef.current = sound;
+            await sound.setVolumeAsync(storyVolume);
+        } catch (e) {
+            console.warn('Soru sesi çalma hatası:', e);
         }
     };
 
