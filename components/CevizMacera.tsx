@@ -21,7 +21,7 @@ const storyData = {
                 image: require('../assets/images/btn_filo.png'),
                 label: 'Güçlü Fil Filo',
                 next: 'scene_a',
-                audio: require('../assets/sounds/ceviz_macera/option_intro_A.mp3'),
+                audio: null,
             },
             {
                 id: 'B',
@@ -29,7 +29,7 @@ const storyData = {
                 image: require('../assets/images/btn_mavis.png'),
                 label: 'Akıllı Kuş Maviş',
                 next: 'scene_b',
-                audio: require('../assets/sounds/ceviz_macera/option_intro_B.mp3'),
+                audio: null,
             },
         ],
     },
@@ -45,7 +45,7 @@ const storyData = {
                 image: require('../assets/images/end_a2_badge.png'), // SWAPPED
                 label: 'Kütükten Köprü Yap',
                 next: 'end_a1',
-                audio: require('../assets/sounds/ceviz_macera/option_scene_a_A1.mp3'),
+                audio: null,
             },
             {
                 id: 'A2',
@@ -53,7 +53,7 @@ const storyData = {
                 image: require('../assets/images/end_a1_badge.png'), // SWAPPED
                 label: "Filo'nun Sırtına Bin",
                 next: 'end_a2',
-                audio: require('../assets/sounds/ceviz_macera/option_scene_a_A2.mp3'),
+                audio: null,
             },
         ],
     },
@@ -69,7 +69,7 @@ const storyData = {
                 image: require('../assets/images/end_b2_badge.png'), // SWAPPED
                 label: 'Kuş Arkadaşları Çağır',
                 next: 'end_b1',
-                audio: require('../assets/sounds/ceviz_macera/option_scene_b_B1.mp3'),
+                audio: null,
             },
             {
                 id: 'B2',
@@ -77,7 +77,7 @@ const storyData = {
                 image: require('../assets/images/end_b1_badge.png'), // SWAPPED
                 label: 'Yaprak Kızak Yap',
                 next: 'end_b2',
-                audio: require('../assets/sounds/ceviz_macera/option_scene_b_B2.mp3'),
+                audio: null,
             },
         ],
     },
@@ -339,7 +339,12 @@ const styles = StyleSheet.create({
     badgeWrapper: { position: 'absolute', bottom: '15%', right: '10%', zIndex: 10, shadowColor: '#FFD700', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 20, elevation: 15 },
     badgeImage: { width: 150, height: 150 },
     optionsView: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 50, width: '100%', height: '100%', paddingHorizontal: 20 },
-    largeOptionButton: { width: Platform.OS === 'web' ? 400 : 200, height: Platform.OS === 'web' ? 400 : 200, borderRadius: 40, backgroundColor: '#FFF', elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3, shadowRadius: 10, borderWidth: 5, borderColor: '#FFB300', padding: 20, alignItems: 'center', justifyContent: 'center' },
+    largeOptionButton: {
+        width: Platform.OS === 'web' ? 400 : 200,
+        height: Platform.OS === 'web' ? 400 : 200,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     largeOptionImage: { width: '100%', height: '100%' },
     resetButton: { position: 'absolute', bottom: 30, backgroundColor: '#FF5722', width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#BF360C', elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3, shadowRadius: 5 },
     congratsOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', zIndex: 100 },
