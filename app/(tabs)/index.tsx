@@ -270,7 +270,7 @@ export default function App() {
   }
 
   if (asama === 'ceviz-macera') {
-    return <CevizMacera onExit={() => setAsama('hikayeler')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
+    return <CevizMacera onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
   }
 
   if (asama === 'sonuc') {

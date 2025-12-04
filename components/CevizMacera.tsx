@@ -44,8 +44,7 @@ const storyData = {
             {
                 id: 'A1',
                 type: 'image_button',
-                image: require('../assets/images/end_a2_badge.png'), // Corrected: Bridge option uses Bridge badge (which is apparently named a2 or a1 depending on the mixup, but user said previous was wrong. Reverting to original mix.)
-                // Wait, if end_a1 (Bridge) uses end_a2_scene (Bridge Image), then Option A1 (Bridge) should probably use end_a2_badge.
+                image: require('../assets/images/end_a1_badge.png'),
                 label: 'Kütükten Köprü Yap',
                 next: 'end_a1',
                 audio: null,
@@ -53,7 +52,7 @@ const storyData = {
             {
                 id: 'A2',
                 type: 'image_button',
-                image: require('../assets/images/end_a1_badge.png'),
+                image: require('../assets/images/end_a2_badge.png'),
                 label: "Filo'nun Sırtına Bin",
                 next: 'end_a2',
                 audio: null,
@@ -70,7 +69,7 @@ const storyData = {
             {
                 id: 'B1',
                 type: 'image_button',
-                image: require('../assets/images/end_b2_badge.png'),
+                image: require('../assets/images/end_b1_badge.png'),
                 label: 'Kuş Arkadaşları Çağır',
                 next: 'end_b1',
                 audio: null,
@@ -78,7 +77,7 @@ const storyData = {
             {
                 id: 'B2',
                 type: 'image_button',
-                image: require('../assets/images/end_b1_badge.png'),
+                image: require('../assets/images/end_b2_badge.png'),
                 label: 'Yaprak Kızak Yap',
                 next: 'end_b2',
                 audio: null,
@@ -88,8 +87,8 @@ const storyData = {
     end_a1: {
         id: 'end_a1',
         isFinal: true,
-        bgImage: require('../assets/images/end_a2_scene.png'), // Reverted: Bridge text uses Bridge image (named a2)
-        badgeImage: require('../assets/images/end_a2_badge.png'),
+        bgImage: require('../assets/images/end_a1_scene.png'),
+        badgeImage: require('../assets/images/end_a1_badge.png'),
         audio: require('../assets/sounds/audio_end_a2.mp3'),
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru',
@@ -97,8 +96,8 @@ const storyData = {
     end_a2: {
         id: 'end_a2',
         isFinal: true,
-        bgImage: require('../assets/images/end_a1_scene.png'), // Reverted: Ride text uses Ride image (named a1)
-        badgeImage: require('../assets/images/end_a1_badge.png'),
+        bgImage: require('../assets/images/end_a2_scene.png'),
+        badgeImage: require('../assets/images/end_a2_badge.png'),
         audio: require('../assets/sounds/audio_end_a1.mp3'),
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek',
