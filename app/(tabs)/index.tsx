@@ -113,6 +113,10 @@ export default function App() {
     }
   };
 
+  const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal'>('bilissel');
+
+  // ... (existing functions)
+
   // === EKRANLAR ===
   if (asama === 'giris') {
     return (
@@ -164,42 +168,72 @@ export default function App() {
             <Text style={styles.bilgi}>Bugün ne oynamak istersin?</Text>
           </View>
 
+          {/* TAB BAR */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'bilissel' && styles.activeTabButton]}
+              onPress={() => setActiveTab('bilissel')}
+            >
+              <Text style={[styles.tabText, activeTab === 'bilissel' && styles.activeTabText]}>🧠 Bilişsel Beceriler</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'sosyal' && styles.activeTabButton]}
+              onPress={() => setActiveTab('sosyal')}
+            >
+              <Text style={[styles.tabText, activeTab === 'sosyal' && styles.activeTabText]}>❤️ Sosyal-Duygusal</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.gridContainer}>
-            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#64B5F6' }]} onPress={() => oyunuBaslat('hafiza')}>
-              <Ionicons name="grid" size={40} color="white" style={{ marginBottom: 10 }} />
-              <Text style={styles.oyunBaslik}>Çiftini Bul!</Text>
-              <Text style={styles.oyunAciklama}>Hafıza Oyunu</Text>
-            </TouchableOpacity>
+            {activeTab === 'bilissel' && (
+              <>
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#64B5F6' }]} onPress={() => oyunuBaslat('hafiza')}>
+                  <Ionicons name="grid" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Çiftini Bul!</Text>
+                  <Text style={styles.oyunAciklama}>Hafıza Oyunu</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFB74D' }]} onPress={() => oyunuBaslat('siralama')}>
-              <Ionicons name="list" size={40} color="white" style={{ marginBottom: 10 }} />
-              <Text style={styles.oyunBaslik}>Sıralama</Text>
-              <Text style={styles.oyunAciklama}>Sayıları Diz</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFB74D' }]} onPress={() => oyunuBaslat('siralama')}>
+                  <Ionicons name="list" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Sıralama</Text>
+                  <Text style={styles.oyunAciklama}>Sayıları Diz</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#81C784' }]} onPress={() => oyunuBaslat('gruplama')}>
-              <Ionicons name="basket" size={40} color="white" style={{ marginBottom: 10 }} />
-              <Text style={styles.oyunBaslik}>Gruplama</Text>
-              <Text style={styles.oyunAciklama}>Meyve mi Hayvan mı?</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#81C784' }]} onPress={() => oyunuBaslat('gruplama')}>
+                  <Ionicons name="basket" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Gruplama</Text>
+                  <Text style={styles.oyunAciklama}>Meyve mi Hayvan mı?</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#BA68C8' }]} onPress={() => oyunuBaslat('diziyi-tamamla')}>
-              <Ionicons name="extension-puzzle" size={40} color="white" style={{ marginBottom: 10 }} />
-              <Text style={styles.oyunBaslik}>Diziyi Tamamla</Text>
-              <Text style={styles.oyunAciklama}>Örüntü Oyunu</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#BA68C8' }]} onPress={() => oyunuBaslat('diziyi-tamamla')}>
+                  <Ionicons name="extension-puzzle" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Diziyi Tamamla</Text>
+                  <Text style={styles.oyunAciklama}>Örüntü Oyunu</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#F06292' }]} onPress={() => oyunuBaslat('bunu-soyle')}>
-              <Ionicons name="mic" size={40} color="white" style={{ marginBottom: 10 }} />
-              <Text style={styles.oyunBaslik}>Bunu Söyle!</Text>
-              <Text style={styles.oyunAciklama}>Kelime Oyunu</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#F06292' }]} onPress={() => oyunuBaslat('bunu-soyle')}>
+                  <Ionicons name="mic" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Bunu Söyle!</Text>
+                  <Text style={styles.oyunAciklama}>Kelime Oyunu</Text>
+                </TouchableOpacity>
+              </>
+            )}
 
-            <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8D6E63' }]} onPress={() => setAsama('hikayeler')}>
-              <Ionicons name="book" size={40} color="white" style={{ marginBottom: 10 }} />
-              <Text style={styles.oyunBaslik}>Hikayeler</Text>
-              <Text style={styles.oyunAciklama}>Masal Dünyası</Text>
-            </TouchableOpacity>
+            {activeTab === 'sosyal' && (
+              <>
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548' }]} onPress={() => oyunuBaslat('ceviz-macera')}>
+                  <Ionicons name="leaf" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Ceviz Macerası</Text>
+                  <Text style={styles.oyunAciklama}>Pıtır'ın Macerası</Text>
+                </TouchableOpacity>
+                {/* Placeholder for future stories if needed */}
+                {/* <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8D6E63', opacity: 0.7 }]} disabled>
+                  <Ionicons name="book" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Yeni Hikayeler</Text>
+                  <Text style={styles.oyunAciklama}>Yakında...</Text>
+                </TouchableOpacity> */}
+              </>
+            )}
           </View>
 
           <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 30, alignSelf: 'center' }]} onPress={cikisYap}>
@@ -210,28 +244,7 @@ export default function App() {
     );
   }
 
-  if (asama === 'hikayeler') {
-    return (
-      <DynamicBackground>
-        <View style={styles.merkezContainer}>
-          <Text style={styles.baslik}>Masal Dünyası 📚</Text>
-          <Text style={styles.bilgi}>Hangi hikayeyi dinleyelim?</Text>
-
-          <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548', width: '90%', maxWidth: 400, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', paddingHorizontal: 30 }]} onPress={() => oyunuBaslat('ceviz-macera')}>
-            <Ionicons name="leaf" size={40} color="white" style={{ marginRight: 20 }} />
-            <View>
-              <Text style={styles.oyunBaslik}>Ceviz Macerası</Text>
-              <Text style={styles.oyunAciklama}>Pıtır'ın yardımsever dostları.</Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 20 }]} onPress={() => setAsama('menu')}>
-            <Text style={styles.butonYazi}>Geri Dön 🔙</Text>
-          </TouchableOpacity>
-        </View>
-      </DynamicBackground>
-    );
-  }
+  // 'hikayeler' state removed/bypassed as we link directly to ceviz-macera
 
   if (asama === 'hafiza') {
     return <HafizaOyunu onGameEnd={oyunuBitir} onExit={cikisYap} />;
@@ -305,4 +318,11 @@ const styles = StyleSheet.create({
 
   sonucBaslik: { fontSize: 36, fontWeight: 'bold', color: '#FF9800', marginVertical: 10, textAlign: 'center' },
   soundButton: { position: 'absolute', top: 50, right: 20, backgroundColor: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 25, zIndex: 10 },
+
+  // Tab Styles
+  tabContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 10, flexWrap: 'wrap' },
+  tabButton: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 25, backgroundColor: 'rgba(255,255,255,0.5)', borderWidth: 2, borderColor: 'transparent' },
+  activeTabButton: { backgroundColor: '#FFF', borderColor: '#4CAF50', elevation: 2 },
+  tabText: { fontSize: 16, fontWeight: 'bold', color: '#555' },
+  activeTabText: { color: '#2E7D32' },
 });
