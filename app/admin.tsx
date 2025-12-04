@@ -467,13 +467,13 @@ export default function AdminPanel() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingTop: 50 },
-    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 20 },
+    container: { flex: 1, paddingTop: 20 },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 10 },
+    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 10 },
     backButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginRight: 15 },
     title: { flex: 1, fontSize: 22, fontWeight: 'bold', color: '#333' },
     soundButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginLeft: 15 },
-    listContent: { padding: 15, paddingBottom: 100 },
+    listContent: { padding: 15, paddingBottom: 50 },
     emptyText: { textAlign: 'center', fontSize: 16, color: '#777', marginTop: 50 },
 
     // Student Card Styles

@@ -13,13 +13,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    const smtpUser = process.env.SMTP_USER || 'admin@childhoodtech.com';
+    const smtpPassword = process.env.SMTP_PASSWORD;
+    
+    if (!smtpPassword) {
+      return res.status(500).json({ error: 'SMTP password not configured. Please set SMTP_PASSWORD environment variable.' });
+    }
+
     const transporter = nodemailer.createTransport({
       host: 'smtp.hostinger.com',
       port: 465,
       secure: true,
       auth: {
-        user: 'admin@childhoodtech.com',
-        pass: 'Muhammed-282828', // Note: In production, use process.env.SMTP_PASSWORD
+        user: smtpUser,
+        pass: smtpPassword,
       },
     });
 

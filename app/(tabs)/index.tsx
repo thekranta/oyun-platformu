@@ -19,7 +19,6 @@ export default function App() {
   const router = useRouter();
   const { isMuted, toggleMute } = useSound();
   const [asama, setAsama] = useState('giris');
-  const [secilenOyun, setSecilenOyun] = useState('');
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
   const [email, setEmail] = useState('');
@@ -48,7 +47,6 @@ export default function App() {
   };
 
   const oyunuBaslat = (oyunTipi: string) => {
-    setSecilenOyun(oyunTipi);
     setYukleniyor(false);
     setAsama(oyunTipi);
   };

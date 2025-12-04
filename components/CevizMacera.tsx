@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Audio, AVPlaybackStatus } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
@@ -14,7 +14,7 @@ const storyData = {
         bgImage: require('../assets/images/intro_scene.png'),
         text: "Pıtır o gün çok şanslıydı! Kış uykusu için kocaman bir ceviz çuvalı bulmuştu ama kaldıramıyordu. Üstelik yağmur başladı! Sence kimden yardım istesin?",
         audio: require('../assets/sounds/audio_intro.mp3'),
-        questionAudio: require('../assets/sounds/ceviz_macera/question_intro.mp3.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_intro.mp3'),
         options: [
             {
                 id: 'A',
@@ -39,7 +39,7 @@ const storyData = {
         bgImage: require('../assets/images/scene_a_river.png'),
         text: "Filo çuvalı kaldırdı ama dere kenarındaki köprü yıkılmış! Karşıya nasıl geçsinler?",
         audio: require('../assets/sounds/audio_scene_a.mp3'),
-        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_a.mp3.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_a.mp3'),
         options: [
             {
                 id: 'A1',
@@ -64,7 +64,7 @@ const storyData = {
         bgImage: require('../assets/images/scene_b_thinking.png'),
         text: "Maviş çuvalı kaldıramaz ama harika bir fikri var! Sence ne yapsınlar?",
         audio: require('../assets/sounds/audio_scene_b.mp3'),
-        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_b.mp3.mp3'),
+        questionAudio: require('../assets/sounds/ceviz_macera/question_scene_b.mp3'),
         options: [
             {
                 id: 'B1',
@@ -89,7 +89,7 @@ const storyData = {
         isFinal: true,
         bgImage: require('../assets/images/end_a1_scene.png'),
         badgeImage: require('../assets/images/end_a1_badge.png'),
-        audio: require('../assets/sounds/audio_end_a2.mp3'),
+        audio: require('../assets/sounds/audio_end_a1.mp3'),
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru',
     },
@@ -98,25 +98,25 @@ const storyData = {
         isFinal: true,
         bgImage: require('../assets/images/end_a2_scene.png'),
         badgeImage: require('../assets/images/end_a2_badge.png'),
-        audio: require('../assets/sounds/audio_end_a1.mp3'),
+        audio: require('../assets/sounds/audio_end_a2.mp3'),
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek',
     },
     end_b1: {
         id: 'end_b1',
         isFinal: true,
-        bgImage: require('../assets/images/end_b2_scene.png'),
-        badgeImage: require('../assets/images/end_b2_badge.png'),
-        audio: require('../assets/sounds/audio_end_b2.mp3'),
+        bgImage: require('../assets/images/end_b1_scene.png'),
+        badgeImage: require('../assets/images/end_b1_badge.png'),
+        audio: require('../assets/sounds/audio_end_b1.mp3'),
         text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
         analysisTag: 'Sosyal-Cozum-Isbirligi',
     },
     end_b2: {
         id: 'end_b2',
         isFinal: true,
-        bgImage: require('../assets/images/end_b1_scene.png'),
-        badgeImage: require('../assets/images/end_b1_badge.png'),
-        audio: require('../assets/sounds/audio_end_b1.mp3'),
+        bgImage: require('../assets/images/end_b2_scene.png'),
+        badgeImage: require('../assets/images/end_b2_badge.png'),
+        audio: require('../assets/sounds/audio_end_b2.mp3'),
         text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar!",
         analysisTag: 'Bilissel-Cozum-Yaraticilik',
     },
@@ -151,19 +151,23 @@ interface CevizMaceraProps {
 }
 
 export default function CevizMacera({ onExit, userId, userEmail, userAge }: CevizMaceraProps) {
+    const { width, height } = useWindowDimensions();
+    const isPortrait = height > width;
+    const isMobile = width < 768;
+
     const [currentNodeId, setCurrentNodeId] = useState<string>('intro');
     const [viewState, setViewState] = useState<'story' | 'options'>('story');
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
-    const { stopSound } = useSound();
+    const { playSound } = useSound();
     const [storyVolume, setStoryVolume] = useState(1.0);
     const soundRef = useRef<Audio.Sound | null>(null);
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const currentNode = storyData[currentNodeId as keyof typeof storyData] as StoryNode;
 
     useEffect(() => {
-        stopSound('background');
+        playSound('background');
         return () => {
             if (soundRef.current) {
                 soundRef.current.unloadAsync();
@@ -334,11 +338,14 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                             )}
                         </View>
                     ) : (
-                        <View style={styles.optionsView}>
+                        <View style={[styles.optionsView, { flexDirection: isPortrait && isMobile ? 'column' : 'row', gap: isPortrait && isMobile ? 20 : 50 }]}>
                             {currentNode.options?.map((opt) => (
                                 <TouchableOpacity
                                     key={opt.id}
-                                    style={styles.largeOptionButton}
+                                    style={[styles.largeOptionButton, {
+                                        width: isMobile ? (isPortrait ? 180 : 200) : 400,
+                                        height: isMobile ? (isPortrait ? 180 : 200) : 400
+                                    }]}
                                     onPress={() => handleOptionSelect(opt)}
                                     activeOpacity={0.8}
                                 >

@@ -124,7 +124,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
             isPlaying: !isMuted,
             volume,
             toggleSound: toggleMute
-        } as any}>
+        }}>
             {children}
         </SoundContext.Provider>
     );
