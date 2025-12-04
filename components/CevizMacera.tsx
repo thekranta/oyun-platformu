@@ -42,7 +42,7 @@ const storyData = {
             {
                 id: 'A1',
                 type: 'image_button',
-                image: require('../assets/images/end_a2_badge.png'), // SWAPPED
+                image: require('../assets/images/end_a1_badge.png'),
                 label: 'Kütükten Köprü Yap',
                 next: 'end_a1',
                 audio: null,
@@ -50,7 +50,7 @@ const storyData = {
             {
                 id: 'A2',
                 type: 'image_button',
-                image: require('../assets/images/end_a1_badge.png'), // SWAPPED
+                image: require('../assets/images/end_a2_badge.png'),
                 label: "Filo'nun Sırtına Bin",
                 next: 'end_a2',
                 audio: null,
@@ -84,8 +84,8 @@ const storyData = {
     end_a1: {
         id: 'end_a1',
         isFinal: true,
-        bgImage: require('../assets/images/end_a2_scene.png'), // SWAPPED to match text (Bridge)
-        badgeImage: require('../assets/images/end_a2_badge.png'), // SWAPPED
+        bgImage: require('../assets/images/end_a1_scene.png'),
+        badgeImage: require('../assets/images/end_a1_badge.png'),
         audio: require('../assets/sounds/audio_end_a2.mp3'), // SWAPPED
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru',
@@ -93,8 +93,8 @@ const storyData = {
     end_a2: {
         id: 'end_a2',
         isFinal: true,
-        bgImage: require('../assets/images/end_a1_scene.png'), // SWAPPED to match text (Ride)
-        badgeImage: require('../assets/images/end_a1_badge.png'), // SWAPPED
+        bgImage: require('../assets/images/end_a2_scene.png'),
+        badgeImage: require('../assets/images/end_a2_badge.png'),
         audio: require('../assets/sounds/audio_end_a1.mp3'), // SWAPPED
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek',

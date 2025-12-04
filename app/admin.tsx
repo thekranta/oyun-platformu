@@ -347,13 +347,24 @@ export default function AdminPanel() {
                 {/* Action Buttons */}
                 <View style={styles.actionRow}>
                     {(!score.yapay_zeka_yorumu || score.yapay_zeka_yorumu.includes('-Cozum-')) ? (
-                        <TouchableOpacity
-                            style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
-                            onPress={() => analyzeGame(score)}
-                            disabled={isProcessing}
-                        >
-                            {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>🤖 Analiz Et</Text>}
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', gap: 10 }}>
+                            <TouchableOpacity
+                                style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
+                                onPress={() => analyzeGame(score)}
+                                disabled={isProcessing}
+                            >
+                                {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>🤖 Analiz Et</Text>}
+                            </TouchableOpacity>
+                            {score.email && score.oyun_turu === 'ceviz_macera' && (
+                                <TouchableOpacity
+                                    style={[styles.actionButton, { backgroundColor: '#4CAF50', paddingVertical: 4, paddingHorizontal: 8 }]}
+                                    onPress={() => sendEmail(score)}
+                                    disabled={isProcessing}
+                                >
+                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     ) : (
                         <View style={{ flexDirection: 'row', gap: 10 }}>
                             <TouchableOpacity onPress={() => toggleCommentVisibility(score.id)} style={styles.aiToggle}>
