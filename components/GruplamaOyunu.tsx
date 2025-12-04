@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
@@ -26,7 +26,8 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
     const [hataSayisi, setHataSayisi] = useState(0);
     const [baslangicZamani] = useState(new Date());
 
-    // Confetti Ref
+    // Animations
+    const shakeAnim = useRef(new Animated.Value(0)).current;
     const confettiRef = useRef<ConfettiCannon>(null);
 
     useEffect(() => {
@@ -38,6 +39,15 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
         setSorular(karisik);
         setSuankiSoruIndex(0);
         setDogruSayisi(0);
+    };
+
+    const shake = () => {
+        Animated.sequence([
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true })
+        ]).start();
     };
 
     const kategoriSec = (secilenKategori: string) => {
@@ -70,7 +80,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
             // Yanlış
             const yeniHata = hataSayisi + 1;
             setHataSayisi(yeniHata);
-            alert("Yanlış kutu! Tekrar dene.");
+            shake(); // Trigger shake animation instead of alert
         }
     };
 
@@ -89,9 +99,9 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                 <Text style={styles.bilgi}>Bu nesne hangisi?</Text>
 
                 {/* Ortadaki Nesne */}
-                <View style={styles.buyukNesneKutusu}>
+                <Animated.View style={[styles.buyukNesneKutusu, { transform: [{ translateX: shakeAnim }] }]}>
                     <Text style={{ fontSize: 80 }}>{soru.nesne}</Text>
-                </View>
+                </Animated.View>
 
                 {/* Şıklar */}
                 <View style={styles.secenekContainer}>

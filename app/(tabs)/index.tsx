@@ -247,26 +247,26 @@ export default function App() {
   // 'hikayeler' state removed/bypassed as we link directly to ceviz-macera
 
   if (asama === 'hafiza') {
-    return <HafizaOyunu onGameEnd={oyunuBitir} onExit={cikisYap} />;
+    return <HafizaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'siralama') {
-    return <SiralamaOyunu onGameEnd={oyunuBitir} onExit={cikisYap} />;
+    return <SiralamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'gruplama') {
-    return <GruplamaOyunu onGameEnd={oyunuBitir} onExit={cikisYap} />;
+    return <GruplamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'diziyi-tamamla') {
     return <DiziyiTamamla
       onGameEnd={oyunuBitir}
-      onLogout={cikisYap}
+      onLogout={() => setAsama('menu')}
     />;
   }
 
   if (asama === 'bunu-soyle') {
-    return <BunuSoyle onGameEnd={oyunuBitir} onExit={cikisYap} />;
+    return <BunuSoyle onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'ceviz-macera') {

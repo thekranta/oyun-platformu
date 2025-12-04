@@ -1,11 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
 const SIRALAMA_SAYILARI = [1, 2, 3, 4, 5];
 const TOTAL_ROUNDS = 4;
+const { width } = Dimensions.get('window');
+const ITEM_SIZE = width > 600 ? 100 : 60; // Larger size for tablets/web
+const FONT_SIZE = width > 600 ? 40 : 24;
 
 interface SiralamaOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
@@ -130,9 +133,9 @@ const styles = StyleSheet.create({
     header: { marginBottom: 20, alignItems: 'center' },
     baslik: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#1565C0' },
     bilgi: { fontSize: 18, marginBottom: 20, color: '#555' },
-    oyunAlani: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: 320 },
-    sayiKutu: { width: 60, height: 60, margin: 8, justifyContent: 'center', alignItems: 'center', borderRadius: 30, borderWidth: 2 },
+    oyunAlani: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '90%', maxWidth: 600 },
+    sayiKutu: { width: ITEM_SIZE, height: ITEM_SIZE, margin: 10, justifyContent: 'center', alignItems: 'center', borderRadius: ITEM_SIZE / 2, borderWidth: 3 },
     sayiSecilmedi: { backgroundColor: 'white', borderColor: '#FFA726' },
     sayiSecildi: { backgroundColor: '#ddd', borderColor: '#ccc' },
-    sayiYazi: { fontSize: 24, fontWeight: 'bold', color: '#333' },
+    sayiYazi: { fontSize: FONT_SIZE, fontWeight: 'bold', color: '#333' },
 });

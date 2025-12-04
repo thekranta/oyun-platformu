@@ -355,7 +355,7 @@ export default function AdminPanel() {
                             >
                                 {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>🤖 Analiz Et</Text>}
                             </TouchableOpacity>
-                            {score.email && score.oyun_turu === 'ceviz_macera' && (
+                            {score.email && (
                                 <TouchableOpacity
                                     style={[styles.actionButton, { backgroundColor: '#4CAF50', paddingVertical: 4, paddingHorizontal: 8 }]}
                                     onPress={() => sendEmail(score)}
