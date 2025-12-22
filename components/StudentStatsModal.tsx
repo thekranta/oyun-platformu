@@ -1,4 +1,4 @@
-﻿import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -77,8 +77,8 @@ export default function StudentStatsModal({ visible, onClose, studentName, stude
                 {/* Header */}
                 <View style={styles.header}>
                     <View>
-                        <Text style={styles.headerTitle}>{studentName} - Ä°statistikler</Text>
-                        <Text style={styles.headerSubtitle}>{studentAge} Ay â€¢ {scores.length} Oyun</Text>
+                        <Text style={styles.headerTitle}>{studentName} - İstatistikler</Text>
+                        <Text style={styles.headerSubtitle}>{studentAge} Ay • {scores.length} Oyun</Text>
                     </View>
                     <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                         <Ionicons name="close" size={28} color="#fff" />
@@ -91,7 +91,7 @@ export default function StudentStatsModal({ visible, onClose, studentName, stude
                         <View style={[styles.summaryCard, { backgroundColor: '#2196F3' }]}>
                             <Ionicons name="time-outline" size={32} color="#fff" />
                             <Text style={styles.summaryValue}>{avgDuration} sn</Text>
-                            <Text style={styles.summaryLabel}>Ort. SÃ¼re</Text>
+                            <Text style={styles.summaryLabel}>Ort. Süre</Text>
                         </View>
                         <View style={[styles.summaryCard, { backgroundColor: '#4CAF50' }]}>
                             <Ionicons name="finger-print-outline" size={32} color="#fff" />
@@ -106,23 +106,22 @@ export default function StudentStatsModal({ visible, onClose, studentName, stude
                     </View>
 
                     {/* Charts */}
-                    <BarChart data={durationData} label="â±ï¸ SÃ¼re Trendi (saniye)" color="#2196F3" />
-                    <BarChart data={movesData} label="ğŸ‘† Hamle SayÄ±sÄ± Trendi" color="#4CAF50" />
-                    <BarChart data={errorsData} label="âŒ Hata Trendi" color="#FF9800" />
+                    <BarChart data={durationData} label="⏱️ Süre Trendi (saniye)" color="#2196F3" />
+                    <BarChart data={movesData} label="👆 Hamle Sayısı Trendi" color="#4CAF50" />
+                    <BarChart data={errorsData} label="❌ Hata Trendi" color="#FF9800" />
 
                     {/* Game Types Breakdown */}
                     <View style={styles.breakdownContainer}>
-                        <Text style={styles.breakdownTitle}>ğŸ® Oyun TÃ¼rleri</Text>
-                        {['hafiza', 'siralama', 'gruplama', 'diziyi-tamamla', 'bunu-soyle', 'ceviz_macera', 'yaratici-cizim'].map(type => {
+                        <Text style={styles.breakdownTitle}>🎮 Oyun Türleri</Text>
+                        {['hafiza', 'siralama', 'gruplama', 'diziyi-tamamla', 'bunu-soyle', 'ceviz_macera'].map(type => {
                             const count = scores.filter(s => s.oyun_turu === type).length;
                             const typeNames: { [key: string]: string } = {
-                                'hafiza': 'ÇÅiftini Bul!',
-                                'siralama': 'SayŽñ SŽñralama',
+                                'hafiza': 'Çiftini Bul!',
+                                'siralama': 'Sayı Sıralama',
                                 'gruplama': 'Gruplama',
                                 'diziyi-tamamla': 'Diziyi Tamamla',
-                                'bunu-soyle': 'Bunu SÇôyle!',
-                                'ceviz_macera': 'Ceviz MacerasŽñ',
-                                'yaratici-cizim': 'Hayal Defteri'
+                                'bunu-soyle': 'Bunu Söyle!',
+                                'ceviz_macera': 'Ceviz Macerası'
                             };
                             if (count === 0) return null;
                             return (
@@ -280,10 +279,3 @@ const styles = StyleSheet.create({
         color: '#2196F3',
     },
 });
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-﻿import BunuSoyle from '@/components/BunuSoyle';
+import BunuSoyle from '@/components/BunuSoyle';
 import CevizMacera from '@/components/CevizMacera';
 import DiziyiTamamla from '@/components/DiziyiTamamla';
 import DynamicBackground from '@/components/DynamicBackground';
@@ -33,16 +33,16 @@ export default function App() {
 
   const girisYap = () => {
     if (ad.trim() === '' || yas.trim() === '') {
-      showToast("LÃ¼tfen isim ve yaÅŸ giriniz.", "error");
+      showToast('L\u00fctfen isim ve ya\u015f giriniz.', 'error');
       return;
     }
     if (!/^\d+$/.test(yas)) {
-      showToast("LÃ¼tfen yaÅŸ alanÄ±na sadece rakam giriniz.", "error");
+      showToast('L\u00fctfen ya\u015f alan\u0131na sadece rakam giriniz.', 'error');
       return;
     }
     const yasNum = parseInt(yas);
     if (yasNum < 24 || yasNum > 75) {
-      showToast("YaÅŸ 24 ile 75 ay arasÄ±nda olmalÄ±dÄ±r.", "error");
+      showToast('Ya\u015f 24 ile 75 ay aras\u0131nda olmal\u0131d\u0131r.', 'error');
       return;
     }
     setAsama('menu');
@@ -88,9 +88,9 @@ export default function App() {
         hata_sayisi: finalHata,
         ogrenci_adi: ad,
         ogrenci_yasi: parseInt(yas),
-        sure: sure,
-        email: email,
-        algilanan_kelime: algilananKelime || ""
+        sure,
+        email,
+        algilanan_kelime: algilananKelime || '',
       };
 
       if (extraData?.cizimVerisi) {
@@ -100,28 +100,28 @@ export default function App() {
       let supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
         method: 'POST',
         headers: {
-          'apikey': SUPABASE_KEY || '',
-          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          apikey: SUPABASE_KEY || '',
+          Authorization: `Bearer ${SUPABASE_KEY}`,
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          Prefer: 'return=minimal',
         },
-        body: JSON.stringify(kayitVerisi)
+        body: JSON.stringify(kayitVerisi),
       });
 
       if (!supabaseResponse.ok) {
         const responseText = await supabaseResponse.text();
-        console.error("Supabase KayZñt HatasZñ:", responseText);
-        if (responseText.includes("cizim_verisi")) {
+        console.error('Supabase Kayıt Hatası:', responseText);
+        if (responseText.includes('cizim_verisi')) {
           const { cizim_verisi, ...kayitVerisiCizimsiz } = kayitVerisi;
           supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
             method: 'POST',
             headers: {
-              'apikey': SUPABASE_KEY || '',
-              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              apikey: SUPABASE_KEY || '',
+              Authorization: `Bearer ${SUPABASE_KEY}`,
               'Content-Type': 'application/json',
-              'Prefer': 'return=minimal'
+              Prefer: 'return=minimal',
             },
-            body: JSON.stringify(kayitVerisiCizimsiz)
+            body: JSON.stringify(kayitVerisiCizimsiz),
           });
         }
         if (responseText.includes("Could not find the 'email' column")) {
@@ -129,22 +129,22 @@ export default function App() {
           supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
             method: 'POST',
             headers: {
-              'apikey': SUPABASE_KEY || '',
-              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              apikey: SUPABASE_KEY || '',
+              Authorization: `Bearer ${SUPABASE_KEY}`,
               'Content-Type': 'application/json',
-              'Prefer': 'return=minimal'
+              Prefer: 'return=minimal',
             },
-            body: JSON.stringify(kayitVerisiEmailsiz)
+            body: JSON.stringify(kayitVerisiEmailsiz),
           });
           if (supabaseResponse.ok) {
-            console.log("ƒo Veri baYarZñyla kaydedildi (Email sÇ¬tunu olmadan).");
+            console.log('✅ Veri başarıyla kaydedildi (Email sütunu olmadan).');
           }
         }
       } else {
-        console.log("ƒo Veri baYarZñyla kaydedildi.");
+        console.log('✅ Veri başarıyla kaydedildi.');
       }
     } catch (error) {
-      console.log("KayZñt HatasZñ:", error);
+      console.log('Kayıt Hatası:', error);
     } finally {
       setYukleniyor(false);
     }
@@ -152,37 +152,35 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal' | 'yaratici'>('bilissel');
 
-  // ... (existing functions)
-
   // === EKRANLAR ===
   if (asama === 'giris') {
     return (
       <DynamicBackground>
         <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-          <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={28} color="#fff" />
+          <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={28} color="#fff" />
         </TouchableOpacity>
         <View style={styles.merkezContainer}>
           <View style={styles.card}>
-            <Text style={styles.girisBaslik}>ğŸ“ Okul Ã–ncesi Akademi</Text>
-            <TextInput style={styles.input} placeholder="Ä°sim (Ã–rn: Ali)" value={ad} onChangeText={setAd} />
-            <TextInput style={styles.input} placeholder="YaÅŸ (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
+            <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
+            <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
+            <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
             <TextInput
               style={styles.input}
-              placeholder="Ebeveyn E-posta (Ä°steÄŸe BaÄŸlÄ±)"
+              placeholder="Ebeveyn E-posta (İsteğe Bağlı)"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
             />
             <TouchableOpacity style={styles.buton} onPress={girisYap}>
-              <Text style={styles.butonYazi}>GiriÅŸ Yap ğŸš€</Text>
+              <Text style={styles.butonYazi}>Giriş Yap 🚀</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.buton, { backgroundColor: '#90A4AE', marginTop: 20, paddingVertical: 10 }]}
               onPress={() => router.push('/admin' as any)}
             >
-              <Text style={[styles.butonYazi, { fontSize: 14 }]}>Admin Paneli ğŸ”’</Text>
+              <Text style={[styles.butonYazi, { fontSize: 14 }]}>Admin Paneli 🔑</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -192,7 +190,7 @@ export default function App() {
           type={toast.type}
           onHide={() => setToast({ ...toast, visible: false })}
         />
-      </DynamicBackground >
+      </DynamicBackground>
     );
   }
 
@@ -201,12 +199,11 @@ export default function App() {
       <DynamicBackground>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.headerContainer}>
-            <Text style={styles.baslik}>Merhaba {ad} ğŸ‘‹</Text>
-            <Text style={styles.bilgi}>BugÃ¼n ne oynamak istersin?</Text>
+            <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
+            <Text style={styles.bilgi}>Bugün ne oynamak istersin?</Text>
           </View>
 
-          {/* TAB BAR */}
-                    <View style={styles.tabContainer}>
+          <View style={styles.tabContainer}>
             <TouchableOpacity
               style={[styles.tabButton, activeTab === 'bilissel' && styles.activeTabButton]}
               onPress={() => setActiveTab('bilissel')}
@@ -225,42 +222,44 @@ export default function App() {
             >
               <Text style={[styles.tabText, activeTab === 'yaratici' && styles.activeTabText]}>🎨 Yaratıcılık</Text>
             </TouchableOpacity>
-          </View>          <View style={styles.gridContainer}>
+          </View>
+
+          <View style={styles.gridContainer}>
             {activeTab === 'bilissel' && (
               <>
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#64B5F6' }]} onPress={() => oyunuBaslat('hafiza')}>
                   <Ionicons name="grid" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>ÇÅiftini Bul!</Text>
-                  <Text style={styles.oyunAciklama}>HafŽñza Oyunu</Text>
+                  <Text style={styles.oyunBaslik}>Çiftini Bul!</Text>
+                  <Text style={styles.oyunAciklama}>Hafıza Oyunu</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFB74D' }]} onPress={() => oyunuBaslat('siralama')}>
                   <Ionicons name="list" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>SŽñralama</Text>
-                  <Text style={styles.oyunAciklama}>SayŽñlarŽñ Diz</Text>
+                  <Text style={styles.oyunBaslik}>Sıralama</Text>
+                  <Text style={styles.oyunAciklama}>Sayıları Diz</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#81C784' }]} onPress={() => oyunuBaslat('gruplama')}>
                   <Ionicons name="basket" size={40} color="white" style={{ marginBottom: 10 }} />
                   <Text style={styles.oyunBaslik}>Gruplama</Text>
-                  <Text style={styles.oyunAciklama}>Meyve mi Hayvan mŽñ?</Text>
+                  <Text style={styles.oyunAciklama}>Meyve mi Hayvan mı?</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#BA68C8' }]} onPress={() => oyunuBaslat('diziyi-tamamla')}>
                   <Ionicons name="extension-puzzle" size={40} color="white" style={{ marginBottom: 10 }} />
                   <Text style={styles.oyunBaslik}>Diziyi Tamamla</Text>
-                  <Text style={styles.oyunAciklama}>Ç-rÇ¬ntÇ¬ Oyunu</Text>
+                  <Text style={styles.oyunAciklama}>Örüntü Oyunu</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#F06292' }]} onPress={() => oyunuBaslat('bunu-soyle')}>
                   <Ionicons name="mic" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Bunu SÇôyle!</Text>
+                  <Text style={styles.oyunBaslik}>Bunu Söyle!</Text>
                   <Text style={styles.oyunAciklama}>Kelime Oyunu</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#00ACC1' }]} onPress={() => oyunuBaslat('kodlama')}>
                   <Ionicons name="map" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Minik KaYif</Text>
+                  <Text style={styles.oyunBaslik}>Minik Kaşif</Text>
                   <Text style={styles.oyunAciklama}>Kodlama Oyunu</Text>
                 </TouchableOpacity>
               </>
@@ -270,8 +269,8 @@ export default function App() {
               <>
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548' }]} onPress={() => oyunuBaslat('ceviz-macera')}>
                   <Ionicons name="leaf" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Ceviz MacerasŽñ</Text>
-                  <Text style={styles.oyunAciklama}>PŽñtŽñr'Žñn MacerasŽñ</Text>
+                  <Text style={styles.oyunBaslik}>Ceviz Macerası</Text>
+                  <Text style={styles.oyunAciklama}>Pıtırcık'ın Macerası</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -281,20 +280,18 @@ export default function App() {
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#ff9f1c' }]} onPress={() => oyunuBaslat('yaratici-cizim')}>
                   <Ionicons name="brush" size={40} color="white" style={{ marginBottom: 10 }} />
                   <Text style={styles.oyunBaslik}>Hayal Defteri</Text>
-                  <Text style={styles.oyunAciklama}>Bos sayfada cizim yap</Text>
+                  <Text style={styles.oyunAciklama}>Boş sayfada çizim yap</Text>
                 </TouchableOpacity>
               </>
             )}
           </View>
           <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 30, alignSelf: 'center' }]} onPress={cikisYap}>
-            <Text style={styles.butonYazi}>Ã‡Ä±kÄ±ÅŸ Yap ğŸšª</Text>
+            <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
           </TouchableOpacity>
         </ScrollView>
       </DynamicBackground>
     );
   }
-
-  // 'hikayeler' state removed/bypassed as we link directly to ceviz-macera
 
   if (asama === 'hafiza') {
     return <HafizaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
@@ -309,10 +306,7 @@ export default function App() {
   }
 
   if (asama === 'diziyi-tamamla') {
-    return <DiziyiTamamla
-      onGameEnd={oyunuBitir}
-      onLogout={() => setAsama('menu')}
-    />;
+    return <DiziyiTamamla onGameEnd={oyunuBitir} onLogout={() => setAsama('menu')} />;
   }
 
   if (asama === 'bunu-soyle') {
@@ -336,23 +330,24 @@ export default function App() {
       <DynamicBackground>
         <View style={styles.merkezContainer}>
           <View style={styles.card}>
-            <Text style={{ fontSize: 80, textAlign: 'center' }}>ğŸŒŸ</Text>
-            <Text style={styles.sonucBaslik}>AFERÄ°N SANA!</Text>
-            <Text style={[styles.baslik, { textAlign: 'center' }]}>{ad}, Harika Ä°ÅŸ Ã‡Ä±kardÄ±n!</Text>
+            <Text style={{ fontSize: 80, textAlign: 'center' }}>🎉</Text>
+            <Text style={styles.sonucBaslik}>AFERİN SANA!</Text>
+            <Text style={[styles.baslik, { textAlign: 'center' }]}>{ad}, Harika iş çıkardın!</Text>
             {yukleniyor && <ActivityIndicator size="small" color="#999" style={{ marginTop: 20 }} />}
 
             <TouchableOpacity style={styles.buton} onPress={() => setAsama('menu')}>
-              <Text style={styles.butonYazi}>BaÅŸka Oyun Oyna ğŸ®</Text>
+              <Text style={styles.butonYazi}>Başka Oyun Oyna 🎮</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 15 }]} onPress={cikisYap}>
-              <Text style={styles.butonYazi}>Oturumu Kapat ğŸšª</Text>
+              <Text style={styles.butonYazi}>Oturumu Kapat 🚪</Text>
             </TouchableOpacity>
           </View>
         </View>
       </DynamicBackground>
     );
   }
+
   return null;
 }
 
@@ -360,7 +355,7 @@ const styles = StyleSheet.create({
   merkezContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
   headerContainer: { alignItems: 'center', marginBottom: 30, marginTop: 40 },
-  card: { backgroundColor: 'white', padding: 30, borderRadius: 25, width: '100%', maxWidth: 400, alignItems: 'center', elevation: 5, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
+  card: { backgroundColor: 'white', padding: 30, borderRadius: 25, width: '100%', maxWidth: 400, alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
   girisBaslik: { fontSize: 28, fontWeight: 'bold', marginBottom: 30, color: '#1565C0', textAlign: 'center' },
   baslik: { fontSize: 28, fontWeight: 'bold', marginBottom: 5, color: '#37474F' },
   bilgi: { fontSize: 18, marginBottom: 20, color: '#546E7A' },
@@ -368,27 +363,17 @@ const styles = StyleSheet.create({
   buton: { backgroundColor: '#66BB6A', padding: 15, borderRadius: 15, marginTop: 20, width: 220, alignItems: 'center', elevation: 3 },
   butonYazi: { color: 'white', fontSize: 18, fontWeight: 'bold' },
 
-  // Grid Layout for Menu
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15 },
-  oyunKarti: { width: 160, height: 160, padding: 15, borderRadius: 25, justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 3 },
+  oyunKarti: { width: 160, height: 160, padding: 15, borderRadius: 25, justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 3 },
   oyunBaslik: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginTop: 5 },
   oyunAciklama: { color: 'rgba(255,255,255,0.9)', fontSize: 12, textAlign: 'center' },
 
   sonucBaslik: { fontSize: 36, fontWeight: 'bold', color: '#FF9800', marginVertical: 10, textAlign: 'center' },
   soundButton: { position: 'absolute', top: 50, right: 20, backgroundColor: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 25, zIndex: 10 },
 
-  // Tab Styles
   tabContainer: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 10, flexWrap: 'wrap' },
   tabButton: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 25, backgroundColor: 'rgba(255,255,255,0.5)', borderWidth: 2, borderColor: 'transparent' },
   activeTabButton: { backgroundColor: '#FFF', borderColor: '#4CAF50', elevation: 2 },
   tabText: { fontSize: 16, fontWeight: 'bold', color: '#555' },
   activeTabText: { color: '#2E7D32' },
 });
-
-
-
-
-
-
-
-

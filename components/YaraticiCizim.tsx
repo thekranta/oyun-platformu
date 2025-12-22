@@ -21,6 +21,7 @@ const { width } = Dimensions.get('window');
 const DEFAULT_COLORS = ['#ef476f', '#f78c6b', '#ffd166', '#06d6a0', '#118ab2', '#5f4b8b', '#000000'];
 const TITLE_TEXT = 'YARATICI \u00c7\u0130Z\u0130M';
 const SUBTITLE_TEXT = 'Renkli kalemlerle \u00e7iz, kaydet ve payla\u015f.';
+const MIN_STEP = 2; // px, dense points avoid gaps at fast drawing
 
 export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
@@ -43,9 +44,27 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
 
   const addPoint = (x: number, y: number) => {
     setLiveStroke(prev => {
-      const nextStroke = prev
-        ? { ...prev, points: [...prev.points, { x, y }] }
-        : { color: selectedColor, size: brushSize, points: [{ x, y }] };
+      if (!prev) {
+        const firstStroke = { color: selectedColor, size: brushSize, points: [{ x, y }] };
+        liveStrokeRef.current = firstStroke;
+        return firstStroke;
+      }
+
+      const last = prev.points[prev.points.length - 1];
+      const points: Point[] = [...prev.points];
+      if (last) {
+        const dx = x - last.x;
+        const dy = y - last.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const step = Math.max(MIN_STEP, brushSize * 0.6);
+        const steps = Math.floor(dist / step);
+        for (let i = 1; i <= steps; i++) {
+          const ratio = i / (steps + 1);
+          points.push({ x: last.x + dx * ratio, y: last.y + dy * ratio });
+        }
+      }
+      points.push({ x, y });
+      const nextStroke = { ...prev, points };
       liveStrokeRef.current = nextStroke;
       return nextStroke;
     });
