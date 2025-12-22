@@ -68,7 +68,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   };
 
   const finishStroke = () => {
-    const completed = liveStrokeRef.current;
+    const completed = liveStrokeRef.current ?? liveStroke;
     if (completed) {
       setStrokes(prev => [...prev, completed]);
     }
