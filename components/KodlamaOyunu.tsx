@@ -64,18 +64,21 @@ const LEVELS: LevelConfig[] = [
     startPos: { x: 0, y: 0 }, goalPos: { x: 3, y: 2 },
     obstacles: [{ x: 1, y: 1 }, { x: 2, y: 1 }],
     story: 'Tavşanı oyuncağına götür!',
+    // Çözüm: → → ↓ ↓ →
   },
   {
     id: 2, name: 'Bahçe', gridSize: 4, emoji: '🌳', theme: 'garden',
     startPos: { x: 0, y: 3 }, goalPos: { x: 3, y: 0 },
-    obstacles: [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 2 }, { x: 1, y: 3 }],
+    obstacles: [{ x: 1, y: 2 }, { x: 2, y: 1 }],
     story: 'Tavşanı çiçeğe götür!',
+    // Çözüm: ↑ ↑ ↑ → → →
   },
   {
     id: 3, name: 'Park', gridSize: 4, emoji: '🎡', theme: 'park',
     startPos: { x: 0, y: 3 }, goalPos: { x: 3, y: 0 },
-    obstacles: [{ x: 1, y: 1 }, { x: 2, y: 2 }, { x: 1, y: 2 }],
+    obstacles: [{ x: 1, y: 1 }, { x: 2, y: 2 }],
     story: 'Tavşanı dönme dolaba götür!',
+    // Çözüm: → → → ↑ ↑ ↑
   },
 ];
 
@@ -180,10 +183,38 @@ const getThemeBg = (theme: string) => {
   }
 };
 
-// ============== RESPONSIVE - Sabit Boyutlar ==============
-const GRID_SIZE = Math.min(width * 0.75, height * 0.32, 260);
+// ============== RESPONSIVE - Büyütülmüş Grid ==============
+const GRID_SIZE = Math.min(width * 0.85, height * 0.45, 340);  // Daha büyük grid
 const BTN_SIZE = Math.min(width * 0.1, 40);
-const DPAD_SIZE = Math.min(width * 0.15, 55);
+const DPAD_SIZE = Math.min(width * 0.14, 52);
+
+// ============== ARKA PLAN MÜZİĞİ ==============
+let bgMusic: HTMLAudioElement | null = null;
+
+const startBgMusic = () => {
+  if (Platform.OS !== 'web') return;
+  if (bgMusic) return;
+  
+  // Ücretsiz çocuk müziği URL'si (royalty-free)
+  bgMusic = new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0ef91aed6.mp3');
+  bgMusic.loop = true;
+  bgMusic.volume = 0.3;
+  bgMusic.play().catch(() => {});
+};
+
+const stopBgMusic = () => {
+  if (bgMusic) {
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+    bgMusic = null;
+  }
+};
+
+const setBgMusicVolume = (on: boolean) => {
+  if (bgMusic) {
+    bgMusic.volume = on ? 0.3 : 0;
+  }
+};
 
 // ============== COMPONENT ==============
 interface Props {
@@ -230,6 +261,19 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
       Animated.timing(bounce, { toValue: 1, duration: 400, useNativeDriver: true }),
     ])).start();
   }, []);
+
+  // Arka plan müziği başlat
+  useEffect(() => {
+    if (soundOn) {
+      startBgMusic();
+    }
+    return () => { stopBgMusic(); };
+  }, []);
+
+  // Ses açıp kapatınca müzik
+  useEffect(() => {
+    setBgMusicVolume(soundOn);
+  }, [soundOn]);
 
   // Player position
   useEffect(() => {
@@ -420,7 +464,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
       <View style={st.container}>
         {/* Top */}
         <View style={st.top}>
-          <TouchableOpacity style={st.exitBtn} onPress={onExit}><Text style={st.exitTxt}>✕</Text></TouchableOpacity>
+          <TouchableOpacity style={st.exitBtn} onPress={() => { stopBgMusic(); onExit?.(); }}><Text style={st.exitTxt}>✕</Text></TouchableOpacity>
           
           <View style={st.levels}>
             {LEVELS.map((l, i) => (
@@ -444,8 +488,8 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
           {LEVELS.map((_, i) => <View key={i} style={[st.dot, i <= levelIdx && st.dotOn, i < levelIdx && st.dotDone]} />)}
         </View>
 
-        {/* Grid */}
-        <View style={[st.gridWrap, { width: GRID_SIZE + 12, height: GRID_SIZE + 12, backgroundColor: getThemeBg(level.theme || 'room') }]}>
+        {/* Grid - Büyütülmüş */}
+        <View style={[st.gridWrap, { width: GRID_SIZE + 16, height: GRID_SIZE + 16, backgroundColor: getThemeBg(level.theme || 'room') }]}>
           <View style={[st.grid, { gap: GAP }]}>{renderGrid()}</View>
           {mode === GameMode.PLAY && (
             <Animated.View style={[st.player, { width: CELL, height: CELL, transform: [{ translateX: animX }, { translateY: animY }, { rotate: rot() }] }]}>
@@ -514,7 +558,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
 
 // ============== STYLES ==============
 const st = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingTop: 35, paddingBottom: 15, paddingHorizontal: 8 },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingTop: 30, paddingBottom: 10, paddingHorizontal: 6 },
   
   // Top
   top: { flexDirection: 'row', alignItems: 'center', width: '100%', justifyContent: 'space-between' },
@@ -532,17 +576,17 @@ const st = StyleSheet.create({
   check: { position: 'absolute', bottom: -2, right: -2, backgroundColor: '#4CAF50', width: 14, height: 14, borderRadius: 7, justifyContent: 'center', alignItems: 'center' },
   checkTxt: { color: '#FFF', fontSize: 8, fontWeight: 'bold' },
 
-  // Dots
-  dots: { flexDirection: 'row', gap: 6 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E0E0E0' },
+  // Dots - Küçük
+  dots: { flexDirection: 'row', gap: 5 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#E0E0E0' },
   dotOn: { backgroundColor: '#64B5F6' },
   dotDone: { backgroundColor: '#4CAF50' },
 
-  // Grid
-  gridWrap: { borderRadius: 14, padding: 6, position: 'relative' },
+  // Grid - Büyük
+  gridWrap: { borderRadius: 16, padding: 8, position: 'relative' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#E0E0E0' },
-  player: { position: 'absolute', top: 6, left: 6, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  player: { position: 'absolute', top: 8, left: 8, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
   winBox: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: 14 },
   winTxt: { fontSize: 50 },
 
@@ -561,28 +605,28 @@ const st = StyleSheet.create({
   playBtn: { paddingHorizontal: 24, height: DPAD_SIZE * 0.85, borderRadius: 20, backgroundColor: '#7B1FA2', justifyContent: 'center', alignItems: 'center' },
   playTxt: { fontSize: 22 },
 
-  // Cmds
-  cmds: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 8, paddingVertical: 5, borderRadius: 14, minHeight: 42, gap: 4 },
-  cmdEmpty: { fontSize: 18, color: '#BDBDBD' },
-  cmd: { width: 34, height: 34, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
-  cmdOn: { transform: [{ scale: 1.15 }], borderWidth: 2, borderColor: '#FFD700' },
+  // Cmds - Kompakt
+  cmds: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 6, paddingVertical: 4, borderRadius: 12, minHeight: 38, gap: 3 },
+  cmdEmpty: { fontSize: 16, color: '#BDBDBD' },
+  cmd: { width: 30, height: 30, borderRadius: 7, justifyContent: 'center', alignItems: 'center' },
+  cmdOn: { transform: [{ scale: 1.12 }], borderWidth: 2, borderColor: '#FFD700' },
   cmdDone: { opacity: 0.4 },
-  cmdTxt: { fontSize: 16 },
-  undoBtn: { marginLeft: 4, backgroundColor: '#FFCDD2', width: 28, height: 28, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
-  undoTxt: { fontSize: 14 },
+  cmdTxt: { fontSize: 14 },
+  undoBtn: { marginLeft: 3, backgroundColor: '#FFCDD2', width: 26, height: 26, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
+  undoTxt: { fontSize: 12 },
 
-  // DPad
-  dpad: { gap: 4 },
-  drow: { flexDirection: 'row', gap: 4 },
+  // DPad - Kompakt
+  dpad: { gap: 3 },
+  drow: { flexDirection: 'row', gap: 3 },
   dspace: { width: DPAD_SIZE, height: DPAD_SIZE },
-  dbtn: { width: DPAD_SIZE, height: DPAD_SIZE, borderRadius: 12, justifyContent: 'center', alignItems: 'center', elevation: 3 },
-  dtxt: { fontSize: DPAD_SIZE * 0.45 },
+  dbtn: { width: DPAD_SIZE, height: DPAD_SIZE, borderRadius: 10, justifyContent: 'center', alignItems: 'center', elevation: 3 },
+  dtxt: { fontSize: DPAD_SIZE * 0.5 },
 
-  // Acts
-  acts: { flexDirection: 'row', gap: 10 },
-  resetBtn: { width: DPAD_SIZE * 0.9, height: DPAD_SIZE * 0.9, borderRadius: 22, backgroundColor: '#ECEFF1', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 3, borderBottomColor: '#B0BEC5' },
-  actTxt: { fontSize: 22 },
-  goBtn: { paddingHorizontal: 32, height: DPAD_SIZE * 0.9, borderRadius: 22, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 3, borderBottomColor: '#2E7D32' },
+  // Acts - Kompakt
+  acts: { flexDirection: 'row', gap: 8 },
+  resetBtn: { width: DPAD_SIZE * 0.85, height: DPAD_SIZE * 0.85, borderRadius: 18, backgroundColor: '#ECEFF1', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#B0BEC5' },
+  actTxt: { fontSize: 20 },
+  goBtn: { paddingHorizontal: 28, height: DPAD_SIZE * 0.85, borderRadius: 18, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#2E7D32' },
   goOff: { backgroundColor: '#BDBDBD', borderBottomColor: '#9E9E9E' },
-  goTxt: { fontSize: 24 },
+  goTxt: { fontSize: 22 },
 });
