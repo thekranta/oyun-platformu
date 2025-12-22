@@ -79,47 +79,85 @@ const LEVELS: LevelConfig[] = [
   },
 ];
 
-// ============== AUDIO - İyileştirilmiş Web Speech ==============
+// ============== AUDIO - Gemini TTS + Web Speech Fallback ==============
+const audioCache = new Map<string, string>();
+let currentAudio: HTMLAudioElement | null = null;
 let isSpeaking = false;
 
-const speakTeacher = (text: string) => {
-  if (Platform.OS !== 'web' || !('speechSynthesis' in window)) return;
+const speakTeacher = async (text: string) => {
+  if (Platform.OS !== 'web') return;
   if (isSpeaking) return;
   
   isSpeaking = true;
-  window.speechSynthesis.cancel();
   
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'tr-TR';
-  utterance.pitch = 1.4; // Daha yüksek = daha tatlı
-  utterance.rate = 0.85; // Yavaş ve net
-  utterance.volume = 1.0;
-  
-  utterance.onend = () => { isSpeaking = false; };
-  utterance.onerror = () => { isSpeaking = false; };
-  
-  // Türkçe kadın sesi bul
-  const setVoiceAndSpeak = () => {
-    const voices = window.speechSynthesis.getVoices();
-    const trVoice = voices.find(v => 
-      v.lang.includes('tr') && 
-      (v.name.toLowerCase().includes('female') || 
-       v.name.toLowerCase().includes('filiz') ||
-       v.name.toLowerCase().includes('google'))
-    );
-    if (trVoice) utterance.voice = trVoice;
-    window.speechSynthesis.speak(utterance);
-  };
-
-  if (window.speechSynthesis.getVoices().length === 0) {
-    window.speechSynthesis.onvoiceschanged = setVoiceAndSpeak;
-  } else {
-    setVoiceAndSpeak();
+  // Mevcut sesi durdur
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
   }
+
+  // Önbellekte var mı?
+  let audioUrl = audioCache.get(text);
+  
+  if (!audioUrl) {
+    try {
+      // Gemini TTS dene
+      const res = await fetch('/api/gemini-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voiceName: 'Kore' }),
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audioContent) {
+          audioUrl = `data:${data.mimeType || 'audio/wav'};base64,${data.audioContent}`;
+          audioCache.set(text, audioUrl);
+        }
+      }
+    } catch (e) {
+      console.log('Gemini TTS error, using fallback');
+    }
+  }
+
+  if (audioUrl) {
+    // Gemini ses çal
+    try {
+      currentAudio = new Audio(audioUrl);
+      currentAudio.onended = () => { isSpeaking = false; };
+      currentAudio.onerror = () => { isSpeaking = false; fallbackSpeak(text); };
+      await currentAudio.play();
+      return;
+    } catch (e) {
+      console.log('Audio play error');
+    }
+  }
+  
+  // Fallback: Web Speech
+  fallbackSpeak(text);
+};
+
+const fallbackSpeak = (text: string) => {
+  if (!('speechSynthesis' in window)) { isSpeaking = false; return; }
+  
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'tr-TR';
+  u.pitch = 1.4;
+  u.rate = 0.85;
+  u.onend = () => { isSpeaking = false; };
+  u.onerror = () => { isSpeaking = false; };
+  
+  const voices = window.speechSynthesis.getVoices();
+  const trVoice = voices.find(v => v.lang.includes('tr'));
+  if (trVoice) u.voice = trVoice;
+  
+  window.speechSynthesis.speak(u);
 };
 
 const stopSpeech = () => {
   isSpeaking = false;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   if (Platform.OS === 'web' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
