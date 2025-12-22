@@ -45,31 +45,25 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   );
 
   const addPoint = (x: number, y: number) => {
-    setLiveStroke(prev => {
-      if (!prev) {
-        const firstStroke = { color: selectedColor, size: brushSize, points: [{ x, y }] };
-        liveStrokeRef.current = firstStroke;
-        return firstStroke;
+    const baseStroke =
+      liveStrokeRef.current ?? { color: selectedColor, size: brushSize, points: [] as Point[] };
+    const last = baseStroke.points[baseStroke.points.length - 1];
+    const points: Point[] = [...baseStroke.points];
+    if (last) {
+      const dx = x - last.x;
+      const dy = y - last.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const step = Math.max(MIN_STEP, brushSize * 0.6);
+      const steps = Math.floor(dist / step);
+      for (let i = 1; i <= steps; i++) {
+        const ratio = i / (steps + 1);
+        points.push({ x: last.x + dx * ratio, y: last.y + dy * ratio });
       }
-
-      const last = prev.points[prev.points.length - 1];
-      const points: Point[] = [...prev.points];
-      if (last) {
-        const dx = x - last.x;
-        const dy = y - last.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const step = Math.max(MIN_STEP, brushSize * 0.6);
-        const steps = Math.floor(dist / step);
-        for (let i = 1; i <= steps; i++) {
-          const ratio = i / (steps + 1);
-          points.push({ x: last.x + dx * ratio, y: last.y + dy * ratio });
-        }
-      }
-      points.push({ x, y });
-      const nextStroke = { ...prev, points };
-      liveStrokeRef.current = nextStroke;
-      return nextStroke;
-    });
+    }
+    points.push({ x, y });
+    const nextStroke = { ...baseStroke, points };
+    liveStrokeRef.current = nextStroke;
+    setLiveStroke(nextStroke);
     setSaved(false);
   };
 
@@ -95,15 +89,15 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           addPoint(locationX, locationY);
         },
         onPanResponderRelease: e => {
-        const { locationX, locationY } = e.nativeEvent;
-        addPoint(locationX, locationY);
-        finishStroke();
-      },
-      onPanResponderTerminate: e => {
-        const { locationX, locationY } = e.nativeEvent;
-        addPoint(locationX, locationY);
-        finishStroke();
-      },
+          const { locationX, locationY } = e.nativeEvent;
+          addPoint(locationX, locationY);
+          finishStroke();
+        },
+        onPanResponderTerminate: e => {
+          const { locationX, locationY } = e.nativeEvent;
+          addPoint(locationX, locationY);
+          finishStroke();
+        },
       }),
     [selectedColor, brushSize],
   );
