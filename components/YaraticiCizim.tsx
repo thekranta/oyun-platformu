@@ -19,6 +19,8 @@ interface Props {
 
 const { width } = Dimensions.get('window');
 const DEFAULT_COLORS = ['#ef476f', '#f78c6b', '#ffd166', '#06d6a0', '#118ab2', '#5f4b8b', '#000000'];
+const TITLE_TEXT = 'YARATICI \u00c7\u0130Z\u0130M';
+const SUBTITLE_TEXT = 'Renkli kalemlerle \u00e7iz, kaydet ve payla\u015f.';
 
 export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
@@ -33,6 +35,10 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const allStrokes = useMemo(
     () => (liveStroke ? [...strokes, liveStroke] : strokes),
     [strokes, liveStroke],
+  );
+  const safeStrokes = useMemo(
+    () => allStrokes.filter((s): s is Stroke => Boolean(s && s.points)),
+    [allStrokes],
   );
 
   const addPoint = (x: number, y: number) => {
@@ -92,7 +98,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   };
 
   const renderStrokeDots = (stroke: Stroke, strokeIndex: number) =>
-    stroke.points.map((pt, idx) => (
+    (stroke?.points ?? []).map((pt, idx) => (
       <View
         key={`${strokeIndex}-${idx}`}
         style={{
@@ -116,8 +122,8 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
             <Text style={styles.exitTxt}>X</Text>
           </TouchableOpacity>
           <View>
-            <Text style={styles.title}>YARATICI {"\u00c7"}{"\u0130"}Z{"\u0130"}M</Text>
-            <Text style={styles.subtitle}>Renkli kalemlerle {"\u00e7"}iz, kaydet ve payla{"\u015f"}.</Text>
+            <Text style={styles.title}>{TITLE_TEXT}</Text>
+            <Text style={styles.subtitle}>{SUBTITLE_TEXT}</Text>
           </View>
           <TouchableOpacity style={[styles.saveBtn, (allStrokes.length === 0) && styles.disabledBtn]} onPress={saveDrawing} disabled={allStrokes.length === 0}>
             <Text style={styles.saveTxt}>{saved ? 'Kaydedildi' : 'Kaydet'}</Text>
@@ -130,7 +136,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
         >
           <View style={styles.paperShadow} />
           <View style={[styles.canvas, { width: canvasSize.width, height: canvasSize.height }]} {...panResponder.panHandlers}>
-            {allStrokes.map((s, i) => renderStrokeDots(s, i))}
+            {safeStrokes.map((s, i) => renderStrokeDots(s, i))}
           </View>
         </View>
 
