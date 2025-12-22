@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { Dimensions, PanResponder, PanResponderInstance, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+﻿import React, { useMemo, useRef, useState } from 'react';
+import { Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 
 type Point = { x: number; y: number };
@@ -47,22 +47,24 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     setLiveStroke(null);
   };
 
-  const panResponder = useRef<PanResponderInstance>(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: e => {
-        const { locationX, locationY } = e.nativeEvent;
-        addPoint(locationX, locationY);
-      },
-      onPanResponderMove: e => {
-        const { locationX, locationY } = e.nativeEvent;
-        addPoint(locationX, locationY);
-      },
-      onPanResponderRelease: finishStroke,
-      onPanResponderTerminate: finishStroke,
-    }),
-  ).current;
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: e => {
+          const { locationX, locationY } = e.nativeEvent;
+          addPoint(locationX, locationY);
+        },
+        onPanResponderMove: e => {
+          const { locationX, locationY } = e.nativeEvent;
+          addPoint(locationX, locationY);
+        },
+        onPanResponderRelease: finishStroke,
+        onPanResponderTerminate: finishStroke,
+      }),
+    [selectedColor, brushSize],
+  );
 
   const clearCanvas = () => {
     setStrokes([]);
@@ -106,8 +108,8 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
             <Text style={styles.exitTxt}>×</Text>
           </TouchableOpacity>
           <View>
-            <Text style={styles.title}>YARATICI DEFTER</Text>
-            <Text style={styles.subtitle}>Renkli kalemlerle Çiz, kaydet ve paylaY.</Text>
+            <Text style={styles.title}>YARATICI Ã‡Ä°ZÄ°M</Text>
+            <Text style={styles.subtitle}>Renkli kalemlerle çiz, kaydet ve paylaş.</Text>
           </View>
           <TouchableOpacity style={[styles.saveBtn, (allStrokes.length === 0) && styles.disabledBtn]} onPress={saveDrawing} disabled={allStrokes.length === 0}>
             <Text style={styles.saveTxt}>{saved ? 'Kaydedildi' : 'Kaydet'}</Text>
@@ -168,11 +170,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 16, paddingTop: 24, gap: 16 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   exitBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#ffe5e0', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ffb3a7' },
-  exitTxt: { fontSize: 22, color: '#d84315', fontWeight: 'bold' },
-  title: { fontSize: 20, fontWeight: '700', color: '#3e2723' },
-  subtitle: { fontSize: 13, color: '#6d4c41', marginTop: 4 },
+  exitTxt: { fontSize: 22, color: '#d84315', fontWeight: 'bold', fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'System' }) },
+  title: { fontSize: 20, fontWeight: '700', color: '#3e2723', letterSpacing: 0.2, fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'System' }) },
+  subtitle: { fontSize: 13, color: '#6d4c41', marginTop: 4, fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif', default: 'System' }) },
   saveBtn: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#06d6a0', borderRadius: 12, borderWidth: 2, borderColor: '#118ab2' },
-  saveTxt: { color: '#fff', fontWeight: '700' },
+  saveTxt: { color: '#fff', fontWeight: '700', fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'System' }) },
   disabledBtn: { opacity: 0.5 },
   canvasWrapper: { flex: 1, alignItems: 'center', justifyContent: 'center', position: 'relative' },
   paperShadow: { position: 'absolute', width: '92%', height: '100%', backgroundColor: '#e8dfd5', borderRadius: 26, transform: [{ rotate: '-1deg' }], opacity: 0.6 },
@@ -197,9 +199,11 @@ const styles = StyleSheet.create({
   brushRow: { flexDirection: 'row', justifyContent: 'space-between' },
   brushBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingVertical: 8, borderRadius: 12, borderWidth: 1, borderColor: '#ddd', backgroundColor: '#fff' },
   brushActive: { borderColor: '#118ab2', backgroundColor: '#e3f2fd' },
-  brushLabel: { fontSize: 12, color: '#333', fontWeight: '600' },
+  brushLabel: { fontSize: 12, color: '#333', fontWeight: '600', fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'System' }) },
   actionsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
   actionBtn: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#ddd', paddingVertical: 12, borderRadius: 14, alignItems: 'center' },
-  actionTxt: { fontWeight: '700', color: '#4e342e' },
+  actionTxt: { fontWeight: '700', color: '#4e342e', fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'System' }) },
   savedState: { backgroundColor: '#4caf50', borderColor: '#2e7d32' },
 });
+
+
