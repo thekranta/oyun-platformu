@@ -97,44 +97,89 @@ const INITIAL_LEVELS: LevelConfig[] = [
   },
 ];
 
-// ============== AUDIO - Geliştirilmiş Web Speech ==============
-// NOT: Daha iyi ses için önceden kaydedilmiş .mp3 dosyaları kullanılabilir
-// Örnek: assets/sounds/kodlama/ klasörüne sesler eklenebilir
+// ============== AUDIO - Google Cloud WaveNet TTS ==============
+// Doğal ve sıcak Türkçe ses - Çocuklara uygun
 
-const speakTeacher = (text: string, isShort = false) => {
-  if (Platform.OS === 'web' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'tr-TR';
-    utterance.pitch = isShort ? 1.5 : 1.3; // Yüksek pitch = daha tatlı
-    utterance.rate = isShort ? 1.1 : 0.9;
-    utterance.volume = 1.0;
-    
-    // En iyi Türkçe sesi bul
-    const loadAndSpeak = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const turkishVoice = voices.find(
-        (v) => v.lang.includes('tr') && 
-        (v.name.toLowerCase().includes('female') || 
-         v.name.toLowerCase().includes('filiz') ||
-         v.name.toLowerCase().includes('yelda') ||
-         v.name.includes('Google'))
-      );
-      if (turkishVoice) utterance.voice = turkishVoice;
-      window.speechSynthesis.speak(utterance);
-    };
+// Ses önbelleği - aynı metinleri tekrar indirme
+const audioCache: Map<string, string> = new Map();
+let currentAudio: HTMLAudioElement | null = null;
 
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length === 0) {
-      window.speechSynthesis.onvoiceschanged = loadAndSpeak;
-    } else {
-      loadAndSpeak();
+const speakWaveNet = async (text: string, isShort = false) => {
+  if (Platform.OS !== 'web') return;
+
+  // Mevcut sesi durdur
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
+
+  // Önbellekte var mı kontrol et
+  const cacheKey = `${text}_${isShort}`;
+  let audioDataUrl = audioCache.get(cacheKey);
+
+  if (!audioDataUrl) {
+    try {
+      const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          voice: 'tr-TR-Wavenet-D', // Kadın sesi - en sıcak
+          speakingRate: isShort ? 1.1 : 0.95, // Kısa komutlar için biraz hızlı
+          pitch: isShort ? 4.0 : 2.0, // Pozitif = daha tiz/çocuksu
+        }),
+      });
+
+      if (!response.ok) {
+        console.warn('WaveNet API error, falling back to Web Speech');
+        fallbackToWebSpeech(text, isShort);
+        return;
+      }
+
+      const data = await response.json();
+      audioDataUrl = `data:audio/mp3;base64,${data.audioContent}`;
+      
+      // Önbelleğe kaydet
+      audioCache.set(cacheKey, audioDataUrl);
+    } catch (error) {
+      console.warn('WaveNet error, falling back to Web Speech:', error);
+      fallbackToWebSpeech(text, isShort);
+      return;
     }
+  }
+
+  // Sesi çal
+  try {
+    currentAudio = new Audio(audioDataUrl);
+    currentAudio.volume = 1.0;
+    await currentAudio.play();
+  } catch (error) {
+    console.warn('Audio play error:', error);
   }
 };
 
+// Yedek olarak Web Speech API
+const fallbackToWebSpeech = (text: string, isShort = false) => {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'tr-TR';
+    utterance.pitch = isShort ? 1.5 : 1.3;
+    utterance.rate = isShort ? 1.1 : 0.9;
+    window.speechSynthesis.speak(utterance);
+  }
+};
+
+// Ana konuşma fonksiyonu
+const speakTeacher = (text: string, isShort = false) => {
+  speakWaveNet(text, isShort);
+};
+
 const stopSpeech = () => {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio = null;
+  }
   if (Platform.OS === 'web' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
