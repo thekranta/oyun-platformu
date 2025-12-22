@@ -23,6 +23,7 @@ const DEFAULT_COLORS = ['#ef476f', '#f78c6b', '#ffd166', '#06d6a0', '#118ab2', '
 export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
+  const liveStrokeRef = useRef<Stroke | null>(null);
   const [selectedColor, setSelectedColor] = useState(DEFAULT_COLORS[0]);
   const [brushSize, setBrushSize] = useState(8);
   const [saved, setSaved] = useState(false);
@@ -36,15 +37,21 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
 
   const addPoint = (x: number, y: number) => {
     setLiveStroke(prev => {
-      if (!prev) return { color: selectedColor, size: brushSize, points: [{ x, y }] };
-      return { ...prev, points: [...prev.points, { x, y }] };
+      const nextStroke = prev
+        ? { ...prev, points: [...prev.points, { x, y }] }
+        : { color: selectedColor, size: brushSize, points: [{ x, y }] };
+      liveStrokeRef.current = nextStroke;
+      return nextStroke;
     });
     setSaved(false);
   };
 
   const finishStroke = () => {
-    setStrokes(prev => (liveStroke ? [...prev, liveStroke] : prev));
+    if (liveStrokeRef.current) {
+      setStrokes(prev => [...prev, liveStrokeRef.current as Stroke]);
+    }
     setLiveStroke(null);
+    liveStrokeRef.current = null;
   };
 
   const panResponder = useMemo(
@@ -69,6 +76,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const clearCanvas = () => {
     setStrokes([]);
     setLiveStroke(null);
+    liveStrokeRef.current = null;
     setSaved(false);
     startTimeRef.current = Date.now();
   };
@@ -105,11 +113,11 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
       <View style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-            <Text style={styles.exitTxt}>×</Text>
+            <Text style={styles.exitTxt}>X</Text>
           </TouchableOpacity>
           <View>
-            <Text style={styles.title}>YARATICI Ã‡Ä°ZÄ°M</Text>
-            <Text style={styles.subtitle}>Renkli kalemlerle çiz, kaydet ve paylaş.</Text>
+            <Text style={styles.title}>YARATICI {"\u00c7"}{"\u0130"}Z{"\u0130"}M</Text>
+            <Text style={styles.subtitle}>Renkli kalemlerle {"\u00e7"}iz, kaydet ve payla{"\u015f"}.</Text>
           </View>
           <TouchableOpacity style={[styles.saveBtn, (allStrokes.length === 0) && styles.disabledBtn]} onPress={saveDrawing} disabled={allStrokes.length === 0}>
             <Text style={styles.saveTxt}>{saved ? 'Kaydedildi' : 'Kaydet'}</Text>
@@ -205,5 +213,6 @@ const styles = StyleSheet.create({
   actionTxt: { fontWeight: '700', color: '#4e342e', fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'System' }) },
   savedState: { backgroundColor: '#4caf50', borderColor: '#2e7d32' },
 });
+
 
 
