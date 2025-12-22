@@ -1,22 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    Dimensions,
+    Platform,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 
 const { width, height } = Dimensions.get('window');
-const isWeb = Platform.OS === 'web';
-
-// Responsive sizing
-const SCREEN_HEIGHT = height;
-const COMPACT_MODE = SCREEN_HEIGHT < 700;
 
 // ============== TYPES ==============
 enum Direction {
@@ -102,41 +97,39 @@ const INITIAL_LEVELS: LevelConfig[] = [
   },
 ];
 
-// ============== IMPROVED AUDIO ==============
-const speakTeacher = (text: string, isChild = false) => {
+// ============== AUDIO - Geliştirilmiş Web Speech ==============
+// NOT: Daha iyi ses için önceden kaydedilmiş .mp3 dosyaları kullanılabilir
+// Örnek: assets/sounds/kodlama/ klasörüne sesler eklenebilir
+
+const speakTeacher = (text: string, isShort = false) => {
   if (Platform.OS === 'web' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel();
     
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'tr-TR';
-    
-    // Daha doğal, çocuk dostu ses ayarları
-    utterance.pitch = isChild ? 1.4 : 1.2; // Daha yüksek pitch = daha tatlı ses
-    utterance.rate = 0.85; // Yavaş ve anlaşılır
+    utterance.pitch = isShort ? 1.5 : 1.3; // Yüksek pitch = daha tatlı
+    utterance.rate = isShort ? 1.1 : 0.9;
     utterance.volume = 1.0;
     
     // En iyi Türkçe sesi bul
-    const voices = window.speechSynthesis.getVoices();
-    const turkishVoice = voices.find(
-      (v) => v.lang.includes('tr') && (v.name.includes('Female') || v.name.includes('Yelda') || v.name.includes('Filiz'))
-    );
-    
-    if (turkishVoice) {
-      utterance.voice = turkishVoice;
-    }
-    
-    // Sesleri yükle ve konuş
-    if (voices.length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        const newVoices = window.speechSynthesis.getVoices();
-        const newTurkishVoice = newVoices.find(
-          (v) => v.lang.includes('tr') && (v.name.includes('Female') || v.name.includes('Yelda') || v.name.includes('Filiz'))
-        );
-        if (newTurkishVoice) utterance.voice = newTurkishVoice;
-        window.speechSynthesis.speak(utterance);
-      };
-    } else {
+    const loadAndSpeak = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const turkishVoice = voices.find(
+        (v) => v.lang.includes('tr') && 
+        (v.name.toLowerCase().includes('female') || 
+         v.name.toLowerCase().includes('filiz') ||
+         v.name.toLowerCase().includes('yelda') ||
+         v.name.includes('Google'))
+      );
+      if (turkishVoice) utterance.voice = turkishVoice;
       window.speechSynthesis.speak(utterance);
+    };
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = loadAndSpeak;
+    } else {
+      loadAndSpeak();
     }
   }
 };
@@ -145,17 +138,6 @@ const stopSpeech = () => {
   if (Platform.OS === 'web' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
-};
-
-// Kısa sesli tepkiler
-const playSound = (type: 'tap' | 'win' | 'lose' | 'move') => {
-  const sounds: Record<string, string> = {
-    tap: 'Tık!',
-    win: 'Yaşasın!',
-    lose: 'Oops!',
-    move: '',
-  };
-  if (sounds[type]) speakTeacher(sounds[type], true);
 };
 
 // ============== THEME ==============
@@ -175,6 +157,24 @@ const getThemeBg = (theme: string) => {
   }
 };
 
+// ============== RESPONSIVE SIZING ==============
+const getResponsiveSizes = () => {
+  const screenWidth = Dimensions.get('window').width;
+  const screenHeight = Dimensions.get('window').height;
+  
+  // Ekranın en küçük boyutunu baz al
+  const minDimension = Math.min(screenWidth, screenHeight);
+  
+  // Grid boyutu - ekranın %40'ı veya max 280px
+  const gridSize = Math.min(minDimension * 0.42, 280);
+  
+  // Buton boyutları
+  const btnSize = Math.min(minDimension * 0.12, 56);
+  const dPadSize = Math.min(minDimension * 0.14, 60);
+  
+  return { gridSize, btnSize, dPadSize, screenHeight };
+};
+
 // ============== PROPS ==============
 interface KodlamaOyunuProps {
   onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number) => void;
@@ -184,6 +184,7 @@ interface KodlamaOyunuProps {
 // ============== MAIN COMPONENT ==============
 export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
   const [mode, setMode] = useState<GameMode>(GameMode.PLAY);
+  const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
   const [level, setLevel] = useState<LevelConfig>(INITIAL_LEVELS[0]);
   const [playerPos, setPlayerPos] = useState<Position>(INITIAL_LEVELS[0].startPos);
   const [playerDirection, setPlayerDirection] = useState<string>('RIGHT');
@@ -191,6 +192,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
   const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.PLANNING);
   const [currentStep, setCurrentStep] = useState<number>(-1);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [showWinMessage, setShowWinMessage] = useState(false);
 
   // Editor
   const [selectedTool, setSelectedTool] = useState<EditorTool>(CellType.WALL);
@@ -207,23 +209,24 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
   const playerAnimX = useRef(new Animated.Value(0)).current;
   const playerAnimY = useRef(new Animated.Value(0)).current;
   const bounceAnim = useRef(new Animated.Value(1)).current;
+  const winScaleAnim = useRef(new Animated.Value(0)).current;
 
   const confettiRef = useRef<ConfettiCannon>(null);
 
-  // Grid sizing - responsive
+  // Responsive sizes
+  const sizes = getResponsiveSizes();
   const gridSize = mode === GameMode.EDIT ? 4 : level.gridSize;
-  const GRID_SIZE = Math.min(width * 0.85, height * 0.35, 320);
-  const CELL_GAP = 6;
-  const CELL_SIZE = (GRID_SIZE - CELL_GAP * (gridSize - 1)) / gridSize;
+  const CELL_GAP = 5;
+  const CELL_SIZE = (sizes.gridSize - CELL_GAP * (gridSize - 1)) / gridSize;
 
   const themeIcons = getThemeIcons(level.theme || 'room');
 
-  // Bounce animation
+  // Bounce animation for goal
   useEffect(() => {
     const bounce = Animated.loop(
       Animated.sequence([
-        Animated.timing(bounceAnim, { toValue: 1.1, duration: 500, useNativeDriver: true }),
-        Animated.timing(bounceAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+        Animated.timing(bounceAnim, { toValue: 1.15, duration: 400, useNativeDriver: true }),
+        Animated.timing(bounceAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
       ])
     );
     bounce.start();
@@ -233,44 +236,82 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
   // Player position animation
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(playerAnimX, { toValue: playerPos.x * (CELL_SIZE + CELL_GAP), useNativeDriver: true, friction: 6 }),
-      Animated.spring(playerAnimY, { toValue: playerPos.y * (CELL_SIZE + CELL_GAP), useNativeDriver: true, friction: 6 }),
+      Animated.spring(playerAnimX, { toValue: playerPos.x * (CELL_SIZE + CELL_GAP), useNativeDriver: true, friction: 5 }),
+      Animated.spring(playerAnimY, { toValue: playerPos.y * (CELL_SIZE + CELL_GAP), useNativeDriver: true, friction: 5 }),
     ]).start();
   }, [playerPos, CELL_SIZE]);
 
-  // Voice on status change
+  // Voice on level start
   useEffect(() => {
     if (!soundEnabled) return;
     if (mode === GameMode.PLAY && gameStatus === GameStatus.PLANNING && commands.length === 0) {
       speakTeacher(level.story || 'Hadi oynayalım!');
-    } else if (gameStatus === GameStatus.WON) {
-      speakTeacher('Aferin sana! Harikasın!');
-    } else if (gameStatus === GameStatus.LOST) {
-      speakTeacher('Tekrar dene!');
     }
-  }, [level, gameStatus, soundEnabled, mode]);
+  }, [level, gameStatus, soundEnabled, mode, commands.length]);
+
+  // ============== OTOMATİK SEVİYE GEÇİŞİ ==============
+  const goToNextLevel = useCallback(() => {
+    const nextIndex = currentLevelIndex + 1;
+    
+    if (nextIndex >= INITIAL_LEVELS.length) {
+      // Tüm seviyeler bitti - oyunu bitir
+      const time = Math.round((new Date().getTime() - startTime.getTime()) / 1000);
+      onGameEnd('Kodlama Oyunu', time, moves, errors);
+      return;
+    }
+
+    // Sonraki seviyeye geç
+    const nextLevel = INITIAL_LEVELS[nextIndex];
+    setCurrentLevelIndex(nextIndex);
+    setLevel(nextLevel);
+    setPlayerPos(nextLevel.startPos);
+    setCommands([]);
+    setGameStatus(GameStatus.PLANNING);
+    setCurrentStep(-1);
+    setShowWinMessage(false);
+    
+    // Animasyonu sıfırla
+    playerAnimX.setValue(nextLevel.startPos.x * (CELL_SIZE + CELL_GAP));
+    playerAnimY.setValue(nextLevel.startPos.y * (CELL_SIZE + CELL_GAP));
+    
+    if (soundEnabled) {
+      setTimeout(() => speakTeacher(nextLevel.story || 'Yeni bölüm!'), 300);
+    }
+  }, [currentLevelIndex, CELL_SIZE, CELL_GAP, soundEnabled, startTime, moves, errors, onGameEnd]);
+
+  // Kazanınca otomatik geçiş
+  useEffect(() => {
+    if (gameStatus === GameStatus.WON && showWinMessage) {
+      // 2 saniye bekle, sonra otomatik geç
+      const timer = setTimeout(() => {
+        goToNextLevel();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [gameStatus, showWinMessage, goToNextLevel]);
 
   const resetLevel = useCallback(() => {
     setPlayerPos(level.startPos);
     setPlayerDirection('RIGHT');
     setGameStatus(GameStatus.PLANNING);
     setCurrentStep(-1);
+    setShowWinMessage(false);
     playerAnimX.setValue(level.startPos.x * (CELL_SIZE + CELL_GAP));
     playerAnimY.setValue(level.startPos.y * (CELL_SIZE + CELL_GAP));
   }, [level, CELL_SIZE, CELL_GAP]);
 
   const addCommand = (cmd: Direction) => {
-    if (gameStatus === GameStatus.RUNNING || commands.length >= 12) return;
+    if (gameStatus === GameStatus.RUNNING || commands.length >= 10) return;
     setCommands((prev: Direction[]) => [...prev, cmd]);
     setMoves((m: number) => m + 1);
     if (soundEnabled) {
-      const dirSounds: Record<Direction, string> = {
+      const shorts: Record<Direction, string> = {
         [Direction.UP]: 'Yukarı!',
         [Direction.DOWN]: 'Aşağı!',
         [Direction.LEFT]: 'Sol!',
         [Direction.RIGHT]: 'Sağ!',
       };
-      speakTeacher(dirSounds[cmd], true);
+      speakTeacher(shorts[cmd], true);
     }
   };
 
@@ -338,13 +379,13 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
 
   // Game logic
   const getNextPos = (pos: Position, dir: Direction): Position => {
-    const moves: Record<Direction, Position> = {
+    const m: Record<Direction, Position> = {
       [Direction.UP]: { x: pos.x, y: pos.y - 1 },
       [Direction.DOWN]: { x: pos.x, y: pos.y + 1 },
       [Direction.LEFT]: { x: pos.x - 1, y: pos.y },
       [Direction.RIGHT]: { x: pos.x + 1, y: pos.y },
     };
-    return moves[dir];
+    return m[dir];
   };
 
   const isBlocked = (pos: Position) => level.obstacles.some((o: Position) => o.x === pos.x && o.y === pos.y);
@@ -360,6 +401,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
         if (gameStatus !== GameStatus.WON) {
           setGameStatus(GameStatus.LOST);
           setErrors((e: number) => e + 1);
+          if (soundEnabled) speakTeacher('Tekrar dene!');
         }
         return;
       }
@@ -371,18 +413,25 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
         if (isGoal(next)) {
           setTimeout(() => {
             setGameStatus(GameStatus.WON);
+            setShowWinMessage(true);
             confettiRef.current?.start();
-          }, 200);
+            if (soundEnabled) speakTeacher('Aferin!');
+            // Win animasyonu
+            Animated.spring(winScaleAnim, { toValue: 1, useNativeDriver: true, friction: 3 }).start();
+          }, 150);
           return next;
         }
         if (isValid(next)) return next;
         clearInterval(interval);
         setErrors((e: number) => e + 1);
-        setTimeout(() => setGameStatus(GameStatus.LOST), 200);
+        setTimeout(() => {
+          setGameStatus(GameStatus.LOST);
+          if (soundEnabled) speakTeacher('Oops!');
+        }, 150);
         return prev;
       });
       step++;
-    }, 600);
+    }, 500);
     return () => clearInterval(interval);
   }, [gameStatus]);
 
@@ -392,22 +441,20 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
     setTimeout(() => setGameStatus(GameStatus.RUNNING), 50);
   };
 
-  const selectLevel = (lvl: LevelConfig) => {
+  const selectLevel = (lvl: LevelConfig, index: number) => {
     setLevel(lvl);
+    setCurrentLevelIndex(index);
     setMode(GameMode.PLAY);
     setCommands([]);
     setPlayerPos(lvl.startPos);
     setGameStatus(GameStatus.PLANNING);
-  };
-
-  const finishGame = () => {
-    const time = Math.round((new Date().getTime() - startTime.getTime()) / 1000);
-    onGameEnd('Kodlama Oyunu', time, moves, errors);
+    setShowWinMessage(false);
+    winScaleAnim.setValue(0);
   };
 
   const getRotation = () => {
-    const rotations: Record<string, string> = { UP: '-90deg', DOWN: '90deg', LEFT: '180deg', RIGHT: '0deg' };
-    return rotations[playerDirection] || '0deg';
+    const r: Record<string, string> = { UP: '-90deg', DOWN: '90deg', LEFT: '180deg', RIGHT: '0deg' };
+    return r[playerDirection] || '0deg';
   };
 
   const getDirIcon = (d: Direction) => ({ UP: '⬆️', DOWN: '⬇️', LEFT: '⬅️', RIGHT: '➡️' }[d]);
@@ -432,13 +479,13 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
         let content = null;
         if (type === CellType.OBSTACLE || type === CellType.WALL) {
           bg = '#78909C';
-          content = <Text style={s.cellEmoji}>{themeIcons.obstacle}</Text>;
+          content = <Text style={[s.cellEmoji, { fontSize: CELL_SIZE * 0.55 }]}>{themeIcons.obstacle}</Text>;
         } else if (type === CellType.GOAL) {
           bg = '#FFF9C4';
-          content = <Animated.Text style={[s.cellEmoji, { transform: [{ scale: bounceAnim }] }]}>{themeIcons.goal}</Animated.Text>;
+          content = <Animated.Text style={[s.cellEmoji, { fontSize: CELL_SIZE * 0.55, transform: [{ scale: bounceAnim }] }]}>{themeIcons.goal}</Animated.Text>;
         } else if (type === CellType.START && mode === GameMode.EDIT) {
           bg = '#BBDEFB';
-          content = <Text style={[s.cellEmoji, { opacity: 0.5 }]}>🐰</Text>;
+          content = <Text style={[s.cellEmoji, { fontSize: CELL_SIZE * 0.5, opacity: 0.5 }]}>🐰</Text>;
         }
 
         cells.push(
@@ -460,52 +507,69 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
   return (
     <DynamicBackground>
       <View style={s.container}>
-        {/* Top Bar - Minimal */}
+        {/* Top Bar */}
         <View style={s.topBar}>
-          <TouchableOpacity style={s.exitBtn} onPress={onExit}>
-            <Text style={s.exitBtnText}>✕</Text>
+          <TouchableOpacity style={[s.exitBtn, { width: sizes.btnSize, height: sizes.btnSize, borderRadius: sizes.btnSize / 2 }]} onPress={onExit}>
+            <Text style={[s.exitBtnText, { fontSize: sizes.btnSize * 0.4 }]}>✕</Text>
           </TouchableOpacity>
           
           <View style={s.levelPicker}>
-            {INITIAL_LEVELS.map((lvl) => (
+            {INITIAL_LEVELS.map((lvl, idx) => (
               <TouchableOpacity
                 key={lvl.id}
-                style={[s.levelBtn, level.id === lvl.id && mode === GameMode.PLAY && s.levelBtnActive]}
-                onPress={() => selectLevel(lvl)}
+                style={[
+                  s.levelBtn, 
+                  { width: sizes.btnSize, height: sizes.btnSize, borderRadius: sizes.btnSize / 2 },
+                  currentLevelIndex === idx && mode === GameMode.PLAY && s.levelBtnActive,
+                  idx > currentLevelIndex && s.levelBtnLocked,
+                ]}
+                onPress={() => idx <= currentLevelIndex && selectLevel(lvl, idx)}
+                disabled={idx > currentLevelIndex}
               >
-                <Text style={s.levelBtnEmoji}>{lvl.emoji}</Text>
+                <Text style={[s.levelBtnEmoji, { fontSize: sizes.btnSize * 0.45 }]}>{lvl.emoji}</Text>
+                {idx <= currentLevelIndex && idx < currentLevelIndex && (
+                  <View style={s.checkMark}><Text style={s.checkMarkText}>✓</Text></View>
+                )}
               </TouchableOpacity>
             ))}
             <TouchableOpacity
-              style={[s.levelBtn, s.editBtn, mode === GameMode.EDIT && s.levelBtnActive]}
+              style={[s.levelBtn, s.editBtn, { width: sizes.btnSize, height: sizes.btnSize, borderRadius: sizes.btnSize / 2 }, mode === GameMode.EDIT && s.levelBtnActive]}
               onPress={() => { setMode(GameMode.EDIT); setCustomGrid(Array(4).fill(null).map(() => Array(4).fill(CellType.EMPTY))); setCommands([]); }}
             >
-              <Text style={s.levelBtnEmoji}>✏️</Text>
+              <Text style={[s.levelBtnEmoji, { fontSize: sizes.btnSize * 0.45 }]}>✏️</Text>
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={[s.soundBtn, !soundEnabled && s.soundBtnOff]} onPress={() => setSoundEnabled(!soundEnabled)}>
-            <Text style={s.soundBtnText}>{soundEnabled ? '🔊' : '🔇'}</Text>
+          <TouchableOpacity style={[s.soundBtn, { width: sizes.btnSize, height: sizes.btnSize, borderRadius: sizes.btnSize / 2 }, !soundEnabled && s.soundBtnOff]} onPress={() => setSoundEnabled(!soundEnabled)}>
+            <Text style={[s.soundBtnText, { fontSize: sizes.btnSize * 0.4 }]}>{soundEnabled ? '🔊' : '🔇'}</Text>
           </TouchableOpacity>
         </View>
 
+        {/* Progress Dots */}
+        <View style={s.progressDots}>
+          {INITIAL_LEVELS.map((_, idx) => (
+            <View key={idx} style={[s.dot, idx <= currentLevelIndex && s.dotActive, idx < currentLevelIndex && s.dotComplete]} />
+          ))}
+        </View>
+
         {/* Game Grid */}
-        <View style={[s.gridWrap, { width: GRID_SIZE + 20, height: GRID_SIZE + 20, backgroundColor: getThemeBg(level.theme || 'room') }]}>
+        <View style={[s.gridWrap, { width: sizes.gridSize + 16, height: sizes.gridSize + 16, backgroundColor: getThemeBg(level.theme || 'room') }]}>
           <View style={[s.grid, { gap: CELL_GAP }]}>{renderGrid()}</View>
           {mode === GameMode.PLAY && (
             <Animated.View style={[s.player, { width: CELL_SIZE, height: CELL_SIZE, transform: [{ translateX: playerAnimX }, { translateY: playerAnimY }, { rotate: getRotation() }] }]}>
-              <Text style={s.playerEmoji}>🐰</Text>
+              <Text style={[s.playerEmoji, { fontSize: CELL_SIZE * 0.6 }]}>🐰</Text>
+            </Animated.View>
+          )}
+          
+          {/* Win Overlay */}
+          {showWinMessage && (
+            <Animated.View style={[s.winOverlay, { transform: [{ scale: winScaleAnim }] }]}>
+              <Text style={s.winEmoji}>🎉</Text>
             </Animated.View>
           )}
         </View>
 
-        {/* Status */}
-        {gameStatus === GameStatus.WON && (
-          <View style={s.statusWin}>
-            <Text style={s.statusEmoji}>🎉</Text>
-            <TouchableOpacity style={s.finishBtn} onPress={finishGame}><Text style={s.finishBtnText}>⭐</Text></TouchableOpacity>
-          </View>
-        )}
+        {/* Status - Sadece Lose göster */}
         {gameStatus === GameStatus.LOST && (
           <View style={s.statusLose}><Text style={s.statusEmoji}>😢</Text></View>
         )}
@@ -522,16 +586,16 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
               ].map((t) => (
                 <TouchableOpacity
                   key={t.id}
-                  style={[s.toolBtn, { backgroundColor: t.bg }, selectedTool === t.id && s.toolBtnActive]}
+                  style={[s.toolBtn, { width: sizes.dPadSize, height: sizes.dPadSize, backgroundColor: t.bg }, selectedTool === t.id && s.toolBtnActive]}
                   onPress={() => setSelectedTool(t.id)}
                 >
-                  <Text style={s.toolEmoji}>{t.icon}</Text>
+                  <Text style={[s.toolEmoji, { fontSize: sizes.dPadSize * 0.45 }]}>{t.icon}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <View style={s.editorActions}>
-              <TouchableOpacity style={s.clearBtn} onPress={() => setCustomGrid(Array(4).fill(null).map(() => Array(4).fill(CellType.EMPTY)))}><Text style={s.actionEmoji}>🗑️</Text></TouchableOpacity>
-              <TouchableOpacity style={s.playBtn} onPress={saveCustomLevel}><Text style={s.playBtnEmoji}>▶️</Text></TouchableOpacity>
+              <TouchableOpacity style={[s.clearBtn, { width: sizes.dPadSize, height: sizes.dPadSize }]} onPress={() => setCustomGrid(Array(4).fill(null).map(() => Array(4).fill(CellType.EMPTY)))}><Text style={s.actionEmoji}>🗑️</Text></TouchableOpacity>
+              <TouchableOpacity style={[s.playBtn, { height: sizes.dPadSize }]} onPress={saveCustomLevel}><Text style={s.playBtnEmoji}>▶️</Text></TouchableOpacity>
             </View>
           </View>
         ) : (
@@ -552,33 +616,33 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
               )}
             </View>
 
-            {/* Direction Pad */}
+            {/* D-Pad */}
             <View style={s.dPad}>
               <View style={s.dRow}>
-                <View style={s.dSpace} />
-                <TouchableOpacity style={[s.dBtn, { backgroundColor: '#FF9800' }]} onPress={() => addCommand(Direction.UP)} disabled={gameStatus === GameStatus.RUNNING}>
-                  <Text style={s.dBtnText}>⬆️</Text>
+                <View style={{ width: sizes.dPadSize, height: sizes.dPadSize }} />
+                <TouchableOpacity style={[s.dBtn, { width: sizes.dPadSize, height: sizes.dPadSize, backgroundColor: '#FF9800' }]} onPress={() => addCommand(Direction.UP)} disabled={gameStatus === GameStatus.RUNNING}>
+                  <Text style={[s.dBtnText, { fontSize: sizes.dPadSize * 0.45 }]}>⬆️</Text>
                 </TouchableOpacity>
-                <View style={s.dSpace} />
+                <View style={{ width: sizes.dPadSize, height: sizes.dPadSize }} />
               </View>
               <View style={s.dRow}>
-                <TouchableOpacity style={[s.dBtn, { backgroundColor: '#E91E63' }]} onPress={() => addCommand(Direction.LEFT)} disabled={gameStatus === GameStatus.RUNNING}>
-                  <Text style={s.dBtnText}>⬅️</Text>
+                <TouchableOpacity style={[s.dBtn, { width: sizes.dPadSize, height: sizes.dPadSize, backgroundColor: '#E91E63' }]} onPress={() => addCommand(Direction.LEFT)} disabled={gameStatus === GameStatus.RUNNING}>
+                  <Text style={[s.dBtnText, { fontSize: sizes.dPadSize * 0.45 }]}>⬅️</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[s.dBtn, { backgroundColor: '#9C27B0' }]} onPress={() => addCommand(Direction.DOWN)} disabled={gameStatus === GameStatus.RUNNING}>
-                  <Text style={s.dBtnText}>⬇️</Text>
+                <TouchableOpacity style={[s.dBtn, { width: sizes.dPadSize, height: sizes.dPadSize, backgroundColor: '#9C27B0' }]} onPress={() => addCommand(Direction.DOWN)} disabled={gameStatus === GameStatus.RUNNING}>
+                  <Text style={[s.dBtnText, { fontSize: sizes.dPadSize * 0.45 }]}>⬇️</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[s.dBtn, { backgroundColor: '#4CAF50' }]} onPress={() => addCommand(Direction.RIGHT)} disabled={gameStatus === GameStatus.RUNNING}>
-                  <Text style={s.dBtnText}>➡️</Text>
+                <TouchableOpacity style={[s.dBtn, { width: sizes.dPadSize, height: sizes.dPadSize, backgroundColor: '#4CAF50' }]} onPress={() => addCommand(Direction.RIGHT)} disabled={gameStatus === GameStatus.RUNNING}>
+                  <Text style={[s.dBtnText, { fontSize: sizes.dPadSize * 0.45 }]}>➡️</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Action Buttons */}
+            {/* Actions */}
             <View style={s.actions}>
-              <TouchableOpacity style={s.resetBtn} onPress={clearCommands}><Text style={s.actionEmoji}>🔄</Text></TouchableOpacity>
+              <TouchableOpacity style={[s.resetBtn, { width: sizes.dPadSize, height: sizes.dPadSize }]} onPress={clearCommands}><Text style={s.actionEmoji}>🔄</Text></TouchableOpacity>
               <TouchableOpacity
-                style={[s.goBtn, (gameStatus === GameStatus.RUNNING || commands.length === 0) && s.goBtnOff]}
+                style={[s.goBtn, { height: sizes.dPadSize }, (gameStatus === GameStatus.RUNNING || commands.length === 0) && s.goBtnOff]}
                 onPress={handleRun}
                 disabled={gameStatus === GameStatus.RUNNING || commands.length === 0}
               >
@@ -589,76 +653,89 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
         )}
       </View>
 
-      <ConfettiCannon ref={confettiRef} count={80} origin={{ x: width / 2, y: 0 }} autoStart={false} fadeOut />
+      <ConfettiCannon ref={confettiRef} count={60} origin={{ x: width / 2, y: 0 }} autoStart={false} fadeOut />
     </DynamicBackground>
   );
 }
 
 // ============== STYLES ==============
 const s = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', paddingTop: 40, paddingHorizontal: 10 },
+  container: { 
+    flex: 1, 
+    alignItems: 'center', 
+    justifyContent: 'space-evenly', // Eşit dağılım
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+  },
   
   // Top Bar
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 8 },
-  exitBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#EF5350', justifyContent: 'center', alignItems: 'center' },
-  exitBtnText: { color: '#FFF', fontSize: 20, fontWeight: 'bold' },
-  levelPicker: { flexDirection: 'row', gap: 8 },
-  levelBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.9)', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'transparent' },
+  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 8 },
+  exitBtn: { backgroundColor: '#EF5350', justifyContent: 'center', alignItems: 'center' },
+  exitBtnText: { color: '#FFF', fontWeight: 'bold' },
+  levelPicker: { flexDirection: 'row', gap: 6 },
+  levelBtn: { backgroundColor: 'rgba(255,255,255,0.95)', justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'transparent' },
   levelBtnActive: { borderColor: '#2196F3', backgroundColor: '#E3F2FD' },
-  levelBtnEmoji: { fontSize: 24 },
+  levelBtnLocked: { opacity: 0.4 },
+  levelBtnEmoji: {},
   editBtn: { backgroundColor: '#FFF8E1' },
-  soundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#64B5F6', justifyContent: 'center', alignItems: 'center' },
+  soundBtn: { backgroundColor: '#64B5F6', justifyContent: 'center', alignItems: 'center' },
   soundBtnOff: { backgroundColor: '#BDBDBD' },
-  soundBtnText: { fontSize: 20 },
+  soundBtnText: {},
+  checkMark: { position: 'absolute', bottom: -2, right: -2, backgroundColor: '#4CAF50', width: 16, height: 16, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
+  checkMarkText: { color: '#FFF', fontSize: 10, fontWeight: 'bold' },
+
+  // Progress Dots
+  progressDots: { flexDirection: 'row', gap: 8 },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#E0E0E0' },
+  dotActive: { backgroundColor: '#64B5F6' },
+  dotComplete: { backgroundColor: '#4CAF50' },
 
   // Grid
-  gridWrap: { borderRadius: 20, padding: 10, marginBottom: 10, position: 'relative' },
+  gridWrap: { borderRadius: 16, padding: 8, position: 'relative' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#E0E0E0' },
-  cellEmoji: { fontSize: COMPACT_MODE ? 22 : 28 },
-  player: { position: 'absolute', top: 10, left: 10, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
-  playerEmoji: { fontSize: COMPACT_MODE ? 26 : 32 },
+  cell: { borderRadius: 10, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#E0E0E0' },
+  cellEmoji: {},
+  player: { position: 'absolute', top: 8, left: 8, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  playerEmoji: {},
+  winOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 16 },
+  winEmoji: { fontSize: 60 },
 
   // Status
-  statusWin: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#C8E6C9', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 30, marginBottom: 8, gap: 12 },
-  statusLose: { backgroundColor: '#FFCDD2', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 30, marginBottom: 8 },
-  statusEmoji: { fontSize: 32 },
-  finishBtn: { backgroundColor: '#4CAF50', width: 50, height: 50, borderRadius: 25, justifyContent: 'center', alignItems: 'center' },
-  finishBtnText: { fontSize: 28 },
+  statusLose: { backgroundColor: '#FFCDD2', paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20 },
+  statusEmoji: { fontSize: 28 },
 
   // Editor
-  editorPanel: { alignItems: 'center', gap: 12 },
-  toolRow: { flexDirection: 'row', gap: 10 },
-  toolBtn: { width: 60, height: 60, borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'transparent' },
+  editorPanel: { alignItems: 'center', gap: 10 },
+  toolRow: { flexDirection: 'row', gap: 8 },
+  toolBtn: { borderRadius: 14, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: 'transparent' },
   toolBtnActive: { borderColor: '#7B1FA2', transform: [{ scale: 1.1 }] },
-  toolEmoji: { fontSize: 28 },
-  editorActions: { flexDirection: 'row', gap: 12 },
-  clearBtn: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FFCDD2', justifyContent: 'center', alignItems: 'center' },
-  playBtn: { width: 80, height: 56, borderRadius: 28, backgroundColor: '#7B1FA2', justifyContent: 'center', alignItems: 'center' },
-  playBtnEmoji: { fontSize: 28 },
+  toolEmoji: {},
+  editorActions: { flexDirection: 'row', gap: 10 },
+  clearBtn: { borderRadius: 28, backgroundColor: '#FFCDD2', justifyContent: 'center', alignItems: 'center' },
+  playBtn: { paddingHorizontal: 30, borderRadius: 28, backgroundColor: '#7B1FA2', justifyContent: 'center', alignItems: 'center' },
+  playBtnEmoji: { fontSize: 26 },
+  actionEmoji: { fontSize: 24 },
 
   // Command Queue
-  cmdQueue: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, marginBottom: 10, minHeight: 56, gap: 6 },
-  cmdEmpty: { fontSize: 24, color: '#BDBDBD' },
-  cmdItem: { width: 42, height: 42, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  cmdItemActive: { transform: [{ scale: 1.2 }], borderWidth: 3, borderColor: '#FFD700' },
+  cmdQueue: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 16, minHeight: 48, gap: 5 },
+  cmdEmpty: { fontSize: 20, color: '#BDBDBD' },
+  cmdItem: { width: 38, height: 38, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  cmdItemActive: { transform: [{ scale: 1.2 }], borderWidth: 2, borderColor: '#FFD700' },
   cmdItemDone: { opacity: 0.4 },
-  cmdEmoji: { fontSize: 20 },
-  cmdClear: { marginLeft: 8, backgroundColor: '#FFCDD2', width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
-  cmdClearText: { fontSize: 18 },
+  cmdEmoji: { fontSize: 18 },
+  cmdClear: { marginLeft: 6, backgroundColor: '#FFCDD2', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  cmdClearText: { fontSize: 16 },
 
   // D-Pad
-  dPad: { marginBottom: 10 },
-  dRow: { flexDirection: 'row', gap: 8 },
-  dSpace: { width: COMPACT_MODE ? 56 : 64, height: COMPACT_MODE ? 56 : 64 },
-  dBtn: { width: COMPACT_MODE ? 56 : 64, height: COMPACT_MODE ? 56 : 64, borderRadius: 16, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 5 },
-  dBtnText: { fontSize: COMPACT_MODE ? 26 : 30 },
+  dPad: { gap: 6 },
+  dRow: { flexDirection: 'row', gap: 6 },
+  dBtn: { borderRadius: 14, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 3, elevation: 4 },
+  dBtnText: {},
 
   // Actions
-  actions: { flexDirection: 'row', gap: 16 },
-  resetBtn: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#ECEFF1', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 4, borderBottomColor: '#B0BEC5' },
-  actionEmoji: { fontSize: 28 },
-  goBtn: { width: 100, height: 60, borderRadius: 30, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 4, borderBottomColor: '#2E7D32' },
+  actions: { flexDirection: 'row', gap: 12 },
+  resetBtn: { borderRadius: 28, backgroundColor: '#ECEFF1', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 3, borderBottomColor: '#B0BEC5' },
+  goBtn: { paddingHorizontal: 40, borderRadius: 28, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 3, borderBottomColor: '#2E7D32' },
   goBtnOff: { backgroundColor: '#BDBDBD', borderBottomColor: '#9E9E9E' },
-  goBtnText: { fontSize: 32 },
+  goBtnText: { fontSize: 28 },
 });
