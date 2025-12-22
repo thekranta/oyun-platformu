@@ -1,22 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    Dimensions,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
-import ProgressBar from './ProgressBar';
 
 const { width } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
-// Types
+// ============== TYPES ==============
 enum Direction {
   UP = 'UP',
   DOWN = 'DOWN',
@@ -39,6 +38,13 @@ enum CellType {
   OBSTACLE = 'OBSTACLE',
 }
 
+enum GameMode {
+  PLAY = 'PLAY',
+  EDIT = 'EDIT',
+}
+
+type EditorTool = CellType.WALL | CellType.START | CellType.GOAL | 'ERASER';
+
 interface Position {
   x: number;
   y: number;
@@ -55,7 +61,7 @@ interface LevelConfig {
   theme?: 'room' | 'garden' | 'park';
 }
 
-// Initial Levels
+// ============== CONSTANTS ==============
 const INITIAL_LEVELS: LevelConfig[] = [
   {
     id: 1,
@@ -68,7 +74,7 @@ const INITIAL_LEVELS: LevelConfig[] = [
       { x: 2, y: 1 },
     ],
     story:
-      'Merhaba minik kaşif! Oyuncakların (engeller) etrafından dolaşarak sepetine (🧸) ulaşabilir misin?',
+      'Merhaba minik kaşif! Burası senin odan. Yerdeki oyuncakların üzerinden atlayamazsın. Sepetine (🧸) ulaşmak için yolu çizer misin?',
     theme: 'room',
   },
   {
@@ -84,7 +90,7 @@ const INITIAL_LEVELS: LevelConfig[] = [
       { x: 1, y: 3 },
     ],
     story:
-      'Şimdi bahçedeyiz! Çiçeklerin etrafından dolaşarak gizli hazineye (🌻) gidebilir misin?',
+      'Şimdi bahçedeyiz! Çiçeklerin ve ağaçların etrafından dolaşarak gizli hazineye (🌻) gitmemiz gerekiyor. En güvenli yol hangisi?',
     theme: 'garden',
   },
   {
@@ -101,12 +107,12 @@ const INITIAL_LEVELS: LevelConfig[] = [
       { x: 3, y: 1 },
     ],
     story:
-      'Oyun parkında kaydırağa (🎡) gitmek istiyorsun ama kum havuzunun etrafından dolaşmalısın!',
+      'Oyun parkında kaydırağa (🎡) gitmek istiyorsun ama kum havuzunun etrafından dolaşmalısın. Hadi planını yap!',
     theme: 'park',
   },
 ];
 
-// Speech synthesis helper
+// ============== AUDIO UTILS ==============
 const speakTeacher = (text: string) => {
   if (Platform.OS === 'web' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel();
@@ -114,6 +120,7 @@ const speakTeacher = (text: string) => {
     utterance.lang = 'tr-TR';
     utterance.pitch = 1.1;
     utterance.rate = 0.9;
+    utterance.volume = 1.0;
     window.speechSynthesis.speak(utterance);
   }
 };
@@ -124,26 +131,58 @@ const stopSpeech = () => {
   }
 };
 
+// ============== THEME ICONS ==============
+const getThemeIcons = (theme: string) => {
+  switch (theme) {
+    case 'garden':
+      return { obstacle: '🌳', goal: '🌻' };
+    case 'park':
+      return { obstacle: '🛝', goal: '🎡' };
+    default:
+      return { obstacle: '🪑', goal: '🧸' };
+  }
+};
+
+const getThemeBackground = (theme: string) => {
+  switch (theme) {
+    case 'garden':
+      return '#E8F5E9';
+    case 'park':
+      return '#FFF3E0';
+    default:
+      return '#ECEFF1';
+  }
+};
+
+// ============== COMPONENT PROPS ==============
 interface KodlamaOyunuProps {
   onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number) => void;
   onExit?: () => void;
 }
 
+// ============== MAIN COMPONENT ==============
 export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
-  // Game State
-  const [currentLevelIndex, setCurrentLevelIndex] = useState(0);
+  // --- State ---
+  const [mode, setMode] = useState<GameMode>(GameMode.PLAY);
   const [level, setLevel] = useState<LevelConfig>(INITIAL_LEVELS[0]);
   const [playerPos, setPlayerPos] = useState<Position>(INITIAL_LEVELS[0].startPos);
-  const [playerDirection, setPlayerDirection] = useState<Direction>(Direction.RIGHT);
+  const [playerDirection, setPlayerDirection] = useState<string>('RIGHT');
   const [commands, setCommands] = useState<Direction[]>([]);
   const [gameStatus, setGameStatus] = useState<GameStatus>(GameStatus.PLANNING);
   const [currentStep, setCurrentStep] = useState<number>(-1);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Editor State
+  const [selectedTool, setSelectedTool] = useState<EditorTool>(CellType.WALL);
+  const [customLevelGrid, setCustomLevelGrid] = useState<CellType[][]>(
+    Array(4).fill(null).map(() => Array(4).fill(CellType.EMPTY))
+  );
 
   // Stats
   const [totalMoves, setTotalMoves] = useState(0);
   const [totalErrors, setTotalErrors] = useState(0);
   const [startTime, setStartTime] = useState<Date | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [levelsCompleted, setLevelsCompleted] = useState(0);
 
   // Animation
   const playerAnimX = useRef(new Animated.Value(0)).current;
@@ -152,17 +191,21 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
   // Confetti
   const confettiRef = useRef<ConfettiCannon>(null);
 
-  // Calculate grid cell size
-  const GRID_CONTAINER_SIZE = Math.min(width - 40, 400);
+  // Calculate grid dimensions
+  const GRID_CONTAINER_SIZE = Math.min(width - 40, 380);
+  const gridSize = mode === GameMode.EDIT ? 4 : level.gridSize;
   const CELL_GAP = 8;
-  const CELL_SIZE = (GRID_CONTAINER_SIZE - CELL_GAP * (level.gridSize - 1)) / level.gridSize;
+  const CELL_SIZE = (GRID_CONTAINER_SIZE - CELL_GAP * (gridSize - 1) - 20) / gridSize;
+
+  // Theme icons
+  const themeIcons = getThemeIcons(level.theme || 'room');
 
   useEffect(() => {
     setStartTime(new Date());
   }, []);
 
+  // Update player animation position
   useEffect(() => {
-    // Update player animation position
     Animated.parallel([
       Animated.spring(playerAnimX, {
         toValue: playerPos.x * (CELL_SIZE + CELL_GAP),
@@ -177,25 +220,36 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
     ]).start();
   }, [playerPos, CELL_SIZE, CELL_GAP]);
 
+  // Voice effects
   useEffect(() => {
-    if (soundEnabled && gameStatus === GameStatus.PLANNING && commands.length === 0) {
-      speakTeacher(level.story || 'Hadi başlayalım!');
-    } else if (soundEnabled && gameStatus === GameStatus.WON) {
-      speakTeacher('Harikasın! Yolu buldun!');
-    } else if (soundEnabled && gameStatus === GameStatus.LOST) {
-      speakTeacher('Bir engele takıldık. Tekrar deneyelim mi?');
+    if (!soundEnabled) {
+      stopSpeech();
+      return;
     }
-  }, [level, gameStatus, soundEnabled]);
 
-  const resetLevel = () => {
+    if (mode === GameMode.PLAY) {
+      if (gameStatus === GameStatus.PLANNING && commands.length === 0) {
+        speakTeacher(level.story || 'Hadi başlayalım!');
+      } else if (gameStatus === GameStatus.WON) {
+        speakTeacher('Harikasın! Yolu buldun. Bir sonraki maceraya hazır mısın?');
+      } else if (gameStatus === GameStatus.LOST) {
+        speakTeacher('Aaa, bir engele takıldık. Tekrar deneyelim mi?');
+      }
+    } else if (mode === GameMode.EDIT) {
+      speakTeacher('Şimdi kendi haritanı tasarla. Eşyaları odaya yerleştir.');
+    }
+  }, [level, gameStatus, mode, soundEnabled]);
+
+  // --- Helpers ---
+  const resetLevel = useCallback(() => {
     setPlayerPos(level.startPos);
-    setPlayerDirection(Direction.RIGHT);
+    setPlayerDirection('RIGHT');
     setGameStatus(GameStatus.PLANNING);
     setCurrentStep(-1);
     playerAnimX.setValue(level.startPos.x * (CELL_SIZE + CELL_GAP));
     playerAnimY.setValue(level.startPos.y * (CELL_SIZE + CELL_GAP));
     stopSpeech();
-  };
+  }, [level, CELL_SIZE, CELL_GAP]);
 
   const clearCommands = () => {
     if (gameStatus === GameStatus.RUNNING) return;
@@ -211,13 +265,13 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
     setTotalMoves((m: number) => m + 1);
 
     if (soundEnabled) {
-      const directionTexts: Record<Direction, string> = {
-        [Direction.UP]: 'Yukarı',
-        [Direction.DOWN]: 'Aşağı',
-        [Direction.LEFT]: 'Sola',
-        [Direction.RIGHT]: 'Sağa',
+      const dirTexts: Record<Direction, string> = {
+        [Direction.UP]: 'Yukarı gidiyoruz',
+        [Direction.DOWN]: 'Aşağı iniyoruz',
+        [Direction.LEFT]: 'Sola dönüyoruz',
+        [Direction.RIGHT]: 'Sağa dönüyoruz',
       };
-      speakTeacher(directionTexts[cmd]);
+      speakTeacher(dirTexts[cmd]);
     }
   };
 
@@ -227,21 +281,89 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
     if (soundEnabled) speakTeacher('Son hareketi sildim.');
   };
 
+  // --- Editor Logic ---
+  const handleEditorCellClick = (x: number, y: number) => {
+    if (mode !== GameMode.EDIT) return;
+
+    const newGrid = [...customLevelGrid.map((row: CellType[]) => [...row])];
+
+    if (selectedTool === CellType.START) {
+      for (let ry = 0; ry < 4; ry++) {
+        for (let rx = 0; rx < 4; rx++) {
+          if (newGrid[ry][rx] === CellType.START) newGrid[ry][rx] = CellType.EMPTY;
+        }
+      }
+      newGrid[y][x] = CellType.START;
+    } else if (selectedTool === CellType.GOAL) {
+      for (let ry = 0; ry < 4; ry++) {
+        for (let rx = 0; rx < 4; rx++) {
+          if (newGrid[ry][rx] === CellType.GOAL) newGrid[ry][rx] = CellType.EMPTY;
+        }
+      }
+      newGrid[y][x] = CellType.GOAL;
+    } else if (selectedTool === 'ERASER') {
+      newGrid[y][x] = CellType.EMPTY;
+    } else {
+      newGrid[y][x] = CellType.WALL;
+    }
+
+    setCustomLevelGrid(newGrid);
+  };
+
+  const handleSaveCustomLevel = () => {
+    let start: Position | null = null;
+    let goal: Position | null = null;
+    const obstacles: Position[] = [];
+
+    for (let y = 0; y < 4; y++) {
+      for (let x = 0; x < 4; x++) {
+        if (customLevelGrid[y][x] === CellType.START) start = { x, y };
+        if (customLevelGrid[y][x] === CellType.GOAL) goal = { x, y };
+        if (customLevelGrid[y][x] === CellType.WALL || customLevelGrid[y][x] === CellType.OBSTACLE) {
+          obstacles.push({ x, y });
+        }
+      }
+    }
+
+    if (!start || !goal) {
+      if (soundEnabled) speakTeacher('Haritada bir başlangıç tavşanı ve bir hedef oyuncak olmalı.');
+      return;
+    }
+
+    const newLevel: LevelConfig = {
+      id: 'custom',
+      name: 'Senin Haritan',
+      gridSize: 4,
+      startPos: start,
+      goalPos: goal,
+      obstacles: obstacles,
+      story: 'Kendi çizdiğin haritada yolunu bulabilir misin?',
+      theme: 'room',
+    };
+
+    setLevel(newLevel);
+    setMode(GameMode.PLAY);
+    setPlayerPos(start);
+    setCommands([]);
+    setGameStatus(GameStatus.PLANNING);
+    if (soundEnabled) speakTeacher('Harita hazır! Hadi şimdi yolu planlayalım.');
+  };
+
+  const initEditor = () => {
+    setMode(GameMode.EDIT);
+    setCustomLevelGrid(Array(4).fill(null).map(() => Array(4).fill(CellType.EMPTY)));
+    setGameStatus(GameStatus.PLANNING);
+    setCommands([]);
+  };
+
+  // --- Game Loop Logic ---
   const getNextPosition = (pos: Position, dir: Direction): Position => {
     let { x, y } = pos;
     switch (dir) {
-      case Direction.UP:
-        y -= 1;
-        break;
-      case Direction.DOWN:
-        y += 1;
-        break;
-      case Direction.LEFT:
-        x -= 1;
-        break;
-      case Direction.RIGHT:
-        x += 1;
-        break;
+      case Direction.UP: y -= 1; break;
+      case Direction.DOWN: y += 1; break;
+      case Direction.LEFT: x -= 1; break;
+      case Direction.RIGHT: x += 1; break;
     }
     return { x, y };
   };
@@ -288,19 +410,8 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
         if (isGoal(nextPos)) {
           setTimeout(() => {
             setGameStatus(GameStatus.WON);
+            setLevelsCompleted((l: number) => l + 1);
             confettiRef.current?.start();
-
-            // Check if all levels completed
-            if (currentLevelIndex >= INITIAL_LEVELS.length - 1) {
-              // Game completed!
-              const endTime = new Date();
-              const totalTime = startTime
-                ? Math.round((endTime.getTime() - startTime.getTime()) / 1000)
-                : 0;
-              setTimeout(() => {
-                onGameEnd('Kodlama Oyunu', totalTime, totalMoves, totalErrors);
-              }, 2000);
-            }
           }, 300);
           return nextPos;
         }
@@ -319,8 +430,9 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
     }, 800);
 
     return () => clearInterval(intervalId);
-  }, [gameStatus]);
+  }, [gameStatus, commands]);
 
+  // --- Handlers ---
   const handleRun = () => {
     if (commands.length === 0) return;
     resetLevel();
@@ -329,107 +441,146 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
     }, 100);
   };
 
-  const handleNextLevel = () => {
-    const nextIndex = currentLevelIndex + 1;
-    if (nextIndex < INITIAL_LEVELS.length) {
-      setCurrentLevelIndex(nextIndex);
-      const nextLevel = INITIAL_LEVELS[nextIndex];
-      setLevel(nextLevel);
-      setPlayerPos(nextLevel.startPos);
-      playerAnimX.setValue(nextLevel.startPos.x * (CELL_SIZE + CELL_GAP));
-      playerAnimY.setValue(nextLevel.startPos.y * (CELL_SIZE + CELL_GAP));
-      setCommands([]);
-      setGameStatus(GameStatus.PLANNING);
-      setCurrentStep(-1);
-    }
+  const selectLevel = (lvl: LevelConfig) => {
+    setLevel(lvl);
+    setMode(GameMode.PLAY);
+    setCommands([]);
+    setPlayerPos(lvl.startPos);
+    setGameStatus(GameStatus.PLANNING);
+    playerAnimX.setValue(lvl.startPos.x * (CELL_SIZE + CELL_GAP));
+    playerAnimY.setValue(lvl.startPos.y * (CELL_SIZE + CELL_GAP));
   };
 
-  const getThemeIcons = (theme: string) => {
-    switch (theme) {
-      case 'garden':
-        return { obstacle: '🌳', goal: '🌻' };
-      case 'park':
-        return { obstacle: '🛝', goal: '🎡' };
-      default:
-        return { obstacle: '🪑', goal: '🧸' };
-    }
+  const handleFinishGame = () => {
+    const endTime = new Date();
+    const totalTime = startTime ? Math.round((endTime.getTime() - startTime.getTime()) / 1000) : 0;
+    onGameEnd('Kodlama Oyunu', totalTime, totalMoves, totalErrors);
   };
 
-  const themeIcons = getThemeIcons(level.theme || 'room');
-
+  // --- Direction helpers ---
   const getDirectionIcon = (dir: Direction) => {
     switch (dir) {
-      case Direction.UP:
-        return '⬆️';
-      case Direction.DOWN:
-        return '⬇️';
-      case Direction.LEFT:
-        return '⬅️';
-      case Direction.RIGHT:
-        return '➡️';
+      case Direction.UP: return '⬆️';
+      case Direction.DOWN: return '⬇️';
+      case Direction.LEFT: return '⬅️';
+      case Direction.RIGHT: return '➡️';
     }
   };
 
   const getDirectionColor = (dir: Direction) => {
     switch (dir) {
-      case Direction.UP:
-        return '#FFB74D';
-      case Direction.DOWN:
-        return '#9C27B0';
-      case Direction.LEFT:
-        return '#E91E63';
-      case Direction.RIGHT:
-        return '#4CAF50';
+      case Direction.UP: return '#FFB74D';
+      case Direction.DOWN: return '#9C27B0';
+      case Direction.LEFT: return '#E91E63';
+      case Direction.RIGHT: return '#4CAF50';
     }
   };
 
-  const renderGrid = () => {
-    const cells = [];
-    for (let y = 0; y < level.gridSize; y++) {
-      for (let x = 0; x < level.gridSize; x++) {
-        const isObstacleCell = level.obstacles.some((o: Position) => o.x === x && o.y === y);
-        const isGoalCell = level.goalPos.x === x && level.goalPos.y === y;
-        const isStartCell = level.startPos.x === x && level.startPos.y === y;
+  const getPlayerRotation = () => {
+    switch (playerDirection) {
+      case 'UP': return '-90deg';
+      case 'DOWN': return '90deg';
+      case 'LEFT': return '180deg';
+      default: return '0deg';
+    }
+  };
 
-        let cellStyle = styles.cell;
+  // --- Render Grid ---
+  const renderGrid = () => {
+    const size = mode === GameMode.EDIT ? 4 : level.gridSize;
+    const cells = [];
+
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        let cellType = CellType.EMPTY;
+
+        if (mode === GameMode.PLAY) {
+          if (level.obstacles.some((o: Position) => o.x === x && o.y === y)) cellType = CellType.OBSTACLE;
+          if (level.goalPos.x === x && level.goalPos.y === y) cellType = CellType.GOAL;
+          if (level.startPos.x === x && level.startPos.y === y) cellType = CellType.START;
+        } else {
+          cellType = customLevelGrid[y][x];
+        }
+
+        let cellStyle: any = [styles.cell, { width: CELL_SIZE, height: CELL_SIZE }];
         let content = null;
 
-        if (isObstacleCell) {
-          cellStyle = { ...styles.cell, ...styles.obstacleCell };
+        if (cellType === CellType.WALL || cellType === CellType.OBSTACLE) {
+          cellStyle = [...cellStyle, styles.obstacleCell];
           content = <Text style={styles.cellIcon}>{themeIcons.obstacle}</Text>;
-        } else if (isGoalCell) {
-          cellStyle = { ...styles.cell, ...styles.goalCell };
+        } else if (cellType === CellType.GOAL) {
+          cellStyle = [...cellStyle, styles.goalCell];
           content = <Text style={[styles.cellIcon, styles.bounceIcon]}>{themeIcons.goal}</Text>;
-        } else if (isStartCell) {
-          cellStyle = { ...styles.cell, ...styles.startCell };
+        } else if (cellType === CellType.START) {
+          cellStyle = [...cellStyle, styles.startCell];
+          if (mode === GameMode.EDIT) {
+            content = <Text style={[styles.cellIcon, { opacity: 0.6 }]}>🐰</Text>;
+          }
         }
 
         cells.push(
-          <View
+          <TouchableOpacity
             key={`${x}-${y}`}
-            style={[cellStyle, { width: CELL_SIZE, height: CELL_SIZE }]}
+            style={cellStyle}
+            onPress={() => handleEditorCellClick(x, y)}
+            disabled={mode !== GameMode.EDIT}
+            activeOpacity={mode === GameMode.EDIT ? 0.7 : 1}
           >
             {content}
-          </View>
+          </TouchableOpacity>
         );
       }
     }
     return cells;
   };
 
-  const getPlayerRotation = () => {
-    switch (playerDirection) {
-      case Direction.UP:
-        return '-90deg';
-      case Direction.DOWN:
-        return '90deg';
-      case Direction.LEFT:
-        return '180deg';
-      default:
-        return '0deg';
-    }
+  // --- Render Editor Tools ---
+  const renderEditorTools = () => {
+    const tools: { id: EditorTool; label: string; icon: string; color: string }[] = [
+      { id: CellType.WALL, label: 'Engel', icon: '🪑', color: '#607D8B' },
+      { id: CellType.START, label: 'Başla', icon: '🐰', color: '#2196F3' },
+      { id: CellType.GOAL, label: 'Hedef', icon: '🧸', color: '#FFB74D' },
+      { id: 'ERASER', label: 'Silgi', icon: '🧼', color: '#E0E0E0' },
+    ];
+
+    return (
+      <View style={styles.editorContainer}>
+        <Text style={styles.editorTitle}>🎨 Harita Atölyesi</Text>
+        <Text style={styles.editorSubtitle}>Bir eşya seç ve kutulara dokun</Text>
+
+        <View style={styles.toolsGrid}>
+          {tools.map((tool) => (
+            <TouchableOpacity
+              key={tool.id}
+              style={[
+                styles.toolButton,
+                { backgroundColor: tool.color },
+                selectedTool === tool.id && styles.toolButtonActive,
+              ]}
+              onPress={() => setSelectedTool(tool.id)}
+            >
+              <Text style={styles.toolIcon}>{tool.icon}</Text>
+              <Text style={[styles.toolLabel, tool.id === 'ERASER' && { color: '#333' }]}>{tool.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={styles.editorActions}>
+          <TouchableOpacity
+            style={styles.clearEditorButton}
+            onPress={() => setCustomLevelGrid(Array(4).fill(null).map(() => Array(4).fill(CellType.EMPTY)))}
+          >
+            <Text style={styles.clearEditorButtonText}>🗑️ Temizle</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.playEditorButton} onPress={handleSaveCustomLevel}>
+            <Text style={styles.playEditorButtonText}>✅ Oyna!</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   };
 
+  // ============== MAIN RENDER ==============
   return (
     <DynamicBackground>
       <ScrollView contentContainerStyle={styles.container}>
@@ -440,7 +591,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
           </TouchableOpacity>
           <View style={styles.headerCenter}>
             <Text style={styles.title}>🗺️ Minik Kaşif</Text>
-            <Text style={styles.subtitle}>Harita ve Kodlama Oyunu</Text>
+            <Text style={styles.subtitle}>Harita ve Kodlama Atölyesi</Text>
           </View>
           <TouchableOpacity
             style={[styles.soundButton, !soundEnabled && styles.soundButtonMuted]}
@@ -453,205 +604,223 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
           </TouchableOpacity>
         </View>
 
-        {/* Progress */}
-        <ProgressBar current={currentLevelIndex + 1} total={INITIAL_LEVELS.length} />
-
-        {/* Level Selection */}
+        {/* Level Selection & Editor Button */}
         <View style={styles.levelSelector}>
-          {INITIAL_LEVELS.map((lvl, idx) => (
+          {INITIAL_LEVELS.map((lvl) => (
             <TouchableOpacity
               key={lvl.id}
               style={[
                 styles.levelButton,
-                currentLevelIndex === idx && styles.levelButtonActive,
-                idx > currentLevelIndex && styles.levelButtonLocked,
+                level.id === lvl.id && mode === GameMode.PLAY && styles.levelButtonActive,
               ]}
-              onPress={() => {
-                if (idx <= currentLevelIndex) {
-                  setCurrentLevelIndex(idx);
-                  setLevel(INITIAL_LEVELS[idx]);
-                  setPlayerPos(INITIAL_LEVELS[idx].startPos);
-                  setCommands([]);
-                  setGameStatus(GameStatus.PLANNING);
-                }
-              }}
-              disabled={idx > currentLevelIndex}
+              onPress={() => selectLevel(lvl)}
             >
               <Text
                 style={[
                   styles.levelButtonText,
-                  currentLevelIndex === idx && styles.levelButtonTextActive,
+                  level.id === lvl.id && mode === GameMode.PLAY && styles.levelButtonTextActive,
                 ]}
               >
-                {idx + 1}
+                {String(lvl.name).split(':')[0]}
               </Text>
             </TouchableOpacity>
           ))}
+          <TouchableOpacity
+            style={[styles.editorButton, mode === GameMode.EDIT && styles.editorButtonActive]}
+            onPress={initEditor}
+          >
+            <Text style={[styles.editorButtonText, mode === GameMode.EDIT && { color: '#FFF' }]}>✏️ Çiz</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Story */}
+        {/* Story Card */}
         <View style={styles.storyCard}>
-          <Text style={styles.storyTitle}>👩‍🏫 {level.name}</Text>
-          <Text style={styles.storyText}>{level.story}</Text>
+          <Text style={styles.storyEmoji}>👩‍🏫</Text>
+          <View style={styles.storyContent}>
+            <Text style={styles.storyTitle}>
+              {mode === GameMode.EDIT ? 'Harita Çizme Zamanı!' : level.name}
+            </Text>
+            <Text style={styles.storyText}>
+              {mode === GameMode.EDIT
+                ? 'Kendi odanı veya bahçeni çizmek ister misin? Eşyaları yerleştir ve sonra "Oyna" düğmesine bas.'
+                : level.story}
+            </Text>
+          </View>
         </View>
+
+        {/* Progress Steps (Play Mode Only) */}
+        {mode === GameMode.PLAY && (
+          <View style={styles.progressSteps}>
+            <View style={[styles.progressStep, gameStatus === GameStatus.PLANNING && styles.progressStepActive]}>
+              <Text style={styles.progressStepIcon}>🤔</Text>
+              <Text style={styles.progressStepText}>Düşün</Text>
+            </View>
+            <View style={styles.progressLine} />
+            <View style={[styles.progressStep, commands.length > 0 && styles.progressStepActive]}>
+              <Text style={styles.progressStepIcon}>👇</Text>
+              <Text style={styles.progressStepText}>Sırala</Text>
+            </View>
+            <View style={styles.progressLine} />
+            <View style={[styles.progressStep, gameStatus === GameStatus.RUNNING && styles.progressStepActive]}>
+              <Text style={styles.progressStepIcon}>🏃</Text>
+              <Text style={styles.progressStepText}>Git</Text>
+            </View>
+          </View>
+        )}
 
         {/* Game Grid */}
         <View
           style={[
             styles.gridContainer,
-            { width: GRID_CONTAINER_SIZE, height: GRID_CONTAINER_SIZE },
+            { width: GRID_CONTAINER_SIZE, height: GRID_CONTAINER_SIZE, backgroundColor: getThemeBackground(level.theme || 'room') },
           ]}
         >
-          <View
-            style={[
-              styles.grid,
-              {
-                gap: CELL_GAP,
-                width: GRID_CONTAINER_SIZE,
-              },
-            ]}
-          >
-            {renderGrid()}
-          </View>
+          <View style={[styles.grid, { gap: CELL_GAP }]}>{renderGrid()}</View>
 
-          {/* Player Overlay */}
-          <Animated.View
-            style={[
-              styles.player,
-              {
-                width: CELL_SIZE,
-                height: CELL_SIZE,
-                transform: [
-                  { translateX: playerAnimX },
-                  { translateY: playerAnimY },
-                  { rotate: getPlayerRotation() },
-                ],
-              },
-            ]}
-          >
-            <Text style={styles.playerIcon}>🐰</Text>
-          </Animated.View>
+          {/* Player Overlay (Play Mode Only) */}
+          {mode === GameMode.PLAY && (
+            <Animated.View
+              style={[
+                styles.player,
+                {
+                  width: CELL_SIZE,
+                  height: CELL_SIZE,
+                  transform: [
+                    { translateX: playerAnimX },
+                    { translateY: playerAnimY },
+                    { rotate: getPlayerRotation() },
+                  ],
+                },
+              ]}
+            >
+              <Text style={styles.playerIcon}>🐰</Text>
+            </Animated.View>
+          )}
         </View>
 
         {/* Status Messages */}
-        {gameStatus === GameStatus.WON && (
+        {mode === GameMode.PLAY && gameStatus === GameStatus.WON && (
           <View style={styles.statusWon}>
             <Text style={styles.statusText}>🎉 Harika! Hedefe ulaştın!</Text>
-            {currentLevelIndex < INITIAL_LEVELS.length - 1 && (
-              <TouchableOpacity style={styles.nextLevelButton} onPress={handleNextLevel}>
-                <Text style={styles.nextLevelButtonText}>Sonraki Bölüm →</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity style={styles.finishButton} onPress={handleFinishGame}>
+              <Text style={styles.finishButtonText}>Oyunu Bitir ⭐</Text>
+            </TouchableOpacity>
           </View>
         )}
-        {gameStatus === GameStatus.LOST && (
+        {mode === GameMode.PLAY && gameStatus === GameStatus.LOST && (
           <View style={styles.statusLost}>
-            <Text style={styles.statusText}>😕 Engele çarptık! Tekrar dene.</Text>
+            <Text style={styles.statusText}>😕 Ah, engele çarptık. Tekrar dene!</Text>
           </View>
         )}
 
-        {/* Command Queue */}
-        <View style={styles.commandQueue}>
-          <View style={styles.commandQueueHeader}>
-            <Text style={styles.commandQueueTitle}>📝 Komutlar ({commands.length})</Text>
-            {commands.length > 0 && gameStatus !== GameStatus.RUNNING && (
-              <View style={styles.commandQueueActions}>
-                <TouchableOpacity style={styles.clearLastButton} onPress={removeLastCommand}>
-                  <Text style={styles.clearLastButtonText}>Son ⌫</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.clearAllButton} onPress={clearCommands}>
-                  <Text style={styles.clearAllButtonText}>🗑️ Temizle</Text>
-                </TouchableOpacity>
+        {/* Editor Controls or Play Controls */}
+        {mode === GameMode.EDIT ? (
+          renderEditorTools()
+        ) : (
+          <>
+            {/* Command Queue */}
+            <View style={styles.commandQueue}>
+              <View style={styles.commandQueueHeader}>
+                <Text style={styles.commandQueueTitle}>📝 Yapılacaklar ({commands.length})</Text>
+                {commands.length > 0 && gameStatus !== GameStatus.RUNNING && (
+                  <View style={styles.commandQueueActions}>
+                    <TouchableOpacity style={styles.clearLastButton} onPress={removeLastCommand}>
+                      <Text style={styles.clearLastButtonText}>Son ⌫</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.clearAllButton} onPress={clearCommands}>
+                      <Text style={styles.clearAllButtonText}>🗑️</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.commandList}>
-            {commands.length === 0 ? (
-              <Text style={styles.emptyCommandText}>Henüz komut eklemedin. Aşağıdaki oklara bas!</Text>
-            ) : (
-              commands.map((cmd: Direction, idx: number) => (
-                <View
-                  key={idx}
-                  style={[
-                    styles.commandItem,
-                    { backgroundColor: getDirectionColor(cmd) },
-                    currentStep === idx && styles.commandItemActive,
-                    currentStep > idx && styles.commandItemDone,
-                  ]}
-                >
-                  <Text style={styles.commandItemText}>{getDirectionIcon(cmd)}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.commandList}>
+                {commands.length === 0 ? (
+                  <Text style={styles.emptyCommandText}>Henüz hareket eklemedin. Aşağıdaki oklara bas!</Text>
+                ) : (
+                  commands.map((cmd: Direction, idx: number) => (
+                    <View
+                      key={idx}
+                      style={[
+                        styles.commandItem,
+                        { backgroundColor: getDirectionColor(cmd) },
+                        currentStep === idx && styles.commandItemActive,
+                        currentStep > idx && styles.commandItemDone,
+                      ]}
+                    >
+                      <Text style={styles.commandItemText}>{getDirectionIcon(cmd)}</Text>
+                    </View>
+                  ))
+                )}
+              </ScrollView>
+            </View>
+
+            {/* Direction Controls */}
+            <View style={styles.controls}>
+              <Text style={styles.controlsTitle}>🎮 Yön Seç</Text>
+              <View style={styles.directionPad}>
+                <View style={styles.directionRow}>
+                  <View style={styles.directionSpacer} />
+                  <TouchableOpacity
+                    style={[styles.directionButton, { backgroundColor: '#FFB74D' }]}
+                    onPress={() => addCommand(Direction.UP)}
+                    disabled={gameStatus === GameStatus.RUNNING}
+                  >
+                    <Text style={styles.directionButtonText}>⬆️</Text>
+                  </TouchableOpacity>
+                  <View style={styles.directionSpacer} />
                 </View>
-              ))
-            )}
-          </ScrollView>
-        </View>
-
-        {/* Direction Controls */}
-        <View style={styles.controls}>
-          <Text style={styles.controlsTitle}>🎮 Yön Seç</Text>
-          <View style={styles.directionPad}>
-            <View style={styles.directionRow}>
-              <View style={styles.directionSpacer} />
-              <TouchableOpacity
-                style={[styles.directionButton, { backgroundColor: '#FFB74D' }]}
-                onPress={() => addCommand(Direction.UP)}
-                disabled={gameStatus === GameStatus.RUNNING}
-              >
-                <Text style={styles.directionButtonText}>⬆️</Text>
-              </TouchableOpacity>
-              <View style={styles.directionSpacer} />
+                <View style={styles.directionRow}>
+                  <TouchableOpacity
+                    style={[styles.directionButton, { backgroundColor: '#E91E63' }]}
+                    onPress={() => addCommand(Direction.LEFT)}
+                    disabled={gameStatus === GameStatus.RUNNING}
+                  >
+                    <Text style={styles.directionButtonText}>⬅️</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.directionButton, { backgroundColor: '#9C27B0' }]}
+                    onPress={() => addCommand(Direction.DOWN)}
+                    disabled={gameStatus === GameStatus.RUNNING}
+                  >
+                    <Text style={styles.directionButtonText}>⬇️</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.directionButton, { backgroundColor: '#4CAF50' }]}
+                    onPress={() => addCommand(Direction.RIGHT)}
+                    disabled={gameStatus === GameStatus.RUNNING}
+                  >
+                    <Text style={styles.directionButtonText}>➡️</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-            <View style={styles.directionRow}>
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
               <TouchableOpacity
-                style={[styles.directionButton, { backgroundColor: '#E91E63' }]}
-                onPress={() => addCommand(Direction.LEFT)}
-                disabled={gameStatus === GameStatus.RUNNING}
+                style={styles.resetButton}
+                onPress={() => {
+                  setCommands([]);
+                  resetLevel();
+                }}
               >
-                <Text style={styles.directionButtonText}>⬅️</Text>
+                <Text style={styles.resetButtonText}>🔄 Başa Dön</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.directionButton, { backgroundColor: '#9C27B0' }]}
-                onPress={() => addCommand(Direction.DOWN)}
-                disabled={gameStatus === GameStatus.RUNNING}
+                style={[
+                  styles.runButton,
+                  (gameStatus === GameStatus.RUNNING || commands.length === 0) && styles.runButtonDisabled,
+                ]}
+                onPress={handleRun}
+                disabled={gameStatus === GameStatus.RUNNING || commands.length === 0}
               >
-                <Text style={styles.directionButtonText}>⬇️</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.directionButton, { backgroundColor: '#4CAF50' }]}
-                onPress={() => addCommand(Direction.RIGHT)}
-                disabled={gameStatus === GameStatus.RUNNING}
-              >
-                <Text style={styles.directionButtonText}>➡️</Text>
+                <Text style={styles.runButtonText}>
+                  {gameStatus === GameStatus.RUNNING ? '🏃 Gidiyor...' : '▶️ BAŞLA!'}
+                </Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={styles.resetButton}
-            onPress={() => {
-              setCommands([]);
-              resetLevel();
-            }}
-          >
-            <Text style={styles.resetButtonText}>🔄 Başa Dön</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.runButton,
-              (gameStatus === GameStatus.RUNNING || commands.length === 0) &&
-                styles.runButtonDisabled,
-            ]}
-            onPress={handleRun}
-            disabled={gameStatus === GameStatus.RUNNING || commands.length === 0}
-          >
-            <Text style={styles.runButtonText}>
-              {gameStatus === GameStatus.RUNNING ? '🏃 Gidiyor...' : '▶️ BAŞLA!'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+          </>
+        )}
       </ScrollView>
 
       <ConfettiCannon
@@ -665,10 +834,11 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: KodlamaOyunuProps) {
   );
 }
 
+// ============== STYLES ==============
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
   },
   header: {
@@ -676,7 +846,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 15,
+    marginBottom: 12,
     marginTop: 30,
   },
   headerCenter: {
@@ -684,32 +854,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#1565C0',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#546E7A',
     marginTop: 2,
   },
   exitButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: 'rgba(244, 67, 54, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   exitButtonText: {
     color: 'white',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   soundButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: 'rgba(33, 150, 243, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -718,20 +888,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(158, 158, 158, 0.9)',
   },
   soundButtonText: {
-    fontSize: 20,
+    fontSize: 18,
   },
   levelSelector: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 15,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 12,
   },
   levelButton: {
-    width: 40,
-    height: 40,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.9)',
     borderWidth: 2,
     borderColor: '#E0E0E0',
   },
@@ -739,46 +909,100 @@ const styles = StyleSheet.create({
     backgroundColor: '#2196F3',
     borderColor: '#1565C0',
   },
-  levelButtonLocked: {
-    opacity: 0.5,
-  },
   levelButtonText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#2196F3',
   },
   levelButtonTextActive: {
     color: 'white',
   },
+  editorButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#FFF8E1',
+    borderWidth: 2,
+    borderColor: '#FFB74D',
+  },
+  editorButtonActive: {
+    backgroundColor: '#FFB74D',
+    borderColor: '#F57C00',
+  },
+  editorButtonText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#F57C00',
+  },
   storyCard: {
     backgroundColor: 'white',
-    padding: 15,
+    padding: 14,
     borderRadius: 20,
-    marginBottom: 15,
+    marginBottom: 12,
     width: '100%',
     maxWidth: 400,
+    flexDirection: 'row',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
+  storyEmoji: {
+    fontSize: 36,
+    marginRight: 12,
+  },
+  storyContent: {
+    flex: 1,
+  },
   storyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#1565C0',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   storyText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#546E7A',
-    lineHeight: 22,
+    lineHeight: 20,
+  },
+  progressSteps: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+  progressStep: {
+    alignItems: 'center',
+    opacity: 0.4,
+  },
+  progressStepActive: {
+    opacity: 1,
+    transform: [{ scale: 1.1 }],
+  },
+  progressStepIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  progressStepText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#666',
+    textTransform: 'uppercase',
+  },
+  progressLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: '#E0E0E0',
+    marginHorizontal: 8,
+    borderStyle: 'dashed',
   },
   gridContainer: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 20,
-    padding: 15,
-    marginBottom: 15,
+    padding: 10,
+    marginBottom: 12,
     position: 'relative',
   },
   grid: {
@@ -786,7 +1010,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   cell: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FAFAFA',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -795,6 +1019,7 @@ const styles = StyleSheet.create({
   },
   obstacleCell: {
     backgroundColor: '#607D8B',
+    borderColor: '#455A64',
   },
   goalCell: {
     backgroundColor: '#FFF8E1',
@@ -806,27 +1031,25 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   cellIcon: {
-    fontSize: 28,
+    fontSize: 26,
   },
-  bounceIcon: {
-    // Animation would require Animated API
-  },
+  bounceIcon: {},
   player: {
     position: 'absolute',
-    top: 15,
-    left: 15,
+    top: 10,
+    left: 10,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 10,
   },
   playerIcon: {
-    fontSize: 32,
+    fontSize: 30,
   },
   statusWon: {
     backgroundColor: '#C8E6C9',
-    padding: 15,
+    padding: 14,
     borderRadius: 15,
-    marginBottom: 15,
+    marginBottom: 12,
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
@@ -835,9 +1058,9 @@ const styles = StyleSheet.create({
   },
   statusLost: {
     backgroundColor: '#FFCDD2',
-    padding: 15,
+    padding: 14,
     borderRadius: 15,
-    marginBottom: 15,
+    marginBottom: 12,
     width: '100%',
     maxWidth: 400,
     alignItems: 'center',
@@ -849,39 +1072,117 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  nextLevelButton: {
+  finishButton: {
     backgroundColor: '#4CAF50',
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
     marginTop: 10,
   },
-  nextLevelButtonText: {
+  finishButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },
+  editorContainer: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 16,
+    width: '100%',
+    maxWidth: 400,
+    marginBottom: 20,
+    borderWidth: 3,
+    borderColor: '#E1BEE7',
+    borderStyle: 'dashed',
+  },
+  editorTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#7B1FA2',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  editorSubtitle: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  toolsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 12,
+  },
+  toolButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.7,
+  },
+  toolButtonActive: {
+    opacity: 1,
+    borderWidth: 3,
+    borderColor: '#7B1FA2',
+    transform: [{ scale: 1.1 }],
+  },
+  toolIcon: {
+    fontSize: 28,
+    marginBottom: 4,
+  },
+  toolLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: 'white',
+    textTransform: 'uppercase',
+  },
+  editorActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  clearEditorButton: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#FFCDD2',
+    alignItems: 'center',
+  },
+  clearEditorButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#C62828',
+  },
+  playEditorButton: {
+    flex: 2,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#7B1FA2',
+    alignItems: 'center',
+  },
+  playEditorButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+  },
   commandQueue: {
     backgroundColor: 'white',
     borderRadius: 20,
-    padding: 15,
-    marginBottom: 15,
+    padding: 12,
+    marginBottom: 12,
     width: '100%',
     maxWidth: 400,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 3,
+    borderColor: '#E0E0E0',
   },
   commandQueueHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   commandQueueTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -896,7 +1197,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   clearLastButtonText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#555',
   },
@@ -907,21 +1208,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   clearAllButtonText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#C62828',
   },
   commandList: {
-    minHeight: 60,
+    minHeight: 55,
   },
   emptyCommandText: {
     color: '#9E9E9E',
     fontStyle: 'italic',
-    paddingVertical: 15,
+    paddingVertical: 12,
+    fontSize: 13,
   },
   commandItem: {
-    width: 50,
-    height: 50,
+    width: 48,
+    height: 48,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -936,22 +1238,22 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   commandItemText: {
-    fontSize: 24,
+    fontSize: 22,
   },
   controls: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     borderRadius: 20,
-    padding: 20,
-    marginBottom: 15,
+    padding: 16,
+    marginBottom: 12,
     alignItems: 'center',
     borderWidth: 3,
     borderColor: '#E3F2FD',
   },
   controlsTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#666',
-    marginBottom: 15,
+    marginBottom: 12,
     textTransform: 'uppercase',
   },
   directionPad: {
@@ -962,13 +1264,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   directionSpacer: {
-    width: 70,
-    height: 70,
+    width: 65,
+    height: 65,
   },
   directionButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 18,
+    width: 65,
+    height: 65,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -978,31 +1280,31 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   directionButtonText: {
-    fontSize: 32,
+    fontSize: 28,
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 12,
     marginBottom: 30,
   },
   resetButton: {
     backgroundColor: '#ECEFF1',
-    paddingHorizontal: 25,
-    paddingVertical: 18,
-    borderRadius: 18,
+    paddingHorizontal: 22,
+    paddingVertical: 16,
+    borderRadius: 16,
     borderBottomWidth: 4,
     borderBottomColor: '#B0BEC5',
   },
   resetButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
     color: '#546E7A',
   },
   runButton: {
     backgroundColor: '#4CAF50',
-    paddingHorizontal: 35,
-    paddingVertical: 18,
-    borderRadius: 18,
+    paddingHorizontal: 30,
+    paddingVertical: 16,
+    borderRadius: 16,
     borderBottomWidth: 4,
     borderBottomColor: '#2E7D32',
     shadowColor: '#4CAF50',
@@ -1017,9 +1319,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0,
   },
   runButtonText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
   },
 });
-
