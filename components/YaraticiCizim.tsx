@@ -1,5 +1,6 @@
 ﻿import React, { useMemo, useRef, useState } from 'react';
 import { Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
 import DynamicBackground from './DynamicBackground';
 
 type Point = { x: number; y: number };
@@ -12,7 +13,7 @@ interface Props {
     finalHamle: number,
     finalHata: number,
     algilananKelime?: string,
-    extraData?: { cizimVerisi?: string },
+    extraData?: { cizimVerisi?: string; cizimResimBase64?: string; cizimResimFormat?: 'png' | 'jpeg' },
   ) => void;
   onExit?: () => void;
 }
@@ -27,6 +28,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
   const liveStrokeRef = useRef<Stroke | null>(null);
+  const canvasRef = useRef<View>(null);
   const [selectedColor, setSelectedColor] = useState(DEFAULT_COLORS[0]);
   const [brushSize, setBrushSize] = useState(8);
   const [saved, setSaved] = useState(false);
@@ -92,8 +94,16 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           const { locationX, locationY } = e.nativeEvent;
           addPoint(locationX, locationY);
         },
-        onPanResponderRelease: finishStroke,
-        onPanResponderTerminate: finishStroke,
+        onPanResponderRelease: e => {
+        const { locationX, locationY } = e.nativeEvent;
+        addPoint(locationX, locationY);
+        finishStroke();
+      },
+      onPanResponderTerminate: e => {
+        const { locationX, locationY } = e.nativeEvent;
+        addPoint(locationX, locationY);
+        finishStroke();
+      },
       }),
     [selectedColor, brushSize],
   );
@@ -106,13 +116,29 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     startTimeRef.current = Date.now();
   };
 
-  const saveDrawing = () => {
-    const bundle = liveStroke ? [...strokes, liveStroke] : strokes;
+  const saveDrawing = async () => {
+    const bundle = liveStrokeRef.current ? [...strokes, liveStrokeRef.current] : strokes;
     if (bundle.length === 0) return;
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
     const serialized = JSON.stringify({ strokes: bundle, size: canvasSize, savedAt: Date.now() });
     const totalPoints = bundle.reduce((sum, s) => sum + s.points.length, 0);
-    onGameEnd('yaratici-cizim', duration, totalPoints, 0, undefined, { cizimVerisi: serialized });
+    let cizimResimBase64: string | undefined;
+    try {
+      if (canvasRef.current) {
+        cizimResimBase64 = await captureRef(canvasRef, {
+          format: 'png',
+          quality: 0.9,
+          result: 'base64',
+        });
+      }
+    } catch (error) {
+      console.warn('Cizim resmi olusturulamadi:', error);
+    }
+    onGameEnd('yaratici-cizim', duration, totalPoints, 0, undefined, {
+      cizimVerisi: serialized,
+      cizimResimBase64,
+      cizimResimFormat: 'png',
+    });
     setSaved(true);
   };
 
@@ -154,7 +180,11 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           onLayout={e => setCanvasSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
         >
           <View style={styles.paperShadow} />
-          <View style={[styles.canvas, { width: canvasSize.width, height: canvasSize.height }]} {...panResponder.panHandlers}>
+          <View
+            ref={canvasRef}
+            style={[styles.canvas, { width: canvasSize.width, height: canvasSize.height }]}
+            {...panResponder.panHandlers}
+          >
             {safeStrokes.map((s, i) => renderStrokeDots(s, i))}
           </View>
         </View>
@@ -238,6 +268,10 @@ const styles = StyleSheet.create({
   actionTxt: { fontWeight: '700', color: '#4e342e', fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'System' }) },
   savedState: { backgroundColor: '#4caf50', borderColor: '#2e7d32' },
 });
+
+
+
+
 
 
 

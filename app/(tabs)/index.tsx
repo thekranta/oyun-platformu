@@ -12,10 +12,22 @@ import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+const DRAWING_BUCKET = 'cizimler';
+
+const slugifyName = (name: string) => {
+  const normalized = name
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  const slug = normalized.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return slug || 'ogrenci';
+};
 
 export default function App() {
   const router = useRouter();
@@ -59,7 +71,7 @@ export default function App() {
     finalHamle: number,
     finalHata: number,
     algilananKelime?: string,
-    extraData?: { cizimVerisi?: string },
+    extraData?: { cizimVerisi?: string; cizimResimBase64?: string; cizimResimFormat?: 'png' | 'jpeg' },
   ) => {
     setAsama('sonuc');
     sessizceAnalizEtVeKaydet(oyunAdi, sure, finalHamle, finalHata, algilananKelime, extraData);
@@ -78,10 +90,56 @@ export default function App() {
     finalHamle: number,
     finalHata: number,
     algilananKelime?: string,
-    extraData?: { cizimVerisi?: string },
+    extraData?: { cizimVerisi?: string; cizimResimBase64?: string; cizimResimFormat?: 'png' | 'jpeg' },
   ) => {
     setYukleniyor(true);
     try {
+      const uploadDrawingImage = async () => {
+        if (!extraData?.cizimResimBase64 || !SUPABASE_URL || !SUPABASE_KEY) return null;
+        const format = extraData.cizimResimFormat || 'png';
+        const safeName = slugifyName(ad);
+        const fileName = `${safeName}-${yas}-${Date.now()}.${format}`;
+        const filePath = `${safeName}/${fileName}`;
+        const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${DRAWING_BUCKET}/${filePath}`;
+        const headers = {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': `image/${format}`,
+          'x-upsert': 'true',
+        };
+
+        if (Platform.OS === 'web') {
+          const blob = await fetch(`data:image/${format};base64,${extraData.cizimResimBase64}`).then(res => res.blob());
+          const response = await fetch(uploadUrl, { method: 'POST', headers, body: blob });
+          if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`Cizim yukleme hatasi: ${errText}`);
+          }
+        } else {
+          const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
+          await FileSystem.writeAsStringAsync(fileUri, extraData.cizimResimBase64, { encoding: FileSystem.EncodingType.Base64 });
+          const uploadResult = await FileSystem.uploadAsync(uploadUrl, fileUri, {
+            httpMethod: 'POST',
+            uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+            headers,
+          });
+          if (uploadResult.status < 200 || uploadResult.status >= 300) {
+            throw new Error(`Cizim yukleme hatasi: ${uploadResult.body || uploadResult.status}`);
+          }
+          await FileSystem.deleteAsync(fileUri, { idempotent: true });
+        }
+
+        const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/${DRAWING_BUCKET}/${filePath}`;
+        return { imageUrl, filePath, format };
+      };
+
+      let uploadResult: { imageUrl: string; filePath: string; format: string } | null = null;
+      try {
+        uploadResult = await uploadDrawingImage();
+      } catch (error) {
+        console.error('Cizim yukleme hatasi:', error);
+      }
+
       const kayitVerisi: Record<string, any> = {
         oyun_turu: oyunAdi,
         hamle_sayisi: finalHamle,
@@ -93,8 +151,24 @@ export default function App() {
         algilanan_kelime: algilananKelime || '',
       };
 
-      if (extraData?.cizimVerisi) {
-        kayitVerisi.cizim_verisi = extraData.cizimVerisi;
+      if (extraData?.cizimVerisi || uploadResult?.imageUrl) {
+        let cizimPayload: Record<string, any> | string = extraData?.cizimVerisi || '';
+        try {
+          if (extraData?.cizimVerisi) {
+            cizimPayload = JSON.parse(extraData.cizimVerisi);
+          }
+        } catch {
+          cizimPayload = { raw: extraData?.cizimVerisi || '' };
+        }
+        if (uploadResult?.imageUrl) {
+          if (typeof cizimPayload !== 'object' || cizimPayload === null) {
+            cizimPayload = { raw: extraData?.cizimVerisi || '' };
+          }
+          cizimPayload.imageUrl = uploadResult.imageUrl;
+          cizimPayload.imagePath = uploadResult.filePath;
+          cizimPayload.imageFormat = uploadResult.format;
+        }
+        kayitVerisi.cizim_verisi = JSON.stringify(cizimPayload);
       }
 
       let supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {

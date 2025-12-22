@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
 import { useSound } from '../components/SoundContext';
 import StudentStatsModal from '../components/StudentStatsModal';
@@ -20,6 +20,7 @@ interface Score {
     yapay_zeka_yorumu?: string;
     sure?: number;
     email?: string;
+    cizim_verisi?: string;
 }
 
 interface StudentGroup {
@@ -28,6 +29,16 @@ interface StudentGroup {
     age: number;
     scores: Score[];
 }
+
+type DrawingPoint = { x: number; y: number };
+type DrawingStroke = { color: string; size: number; points: DrawingPoint[] };
+type DrawingPayload = {
+    strokes?: DrawingStroke[];
+    size?: { width: number; height: number };
+    imageUrl?: string;
+    imagePath?: string;
+    imageFormat?: string;
+};
 
 export default function AdminPanel() {
     const router = useRouter();
@@ -135,6 +146,10 @@ export default function AdminPanel() {
     };
 
     const analyzeGame = async (score: Score) => {
+        if (score.oyun_turu === 'yaratici-cizim') {
+            alert('Yaratıcı çizim için yapay zeka yorumu oluşturulmaz.');
+            return;
+        }
         if (!GEMINI_API_KEY) {
             alert('Gemini API anahtarı bulunamadı. Lütfen .env dosyasını kontrol edin.');
             return;
@@ -167,7 +182,7 @@ export default function AdminPanel() {
                 else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
                 else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
                 else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
-                else if (score.oyun_turu === 'bunu-soyle') oyunAdiTR = 'Bunu Söyle (Telaffuz)';
+                else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
                 else oyunAdiTR = score.oyun_turu;
 
                 prompt = `
@@ -257,7 +272,7 @@ export default function AdminPanel() {
             else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
             else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
             else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
-            else if (score.oyun_turu === 'bunu-soyle') oyunAdiTR = 'Bunu Söyle (Telaffuz)';
+            else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
             else oyunAdiTR = score.oyun_turu;
 
             const response = await fetch('/api/send-email', {
@@ -290,6 +305,69 @@ export default function AdminPanel() {
         } finally {
             setProcessingId(null);
         }
+    };
+
+    const DrawingPreview = ({ data }: { data: string }) => {
+        const parsed = useMemo<DrawingPayload | null>(() => {
+            try {
+                const obj = JSON.parse(data);
+                if (obj?.strokes || obj?.imageUrl) return obj as DrawingPayload;
+                return null;
+            } catch {
+                return null;
+            }
+        }, [data]);
+
+        if (!parsed) {
+            return <Text style={styles.drawingError}>Çizim yüklenemedi</Text>;
+        }
+
+        if (parsed.imageUrl) {
+            return (
+                <View style={styles.drawingBox}>
+                    <Image source={{ uri: parsed.imageUrl }} style={styles.drawingImage} resizeMode="contain" />
+                </View>
+            );
+        }
+
+        if (!parsed.strokes) {
+            return <Text style={styles.drawingError}>Çizim yüklenemedi</Text>;
+        }
+
+        const baseW = parsed.size?.width || 320;
+        const baseH = parsed.size?.height || 220;
+        const scale = Math.min(1, 160 / baseW);
+        const viewW = baseW * scale;
+        const viewH = baseH * scale;
+
+        return (
+            <View style={[styles.drawingBox, { width: viewW, height: viewH }]}>
+                {parsed.strokes.flatMap((stroke, si) =>
+                    (stroke.points || []).map((p, pi) => {
+                        const dot = {
+                            x: (p?.x || 0) * scale,
+                            y: (p?.y || 0) * scale,
+                            size: (stroke.size || 4) * scale,
+                        };
+                        return (
+                            <View
+                                key={`${si}-${pi}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: dot.x - dot.size / 2,
+                                    top: dot.y - dot.size / 2,
+                                    width: dot.size,
+                                    height: dot.size,
+                                    borderRadius: dot.size / 2,
+                                    backgroundColor: stroke.color || '#000',
+                                    opacity: 0.9,
+                                }}
+                            />
+                        );
+                    })
+                )}
+            </View>
+        );
     };
 
     const StudentCard = ({ student }: { student: StudentGroup }) => {
@@ -339,6 +417,7 @@ export default function AdminPanel() {
     const GameRow = ({ score, isLast }: { score: Score, isLast: boolean }) => {
         const showComment = visibleCommentIds.has(score.id);
         const isProcessing = processingId === score.id;
+        const isDrawing = score.oyun_turu === 'yaratici-cizim';
 
         return (
             <View style={[styles.gameRow, !isLast && styles.gameRowBorder]}>
@@ -362,45 +441,55 @@ export default function AdminPanel() {
                     </View>
                 </View>
 
-                {/* Action Buttons */}
-                <View style={styles.actionRow}>
-                    {(!score.yapay_zeka_yorumu || score.yapay_zeka_yorumu.includes('-Cozum-')) ? (
-                        <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <TouchableOpacity
-                                style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
-                                onPress={() => analyzeGame(score)}
-                                disabled={isProcessing}
-                            >
-                                {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>🤖 Analiz Et</Text>}
-                            </TouchableOpacity>
-                            {score.email && (
-                                <TouchableOpacity
-                                    style={[styles.actionButton, { backgroundColor: '#4CAF50', paddingVertical: 4, paddingHorizontal: 8 }]}
-                                    onPress={() => sendEmail(score)}
-                                    disabled={isProcessing}
-                                >
-                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
-                                </TouchableOpacity>
-                            )}
-                        </View>
-                    ) : (
-                        <View style={{ flexDirection: 'row', gap: 10 }}>
-                            <TouchableOpacity onPress={() => toggleCommentVisibility(score.id)} style={styles.aiToggle}>
-                                <Text style={styles.aiToggleText}>🤖 Yorumu {showComment ? 'Gizle' : 'Göster'}</Text>
-                            </TouchableOpacity>
+                {score.cizim_verisi && (
+                    <View style={styles.drawingPreviewWrap}>
+                        <Text style={styles.drawingLabel}>Çizim</Text>
+                        <DrawingPreview data={score.cizim_verisi} />
+                    </View>
+                )}
 
-                            {score.email && (
+                {isDrawing ? (
+                    <Text style={styles.infoNote}>Yaratıcı çizimde yapay zeka yorumu oluşturulmaz.</Text>
+                ) : (
+                    <View style={styles.actionRow}>
+                        {(!score.yapay_zeka_yorumu || score.yapay_zeka_yorumu.includes('-Cozum-')) ? (
+                            <View style={{ flexDirection: 'row', gap: 10 }}>
                                 <TouchableOpacity
-                                    style={[styles.actionButton, { backgroundColor: '#4CAF50', paddingVertical: 4, paddingHorizontal: 8 }]}
-                                    onPress={() => sendEmail(score)}
+                                    style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
+                                    onPress={() => analyzeGame(score)}
                                     disabled={isProcessing}
                                 >
-                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
+                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>🤖 Analiz Et</Text>}
                                 </TouchableOpacity>
-                            )}
-                        </View>
-                    )}
-                </View>
+                                {score.email && (
+                                    <TouchableOpacity
+                                        style={[styles.actionButton, { backgroundColor: '#4CAF50', paddingVertical: 4, paddingHorizontal: 8 }]}
+                                        onPress={() => sendEmail(score)}
+                                        disabled={isProcessing}
+                                    >
+                                        {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        ) : (
+                            <View style={{ flexDirection: 'row', gap: 10 }}>
+                                <TouchableOpacity onPress={() => toggleCommentVisibility(score.id)} style={styles.aiToggle}>
+                                    <Text style={styles.aiToggleText}>🤖 Yorumu {showComment ? 'Gizle' : 'Göster'}</Text>
+                                </TouchableOpacity>
+
+                                {score.email && (
+                                    <TouchableOpacity
+                                        style={[styles.actionButton, { backgroundColor: '#4CAF50', paddingVertical: 4, paddingHorizontal: 8 }]}
+                                        onPress={() => sendEmail(score)}
+                                        disabled={isProcessing}
+                                    >
+                                        {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        )}
+                    </View>
+                )}
 
                 {showComment && score.yapay_zeka_yorumu && (
                     <View style={styles.aiCommentBox}>
@@ -528,6 +617,12 @@ const styles = StyleSheet.create({
     aiToggleText: { fontSize: 12, color: '#2196F3', fontWeight: 'bold' },
     aiCommentBox: { marginTop: 10, backgroundColor: '#E8F5E9', padding: 12, borderRadius: 10 },
     aiCommentText: { fontSize: 13, color: '#2E7D32', fontStyle: 'italic', lineHeight: 20 },
+    infoNote: { marginTop: 6, color: '#666', fontSize: 12 },
+    drawingPreviewWrap: { marginTop: 10, gap: 6 },
+    drawingLabel: { fontSize: 12, color: '#555', fontWeight: '600' },
+    drawingBox: { borderRadius: 12, backgroundColor: '#fdfaf3', borderWidth: 1, borderColor: '#e0d6c8', overflow: 'hidden' },
+    drawingImage: { width: '100%', height: 160 },
+    drawingError: { fontSize: 12, color: '#d32f2f' },
 
     // Login Styles
     loginBox: { width: '100%', maxWidth: 350, backgroundColor: 'white', padding: 30, borderRadius: 25, elevation: 5 },

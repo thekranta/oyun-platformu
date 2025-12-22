@@ -113,7 +113,7 @@ export default function StudentStatsModal({ visible, onClose, studentName, stude
                     {/* Game Types Breakdown */}
                     <View style={styles.breakdownContainer}>
                         <Text style={styles.breakdownTitle}>🎮 Oyun Türleri</Text>
-                        {['hafiza', 'siralama', 'gruplama', 'diziyi-tamamla', 'bunu-soyle', 'ceviz_macera'].map(type => {
+                        {['hafiza', 'siralama', 'gruplama', 'diziyi-tamamla', 'bunu-soyle', 'ceviz_macera', 'yaratici-cizim'].map(type => {
                             const count = scores.filter(s => s.oyun_turu === type).length;
                             const typeNames: { [key: string]: string } = {
                                 'hafiza': 'Çiftini Bul!',
@@ -121,7 +121,8 @@ export default function StudentStatsModal({ visible, onClose, studentName, stude
                                 'gruplama': 'Gruplama',
                                 'diziyi-tamamla': 'Diziyi Tamamla',
                                 'bunu-soyle': 'Bunu Söyle!',
-                                'ceviz_macera': 'Ceviz Macerası'
+                                'ceviz_macera': 'Ceviz Macerası',
+                                'yaratici-cizim': 'Hayal Defteri'
                             };
                             if (count === 0) return null;
                             return (
