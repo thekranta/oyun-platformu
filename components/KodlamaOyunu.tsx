@@ -97,14 +97,15 @@ const INITIAL_LEVELS: LevelConfig[] = [
   },
 ];
 
-// ============== AUDIO - Google Cloud WaveNet TTS ==============
-// Doğal ve sıcak Türkçe ses - Çocuklara uygun
+// ============== AUDIO - Gemini 2.5 Flash TTS ==============
+// Doğal ve sıcak ses - Çocuklara uygun
+// Mevcut Gemini API key ile çalışır
 
-// Ses önbelleği - aynı metinleri tekrar indirme
+// Ses önbelleği
 const audioCache: Map<string, string> = new Map();
 let currentAudio: HTMLAudioElement | null = null;
 
-const speakWaveNet = async (text: string, isShort = false) => {
+const speakGemini = async (text: string) => {
   if (Platform.OS !== 'web') return;
 
   // Mevcut sesi durdur
@@ -114,36 +115,35 @@ const speakWaveNet = async (text: string, isShort = false) => {
   }
 
   // Önbellekte var mı kontrol et
-  const cacheKey = `${text}_${isShort}`;
+  const cacheKey = text;
   let audioDataUrl = audioCache.get(cacheKey);
 
   if (!audioDataUrl) {
     try {
-      const response = await fetch('/api/text-to-speech', {
+      const response = await fetch('/api/gemini-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text,
-          voice: 'tr-TR-Wavenet-D', // Kadın sesi - en sıcak
-          speakingRate: isShort ? 1.1 : 0.95, // Kısa komutlar için biraz hızlı
-          pitch: isShort ? 4.0 : 2.0, // Pozitif = daha tiz/çocuksu
+          voiceName: 'Kore', // Kore: yumuşak kadın sesi, Puck: enerjik
         }),
       });
 
       if (!response.ok) {
-        console.warn('WaveNet API error, falling back to Web Speech');
-        fallbackToWebSpeech(text, isShort);
+        console.warn('Gemini TTS error, falling back to Web Speech');
+        fallbackToWebSpeech(text);
         return;
       }
 
       const data = await response.json();
-      audioDataUrl = `data:audio/mp3;base64,${data.audioContent}`;
+      const mimeType = data.mimeType || 'audio/mp3';
+      audioDataUrl = `data:${mimeType};base64,${data.audioContent}`;
       
       // Önbelleğe kaydet
       audioCache.set(cacheKey, audioDataUrl);
     } catch (error) {
-      console.warn('WaveNet error, falling back to Web Speech:', error);
-      fallbackToWebSpeech(text, isShort);
+      console.warn('Gemini TTS error, falling back to Web Speech:', error);
+      fallbackToWebSpeech(text);
       return;
     }
   }
@@ -159,20 +159,20 @@ const speakWaveNet = async (text: string, isShort = false) => {
 };
 
 // Yedek olarak Web Speech API
-const fallbackToWebSpeech = (text: string, isShort = false) => {
+const fallbackToWebSpeech = (text: string) => {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'tr-TR';
-    utterance.pitch = isShort ? 1.5 : 1.3;
-    utterance.rate = isShort ? 1.1 : 0.9;
+    utterance.pitch = 1.3;
+    utterance.rate = 0.9;
     window.speechSynthesis.speak(utterance);
   }
 };
 
 // Ana konuşma fonksiyonu
-const speakTeacher = (text: string, isShort = false) => {
-  speakWaveNet(text, isShort);
+const speakTeacher = (text: string, _isShort = false) => {
+  speakGemini(text);
 };
 
 const stopSpeech = () => {
