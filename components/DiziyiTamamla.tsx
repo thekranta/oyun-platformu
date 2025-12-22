@@ -5,7 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSound } from './SoundContext';
 
 interface DiziyiTamamlaProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
     onLogout: () => void;
 }
 

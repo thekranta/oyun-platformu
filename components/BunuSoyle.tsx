@@ -17,7 +17,7 @@ const STAGES = [
 ];
 
 interface BunuSoyleProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime: string) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
     onExit: () => void;
 }
 

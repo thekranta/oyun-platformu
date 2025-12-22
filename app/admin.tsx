@@ -1,6 +1,6 @@
-import { Ionicons } from '@expo/vector-icons';
+﻿import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
 import { useSound } from '../components/SoundContext';
@@ -20,6 +20,7 @@ interface Score {
     yapay_zeka_yorumu?: string;
     sure?: number;
     email?: string;
+    cizim_verisi?: string;
 }
 
 interface StudentGroup {
@@ -28,6 +29,10 @@ interface StudentGroup {
     age: number;
     scores: Score[];
 }
+
+type DrawingPoint = { x: number; y: number };
+type DrawingStroke = { color: string; size: number; points: DrawingPoint[] };
+type DrawingPayload = { strokes: DrawingStroke[]; size?: { width: number; height: number } };
 
 export default function AdminPanel() {
     const router = useRouter();
@@ -57,7 +62,7 @@ export default function AdminPanel() {
         if (username === 'admin' && password === '123456') {
             setIsAuthenticated(true);
         } else {
-            alert('Hatalı kullanıcı adı veya şifre!');
+            alert('HatalÄ± kullanÄ±cÄ± adÄ± veya ÅŸifre!');
         }
     };
 
@@ -96,14 +101,14 @@ export default function AdminPanel() {
             });
 
             if (!response.ok) {
-                throw new Error('Veri çekilemedi');
+                throw new Error('Veri Ã§ekilemedi');
             }
 
             const data: Score[] = await response.json();
             groupScoresByStudent(data);
         } catch (error) {
             console.error(error);
-            alert('Veriler yüklenirken bir hata oluştu.');
+            alert('Veriler yÃ¼klenirken bir hata oluÅŸtu.');
         } finally {
             setLoading(false);
         }
@@ -136,7 +141,7 @@ export default function AdminPanel() {
 
     const analyzeGame = async (score: Score) => {
         if (!GEMINI_API_KEY) {
-            alert('Gemini API anahtarı bulunamadı. Lütfen .env dosyasını kontrol edin.');
+            alert('Gemini API anahtarÄ± bulunamadÄ±. LÃ¼tfen .env dosyasÄ±nÄ± kontrol edin.');
             return;
         }
 
@@ -149,39 +154,39 @@ export default function AdminPanel() {
                 const ageMonths = score.ogrenci_yasi;
 
                 prompt = `
-                    Sen uzman bir Gelişim Psikoloğusun. Aşağıdaki verileri kullanarak ebeveyne özel bir analiz yazacaksın.
+                    Sen uzman bir GeliÅŸim PsikoloÄŸusun. AÅŸaÄŸÄ±daki verileri kullanarak ebeveyne Ã¶zel bir analiz yazacaksÄ±n.
 
-                    GİRDİLER:
-                    - Çocuk Adı: ${score.ogrenci_adi}
-                    - Çocuk Yaşı: ${ageMonths} Ay
-                    - Seçilen Yol: ${aiContext} (Örn: 'Sosyal-Cozum-Isbirligi', 'Fiziksel-Cozum-Destek', 'Bilissel-Cozum-Yaraticilik')
+                    GÄ°RDÄ°LER:
+                    - Ã‡ocuk AdÄ±: ${score.ogrenci_adi}
+                    - Ã‡ocuk YaÅŸÄ±: ${ageMonths} Ay
+                    - SeÃ§ilen Yol: ${aiContext} (Ã–rn: 'Sosyal-Cozum-Isbirligi', 'Fiziksel-Cozum-Destek', 'Bilissel-Cozum-Yaraticilik')
 
-                    GÖREVİN:
-                    Çocuğun yaptığı seçimi, YAŞINA GÖRE (Gelişimsel Dönem Özellikleri bağlamında) yorumla.
-                    Ebeveyne doğrudan, sıcak ve çocuğun gelişim seviyesine uygun bir dille hitap et.
+                    GÃ–REVÄ°N:
+                    Ã‡ocuÄŸun yaptÄ±ÄŸÄ± seÃ§imi, YAÅINA GÃ–RE (GeliÅŸimsel DÃ¶nem Ã–zellikleri baÄŸlamÄ±nda) yorumla.
+                    Ebeveyne doÄŸrudan, sÄ±cak ve Ã§ocuÄŸun geliÅŸim seviyesine uygun bir dille hitap et.
                     Maili samimi, profesyonel ve cesaretlendirici bir dille yaz.
                 `;
             } else {
                 let oyunAdiTR = '';
-                if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
-                else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
+                if (score.oyun_turu === 'hafiza') oyunAdiTR = 'HafÄ±za KartlarÄ±';
+                else if (score.oyun_turu === 'siralama') oyunAdiTR = 'SayÄ± SÄ±ralama';
                 else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
                 else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
-                else if (score.oyun_turu === 'bunu-soyle') oyunAdiTR = 'Bunu Söyle (Telaffuz)';
+                else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
                 else oyunAdiTR = score.oyun_turu;
 
                 prompt = `
-                    Sen bir okul öncesi eğitim uzmanısın. Aşağıdaki verilere göre çocuğun gelişimini değerlendir.
+                    Sen bir okul Ã¶ncesi eÄŸitim uzmanÄ±sÄ±n. AÅŸaÄŸÄ±daki verilere gÃ¶re Ã§ocuÄŸun geliÅŸimini deÄŸerlendir.
                     
-                    Öğrenci: ${score.ogrenci_adi} (${score.ogrenci_yasi} yaşında)
+                    Ã–ÄŸrenci: ${score.ogrenci_adi} (${score.ogrenci_yasi} yaÅŸÄ±nda)
                     Oyun: ${oyunAdiTR}
                     
                     Performans Verileri:
-                    - Süre: ${score.sure || '?'} saniye
+                    - SÃ¼re: ${score.sure || '?'} saniye
                     - Hamle: ${score.hamle_sayisi}
                     - Hata: ${score.hata_sayisi}
                     
-                    Lütfen çocuğun dikkat, hafıza veya mantık becerileri hakkında yapıcı, motive edici ve ebeveyne yönelik kısa bir yorum yaz.
+                    LÃ¼tfen Ã§ocuÄŸun dikkat, hafÄ±za veya mantÄ±k becerileri hakkÄ±nda yapÄ±cÄ±, motive edici ve ebeveyne yÃ¶nelik kÄ±sa bir yorum yaz.
                 `;
             }
 
@@ -196,8 +201,8 @@ export default function AdminPanel() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Gemini API Hatası:', errorData);
-                throw new Error(errorData.error?.message || 'API isteği başarısız oldu');
+                console.error('Gemini API HatasÄ±:', errorData);
+                throw new Error(errorData.error?.message || 'API isteÄŸi baÅŸarÄ±sÄ±z oldu');
             }
 
             const data = await response.json();
@@ -217,7 +222,7 @@ export default function AdminPanel() {
                 });
 
                 if (!supabaseResponse.ok) {
-                    throw new Error('Analiz kaydedilirken bir hata oluştu.');
+                    throw new Error('Analiz kaydedilirken bir hata oluÅŸtu.');
                 }
 
                 // Update state directly
@@ -233,13 +238,13 @@ export default function AdminPanel() {
                 // Auto-show comment
                 setVisibleCommentIds(prev => new Set(prev).add(score.id));
 
-                console.log('✅ Analiz tamamlandı ve kaydedildi!', { scoreId: score.id, aiComment });
+                console.log('âœ… Analiz tamamlandÄ± ve kaydedildi!', { scoreId: score.id, aiComment });
             } else {
-                throw new Error('Yapay zeka uygun bir yanıt oluşturamadı.');
+                throw new Error('Yapay zeka uygun bir yanÄ±t oluÅŸturamadÄ±.');
             }
         } catch (error: any) {
-            console.error('❌ Analiz sırasında hata:', error);
-            alert(`Analiz hatası: ${error.message}`);
+            console.error('âŒ Analiz sÄ±rasÄ±nda hata:', error);
+            alert(`Analiz hatasÄ±: ${error.message}`);
         } finally {
             setProcessingId(null);
         }
@@ -247,17 +252,17 @@ export default function AdminPanel() {
 
     const sendEmail = async (score: Score) => {
         if (!score.email) {
-            console.warn('⚠️ Bu kayıt için ebeveyn e-postası bulunamadı.', { scoreId: score.id });
+            console.warn('âš ï¸ Bu kayÄ±t iÃ§in ebeveyn e-postasÄ± bulunamadÄ±.', { scoreId: score.id });
             return;
         }
         setProcessingId(score.id);
         try {
             let oyunAdiTR = '';
-            if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
-            else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
+            if (score.oyun_turu === 'hafiza') oyunAdiTR = 'HafÄ±za KartlarÄ±';
+            else if (score.oyun_turu === 'siralama') oyunAdiTR = 'SayÄ± SÄ±ralama';
             else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
             else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
-            else if (score.oyun_turu === 'bunu-soyle') oyunAdiTR = 'Bunu Söyle (Telaffuz)';
+            else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
             else oyunAdiTR = score.oyun_turu;
 
             const response = await fetch('/api/send-email', {
@@ -265,8 +270,8 @@ export default function AdminPanel() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: score.email,
-                    subject: `🎮 ${score.ogrenci_adi} - ${oyunAdiTR} Raporu`,
-                    message: `Merhaba, ${score.ogrenci_adi} az önce ${oyunAdiTR} oyununu tamamladı. İşte sonuçlar:`,
+                    subject: `ğŸ® ${score.ogrenci_adi} - ${oyunAdiTR} Raporu`,
+                    message: `Merhaba, ${score.ogrenci_adi} az Ã¶nce ${oyunAdiTR} oyununu tamamladÄ±. Ä°ÅŸte sonuÃ§lar:`,
                     gameDetails: {
                         game: oyunAdiTR,
                         duration: score.sure,
@@ -278,20 +283,70 @@ export default function AdminPanel() {
             });
 
             if (response.ok) {
-                console.log('✅ E-posta başarıyla gönderildi!', { email: score.email, scoreId: score.id });
-                alert('E-posta gönderildi!');
+                console.log('âœ… E-posta baÅŸarÄ±yla gÃ¶nderildi!', { email: score.email, scoreId: score.id });
+                alert('E-posta gÃ¶nderildi!');
             } else {
-                console.error('❌ E-posta hatası');
-                alert('E-posta gönderilemedi.');
+                console.error('âŒ E-posta hatasÄ±');
+                alert('E-posta gÃ¶nderilemedi.');
             }
 
         } catch (error: any) {
-            console.error("❌ E-posta gönderilirken hata:", error.message);
+            console.error("âŒ E-posta gÃ¶nderilirken hata:", error.message);
         } finally {
             setProcessingId(null);
         }
     };
 
+    const DrawingPreview = ({ data }: { data: string }) => {
+        const parsed = useMemo<DrawingPayload | null>(() => {
+            try {
+                const obj = JSON.parse(data);
+                if (obj?.strokes) return obj as DrawingPayload;
+                return null;
+            } catch {
+                return null;
+            }
+        }, [data]);
+
+        if (!parsed) {
+            return <Text style={styles.drawingError}>Cizim yuklenemedi</Text>;
+        }
+
+        const baseW = parsed.size?.width || 320;
+        const baseH = parsed.size?.height || 220;
+        const scale = Math.min(1, 160 / baseW);
+        const viewW = baseW * scale;
+        const viewH = baseH * scale;
+
+        return (
+            <View style={[styles.drawingBox, { width: viewW, height: viewH }]}>
+                {parsed.strokes.flatMap((stroke, si) =>
+                    (stroke.points || []).map((p, pi) => {
+                        const dot = {
+                            x: (p?.x || 0) * scale,
+                            y: (p?.y || 0) * scale,
+                            size: (stroke.size || 4) * scale,
+                        };
+                        return (
+                            <View
+                                key={`${si}-${pi}`}
+                                style={{
+                                    position: 'absolute',
+                                    left: dot.x - dot.size / 2,
+                                    top: dot.y - dot.size / 2,
+                                    width: dot.size,
+                                    height: dot.size,
+                                    borderRadius: dot.size / 2,
+                                    backgroundColor: stroke.color || '#000',
+                                    opacity: 0.9,
+                                }}
+                            />
+                        );
+                    })
+                )}
+            </View>
+        );
+    };
     const StudentCard = ({ student }: { student: StudentGroup }) => {
         const isExpanded = expandedGroupIds.has(student.id);
         const [showStats, setShowStats] = useState(false);
@@ -313,7 +368,7 @@ export default function AdminPanel() {
                             </View>
                             <View>
                                 <Text style={styles.studentName}>{student.name}</Text>
-                                <Text style={styles.studentAge}>{student.age} Ay • {student.scores.length} Oyun</Text>
+                                <Text style={styles.studentAge}>{student.age} Ay â€¢ {student.scores.length} Oyun</Text>
                             </View>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
@@ -362,6 +417,13 @@ export default function AdminPanel() {
                     </View>
                 </View>
 
+                {score.cizim_verisi && (
+                    <View style={styles.drawingPreviewWrap}>
+                        <Text style={styles.drawingLabel}>Çizim</Text>
+                        <DrawingPreview data={score.cizim_verisi} />
+                    </View>
+                )}
+
                 {/* Action Buttons */}
                 <View style={styles.actionRow}>
                     {(!score.yapay_zeka_yorumu || score.yapay_zeka_yorumu.includes('-Cozum-')) ? (
@@ -371,7 +433,7 @@ export default function AdminPanel() {
                                 onPress={() => analyzeGame(score)}
                                 disabled={isProcessing}
                             >
-                                {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>🤖 Analiz Et</Text>}
+                                {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>ğŸ¤– Analiz Et</Text>}
                             </TouchableOpacity>
                             {score.email && (
                                 <TouchableOpacity
@@ -379,14 +441,14 @@ export default function AdminPanel() {
                                     onPress={() => sendEmail(score)}
                                     disabled={isProcessing}
                                 >
-                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
+                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>ğŸ“§ Mail GÃ¶nder</Text>}
                                 </TouchableOpacity>
                             )}
                         </View>
                     ) : (
                         <View style={{ flexDirection: 'row', gap: 10 }}>
                             <TouchableOpacity onPress={() => toggleCommentVisibility(score.id)} style={styles.aiToggle}>
-                                <Text style={styles.aiToggleText}>🤖 Yorumu {showComment ? 'Gizle' : 'Göster'}</Text>
+                                <Text style={styles.aiToggleText}>ğŸ¤– Yorumu {showComment ? 'Gizle' : 'GÃ¶ster'}</Text>
                             </TouchableOpacity>
 
                             {score.email && (
@@ -395,7 +457,7 @@ export default function AdminPanel() {
                                     onPress={() => sendEmail(score)}
                                     disabled={isProcessing}
                                 >
-                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
+                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>ğŸ“§ Mail GÃ¶nder</Text>}
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -423,26 +485,26 @@ export default function AdminPanel() {
             <DynamicBackground>
                 <View style={styles.centerContainer}>
                     <View style={styles.loginBox}>
-                        <Text style={styles.loginTitle}>Admin Girişi 🔒</Text>
+                        <Text style={styles.loginTitle}>Admin GiriÅŸi ğŸ”’</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Kullanıcı Adı"
+                            placeholder="KullanÄ±cÄ± AdÄ±"
                             value={username}
                             onChangeText={setUsername}
                             autoCapitalize="none"
                         />
                         <TextInput
                             style={styles.input}
-                            placeholder="Şifre"
+                            placeholder="Åifre"
                             value={password}
                             onChangeText={setPassword}
                             secureTextEntry
                         />
                         <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                            <Text style={styles.loginButtonText}>Giriş Yap</Text>
+                            <Text style={styles.loginButtonText}>GiriÅŸ Yap</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.backButtonSimple} onPress={() => router.back()}>
-                            <Text style={{ color: '#666' }}>Geri Dön</Text>
+                            <Text style={{ color: '#666' }}>Geri DÃ¶n</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -457,7 +519,7 @@ export default function AdminPanel() {
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
-                    <Text style={[styles.title, isLandscape && styles.titleLandscape]}>Öğrenci Gelişim Takibi 📊</Text>
+                    <Text style={[styles.title, isLandscape && styles.titleLandscape]}>Ã–ÄŸrenci GeliÅŸim Takibi ğŸ“Š</Text>
                     <View style={{ flexDirection: 'row' }}>
                         <TouchableOpacity onPress={fetchScores} style={styles.soundButton}>
                             <Ionicons name="refresh" size={24} color="white" />
@@ -476,7 +538,7 @@ export default function AdminPanel() {
                         renderItem={({ item }) => <StudentCard student={item} />}
                         keyExtractor={(item) => item.id}
                         contentContainerStyle={[styles.listContent, isLandscape && styles.listContentLandscape]}
-                        ListEmptyComponent={<Text style={styles.emptyText}>Henüz kayıt yok.</Text>}
+                        ListEmptyComponent={<Text style={styles.emptyText}>HenÃ¼z kayÄ±t yok.</Text>}
                     />
                 )}
             </View>
@@ -528,6 +590,10 @@ const styles = StyleSheet.create({
     aiToggleText: { fontSize: 12, color: '#2196F3', fontWeight: 'bold' },
     aiCommentBox: { marginTop: 10, backgroundColor: '#E8F5E9', padding: 12, borderRadius: 10 },
     aiCommentText: { fontSize: 13, color: '#2E7D32', fontStyle: 'italic', lineHeight: 20 },
+    drawingPreviewWrap: { marginTop: 10, gap: 6 },
+    drawingLabel: { fontSize: 12, color: '#555', fontWeight: '600' },
+    drawingBox: { borderRadius: 12, backgroundColor: '#fdfaf3', borderWidth: 1, borderColor: '#e0d6c8', overflow: 'hidden' },
+    drawingError: { fontSize: 12, color: '#d32f2f' },
 
     // Login Styles
     loginBox: { width: '100%', maxWidth: 350, backgroundColor: 'white', padding: 30, borderRadius: 25, elevation: 5 },
@@ -537,3 +603,6 @@ const styles = StyleSheet.create({
     loginButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     backButtonSimple: { marginTop: 15, alignItems: 'center' },
 });
+
+
+

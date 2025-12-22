@@ -14,7 +14,7 @@ const GRUPLAMA_SORULARI = [
 ];
 
 interface GruplamaOyunuProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
     onExit?: () => void;
 }
 

@@ -11,7 +11,7 @@ const ITEM_SIZE = width > 600 ? 100 : 60; // Larger size for tablets/web
 const FONT_SIZE = width > 600 ? 40 : 24;
 
 interface SiralamaOyunuProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
     onExit?: () => void;
 }
 

@@ -218,7 +218,7 @@ const setBgMusicVolume = (on: boolean) => {
 
 // ============== COMPONENT ==============
 interface Props {
-  onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number) => void;
+  onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
   onExit?: () => void;
 }
 

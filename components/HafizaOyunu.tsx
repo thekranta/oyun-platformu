@@ -38,7 +38,7 @@ const AŞAMA_AYARLARI = [
 ];
 
 interface HafizaOyunuProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
     onExit?: () => void;
 }
 
