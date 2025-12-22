@@ -4,6 +4,7 @@ import DiziyiTamamla from '@/components/DiziyiTamamla';
 import DynamicBackground from '@/components/DynamicBackground';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
+import KodlamaOyunu from '@/components/KodlamaOyunu';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
@@ -220,6 +221,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Bunu Söyle!</Text>
                   <Text style={styles.oyunAciklama}>Kelime Oyunu</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#00ACC1' }]} onPress={() => oyunuBaslat('kodlama')}>
+                  <Ionicons name="map" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Minik Kaşif</Text>
+                  <Text style={styles.oyunAciklama}>Kodlama Oyunu</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -271,6 +278,10 @@ export default function App() {
 
   if (asama === 'bunu-soyle') {
     return <BunuSoyle onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'kodlama') {
+    return <KodlamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'ceviz-macera') {
