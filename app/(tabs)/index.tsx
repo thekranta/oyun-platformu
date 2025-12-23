@@ -2,6 +2,7 @@ import BunuSoyle from '@/components/BunuSoyle';
 import CevizMacera from '@/components/CevizMacera';
 import DiziyiTamamla from '@/components/DiziyiTamamla';
 import DynamicBackground from '@/components/DynamicBackground';
+import EksikSayiBul from '@/components/EksikSayiBul';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
@@ -316,6 +317,11 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Sıralama</Text>
                   <Text style={styles.oyunAciklama}>Sayıları Diz</Text>
                 </TouchableOpacity>
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FF8A65' }]} onPress={() => oyunuBaslat('eksik-sayi-bul')}>
+                  <Ionicons name="help-circle" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Eksik Sayiyi Bul</Text>
+                  <Text style={styles.oyunAciklama}>Eksik rakami tamamla</Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#81C784' }]} onPress={() => oyunuBaslat('gruplama')}>
                   <Ionicons name="basket" size={40} color="white" style={{ marginBottom: 10 }} />
@@ -377,6 +383,10 @@ export default function App() {
 
   if (asama === 'siralama') {
     return <SiralamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'eksik-sayi-bul') {
+    return <EksikSayiBul onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'gruplama') {
@@ -455,3 +465,5 @@ const styles = StyleSheet.create({
   tabText: { fontSize: 16, fontWeight: 'bold', color: '#555' },
   activeTabText: { color: '#2E7D32' },
 });
+
+

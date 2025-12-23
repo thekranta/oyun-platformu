@@ -180,6 +180,7 @@ export default function AdminPanel() {
                 let oyunAdiTR = '';
                 if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
                 else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
+                else if (score.oyun_turu === 'eksik-sayi-bul') oyunAdiTR = 'Eksik Sayiyi Bul';
                 else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
                 else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
                 else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
@@ -270,6 +271,7 @@ export default function AdminPanel() {
             let oyunAdiTR = '';
             if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
             else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
+            else if (score.oyun_turu === 'eksik-sayi-bul') oyunAdiTR = 'Eksik Sayiyi Bul';
             else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
             else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
             else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
@@ -632,3 +634,6 @@ const styles = StyleSheet.create({
     loginButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     backButtonSimple: { marginTop: 15, alignItems: 'center' },
 });
+
+
+
