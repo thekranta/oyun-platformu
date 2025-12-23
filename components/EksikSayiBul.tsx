@@ -224,15 +224,18 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
         <View style={styles.optionsArea}>
           <Text style={styles.sectionLabel}>Secenekler</Text>
           <View style={styles.optionsGrid}>
-            {options.map(option => (
-              <DraggableOption
-                key={`opt-${option}-${currentStage}`}
-                value={option}
-                disabled={placedNumber !== null}
-                dropZone={dropZone}
-                onDrop={handleDrop}
-              />
-            ))}
+            {options.map(option => {
+              if (placedNumber === missingNumber && option === missingNumber) return null;
+              return (
+                <DraggableOption
+                  key={`opt-${option}-${currentStage}`}
+                  value={option}
+                  disabled={placedNumber !== null}
+                  dropZone={dropZone}
+                  onDrop={handleDrop}
+                />
+              );
+            })}
           </View>
           <Text style={styles.helperText}>Eksik kutuyu tamamlamak icin sayiyi surukle birak.</Text>
         </View>
