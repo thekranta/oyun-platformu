@@ -1,5 +1,5 @@
 ﻿import React, { useMemo, useRef, useState } from 'react';
-import { Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { Dimensions, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import DynamicBackground from './DynamicBackground';
 
@@ -120,11 +120,16 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     let cizimResimBase64: string | undefined;
     try {
       if (canvasRef.current) {
-        cizimResimBase64 = await captureRef(canvasRef, {
+        const base64Result = await captureRef(canvasRef, {
           format: 'png',
           quality: 0.9,
           result: 'base64',
         });
+        // Base64 string'den data URL prefix'ini temizle (varsa)
+        // Örnek: "data:image/png;base64,iVBORw0KG..." -> "iVBORw0KG..."
+        if (base64Result) {
+          cizimResimBase64 = base64Result.includes(',') ? base64Result.split(',')[1] : base64Result;
+        }
       }
     } catch (error) {
       console.warn('Cizim resmi olusturulamadi:', error);
@@ -161,13 +166,11 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
             <Text style={styles.exitTxt}>X</Text>
           </TouchableOpacity>
-          <View>
+          <View style={{ flex: 1, alignItems: 'center' }}>
             <Text style={styles.title}>{TITLE_TEXT}</Text>
             <Text style={styles.subtitle}>{SUBTITLE_TEXT}</Text>
           </View>
-          <TouchableOpacity style={[styles.saveBtn, (allStrokes.length === 0) && styles.disabledBtn]} onPress={saveDrawing} disabled={allStrokes.length === 0}>
-            <Text style={styles.saveTxt}>{saved ? 'Kaydedildi' : 'Kaydet'}</Text>
-          </TouchableOpacity>
+          <View style={{ width: 42 }} />
         </View>
 
         <View

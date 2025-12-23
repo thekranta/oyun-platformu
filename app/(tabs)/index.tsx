@@ -97,6 +97,10 @@ export default function App() {
       const uploadDrawingImage = async () => {
         if (!extraData?.cizimResimBase64 || !SUPABASE_URL || !SUPABASE_KEY) return null;
         const format = extraData.cizimResimFormat || 'png';
+        // Base64 string'den data URL prefix'ini temizle (varsa)
+        const cleanBase64 = extraData.cizimResimBase64.includes(',') 
+          ? extraData.cizimResimBase64.split(',')[1] 
+          : extraData.cizimResimBase64;
         const safeName = slugifyName(ad);
         const fileName = `${safeName}-${yas}-${Date.now()}.${format}`;
         const filePath = `${safeName}/${fileName}`;
@@ -109,7 +113,7 @@ export default function App() {
         };
 
         if (Platform.OS === 'web') {
-          const blob = await fetch(`data:image/${format};base64,${extraData.cizimResimBase64}`).then(res => res.blob());
+          const blob = await fetch(`data:image/${format};base64,${cleanBase64}`).then(res => res.blob());
           const response = await fetch(uploadUrl, { method: 'POST', headers, body: blob });
           if (!response.ok) {
             const errText = await response.text();
@@ -117,7 +121,7 @@ export default function App() {
           }
         } else {
           const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
-          await FileSystem.writeAsStringAsync(fileUri, extraData.cizimResimBase64, { encoding: FileSystem.EncodingType.Base64 });
+          await FileSystem.writeAsStringAsync(fileUri, cleanBase64, { encoding: FileSystem.EncodingType.Base64 });
           const uploadResult = await FileSystem.uploadAsync(uploadUrl, fileUri, {
             httpMethod: 'POST',
             uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
