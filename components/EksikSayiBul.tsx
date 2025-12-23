@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, View } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
@@ -33,6 +34,8 @@ const shuffle = (items: number[]) => {
   return copy;
 };
 
+const DRAG_THRESHOLD = 4;
+
 const DraggableOption = ({
   value,
   disabled,
@@ -50,12 +53,14 @@ const DraggableOption = ({
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => !disabled,
-        onMoveShouldSetPanResponder: () => !disabled,
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (_evt, gesture) =>
+          !disabled && (Math.abs(gesture.dx) > DRAG_THRESHOLD || Math.abs(gesture.dy) > DRAG_THRESHOLD),
         onPanResponderGrant: () => {
           setIsDragging(true);
           pan.setValue({ x: 0, y: 0 });
         },
+        onPanResponderTerminationRequest: () => false,
         onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
         onPanResponderRelease: (_evt, gesture) => {
           setIsDragging(false);
@@ -97,8 +102,12 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
   const [currentStage, setCurrentStage] = useState(0);
   const [moves, setMoves] = useState(0);
   const [errors, setErrors] = useState(0);
+  const movesRef = useRef(0);
+  const errorsRef = useRef(0);
   const [placedNumber, setPlacedNumber] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const confettiRef = useRef<ConfettiCannon>(null);
   const startTimeRef = useRef(Date.now());
   const dropZoneRef = useRef<View>(null);
   const [dropZone, setDropZone] = useState<DropZone | null>(null);
@@ -123,19 +132,32 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
       requestAnimationFrame(measureDropZone);
     } else {
       const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-      onGameEnd('eksik-sayi-bul', duration, moves, errors);
+      onGameEnd('eksik-sayi-bul', duration, movesRef.current, errorsRef.current);
     }
   };
 
   const handleDrop = (value: number) => {
     if (placedNumber !== null) return;
-    setMoves(prev => prev + 1);
+    setMoves(prev => {
+      const next = prev + 1;
+      movesRef.current = next;
+      return next;
+    });
     if (value === missingNumber) {
       setPlacedNumber(value);
       setFeedback('correct');
-      setTimeout(goNextStage, 1200);
+      if (currentStage === TOTAL_STAGES - 1) {
+        setShowConfetti(true);
+        setTimeout(goNextStage, 1600);
+      } else {
+        setTimeout(goNextStage, 1000);
+      }
     } else {
-      setErrors(prev => prev + 1);
+      setErrors(prev => {
+        const next = prev + 1;
+        errorsRef.current = next;
+        return next;
+      });
       setFeedback('wrong');
       setTimeout(() => setFeedback('idle'), 800);
     }
@@ -143,16 +165,30 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
 
   return (
     <DynamicBackground onExit={onExit}>
+      {showConfetti && (
+        <ConfettiCannon
+          count={180}
+          origin={{ x: 0, y: 0 }}
+          autoStart={true}
+          ref={confettiRef}
+          fadeOut={true}
+        />
+      )}
       <View style={styles.container}>
         <View style={styles.header}>
           <Image source={PLATFORM_LOGO} style={styles.logo} resizeMode="contain" />
           <View>
             <Text style={styles.title}>Eksik Sayiyi Bul</Text>
-            <Text style={styles.subtitle}>1-5 arasindaki eksik sayiyi surukle.</Text>
+            <Text style={styles.subtitle}>1-5 arasinda eksik sayiyi surukle birak.</Text>
           </View>
         </View>
 
-        <ProgressBar current={currentStage + 1} total={TOTAL_STAGES} />
+        <View style={styles.progressRow}>
+          <ProgressBar current={currentStage + 1} total={TOTAL_STAGES} />
+          <View style={styles.roundBadge}>
+            <Text style={styles.roundBadgeText}>{currentStage + 1}. Asama</Text>
+          </View>
+        </View>
 
         <View style={styles.sequenceArea}>
           <Text style={styles.sectionLabel}>Dizi</Text>
@@ -198,7 +234,7 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
               />
             ))}
           </View>
-          <Text style={styles.helperText}>Eksik kutuya uygun rakami surukle birak.</Text>
+          <Text style={styles.helperText}>Eksik kutuyu tamamlamak icin sayiyi surukle birak.</Text>
         </View>
       </View>
     </DynamicBackground>
@@ -209,7 +245,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingTop: 40,
+    paddingTop: 36,
     gap: 18,
   },
   header: {
@@ -224,7 +260,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#fff',
     borderWidth: 2,
-    borderColor: '#f2d6a2',
+    borderColor: '#ffe0b2',
   },
   title: {
     fontSize: 22,
@@ -236,12 +272,34 @@ const styles = StyleSheet.create({
     color: '#6d4c41',
     marginTop: 4,
   },
-  sequenceArea: {
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    borderRadius: 18,
-    padding: 16,
+  progressRow: {
+    gap: 8,
+  },
+  roundBadge: {
+    alignSelf: 'center',
+    backgroundColor: '#fff3e0',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#f3e3c8',
+    borderColor: '#ffcc80',
+  },
+  roundBadgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#e65100',
+  },
+  sequenceArea: {
+    backgroundColor: '#fff7e0',
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 2,
+    borderColor: '#ffc88f',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   sectionLabel: {
     fontSize: 14,
@@ -253,17 +311,17 @@ const styles = StyleSheet.create({
   },
   sequenceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 12,
   },
   sequenceCard: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    borderRadius: 20,
-    backgroundColor: '#fff8e1',
+    borderRadius: 22,
+    backgroundColor: '#fff3c4',
     borderWidth: 2,
-    borderColor: '#fbc02d',
+    borderColor: '#ffb74d',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
@@ -279,8 +337,8 @@ const styles = StyleSheet.create({
   },
   missingCard: {
     borderStyle: 'dashed',
-    borderColor: '#8d6e63',
-    backgroundColor: '#fff3e0',
+    borderColor: '#ff7043',
+    backgroundColor: '#ffe0b2',
   },
   missingText: {
     fontSize: 30,
@@ -296,36 +354,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffebee',
   },
   optionsArea: {
-    backgroundColor: '#fdfaf5',
-    borderRadius: 20,
+    backgroundColor: '#e8f4ff',
+    borderRadius: 22,
     padding: 16,
+    marginTop: 6,
     borderWidth: 2,
-    borderColor: '#d7ccc8',
+    borderColor: '#64b5f6',
   },
   optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 12,
+    justifyContent: 'center',
+    gap: 8,
   },
   optionCard: {
     width: OPTION_SIZE,
     height: OPTION_SIZE,
-    borderRadius: 18,
-    backgroundColor: '#ffffff',
+    borderRadius: OPTION_SIZE / 2,
+    backgroundColor: '#dbefff',
     borderWidth: 2,
-    borderColor: '#90a4ae',
+    borderColor: '#64b5f6',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
+    elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.18,
     shadowRadius: 3,
   },
   optionDragging: {
     borderColor: '#1565c0',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#bbdefb',
   },
   optionText: {
     fontSize: 26,
@@ -335,7 +394,7 @@ const styles = StyleSheet.create({
   helperText: {
     marginTop: 10,
     fontSize: 12,
-    color: '#8d6e63',
+    color: '#546e7a',
     textAlign: 'center',
   },
 });
