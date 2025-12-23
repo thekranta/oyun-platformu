@@ -93,7 +93,9 @@ const DraggableOption = ({
       ]}
       {...panResponder.panHandlers}
     >
-      <Text style={styles.optionText}>{value}</Text>
+      <Text style={styles.optionText} selectable={false}>
+        {value}
+      </Text>
     </Animated.View>
   );
 };
@@ -108,6 +110,8 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [showConfetti, setShowConfetti] = useState(false);
   const confettiRef = useRef<ConfettiCannon>(null);
+  const correctScale = useRef(new Animated.Value(1)).current;
+  const wrongShake = useRef(new Animated.Value(0)).current;
   const startTimeRef = useRef(Date.now());
   const dropZoneRef = useRef<View>(null);
   const [dropZone, setDropZone] = useState<DropZone | null>(null);
@@ -129,6 +133,8 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
       setCurrentStage(prev => prev + 1);
       setPlacedNumber(null);
       setFeedback('idle');
+      correctScale.setValue(1);
+      wrongShake.setValue(0);
       requestAnimationFrame(measureDropZone);
     } else {
       const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
@@ -146,6 +152,10 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
     if (value === missingNumber) {
       setPlacedNumber(value);
       setFeedback('correct');
+      Animated.sequence([
+        Animated.spring(correctScale, { toValue: 1.12, useNativeDriver: true, friction: 5 }),
+        Animated.spring(correctScale, { toValue: 1, useNativeDriver: true, friction: 5 }),
+      ]).start();
       if (currentStage === TOTAL_STAGES - 1) {
         setShowConfetti(true);
         setTimeout(goNextStage, 1600);
@@ -159,6 +169,13 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
         return next;
       });
       setFeedback('wrong');
+      Animated.sequence([
+        Animated.timing(wrongShake, { toValue: 8, duration: 80, useNativeDriver: true }),
+        Animated.timing(wrongShake, { toValue: -8, duration: 80, useNativeDriver: true }),
+        Animated.timing(wrongShake, { toValue: 6, duration: 70, useNativeDriver: true }),
+        Animated.timing(wrongShake, { toValue: -6, duration: 70, useNativeDriver: true }),
+        Animated.timing(wrongShake, { toValue: 0, duration: 60, useNativeDriver: true }),
+      ]).start();
       setTimeout(() => setFeedback('idle'), 800);
     }
   };
@@ -198,12 +215,14 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
               if (!isMissing) {
                 return (
                   <View key={`seq-${index}`} style={styles.sequenceCard}>
-                    <Text style={styles.sequenceText}>{value}</Text>
+                    <Text style={styles.sequenceText} selectable={false}>
+                      {value}
+                    </Text>
                   </View>
                 );
               }
               return (
-                <View
+                <Animated.View
                   key={`seq-${index}`}
                   ref={dropZoneRef}
                   onLayout={measureDropZone}
@@ -212,10 +231,13 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
                     styles.missingCard,
                     feedback === 'correct' && styles.missingCorrect,
                     feedback === 'wrong' && styles.missingWrong,
+                    { transform: [{ scale: correctScale }, { translateX: wrongShake }] },
                   ]}
                 >
-                  <Text style={styles.missingText}>{placedNumber ?? '?'}</Text>
-                </View>
+                  <Text style={styles.missingText} selectable={false}>
+                    {placedNumber ?? '?'}
+                  </Text>
+                </Animated.View>
               );
             })}
           </View>
@@ -337,6 +359,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '900',
     color: '#5d4037',
+    userSelect: 'none',
   },
   missingCard: {
     borderStyle: 'dashed',
@@ -347,6 +370,7 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: '900',
     color: '#5d4037',
+    userSelect: 'none',
   },
   missingCorrect: {
     borderColor: '#2e7d32',
@@ -394,6 +418,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '900',
     color: '#0d47a1',
+    userSelect: 'none',
   },
   helperText: {
     marginTop: 10,
