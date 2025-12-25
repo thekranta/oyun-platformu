@@ -161,9 +161,9 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         }));
     }, [currentNumber, canvasSize]);
 
-    // Hit radius - scales with canvas but not too large
+    // Hit radius - scales with canvas, generous for children
     const hitRadius = useMemo(() => {
-        return Math.max(Math.min(canvasSize.width, canvasSize.height) * 0.06, 18);
+        return Math.max(Math.min(canvasSize.width, canvasSize.height) * 0.12, 35);
     }, [canvasSize]);
 
     const resetForNextNumber = useCallback((nextNum: number) => {
