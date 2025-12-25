@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 
@@ -18,69 +18,59 @@ interface Props {
     onExit?: () => void;
 }
 
-const { width, height } = Dimensions.get('window');
-const CANVAS_WIDTH = width * 0.9;
-const CANVAS_HEIGHT = height * 0.5;
 const MIN_STEP = 2;
-const SUCCESS_THRESHOLD = 0.7; // Lowered to 70% for better UX
+const SUCCESS_THRESHOLD = 0.65; // 65% coverage required
 
-// Simplified number templates for easier tracing
+// Normalized coordinates (0-1) for number detection - matches visual template
 const NUMBER_TEMPLATES: Record<number, Point[]> = {
-    1: Array.from({ length: 25 }, (_, i) => ({ x: 0.5, y: 0.15 + (i * 0.7) / 24 })),
+    1: Array.from({ length: 30 }, (_, i) => ({ x: 0.5, y: 0.1 + (i * 0.8) / 29 })),
     2: [
         // Top arc
-        ...Array.from({ length: 12 }, (_, i) => {
-            const angle = Math.PI + (i * Math.PI) / 11;
-            return { x: 0.5 + 0.18 * Math.cos(angle), y: 0.32 + 0.14 * Math.sin(angle) };
+        ...Array.from({ length: 15 }, (_, i) => {
+            const angle = Math.PI + (i * Math.PI) / 14;
+            return { x: 0.5 + 0.2 * Math.cos(angle), y: 0.28 + 0.16 * Math.sin(angle) };
         }),
-        // Diagonal down
-        ...Array.from({ length: 12 }, (_, i) => ({ x: 0.68 - (i * 0.36) / 11, y: 0.32 + (i * 0.42) / 11 })),
-        // Bottom line
-        ...Array.from({ length: 12 }, (_, i) => ({ x: 0.32 + (i * 0.36) / 11, y: 0.74 })),
+        // Diagonal line
+        ...Array.from({ length: 15 }, (_, i) => ({ x: 0.7 - (i * 0.4) / 14, y: 0.28 + (i * 0.52) / 14 })),
+        // Bottom horizontal
+        ...Array.from({ length: 12 }, (_, i) => ({ x: 0.3 + (i * 0.4) / 11, y: 0.8 })),
     ],
     3: [
         // Top curve
-        ...Array.from({ length: 12 }, (_, i) => {
-            const angle = -Math.PI * 0.7 + (i * Math.PI * 1.2) / 11;
-            return { x: 0.5 + 0.16 * Math.cos(angle), y: 0.32 + 0.14 * Math.sin(angle) };
+        ...Array.from({ length: 15 }, (_, i) => {
+            const angle = -Math.PI * 0.6 + (i * Math.PI * 1.1) / 14;
+            return { x: 0.5 + 0.18 * Math.cos(angle), y: 0.28 + 0.15 * Math.sin(angle) };
         }),
         // Bottom curve
-        ...Array.from({ length: 12 }, (_, i) => {
-            const angle = -Math.PI * 0.7 + (i * Math.PI * 1.2) / 11;
-            return { x: 0.5 + 0.16 * Math.cos(angle), y: 0.58 + 0.16 * Math.sin(angle) };
+        ...Array.from({ length: 15 }, (_, i) => {
+            const angle = -Math.PI * 0.6 + (i * Math.PI * 1.2) / 14;
+            return { x: 0.5 + 0.18 * Math.cos(angle), y: 0.62 + 0.18 * Math.sin(angle) };
         }),
     ],
     4: [
-        // Down stroke on left
-        ...Array.from({ length: 10 }, (_, i) => ({ x: 0.55 - (i * 0.22) / 9, y: 0.18 + (i * 0.35) / 9 })),
+        // Down stroke left
+        ...Array.from({ length: 12 }, (_, i) => ({ x: 0.55 - (i * 0.25) / 11, y: 0.12 + (i * 0.4) / 11 })),
         // Horizontal line
-        ...Array.from({ length: 10 }, (_, i) => ({ x: 0.33 + (i * 0.35) / 9, y: 0.53 })),
+        ...Array.from({ length: 12 }, (_, i) => ({ x: 0.3 + (i * 0.4) / 11, y: 0.52 })),
         // Vertical line
-        ...Array.from({ length: 18 }, (_, i) => ({ x: 0.55, y: 0.18 + (i * 0.65) / 17 })),
+        ...Array.from({ length: 22 }, (_, i) => ({ x: 0.55, y: 0.12 + (i * 0.76) / 21 })),
     ],
     5: [
         // Top horizontal
-        ...Array.from({ length: 10 }, (_, i) => ({ x: 0.65 - (i * 0.28) / 9, y: 0.2 })),
+        ...Array.from({ length: 10 }, (_, i) => ({ x: 0.68 - (i * 0.32) / 9, y: 0.14 })),
         // Down stroke
-        ...Array.from({ length: 8 }, (_, i) => ({ x: 0.37, y: 0.2 + (i * 0.22) / 7 })),
+        ...Array.from({ length: 10 }, (_, i) => ({ x: 0.36, y: 0.14 + (i * 0.26) / 9 })),
         // Bottom curve
-        ...Array.from({ length: 14 }, (_, i) => {
-            const angle = -Math.PI * 0.6 + (i * Math.PI * 1.3) / 13;
-            return { x: 0.5 + 0.16 * Math.cos(angle), y: 0.58 + 0.16 * Math.sin(angle) };
+        ...Array.from({ length: 16 }, (_, i) => {
+            const angle = -Math.PI * 0.55 + (i * Math.PI * 1.25) / 15;
+            return { x: 0.52 + 0.18 * Math.cos(angle), y: 0.62 + 0.18 * Math.sin(angle) };
         }),
     ],
 };
 
-// Child-friendly number display (using dotted pattern display)
-const DISPLAY_NUMBERS: Record<number, string> = {
-    1: '1',
-    2: '2',
-    3: '3',
-    4: '4',
-    5: '5',
-};
-
 export default function RakamYazma({ onGameEnd, onExit }: Props) {
+    // Dynamic dimensions
+    const [canvasSize, setCanvasSize] = useState({ width: 300, height: 300 });
     const [currentNumber, setCurrentNumber] = useState(1);
     const [strokes, setStrokes] = useState<Stroke[]>([]);
     const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
@@ -91,12 +81,29 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
     const [successAnim] = useState(new Animated.Value(0));
     const [showSuccess, setShowSuccess] = useState(false);
 
+    // Recalculate on dimension change
+    useEffect(() => {
+        const updateDimensions = () => {
+            const { width, height } = Dimensions.get('window');
+            const canvasWidth = Math.min(width * 0.9, 500);
+            const canvasHeight = Math.min(height * 0.5, 400);
+            setCanvasSize({ width: canvasWidth, height: canvasHeight });
+        };
+        updateDimensions();
+        const subscription = Dimensions.addEventListener('change', updateDimensions);
+        return () => subscription?.remove();
+    }, []);
+
+    // Convert normalized points to actual canvas coordinates
     const targetPoints = useMemo(() => {
         return NUMBER_TEMPLATES[currentNumber].map(p => ({
-            x: p.x * CANVAS_WIDTH,
-            y: p.y * CANVAS_HEIGHT,
+            x: p.x * canvasSize.width,
+            y: p.y * canvasSize.height,
         }));
-    }, [currentNumber]);
+    }, [currentNumber, canvasSize]);
+
+    // Hit radius scales with canvas size
+    const hitRadius = useMemo(() => Math.max(canvasSize.width * 0.08, 25), [canvasSize]);
 
     const resetForNextNumber = useCallback((nextNum: number) => {
         coveredPointsRef.current = new Set();
@@ -124,12 +131,12 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         });
     }, [currentNumber, onGameEnd, resetForNextNumber, successAnim]);
 
-    const checkAndUpdateCoverage = useCallback((x: number, y: number, points: Point[]) => {
+    const checkAndUpdateCoverage = useCallback((x: number, y: number, points: Point[], radius: number) => {
         let updated = false;
         points.forEach((p, idx) => {
             if (!coveredPointsRef.current.has(idx)) {
                 const dist = Math.sqrt(Math.pow(x - p.x, 2) + Math.pow(y - p.y, 2));
-                if (dist < 30) { // Increased hit area for easier detection
+                if (dist < radius) {
                     coveredPointsRef.current.add(idx);
                     updated = true;
                 }
@@ -141,8 +148,9 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         return coveredPointsRef.current.size;
     }, []);
 
-    const addPoint = useCallback((x: number, y: number, points: Point[]) => {
-        const baseStroke = liveStrokeRef.current ?? { color: '#4FC3F7', size: 18, points: [] as Point[] };
+    const addPoint = useCallback((x: number, y: number, points: Point[], radius: number) => {
+        const strokeSize = Math.max(canvasSize.width * 0.04, 12);
+        const baseStroke = liveStrokeRef.current ?? { color: '#4FC3F7', size: strokeSize, points: [] as Point[] };
         const currentPoints: Point[] = [...baseStroke.points];
         const last = currentPoints[currentPoints.length - 1];
 
@@ -156,16 +164,16 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                 const px = last.x + dx * ratio;
                 const py = last.y + dy * ratio;
                 currentPoints.push({ x: px, y: py });
-                checkAndUpdateCoverage(px, py, points);
+                checkAndUpdateCoverage(px, py, points, radius);
             }
         }
         currentPoints.push({ x, y });
-        checkAndUpdateCoverage(x, y, points);
+        checkAndUpdateCoverage(x, y, points, radius);
 
         const nextStroke = { ...baseStroke, points: currentPoints };
         liveStrokeRef.current = nextStroke;
         setLiveStroke(nextStroke);
-    }, [checkAndUpdateCoverage]);
+    }, [checkAndUpdateCoverage, canvasSize]);
 
     const finishStroke = useCallback((points: Point[]) => {
         const completed = liveStrokeRef.current;
@@ -189,19 +197,19 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                 onPanResponderGrant: e => {
                     if (showSuccess) return;
                     const { locationX, locationY } = e.nativeEvent;
-                    addPoint(locationX, locationY, targetPoints);
+                    addPoint(locationX, locationY, targetPoints, hitRadius);
                 },
                 onPanResponderMove: e => {
                     if (showSuccess) return;
                     const { locationX, locationY } = e.nativeEvent;
-                    addPoint(locationX, locationY, targetPoints);
+                    addPoint(locationX, locationY, targetPoints, hitRadius);
                 },
                 onPanResponderRelease: () => {
                     if (showSuccess) return;
                     finishStroke(targetPoints);
                 },
             }),
-        [targetPoints, addPoint, finishStroke, showSuccess],
+        [targetPoints, hitRadius, addPoint, finishStroke, showSuccess],
     );
 
     const clearCanvas = () => {
@@ -213,6 +221,9 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
     };
 
     const progress = Math.round((coveredCount / targetPoints.length) * 100);
+
+    // Dynamic font size based on canvas
+    const templateFontSize = Math.min(canvasSize.height * 0.85, canvasSize.width * 0.7);
 
     return (
         <DynamicBackground>
@@ -227,27 +238,22 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                     </View>
                 </View>
 
-                <View style={styles.canvasContainer}>
-                    {/* Dotted guide showing where to trace */}
-                    <View style={styles.guideLayer}>
-                        {targetPoints.map((p, i) => (
-                            <View
-                                key={i}
-                                style={[
-                                    styles.guidePoint,
-                                    {
-                                        left: p.x - 8,
-                                        top: p.y - 8,
-                                        backgroundColor: coveredPointsRef.current.has(i) ? '#81C784' : '#E0E0E0',
-                                    },
-                                ]}
-                            />
-                        ))}
-                    </View>
-
-                    {/* Template number overlay */}
+                <View
+                    style={[
+                        styles.canvasContainer,
+                        { width: canvasSize.width, height: canvasSize.height },
+                    ]}
+                >
+                    {/* Faded number template only */}
                     <View style={styles.templateOverlay}>
-                        <Text style={styles.templateText}>{DISPLAY_NUMBERS[currentNumber]}</Text>
+                        <Text
+                            style={[
+                                styles.templateText,
+                                { fontSize: templateFontSize, lineHeight: templateFontSize * 1.1 },
+                            ]}
+                        >
+                            {currentNumber}
+                        </Text>
                     </View>
 
                     {/* Drawing canvas */}
@@ -297,25 +303,32 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                                 styles.successOverlay,
                                 {
                                     opacity: successAnim,
-                                    transform: [{ scale: successAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }],
+                                    transform: [
+                                        {
+                                            scale: successAnim.interpolate({
+                                                inputRange: [0, 1],
+                                                outputRange: [0.5, 1],
+                                            }),
+                                        },
+                                    ],
                                 },
                             ]}
                         >
-                            <Ionicons name="checkmark-circle" size={100} color="#4CAF50" />
+                            <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
                             <Text style={styles.successText}>Harika! 🎉</Text>
                         </Animated.View>
                     )}
                 </View>
 
                 {/* Progress bar */}
-                <View style={styles.progressBarContainer}>
+                <View style={[styles.progressBarContainer, { width: canvasSize.width }]}>
                     <View style={[styles.progressBar, { width: `${progress}%` }]} />
                 </View>
                 <Text style={styles.progressLabel}>%{progress} tamamlandı</Text>
 
                 <View style={styles.footer}>
                     <Text style={styles.infoText}>
-                        {currentNumber}. rakamı noktaları takip ederek çiz! ✨
+                        {currentNumber}. rakamın üzerini çiz! ✨
                     </Text>
                     <TouchableOpacity style={styles.clearBtn} onPress={clearCanvas}>
                         <Ionicons name="refresh" size={20} color="#fff" style={{ marginRight: 6 }} />
@@ -345,7 +358,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         elevation: 2,
     },
-    title: { fontSize: 26, fontWeight: 'bold', color: '#3e2723' },
+    title: { fontSize: 24, fontWeight: 'bold', color: '#3e2723' },
     progressBadge: {
         backgroundColor: '#E3F2FD',
         paddingHorizontal: 14,
@@ -354,8 +367,6 @@ const styles = StyleSheet.create({
     },
     progressText: { fontSize: 16, fontWeight: 'bold', color: '#1976D2' },
     canvasContainer: {
-        width: CANVAS_WIDTH,
-        height: CANVAS_HEIGHT,
         backgroundColor: '#FFFEF7',
         borderRadius: 24,
         position: 'relative',
@@ -368,31 +379,18 @@ const styles = StyleSheet.create({
         borderWidth: 3,
         borderColor: '#FFE0B2',
     },
-    guideLayer: {
-        ...StyleSheet.absoluteFillObject,
-        zIndex: 1,
-    },
-    guidePoint: {
-        position: 'absolute',
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        borderWidth: 2,
-        borderColor: '#BDBDBD',
-    },
     templateOverlay: {
         ...StyleSheet.absoluteFillObject,
         justifyContent: 'center',
         alignItems: 'center',
-        opacity: 0.08,
         zIndex: 0,
     },
     templateText: {
-        fontSize: 280,
         fontWeight: '300',
-        color: '#000',
-        fontFamily: 'System',
-        letterSpacing: -10,
+        color: 'rgba(0, 0, 0, 0.12)',
+        textAlign: 'center',
+        includeFontPadding: false,
+        textAlignVertical: 'center',
     },
     canvas: { flex: 1, zIndex: 5 },
     point: { position: 'absolute' },
@@ -403,9 +401,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         zIndex: 20,
     },
-    successText: { fontSize: 36, fontWeight: 'bold', color: '#4CAF50', marginTop: 10 },
+    successText: { fontSize: 32, fontWeight: 'bold', color: '#4CAF50', marginTop: 10 },
     progressBarContainer: {
-        width: CANVAS_WIDTH,
         height: 10,
         backgroundColor: '#E0E0E0',
         borderRadius: 5,
