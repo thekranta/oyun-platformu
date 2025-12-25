@@ -184,6 +184,7 @@ export default function AdminPanel() {
                 else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
                 else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
                 else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
+                else if (score.oyun_turu === 'rakam-yazma') oyunAdiTR = 'Rakam Yazma';
                 else oyunAdiTR = score.oyun_turu;
 
                 prompt = `
@@ -275,6 +276,7 @@ export default function AdminPanel() {
             else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
             else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
             else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
+            else if (score.oyun_turu === 'rakam-yazma') oyunAdiTR = 'Rakam Yazma';
             else oyunAdiTR = score.oyun_turu;
 
             const response = await fetch('/api/send-email', {

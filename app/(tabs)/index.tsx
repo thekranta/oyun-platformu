@@ -6,6 +6,7 @@ import EksikSayiBul from '@/components/EksikSayiBul';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
+import RakamYazma from '@/components/RakamYazma';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
