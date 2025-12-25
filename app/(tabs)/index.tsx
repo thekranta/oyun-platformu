@@ -8,13 +8,13 @@ import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
-import YaraticiCizim from '@/components/YaraticiCizim';
 import Toast from '@/components/Toast';
+import YaraticiCizim from '@/components/YaraticiCizim';
 import { Ionicons } from '@expo/vector-icons';
+import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import * as FileSystem from 'expo-file-system';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -99,8 +99,8 @@ export default function App() {
         if (!extraData?.cizimResimBase64 || !SUPABASE_URL || !SUPABASE_KEY) return null;
         const format = extraData.cizimResimFormat || 'png';
         // Base64 string'den data URL prefix'ini temizle (varsa)
-        const cleanBase64 = extraData.cizimResimBase64.includes(',') 
-          ? extraData.cizimResimBase64.split(',')[1] 
+        const cleanBase64 = extraData.cizimResimBase64.includes(',')
+          ? extraData.cizimResimBase64.split(',')[1]
           : extraData.cizimResimBase64;
         const safeName = slugifyName(ad);
         const fileName = `${safeName}-${yas}-${Date.now()}.${format}`;
@@ -346,6 +346,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Minik Kaşif</Text>
                   <Text style={styles.oyunAciklama}>Kodlama Oyunu</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#4DB6AC' }]} onPress={() => oyunuBaslat('rakam-yazma')}>
+                  <Ionicons name="pencil" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Rakam Yazma</Text>
+                  <Text style={styles.oyunAciklama}>1'den 5'e Yaz</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -403,6 +409,10 @@ export default function App() {
 
   if (asama === 'kodlama') {
     return <KodlamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'rakam-yazma') {
+    return <RakamYazma onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'ceviz-macera') {
