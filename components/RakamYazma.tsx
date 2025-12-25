@@ -19,57 +19,116 @@ interface Props {
 }
 
 const MIN_STEP = 2;
-const SUCCESS_THRESHOLD = 0.65; // 65% coverage required
+const SUCCESS_THRESHOLD = 0.60;
 
-// Normalized coordinates (0-1) for number detection - matches visual template
-const NUMBER_TEMPLATES: Record<number, Point[]> = {
-    1: Array.from({ length: 30 }, (_, i) => ({ x: 0.5, y: 0.1 + (i * 0.8) / 29 })),
-    2: [
-        // Top arc
-        ...Array.from({ length: 15 }, (_, i) => {
-            const angle = Math.PI + (i * Math.PI) / 14;
-            return { x: 0.5 + 0.2 * Math.cos(angle), y: 0.28 + 0.16 * Math.sin(angle) };
-        }),
-        // Diagonal line
-        ...Array.from({ length: 15 }, (_, i) => ({ x: 0.7 - (i * 0.4) / 14, y: 0.28 + (i * 0.52) / 14 })),
-        // Bottom horizontal
-        ...Array.from({ length: 12 }, (_, i) => ({ x: 0.3 + (i * 0.4) / 11, y: 0.8 })),
-    ],
-    3: [
-        // Top curve
-        ...Array.from({ length: 15 }, (_, i) => {
-            const angle = -Math.PI * 0.6 + (i * Math.PI * 1.1) / 14;
-            return { x: 0.5 + 0.18 * Math.cos(angle), y: 0.28 + 0.15 * Math.sin(angle) };
-        }),
-        // Bottom curve
-        ...Array.from({ length: 15 }, (_, i) => {
-            const angle = -Math.PI * 0.6 + (i * Math.PI * 1.2) / 14;
-            return { x: 0.5 + 0.18 * Math.cos(angle), y: 0.62 + 0.18 * Math.sin(angle) };
-        }),
-    ],
-    4: [
-        // Down stroke left
-        ...Array.from({ length: 12 }, (_, i) => ({ x: 0.55 - (i * 0.25) / 11, y: 0.12 + (i * 0.4) / 11 })),
-        // Horizontal line
-        ...Array.from({ length: 12 }, (_, i) => ({ x: 0.3 + (i * 0.4) / 11, y: 0.52 })),
-        // Vertical line
-        ...Array.from({ length: 22 }, (_, i) => ({ x: 0.55, y: 0.12 + (i * 0.76) / 21 })),
-    ],
-    5: [
-        // Top horizontal
-        ...Array.from({ length: 10 }, (_, i) => ({ x: 0.68 - (i * 0.32) / 9, y: 0.14 })),
-        // Down stroke
-        ...Array.from({ length: 10 }, (_, i) => ({ x: 0.36, y: 0.14 + (i * 0.26) / 9 })),
-        // Bottom curve
-        ...Array.from({ length: 16 }, (_, i) => {
-            const angle = -Math.PI * 0.55 + (i * Math.PI * 1.25) / 15;
-            return { x: 0.52 + 0.18 * Math.cos(angle), y: 0.62 + 0.18 * Math.sin(angle) };
-        }),
-    ],
+// Detection points - centered in canvas (matching text position)
+// Coordinates normalized to 0-1 where (0.5, 0.5) is center
+const createNumberPoints = (num: number): Point[] => {
+    const centerX = 0.5;
+    const centerY = 0.5;
+    const scale = 0.35; // Scale factor for number size
+
+    switch (num) {
+        case 1:
+            // Vertical line in center
+            return Array.from({ length: 40 }, (_, i) => ({
+                x: centerX,
+                y: centerY - scale + (i * scale * 2) / 39,
+            }));
+
+        case 2:
+            // Top curve + diagonal + bottom line
+            return [
+                // Top arc (semicircle opening down-right)
+                ...Array.from({ length: 18 }, (_, i) => {
+                    const angle = Math.PI * 1.1 + (i * Math.PI * 0.9) / 17;
+                    return {
+                        x: centerX + 0.05 + scale * 0.5 * Math.cos(angle),
+                        y: centerY - scale * 0.45 + scale * 0.45 * Math.sin(angle),
+                    };
+                }),
+                // Diagonal from right to bottom-left
+                ...Array.from({ length: 18 }, (_, i) => ({
+                    x: centerX + scale * 0.55 - (i * scale * 1.1) / 17,
+                    y: centerY - scale * 0.05 + (i * scale * 0.75) / 17,
+                })),
+                // Bottom horizontal line
+                ...Array.from({ length: 15 }, (_, i) => ({
+                    x: centerX - scale * 0.55 + (i * scale * 1.1) / 14,
+                    y: centerY + scale * 0.7,
+                })),
+            ];
+
+        case 3:
+            // Two curves stacked
+            return [
+                // Top curve
+                ...Array.from({ length: 18 }, (_, i) => {
+                    const angle = -Math.PI * 0.7 + (i * Math.PI * 1.2) / 17;
+                    return {
+                        x: centerX + scale * 0.45 * Math.cos(angle),
+                        y: centerY - scale * 0.5 + scale * 0.4 * Math.sin(angle),
+                    };
+                }),
+                // Bottom curve
+                ...Array.from({ length: 20 }, (_, i) => {
+                    const angle = -Math.PI * 0.6 + (i * Math.PI * 1.3) / 19;
+                    return {
+                        x: centerX + scale * 0.5 * Math.cos(angle),
+                        y: centerY + scale * 0.35 + scale * 0.45 * Math.sin(angle),
+                    };
+                }),
+            ];
+
+        case 4:
+            // Down-left diagonal + horizontal + full vertical
+            return [
+                // Diagonal from top to left
+                ...Array.from({ length: 15 }, (_, i) => ({
+                    x: centerX + scale * 0.15 - (i * scale * 0.65) / 14,
+                    y: centerY - scale * 0.8 + (i * scale * 0.9) / 14,
+                })),
+                // Horizontal line
+                ...Array.from({ length: 15 }, (_, i) => ({
+                    x: centerX - scale * 0.5 + (i * scale * 1.0) / 14,
+                    y: centerY + scale * 0.1,
+                })),
+                // Full vertical on right
+                ...Array.from({ length: 30 }, (_, i) => ({
+                    x: centerX + scale * 0.15,
+                    y: centerY - scale * 0.8 + (i * scale * 1.6) / 29,
+                })),
+            ];
+
+        case 5:
+            // Top horizontal + down stroke + bottom curve
+            return [
+                // Top horizontal (right to left)
+                ...Array.from({ length: 12 }, (_, i) => ({
+                    x: centerX + scale * 0.5 - (i * scale * 0.9) / 11,
+                    y: centerY - scale * 0.75,
+                })),
+                // Down stroke on left
+                ...Array.from({ length: 12 }, (_, i) => ({
+                    x: centerX - scale * 0.4,
+                    y: centerY - scale * 0.75 + (i * scale * 0.6) / 11,
+                })),
+                // Bottom curve
+                ...Array.from({ length: 22 }, (_, i) => {
+                    const angle = -Math.PI * 0.55 + (i * Math.PI * 1.3) / 21;
+                    return {
+                        x: centerX + scale * 0.5 * Math.cos(angle),
+                        y: centerY + scale * 0.35 + scale * 0.45 * Math.sin(angle),
+                    };
+                }),
+            ];
+
+        default:
+            return [];
+    }
 };
 
 export default function RakamYazma({ onGameEnd, onExit }: Props) {
-    // Dynamic dimensions
     const [canvasSize, setCanvasSize] = useState({ width: 300, height: 300 });
     const [currentNumber, setCurrentNumber] = useState(1);
     const [strokes, setStrokes] = useState<Stroke[]>([]);
@@ -81,7 +140,6 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
     const [successAnim] = useState(new Animated.Value(0));
     const [showSuccess, setShowSuccess] = useState(false);
 
-    // Recalculate on dimension change
     useEffect(() => {
         const updateDimensions = () => {
             const { width, height } = Dimensions.get('window');
@@ -94,16 +152,19 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         return () => subscription?.remove();
     }, []);
 
-    // Convert normalized points to actual canvas coordinates
+    // Convert normalized points to canvas coordinates
     const targetPoints = useMemo(() => {
-        return NUMBER_TEMPLATES[currentNumber].map(p => ({
+        const points = createNumberPoints(currentNumber);
+        return points.map(p => ({
             x: p.x * canvasSize.width,
             y: p.y * canvasSize.height,
         }));
     }, [currentNumber, canvasSize]);
 
-    // Hit radius scales with canvas size
-    const hitRadius = useMemo(() => Math.max(canvasSize.width * 0.08, 25), [canvasSize]);
+    // Hit radius - scales with canvas but not too large
+    const hitRadius = useMemo(() => {
+        return Math.max(Math.min(canvasSize.width, canvasSize.height) * 0.06, 18);
+    }, [canvasSize]);
 
     const resetForNextNumber = useCallback((nextNum: number) => {
         coveredPointsRef.current = new Set();
@@ -145,12 +206,11 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         if (updated) {
             setCoveredCount(coveredPointsRef.current.size);
         }
-        return coveredPointsRef.current.size;
     }, []);
 
     const addPoint = useCallback((x: number, y: number, points: Point[], radius: number) => {
-        const strokeSize = Math.max(canvasSize.width * 0.04, 12);
-        const baseStroke = liveStrokeRef.current ?? { color: '#4FC3F7', size: strokeSize, points: [] as Point[] };
+        const strokeSize = Math.max(canvasSize.width * 0.035, 10);
+        const baseStroke = liveStrokeRef.current ?? { color: '#42A5F5', size: strokeSize, points: [] as Point[] };
         const currentPoints: Point[] = [...baseStroke.points];
         const last = currentPoints[currentPoints.length - 1];
 
@@ -221,9 +281,7 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
     };
 
     const progress = Math.round((coveredCount / targetPoints.length) * 100);
-
-    // Dynamic font size based on canvas
-    const templateFontSize = Math.min(canvasSize.height * 0.85, canvasSize.width * 0.7);
+    const templateFontSize = Math.min(canvasSize.height * 0.85, canvasSize.width * 0.75);
 
     return (
         <DynamicBackground>
@@ -244,12 +302,12 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                         { width: canvasSize.width, height: canvasSize.height },
                     ]}
                 >
-                    {/* Faded number template only */}
+                    {/* Faded number template - BOLDER */}
                     <View style={styles.templateOverlay}>
                         <Text
                             style={[
                                 styles.templateText,
-                                { fontSize: templateFontSize, lineHeight: templateFontSize * 1.1 },
+                                { fontSize: templateFontSize, lineHeight: templateFontSize * 1.05 },
                             ]}
                         >
                             {currentNumber}
@@ -327,9 +385,7 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                 <Text style={styles.progressLabel}>%{progress} tamamlandı</Text>
 
                 <View style={styles.footer}>
-                    <Text style={styles.infoText}>
-                        {currentNumber}. rakamın üzerini çiz! ✨
-                    </Text>
+                    <Text style={styles.infoText}>{currentNumber}. rakamın üzerini çiz! ✨</Text>
                     <TouchableOpacity style={styles.clearBtn} onPress={clearCanvas}>
                         <Ionicons name="refresh" size={20} color="#fff" style={{ marginRight: 6 }} />
                         <Text style={styles.clearBtnText}>Temizle</Text>
@@ -386,8 +442,8 @@ const styles = StyleSheet.create({
         zIndex: 0,
     },
     templateText: {
-        fontWeight: '300',
-        color: 'rgba(0, 0, 0, 0.12)',
+        fontWeight: '900', // MUCH BOLDER
+        color: 'rgba(0, 0, 0, 0.18)', // Slightly more visible
         textAlign: 'center',
         includeFontPadding: false,
         textAlignVertical: 'center',
