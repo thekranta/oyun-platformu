@@ -19,60 +19,69 @@ interface Props {
 }
 
 const MIN_STEP = 2;
-const SUCCESS_THRESHOLD = 0.60;
+const SUCCESS_THRESHOLD = 0.55;
 
-// Detection points - centered in canvas (matching text position)
-// Coordinates normalized to 0-1 where (0.5, 0.5) is center
+// Color palette for pen selection
+const PEN_COLORS = [
+    { color: '#2196F3', name: 'Mavi' },
+    { color: '#E91E63', name: 'Pembe' },
+    { color: '#4CAF50', name: 'Yeşil' },
+    { color: '#FF9800', name: 'Turuncu' },
+    { color: '#9C27B0', name: 'Mor' },
+    { color: '#F44336', name: 'Kırmızı' },
+];
+
+// Detection points - balanced distribution for each number
 const createNumberPoints = (num: number): Point[] => {
     const centerX = 0.5;
     const centerY = 0.5;
-    const scale = 0.35; // Scale factor for number size
+    const scale = 0.35;
 
     switch (num) {
         case 1:
-            // Vertical line in center
-            return Array.from({ length: 40 }, (_, i) => ({
+            // Simple vertical line - evenly distributed
+            return Array.from({ length: 25 }, (_, i) => ({
                 x: centerX,
-                y: centerY - scale + (i * scale * 2) / 39,
+                y: centerY - scale + (i * scale * 2) / 24,
             }));
 
         case 2:
-            // Top curve + diagonal + bottom line
+            // Top curve + diagonal + bottom line (balanced)
             return [
-                // Top arc (semicircle opening down-right)
-                ...Array.from({ length: 18 }, (_, i) => {
-                    const angle = Math.PI * 1.1 + (i * Math.PI * 0.9) / 17;
+                // Top arc
+                ...Array.from({ length: 12 }, (_, i) => {
+                    const angle = Math.PI * 1.1 + (i * Math.PI * 0.9) / 11;
                     return {
                         x: centerX + 0.05 + scale * 0.5 * Math.cos(angle),
                         y: centerY - scale * 0.45 + scale * 0.45 * Math.sin(angle),
                     };
                 }),
-                // Diagonal from right to bottom-left
-                ...Array.from({ length: 18 }, (_, i) => ({
-                    x: centerX + scale * 0.55 - (i * scale * 1.1) / 17,
-                    y: centerY - scale * 0.05 + (i * scale * 0.75) / 17,
+                // Diagonal
+                ...Array.from({ length: 12 }, (_, i) => ({
+                    x: centerX + scale * 0.55 - (i * scale * 1.1) / 11,
+                    y: centerY - scale * 0.05 + (i * scale * 0.75) / 11,
                 })),
-                // Bottom horizontal line
-                ...Array.from({ length: 15 }, (_, i) => ({
-                    x: centerX - scale * 0.55 + (i * scale * 1.1) / 14,
+                // Bottom horizontal
+                ...Array.from({ length: 12 }, (_, i) => ({
+                    x: centerX - scale * 0.55 + (i * scale * 1.1) / 11,
                     y: centerY + scale * 0.7,
                 })),
             ];
 
         case 3:
-            // Two curves stacked
+            // Two curves stacked (balanced)
             return [
                 // Top curve
-                ...Array.from({ length: 18 }, (_, i) => {
-                    const angle = -Math.PI * 0.7 + (i * Math.PI * 1.2) / 17;
+                ...Array.from({ length: 14 }, (_, i) => {
+                    const angle = -Math.PI * 0.7 + (i * Math.PI * 1.2) / 13;
                     return {
                         x: centerX + scale * 0.45 * Math.cos(angle),
                         y: centerY - scale * 0.5 + scale * 0.4 * Math.sin(angle),
                     };
                 }),
                 // Bottom curve
-                ...Array.from({ length: 20 }, (_, i) => {
-                    const angle = -Math.PI * 0.6 + (i * Math.PI * 1.3) / 19;
+                ...Array.from({ length: 14 }, (_, i) => {
+                    const angle = -Math.PI * 0.6 + (i * Math.PI * 1.3) / 13;
                     return {
                         x: centerX + scale * 0.5 * Math.cos(angle),
                         y: centerY + scale * 0.35 + scale * 0.45 * Math.sin(angle),
@@ -81,41 +90,47 @@ const createNumberPoints = (num: number): Point[] => {
             ];
 
         case 4:
-            // Down-left diagonal + horizontal + full vertical
+            // FIXED: Balanced distribution - fewer vertical points, more on diagonal and horizontal
             return [
-                // Diagonal from top to left
-                ...Array.from({ length: 15 }, (_, i) => ({
-                    x: centerX + scale * 0.15 - (i * scale * 0.65) / 14,
-                    y: centerY - scale * 0.8 + (i * scale * 0.9) / 14,
+                // Diagonal from top-right going down-left (main stroke)
+                ...Array.from({ length: 12 }, (_, i) => ({
+                    x: centerX + scale * 0.2 - (i * scale * 0.7) / 11,
+                    y: centerY - scale * 0.85 + (i * scale * 1.0) / 11,
                 })),
-                // Horizontal line
-                ...Array.from({ length: 15 }, (_, i) => ({
-                    x: centerX - scale * 0.5 + (i * scale * 1.0) / 14,
-                    y: centerY + scale * 0.1,
+                // Horizontal line in middle
+                ...Array.from({ length: 14 }, (_, i) => ({
+                    x: centerX - scale * 0.5 + (i * scale * 0.95) / 13,
+                    y: centerY + scale * 0.15,
                 })),
-                // Full vertical on right
-                ...Array.from({ length: 30 }, (_, i) => ({
-                    x: centerX + scale * 0.15,
-                    y: centerY - scale * 0.8 + (i * scale * 1.6) / 29,
+                // Vertical line - ONLY the parts not covered by diagonal
+                // Upper part (above horizontal)
+                ...Array.from({ length: 6 }, (_, i) => ({
+                    x: centerX + scale * 0.2,
+                    y: centerY - scale * 0.85 + (i * scale * 0.5) / 5,
+                })),
+                // Lower part (below horizontal)
+                ...Array.from({ length: 8 }, (_, i) => ({
+                    x: centerX + scale * 0.2,
+                    y: centerY + scale * 0.25 + (i * scale * 0.6) / 7,
                 })),
             ];
 
         case 5:
-            // Top horizontal + down stroke + bottom curve
+            // Top horizontal + down stroke + bottom curve (balanced)
             return [
-                // Top horizontal (right to left)
-                ...Array.from({ length: 12 }, (_, i) => ({
-                    x: centerX + scale * 0.5 - (i * scale * 0.9) / 11,
+                // Top horizontal
+                ...Array.from({ length: 10 }, (_, i) => ({
+                    x: centerX + scale * 0.5 - (i * scale * 0.9) / 9,
                     y: centerY - scale * 0.75,
                 })),
                 // Down stroke on left
-                ...Array.from({ length: 12 }, (_, i) => ({
+                ...Array.from({ length: 10 }, (_, i) => ({
                     x: centerX - scale * 0.4,
-                    y: centerY - scale * 0.75 + (i * scale * 0.6) / 11,
+                    y: centerY - scale * 0.75 + (i * scale * 0.6) / 9,
                 })),
                 // Bottom curve
-                ...Array.from({ length: 22 }, (_, i) => {
-                    const angle = -Math.PI * 0.55 + (i * Math.PI * 1.3) / 21;
+                ...Array.from({ length: 16 }, (_, i) => {
+                    const angle = -Math.PI * 0.55 + (i * Math.PI * 1.3) / 15;
                     return {
                         x: centerX + scale * 0.5 * Math.cos(angle),
                         y: centerY + scale * 0.35 + scale * 0.45 * Math.sin(angle),
@@ -140,11 +155,14 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
     const [successAnim] = useState(new Animated.Value(0));
     const [showSuccess, setShowSuccess] = useState(false);
 
+    // Selected pen color
+    const [selectedColor, setSelectedColor] = useState(PEN_COLORS[0].color);
+
     useEffect(() => {
         const updateDimensions = () => {
             const { width, height } = Dimensions.get('window');
             const canvasWidth = Math.min(width * 0.9, 500);
-            const canvasHeight = Math.min(height * 0.5, 400);
+            const canvasHeight = Math.min(height * 0.45, 380);
             setCanvasSize({ width: canvasWidth, height: canvasHeight });
         };
         updateDimensions();
@@ -152,7 +170,6 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         return () => subscription?.remove();
     }, []);
 
-    // Convert normalized points to canvas coordinates
     const targetPoints = useMemo(() => {
         const points = createNumberPoints(currentNumber);
         return points.map(p => ({
@@ -161,7 +178,6 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         }));
     }, [currentNumber, canvasSize]);
 
-    // Hit radius - scales with canvas, generous for children
     const hitRadius = useMemo(() => {
         return Math.max(Math.min(canvasSize.width, canvasSize.height) * 0.12, 35);
     }, [canvasSize]);
@@ -208,9 +224,9 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         }
     }, []);
 
-    const addPoint = useCallback((x: number, y: number, points: Point[], radius: number) => {
-        const strokeSize = Math.max(canvasSize.width * 0.035, 10);
-        const baseStroke = liveStrokeRef.current ?? { color: '#42A5F5', size: strokeSize, points: [] as Point[] };
+    const addPoint = useCallback((x: number, y: number, points: Point[], radius: number, color: string) => {
+        const strokeSize = Math.max(canvasSize.width * 0.04, 12);
+        const baseStroke = liveStrokeRef.current ?? { color, size: strokeSize, points: [] as Point[] };
         const currentPoints: Point[] = [...baseStroke.points];
         const last = currentPoints[currentPoints.length - 1];
 
@@ -230,7 +246,7 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         currentPoints.push({ x, y });
         checkAndUpdateCoverage(x, y, points, radius);
 
-        const nextStroke = { ...baseStroke, points: currentPoints };
+        const nextStroke = { ...baseStroke, color, points: currentPoints };
         liveStrokeRef.current = nextStroke;
         setLiveStroke(nextStroke);
     }, [checkAndUpdateCoverage, canvasSize]);
@@ -257,19 +273,19 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                 onPanResponderGrant: e => {
                     if (showSuccess) return;
                     const { locationX, locationY } = e.nativeEvent;
-                    addPoint(locationX, locationY, targetPoints, hitRadius);
+                    addPoint(locationX, locationY, targetPoints, hitRadius, selectedColor);
                 },
                 onPanResponderMove: e => {
                     if (showSuccess) return;
                     const { locationX, locationY } = e.nativeEvent;
-                    addPoint(locationX, locationY, targetPoints, hitRadius);
+                    addPoint(locationX, locationY, targetPoints, hitRadius, selectedColor);
                 },
                 onPanResponderRelease: () => {
                     if (showSuccess) return;
                     finishStroke(targetPoints);
                 },
             }),
-        [targetPoints, hitRadius, addPoint, finishStroke, showSuccess],
+        [targetPoints, hitRadius, selectedColor, addPoint, finishStroke, showSuccess],
     );
 
     const clearCanvas = () => {
@@ -296,13 +312,32 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                     </View>
                 </View>
 
+                {/* Color Palette */}
+                <View style={styles.colorPalette}>
+                    {PEN_COLORS.map((pen) => (
+                        <TouchableOpacity
+                            key={pen.color}
+                            onPress={() => setSelectedColor(pen.color)}
+                            style={[
+                                styles.colorBtn,
+                                { backgroundColor: pen.color },
+                                selectedColor === pen.color && styles.colorBtnSelected,
+                            ]}
+                        >
+                            {selectedColor === pen.color && (
+                                <Ionicons name="checkmark" size={18} color="#fff" />
+                            )}
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
                 <View
                     style={[
                         styles.canvasContainer,
                         { width: canvasSize.width, height: canvasSize.height },
                     ]}
                 >
-                    {/* Faded number template - BOLDER */}
+                    {/* Faded number template */}
                     <View style={styles.templateOverlay}>
                         <Text
                             style={[
@@ -397,13 +432,13 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, alignItems: 'center' },
+    container: { flex: 1, padding: 16, alignItems: 'center' },
     header: {
         flexDirection: 'row',
         width: '100%',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: 10,
     },
     exitBtn: {
         width: 44,
@@ -414,14 +449,42 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         elevation: 2,
     },
-    title: { fontSize: 24, fontWeight: 'bold', color: '#3e2723' },
+    title: { fontSize: 22, fontWeight: 'bold', color: '#3e2723' },
     progressBadge: {
         backgroundColor: '#E3F2FD',
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        borderRadius: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
     },
-    progressText: { fontSize: 16, fontWeight: 'bold', color: '#1976D2' },
+    progressText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
+
+    // Color palette
+    colorPalette: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 10,
+        marginBottom: 12,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        elevation: 2,
+    },
+    colorBtn: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 2,
+    },
+    colorBtnSelected: {
+        borderWidth: 3,
+        borderColor: '#fff',
+        transform: [{ scale: 1.15 }],
+        elevation: 4,
+    },
+
     canvasContainer: {
         backgroundColor: '#FFFEF7',
         borderRadius: 24,
@@ -442,8 +505,8 @@ const styles = StyleSheet.create({
         zIndex: 0,
     },
     templateText: {
-        fontWeight: '900', // MUCH BOLDER
-        color: 'rgba(0, 0, 0, 0.18)', // Slightly more visible
+        fontWeight: '900',
+        color: 'rgba(0, 0, 0, 0.18)',
         textAlign: 'center',
         includeFontPadding: false,
         textAlignVertical: 'center',
@@ -462,7 +525,7 @@ const styles = StyleSheet.create({
         height: 10,
         backgroundColor: '#E0E0E0',
         borderRadius: 5,
-        marginTop: 15,
+        marginTop: 12,
         overflow: 'hidden',
     },
     progressBar: {
@@ -471,20 +534,20 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     progressLabel: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#757575',
-        marginTop: 6,
+        marginTop: 4,
     },
-    footer: { marginTop: 20, alignItems: 'center' },
-    infoText: { fontSize: 18, color: '#5D4037', marginBottom: 15, fontWeight: '500' },
+    footer: { marginTop: 14, alignItems: 'center' },
+    infoText: { fontSize: 16, color: '#5D4037', marginBottom: 12, fontWeight: '500' },
     clearBtn: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#FF7043',
-        paddingHorizontal: 24,
-        paddingVertical: 14,
-        borderRadius: 18,
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 16,
         elevation: 3,
     },
-    clearBtnText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+    clearBtnText: { color: '#fff', fontSize: 15, fontWeight: 'bold' },
 });
