@@ -28,21 +28,11 @@ const PENCIL_COLORS = [
   '#118ab2', '#5f4b8b', '#000000', '#8B4513',
 ];
 
-// Brush sizes
-const BRUSH_SIZES = [
-  { size: 4, label: 'S' },
-  { size: 8, label: 'M' },
-  { size: 14, label: 'L' },
-  { size: 22, label: 'XL' },
-];
+// Brush sizes - visual dots only, no text
+const BRUSH_SIZES = [4, 8, 14, 22];
 
-// Shape sizes
-const SHAPE_SIZES = [
-  { size: 30, label: 'S' },
-  { size: 50, label: 'M' },
-  { size: 80, label: 'L' },
-  { size: 120, label: 'XL' },
-];
+// Shape sizes - visual only
+const SHAPE_SIZES = [30, 50, 80, 120];
 
 // Geometric shapes
 const SHAPES: { type: ShapeType; icon: string }[] = [
@@ -429,9 +419,9 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
             </View>
           </TouchableOpacity>
 
-          {/* Brush Size */}
+          {/* Brush Size - shows visual dot */}
           <TouchableOpacity style={styles.sizeButton} onPress={() => togglePicker('size')}>
-            <Text style={styles.sizeButtonText}>{BRUSH_SIZES.find(b => b.size === brushSize)?.label || 'M'}</Text>
+            <View style={[styles.sizePreviewDot, { width: Math.min(brushSize, 20), height: Math.min(brushSize, 20), borderRadius: brushSize / 2, backgroundColor: selectedColor }]} />
           </TouchableOpacity>
 
           <View style={styles.divider} />
@@ -444,10 +434,10 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
             <Ionicons name="shapes" size={20} color={selectedShape ? '#fff' : '#666'} />
           </TouchableOpacity>
 
-          {/* Shape Size (only when shape selected) */}
+          {/* Shape Size - shows visual shape preview */}
           {selectedShape && (
             <TouchableOpacity style={styles.shapeSizeBtn} onPress={() => togglePicker('shapeSize')}>
-              <Text style={styles.shapeSizeBtnText}>{SHAPE_SIZES.find(s => s.size === shapeSize)?.label || 'M'}</Text>
+              <Ionicons name={SHAPES.find(s => s.type === selectedShape)?.icon as any} size={Math.min(shapeSize / 4, 20)} color="#9C27B0" />
             </TouchableOpacity>
           )}
 
@@ -496,16 +486,15 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           ))
         )}
 
-        {/* Brush size picker */}
+        {/* Brush size picker - visual dots */}
         {renderPickerPopup(sizePickerAnim, showSizePicker, styles.sizePickerPopup,
-          BRUSH_SIZES.map(b => (
+          BRUSH_SIZES.map(size => (
             <TouchableOpacity
-              key={b.size}
-              style={[styles.sizeOption, brushSize === b.size && styles.optionSelected]}
-              onPress={() => selectSize(b.size)}
+              key={size}
+              style={[styles.sizeOption, brushSize === size && styles.optionSelected]}
+              onPress={() => selectSize(size)}
             >
-              <Text style={[styles.optionLabel, brushSize === b.size && styles.optionLabelActive]}>{b.label}</Text>
-              <View style={{ width: Math.min(b.size, 16), height: Math.min(b.size, 16), borderRadius: b.size / 2, backgroundColor: selectedColor }} />
+              <View style={{ width: Math.min(size, 18), height: Math.min(size, 18), borderRadius: size / 2, backgroundColor: selectedColor }} />
             </TouchableOpacity>
           ))
         )}
@@ -531,15 +520,19 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           </>
         )}
 
-        {/* Shape size picker */}
+        {/* Shape size picker - visual shapes in different sizes */}
         {renderPickerPopup(shapeSizePickerAnim, showShapeSizePicker, styles.shapeSizePickerPopup,
-          SHAPE_SIZES.map(s => (
+          SHAPE_SIZES.map(size => (
             <TouchableOpacity
-              key={s.size}
-              style={[styles.sizeOption, shapeSize === s.size && styles.optionSelected]}
-              onPress={() => selectShapeSize(s.size)}
+              key={size}
+              style={[styles.shapeSizeOption, shapeSize === size && styles.optionSelected]}
+              onPress={() => selectShapeSize(size)}
             >
-              <Text style={[styles.optionLabel, shapeSize === s.size && styles.optionLabelActive]}>{s.label}</Text>
+              <Ionicons
+                name={selectedShape ? (SHAPES.find(s => s.type === selectedShape)?.icon as any) : 'ellipse'}
+                size={Math.min(size / 3, 28)}
+                color={selectedColor}
+              />
             </TouchableOpacity>
           ))
         )}
@@ -632,8 +625,15 @@ const styles = StyleSheet.create({
   colorOption: { width: 36, height: 36, borderRadius: 18, borderWidth: 3, borderColor: 'transparent' },
   optionSelected: { borderColor: '#333', transform: [{ scale: 1.1 }] },
   sizeOption: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#f5f5f5',
-    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#e0e0e0', gap: 2,
+    width: 44, height: 44, borderRadius: 22, backgroundColor: '#f5f5f5',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#e0e0e0',
+  },
+  shapeSizeOption: {
+    width: 48, height: 48, borderRadius: 24, backgroundColor: '#f5f5f5',
+    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#e0e0e0',
+  },
+  sizePreviewDot: {
+    // Dynamic size set inline
   },
   optionLabel: { fontSize: 10, fontWeight: 'bold', color: '#666' },
   optionLabelActive: { color: '#4CAF50' },
