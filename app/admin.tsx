@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
-import { useSound } from '../components/SoundContext';
+import MusicButton from '../components/MusicButton';
 import StudentStatsModal from '../components/StudentStatsModal';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -47,7 +47,7 @@ export default function AdminPanel() {
     const [studentGroups, setStudentGroups] = useState<StudentGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<number | null>(null);
-    const { isMuted, toggleMute } = useSound();
+    const { isMuted, toggleMute } = { isMuted: false, toggleMute: () => { } }; // Placeholder - using MusicButton instead
 
     // UI State - Lifted to prevent collapse on re-render
     const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(new Set());
@@ -65,7 +65,7 @@ export default function AdminPanel() {
     }, [isAuthenticated]);
 
     const handleLogin = () => {
-        if (username === 'admin' && password === '123456') {
+        if (username === 'admin' && password === '12') {
             setIsAuthenticated(true);
         } else {
             alert('Hatalı kullanıcı adı veya şifre!');
@@ -551,15 +551,11 @@ export default function AdminPanel() {
                         <Ionicons name="arrow-back" size={24} color="white" />
                     </TouchableOpacity>
                     <Text style={[styles.title, isLandscape && styles.titleLandscape]}>Öğrenci Gelişim Takibi 📊</Text>
-                    <View style={{ flexDirection: 'row' }}>
-                        <TouchableOpacity onPress={fetchScores} style={styles.soundButton}>
-                            <Ionicons name="refresh" size={24} color="white" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-                            <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="white" />
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity onPress={fetchScores} style={styles.refreshButton}>
+                        <Ionicons name="refresh" size={24} color="white" />
+                    </TouchableOpacity>
                 </View>
+                <MusicButton />
 
                 {loading ? (
                     <ActivityIndicator size="large" color="#4CAF50" style={{ marginTop: 50 }} />
@@ -584,6 +580,7 @@ const styles = StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 10 },
     headerLandscape: { maxWidth: 1400, alignSelf: 'center', width: '100%' },
     backButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginRight: 15 },
+    refreshButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20 },
     title: { flex: 1, fontSize: 22, fontWeight: 'bold', color: '#333' },
     titleLandscape: { fontSize: 24 },
     soundButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginLeft: 15 },
