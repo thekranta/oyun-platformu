@@ -1,5 +1,5 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 type SoundName = 'background' | 'correct' | 'wrong';
 
@@ -12,6 +12,7 @@ interface SoundContextType {
     isPlaying: boolean;
     volume: number;
     toggleSound: () => Promise<void>;
+    resumeAfterInteraction: () => Promise<void>;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
@@ -20,6 +21,8 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     const [backgroundSound, setBackgroundSound] = useState<Audio.Sound | null>(null);
     const [isMuted, setIsMuted] = useState(false);
     const [volume, setVolume] = useState(0.5);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const hasInteracted = useRef(false);
 
     useEffect(() => {
         loadBackgroundSound();
@@ -39,11 +42,12 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
     // Update play state when mute changes
     useEffect(() => {
-        if (backgroundSound) {
+        if (backgroundSound && hasInteracted.current) {
             if (isMuted) {
                 backgroundSound.pauseAsync();
+                setIsPlaying(false);
             } else {
-                backgroundSound.playAsync();
+                backgroundSound.playAsync().then(() => setIsPlaying(true));
             }
         }
     }, [isMuted, backgroundSound]);
@@ -59,13 +63,31 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
                 playThroughEarpieceAndroid: false,
             });
 
+            // Load sound but don't play yet - wait for user interaction
             const { sound } = await Audio.Sound.createAsync(
                 require('../assets/sounds/background.mp3'),
-                { shouldPlay: true, isLooping: true, volume: 0.5 }
+                { shouldPlay: false, isLooping: true, volume: 0.5 }
             );
             setBackgroundSound(sound);
+            console.log("✅ Background sound loaded (waiting for user interaction)");
         } catch (error) {
-            console.log("Error loading background sound:", error);
+            console.log("❌ Error loading background sound:", error);
+        }
+    };
+
+    // Call this after first user interaction to start music
+    const resumeAfterInteraction = async () => {
+        if (hasInteracted.current) return; // Already interacted
+        hasInteracted.current = true;
+
+        try {
+            if (backgroundSound && !isMuted) {
+                console.log("🎵 Starting background music after user interaction");
+                await backgroundSound.playAsync();
+                setIsPlaying(true);
+            }
+        } catch (error) {
+            console.log("❌ Error starting background music:", error);
         }
     };
 
@@ -82,12 +104,9 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
                         await backgroundSound.playAsync();
                     }
                 } else {
-                    // If sound not loaded yet, wait a bit and try again
-                    setTimeout(async () => {
-                        if (backgroundSound && !isMuted) {
-                            await backgroundSound.playAsync();
-                        }
-                    }, 500);
+                    // If sound not loaded yet, this branch won't help
+                    // The sound will start when user interacts via resumeAfterInteraction
+                    console.log("Background sound not loaded yet");
                 }
             } else if (name === 'correct') {
                 // SFX logic here
@@ -150,10 +169,10 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
             stopSound,
             toggleMute,
             changeVolume,
-            // SoundControls uyumluluğu için eklenenler:
-            isPlaying: !isMuted,
+            isPlaying,
             volume,
-            toggleSound: toggleMute
+            toggleSound: toggleMute,
+            resumeAfterInteraction,
         }}>
             {children}
         </SoundContext.Provider>

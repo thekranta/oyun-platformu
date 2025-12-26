@@ -6,6 +6,7 @@ import EksikSayiBul from '@/components/EksikSayiBul';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
+import MusicButton from '@/components/MusicButton';
 import RakamYazma from '@/components/RakamYazma';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
@@ -33,7 +34,7 @@ const slugifyName = (name: string) => {
 
 export default function App() {
   const router = useRouter();
-  const { isMuted, toggleMute } = useSound();
+  const { isMuted, toggleMute, resumeAfterInteraction } = useSound();
   const [asama, setAsama] = useState('giris');
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
@@ -45,7 +46,7 @@ export default function App() {
     setToast({ visible: true, message, type });
   };
 
-  const girisYap = () => {
+  const girisYap = async () => {
     if (ad.trim() === '' || yas.trim() === '') {
       showToast('L\u00fctfen isim ve ya\u015f giriniz.', 'error');
       return;
@@ -59,6 +60,8 @@ export default function App() {
       showToast('Ya\u015f 24 ile 75 ay aras\u0131nda olmal\u0131d\u0131r.', 'error');
       return;
     }
+    // Start background music after first user interaction
+    await resumeAfterInteraction();
     setAsama('menu');
   };
 
@@ -236,9 +239,7 @@ export default function App() {
   if (asama === 'giris') {
     return (
       <DynamicBackground>
-        <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-          <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={28} color="#fff" />
-        </TouchableOpacity>
+        <MusicButton />
         <View style={styles.merkezContainer}>
           <View style={styles.card}>
             <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
@@ -277,6 +278,7 @@ export default function App() {
   if (asama === 'menu') {
     return (
       <DynamicBackground>
+        <MusicButton />
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.headerContainer}>
             <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
@@ -427,6 +429,7 @@ export default function App() {
   if (asama === 'sonuc') {
     return (
       <DynamicBackground>
+        <MusicButton />
         <View style={styles.merkezContainer}>
           <View style={styles.card}>
             <Text style={{ fontSize: 80, textAlign: 'center' }}>🎉</Text>
