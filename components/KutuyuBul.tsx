@@ -48,12 +48,13 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
     const isPortrait = screenHeight > screenWidth;
     const { playSound } = useSound();
 
-    // Responsive box size - smaller on portrait mobile
+    // For portrait: use vertical layout with 2x2 grid per box
+    // Box size based on screen width with good margins
     const boxSize = isPortrait
-        ? Math.min((screenWidth - 48) / 3, 100) // Portrait: 3 boxes with smaller padding
-        : Math.min((screenWidth - 80) / 3, 160); // Landscape: more space
+        ? Math.min(screenWidth * 0.28, 110)
+        : Math.min((screenWidth - 100) / 3, 160);
 
-    const emojiSize = isPortrait ? 28 : 40;
+    const emojiSize = isPortrait ? 24 : 36;
 
     const [stage, setStage] = useState(1);
     const [currentQuestion, setCurrentQuestion] = useState<typeof QUESTIONS[0] | null>(null);
@@ -78,7 +79,6 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
 
     // Generate a new round
     const generateRound = () => {
-        // Pick a random unused question
         let availableQuestions = QUESTIONS.map((_, i) => i).filter(i => !usedQuestions.includes(i));
         if (availableQuestions.length === 0) {
             setUsedQuestions([]);
@@ -89,34 +89,28 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         setUsedQuestions(prev => [...prev, questionIndex]);
         setCurrentQuestion(question);
 
-        // Determine which box will have the target
         const targetBoxIndex = Math.floor(Math.random() * 3);
         setCorrectBoxIndex(targetBoxIndex);
 
-        // Get items from the same category (excluding the target)
         const categoryItems = [...ITEM_CATEGORIES[question.category]].filter(item => item !== question.target);
 
-        // Generate boxes
         const newBoxes: string[][] = [];
         for (let i = 0; i < 3; i++) {
             const boxItems: string[] = [];
 
             if (i === targetBoxIndex) {
-                // This box has the target - add target and other items
                 boxItems.push(question.target);
                 const shuffled = [...categoryItems].sort(() => Math.random() - 0.5);
                 for (let j = 0; j < ITEMS_PER_BOX - 1; j++) {
                     boxItems.push(shuffled[j]);
                 }
             } else {
-                // This box doesn't have the target - add random items (NOT the target)
                 const shuffled = [...categoryItems].sort(() => Math.random() - 0.5);
                 for (let j = 0; j < ITEMS_PER_BOX; j++) {
                     boxItems.push(shuffled[j + (i * ITEMS_PER_BOX)]);
                 }
             }
 
-            // Shuffle items within the box
             newBoxes.push(boxItems.sort(() => Math.random() - 0.5));
         }
 
@@ -124,7 +118,6 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         setWrongBoxes(new Set());
         setFoundCorrect(false);
 
-        // Animate boxes in
         boxAnims.forEach((anim, i) => {
             anim.setValue(0);
             Animated.spring(anim, {
@@ -136,7 +129,6 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
             }).start();
         });
 
-        // Animate question
         questionAnim.setValue(0);
         Animated.spring(questionAnim, {
             toValue: 1,
@@ -144,7 +136,6 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
             useNativeDriver: true,
         }).start();
 
-        // Animate progress
         Animated.timing(progressAnim, {
             toValue: stage / TOTAL_STAGES,
             duration: 300,
@@ -160,37 +151,31 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         if (foundCorrect || wrongBoxes.has(boxIndex)) return;
 
         setMoves(prev => prev + 1);
-
         const correct = boxIndex === correctBoxIndex;
 
         if (correct) {
             setFoundCorrect(true);
-            playSound('correct'); // Play correct sound
+            playSound('correct');
 
-            // Animate feedback
             feedbackAnim.setValue(0);
             Animated.spring(feedbackAnim, {
                 toValue: 1,
                 useNativeDriver: true,
             }).start();
 
-            // Move to next stage after delay
             setTimeout(() => {
                 if (stage < TOTAL_STAGES) {
                     setStage(prev => prev + 1);
                 } else {
-                    // Game complete
                     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
                     onGameEnd('kutuyu-bul', duration, moves + 1, errors);
                 }
             }, 1500);
         } else {
-            // Wrong answer - mark this box and track error
             setWrongBoxes(prev => new Set(prev).add(boxIndex));
             setErrors(prev => prev + 1);
-            playSound('wrong'); // Play wrong sound
+            playSound('wrong');
 
-            // Shake animation for wrong box
             const shakeAnim = boxAnims[boxIndex];
             Animated.sequence([
                 Animated.timing(shakeAnim, { toValue: 1.05, duration: 50, useNativeDriver: true }),
@@ -211,15 +196,62 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         return styles.box;
     };
 
+    const renderBox = (boxIndex: number) => {
+        const boxItems = boxes[boxIndex];
+        return (
+            <Animated.View
+                key={boxIndex}
+                style={{
+                    opacity: boxAnims[boxIndex],
+                    transform: [
+                        { scale: boxAnims[boxIndex] },
+                    ],
+                }}
+            >
+                <TouchableOpacity
+                    style={[
+                        getBoxStyle(boxIndex),
+                        {
+                            width: boxSize,
+                            height: boxSize,
+                        }
+                    ]}
+                    onPress={() => handleBoxPress(boxIndex)}
+                    disabled={foundCorrect || wrongBoxes.has(boxIndex)}
+                    activeOpacity={0.8}
+                >
+                    <View style={styles.boxContent}>
+                        {boxItems.map((item, itemIndex) => (
+                            <Text key={itemIndex} style={[styles.boxItem, { fontSize: emojiSize }]}>
+                                {item}
+                            </Text>
+                        ))}
+                    </View>
+
+                    {foundCorrect && boxIndex === correctBoxIndex && (
+                        <View style={styles.correctIndicator}>
+                            <Ionicons name="checkmark-circle" size={32} color="#4CAF50" />
+                        </View>
+                    )}
+                    {wrongBoxes.has(boxIndex) && (
+                        <View style={styles.wrongIndicator}>
+                            <Ionicons name="close-circle" size={28} color="#f44336" />
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
+
     return (
         <DynamicBackground>
             <View style={styles.container}>
                 {/* Exit button */}
                 <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                    <Ionicons name="close" size={28} color="#d84315" />
+                    <Ionicons name="close" size={26} color="#d84315" />
                 </TouchableOpacity>
 
-                {/* Progress bar at top */}
+                {/* Progress bar */}
                 <View style={styles.progressBarContainer}>
                     <View style={styles.progressBarBg}>
                         <Animated.View
@@ -254,59 +286,26 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                     </Text>
                 </Animated.View>
 
-                {/* Boxes */}
-                <View style={styles.boxesContainer}>
-                    {boxes.map((boxItems, boxIndex) => (
-                        <Animated.View
-                            key={boxIndex}
-                            style={{
-                                opacity: boxAnims[boxIndex],
-                                transform: [
-                                    { scale: boxAnims[boxIndex] },
-                                    { translateY: boxAnims[boxIndex].interpolate({ inputRange: [0, 1], outputRange: [50, 0] }) },
-                                ],
-                            }}
-                        >
-                            <TouchableOpacity
-                                style={[
-                                    getBoxStyle(boxIndex),
-                                    {
-                                        width: boxSize,
-                                        height: boxSize,
-                                        padding: isPortrait ? 6 : 12,
-                                        borderRadius: isPortrait ? 16 : 24,
-                                    }
-                                ]}
-                                onPress={() => handleBoxPress(boxIndex)}
-                                disabled={foundCorrect || wrongBoxes.has(boxIndex)}
-                                activeOpacity={0.8}
-                            >
-                                <View style={styles.boxContent}>
-                                    {boxItems.map((item, itemIndex) => (
-                                        <Text key={itemIndex} style={[styles.boxItem, { fontSize: emojiSize }]}>
-                                            {item}
-                                        </Text>
-                                    ))}
-                                </View>
+                {/* Boxes - Triangle/Pyramid layout on portrait */}
+                {isPortrait ? (
+                    <View style={styles.pyramidContainer}>
+                        {/* Top box */}
+                        <View style={styles.pyramidTop}>
+                            {renderBox(0)}
+                        </View>
+                        {/* Bottom two boxes */}
+                        <View style={styles.pyramidBottom}>
+                            {renderBox(1)}
+                            {renderBox(2)}
+                        </View>
+                    </View>
+                ) : (
+                    <View style={styles.boxesContainerRow}>
+                        {boxes.map((_, boxIndex) => renderBox(boxIndex))}
+                    </View>
+                )}
 
-                                {/* Correct indicator */}
-                                {foundCorrect && boxIndex === correctBoxIndex && (
-                                    <View style={styles.correctIndicator}>
-                                        <Ionicons name="checkmark-circle" size={isPortrait ? 32 : 44} color="#4CAF50" />
-                                    </View>
-                                )}
-                                {/* Wrong indicator */}
-                                {wrongBoxes.has(boxIndex) && (
-                                    <View style={styles.wrongIndicator}>
-                                        <Ionicons name="close-circle" size={isPortrait ? 28 : 36} color="#f44336" />
-                                    </View>
-                                )}
-                            </TouchableOpacity>
-                        </Animated.View>
-                    ))}
-                </View>
-
-                {/* Feedback message when correct */}
+                {/* Feedback message */}
                 {foundCorrect && (
                     <Animated.View
                         style={[
@@ -318,7 +317,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                         ]}
                     >
                         <Text style={[styles.feedbackText, isPortrait && styles.feedbackTextSmall]}>
-                            🎉 Harika! Doğru!
+                            🎉 Harika!
                         </Text>
                     </Animated.View>
                 )}
@@ -330,16 +329,16 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingTop: 50,
+        paddingTop: 45,
         paddingHorizontal: 12,
     },
     exitBtn: {
         position: 'absolute',
-        top: 50,
+        top: 45,
         left: 12,
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 42,
+        height: 42,
+        borderRadius: 21,
         backgroundColor: 'rgba(255, 229, 224, 0.95)',
         alignItems: 'center',
         justifyContent: 'center',
@@ -347,69 +346,79 @@ const styles = StyleSheet.create({
         zIndex: 100,
     },
     progressBarContainer: {
-        marginTop: 50,
-        marginBottom: 16,
+        marginTop: 45,
+        marginBottom: 12,
         marginHorizontal: 50,
         alignItems: 'center',
     },
     progressBarBg: {
         width: '100%',
-        height: 10,
+        height: 8,
         backgroundColor: '#e0e0e0',
-        borderRadius: 5,
+        borderRadius: 4,
         overflow: 'hidden',
     },
     progressBarFill: {
         height: '100%',
         backgroundColor: '#4CAF50',
-        borderRadius: 5,
+        borderRadius: 4,
     },
     progressText: {
-        marginTop: 6,
-        fontSize: 13,
+        marginTop: 4,
+        fontSize: 12,
         fontWeight: '600',
         color: '#666',
     },
     questionContainer: {
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        borderRadius: 16,
-        padding: 16,
-        marginHorizontal: 10,
-        marginBottom: 20,
+        borderRadius: 14,
+        padding: 14,
+        marginHorizontal: 16,
+        marginBottom: 16,
         elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
     },
     questionText: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
         textAlign: 'center',
         color: '#333',
     },
     questionTextSmall: {
-        fontSize: 18,
+        fontSize: 16,
     },
-    boxesContainer: {
+    pyramidContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 16,
+    },
+    pyramidTop: {
+        alignItems: 'center',
+    },
+    pyramidBottom: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 20,
+    },
+    boxesContainerRow: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 8,
+        gap: 16,
         flex: 1,
-        paddingHorizontal: 4,
     },
     box: {
         backgroundColor: '#fff',
-        borderRadius: 24,
-        padding: 12,
+        borderRadius: 16,
+        padding: 8,
         elevation: 6,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.15,
         shadowRadius: 6,
-        borderWidth: 4,
+        borderWidth: 3,
         borderColor: '#e0e0e0',
+        overflow: 'hidden',
     },
     correctBox: {
         borderColor: '#4CAF50',
@@ -426,45 +435,45 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 4,
+        gap: 2,
     },
     boxItem: {
-        fontSize: 40,
+        fontSize: 24,
     },
     correctIndicator: {
         position: 'absolute',
-        top: -14,
-        right: -14,
+        top: -10,
+        right: -10,
         backgroundColor: '#fff',
-        borderRadius: 22,
+        borderRadius: 16,
     },
     wrongIndicator: {
         position: 'absolute',
-        top: -12,
-        right: -12,
+        top: -8,
+        right: -8,
         backgroundColor: '#fff',
-        borderRadius: 18,
+        borderRadius: 14,
     },
     feedbackContainer: {
         position: 'absolute',
-        bottom: 80,
+        bottom: 60,
         left: 0,
         right: 0,
         alignItems: 'center',
     },
     feedbackText: {
-        fontSize: 26,
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#4CAF50',
         backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 30,
-        paddingVertical: 16,
-        borderRadius: 25,
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+        borderRadius: 22,
         overflow: 'hidden',
     },
     feedbackTextSmall: {
-        fontSize: 20,
+        fontSize: 18,
         paddingHorizontal: 20,
-        paddingVertical: 12,
+        paddingVertical: 10,
     },
 });
