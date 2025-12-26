@@ -1,11 +1,11 @@
 ﻿import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useRef, useState } from 'react';
-import { Animated, Dimensions, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Dimensions, PanResponder, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import DynamicBackground from './DynamicBackground';
 
 type Point = { x: number; y: number };
-type Stroke = { color: string; size: number; points: Point[] };
+type Stroke = { color: string; size: number; points: Point[]; isEraser?: boolean };
 
 interface Props {
   onGameEnd: (
@@ -19,25 +19,20 @@ interface Props {
   onExit?: () => void;
 }
 
-// Pencil colors with fun names
+// Pencil colors
 const PENCIL_COLORS = [
-  { color: '#ef476f', name: 'Pembe' },
-  { color: '#f78c6b', name: 'Turuncu' },
-  { color: '#ffd166', name: 'Sarı' },
-  { color: '#06d6a0', name: 'Yeşil' },
-  { color: '#118ab2', name: 'Mavi' },
-  { color: '#5f4b8b', name: 'Mor' },
-  { color: '#000000', name: 'Siyah' },
-  { color: '#8B4513', name: 'Kahve' },
+  '#ef476f', // Pink
+  '#f78c6b', // Orange
+  '#ffd166', // Yellow
+  '#06d6a0', // Green
+  '#118ab2', // Blue
+  '#5f4b8b', // Purple
+  '#000000', // Black
+  '#8B4513', // Brown
 ];
 
 // Brush sizes
-const BRUSH_SIZES = [
-  { size: 4, label: 'İnce' },
-  { size: 8, label: 'Normal' },
-  { size: 14, label: 'Kalın' },
-  { size: 22, label: 'Çok Kalın' },
-];
+const BRUSH_SIZES = [4, 8, 14, 22];
 
 const MIN_STEP = 2;
 
@@ -46,16 +41,36 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
   const liveStrokeRef = useRef<Stroke | null>(null);
   const canvasRef = useRef<View>(null);
-  const [selectedColor, setSelectedColor] = useState(PENCIL_COLORS[0].color);
+  const [selectedColor, setSelectedColor] = useState(PENCIL_COLORS[0]);
   const [brushSize, setBrushSize] = useState(8);
   const [saved, setSaved] = useState(false);
-  const [canvasSize, setCanvasSize] = useState({ width: 300, height: 400 });
+  const [isEraser, setIsEraser] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showSizePicker, setShowSizePicker] = useState(false);
   const startTimeRef = useRef(Date.now());
+
+  // Animations
+  const colorPickerAnim = useRef(new Animated.Value(0)).current;
+  const sizePickerAnim = useRef(new Animated.Value(0)).current;
   const saveAnim = useRef(new Animated.Value(1)).current;
 
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-  const isLandscape = screenWidth > screenHeight;
-  const toolbarWidth = isLandscape ? 80 : 70;
+
+  useEffect(() => {
+    Animated.timing(colorPickerAnim, {
+      toValue: showColorPicker ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [showColorPicker]);
+
+  useEffect(() => {
+    Animated.timing(sizePickerAnim, {
+      toValue: showSizePicker ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [showSizePicker]);
 
   const allStrokes = useMemo(
     () => (liveStroke ? [...strokes, liveStroke] : strokes),
@@ -67,8 +82,9 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   );
 
   const addPoint = (x: number, y: number) => {
+    const currentColor = isEraser ? '#fffef9' : selectedColor; // Eraser uses canvas bg color
     const baseStroke =
-      liveStrokeRef.current ?? { color: selectedColor, size: brushSize, points: [] as Point[] };
+      liveStrokeRef.current ?? { color: currentColor, size: brushSize, points: [] as Point[], isEraser };
     const last = baseStroke.points[baseStroke.points.length - 1];
     const points: Point[] = [...baseStroke.points];
     if (last) {
@@ -104,6 +120,8 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: e => {
+          setShowColorPicker(false);
+          setShowSizePicker(false);
           const { locationX, locationY } = e.nativeEvent;
           addPoint(locationX, locationY);
         },
@@ -122,7 +140,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           finishStroke();
         },
       }),
-    [selectedColor, brushSize],
+    [selectedColor, brushSize, isEraser],
   );
 
   const clearCanvas = () => {
@@ -133,18 +151,25 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     startTimeRef.current = Date.now();
   };
 
+  const undoLast = () => {
+    if (strokes.length > 0) {
+      setStrokes(prev => prev.slice(0, -1));
+      setSaved(false);
+    }
+  };
+
   const saveDrawing = async () => {
     const bundle = liveStrokeRef.current ? [...strokes, liveStrokeRef.current] : strokes;
     if (bundle.length === 0) return;
 
     // Animate save button
     Animated.sequence([
-      Animated.timing(saveAnim, { toValue: 1.2, duration: 150, useNativeDriver: true }),
+      Animated.timing(saveAnim, { toValue: 1.3, duration: 150, useNativeDriver: true }),
       Animated.timing(saveAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
     ]).start();
 
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-    const serialized = JSON.stringify({ strokes: bundle, size: canvasSize, savedAt: Date.now() });
+    const serialized = JSON.stringify({ strokes: bundle, savedAt: Date.now() });
     const totalPoints = bundle.reduce((sum, s) => sum + s.points.length, 0);
     let cizimResimBase64: string | undefined;
     try {
@@ -181,121 +206,184 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           height: stroke.size,
           borderRadius: stroke.size / 2,
           backgroundColor: stroke.color,
-          opacity: 0.94,
         }}
       />
     ));
 
-  // Pencil component
-  const Pencil = ({ color, isSelected, onPress }: { color: string; isSelected: boolean; onPress: () => void }) => (
-    <TouchableOpacity onPress={onPress} style={styles.pencilContainer}>
-      <View style={[styles.pencilTip, { borderBottomColor: color }]} />
-      <View style={[styles.pencilBody, { backgroundColor: color }, isSelected && styles.pencilSelected]} />
-      <View style={[styles.pencilEraser, { backgroundColor: color === '#000000' ? '#333' : '#ffb6c1' }]} />
-      {isSelected && (
-        <View style={styles.pencilCheckmark}>
-          <Ionicons name="checkmark" size={12} color="#fff" />
-        </View>
-      )}
-    </TouchableOpacity>
-  );
+  const toggleColorPicker = () => {
+    setShowSizePicker(false);
+    setShowColorPicker(!showColorPicker);
+  };
+
+  const toggleSizePicker = () => {
+    setShowColorPicker(false);
+    setShowSizePicker(!showSizePicker);
+  };
+
+  const selectColor = (color: string) => {
+    setSelectedColor(color);
+    setIsEraser(false);
+    setShowColorPicker(false);
+  };
+
+  const selectSize = (size: number) => {
+    setBrushSize(size);
+    setShowSizePicker(false);
+  };
+
+  const toggleEraser = () => {
+    setIsEraser(!isEraser);
+    setShowColorPicker(false);
+    setShowSizePicker(false);
+  };
 
   return (
     <DynamicBackground>
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-            <Ionicons name="close" size={24} color="#d84315" />
-          </TouchableOpacity>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>🎨 Hayal Defteri</Text>
-            <Text style={styles.subtitle}>Renkli kalemlerle özgürce çiz!</Text>
-          </View>
-          <View style={{ width: 44 }} />
+        {/* Exit button */}
+        <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
+          <Ionicons name="close" size={28} color="#d84315" />
+        </TouchableOpacity>
+
+        {/* Canvas - full screen */}
+        <View
+          ref={canvasRef}
+          style={styles.canvas}
+          {...panResponder.panHandlers}
+        >
+          {safeStrokes.map((s, i) => renderStrokeDots(s, i))}
         </View>
 
-        {/* Main content area with canvas and toolbar */}
-        <View style={styles.mainContent}>
-          {/* Canvas wrapper */}
-          <View
-            style={styles.canvasWrapper}
-            onLayout={e => setCanvasSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+        {/* Floating toolbar at bottom */}
+        <View style={styles.floatingToolbar}>
+          {/* Color picker button */}
+          <TouchableOpacity
+            style={[styles.toolBtn, !isEraser && styles.toolBtnActive]}
+            onPress={toggleColorPicker}
           >
-            <View style={styles.paperShadow} />
-            <View
-              ref={canvasRef}
-              style={[styles.canvas, { width: canvasSize.width, height: canvasSize.height }]}
-              {...panResponder.panHandlers}
+            <View style={[styles.colorPreview, { backgroundColor: selectedColor }]} />
+          </TouchableOpacity>
+
+          {/* Size picker button */}
+          <TouchableOpacity
+            style={styles.toolBtn}
+            onPress={toggleSizePicker}
+          >
+            <View style={[styles.sizePreview, {
+              width: Math.min(brushSize, 24),
+              height: Math.min(brushSize, 24),
+              backgroundColor: isEraser ? '#ccc' : selectedColor
+            }]} />
+          </TouchableOpacity>
+
+          {/* Eraser button */}
+          <TouchableOpacity
+            style={[styles.toolBtn, isEraser && styles.eraserActive]}
+            onPress={toggleEraser}
+          >
+            <Ionicons name="bandage-outline" size={24} color={isEraser ? '#fff' : '#666'} />
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Undo button */}
+          <TouchableOpacity
+            style={styles.toolBtn}
+            onPress={undoLast}
+            disabled={strokes.length === 0}
+          >
+            <Ionicons name="arrow-undo" size={24} color={strokes.length > 0 ? '#FF9800' : '#ccc'} />
+          </TouchableOpacity>
+
+          {/* Clear all button */}
+          <TouchableOpacity
+            style={styles.toolBtn}
+            onPress={clearCanvas}
+            disabled={strokes.length === 0}
+          >
+            <Ionicons name="trash-outline" size={24} color={strokes.length > 0 ? '#e53935' : '#ccc'} />
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Save button */}
+          <Animated.View style={{ transform: [{ scale: saveAnim }] }}>
+            <TouchableOpacity
+              style={[styles.toolBtn, styles.saveBtn, saved && styles.savedBtn]}
+              onPress={saveDrawing}
+              disabled={strokes.length === 0}
             >
-              {safeStrokes.map((s, i) => renderStrokeDots(s, i))}
-            </View>
-          </View>
-
-          {/* Right side toolbar */}
-          <View style={[styles.toolbar, { width: toolbarWidth }]}>
-            {/* Pencil colors */}
-            <View style={styles.toolSection}>
-              <Text style={styles.toolSectionTitle}>🖍️</Text>
-              <View style={styles.pencilRow}>
-                {PENCIL_COLORS.map(p => (
-                  <Pencil
-                    key={p.color}
-                    color={p.color}
-                    isSelected={selectedColor === p.color}
-                    onPress={() => setSelectedColor(p.color)}
-                  />
-                ))}
-              </View>
-            </View>
-
-            {/* Brush sizes */}
-            <View style={styles.toolSection}>
-              <Text style={styles.toolSectionTitle}>📏</Text>
-              <View style={styles.sizeRow}>
-                {BRUSH_SIZES.map(b => (
-                  <TouchableOpacity
-                    key={b.size}
-                    style={[styles.sizeBtn, brushSize === b.size && styles.sizeBtnSelected]}
-                    onPress={() => setBrushSize(b.size)}
-                  >
-                    <View
-                      style={{
-                        width: Math.min(b.size, 20),
-                        height: Math.min(b.size, 20),
-                        borderRadius: b.size / 2,
-                        backgroundColor: selectedColor,
-                      }}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-            {/* Action buttons */}
-            <View style={styles.actionSection}>
-              {/* Clear button */}
-              <TouchableOpacity style={styles.actionBtn} onPress={clearCanvas}>
-                <Ionicons name="trash-outline" size={26} color="#e53935" />
-              </TouchableOpacity>
-
-              {/* Save button */}
-              <Animated.View style={{ transform: [{ scale: saveAnim }] }}>
-                <TouchableOpacity
-                  style={[styles.actionBtn, styles.saveBtn, saved && styles.savedBtn]}
-                  onPress={saveDrawing}
-                  disabled={allStrokes.length === 0}
-                >
-                  <Ionicons
-                    name={saved ? 'checkmark-circle' : 'save-outline'}
-                    size={26}
-                    color={saved ? '#fff' : '#4CAF50'}
-                  />
-                </TouchableOpacity>
-              </Animated.View>
-            </View>
-          </View>
+              <Ionicons
+                name={saved ? 'checkmark-circle' : 'save'}
+                size={26}
+                color={saved ? '#fff' : strokes.length > 0 ? '#4CAF50' : '#ccc'}
+              />
+            </TouchableOpacity>
+          </Animated.View>
         </View>
+
+        {/* Color picker popup */}
+        <Animated.View
+          style={[
+            styles.pickerPopup,
+            styles.colorPickerPopup,
+            {
+              opacity: colorPickerAnim,
+              transform: [
+                { translateY: colorPickerAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+                { scale: colorPickerAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) },
+              ],
+            },
+          ]}
+          pointerEvents={showColorPicker ? 'auto' : 'none'}
+        >
+          {PENCIL_COLORS.map(color => (
+            <TouchableOpacity
+              key={color}
+              style={[
+                styles.colorOption,
+                { backgroundColor: color },
+                selectedColor === color && styles.colorOptionSelected,
+              ]}
+              onPress={() => selectColor(color)}
+            />
+          ))}
+        </Animated.View>
+
+        {/* Size picker popup */}
+        <Animated.View
+          style={[
+            styles.pickerPopup,
+            styles.sizePickerPopup,
+            {
+              opacity: sizePickerAnim,
+              transform: [
+                { translateY: sizePickerAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+                { scale: sizePickerAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) },
+              ],
+            },
+          ]}
+          pointerEvents={showSizePicker ? 'auto' : 'none'}
+        >
+          {BRUSH_SIZES.map(size => (
+            <TouchableOpacity
+              key={size}
+              style={[styles.sizeOption, brushSize === size && styles.sizeOptionSelected]}
+              onPress={() => selectSize(size)}
+            >
+              <View
+                style={{
+                  width: Math.min(size, 20),
+                  height: Math.min(size, 20),
+                  borderRadius: size / 2,
+                  backgroundColor: selectedColor,
+                }}
+              />
+            </TouchableOpacity>
+          ))}
+        </Animated.View>
       </View>
     </DynamicBackground>
   );
@@ -304,173 +392,94 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
   },
   exitBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#ffe5e0',
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 229, 224, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 2,
-  },
-  titleContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#3e2723',
-    fontFamily: Platform.select({ ios: 'Helvetica Neue', android: 'sans-serif-medium', default: 'System' }),
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#6d4c41',
-    marginTop: 2,
-  },
-  mainContent: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: 10,
-  },
-  canvasWrapper: {
-    flex: 1,
-    position: 'relative',
-  },
-  paperShadow: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#e8dfd5',
-    borderRadius: 20,
-    transform: [{ rotate: '-0.5deg' }],
-    opacity: 0.6,
+    elevation: 4,
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   canvas: {
+    flex: 1,
     backgroundColor: '#fffef9',
-    borderRadius: 18,
+    marginTop: 10,
+    marginHorizontal: 10,
+    marginBottom: 90,
+    borderRadius: 20,
     borderWidth: 3,
     borderColor: '#f2e4cf',
     overflow: 'hidden',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-  },
-  toolbar: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    gap: 16,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    alignItems: 'center',
   },
-  toolSection: {
-    alignItems: 'center',
-    gap: 8,
-  },
-  toolSectionTitle: {
-    fontSize: 18,
-  },
-  pencilRow: {
-    flexDirection: 'column',
-    gap: 4,
-    alignItems: 'center',
-  },
-  pencilContainer: {
-    alignItems: 'center',
-    width: 30,
-    height: 50,
-  },
-  pencilTip: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderBottomWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: '#000',
-  },
-  pencilBody: {
-    width: 12,
-    height: 28,
-    borderRadius: 2,
-  },
-  pencilEraser: {
-    width: 14,
-    height: 8,
-    borderRadius: 2,
-  },
-  pencilSelected: {
-    borderWidth: 2,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 4,
-    transform: [{ scale: 1.1 }],
-  },
-  pencilCheckmark: {
+  floatingToolbar: {
     position: 'absolute',
-    bottom: 15,
-    backgroundColor: '#4CAF50',
-    borderRadius: 10,
-    width: 16,
-    height: 16,
+    bottom: 20,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderRadius: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    gap: 8,
   },
-  sizeRow: {
-    flexDirection: 'column',
-    gap: 6,
-    alignItems: 'center',
-  },
-  sizeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  toolBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#f5f5f5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#e0e0e0',
   },
-  sizeBtnSelected: {
+  toolBtnActive: {
     borderColor: '#4CAF50',
     backgroundColor: '#E8F5E9',
-    transform: [{ scale: 1.05 }],
   },
-  actionSection: {
-    marginTop: 'auto',
-    gap: 12,
-    alignItems: 'center',
-  },
-  actionBtn: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+  colorPreview: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     borderWidth: 2,
-    borderColor: '#e0e0e0',
+    borderColor: '#fff',
     elevation: 2,
+  },
+  sizePreview: {
+    borderRadius: 12,
+  },
+  eraserActive: {
+    backgroundColor: '#FF9800',
+    borderColor: '#F57C00',
+  },
+  divider: {
+    width: 2,
+    height: 32,
+    backgroundColor: '#e0e0e0',
+    marginHorizontal: 4,
+    borderRadius: 1,
   },
   saveBtn: {
     borderColor: '#4CAF50',
@@ -478,5 +487,54 @@ const styles = StyleSheet.create({
   savedBtn: {
     backgroundColor: '#4CAF50',
     borderColor: '#2E7D32',
+  },
+  pickerPopup: {
+    position: 'absolute',
+    bottom: 90,
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderRadius: 20,
+    padding: 12,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    zIndex: 50,
+  },
+  colorPickerPopup: {
+    left: 20,
+    width: 200,
+  },
+  sizePickerPopup: {
+    left: 80,
+    width: 180,
+  },
+  colorOption: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: 'transparent',
+  },
+  colorOptionSelected: {
+    borderColor: '#333',
+    transform: [{ scale: 1.1 }],
+  },
+  sizeOption: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
+  sizeOptionSelected: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#E8F5E9',
   },
 });
