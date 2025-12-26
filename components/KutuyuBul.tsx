@@ -49,12 +49,12 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
     const { playSound } = useSound();
 
     // For portrait: use vertical layout with 2x2 grid per box
-    // Box size based on screen width - bigger on mobile
+    // Box size based on screen width - much bigger on mobile
     const boxSize = isPortrait
-        ? Math.min(screenWidth * 0.38, 140) // Bigger boxes on mobile
+        ? Math.min(screenWidth * 0.42, 160) // Much bigger boxes on mobile
         : Math.min((screenWidth - 100) / 3, 160);
 
-    const emojiSize = isPortrait ? 32 : 36; // Bigger emojis on mobile
+    const emojiSize = isPortrait ? 38 : 36; // Much bigger emojis on mobile
 
     const [stage, setStage] = useState(1);
     const [currentQuestion, setCurrentQuestion] = useState<typeof QUESTIONS[0] | null>(null);
