@@ -43,15 +43,15 @@ const TOTAL_STAGES = 5;
 const ITEMS_PER_BOX = 4;
 
 const { width: screenWidth } = Dimensions.get('window');
-const boxSize = Math.min((screenWidth - 60) / 3, 140);
+const boxSize = Math.min((screenWidth - 60) / 3, 160);
 
 export default function KutuyuBul({ onGameEnd, onExit }: Props) {
     const [stage, setStage] = useState(1);
     const [currentQuestion, setCurrentQuestion] = useState<typeof QUESTIONS[0] | null>(null);
     const [boxes, setBoxes] = useState<string[][]>([[], [], []]);
     const [correctBoxIndex, setCorrectBoxIndex] = useState(0);
-    const [selectedBox, setSelectedBox] = useState<number | null>(null);
-    const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+    const [wrongBoxes, setWrongBoxes] = useState<Set<number>>(new Set());
+    const [foundCorrect, setFoundCorrect] = useState(false);
     const [errors, setErrors] = useState(0);
     const [moves, setMoves] = useState(0);
     const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
@@ -65,13 +65,15 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
     ];
     const questionAnim = useRef(new Animated.Value(0)).current;
     const feedbackAnim = useRef(new Animated.Value(0)).current;
+    const progressAnim = useRef(new Animated.Value(0)).current;
 
     // Generate a new round
     const generateRound = () => {
         // Pick a random unused question
-        const availableQuestions = QUESTIONS.map((_, i) => i).filter(i => !usedQuestions.includes(i));
+        let availableQuestions = QUESTIONS.map((_, i) => i).filter(i => !usedQuestions.includes(i));
         if (availableQuestions.length === 0) {
             setUsedQuestions([]);
+            availableQuestions = QUESTIONS.map((_, i) => i);
         }
         const questionIndex = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
         const question = QUESTIONS[questionIndex];
@@ -110,8 +112,8 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         }
 
         setBoxes(newBoxes);
-        setSelectedBox(null);
-        setIsCorrect(null);
+        setWrongBoxes(new Set());
+        setFoundCorrect(false);
 
         // Animate boxes in
         boxAnims.forEach((anim, i) => {
@@ -132,6 +134,13 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
             delay: 300,
             useNativeDriver: true,
         }).start();
+
+        // Animate progress
+        Animated.timing(progressAnim, {
+            toValue: stage / TOTAL_STAGES,
+            duration: 300,
+            useNativeDriver: false,
+        }).start();
     };
 
     useEffect(() => {
@@ -139,41 +148,55 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
     }, [stage]);
 
     const handleBoxPress = (boxIndex: number) => {
-        if (selectedBox !== null) return; // Already selected
+        if (foundCorrect || wrongBoxes.has(boxIndex)) return; // Already found or already tried this box
 
-        setSelectedBox(boxIndex);
         setMoves(prev => prev + 1);
 
         const correct = boxIndex === correctBoxIndex;
-        setIsCorrect(correct);
 
-        if (!correct) {
+        if (correct) {
+            setFoundCorrect(true);
+
+            // Animate feedback
+            feedbackAnim.setValue(0);
+            Animated.spring(feedbackAnim, {
+                toValue: 1,
+                useNativeDriver: true,
+            }).start();
+
+            // Move to next stage after delay
+            setTimeout(() => {
+                if (stage < TOTAL_STAGES) {
+                    setStage(prev => prev + 1);
+                } else {
+                    // Game complete
+                    const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
+                    onGameEnd('kutuyu-bul', duration, moves + 1, errors);
+                }
+            }, 1500);
+        } else {
+            // Wrong answer - mark this box and track error
+            setWrongBoxes(prev => new Set(prev).add(boxIndex));
             setErrors(prev => prev + 1);
+
+            // Shake animation for wrong box
+            const shakeAnim = boxAnims[boxIndex];
+            Animated.sequence([
+                Animated.timing(shakeAnim, { toValue: 1.05, duration: 50, useNativeDriver: true }),
+                Animated.timing(shakeAnim, { toValue: 0.95, duration: 50, useNativeDriver: true }),
+                Animated.timing(shakeAnim, { toValue: 1.05, duration: 50, useNativeDriver: true }),
+                Animated.timing(shakeAnim, { toValue: 1, duration: 50, useNativeDriver: true }),
+            ]).start();
         }
-
-        // Animate feedback
-        feedbackAnim.setValue(0);
-        Animated.spring(feedbackAnim, {
-            toValue: 1,
-            useNativeDriver: true,
-        }).start();
-
-        // Move to next stage after delay
-        setTimeout(() => {
-            if (stage < TOTAL_STAGES) {
-                setStage(prev => prev + 1);
-            } else {
-                // Game complete
-                const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-                onGameEnd('kutuyu-bul', duration, moves + 1, errors + (correct ? 0 : 1));
-            }
-        }, correct ? 1500 : 2000);
     };
 
     const getBoxStyle = (boxIndex: number) => {
-        if (selectedBox === null) return styles.box;
-        if (boxIndex === correctBoxIndex) return [styles.box, styles.correctBox];
-        if (boxIndex === selectedBox) return [styles.box, styles.wrongBox];
+        if (foundCorrect && boxIndex === correctBoxIndex) {
+            return [styles.box, styles.correctBox];
+        }
+        if (wrongBoxes.has(boxIndex)) {
+            return [styles.box, styles.wrongBox];
+        }
         return styles.box;
     };
 
@@ -185,18 +208,22 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                     <Ionicons name="close" size={28} color="#d84315" />
                 </TouchableOpacity>
 
-                {/* Progress indicator */}
-                <View style={styles.progressContainer}>
-                    {Array.from({ length: TOTAL_STAGES }).map((_, i) => (
-                        <View
-                            key={i}
+                {/* Progress bar at top */}
+                <View style={styles.progressBarContainer}>
+                    <View style={styles.progressBarBg}>
+                        <Animated.View
                             style={[
-                                styles.progressDot,
-                                i < stage ? styles.progressDotActive : {},
-                                i === stage - 1 ? styles.progressDotCurrent : {},
+                                styles.progressBarFill,
+                                {
+                                    width: progressAnim.interpolate({
+                                        inputRange: [0, 1],
+                                        outputRange: ['0%', '100%'],
+                                    }),
+                                },
                             ]}
                         />
-                    ))}
+                    </View>
+                    <Text style={styles.progressText}>{stage} / {TOTAL_STAGES}</Text>
                 </View>
 
                 {/* Question */}
@@ -230,7 +257,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                             <TouchableOpacity
                                 style={[getBoxStyle(boxIndex), { width: boxSize, height: boxSize }]}
                                 onPress={() => handleBoxPress(boxIndex)}
-                                disabled={selectedBox !== null}
+                                disabled={foundCorrect || wrongBoxes.has(boxIndex)}
                                 activeOpacity={0.8}
                             >
                                 <View style={styles.boxContent}>
@@ -241,15 +268,16 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                                     ))}
                                 </View>
 
-                                {/* Correct/Wrong indicator */}
-                                {selectedBox !== null && boxIndex === correctBoxIndex && (
+                                {/* Correct indicator */}
+                                {foundCorrect && boxIndex === correctBoxIndex && (
                                     <View style={styles.correctIndicator}>
-                                        <Ionicons name="checkmark-circle" size={40} color="#4CAF50" />
+                                        <Ionicons name="checkmark-circle" size={44} color="#4CAF50" />
                                     </View>
                                 )}
-                                {selectedBox === boxIndex && boxIndex !== correctBoxIndex && (
+                                {/* Wrong indicator */}
+                                {wrongBoxes.has(boxIndex) && (
                                     <View style={styles.wrongIndicator}>
-                                        <Ionicons name="close-circle" size={40} color="#f44336" />
+                                        <Ionicons name="close-circle" size={36} color="#f44336" />
                                     </View>
                                 )}
                             </TouchableOpacity>
@@ -257,8 +285,8 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                     ))}
                 </View>
 
-                {/* Feedback message */}
-                {selectedBox !== null && (
+                {/* Feedback message when correct */}
+                {foundCorrect && (
                     <Animated.View
                         style={[
                             styles.feedbackContainer,
@@ -268,23 +296,9 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                             },
                         ]}
                     >
-                        <Text style={[styles.feedbackText, isCorrect ? styles.correctText : styles.wrongText]}>
-                            {isCorrect ? '🎉 Harika! Doğru!' : '😊 Tekrar dene!'}
-                        </Text>
+                        <Text style={styles.feedbackText}>🎉 Harika! Doğru!</Text>
                     </Animated.View>
                 )}
-
-                {/* Stats */}
-                <View style={styles.statsContainer}>
-                    <View style={styles.statItem}>
-                        <Ionicons name="flag" size={18} color="#666" />
-                        <Text style={styles.statText}>{stage}/{TOTAL_STAGES}</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <Ionicons name="close-circle-outline" size={18} color="#f44336" />
-                        <Text style={styles.statText}>{errors}</Text>
-                    </View>
-                </View>
             </View>
         </DynamicBackground>
     );
@@ -309,29 +323,29 @@ const styles = StyleSheet.create({
         elevation: 4,
         zIndex: 100,
     },
-    progressContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 8,
+    progressBarContainer: {
         marginTop: 60,
         marginBottom: 20,
+        marginHorizontal: 60,
+        alignItems: 'center',
     },
-    progressDot: {
-        width: 12,
+    progressBarBg: {
+        width: '100%',
         height: 12,
-        borderRadius: 6,
         backgroundColor: '#e0e0e0',
+        borderRadius: 6,
+        overflow: 'hidden',
     },
-    progressDotActive: {
+    progressBarFill: {
+        height: '100%',
         backgroundColor: '#4CAF50',
+        borderRadius: 6,
     },
-    progressDotCurrent: {
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        borderWidth: 3,
-        borderColor: '#4CAF50',
-        backgroundColor: '#E8F5E9',
+    progressText: {
+        marginTop: 8,
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#666',
     },
     questionContainer: {
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -346,7 +360,7 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
     },
     questionText: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
         color: '#333',
@@ -355,13 +369,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 12,
+        gap: 14,
         flex: 1,
     },
     box: {
         backgroundColor: '#fff',
-        borderRadius: 20,
-        padding: 10,
+        borderRadius: 24,
+        padding: 12,
         elevation: 6,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 3 },
@@ -377,6 +391,7 @@ const styles = StyleSheet.create({
     wrongBox: {
         borderColor: '#f44336',
         backgroundColor: '#FFEBEE',
+        opacity: 0.6,
     },
     boxContent: {
         flex: 1,
@@ -384,65 +399,40 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 4,
+        gap: 8,
     },
     boxItem: {
-        fontSize: 28,
+        fontSize: 40,
     },
     correctIndicator: {
         position: 'absolute',
-        top: -15,
-        right: -15,
+        top: -18,
+        right: -18,
         backgroundColor: '#fff',
-        borderRadius: 20,
+        borderRadius: 22,
     },
     wrongIndicator: {
         position: 'absolute',
-        top: -15,
-        right: -15,
+        top: -14,
+        right: -14,
         backgroundColor: '#fff',
-        borderRadius: 20,
+        borderRadius: 18,
     },
     feedbackContainer: {
         position: 'absolute',
-        bottom: 120,
+        bottom: 100,
         left: 0,
         right: 0,
         alignItems: 'center',
     },
     feedbackText: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
+        color: '#4CAF50',
         backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 30,
-        paddingVertical: 15,
+        paddingHorizontal: 35,
+        paddingVertical: 18,
         borderRadius: 30,
         overflow: 'hidden',
-    },
-    correctText: {
-        color: '#4CAF50',
-    },
-    wrongText: {
-        color: '#FF9800',
-    },
-    statsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 30,
-        paddingBottom: 30,
-    },
-    statItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 20,
-    },
-    statText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#333',
     },
 });
