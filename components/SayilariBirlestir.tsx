@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useRef, useState } from 'react';
-import { Animated, Image, PanResponder, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Image, PanResponder, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 
@@ -14,90 +14,87 @@ interface Props {
     onExit?: () => void;
 }
 
-// Fruit images
-const FRUIT_IMAGES = {
-    elma: require('../assets/images/elma.png'),
-    armut: require('../assets/images/armut.png'),
-    cilek: require('../assets/images/cilek.png'),
-    karpuz: require('../assets/images/karpuz.png'),
-    uzum: require('../assets/images/uzum.png'),
-    kiraz: require('../assets/images/kiraz.png'),
-};
-
-const FRUIT_KEYS = Object.keys(FRUIT_IMAGES) as (keyof typeof FRUIT_IMAGES)[];
+// Single fruit per stage
+const STAGE_FRUITS = [
+    { image: require('../assets/images/elma.png'), name: 'Elma' },
+    { image: require('../assets/images/uzum.png'), name: 'Üzüm' },
+    { image: require('../assets/images/karpuz.png'), name: 'Karpuz' },
+];
 
 type Point = { x: number; y: number };
-type NumberDot = { number: number; x: number; y: number; fruit: keyof typeof FRUIT_IMAGES };
+type NumberDot = { number: number; x: number; y: number };
 
 const TOTAL_STAGES = 3;
+const NUMBERS_COUNT = 5;
 
 // Pre-defined layouts for each stage (relative positions 0-1)
 const STAGE_LAYOUTS: { x: number; y: number }[][] = [
-    // Stage 1 - Simple zigzag
+    // Stage 1 - Zigzag
     [
-        { x: 0.2, y: 0.15 },
-        { x: 0.75, y: 0.25 },
-        { x: 0.25, y: 0.5 },
-        { x: 0.7, y: 0.6 },
-        { x: 0.45, y: 0.85 },
+        { x: 0.2, y: 0.12 },
+        { x: 0.8, y: 0.28 },
+        { x: 0.2, y: 0.50 },
+        { x: 0.8, y: 0.68 },
+        { x: 0.5, y: 0.88 },
     ],
     // Stage 2 - Star pattern
     [
-        { x: 0.5, y: 0.1 },
-        { x: 0.85, y: 0.4 },
-        { x: 0.65, y: 0.85 },
-        { x: 0.35, y: 0.85 },
-        { x: 0.15, y: 0.4 },
+        { x: 0.5, y: 0.08 },
+        { x: 0.88, y: 0.38 },
+        { x: 0.7, y: 0.88 },
+        { x: 0.3, y: 0.88 },
+        { x: 0.12, y: 0.38 },
     ],
     // Stage 3 - Random spread
     [
-        { x: 0.15, y: 0.2 },
-        { x: 0.8, y: 0.15 },
-        { x: 0.5, y: 0.45 },
-        { x: 0.2, y: 0.75 },
-        { x: 0.75, y: 0.8 },
+        { x: 0.15, y: 0.15 },
+        { x: 0.85, y: 0.20 },
+        { x: 0.5, y: 0.50 },
+        { x: 0.18, y: 0.80 },
+        { x: 0.82, y: 0.85 },
     ],
 ];
 
 export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+    const isPortrait = screenHeight > screenWidth;
     const { playSound } = useSound();
 
     const [stage, setStage] = useState(1);
     const [dots, setDots] = useState<NumberDot[]>([]);
-    const [connectedLines, setConnectedLines] = useState<{ from: number; to: number }[]>([]);
+    const [completedLines, setCompletedLines] = useState<{ from: number; to: number }[]>([]);
     const [currentNumber, setCurrentNumber] = useState(1);
     const [drawingLine, setDrawingLine] = useState<{ start: Point; end: Point } | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
     const [errors, setErrors] = useState(0);
     const [moves, setMoves] = useState(0);
     const [stageComplete, setStageComplete] = useState(false);
     const startTimeRef = useRef(Date.now());
-    const canvasRef = useRef<View>(null);
     const canvasLayoutRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
 
     const progressAnim = useRef(new Animated.Value(0)).current;
     const successAnim = useRef(new Animated.Value(0)).current;
 
-    const dotSize = Math.min(screenWidth * 0.18, 80);
-    const fruitSize = dotSize * 0.9;
+    // Bigger fruits on mobile
+    const fruitSize = isPortrait ? Math.min(screenWidth * 0.22, 100) : Math.min(screenWidth * 0.12, 90);
+    const currentFruit = STAGE_FRUITS[(stage - 1) % STAGE_FRUITS.length];
 
     // Generate dots for current stage
     const generateDots = () => {
         const layout = STAGE_LAYOUTS[(stage - 1) % STAGE_LAYOUTS.length];
-        const shuffledFruits = [...FRUIT_KEYS].sort(() => Math.random() - 0.5);
 
         const newDots: NumberDot[] = layout.map((pos, i) => ({
             number: i + 1,
             x: pos.x,
             y: pos.y,
-            fruit: shuffledFruits[i % shuffledFruits.length],
         }));
 
         setDots(newDots);
-        setConnectedLines([]);
+        setCompletedLines([]);
         setCurrentNumber(1);
         setStageComplete(false);
         setDrawingLine(null);
+        setIsDragging(false);
 
         Animated.timing(progressAnim, {
             toValue: stage / TOTAL_STAGES,
@@ -106,11 +103,11 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
         }).start();
     };
 
-    React.useEffect(() => {
+    useEffect(() => {
         generateDots();
     }, [stage]);
 
-    const getDotCenter = (dot: NumberDot): Point => {
+    const getDotPixelPos = (dot: NumberDot): Point => {
         const { width, height } = canvasLayoutRef.current;
         return {
             x: dot.x * width,
@@ -120,7 +117,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
 
     const findDotAtPoint = (x: number, y: number): NumberDot | null => {
         const { width, height } = canvasLayoutRef.current;
-        const threshold = dotSize * 0.6;
+        const threshold = fruitSize * 0.7;
 
         for (const dot of dots) {
             const dotX = dot.x * width;
@@ -133,17 +130,17 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
         return null;
     };
 
-    const handleDotPress = (dot: NumberDot) => {
-        if (stageComplete) return;
-
-        if (dot.number === currentNumber) {
-            // Correct starting point
+    const handleConnectionComplete = (fromNum: number, toNum: number) => {
+        if (fromNum === currentNumber && toNum === currentNumber + 1) {
+            // Correct connection!
+            setCompletedLines(prev => [...prev, { from: fromNum, to: toNum }]);
             setMoves(prev => prev + 1);
+            playSound('correct');
 
-            if (currentNumber === 5) {
+            if (toNum === NUMBERS_COUNT) {
                 // Stage complete!
                 setStageComplete(true);
-                playSound('correct');
+                setCurrentNumber(NUMBERS_COUNT + 1); // Prevent further input
 
                 Animated.spring(successAnim, {
                     toValue: 1,
@@ -160,59 +157,61 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                     }
                 }, 1500);
             } else {
-                // Move to next number
-                setConnectedLines(prev => [...prev, { from: currentNumber, to: currentNumber + 1 }]);
                 setCurrentNumber(prev => prev + 1);
-                playSound('correct');
             }
-        } else if (dot.number !== currentNumber - 1) {
-            // Wrong dot
+        } else {
+            // Wrong connection
             setErrors(prev => prev + 1);
             playSound('wrong');
         }
     };
 
-    const panResponder = PanResponder.create({
+    const panResponder = useMemo(() => PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: (e) => {
+            if (stageComplete) return;
+
             const { locationX, locationY } = e.nativeEvent;
             const startDot = findDotAtPoint(locationX, locationY);
 
+            // Must start from the current number
             if (startDot && startDot.number === currentNumber) {
-                const center = getDotCenter(startDot);
+                const center = getDotPixelPos(startDot);
                 setDrawingLine({ start: center, end: center });
+                setIsDragging(true);
             }
         },
         onPanResponderMove: (e) => {
-            if (drawingLine) {
-                const { locationX, locationY } = e.nativeEvent;
-                setDrawingLine(prev => prev ? { ...prev, end: { x: locationX, y: locationY } } : null);
-            }
+            if (!isDragging || !drawingLine || stageComplete) return;
+
+            const { locationX, locationY } = e.nativeEvent;
+            setDrawingLine(prev => prev ? { ...prev, end: { x: locationX, y: locationY } } : null);
         },
         onPanResponderRelease: (e) => {
-            if (drawingLine) {
-                const { locationX, locationY } = e.nativeEvent;
-                const endDot = findDotAtPoint(locationX, locationY);
-
-                if (endDot && endDot.number === currentNumber + 1) {
-                    // Correct connection!
-                    handleDotPress(endDot);
-                } else if (endDot && endDot.number !== currentNumber) {
-                    // Wrong connection
-                    setErrors(prev => prev + 1);
-                    playSound('wrong');
-                }
-
+            if (!isDragging || !drawingLine || stageComplete) {
                 setDrawingLine(null);
+                setIsDragging(false);
+                return;
             }
+
+            const { locationX, locationY } = e.nativeEvent;
+            const endDot = findDotAtPoint(locationX, locationY);
+
+            if (endDot) {
+                handleConnectionComplete(currentNumber, endDot.number);
+            }
+
+            setDrawingLine(null);
+            setIsDragging(false);
         },
         onPanResponderTerminate: () => {
             setDrawingLine(null);
+            setIsDragging(false);
         },
-    });
+    }), [currentNumber, isDragging, drawingLine, stageComplete, dots, fruitSize]);
 
-    const renderLine = (from: NumberDot, to: NumberDot, key: string) => {
+    const renderCompletedLine = (from: NumberDot, to: NumberDot, key: string) => {
         const { width, height } = canvasLayoutRef.current;
         const x1 = from.x * width;
         const y1 = from.y * height;
@@ -226,13 +225,12 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             <View
                 key={key}
                 style={[
-                    styles.connectionLine,
+                    styles.completedLine,
                     {
                         width: length,
                         left: x1,
-                        top: y1 - 3,
+                        top: y1 - 4,
                         transform: [{ rotate: `${angle}deg` }],
-                        transformOrigin: 'left center',
                     },
                 ]}
             />
@@ -253,9 +251,8 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                     {
                         width: length,
                         left: start.x,
-                        top: start.y - 3,
+                        top: start.y - 4,
                         transform: [{ rotate: `${angle}deg` }],
-                        transformOrigin: 'left center',
                     },
                 ]}
             />
@@ -266,9 +263,9 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
         <DynamicBackground>
             <View style={styles.container}>
                 {/* Exit button */}
-                <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                    <Ionicons name="close" size={26} color="#d84315" />
-                </TouchableOpacity>
+                <View style={styles.exitBtn}>
+                    <Ionicons name="close" size={26} color="#d84315" onPress={onExit} />
+                </View>
 
                 {/* Progress bar */}
                 <View style={styles.progressBarContainer}>
@@ -291,64 +288,74 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                 {/* Instructions */}
                 <View style={styles.instructionContainer}>
                     <Text style={styles.instructionText}>
-                        Meyveleri 1'den 5'e sırayla birleştir! 🍎
+                        {currentFruit.name}ları 1'den 5'e çizgi çizerek birleştir!
+                    </Text>
+                    <Text style={styles.hintText}>
+                        {currentNumber <= NUMBERS_COUNT ? `Şimdi ${currentNumber}'den başla` : ''}
                     </Text>
                 </View>
 
                 {/* Canvas */}
                 <View
-                    ref={canvasRef}
                     style={styles.canvas}
                     onLayout={(e) => {
                         canvasLayoutRef.current = e.nativeEvent.layout;
                     }}
                     {...panResponder.panHandlers}
                 >
-                    {/* Connected lines */}
-                    {connectedLines.map((line, i) => {
+                    {/* Completed lines */}
+                    {completedLines.map((line, i) => {
                         const fromDot = dots.find(d => d.number === line.from);
                         const toDot = dots.find(d => d.number === line.to);
                         if (fromDot && toDot) {
-                            return renderLine(fromDot, toDot, `line-${i}`);
+                            return renderCompletedLine(fromDot, toDot, `line-${i}`);
                         }
                         return null;
                     })}
 
-                    {/* Drawing line */}
+                    {/* Drawing line (while dragging) */}
                     {renderDrawingLine()}
 
-                    {/* Number dots with fruits */}
+                    {/* Fruit dots with numbers inside */}
                     {dots.map((dot) => {
                         const { width, height } = canvasLayoutRef.current;
                         const isActive = dot.number === currentNumber;
-                        const isConnected = dot.number < currentNumber;
+                        const isCompleted = dot.number < currentNumber;
 
                         return (
-                            <TouchableOpacity
+                            <View
                                 key={dot.number}
                                 style={[
-                                    styles.dotContainer,
+                                    styles.fruitContainer,
                                     {
-                                        left: dot.x * width - dotSize / 2,
-                                        top: dot.y * height - dotSize / 2,
-                                        width: dotSize,
-                                        height: dotSize,
+                                        left: dot.x * width - fruitSize / 2,
+                                        top: dot.y * height - fruitSize / 2,
+                                        width: fruitSize,
+                                        height: fruitSize,
                                     },
-                                    isActive && styles.dotActive,
-                                    isConnected && styles.dotConnected,
+                                    isActive && styles.fruitActive,
+                                    isCompleted && styles.fruitCompleted,
                                 ]}
-                                onPress={() => handleDotPress(dot)}
-                                activeOpacity={0.7}
                             >
                                 <Image
-                                    source={FRUIT_IMAGES[dot.fruit]}
-                                    style={{ width: fruitSize, height: fruitSize }}
+                                    source={currentFruit.image}
+                                    style={{ width: fruitSize * 0.85, height: fruitSize * 0.85 }}
                                     resizeMode="contain"
                                 />
-                                <View style={[styles.numberBadge, isConnected && styles.numberBadgeConnected]}>
-                                    <Text style={styles.numberText}>{dot.number}</Text>
+                                {/* Number inside fruit */}
+                                <View style={[
+                                    styles.numberOverlay,
+                                    isCompleted && styles.numberOverlayCompleted,
+                                ]}>
+                                    <Text style={[
+                                        styles.numberText,
+                                        { fontSize: fruitSize * 0.4 },
+                                        isCompleted && styles.numberTextCompleted,
+                                    ]}>
+                                        {dot.number}
+                                    </Text>
                                 </View>
-                            </TouchableOpacity>
+                            </View>
                         );
                     })}
                 </View>
@@ -382,9 +389,9 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 45,
         left: 12,
-        width: 42,
-        height: 42,
-        borderRadius: 21,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         backgroundColor: 'rgba(255, 229, 224, 0.95)',
         alignItems: 'center',
         justifyContent: 'center',
@@ -392,102 +399,111 @@ const styles = StyleSheet.create({
         zIndex: 100,
     },
     progressBarContainer: {
-        marginTop: 45,
-        marginBottom: 10,
+        marginTop: 50,
+        marginBottom: 8,
         marginHorizontal: 50,
         alignItems: 'center',
     },
     progressBarBg: {
         width: '100%',
-        height: 8,
+        height: 10,
         backgroundColor: '#e0e0e0',
-        borderRadius: 4,
+        borderRadius: 5,
         overflow: 'hidden',
     },
     progressBarFill: {
         height: '100%',
         backgroundColor: '#4CAF50',
-        borderRadius: 4,
+        borderRadius: 5,
     },
     progressText: {
         marginTop: 4,
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: '600',
         color: '#666',
     },
     instructionContainer: {
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        borderRadius: 14,
-        padding: 12,
-        marginHorizontal: 16,
-        marginBottom: 12,
+        borderRadius: 16,
+        padding: 14,
+        marginHorizontal: 12,
+        marginBottom: 10,
         elevation: 4,
     },
     instructionText: {
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
         textAlign: 'center',
         color: '#333',
     },
+    hintText: {
+        fontSize: 14,
+        textAlign: 'center',
+        color: '#666',
+        marginTop: 4,
+    },
     canvas: {
         flex: 1,
-        backgroundColor: 'rgba(255, 255, 255, 0.6)',
+        backgroundColor: 'rgba(255, 255, 255, 0.5)',
         borderRadius: 20,
-        marginBottom: 20,
+        marginBottom: 16,
         overflow: 'hidden',
     },
-    dotContainer: {
+    fruitContainer: {
         position: 'absolute',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 40,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        borderRadius: 50,
     },
-    dotActive: {
-        borderWidth: 3,
-        borderColor: '#4CAF50',
-        transform: [{ scale: 1.1 }],
+    fruitActive: {
+        transform: [{ scale: 1.15 }],
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.5,
+        shadowRadius: 10,
+        elevation: 8,
     },
-    dotConnected: {
-        opacity: 0.6,
+    fruitCompleted: {
+        opacity: 0.7,
     },
-    numberBadge: {
+    numberOverlay: {
         position: 'absolute',
-        top: -8,
-        right: -8,
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        backgroundColor: '#FF9800',
+        width: '60%',
+        height: '60%',
+        borderRadius: 50,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
         alignItems: 'center',
         justifyContent: 'center',
         elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
     },
-    numberBadgeConnected: {
-        backgroundColor: '#4CAF50',
+    numberOverlayCompleted: {
+        backgroundColor: 'rgba(76, 175, 80, 0.9)',
     },
     numberText: {
-        fontSize: 16,
         fontWeight: 'bold',
+        color: '#333',
+    },
+    numberTextCompleted: {
         color: '#fff',
     },
-    connectionLine: {
+    completedLine: {
         position: 'absolute',
-        height: 6,
+        height: 8,
         backgroundColor: '#4CAF50',
-        borderRadius: 3,
+        borderRadius: 4,
+        transformOrigin: 'left center',
     },
     drawingLine: {
         position: 'absolute',
-        height: 6,
+        height: 8,
         backgroundColor: '#81C784',
-        borderRadius: 3,
-        opacity: 0.7,
+        borderRadius: 4,
+        opacity: 0.8,
+        transformOrigin: 'left center',
     },
     successContainer: {
         position: 'absolute',
@@ -497,13 +513,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     successText: {
-        fontSize: 28,
+        fontSize: 30,
         fontWeight: 'bold',
         color: '#4CAF50',
         backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 30,
-        paddingVertical: 16,
-        borderRadius: 25,
+        paddingHorizontal: 35,
+        paddingVertical: 18,
+        borderRadius: 28,
         overflow: 'hidden',
     },
 });
