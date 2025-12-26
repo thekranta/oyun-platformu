@@ -8,6 +8,7 @@ import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
 import KutuyuBul from '@/components/KutuyuBul';
 import RakamYazma from '@/components/RakamYazma';
+import SayilariBirlestir from '@/components/SayilariBirlestir';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
@@ -359,6 +360,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Kutuyu Bul!</Text>
                   <Text style={styles.oyunAciklama}>Doğru Kutuyu Seç</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#26A69A' }]} onPress={() => oyunuBaslat('sayilari-birlestir')}>
+                  <Ionicons name="git-network" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Sayıları Birleştir</Text>
+                  <Text style={styles.oyunAciklama}>Meyveleri Sırayla Bağla</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -424,6 +431,10 @@ export default function App() {
 
   if (asama === 'kutuyu-bul') {
     return <KutuyuBul onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'sayilari-birlestir') {
+    return <SayilariBirlestir onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'ceviz-macera') {
