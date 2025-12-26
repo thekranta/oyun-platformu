@@ -1,11 +1,13 @@
 ﻿import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Dimensions, PanResponder, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import DynamicBackground from './DynamicBackground';
 
 type Point = { x: number; y: number };
 type Stroke = { color: string; size: number; points: Point[]; isEraser?: boolean };
+type ShapeType = 'circle' | 'square' | 'triangle' | 'star' | 'heart';
+type PlacedShape = { type: ShapeType; x: number; y: number; color: string; size: number };
 
 interface Props {
   onGameEnd: (
@@ -32,12 +34,27 @@ const PENCIL_COLORS = [
 ];
 
 // Brush sizes
-const BRUSH_SIZES = [4, 8, 14, 22];
+const BRUSH_SIZES = [
+  { size: 4, label: 'S' },
+  { size: 8, label: 'M' },
+  { size: 14, label: 'L' },
+  { size: 22, label: 'XL' },
+];
+
+// Geometric shapes
+const SHAPES: { type: ShapeType; icon: string; label: string }[] = [
+  { type: 'circle', icon: 'ellipse', label: 'Daire' },
+  { type: 'square', icon: 'square', label: 'Kare' },
+  { type: 'triangle', icon: 'triangle', label: 'Üçgen' },
+  { type: 'star', icon: 'star', label: 'Yıldız' },
+  { type: 'heart', icon: 'heart', label: 'Kalp' },
+];
 
 const MIN_STEP = 2;
 
 export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
+  const [placedShapes, setPlacedShapes] = useState<PlacedShape[]>([]);
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
   const liveStrokeRef = useRef<Stroke | null>(null);
   const canvasRef = useRef<View>(null);
@@ -45,16 +62,17 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [brushSize, setBrushSize] = useState(8);
   const [saved, setSaved] = useState(false);
   const [isEraser, setIsEraser] = useState(false);
+  const [selectedShape, setSelectedShape] = useState<ShapeType | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showSizePicker, setShowSizePicker] = useState(false);
+  const [showShapePicker, setShowShapePicker] = useState(false);
   const startTimeRef = useRef(Date.now());
 
   // Animations
   const colorPickerAnim = useRef(new Animated.Value(0)).current;
   const sizePickerAnim = useRef(new Animated.Value(0)).current;
+  const shapePickerAnim = useRef(new Animated.Value(0)).current;
   const saveAnim = useRef(new Animated.Value(1)).current;
-
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
   useEffect(() => {
     Animated.timing(colorPickerAnim, {
@@ -72,6 +90,14 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     }).start();
   }, [showSizePicker]);
 
+  useEffect(() => {
+    Animated.timing(shapePickerAnim, {
+      toValue: showShapePicker ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [showShapePicker]);
+
   const allStrokes = useMemo(
     () => (liveStroke ? [...strokes, liveStroke] : strokes),
     [strokes, liveStroke],
@@ -81,8 +107,14 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     [allStrokes],
   );
 
+  const closeAllPickers = () => {
+    setShowColorPicker(false);
+    setShowSizePicker(false);
+    setShowShapePicker(false);
+  };
+
   const addPoint = (x: number, y: number) => {
-    const currentColor = isEraser ? '#fffef9' : selectedColor; // Eraser uses canvas bg color
+    const currentColor = isEraser ? '#fffef9' : selectedColor;
     const baseStroke =
       liveStrokeRef.current ?? { color: currentColor, size: brushSize, points: [] as Point[], isEraser };
     const last = baseStroke.points[baseStroke.points.length - 1];
@@ -114,37 +146,60 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     liveStrokeRef.current = null;
   };
 
+  const placeShape = (x: number, y: number) => {
+    if (selectedShape) {
+      setPlacedShapes(prev => [...prev, {
+        type: selectedShape,
+        x,
+        y,
+        color: selectedColor,
+        size: brushSize * 3, // Shapes are larger
+      }]);
+      setSaved(false);
+    }
+  };
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderGrant: e => {
-          setShowColorPicker(false);
-          setShowSizePicker(false);
+          closeAllPickers();
           const { locationX, locationY } = e.nativeEvent;
-          addPoint(locationX, locationY);
+          if (selectedShape) {
+            placeShape(locationX, locationY);
+          } else {
+            addPoint(locationX, locationY);
+          }
         },
         onPanResponderMove: e => {
-          const { locationX, locationY } = e.nativeEvent;
-          addPoint(locationX, locationY);
+          if (!selectedShape) {
+            const { locationX, locationY } = e.nativeEvent;
+            addPoint(locationX, locationY);
+          }
         },
         onPanResponderRelease: e => {
-          const { locationX, locationY } = e.nativeEvent;
-          addPoint(locationX, locationY);
-          finishStroke();
+          if (!selectedShape) {
+            const { locationX, locationY } = e.nativeEvent;
+            addPoint(locationX, locationY);
+            finishStroke();
+          }
         },
         onPanResponderTerminate: e => {
-          const { locationX, locationY } = e.nativeEvent;
-          addPoint(locationX, locationY);
-          finishStroke();
+          if (!selectedShape) {
+            const { locationX, locationY } = e.nativeEvent;
+            addPoint(locationX, locationY);
+            finishStroke();
+          }
         },
       }),
-    [selectedColor, brushSize, isEraser],
+    [selectedColor, brushSize, isEraser, selectedShape],
   );
 
   const clearCanvas = () => {
     setStrokes([]);
+    setPlacedShapes([]);
     setLiveStroke(null);
     liveStrokeRef.current = null;
     setSaved(false);
@@ -152,7 +207,10 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   };
 
   const undoLast = () => {
-    if (strokes.length > 0) {
+    if (placedShapes.length > 0) {
+      setPlacedShapes(prev => prev.slice(0, -1));
+      setSaved(false);
+    } else if (strokes.length > 0) {
       setStrokes(prev => prev.slice(0, -1));
       setSaved(false);
     }
@@ -160,17 +218,16 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
 
   const saveDrawing = async () => {
     const bundle = liveStrokeRef.current ? [...strokes, liveStrokeRef.current] : strokes;
-    if (bundle.length === 0) return;
+    if (bundle.length === 0 && placedShapes.length === 0) return;
 
-    // Animate save button
     Animated.sequence([
       Animated.timing(saveAnim, { toValue: 1.3, duration: 150, useNativeDriver: true }),
       Animated.timing(saveAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
     ]).start();
 
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-    const serialized = JSON.stringify({ strokes: bundle, savedAt: Date.now() });
-    const totalPoints = bundle.reduce((sum, s) => sum + s.points.length, 0);
+    const serialized = JSON.stringify({ strokes: bundle, shapes: placedShapes, savedAt: Date.now() });
+    const totalPoints = bundle.reduce((sum, s) => sum + s.points.length, 0) + placedShapes.length;
     let cizimResimBase64: string | undefined;
     try {
       if (canvasRef.current) {
@@ -197,7 +254,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const renderStrokeDots = (stroke: Stroke, strokeIndex: number) =>
     (stroke?.points ?? []).map((pt, idx) => (
       <View
-        key={`${strokeIndex}-${idx}`}
+        key={`stroke-${strokeIndex}-${idx}`}
         style={{
           position: 'absolute',
           left: pt.x - stroke.size / 2,
@@ -210,14 +267,98 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
       />
     ));
 
+  const renderShape = (shape: PlacedShape, index: number) => {
+    const halfSize = shape.size / 2;
+
+    switch (shape.type) {
+      case 'circle':
+        return (
+          <View
+            key={`shape-${index}`}
+            style={{
+              position: 'absolute',
+              left: shape.x - halfSize,
+              top: shape.y - halfSize,
+              width: shape.size,
+              height: shape.size,
+              borderRadius: halfSize,
+              backgroundColor: shape.color,
+            }}
+          />
+        );
+      case 'square':
+        return (
+          <View
+            key={`shape-${index}`}
+            style={{
+              position: 'absolute',
+              left: shape.x - halfSize,
+              top: shape.y - halfSize,
+              width: shape.size,
+              height: shape.size,
+              backgroundColor: shape.color,
+              borderRadius: 4,
+            }}
+          />
+        );
+      case 'triangle':
+        return (
+          <View
+            key={`shape-${index}`}
+            style={{
+              position: 'absolute',
+              left: shape.x - halfSize,
+              top: shape.y - halfSize,
+              width: 0,
+              height: 0,
+              borderLeftWidth: halfSize,
+              borderRightWidth: halfSize,
+              borderBottomWidth: shape.size,
+              borderLeftColor: 'transparent',
+              borderRightColor: 'transparent',
+              borderBottomColor: shape.color,
+            }}
+          />
+        );
+      case 'star':
+      case 'heart':
+        return (
+          <View
+            key={`shape-${index}`}
+            style={{
+              position: 'absolute',
+              left: shape.x - halfSize,
+              top: shape.y - halfSize,
+              width: shape.size,
+              height: shape.size,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Ionicons name={shape.type} size={shape.size} color={shape.color} />
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
+
   const toggleColorPicker = () => {
     setShowSizePicker(false);
+    setShowShapePicker(false);
     setShowColorPicker(!showColorPicker);
   };
 
   const toggleSizePicker = () => {
     setShowColorPicker(false);
+    setShowShapePicker(false);
     setShowSizePicker(!showSizePicker);
+  };
+
+  const toggleShapePicker = () => {
+    setShowColorPicker(false);
+    setShowSizePicker(false);
+    setShowShapePicker(!showShapePicker);
   };
 
   const selectColor = (color: string) => {
@@ -231,11 +372,24 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     setShowSizePicker(false);
   };
 
+  const selectShape = (type: ShapeType | null) => {
+    setSelectedShape(type);
+    setIsEraser(false);
+    setShowShapePicker(false);
+  };
+
   const toggleEraser = () => {
     setIsEraser(!isEraser);
-    setShowColorPicker(false);
-    setShowSizePicker(false);
+    setSelectedShape(null);
+    closeAllPickers();
   };
+
+  const switchToPen = () => {
+    setSelectedShape(null);
+    setIsEraser(false);
+  };
+
+  const hasContent = strokes.length > 0 || placedShapes.length > 0;
 
   return (
     <DynamicBackground>
@@ -245,35 +399,52 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           <Ionicons name="close" size={28} color="#d84315" />
         </TouchableOpacity>
 
-        {/* Canvas - full screen */}
+        {/* Canvas */}
         <View
           ref={canvasRef}
           style={styles.canvas}
           {...panResponder.panHandlers}
         >
           {safeStrokes.map((s, i) => renderStrokeDots(s, i))}
+          {placedShapes.map((shape, i) => renderShape(shape, i))}
         </View>
 
-        {/* Floating toolbar at bottom */}
+        {/* Floating toolbar */}
         <View style={styles.floatingToolbar}>
+          {/* Pen/Brush button */}
+          <TouchableOpacity
+            style={[styles.toolBtn, !isEraser && !selectedShape && styles.toolBtnActive]}
+            onPress={switchToPen}
+          >
+            <Ionicons name="brush" size={22} color={!isEraser && !selectedShape ? '#4CAF50' : '#666'} />
+          </TouchableOpacity>
+
           {/* Color picker button */}
           <TouchableOpacity
-            style={[styles.toolBtn, !isEraser && styles.toolBtnActive]}
+            style={[styles.colorBtn]}
             onPress={toggleColorPicker}
           >
-            <View style={[styles.colorPreview, { backgroundColor: selectedColor }]} />
+            <View style={[styles.colorPreview, { backgroundColor: selectedColor }]}>
+              <Ionicons name="color-palette" size={14} color="#fff" />
+            </View>
           </TouchableOpacity>
 
           {/* Size picker button */}
           <TouchableOpacity
-            style={styles.toolBtn}
+            style={[styles.sizeButton]}
             onPress={toggleSizePicker}
           >
-            <View style={[styles.sizePreview, {
-              width: Math.min(brushSize, 24),
-              height: Math.min(brushSize, 24),
-              backgroundColor: isEraser ? '#ccc' : selectedColor
-            }]} />
+            <Text style={styles.sizeButtonText}>
+              {BRUSH_SIZES.find(b => b.size === brushSize)?.label || 'M'}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Shapes button */}
+          <TouchableOpacity
+            style={[styles.toolBtn, selectedShape && styles.shapeActive]}
+            onPress={toggleShapePicker}
+          >
+            <Ionicons name="shapes" size={22} color={selectedShape ? '#fff' : '#666'} />
           </TouchableOpacity>
 
           {/* Eraser button */}
@@ -281,7 +452,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
             style={[styles.toolBtn, isEraser && styles.eraserActive]}
             onPress={toggleEraser}
           >
-            <Ionicons name="bandage-outline" size={24} color={isEraser ? '#fff' : '#666'} />
+            <Ionicons name="bandage-outline" size={22} color={isEraser ? '#fff' : '#666'} />
           </TouchableOpacity>
 
           {/* Divider */}
@@ -291,18 +462,18 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           <TouchableOpacity
             style={styles.toolBtn}
             onPress={undoLast}
-            disabled={strokes.length === 0}
+            disabled={!hasContent}
           >
-            <Ionicons name="arrow-undo" size={24} color={strokes.length > 0 ? '#FF9800' : '#ccc'} />
+            <Ionicons name="arrow-undo" size={22} color={hasContent ? '#FF9800' : '#ccc'} />
           </TouchableOpacity>
 
           {/* Clear all button */}
           <TouchableOpacity
             style={styles.toolBtn}
             onPress={clearCanvas}
-            disabled={strokes.length === 0}
+            disabled={!hasContent}
           >
-            <Ionicons name="trash-outline" size={24} color={strokes.length > 0 ? '#e53935' : '#ccc'} />
+            <Ionicons name="trash-outline" size={22} color={hasContent ? '#e53935' : '#ccc'} />
           </TouchableOpacity>
 
           {/* Divider */}
@@ -313,12 +484,12 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
             <TouchableOpacity
               style={[styles.toolBtn, styles.saveBtn, saved && styles.savedBtn]}
               onPress={saveDrawing}
-              disabled={strokes.length === 0}
+              disabled={!hasContent}
             >
               <Ionicons
                 name={saved ? 'checkmark-circle' : 'save'}
-                size={26}
-                color={saved ? '#fff' : strokes.length > 0 ? '#4CAF50' : '#ccc'}
+                size={24}
+                color={saved ? '#fff' : hasContent ? '#4CAF50' : '#ccc'}
               />
             </TouchableOpacity>
           </Animated.View>
@@ -367,23 +538,64 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           ]}
           pointerEvents={showSizePicker ? 'auto' : 'none'}
         >
-          {BRUSH_SIZES.map(size => (
+          {BRUSH_SIZES.map(b => (
             <TouchableOpacity
-              key={size}
-              style={[styles.sizeOption, brushSize === size && styles.sizeOptionSelected]}
-              onPress={() => selectSize(size)}
+              key={b.size}
+              style={[styles.sizeOption, brushSize === b.size && styles.sizeOptionSelected]}
+              onPress={() => selectSize(b.size)}
             >
+              <Text style={[styles.sizeOptionText, brushSize === b.size && styles.sizeOptionTextSelected]}>
+                {b.label}
+              </Text>
               <View
                 style={{
-                  width: Math.min(size, 20),
-                  height: Math.min(size, 20),
-                  borderRadius: size / 2,
+                  width: Math.min(b.size, 18),
+                  height: Math.min(b.size, 18),
+                  borderRadius: b.size / 2,
                   backgroundColor: selectedColor,
                 }}
               />
             </TouchableOpacity>
           ))}
         </Animated.View>
+
+        {/* Shape picker popup */}
+        <Animated.View
+          style={[
+            styles.pickerPopup,
+            styles.shapePickerPopup,
+            {
+              opacity: shapePickerAnim,
+              transform: [
+                { translateY: shapePickerAnim.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+                { scale: shapePickerAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) },
+              ],
+            },
+          ]}
+          pointerEvents={showShapePicker ? 'auto' : 'none'}
+        >
+          {SHAPES.map(shape => (
+            <TouchableOpacity
+              key={shape.type}
+              style={[styles.shapeOption, selectedShape === shape.type && styles.shapeOptionSelected]}
+              onPress={() => selectShape(shape.type)}
+            >
+              <Ionicons
+                name={shape.icon as any}
+                size={28}
+                color={selectedShape === shape.type ? '#fff' : selectedColor}
+              />
+            </TouchableOpacity>
+          ))}
+        </Animated.View>
+
+        {/* Mode indicator */}
+        {selectedShape && (
+          <View style={styles.modeIndicator}>
+            <Ionicons name={SHAPES.find(s => s.type === selectedShape)?.icon as any} size={16} color="#fff" />
+            <Text style={styles.modeText}>Şekil modu - Tuvale dokun</Text>
+          </View>
+        )}
       </View>
     </DynamicBackground>
   );
@@ -429,26 +641,26 @@ const styles = StyleSheet.create({
   floatingToolbar: {
     position: 'absolute',
     bottom: 20,
-    left: 20,
-    right: 20,
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.98)',
-    borderRadius: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    borderRadius: 28,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
-    gap: 8,
+    gap: 6,
   },
   toolBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#f5f5f5',
     alignItems: 'center',
     justifyContent: 'center',
@@ -459,16 +671,44 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
     backgroundColor: '#E8F5E9',
   },
+  colorBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+  },
   colorPreview: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#fff',
     elevation: 2,
   },
-  sizePreview: {
-    borderRadius: 12,
+  sizeButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E3F2FD',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#2196F3',
+  },
+  sizeButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#2196F3',
+  },
+  shapeActive: {
+    backgroundColor: '#9C27B0',
+    borderColor: '#7B1FA2',
   },
   eraserActive: {
     backgroundColor: '#FF9800',
@@ -476,9 +716,9 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: 2,
-    height: 32,
+    height: 28,
     backgroundColor: '#e0e0e0',
-    marginHorizontal: 4,
+    marginHorizontal: 2,
     borderRadius: 1,
   },
   saveBtn: {
@@ -490,13 +730,13 @@ const styles = StyleSheet.create({
   },
   pickerPopup: {
     position: 'absolute',
-    bottom: 90,
+    bottom: 85,
     backgroundColor: 'rgba(255, 255, 255, 0.98)',
     borderRadius: 20,
     padding: 12,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -505,17 +745,21 @@ const styles = StyleSheet.create({
     zIndex: 50,
   },
   colorPickerPopup: {
-    left: 20,
-    width: 200,
+    left: 60,
+    width: 190,
   },
   sizePickerPopup: {
-    left: 80,
-    width: 180,
+    left: 110,
+    width: 200,
+  },
+  shapePickerPopup: {
+    left: 150,
+    width: 220,
   },
   colorOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 3,
     borderColor: 'transparent',
   },
@@ -524,17 +768,58 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.1 }],
   },
   sizeOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#f5f5f5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#e0e0e0',
+    flexDirection: 'column',
+    gap: 2,
+  },
+  sizeOptionSelected: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#E8F5E9',
+  },
+  sizeOptionText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#666',
+  },
+  sizeOptionTextSelected: {
+    color: '#4CAF50',
+  },
+  shapeOption: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#f5f5f5',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
     borderColor: '#e0e0e0',
   },
-  sizeOptionSelected: {
-    borderColor: '#4CAF50',
-    backgroundColor: '#E8F5E9',
+  shapeOptionSelected: {
+    borderColor: '#9C27B0',
+    backgroundColor: '#9C27B0',
+  },
+  modeIndicator: {
+    position: 'absolute',
+    top: 50,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(156, 39, 176, 0.9)',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 8,
+  },
+  modeText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
