@@ -6,6 +6,7 @@ import EksikSayiBul from '@/components/EksikSayiBul';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
+import KutuyuBul from '@/components/KutuyuBul';
 import RakamYazma from '@/components/RakamYazma';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
@@ -352,6 +353,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Rakam Yazma</Text>
                   <Text style={styles.oyunAciklama}>1'den 5'e Yaz</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#7E57C2' }]} onPress={() => oyunuBaslat('kutuyu-bul')}>
+                  <Ionicons name="cube" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Kutuyu Bul!</Text>
+                  <Text style={styles.oyunAciklama}>Doğru Kutuyu Seç</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -413,6 +420,10 @@ export default function App() {
 
   if (asama === 'rakam-yazma') {
     return <RakamYazma onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'kutuyu-bul') {
+    return <KutuyuBul onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'ceviz-macera') {
