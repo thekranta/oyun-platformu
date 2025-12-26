@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
-import MusicButton from '../components/MusicButton';
 import StudentStatsModal from '../components/StudentStatsModal';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -555,7 +554,6 @@ export default function AdminPanel() {
                         <Ionicons name="refresh" size={24} color="white" />
                     </TouchableOpacity>
                 </View>
-                <MusicButton />
 
                 {loading ? (
                     <ActivityIndicator size="large" color="#4CAF50" style={{ marginTop: 50 }} />

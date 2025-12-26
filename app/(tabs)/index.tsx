@@ -6,7 +6,6 @@ import EksikSayiBul from '@/components/EksikSayiBul';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
-import MusicButton from '@/components/MusicButton';
 import RakamYazma from '@/components/RakamYazma';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
@@ -239,7 +238,6 @@ export default function App() {
   if (asama === 'giris') {
     return (
       <DynamicBackground>
-        <MusicButton />
         <View style={styles.merkezContainer}>
           <View style={styles.card}>
             <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
@@ -278,7 +276,6 @@ export default function App() {
   if (asama === 'menu') {
     return (
       <DynamicBackground>
-        <MusicButton />
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.headerContainer}>
             <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
@@ -429,7 +426,6 @@ export default function App() {
   if (asama === 'sonuc') {
     return (
       <DynamicBackground>
-        <MusicButton />
         <View style={styles.merkezContainer}>
           <View style={styles.card}>
             <Text style={{ fontSize: 80, textAlign: 'center' }}>🎉</Text>

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import SoundControls from './SoundControls';
+import MusicButton from './MusicButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -88,10 +88,8 @@ export default function DynamicBackground({ children, onExit }: DynamicBackgroun
                 </FloatingItem>
             </View>
 
-            {/* Global Sound Controls */}
-            <View style={styles.soundControlsContainer}>
-                <SoundControls />
-            </View>
+            {/* Global Music Button */}
+            <MusicButton />
 
             {/* Global Exit Button */}
             {onExit && (
