@@ -13,6 +13,7 @@ import SayilariBirlestir from '@/components/SayilariBirlestir';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
+import YapbozOyunu from '@/components/YapbozOyunu';
 import YaraticiCizim from '@/components/YaraticiCizim';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
@@ -367,6 +368,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Sayıları Birleştir</Text>
                   <Text style={styles.oyunAciklama}>Meyveleri Sırayla Bağla</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#E91E63' }]} onPress={() => oyunuBaslat('yapboz')}>
+                  <Ionicons name="apps" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Yapboz</Text>
+                  <Text style={styles.oyunAciklama}>3x3 Puzzle Oyunu</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -442,6 +449,10 @@ export default function App() {
 
   if (asama === 'sayilari-birlestir') {
     return <SayilariBirlestir onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'yapboz') {
+    return <YapbozOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'ceviz-macera') {
