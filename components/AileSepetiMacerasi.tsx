@@ -5,7 +5,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
-import { useSound } from './SoundContext';
 
 // STORY DATA
 const storyData = {
@@ -13,7 +12,8 @@ const storyData = {
         id: 'intro',
         bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_giris_bg_misket_sepet.jpg'),
         text: "Bir zamanlar Kokulu Çayır’da, Misket adında küçük bir tavşan yaşardı. Bugün Aile Buluşması Günü’ydü! Anne Narin, baba Umut ve minik kardeş Pofik ile büyük çınarın altında piknik yapacaklardı. Misket aile sepetini hazırladı: elmalar, havuçlar ve küçük bir aile fotoğraf albümü… Tam yola çıkacakken rüzgâr vuuuu! diye esti, sepetin kapağı tak! diye açıldı. Albüm yuvarlandı ve iki patikanın arasına düştü. Misket heyecanla, “Albümü bulmalıyız! Hep birlikte gitmezsek kaybolabiliriz,” dedi.",
-        audio: null,
+        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_giris_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_giris_q.mp3'),
         question: "Sence Misket kimden yardım istesin?",
         options: [
             {
@@ -22,7 +22,6 @@ const storyData = {
                 image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim1_icon_togo.png'),
                 label: 'Planlı Kaplumbağa Togo',
                 next: 'scene_a',
-                audio: null,
             },
             {
                 id: 'B',
@@ -30,7 +29,6 @@ const storyData = {
                 image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim1_icon_bobo.png'),
                 label: 'Pratik Kunduz Bobo',
                 next: 'scene_b',
-                audio: null,
             },
         ],
     },
@@ -38,7 +36,8 @@ const storyData = {
         id: 'scene_a',
         bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_yolA_bg_togo_kaygan_tepe.jpg'),
         text: "Togo gözlüğünü düzeltti: “Önce ailece duralım. Kimse tek başına ilerlemesin,” dedi. Sonra yere küçük taşlarla bir işaret yaptı: “Albüm rüzgârla bu yöne gitmiş olabilir. Hep birlikte iz takibi yapalım.” Aile sıraya girdi. Tam yürürken önlerine çiğle ıslanmış kaygan bir tepe çıktı. Ayaklar pıt pıt kayıyordu.",
-        audio: null,
+        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_yolA_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_yolA_q.mp3'),
         question: "Sence aile bu tepeden nasıl geçsin?",
         options: [
             {
@@ -47,7 +46,6 @@ const storyData = {
                 image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim2A_icon_ele_ele.png'),
                 label: 'El ele tutuşup birlikte çıksınlar',
                 next: 'end_a1',
-                audio: null,
             },
             {
                 id: 'A2',
@@ -55,7 +53,6 @@ const storyData = {
                 image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim2A_icon_gorev.png'),
                 label: 'Görev paylaşımı yapsınlar',
                 next: 'end_a2',
-                audio: null,
             },
         ],
     },
@@ -63,7 +60,8 @@ const storyData = {
         id: 'scene_b',
         bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_yolB_bg_bobo_yol_ayrimi.jpg'),
         text: "Bobo kuyruğunu şap şap salladı: “Ben çalılıklara bakayım. Albüm rüzgârla oraya sıkışmış olabilir,” dedi. Misket hemen seslendi: “Bobo, lütfen fazla uzaklaşma. Biz ailece birlikte kalmak istiyoruz.” Bobo durdu: “Tamam! O zaman hızlı çözüm bulalım: yol ikiye ayrılıyor. Albüm bir tarafta, sepet bir tarafta kalmasın.”",
-        audio: null,
+        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_yolB_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_yolB_q.mp3'),
         question: "Sence aile iki yolu nasıl kontrol etsin?",
         options: [
             {
@@ -72,7 +70,6 @@ const storyData = {
                 image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim2B_icon_ayrilmadan.png'),
                 label: 'Aile ayrılmadan birlikte arasın',
                 next: 'end_b1',
-                audio: null,
             },
             {
                 id: 'B2',
@@ -80,14 +77,13 @@ const storyData = {
                 image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim2B_icon_isaret.png'),
                 label: 'İşaretlerle plan yapıp sırayla kontrol etsin',
                 next: 'end_b2',
-                audio: null,
             },
         ],
     },
     end_a1: {
         id: 'end_a1',
         bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_sonucA1_bg_ele_ele_tepe.jpg'),
-        audio: null,
+        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_sonucA1_narr.mp3'),
         text: "Anne Narin, Misket’in patisini tuttu. Baba Umut da Pofik’i yanına aldı. Hep birlikte “Yavaş… şimdi… hop!” dediler. Kaygan tepeyi pıt pıt adımlarla çıktılar. Kimse geride kalmadı. Tepenin sonunda albüm çimenlerin arasında parlıyordu. Aile birbirine sarıldı.\n\nDEGER MESAJI: Aile, aynı yolda birlikte yürüdüğünde güçlü olur. Birbirini bırakmamak aile bütünlüğüdür.",
         analysisTag: 'Sosyal-Isbirligi-Guven',
         next: 'final'
@@ -95,7 +91,7 @@ const storyData = {
     end_a2: {
         id: 'end_a2',
         bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_sonucA2_bg_gorev_paylasimi.jpg'),
-        audio: null,
+        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_sonucA2_narr.mp3'),
         text: "Baba Umut “Ben sepeti taşırım,” dedi. Anne Narin “Ben Pofik’in yanındayım,” dedi. Misket “Ben önden yavaş adımlarla yolu göstereceğim,” dedi. Togo da “Dur–yürü ritmini ben söyleyeceğim,” dedi. Hep birlikte güvenle geçtiler ve albümü birlikte buldular.\n\nDEGER MESAJI: Aile görev paylaşınca hem hızlı hem güvenli ilerler. Herkes katkı verince aile bütünlüğü güçlenir.",
         analysisTag: 'Sosyal-Liderlik-Planlama',
         next: 'final'
@@ -103,7 +99,7 @@ const storyData = {
     end_b1: {
         id: 'end_b1',
         bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_sonucB1_bg_ayrilmadan_arama.jpg'),
-        audio: null,
+        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_sonucB1_narr.mp3'),
         text: "Misket “Biz ayrılmayalım,” dedi. Aile aynı patikadan yürüdü. Albüm bir taşın arkasına sıkışmıştı. Bobo “Buldum!” dedi ve gülümsedi. Hep birlikte sevindiler.\n\nDEGER MESAJI: Aile aynı yerde ve aynı kalpte kalınca güvende hisseder. Birlikte aramak aile bütünlüğünü büyütür.",
         analysisTag: 'Guvenlik-Birliktelik',
         next: 'final'
@@ -111,7 +107,7 @@ const storyData = {
     end_b2: {
         id: 'end_b2',
         bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_sonucB2_bg_isaretli_plan.jpg'),
-        audio: null,
+        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_sonucB2_narr.mp3'),
         text: "Bobo yere küçük dal parçalarıyla oklar yaptı: “Bu oklar ‘aynı hizada kal’ demek,” dedi. Aile ayrılmadan önce sol yanı kontrol etti; sonra birlikte sağ yana geçti. Albüm çiçek demetinin altında çıktı. Misket “Birlikte bulduk!” diye sevindi.\n\nDEGER MESAJI: Aile ayrılmadan plan yaparsa her şey kolaylaşır. Aynı takım olmak aile bütünlüğüdür.",
         analysisTag: 'Bilissel-ProblemCozme-Harita',
         next: 'final'
@@ -120,7 +116,7 @@ const storyData = {
         id: 'final',
         isFinal: true,
         bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_final_bg_birlikte_aile.jpg'),
-        audio: null,
+        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_final_narr.mp3'),
         text: "Birlikte olunca her şey daha kolay!\nAile bütünlüğü: Birlikte karar vermek, birlikte hareket etmek ve birbirini bırakmamaktır.",
         analysisTag: 'Final',
     }
@@ -132,7 +128,6 @@ type StoryOption = {
     image: any;
     label: string;
     next: string;
-    audio: any;
 };
 
 type StoryNode = {
@@ -140,6 +135,7 @@ type StoryNode = {
     bgImage: any;
     text: string;
     audio: any;
+    questionAudio?: any;
     question?: string;
     isFinal?: boolean;
     analysisTag?: string;
@@ -160,14 +156,13 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
     const isMobile = width < 768;
 
     const [currentNodeId, setCurrentNodeId] = useState<string>('intro');
-    // 'narrative': show text + arrow button
-    // 'choice': show options (if any)
     const [phase, setPhase] = useState<'narrative' | 'choice'>('narrative');
 
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
-    const { playSound } = useSound();
+
+    // Audio State
     const [storyVolume, setStoryVolume] = useState(1.0);
     const soundRef = useRef<Audio.Sound | null>(null);
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -176,9 +171,7 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
 
     useEffect(() => {
         return () => {
-            if (soundRef.current) {
-                soundRef.current.unloadAsync();
-            }
+            stopAudio();
         };
     }, []);
 
@@ -188,70 +181,55 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
         }
     }, [storyVolume]);
 
-    // When node changes, reset to narrative phase and play audio
+    // On Node Change
     useEffect(() => {
         setPhase('narrative');
         setShowConfetti(false);
         fadeAnim.setValue(0);
         Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }).start();
 
-        playSceneAudio();
+        // Auto-play narrator
+        playAudio(currentNode.audio);
 
         if (currentNode.isFinal && !isLogging) {
             logGameResult(currentNode.analysisTag || 'Unknown');
         }
     }, [currentNodeId]);
 
-    const playSceneAudio = async () => {
-        try {
-            if (soundRef.current) {
+    const stopAudio = async () => {
+        if (soundRef.current) {
+            try {
                 await soundRef.current.unloadAsync();
-                soundRef.current = null;
-            }
-            if (currentNode.audio) {
-                const { sound } = await Audio.Sound.createAsync(currentNode.audio, { shouldPlay: true });
-                soundRef.current = sound;
-                await sound.setVolumeAsync(storyVolume);
-            }
-        } catch (e) {
-            console.log('Ses çalma hatası:', e);
+            } catch (e) { }
+            soundRef.current = null;
         }
     };
 
-    // Called when user clicks the "Next" (arrow) button
+    const playAudio = async (audioSource: any) => {
+        await stopAudio();
+        if (!audioSource) return;
+
+        try {
+            const { sound } = await Audio.Sound.createAsync(audioSource, { shouldPlay: true });
+            soundRef.current = sound;
+            await sound.setVolumeAsync(storyVolume);
+        } catch (e) {
+            console.log('Audio playback error:', e);
+        }
+    };
+
     const handleNext = () => {
-        // Stop current audio logic if needed, or let it play
-        // If there are options, go to choice phase
         if (currentNode.options && currentNode.options.length > 0) {
             setPhase('choice');
         } else if (currentNode.next) {
-            // Direct transition (e.g. result -> final)
             setCurrentNodeId(currentNode.next);
         } else if (currentNode.isFinal) {
-            // Final scene -> maybe exit or show confetti?
             setShowConfetti(true);
         }
     };
 
-    const handleOptionSelect = async (opt: StoryOption) => {
-        if (opt.audio) {
-            try {
-                const { sound } = await Audio.Sound.createAsync(opt.audio);
-                await sound.setRateAsync(1.0, false);
-                await sound.playAsync();
-                // optional: wait for sound?
-            } catch (e) {
-                console.warn('Ses çalma hatası', e);
-            }
-        }
+    const handleOptionSelect = (opt: StoryOption) => {
         setCurrentNodeId(opt.next);
-    };
-
-    const handleReset = () => {
-        setCurrentNodeId('intro');
-        setIsLogging(false);
-        setShowConfetti(false);
-        setPhase('narrative');
     };
 
     const logGameResult = async (analysisTag: string) => {
@@ -261,10 +239,7 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
         const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
         const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
-        if (!SUPABASE_URL || !SUPABASE_KEY) {
-            console.error('Supabase URL veya Key eksik!');
-            return;
-        }
+        if (!SUPABASE_URL || !SUPABASE_KEY) return;
 
         const logData = {
             ogrenci_adi: userId || 'Misafir',
@@ -288,7 +263,6 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
                 },
                 body: JSON.stringify(logData),
             });
-            console.log('✅ Oyun sonucu başarıyla kaydedildi.');
         } catch (e) {
             console.error('Log hatası:', e);
         }
@@ -298,9 +272,14 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
         <View style={styles.textBoxContainer}>
             <View style={styles.textWrapper}>
                 <Text style={styles.storyText}>{currentNode.text}</Text>
+
+                {currentNode.audio && (
+                    <TouchableOpacity style={styles.speakButton} onPress={() => playAudio(currentNode.audio)}>
+                        <Ionicons name="volume-medium" size={32} color="#FFF" />
+                    </TouchableOpacity>
+                )}
             </View>
 
-            {/* Arrow Button to proceed */}
             <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
                 <Ionicons name="arrow-forward-circle" size={60} color="#FF9800" />
             </TouchableOpacity>
@@ -316,9 +295,15 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
 
     const renderChoices = () => (
         <View style={styles.choicesContainer}>
-            {currentNode.question && (
+            {(currentNode.question || currentNode.questionAudio) && (
                 <View style={styles.questionBox}>
                     <Text style={styles.questionText}>{currentNode.question}</Text>
+                    {currentNode.questionAudio && (
+                        <TouchableOpacity style={styles.questionSpeakButton} onPress={() => playAudio(currentNode.questionAudio)}>
+                            <Ionicons name="help-circle" size={30} color="#FFF" />
+                            <Text style={styles.questionSpeakText}>Soruyu Dinle</Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             )}
 
@@ -373,15 +358,13 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
 
                 {/* Content */}
                 <View style={styles.contentContainer}>
-                    {/* Background Image Layer */}
                     <Animated.Image
                         source={currentNode.bgImage}
                         style={[styles.backgroundImage, { opacity: fadeAnim }]}
                         resizeMode="cover"
-                        blurRadius={phase === 'choice' ? 5 : 0} // Optional blur effect during choice
+                        blurRadius={phase === 'choice' ? 5 : 0}
                     />
 
-                    {/* Overlay Layer */}
                     <View style={styles.overlayContainer}>
                         {phase === 'narrative' ? renderNarrative() : renderChoices()}
                     </View>
@@ -413,10 +396,9 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         borderWidth: 5,
         borderColor: '#8D6E63',
-        position: 'relative' // For absolute positioning children
+        position: 'relative'
     },
 
-    // Background fills the container
     backgroundImage: {
         width: '100%',
         height: '100%',
@@ -425,37 +407,46 @@ const styles = StyleSheet.create({
         left: 0,
     },
 
-    // Overlay sits on top of background
     overlayContainer: {
         flex: 1,
         width: '100%',
-        justifyContent: 'flex-end', // Text at bottom usually? Or center? Let's try bottom for text, center for options
+        justifyContent: 'flex-end',
         alignItems: 'center',
         padding: 20,
-        backgroundColor: 'rgba(0,0,0,0.1)' // Slight tint
+        backgroundColor: 'rgba(0,0,0,0.1)'
     },
 
-    // Text Box Styling
     textBoxContainer: {
         width: '100%',
         alignItems: 'center',
         marginBottom: 20,
     },
     textWrapper: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         padding: 20,
         borderRadius: 20,
         borderWidth: 3,
         borderColor: '#FF9800',
         width: '90%',
         marginBottom: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
     },
     storyText: {
-        fontSize: 22,
+        flex: 1,
+        fontSize: 20,
         color: '#3E2723',
         textAlign: 'center',
-        lineHeight: 32,
-        fontWeight: '600'
+        lineHeight: 30,
+        fontWeight: '600',
+        marginRight: 10
+    },
+    speakButton: {
+        backgroundColor: '#FF9800',
+        padding: 10,
+        borderRadius: 25,
+        elevation: 3
     },
     nextButton: {
         backgroundColor: '#FFF',
@@ -479,13 +470,12 @@ const styles = StyleSheet.create({
         marginRight: 10
     },
 
-    // Choice Styling
     choicesContainer: {
         flex: 1,
         width: '100%',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.4)' // Darker overlay for focus
+        backgroundColor: 'rgba(0,0,0,0.4)'
     },
     questionBox: {
         backgroundColor: '#FFF',
@@ -493,13 +483,28 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         marginBottom: 20,
         borderWidth: 2,
-        borderColor: '#FF9800'
+        borderColor: '#FF9800',
+        alignItems: 'center'
     },
     questionText: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#E65100',
-        textAlign: 'center'
+        textAlign: 'center',
+        marginBottom: 10
+    },
+    questionSpeakButton: {
+        flexDirection: 'row',
+        backgroundColor: '#FF5722',
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 20,
+        alignItems: 'center'
+    },
+    questionSpeakText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+        marginLeft: 5
     },
     optionsScroll: {
         alignItems: 'center',
