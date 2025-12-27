@@ -62,9 +62,9 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
 
     const [stage, setStage] = useState(1);
     const [dots, setDots] = useState<NumberDot[]>([]);
-    const [completedLines, setCompletedLines] = useState<{ from: number; to: number }[]>([]);
+    const [completedLines, setCompletedLines] = useState<{ from: number; to: number; path: Point[] }[]>([]);
     const [currentNumber, setCurrentNumber] = useState(1);
-    const [drawingLine, setDrawingLine] = useState<{ start: Point; end: Point } | null>(null);
+    const [drawingPath, setDrawingPath] = useState<Point[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const [errors, setErrors] = useState(0);
     const [moves, setMoves] = useState(0);
@@ -94,7 +94,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
         setCompletedLines([]);
         setCurrentNumber(1);
         setStageComplete(false);
-        setDrawingLine(null);
+        setDrawingPath([]);
         setIsDragging(false);
 
         Animated.timing(progressAnim, {
@@ -133,10 +133,10 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
         return null;
     };
 
-    const handleConnectionComplete = (fromNum: number, toNum: number) => {
+    const handleConnectionComplete = (fromNum: number, toNum: number, path: Point[]) => {
         if (fromNum === currentNumber && toNum === currentNumber + 1) {
             // Correct connection!
-            setCompletedLines(prev => [...prev, { from: fromNum, to: toNum }]);
+            setCompletedLines(prev => [...prev, { from: fromNum, to: toNum, path }]);
             setMoves(prev => prev + 1);
             playSound('correct');
 
@@ -181,19 +181,19 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             // Must start from the current number
             if (startDot && startDot.number === currentNumber) {
                 const center = getDotPixelPos(startDot);
-                setDrawingLine({ start: center, end: center });
+                setDrawingPath([center]); // Start path
                 setIsDragging(true);
             }
         },
         onPanResponderMove: (e) => {
-            if (!isDragging || !drawingLine || stageComplete) return;
+            if (!isDragging || drawingPath.length === 0 || stageComplete) return;
 
             const { locationX, locationY } = e.nativeEvent;
-            setDrawingLine(prev => prev ? { ...prev, end: { x: locationX, y: locationY } } : null);
+            setDrawingPath(prev => [...prev, { x: locationX, y: locationY }]);
         },
         onPanResponderRelease: (e) => {
-            if (!isDragging || !drawingLine || stageComplete) {
-                setDrawingLine(null);
+            if (!isDragging || drawingPath.length === 0 || stageComplete) {
+                setDrawingPath([]);
                 setIsDragging(false);
                 return;
             }
@@ -202,67 +202,38 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             const endDot = findDotAtPoint(locationX, locationY);
 
             if (endDot) {
-                handleConnectionComplete(currentNumber, endDot.number);
+                handleConnectionComplete(currentNumber, endDot.number, drawingPath);
             }
 
-            setDrawingLine(null);
+            setDrawingPath([]);
             setIsDragging(false);
         },
         onPanResponderTerminate: () => {
-            setDrawingLine(null);
+            setDrawingPath([]);
             setIsDragging(false);
         },
-    }), [currentNumber, isDragging, drawingLine, stageComplete, dots, fruitSize, canvasSize]);
+    }), [currentNumber, isDragging, drawingPath, stageComplete, dots, fruitSize, canvasSize]);
 
 
-    const renderCompletedLine = (from: NumberDot, to: NumberDot, key: string) => {
-        const { width, height } = canvasSize;
-        const x1 = from.x * width;
-
-        const y1 = from.y * height;
-        const x2 = to.x * width;
-        const y2 = to.y * height;
-
-        const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-        const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
-
-        return (
+    const renderPath = (path: Point[], color: string, keyPrefix: string) => {
+        // Render points as small circles for free drawing effect
+        return path.map((p, i) => (
             <View
-                key={key}
-                style={[
-                    styles.completedLine,
-                    {
-                        width: length,
-                        left: x1,
-                        top: y1 - 4,
-                        transform: [{ rotate: `${angle}deg` }],
-                    },
-                ]}
+                key={`${keyPrefix}-${i}`}
+                style={{
+                    position: 'absolute',
+                    left: p.x - 4,
+                    top: p.y - 4,
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: color,
+                }}
             />
-        );
+        ));
     };
 
-    const renderDrawingLine = () => {
-        if (!drawingLine) return null;
-
-        const { start, end } = drawingLine;
-        const length = Math.sqrt((end.x - start.x) ** 2 + (end.y - start.y) ** 2);
-        const angle = Math.atan2(end.y - start.y, end.x - start.x) * (180 / Math.PI);
-
-        return (
-            <View
-                style={[
-                    styles.drawingLine,
-                    {
-                        width: length,
-                        left: start.x,
-                        top: start.y - 4,
-                        transform: [{ rotate: `${angle}deg` }],
-                    },
-                ]}
-            />
-        );
-    };
+    // Removed old renderDrawingLine since we use renderPath now
 
     return (
         <DynamicBackground>
@@ -313,17 +284,14 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                     {canvasSize.width > 0 && canvasSize.height > 0 && (
                         <>
                             {/* Completed lines */}
-                            {completedLines.map((line, i) => {
-                                const fromDot = dots.find(d => d.number === line.from);
-                                const toDot = dots.find(d => d.number === line.to);
-                                if (fromDot && toDot) {
-                                    return renderCompletedLine(fromDot, toDot, `line-${i}`);
-                                }
-                                return null;
-                            })}
+                            {completedLines.map((line, i) => (
+                                <React.Fragment key={`completed-${i}`}>
+                                    {renderPath(line.path, '#4CAF50', `completed-${i}`)}
+                                </React.Fragment>
+                            ))}
 
                             {/* Drawing line (while dragging) */}
-                            {renderDrawingLine()}
+                            {renderPath(drawingPath, '#81C784', 'drawing')}
 
                             {/* Fruit dots with numbers inside */}
                             {dots.map((dot) => {
@@ -352,15 +320,21 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                                             resizeMode="contain"
                                         />
                                         {/* Number inside fruit */}
-                                        <View style={[
-                                            styles.numberOverlay,
-                                            isCompleted && styles.numberOverlayCompleted,
-                                        ]}>
-                                            <Text style={[
-                                                styles.numberText,
-                                                { fontSize: fruitSize * 0.4 },
-                                                isCompleted && styles.numberTextCompleted,
-                                            ]}>
+                                        <View
+                                            style={[
+                                                styles.numberOverlay,
+                                                isCompleted && styles.numberOverlayCompleted,
+                                            ]}
+                                            pointerEvents="none"
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.numberText,
+                                                    { fontSize: fruitSize * 0.4 },
+                                                    isCompleted && styles.numberTextCompleted,
+                                                ]}
+                                                selectable={false}
+                                            >
                                                 {dot.number}
                                             </Text>
                                         </View>
