@@ -137,6 +137,7 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
 
     const [currentNodeId, setCurrentNodeId] = useState<string>('intro');
     const [phase, setPhase] = useState<'narrative' | 'choice'>('narrative');
+    const [path, setPath] = useState<string[]>(['intro']); // Track user path
 
     const [startTime] = useState<number>(Date.now());
     const [isLogging, setIsLogging] = useState(false);
@@ -172,7 +173,7 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
         playAudio(currentNode.audio, 'narrative');
 
         if (currentNode.isFinal && !isLogging) {
-            logGameResult(currentNode.analysisTag || 'Unknown');
+            logGameResult();
         }
     }, [currentNodeId]);
 
@@ -235,26 +236,61 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
     };
 
     const handleOptionSelect = (opt: StoryOption) => {
+        setPath(prev => [...prev, opt.next]); // Track path
         setCurrentNodeId(opt.next);
     };
 
-    const logGameResult = async (analysisTag: string) => {
+    const logGameResult = async () => {
         setIsLogging(true);
         const endTime = Date.now();
         const durationSeconds = Math.floor((endTime - startTime) / 1000);
+        const durationMs = endTime - startTime;
         const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
         const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+        const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
         if (!SUPABASE_URL || !SUPABASE_KEY) return;
+
+        // Build path string like "intro -> scene_a -> end_a1 -> final"
+        const pathString = path.join(' -> ');
+
+        // Generate AI comment using Gemini
+        let aiComment: string | null = null;
+        if (GEMINI_API_KEY) {
+            try {
+                const prompt = `Bu bir okul öncesi değerler hikâyesi. Değer: Aile bütünlüğü. Çocuk şu yolu seçti: ${pathString}. Süre: ${durationMs} ms.
+Bu seçimlere dayanarak ebeveyne yönelik 4-6 cümlelik kısa bir yorum yaz.
+Yargılayıcı olma. Klinik tanı yok. Sadece gözleme dayalı, olumlu ve geliştirici dil kullan.
+Sonuna 2 soru ve 2 ev içi mini etkinlik önerisi ekle.`;
+
+                const response = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY.trim()}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    }
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.candidates && data.candidates.length > 0) {
+                        aiComment = data.candidates[0].content.parts[0].text;
+                    }
+                }
+            } catch (e) {
+                console.error('Gemini API hatası:', e);
+            }
+        }
 
         const logData = {
             ogrenci_adi: userId || 'Misafir',
             ogrenci_yasi: userAge || 0,
             oyun_turu: 'aile_sepeti_macerasi',
-            hamle_sayisi: 1,
+            hamle_sayisi: path.length,
             hata_sayisi: 0,
             sure: durationSeconds,
-            yapay_zeka_yorumu: analysisTag,
+            yapay_zeka_yorumu: aiComment || `Seçilen yol: ${pathString}`,
             email: userEmail,
         };
 
@@ -269,6 +305,7 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
                 },
                 body: JSON.stringify(logData),
             });
+            console.log('✅ Oyun sonucu ve AI yorumu kaydedildi.');
         } catch (e) {
             console.error('Log hatası:', e);
         }
@@ -298,7 +335,7 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
     );
 
     return (
-        <DynamicBackground onExit={onExit} showCloseButton={true}>
+        <DynamicBackground onExit={onExit}>
             <View style={styles.mainContainer}>
                 {/* Header - Minimal, just volume */}
                 <View style={styles.header}>
