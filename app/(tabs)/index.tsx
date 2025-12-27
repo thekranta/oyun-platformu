@@ -1,3 +1,4 @@
+import AileSepetiMacerasi from '@/components/AileSepetiMacerasi';
 import BunuSoyle from '@/components/BunuSoyle';
 import CevizMacera from '@/components/CevizMacera';
 import DiziyiTamamla from '@/components/DiziyiTamamla';
@@ -376,6 +377,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Ceviz Macerası</Text>
                   <Text style={styles.oyunAciklama}>Pıtırcık'ın Macerası</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8D6E63' }]} onPress={() => oyunuBaslat('aile-sepeti-macerasi')}>
+                  <Ionicons name="basket-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Aile Sepeti</Text>
+                  <Text style={styles.oyunAciklama}>Piknik Macerası</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -439,6 +446,10 @@ export default function App() {
 
   if (asama === 'ceviz-macera') {
     return <CevizMacera onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
+  }
+
+  if (asama === 'aile-sepeti-macerasi') {
+    return <AileSepetiMacerasi onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
   }
 
   if (asama === 'yaratici-cizim') {
