@@ -261,7 +261,9 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
                 const prompt = `Bu bir okul öncesi değerler hikâyesi. Değer: Aile bütünlüğü. Çocuk şu yolu seçti: ${pathString}. Süre: ${durationMs} ms.
 Bu seçimlere dayanarak ebeveyne yönelik 4-6 cümlelik kısa bir yorum yaz.
 Yargılayıcı olma. Klinik tanı yok. Sadece gözleme dayalı, olumlu ve geliştirici dil kullan.
-Sonuna 2 soru ve 2 ev içi mini etkinlik önerisi ekle.`;
+Ebeveyne soru sorma. Sadece yorum yap ve önerilerde bulun.
+Sonuna 2 ev içi mini etkinlik önerisi ekle.
+Yorumun en sonuna "ChildhoodTech Ekibi" yazarak bitir.`;
 
                 const response = await fetch(
                     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY.trim()}`,
