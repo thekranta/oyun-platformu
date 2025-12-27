@@ -19,7 +19,7 @@ interface Props {
 }
 
 const MIN_STEP = 2;
-const SUCCESS_THRESHOLD = 0.55;
+const SUCCESS_THRESHOLD = 0.9;
 
 // Color palette for pen selection
 const PEN_COLORS = [
