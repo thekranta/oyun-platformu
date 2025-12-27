@@ -70,7 +70,8 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
     const [moves, setMoves] = useState(0);
     const [stageComplete, setStageComplete] = useState(false);
     const startTimeRef = useRef(Date.now());
-    const canvasLayoutRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
+    const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+
 
     const progressAnim = useRef(new Animated.Value(0)).current;
     const successAnim = useRef(new Animated.Value(0)).current;
@@ -108,16 +109,18 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
     }, [stage]);
 
     const getDotPixelPos = (dot: NumberDot): Point => {
-        const { width, height } = canvasLayoutRef.current;
+        const { width, height } = canvasSize;
         return {
             x: dot.x * width,
             y: dot.y * height,
         };
     };
 
+
     const findDotAtPoint = (x: number, y: number): NumberDot | null => {
-        const { width, height } = canvasLayoutRef.current;
+        const { width, height } = canvasSize;
         const threshold = fruitSize * 0.7;
+
 
         for (const dot of dots) {
             const dotX = dot.x * width;
@@ -209,11 +212,13 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             setDrawingLine(null);
             setIsDragging(false);
         },
-    }), [currentNumber, isDragging, drawingLine, stageComplete, dots, fruitSize]);
+    }), [currentNumber, isDragging, drawingLine, stageComplete, dots, fruitSize, canvasSize]);
+
 
     const renderCompletedLine = (from: NumberDot, to: NumberDot, key: string) => {
-        const { width, height } = canvasLayoutRef.current;
+        const { width, height } = canvasSize;
         const x1 = from.x * width;
+
         const y1 = from.y * height;
         const x2 = to.x * width;
         const y2 = to.y * height;
@@ -299,66 +304,73 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                 <View
                     style={styles.canvas}
                     onLayout={(e) => {
-                        canvasLayoutRef.current = e.nativeEvent.layout;
+                        const { width, height } = e.nativeEvent.layout;
+                        setCanvasSize({ width, height });
                     }}
                     {...panResponder.panHandlers}
                 >
-                    {/* Completed lines */}
-                    {completedLines.map((line, i) => {
-                        const fromDot = dots.find(d => d.number === line.from);
-                        const toDot = dots.find(d => d.number === line.to);
-                        if (fromDot && toDot) {
-                            return renderCompletedLine(fromDot, toDot, `line-${i}`);
-                        }
-                        return null;
-                    })}
+                    {/* Only render content if canvas size is known */}
+                    {canvasSize.width > 0 && canvasSize.height > 0 && (
+                        <>
+                            {/* Completed lines */}
+                            {completedLines.map((line, i) => {
+                                const fromDot = dots.find(d => d.number === line.from);
+                                const toDot = dots.find(d => d.number === line.to);
+                                if (fromDot && toDot) {
+                                    return renderCompletedLine(fromDot, toDot, `line-${i}`);
+                                }
+                                return null;
+                            })}
 
-                    {/* Drawing line (while dragging) */}
-                    {renderDrawingLine()}
+                            {/* Drawing line (while dragging) */}
+                            {renderDrawingLine()}
 
-                    {/* Fruit dots with numbers inside */}
-                    {dots.map((dot) => {
-                        const { width, height } = canvasLayoutRef.current;
-                        const isActive = dot.number === currentNumber;
-                        const isCompleted = dot.number < currentNumber;
+                            {/* Fruit dots with numbers inside */}
+                            {dots.map((dot) => {
+                                const { width, height } = canvasSize;
+                                const isActive = dot.number === currentNumber;
+                                const isCompleted = dot.number < currentNumber;
 
-                        return (
-                            <View
-                                key={dot.number}
-                                style={[
-                                    styles.fruitContainer,
-                                    {
-                                        left: dot.x * width - fruitSize / 2,
-                                        top: dot.y * height - fruitSize / 2,
-                                        width: fruitSize,
-                                        height: fruitSize,
-                                    },
-                                    isActive && styles.fruitActive,
-                                    isCompleted && styles.fruitCompleted,
-                                ]}
-                            >
-                                <Image
-                                    source={currentFruit.image}
-                                    style={{ width: fruitSize * 0.85, height: fruitSize * 0.85 }}
-                                    resizeMode="contain"
-                                />
-                                {/* Number inside fruit */}
-                                <View style={[
-                                    styles.numberOverlay,
-                                    isCompleted && styles.numberOverlayCompleted,
-                                ]}>
-                                    <Text style={[
-                                        styles.numberText,
-                                        { fontSize: fruitSize * 0.4 },
-                                        isCompleted && styles.numberTextCompleted,
-                                    ]}>
-                                        {dot.number}
-                                    </Text>
-                                </View>
-                            </View>
-                        );
-                    })}
+                                return (
+                                    <View
+                                        key={dot.number}
+                                        style={[
+                                            styles.fruitContainer,
+                                            {
+                                                left: dot.x * width - fruitSize / 2,
+                                                top: dot.y * height - fruitSize / 2,
+                                                width: fruitSize,
+                                                height: fruitSize,
+                                            },
+                                            isActive && styles.fruitActive,
+                                            isCompleted && styles.fruitCompleted,
+                                        ]}
+                                    >
+                                        <Image
+                                            source={currentFruit.image}
+                                            style={{ width: fruitSize * 0.85, height: fruitSize * 0.85 }}
+                                            resizeMode="contain"
+                                        />
+                                        {/* Number inside fruit */}
+                                        <View style={[
+                                            styles.numberOverlay,
+                                            isCompleted && styles.numberOverlayCompleted,
+                                        ]}>
+                                            <Text style={[
+                                                styles.numberText,
+                                                { fontSize: fruitSize * 0.4 },
+                                                isCompleted && styles.numberTextCompleted,
+                                            ]}>
+                                                {dot.number}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                );
+                            })}
+                        </>
+                    )}
                 </View>
+
 
                 {/* Success message */}
                 {stageComplete && (
