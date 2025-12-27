@@ -7,30 +7,27 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 
-// STORY DATA - Placeholder Yapı
+// STORY DATA
 const storyData = {
     intro: {
         id: 'intro',
-        // TODO: Add intro_scene.png to assets/images/stories/aile_sepeti_macerasi/
-        bgImage: require('../assets/images/ev.png'), // Placeholder
-        text: "Pelin ve Atıl, aile pikniği için sepeti hazırlıyorlar. Ama çok kararsızlar! Sence sepete önce ne koysunlar?",
-        audio: null, // TODO: Add audio_intro.mp3
+        bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_giris_bg_misket_sepet.jpg'),
+        text: "Tavşan ailesi büyük bir maceraya hazırlanıyor! Yola çıkarken kime güvensinler?",
+        audio: null, // TODO: Add audio
         options: [
             {
                 id: 'A',
                 type: 'image_button',
-                // TODO: Add btn_yiyecek.png
-                image: require('../assets/images/elma.png'), // Placeholder
-                label: 'Lezzetli Yiyecekler',
+                image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim1_icon_togo.png'),
+                label: 'Cesur Togo',
                 next: 'scene_a',
                 audio: null,
             },
             {
                 id: 'B',
                 type: 'image_button',
-                // TODO: Add btn_oyuncak.png
-                image: require('../assets/images/top.png'), // Placeholder
-                label: 'Eğlenceli Oyuncaklar',
+                image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim1_icon_bobo.png'),
+                label: 'Akıllı Bobo',
                 next: 'scene_b',
                 audio: null,
             },
@@ -38,23 +35,23 @@ const storyData = {
     },
     scene_a: {
         id: 'scene_a',
-        bgImage: require('../assets/images/stories/ceviz_macera/scene_a_river.png'), // Placeholder
-        text: "Yiyecekleri seçtiler! Ama meyve mi yoksa sandviç mi daha sağlıklı olur?",
+        bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_yolA_bg_togo_kaygan_tepe.jpg'),
+        text: "Togo ile kaygan bir tepeye geldiler! Burayı güvenle geçmek için ne yapsınlar?",
         audio: null,
         options: [
             {
                 id: 'A1',
                 type: 'image_button',
-                image: require('../assets/images/elma.png'),
-                label: 'Meyve Sepeti',
+                image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim2A_icon_ele_ele.png'),
+                label: 'El Ele Tutuş',
                 next: 'end_a1',
                 audio: null,
             },
             {
                 id: 'A2',
                 type: 'image_button',
-                image: require('../assets/images/uzum.png'), // Placeholder
-                label: 'Sandviçler',
+                image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim2A_icon_gorev.png'),
+                label: 'Görev Paylaş',
                 next: 'end_a2',
                 audio: null,
             },
@@ -62,23 +59,23 @@ const storyData = {
     },
     scene_b: {
         id: 'scene_b',
-        bgImage: require('../assets/images/stories/ceviz_macera/scene_b_thinking.png'), // Placeholder
-        text: "Oyuncakları seçtiler! Top mu oynasınlar yoksa uçurtma mı uçursunlar?",
+        bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_yolB_bg_bobo_yol_ayrimi.jpg'),
+        text: "Bobo ile karışık bir yol ayrımına geldiler. Kaybolmamak için ne yapmalılar?",
         audio: null,
         options: [
             {
                 id: 'B1',
                 type: 'image_button',
-                image: require('../assets/images/top.png'),
-                label: 'Top Oyna',
+                image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim2B_icon_ayrilmadan.png'),
+                label: 'Hiç Ayrılma',
                 next: 'end_b1',
                 audio: null,
             },
             {
                 id: 'B2',
                 type: 'image_button',
-                image: require('../assets/images/araba.png'), // Placeholder
-                label: 'Uçurtma Uçur',
+                image: require('../assets/images/stories/aile_sepeti_macerasi/s02_secim2B_icon_isaret.png'),
+                label: 'İşaret Bırak',
                 next: 'end_b2',
                 audio: null,
             },
@@ -87,34 +84,34 @@ const storyData = {
     end_a1: {
         id: 'end_a1',
         isFinal: true,
-        bgImage: require('../assets/images/stories/ceviz_macera/end_a1_scene.png'), // Placeholder
+        bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_sonucA1_bg_ele_ele_tepe.jpg'),
         audio: null,
-        text: "Meyvelerle dolu sağlıklı bir piknik yaptılar!",
-        analysisTag: 'Saglik-Secimi-Meyve',
+        text: "El ele tutuşup birbirlerine destek oldular ve tepeyi kolayca aştılar!",
+        analysisTag: 'Sosyal-Isbirligi-Guven',
     },
     end_a2: {
         id: 'end_a2',
         isFinal: true,
-        bgImage: require('../assets/images/stories/ceviz_macera/end_a2_scene.png'), // Placeholder
+        bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_sonucA2_bg_gorev_paylasimi.jpg'),
         audio: null,
-        text: "Sandviçleri afiyetle yediler!",
-        analysisTag: 'Beslenme-Secimi-Sandvic',
+        text: "Herkes bir görev aldı ve engelleri takım çalışmasıyla aştılar!",
+        analysisTag: 'Sosyal-Liderlik-Planlama',
     },
     end_b1: {
         id: 'end_b1',
         isFinal: true,
-        bgImage: require('../assets/images/stories/ceviz_macera/end_b1_scene.png'), // Placeholder
+        bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_sonucB1_bg_ayrilmadan_arama.jpg'),
         audio: null,
-        text: "Bütün aile top oynayıp çok eğlendi!",
-        analysisTag: 'Sosyal-Aktivite-Top',
+        text: "Birbirlerinden hiç ayrılmadılar ve güvenle yola devam ettiler.",
+        analysisTag: 'Guvenlik-Birliktelik',
     },
     end_b2: {
         id: 'end_b2',
         isFinal: true,
-        bgImage: require('../assets/images/stories/ceviz_macera/end_b2_scene.png'), // Placeholder
+        bgImage: require('../assets/images/stories/aile_sepeti_macerasi/s02_sonucB2_bg_isaretli_plan.jpg'),
         audio: null,
-        text: "Uçurtmaları gökyüzünde dans etti!",
-        analysisTag: 'Doga-Aktivite-Ucurtma',
+        text: "Bıraktıkları işaretler sayesinde yollarını hiç kaybetmediler!",
+        analysisTag: 'Bilissel-ProblemCozme-Harita',
     },
 };
 
