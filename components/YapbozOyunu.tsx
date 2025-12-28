@@ -1,14 +1,15 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
     Image,
+    PanResponder,
     Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 
 interface YapbozOyunuProps {
@@ -26,32 +27,29 @@ interface Tile {
     row: number;
     col: number;
     isPlaced: boolean;
-}
-
-interface Position {
-    x: number;
-    y: number;
+    startX: number;
+    startY: number;
 }
 
 const GRID_SIZE = 3;
 const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
 
-// Mevcut assetlerden bir meyve görseli kullan
 const PUZZLE_IMAGE = require('@/assets/images/karpuz.png');
 
 export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const [tiles, setTiles] = useState<Tile[]>([]);
-    const [placedTiles, setPlacedTiles] = useState<Set<number>>(new Set());
     const [moves, setMoves] = useState(0);
     const [errors, setErrors] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
     const [startTime] = useState(Date.now());
     const [showPreview, setShowPreview] = useState(true);
-    const [selectedTile, setSelectedTile] = useState<number | null>(null);
+    const [placedCount, setPlacedCount] = useState(0);
+    const [gridLayout, setGridLayout] = useState({ x: 0, y: 0 });
 
-    // Her tile için pozisyon animasyonu
-    const tilePositions = useRef<{ [key: number]: Animated.ValueXY }>({}).current;
-    const [scatteredPositions, setScatteredPositions] = useState<{ [key: number]: Position }>({});
+    const screenWidth = Dimensions.get('window').width;
+    const screenHeight = Dimensions.get('window').height;
+    const puzzleSize = Math.min(screenWidth * 0.7, 280);
+    const tileSize = puzzleSize / GRID_SIZE;
 
     const confettiAnims = useRef(
         Array.from({ length: 30 }, () => ({
@@ -62,20 +60,20 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         }))
     ).current;
 
-    // Ekran boyutuna göre puzzle boyutunu hesapla
-    const screenWidth = Dimensions.get('window').width;
-    const screenHeight = Dimensions.get('window').height;
-    const puzzleSize = Math.min(screenWidth * 0.6, screenHeight * 0.4, 300);
-    const tileSize = puzzleSize / GRID_SIZE;
+    // Oyunu başlat
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowPreview(false);
+            initializeTiles();
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, []);
 
-    // Dağınık parçalar için alan
-    const scatterAreaWidth = screenWidth - 40;
-    const scatterAreaHeight = screenHeight * 0.35;
-
-    // Parçaları dağıt
-    const scatterTiles = useCallback(() => {
+    const initializeTiles = () => {
         const newTiles: Tile[] = [];
-        const newPositions: { [key: number]: Position } = {};
+        const scatterWidth = screenWidth - tileSize - 40;
+        const scatterHeight = screenHeight * 0.3;
+        const startY = screenHeight * 0.55;
 
         for (let i = 0; i < TOTAL_TILES; i++) {
             const row = Math.floor(i / GRID_SIZE);
@@ -86,151 +84,156 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 row,
                 col,
                 isPlaced: false,
+                startX: Math.random() * scatterWidth + 20,
+                startY: startY + Math.random() * scatterHeight,
             });
-
-            // Rastgele pozisyon (alt alanda)
-            const maxX = scatterAreaWidth - tileSize - 20;
-            const maxY = scatterAreaHeight - tileSize - 20;
-            const randomX = Math.random() * maxX + 10;
-            const randomY = Math.random() * maxY + 10;
-
-            newPositions[i] = { x: randomX, y: randomY };
-
-            if (!tilePositions[i]) {
-                tilePositions[i] = new Animated.ValueXY({ x: randomX, y: randomY });
-            } else {
-                tilePositions[i].setValue({ x: randomX, y: randomY });
-            }
         }
-
         setTiles(newTiles);
-        setScatteredPositions(newPositions);
-    }, [scatterAreaWidth, scatterAreaHeight, tileSize]);
-
-    // Tile'ı doğru yere yerleştir
-    const placeTile = useCallback((tileId: number, targetRow: number, targetCol: number) => {
-        const tile = tiles.find(t => t.id === tileId);
-        if (!tile || tile.isPlaced) return;
-
-        setMoves(m => m + 1);
-
-        // Doğru yere mi yerleştirildi?
-        if (tile.row === targetRow && tile.col === targetCol) {
-            // Doğru yer - parçayı yerleştir
-            setPlacedTiles(prev => new Set([...prev, tileId]));
-            setTiles(prev => prev.map(t =>
-                t.id === tileId ? { ...t, isPlaced: true } : t
-            ));
-            setSelectedTile(null);
-
-            // Tamamlandı mı kontrol et
-            if (placedTiles.size + 1 === TOTAL_TILES) {
-                setIsComplete(true);
-                triggerConfetti();
-                const duration = Math.floor((Date.now() - startTime) / 1000);
-                setTimeout(() => {
-                    onGameEnd('Yapboz Oyunu', duration, moves + 1, errors);
-                }, 2000);
-            }
-        } else {
-            // Yanlış yer
-            setErrors(e => e + 1);
-        }
-    }, [tiles, placedTiles, moves, errors, startTime, onGameEnd]);
-
-    // Tile seçimi
-    const handleTileSelect = (tileId: number) => {
-        const tile = tiles.find(t => t.id === tileId);
-        if (tile?.isPlaced) return;
-
-        setSelectedTile(selectedTile === tileId ? null : tileId);
     };
 
-    // Hedef hücreye tıklama
-    const handleCellPress = (row: number, col: number) => {
-        if (selectedTile === null) return;
-
-        // Zaten dolu mu?
-        const existingTile = tiles.find(t => t.isPlaced && t.row === row && t.col === col);
-        if (existingTile) return;
-
-        placeTile(selectedTile, row, col);
-    };
-
-    // Confetti animasyonu
     const triggerConfetti = () => {
         confettiAnims.forEach((anim, i) => {
-            const startX = Math.random() * puzzleSize + (screenWidth - puzzleSize) / 2;
+            const startX = Math.random() * screenWidth;
             anim.x.setValue(startX);
-            anim.y.setValue(100);
+            anim.y.setValue(0);
             anim.rotate.setValue(0);
             anim.opacity.setValue(1);
 
             Animated.parallel([
                 Animated.timing(anim.y, {
                     toValue: screenHeight,
-                    duration: 2000 + Math.random() * 1000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(anim.x, {
-                    toValue: startX + (Math.random() - 0.5) * 150,
-                    duration: 2000 + Math.random() * 1000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(anim.rotate, {
-                    toValue: Math.random() * 10,
-                    duration: 2000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(anim.opacity, {
-                    toValue: 0,
                     duration: 2500,
                     useNativeDriver: true,
                 }),
+                Animated.timing(anim.rotate, {
+                    toValue: 10,
+                    duration: 2500,
+                    useNativeDriver: true,
+                }),
+                Animated.sequence([
+                    Animated.delay(1500),
+                    Animated.timing(anim.opacity, {
+                        toValue: 0,
+                        duration: 1000,
+                        useNativeDriver: true,
+                    }),
+                ]),
             ]).start();
         });
     };
 
-    // Oyunu başlat
-    useEffect(() => {
-        // 3 saniye önizleme göster
-        const timer = setTimeout(() => {
-            setShowPreview(false);
-            scatterTiles();
-        }, 3000);
+    const handlePlacement = (placed: number) => {
+        if (placed === TOTAL_TILES && !isComplete) {
+            setIsComplete(true);
+            triggerConfetti();
+            const duration = Math.floor((Date.now() - startTime) / 1000);
+            setTimeout(() => {
+                onGameEnd('Yapboz Oyunu', duration, moves, errors);
+            }, 2500);
+        }
+    };
 
-        return () => clearTimeout(timer);
-    }, [scatterTiles]);
+    // Drag edilebilir parça komponenti
+    const DraggableTile = ({ tile }: { tile: Tile }) => {
+        const pan = useRef(new Animated.ValueXY({ x: tile.startX, y: tile.startY })).current;
+        const scale = useRef(new Animated.Value(1)).current;
+        const [placed, setPlaced] = useState(false);
 
-    // Dağınık parça render
-    const renderScatteredTile = (tile: Tile) => {
+        const panResponder = useRef(
+            PanResponder.create({
+                onStartShouldSetPanResponder: () => !placed,
+                onMoveShouldSetPanResponder: () => !placed,
+                onPanResponderGrant: () => {
+                    Animated.spring(scale, {
+                        toValue: 1.15,
+                        useNativeDriver: true,
+                    }).start();
+                },
+                onPanResponderMove: Animated.event(
+                    [null, { moveX: pan.x, moveY: pan.y }],
+                    { useNativeDriver: false }
+                ),
+                onPanResponderRelease: (_, gesture) => {
+                    Animated.spring(scale, {
+                        toValue: 1,
+                        useNativeDriver: true,
+                    }).start();
+
+                    // Drop pozisyonunu kontrol et
+                    const dropX = gesture.moveX;
+                    const dropY = gesture.moveY;
+
+                    // Grid sınırları içinde mi?
+                    const gridTop = gridLayout.y;
+                    const gridLeft = gridLayout.x;
+                    const gridRight = gridLeft + puzzleSize;
+                    const gridBottom = gridTop + puzzleSize;
+
+                    if (dropX >= gridLeft && dropX <= gridRight && dropY >= gridTop && dropY <= gridBottom) {
+                        // Hangi hücreye düştü?
+                        const relX = dropX - gridLeft;
+                        const relY = dropY - gridTop;
+                        const dropCol = Math.floor(relX / tileSize);
+                        const dropRow = Math.floor(relY / tileSize);
+
+                        setMoves(m => m + 1);
+
+                        // Doğru yere mi?
+                        if (dropRow === tile.row && dropCol === tile.col) {
+                            // Doğru! Yerine yerleştir
+                            const targetX = gridLeft + tile.col * tileSize + 2;
+                            const targetY = gridTop + tile.row * tileSize + 2;
+
+                            Animated.spring(pan, {
+                                toValue: { x: targetX, y: targetY },
+                                useNativeDriver: false,
+                            }).start(() => {
+                                setPlaced(true);
+                                setPlacedCount(prev => {
+                                    const newCount = prev + 1;
+                                    handlePlacement(newCount);
+                                    return newCount;
+                                });
+                            });
+                        } else {
+                            // Yanlış - geri gönder
+                            setErrors(e => e + 1);
+                            Animated.spring(pan, {
+                                toValue: { x: tile.startX, y: tile.startY },
+                                friction: 5,
+                                useNativeDriver: false,
+                            }).start();
+                        }
+                    } else {
+                        // Grid dışına bırakıldı - geri gönder
+                        Animated.spring(pan, {
+                            toValue: { x: tile.startX, y: tile.startY },
+                            friction: 5,
+                            useNativeDriver: false,
+                        }).start();
+                    }
+                },
+            })
+        ).current;
+
         if (tile.isPlaced) return null;
 
-        const position = scatteredPositions[tile.id];
-        if (!position) return null;
-
-        const isSelected = selectedTile === tile.id;
-
         return (
-            <TouchableOpacity
-                key={tile.id}
+            <Animated.View
+                {...panResponder.panHandlers}
                 style={[
-                    styles.scatteredTile,
+                    styles.draggableTile,
                     {
-                        width: tileSize,
-                        height: tileSize,
-                        left: position.x,
-                        top: position.y,
-                        borderWidth: isSelected ? 3 : 1,
-                        borderColor: isSelected ? '#FFD700' : '#fff',
-                        transform: [{ scale: isSelected ? 1.1 : 1 }],
-                        zIndex: isSelected ? 100 : 1,
+                        width: tileSize - 4,
+                        height: tileSize - 4,
+                        left: pan.x,
+                        top: pan.y,
+                        transform: [{ scale }],
+                        zIndex: placed ? 1 : 100,
                     },
                 ]}
-                onPress={() => handleTileSelect(tile.id)}
-                activeOpacity={0.8}
             >
-                <View style={[styles.tileInner, { width: tileSize - 6, height: tileSize - 6 }]}>
+                <View style={[styles.tileImageWrapper, { width: tileSize - 8, height: tileSize - 8 }]}>
                     <Image
                         source={PUZZLE_IMAGE}
                         style={{
@@ -243,67 +246,31 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                         resizeMode="cover"
                     />
                 </View>
-            </TouchableOpacity>
+            </Animated.View>
         );
     };
 
-    // Puzzle grid hücresi render
-    const renderGridCell = (row: number, col: number) => {
-        const placedTile = tiles.find(t => t.isPlaced && t.row === row && t.col === col);
-        const index = row * GRID_SIZE + col;
-
-        return (
-            <TouchableOpacity
-                key={index}
-                style={[
-                    styles.gridCell,
-                    {
-                        width: tileSize,
-                        height: tileSize,
-                        backgroundColor: placedTile ? 'transparent' : 'rgba(255,255,255,0.1)',
-                    },
-                ]}
-                onPress={() => handleCellPress(row, col)}
-                activeOpacity={0.7}
-            >
-                {placedTile ? (
-                    <View style={[styles.placedTileInner, { width: tileSize - 4, height: tileSize - 4 }]}>
-                        <Image
-                            source={PUZZLE_IMAGE}
-                            style={{
-                                width: puzzleSize,
-                                height: puzzleSize,
-                                position: 'absolute',
-                                left: -col * tileSize,
-                                top: -row * tileSize,
-                            }}
-                            resizeMode="cover"
-                        />
-                    </View>
-                ) : (
-                    <View style={styles.emptyCell}>
-                        <Text style={styles.cellNumber}>{index + 1}</Text>
-                    </View>
-                )}
-            </TouchableOpacity>
-        );
-    };
-
-    // Grid oluştur
     const renderGrid = () => {
-        const rows = [];
+        const cells = [];
         for (let row = 0; row < GRID_SIZE; row++) {
-            const cells = [];
             for (let col = 0; col < GRID_SIZE; col++) {
-                cells.push(renderGridCell(row, col));
+                cells.push(
+                    <View
+                        key={`${row}-${col}`}
+                        style={[
+                            styles.gridCell,
+                            {
+                                width: tileSize,
+                                height: tileSize,
+                            },
+                        ]}
+                    >
+                        <Text style={styles.cellHint}>{row * GRID_SIZE + col + 1}</Text>
+                    </View>
+                );
             }
-            rows.push(
-                <View key={row} style={styles.gridRow}>
-                    {cells}
-                </View>
-            );
         }
-        return rows;
+        return cells;
     };
 
     return (
@@ -316,12 +283,8 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 <Text style={styles.title}>🧩 Yapboz</Text>
                 <View style={styles.statsContainer}>
                     <View style={styles.statItem}>
-                        <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                        <Text style={styles.statText}>{placedTiles.size}/{TOTAL_TILES}</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <Ionicons name="hand-left" size={20} color="#FFD54F" />
-                        <Text style={styles.statText}>{moves}</Text>
+                        <Ionicons name="checkmark-circle" size={18} color="#4CAF50" />
+                        <Text style={styles.statText}>{placedCount}/{TOTAL_TILES}</Text>
                     </View>
                 </View>
             </View>
@@ -329,32 +292,48 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             {showPreview ? (
                 <View style={styles.previewContainer}>
                     <Text style={styles.previewText}>Resmi iyi hatırla! 👀</Text>
-                    <View style={[styles.puzzleContainer, { width: puzzleSize, height: puzzleSize }]}>
-                        <Image
-                            source={PUZZLE_IMAGE}
-                            style={{ width: puzzleSize, height: puzzleSize, borderRadius: 12 }}
-                            resizeMode="cover"
-                        />
-                    </View>
+                    <Image
+                        source={PUZZLE_IMAGE}
+                        style={[styles.previewImage, { width: puzzleSize, height: puzzleSize }]}
+                        resizeMode="cover"
+                    />
                     <Text style={styles.countdownText}>Oyun yakında başlıyor...</Text>
                 </View>
             ) : (
-                <View style={styles.gameArea}>
-                    {/* Üstte hedef puzzle alanı */}
-                    <View style={styles.targetArea}>
-                        <Text style={styles.instruction}>
-                            {isComplete ? '🎉 Tebrikler! Yapbozu tamamladın!' : 'Parçayı seç, sonra yerine koy!'}
-                        </Text>
-                        <View style={[styles.puzzleGrid, { width: puzzleSize + 10, height: puzzleSize + 10 }]}>
-                            {renderGrid()}
-                        </View>
+                <View style={styles.gameContainer}>
+                    {/* Talimat */}
+                    <Text style={styles.instruction}>
+                        {isComplete ? '🎉 Harika! Tamamladın!' : 'Parçaları sürükleyip yerine bırak!'}
+                    </Text>
+
+                    {/* Hedef Grid */}
+                    <View
+                        style={[styles.puzzleGrid, { width: puzzleSize, height: puzzleSize }]}
+                        onLayout={(e) => {
+                            const { x, y } = e.nativeEvent.layout;
+                            // Ekrandaki mutlak pozisyonu hesapla
+                            e.target.measure((fx, fy, width, height, px, py) => {
+                                setGridLayout({ x: px, y: py });
+                            });
+                        }}
+                    >
+                        {renderGrid()}
                     </View>
 
-                    {/* Altta dağınık parçalar */}
-                    <View style={[styles.scatterArea, { height: scatterAreaHeight }]}>
-                        <Text style={styles.scatterLabel}>📦 Parçalar</Text>
-                        {tiles.map(renderScatteredTile)}
+                    {/* Mini referans */}
+                    <View style={styles.referenceContainer}>
+                        <Text style={styles.referenceLabel}>Hedef:</Text>
+                        <Image
+                            source={PUZZLE_IMAGE}
+                            style={styles.referenceImage}
+                            resizeMode="cover"
+                        />
                     </View>
+
+                    {/* Dağınık parçalar */}
+                    {tiles.map((tile) => (
+                        <DraggableTile key={tile.id} tile={tile} />
+                    ))}
                 </View>
             )}
 
@@ -366,16 +345,11 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                         style={[
                             styles.confetti,
                             {
-                                backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'][i % 5],
+                                backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181', '#AA96DA'][i % 6],
                                 transform: [
                                     { translateX: anim.x },
                                     { translateY: anim.y },
-                                    {
-                                        rotate: anim.rotate.interpolate({
-                                            inputRange: [0, 10],
-                                            outputRange: ['0deg', '360deg'],
-                                        }),
-                                    },
+                                    { rotate: anim.rotate.interpolate({ inputRange: [0, 10], outputRange: ['0deg', '720deg'] }) },
                                 ],
                                 opacity: anim.opacity,
                             },
@@ -395,24 +369,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'ios' ? 50 : 30,
-        paddingBottom: 15,
+        paddingHorizontal: 15,
+        paddingTop: Platform.OS === 'ios' ? 50 : 25,
+        paddingBottom: 10,
         backgroundColor: 'rgba(0,0,0,0.3)',
     },
     exitButton: {
         backgroundColor: 'rgba(255,255,255,0.2)',
-        padding: 10,
-        borderRadius: 15,
+        padding: 8,
+        borderRadius: 12,
     },
     title: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#fff',
     },
     statsContainer: {
         flexDirection: 'row',
-        gap: 10,
     },
     statItem: {
         flexDirection: 'row',
@@ -420,8 +393,8 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.15)',
         paddingHorizontal: 10,
         paddingVertical: 5,
-        borderRadius: 15,
-        gap: 5,
+        borderRadius: 12,
+        gap: 4,
     },
     statText: {
         color: '#fff',
@@ -432,111 +405,95 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        gap: 20,
-    },
-    previewText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#FFD54F',
-        textAlign: 'center',
-    },
-    countdownText: {
-        fontSize: 18,
-        color: '#aaa',
-        marginTop: 10,
-    },
-    puzzleContainer: {
-        borderRadius: 12,
-        overflow: 'hidden',
-        borderWidth: 3,
-        borderColor: '#4ECDC4',
-    },
-    gameArea: {
-        flex: 1,
         padding: 20,
     },
-    targetArea: {
-        alignItems: 'center',
+    previewText: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#FFD54F',
         marginBottom: 20,
+    },
+    previewImage: {
+        borderRadius: 15,
+        borderWidth: 4,
+        borderColor: '#4ECDC4',
+    },
+    countdownText: {
+        fontSize: 16,
+        color: '#aaa',
+        marginTop: 20,
+    },
+    gameContainer: {
+        flex: 1,
+        alignItems: 'center',
+        paddingTop: 10,
     },
     instruction: {
         fontSize: 18,
         fontWeight: 'bold',
         color: '#fff',
-        textAlign: 'center',
         marginBottom: 15,
+        textAlign: 'center',
     },
     puzzleGrid: {
         backgroundColor: '#2d2d44',
         borderRadius: 12,
-        padding: 5,
         borderWidth: 3,
         borderColor: '#4ECDC4',
-    },
-    gridRow: {
         flexDirection: 'row',
+        flexWrap: 'wrap',
+        overflow: 'hidden',
     },
     gridCell: {
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-        borderRadius: 4,
-        overflow: 'hidden',
+        borderColor: 'rgba(255,255,255,0.2)',
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.2)',
     },
-    emptyCell: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    cellNumber: {
-        color: 'rgba(255,255,255,0.3)',
-        fontSize: 20,
+    cellHint: {
+        color: 'rgba(255,255,255,0.15)',
+        fontSize: 24,
         fontWeight: 'bold',
     },
-    placedTileInner: {
-        overflow: 'hidden',
-        borderRadius: 3,
+    referenceContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        padding: 8,
+        borderRadius: 10,
+        marginTop: 15,
+        gap: 8,
     },
-    scatterArea: {
-        flex: 1,
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 15,
-        position: 'relative',
-        overflow: 'hidden',
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.1)',
-        borderStyle: 'dashed',
-    },
-    scatterLabel: {
-        position: 'absolute',
-        top: 10,
-        left: 15,
+    referenceLabel: {
         color: '#aaa',
-        fontSize: 14,
-        fontWeight: 'bold',
-        zIndex: 0,
+        fontSize: 12,
     },
-    scatteredTile: {
+    referenceImage: {
+        width: 50,
+        height: 50,
+        borderRadius: 6,
+    },
+    draggableTile: {
         position: 'absolute',
         borderRadius: 8,
-        overflow: 'hidden',
         backgroundColor: '#fff',
-        elevation: 5,
+        elevation: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
+        borderWidth: 2,
+        borderColor: '#4ECDC4',
     },
-    tileInner: {
+    tileImageWrapper: {
         overflow: 'hidden',
-        borderRadius: 5,
+        borderRadius: 6,
     },
     confetti: {
         position: 'absolute',
-        width: 12,
-        height: 12,
+        width: 14,
+        height: 14,
         borderRadius: 3,
     },
 });
