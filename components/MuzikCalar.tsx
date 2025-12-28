@@ -36,6 +36,30 @@ const SONGS: Song[] = [
         coverColor: '#4ECDC4', // Turkuaz
         icon: 'planet',
     },
+    {
+        id: '3',
+        title: 'Adil Oyun, Güzel Oyun',
+        artist: 'Değerler Eğitimi',
+        source: require('@/assets/sounds/songs/ADİL OYUN, GÜZEL OYUN.mp3'),
+        coverColor: '#FF7043', // Turuncu
+        icon: 'heart',
+    },
+    {
+        id: '4',
+        title: 'Paylaşınca Güzel',
+        artist: 'Arkadaşlık',
+        source: require('@/assets/sounds/songs/PAYLAŞINCA GÜZEL.mp3'),
+        coverColor: '#AB47BC', // Mor
+        icon: 'people',
+    },
+    {
+        id: '5',
+        title: 'Çalışkan Arı Gibi',
+        artist: 'Sorumluluk',
+        source: require('@/assets/sounds/songs/ÇALIŞKAN ARI GİBİ.mp3'),
+        coverColor: '#66BB6A', // Yeşil
+        icon: 'leaf',
+    },
 ];
 
 interface MuzikCalarProps {
