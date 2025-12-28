@@ -8,6 +8,7 @@ import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
 import KutuyuBul from '@/components/KutuyuBul';
+import MuzikCalar from '@/components/MuzikCalar';
 import RakamYazma from '@/components/RakamYazma';
 import SayilariBirlestir from '@/components/SayilariBirlestir';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
@@ -400,6 +401,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Hayal Defteri</Text>
                   <Text style={styles.oyunAciklama}>Boş sayfada çizim yap</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFD54F' }]} onPress={() => oyunuBaslat('muzik-calar')}>
+                  <Ionicons name="musical-notes" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Müzik Kutusu</Text>
+                  <Text style={styles.oyunAciklama}>Şarkılarını Dinle</Text>
+                </TouchableOpacity>
               </>
             )}
           </View>
@@ -465,6 +472,10 @@ export default function App() {
 
   if (asama === 'yaratici-cizim') {
     return <YaraticiCizim onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'muzik-calar') {
+    return <MuzikCalar onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'sonuc') {
