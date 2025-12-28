@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
     Image,
+    LayoutChangeEvent,
     PanResponder,
     Platform,
     StyleSheet,
@@ -46,15 +47,15 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const [startTime] = useState(Date.now());
     const [showPreview, setShowPreview] = useState(true);
     const [placedCount, setPlacedCount] = useState(0);
-    const [gridLayout, setGridLayout] = useState({ x: 0, y: 0 });
+    const [gridLayout, setGridLayout] = useState({ x: 0, y: 0, ready: false });
+
+    const gridRef = useRef<View>(null);
 
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
     const puzzleSize = Math.min(screenWidth * 0.6, screenHeight * 0.35, 280);
     const tileSize = puzzleSize / GRID_SIZE;
 
-    // Dağınık parçalar için alan boyutları
-    const piecesAreaWidth = Math.min(screenWidth - 40, 400);
     const pieceDisplaySize = tileSize * 0.9;
 
     const confettiAnims = useRef(
@@ -66,14 +67,45 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         }))
     ).current;
 
+    // Grid pozisyonunu hesapla
+    const handleGridLayout = useCallback((event: LayoutChangeEvent) => {
+        const { x, y, width, height } = event.nativeEvent.layout;
+
+        if (Platform.OS === 'web') {
+            // Web için: layout pozisyonu kullan ve container offset ekle
+            // Header yüksekliği + padding hesapla
+            const headerHeight = 80;
+            const instructionHeight = 50;
+            const paddingTop = 10;
+
+            const gridX = (screenWidth - puzzleSize) / 2;
+            const gridY = headerHeight + instructionHeight + paddingTop;
+
+            setGridLayout({ x: gridX, y: gridY, ready: true });
+        } else {
+            // Native için measure kullan
+            if (gridRef.current) {
+                gridRef.current.measure((fx, fy, w, h, px, py) => {
+                    setGridLayout({ x: px, y: py, ready: true });
+                });
+            }
+        }
+    }, [screenWidth, puzzleSize]);
+
     // Oyunu başlat
     useEffect(() => {
         const timer = setTimeout(() => {
             setShowPreview(false);
-            initializeTiles();
         }, 3000);
         return () => clearTimeout(timer);
     }, []);
+
+    // Grid hazır olunca parçaları oluştur
+    useEffect(() => {
+        if (!showPreview && gridLayout.ready) {
+            initializeTiles();
+        }
+    }, [showPreview, gridLayout.ready]);
 
     const initializeTiles = () => {
         const newTiles: Tile[] = [];
@@ -88,13 +120,12 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         // Parçaları 3x3 grid şeklinde alt alanda düzenli yerleştir
         const pieceSpacing = pieceDisplaySize + 15;
         const startX = (screenWidth - (GRID_SIZE * pieceSpacing - 15)) / 2;
-        const startY = screenHeight * 0.58;
+        const startY = screenHeight * 0.55;
 
         shuffledIndices.forEach((originalIndex, shuffledPos) => {
             const row = Math.floor(originalIndex / GRID_SIZE);
             const col = originalIndex % GRID_SIZE;
 
-            // Düzenli grid pozisyonu
             const displayRow = Math.floor(shuffledPos / GRID_SIZE);
             const displayCol = shuffledPos % GRID_SIZE;
 
@@ -123,19 +154,19 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 Animated.timing(anim.y, {
                     toValue: screenHeight,
                     duration: 2500,
-                    useNativeDriver: true,
+                    useNativeDriver: false,
                 }),
                 Animated.timing(anim.rotate, {
                     toValue: 10,
                     duration: 2500,
-                    useNativeDriver: true,
+                    useNativeDriver: false,
                 }),
                 Animated.sequence([
                     Animated.delay(1500),
                     Animated.timing(anim.opacity, {
                         toValue: 0,
                         duration: 1000,
-                        useNativeDriver: true,
+                        useNativeDriver: false,
                     }),
                 ]),
             ]).start();
@@ -153,30 +184,50 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         }
     };
 
+    const handleTilePlaced = (tileId: number) => {
+        setTiles(prev => prev.map(t => t.id === tileId ? { ...t, isPlaced: true } : t));
+        setPlacedCount(prev => {
+            const newCount = prev + 1;
+            handlePlacement(newCount);
+            return newCount;
+        });
+    };
+
     // Drag edilebilir parça komponenti
     const DraggableTile = ({ tile, onPlace }: { tile: Tile; onPlace: () => void }) => {
         const pan = useRef(new Animated.ValueXY({ x: tile.startX, y: tile.startY })).current;
         const scale = useRef(new Animated.Value(1)).current;
         const [placed, setPlaced] = useState(false);
+        const [isDragging, setIsDragging] = useState(false);
 
         const panResponder = useRef(
             PanResponder.create({
                 onStartShouldSetPanResponder: () => !placed,
                 onMoveShouldSetPanResponder: () => !placed,
-                onPanResponderGrant: () => {
+                onPanResponderGrant: (evt) => {
+                    setIsDragging(true);
                     Animated.spring(scale, {
                         toValue: 1.15,
-                        useNativeDriver: true,
+                        useNativeDriver: false,
                     }).start();
+
+                    // Başlangıç pozisyonunu ayarla
+                    pan.setOffset({
+                        x: (pan.x as any)._value,
+                        y: (pan.y as any)._value,
+                    });
+                    pan.setValue({ x: 0, y: 0 });
                 },
-                onPanResponderMove: Animated.event(
-                    [null, { moveX: pan.x, moveY: pan.y }],
-                    { useNativeDriver: false }
-                ),
-                onPanResponderRelease: (_, gesture) => {
+                onPanResponderMove: (evt, gestureState) => {
+                    pan.setValue({ x: gestureState.dx, y: gestureState.dy });
+                },
+                onPanResponderRelease: (evt, gesture) => {
+                    pan.flattenOffset();
+                    setIsDragging(false);
+
                     Animated.spring(scale, {
                         toValue: 1,
-                        useNativeDriver: true,
+                        useNativeDriver: false,
                     }).start();
 
                     const dropX = gesture.moveX;
@@ -196,17 +247,20 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                         setMoves(m => m + 1);
 
                         if (dropRow === tile.row && dropCol === tile.col) {
-                            const targetX = gridLeft + tile.col * tileSize + 2;
-                            const targetY = gridTop + tile.row * tileSize + 2;
+                            // Doğru yere bırakıldı
+                            const targetX = gridLeft + tile.col * tileSize + (tileSize - pieceDisplaySize) / 2;
+                            const targetY = gridTop + tile.row * tileSize + (tileSize - pieceDisplaySize) / 2;
 
                             Animated.spring(pan, {
                                 toValue: { x: targetX, y: targetY },
                                 useNativeDriver: false,
+                                friction: 7,
                             }).start(() => {
                                 setPlaced(true);
                                 onPlace();
                             });
                         } else {
+                            // Yanlış yer
                             setErrors(e => e + 1);
                             Animated.spring(pan, {
                                 toValue: { x: tile.startX, y: tile.startY },
@@ -215,6 +269,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                             }).start();
                         }
                     } else {
+                        // Grid dışı
                         Animated.spring(pan, {
                             toValue: { x: tile.startX, y: tile.startY },
                             friction: 5,
@@ -225,6 +280,8 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             })
         ).current;
 
+        if (placed) return null;
+
         return (
             <Animated.View
                 {...panResponder.panHandlers}
@@ -233,12 +290,14 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                     {
                         width: pieceDisplaySize,
                         height: pieceDisplaySize,
-                        left: pan.x,
-                        top: pan.y,
-                        transform: [{ scale }],
-                        zIndex: placed ? 1 : 50,
-                        opacity: placed ? 0 : 1,
-                    },
+                        transform: [
+                            { translateX: pan.x },
+                            { translateY: pan.y },
+                            { scale: scale },
+                        ],
+                        zIndex: isDragging ? 1000 : 50,
+                        cursor: 'grab',
+                    } as any,
                 ]}
             >
                 <View style={[styles.tileImageWrapper, { width: pieceDisplaySize - 6, height: pieceDisplaySize - 6 }]}>
@@ -258,13 +317,13 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         );
     };
 
-    // Grid hücrelerini oluştur - 3x3 düzgün grid
+    // Grid hücrelerini oluştur
     const renderGrid = () => {
         const rows = [];
         for (let row = 0; row < GRID_SIZE; row++) {
             const cells = [];
             for (let col = 0; col < GRID_SIZE; col++) {
-                const isPlaced = tiles.find(t => t.row === row && t.col === col && t.isPlaced);
+                const placedTile = tiles.find(t => t.row === row && t.col === col && t.isPlaced);
                 cells.push(
                     <View
                         key={`${row}-${col}`}
@@ -276,7 +335,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                             },
                         ]}
                     >
-                        {isPlaced && (
+                        {placedTile && (
                             <View style={[styles.placedTileInner, { width: tileSize - 4, height: tileSize - 4 }]}>
                                 <Image
                                     source={PUZZLE_IMAGE}
@@ -301,15 +360,6 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             );
         }
         return rows;
-    };
-
-    const handleTilePlaced = (tileId: number) => {
-        setTiles(prev => prev.map(t => t.id === tileId ? { ...t, isPlaced: true } : t));
-        setPlacedCount(prev => {
-            const newCount = prev + 1;
-            handlePlacement(newCount);
-            return newCount;
-        });
     };
 
     return (
@@ -348,14 +398,11 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                         {isComplete ? '🎉 Harika! Tamamladın!' : 'Parçaları sürükleyip yerine bırak!'}
                     </Text>
 
-                    {/* Hedef Grid - 3x3 düzgün */}
+                    {/* Hedef Grid */}
                     <View
+                        ref={gridRef}
                         style={[styles.puzzleGrid, { width: puzzleSize, height: puzzleSize }]}
-                        onLayout={(e) => {
-                            e.target.measure((fx, fy, width, height, px, py) => {
-                                setGridLayout({ x: px, y: py });
-                            });
-                        }}
+                        onLayout={handleGridLayout}
                     >
                         {renderGrid()}
                     </View>
@@ -370,21 +417,21 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                         />
                     </View>
 
-                    {/* Parçalar alt bölümde düzenli sıralanmış */}
-                    <View style={styles.piecesArea}>
-                        <Text style={styles.piecesLabel}>📦 Parçalar</Text>
+                    {/* Parçalar etiketi */}
+                    <View style={styles.piecesLabelContainer}>
+                        <Text style={styles.piecesLabel}>📦 Parçaları yukarı sürükle</Text>
                     </View>
-
-                    {/* Dağınık parçalar */}
-                    {tiles.filter(t => !t.isPlaced).map((tile) => (
-                        <DraggableTile
-                            key={tile.id}
-                            tile={tile}
-                            onPlace={() => handleTilePlaced(tile.id)}
-                        />
-                    ))}
                 </View>
             )}
+
+            {/* Sürüklenebilir parçalar - container dışında absolute konumda */}
+            {!showPreview && tiles.filter(t => !t.isPlaced).map((tile) => (
+                <DraggableTile
+                    key={tile.id}
+                    tile={tile}
+                    onPlace={() => handleTilePlaced(tile.id)}
+                />
+            ))}
 
             {/* Confetti */}
             {isComplete &&
@@ -422,6 +469,7 @@ const styles = StyleSheet.create({
         paddingTop: Platform.OS === 'ios' ? 50 : 25,
         paddingBottom: 10,
         backgroundColor: 'rgba(0,0,0,0.3)',
+        zIndex: 100,
     },
     exitButton: {
         backgroundColor: 'rgba(255,255,255,0.2)',
@@ -490,6 +538,7 @@ const styles = StyleSheet.create({
         color: '#fff',
         marginBottom: 15,
         textAlign: 'center',
+        height: 30,
     },
     puzzleGrid: {
         backgroundColor: '#2d2d44',
@@ -509,6 +558,7 @@ const styles = StyleSheet.create({
     },
     placedTileInner: {
         overflow: 'hidden',
+        margin: 2,
     },
     referenceContainer: {
         flexDirection: 'row',
@@ -528,15 +578,15 @@ const styles = StyleSheet.create({
         height: 45,
         borderRadius: 6,
     },
-    piecesArea: {
-        marginTop: 15,
+    piecesLabelContainer: {
+        marginTop: 20,
         paddingHorizontal: 20,
-        alignSelf: 'flex-start',
     },
     piecesLabel: {
         color: '#aaa',
         fontSize: 14,
         fontWeight: 'bold',
+        textAlign: 'center',
     },
     draggableTile: {
         position: 'absolute',
