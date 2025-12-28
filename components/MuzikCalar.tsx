@@ -64,16 +64,28 @@ const SONGS: Song[] = [
 
 interface MuzikCalarProps {
     onExit: () => void;
+    initialSongIndex?: number;
 }
 
-export default function MuzikCalar({ onExit }: MuzikCalarProps) {
+export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarProps) {
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [currentSongIndex, setCurrentSongIndex] = useState(0);
+    const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(1);
+    const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
 
     const currentSong = SONGS[currentSongIndex];
+
+    useEffect(() => {
+        // Load the initial song when component mounts
+        loadSound(initialSongIndex);
+        return () => {
+            if (sound) {
+                sound.unloadAsync();
+            }
+        };
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -103,6 +115,27 @@ export default function MuzikCalar({ onExit }: MuzikCalarProps) {
         }
     };
 
+    const handleSongFinish = async () => {
+        if (repeatMode === 'one') {
+            // Repeat current song
+            if (sound) {
+                await sound.setPositionAsync(0);
+                await sound.playAsync();
+            }
+        } else if (repeatMode === 'all') {
+            // Play next song, loop to beginning if at end
+            const nextIndex = (currentSongIndex + 1) % SONGS.length;
+            loadSound(nextIndex);
+        } else {
+            // No repeat - play next if available
+            if (currentSongIndex < SONGS.length - 1) {
+                loadSound(currentSongIndex + 1);
+            } else {
+                setIsPlaying(false);
+            }
+        }
+    };
+
     const onPlaybackStatusUpdate = (status: any) => {
         if (status.isLoaded) {
             setPosition(status.positionMillis);
@@ -110,9 +143,7 @@ export default function MuzikCalar({ onExit }: MuzikCalarProps) {
             setIsPlaying(status.isPlaying);
 
             if (status.didJustFinish) {
-                setIsPlaying(false);
-                // Otomatik sonraki şarkıya geç (opsiyonel)
-                // playNext();
+                handleSongFinish();
             }
         }
     };
@@ -192,6 +223,15 @@ export default function MuzikCalar({ onExit }: MuzikCalarProps) {
 
                 {/* Kontroller */}
                 <View style={styles.controlsContainer}>
+                    {/* Tekrar Dinleme Butonu (Tek Şarkı) */}
+                    <TouchableOpacity
+                        onPress={() => setRepeatMode(repeatMode === 'one' ? 'none' : 'one')}
+                        style={[styles.controlButtonSmall, repeatMode === 'one' && { backgroundColor: currentSong.coverColor }]}
+                    >
+                        <Ionicons name="repeat" size={24} color={repeatMode === 'one' ? '#fff' : '#546E7A'} />
+                        {repeatMode === 'one' && <Text style={styles.repeatBadge}>1</Text>}
+                    </TouchableOpacity>
+
                     <TouchableOpacity onPress={playPrevious} style={styles.controlButtonSmall}>
                         <Ionicons name="play-skip-back" size={24} color="#546E7A" />
                     </TouchableOpacity>
@@ -202,6 +242,14 @@ export default function MuzikCalar({ onExit }: MuzikCalarProps) {
 
                     <TouchableOpacity onPress={playNext} style={styles.controlButtonSmall}>
                         <Ionicons name="play-skip-forward" size={24} color="#546E7A" />
+                    </TouchableOpacity>
+
+                    {/* Listeyi Tekrar Dinle Butonu */}
+                    <TouchableOpacity
+                        onPress={() => setRepeatMode(repeatMode === 'all' ? 'none' : 'all')}
+                        style={[styles.controlButtonSmall, repeatMode === 'all' && { backgroundColor: currentSong.coverColor }]}
+                    >
+                        <Ionicons name="sync" size={24} color={repeatMode === 'all' ? '#fff' : '#546E7A'} />
                     </TouchableOpacity>
                 </View>
 
@@ -357,10 +405,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 30,
+        gap: 15,
         marginBottom: 40,
     },
     controlButtonSmall: {
+        position: 'relative',
         padding: 12,
         backgroundColor: '#fff',
         borderRadius: 20,
@@ -419,5 +468,20 @@ const styles = StyleSheet.create({
     songItemArtist: {
         fontSize: 12,
         color: '#90A4AE',
+    },
+    repeatBadge: {
+        position: 'absolute',
+        top: -2,
+        right: -2,
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#fff',
+        backgroundColor: '#FF5722',
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        textAlign: 'center',
+        lineHeight: 14,
+        overflow: 'hidden',
     },
 });

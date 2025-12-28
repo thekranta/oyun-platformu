@@ -237,7 +237,8 @@ export default function App() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal' | 'yaratici'>('bilissel');
+  const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal' | 'yaratici' | 'muzikler'>('bilissel');
+  const [selectedSongIndex, setSelectedSongIndex] = useState<number>(0);
 
   // === EKRANLAR ===
   if (asama === 'giris') {
@@ -305,6 +306,12 @@ export default function App() {
               onPress={() => setActiveTab('yaratici')}
             >
               <Text style={[styles.tabText, activeTab === 'yaratici' && styles.activeTabText]}>🎨 Yaratıcılık</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tabButton, activeTab === 'muzikler' && styles.activeTabButton]}
+              onPress={() => setActiveTab('muzikler')}
+            >
+              <Text style={[styles.tabText, activeTab === 'muzikler' && styles.activeTabText]}>🎵 Müzikler</Text>
             </TouchableOpacity>
           </View>
 
@@ -401,11 +408,54 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Hayal Defteri</Text>
                   <Text style={styles.oyunAciklama}>Boş sayfada çizim yap</Text>
                 </TouchableOpacity>
+              </>
+            )}
 
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFD54F' }]} onPress={() => oyunuBaslat('muzik-calar')}>
+            {activeTab === 'muzikler' && (
+              <>
+                <TouchableOpacity
+                  style={[styles.oyunKarti, { backgroundColor: '#FFD54F' }]}
+                  onPress={() => { setSelectedSongIndex(0); oyunuBaslat('muzik-calar'); }}
+                >
                   <Ionicons name="musical-notes" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Müzik Kutusu</Text>
-                  <Text style={styles.oyunAciklama}>Şarkılarını Dinle</Text>
+                  <Text style={styles.oyunBaslik}>ChildhoodTech V1</Text>
+                  <Text style={styles.oyunAciklama}>Web Sitemiz İçin</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.oyunKarti, { backgroundColor: '#4ECDC4' }]}
+                  onPress={() => { setSelectedSongIndex(1); oyunuBaslat('muzik-calar'); }}
+                >
+                  <Ionicons name="planet" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>ChildhoodTech V2</Text>
+                  <Text style={styles.oyunAciklama}>Tanıtım Müziği</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.oyunKarti, { backgroundColor: '#FF7043' }]}
+                  onPress={() => { setSelectedSongIndex(2); oyunuBaslat('muzik-calar'); }}
+                >
+                  <Ionicons name="heart" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Adil Oyun</Text>
+                  <Text style={styles.oyunAciklama}>Güzel Oyun</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.oyunKarti, { backgroundColor: '#AB47BC' }]}
+                  onPress={() => { setSelectedSongIndex(3); oyunuBaslat('muzik-calar'); }}
+                >
+                  <Ionicons name="people" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Paylaşınca Güzel</Text>
+                  <Text style={styles.oyunAciklama}>Arkadaşlık</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.oyunKarti, { backgroundColor: '#66BB6A' }]}
+                  onPress={() => { setSelectedSongIndex(4); oyunuBaslat('muzik-calar'); }}
+                >
+                  <Ionicons name="leaf" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Çalışkan Arı</Text>
+                  <Text style={styles.oyunAciklama}>Sorumluluk</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -475,7 +525,7 @@ export default function App() {
   }
 
   if (asama === 'muzik-calar') {
-    return <MuzikCalar onExit={() => setAsama('menu')} />;
+    return <MuzikCalar onExit={() => setAsama('menu')} initialSongIndex={selectedSongIndex} />;
   }
 
   if (asama === 'sonuc') {
