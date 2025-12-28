@@ -23,10 +23,14 @@ interface YapbozOyunuProps {
 
 interface Tile {
     id: number;
-    correctIndex: number;
-    currentIndex: number;
     row: number;
     col: number;
+    isPlaced: boolean;
+}
+
+interface Position {
+    x: number;
+    y: number;
 }
 
 const GRID_SIZE = 3;
@@ -37,13 +41,17 @@ const PUZZLE_IMAGE = require('@/assets/images/karpuz.png');
 
 export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const [tiles, setTiles] = useState<Tile[]>([]);
-    const [emptyIndex, setEmptyIndex] = useState<number>(TOTAL_TILES - 1);
+    const [placedTiles, setPlacedTiles] = useState<Set<number>>(new Set());
     const [moves, setMoves] = useState(0);
     const [errors, setErrors] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
     const [startTime] = useState(Date.now());
     const [showPreview, setShowPreview] = useState(true);
-    const [imageSize, setImageSize] = useState({ width: 300, height: 300 });
+    const [selectedTile, setSelectedTile] = useState<number | null>(null);
+
+    // Her tile için pozisyon animasyonu
+    const tilePositions = useRef<{ [key: number]: Animated.ValueXY }>({}).current;
+    const [scatteredPositions, setScatteredPositions] = useState<{ [key: number]: Position }>({});
 
     const confettiAnims = useRef(
         Array.from({ length: 30 }, () => ({
@@ -57,134 +65,115 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     // Ekran boyutuna göre puzzle boyutunu hesapla
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
-    const puzzleSize = Math.min(screenWidth * 0.85, screenHeight * 0.55, 400);
+    const puzzleSize = Math.min(screenWidth * 0.6, screenHeight * 0.4, 300);
     const tileSize = puzzleSize / GRID_SIZE;
 
-    // Tile'ları karıştır (çözülebilir olmasını garanti et)
-    const shuffleTiles = useCallback(() => {
-        const initialTiles: Tile[] = [];
+    // Dağınık parçalar için alan
+    const scatterAreaWidth = screenWidth - 40;
+    const scatterAreaHeight = screenHeight * 0.35;
+
+    // Parçaları dağıt
+    const scatterTiles = useCallback(() => {
+        const newTiles: Tile[] = [];
+        const newPositions: { [key: number]: Position } = {};
+
         for (let i = 0; i < TOTAL_TILES; i++) {
-            initialTiles.push({
+            const row = Math.floor(i / GRID_SIZE);
+            const col = i % GRID_SIZE;
+
+            newTiles.push({
                 id: i,
-                correctIndex: i,
-                currentIndex: i,
-                row: Math.floor(i / GRID_SIZE),
-                col: i % GRID_SIZE,
+                row,
+                col,
+                isPlaced: false,
             });
-        }
 
-        // Fisher-Yates shuffle with solvability check
-        let shuffled = [...initialTiles];
-        let attempts = 0;
+            // Rastgele pozisyon (alt alanda)
+            const maxX = scatterAreaWidth - tileSize - 20;
+            const maxY = scatterAreaHeight - tileSize - 20;
+            const randomX = Math.random() * maxX + 10;
+            const randomY = Math.random() * maxY + 10;
 
-        do {
-            shuffled = [...initialTiles];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                // Swap currentIndex
-                const tempIndex = shuffled[i].currentIndex;
-                shuffled[i] = { ...shuffled[i], currentIndex: shuffled[j].currentIndex };
-                shuffled[j] = { ...shuffled[j], currentIndex: tempIndex };
-            }
-            attempts++;
-        } while (!isSolvable(shuffled) && attempts < 100);
+            newPositions[i] = { x: randomX, y: randomY };
 
-        // Sort by currentIndex for rendering
-        shuffled.sort((a, b) => a.currentIndex - b.currentIndex);
-
-        setTiles(shuffled);
-        setEmptyIndex(shuffled.findIndex(t => t.id === TOTAL_TILES - 1));
-    }, []);
-
-    // Çözülebilirlik kontrolü
-    const isSolvable = (tiles: Tile[]): boolean => {
-        let inversions = 0;
-        const arr = tiles.map(t => t.id).filter(id => id !== TOTAL_TILES - 1);
-
-        for (let i = 0; i < arr.length; i++) {
-            for (let j = i + 1; j < arr.length; j++) {
-                if (arr[i] > arr[j]) inversions++;
+            if (!tilePositions[i]) {
+                tilePositions[i] = new Animated.ValueXY({ x: randomX, y: randomY });
+            } else {
+                tilePositions[i].setValue({ x: randomX, y: randomY });
             }
         }
 
-        // 3x3 için çift sayıda inversiyon gerekli
-        return inversions % 2 === 0;
-    };
+        setTiles(newTiles);
+        setScatteredPositions(newPositions);
+    }, [scatterAreaWidth, scatterAreaHeight, tileSize]);
 
-    // Tamamlanma kontrolü
-    const checkComplete = useCallback((currentTiles: Tile[]) => {
-        const sorted = [...currentTiles].sort((a, b) => a.currentIndex - b.currentIndex);
-        const complete = sorted.every((tile, index) => tile.id === index);
-
-        if (complete && !isComplete) {
-            setIsComplete(true);
-            triggerConfetti();
-            const duration = Math.floor((Date.now() - startTime) / 1000);
-            setTimeout(() => {
-                onGameEnd('Yapboz Oyunu', duration, moves, errors);
-            }, 2000);
-        }
-    }, [isComplete, moves, errors, startTime, onGameEnd]);
-
-    // Tile'a tıklama
-    const handleTilePress = useCallback((tileIndex: number) => {
-        if (isComplete) return;
-
-        const emptyRow = Math.floor(emptyIndex / GRID_SIZE);
-        const emptyCol = emptyIndex % GRID_SIZE;
-        const tileRow = Math.floor(tileIndex / GRID_SIZE);
-        const tileCol = tileIndex % GRID_SIZE;
-
-        // Sadece bitişik tile'lar hareket edebilir
-        const isAdjacent =
-            (Math.abs(emptyRow - tileRow) === 1 && emptyCol === tileCol) ||
-            (Math.abs(emptyCol - tileCol) === 1 && emptyRow === tileRow);
-
-        if (!isAdjacent) {
-            setErrors(e => e + 1);
-            return;
-        }
+    // Tile'ı doğru yere yerleştir
+    const placeTile = useCallback((tileId: number, targetRow: number, targetCol: number) => {
+        const tile = tiles.find(t => t.id === tileId);
+        if (!tile || tile.isPlaced) return;
 
         setMoves(m => m + 1);
 
-        // Swap tiles
-        const newTiles = [...tiles];
-        const clickedTileArrayIndex = newTiles.findIndex(t => t.currentIndex === tileIndex);
-        const emptyTileArrayIndex = newTiles.findIndex(t => t.currentIndex === emptyIndex);
+        // Doğru yere mi yerleştirildi?
+        if (tile.row === targetRow && tile.col === targetCol) {
+            // Doğru yer - parçayı yerleştir
+            setPlacedTiles(prev => new Set([...prev, tileId]));
+            setTiles(prev => prev.map(t =>
+                t.id === tileId ? { ...t, isPlaced: true } : t
+            ));
+            setSelectedTile(null);
 
-        if (clickedTileArrayIndex !== -1 && emptyTileArrayIndex !== -1) {
-            newTiles[clickedTileArrayIndex] = {
-                ...newTiles[clickedTileArrayIndex],
-                currentIndex: emptyIndex,
-            };
-            newTiles[emptyTileArrayIndex] = {
-                ...newTiles[emptyTileArrayIndex],
-                currentIndex: tileIndex,
-            };
-
-            setTiles(newTiles);
-            setEmptyIndex(tileIndex);
-            checkComplete(newTiles);
+            // Tamamlandı mı kontrol et
+            if (placedTiles.size + 1 === TOTAL_TILES) {
+                setIsComplete(true);
+                triggerConfetti();
+                const duration = Math.floor((Date.now() - startTime) / 1000);
+                setTimeout(() => {
+                    onGameEnd('Yapboz Oyunu', duration, moves + 1, errors);
+                }, 2000);
+            }
+        } else {
+            // Yanlış yer
+            setErrors(e => e + 1);
         }
-    }, [tiles, emptyIndex, isComplete, checkComplete]);
+    }, [tiles, placedTiles, moves, errors, startTime, onGameEnd]);
+
+    // Tile seçimi
+    const handleTileSelect = (tileId: number) => {
+        const tile = tiles.find(t => t.id === tileId);
+        if (tile?.isPlaced) return;
+
+        setSelectedTile(selectedTile === tileId ? null : tileId);
+    };
+
+    // Hedef hücreye tıklama
+    const handleCellPress = (row: number, col: number) => {
+        if (selectedTile === null) return;
+
+        // Zaten dolu mu?
+        const existingTile = tiles.find(t => t.isPlaced && t.row === row && t.col === col);
+        if (existingTile) return;
+
+        placeTile(selectedTile, row, col);
+    };
 
     // Confetti animasyonu
     const triggerConfetti = () => {
         confettiAnims.forEach((anim, i) => {
-            const startX = Math.random() * puzzleSize;
+            const startX = Math.random() * puzzleSize + (screenWidth - puzzleSize) / 2;
             anim.x.setValue(startX);
-            anim.y.setValue(-20);
+            anim.y.setValue(100);
             anim.rotate.setValue(0);
             anim.opacity.setValue(1);
 
             Animated.parallel([
                 Animated.timing(anim.y, {
-                    toValue: puzzleSize + 100,
+                    toValue: screenHeight,
                     duration: 2000 + Math.random() * 1000,
                     useNativeDriver: true,
                 }),
                 Animated.timing(anim.x, {
-                    toValue: startX + (Math.random() - 0.5) * 100,
+                    toValue: startX + (Math.random() - 0.5) * 150,
                     duration: 2000 + Math.random() * 1000,
                     useNativeDriver: true,
                 }),
@@ -207,57 +196,114 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         // 3 saniye önizleme göster
         const timer = setTimeout(() => {
             setShowPreview(false);
-            shuffleTiles();
+            scatterTiles();
         }, 3000);
 
         return () => clearTimeout(timer);
-    }, [shuffleTiles]);
+    }, [scatterTiles]);
 
-    // Tile render
-    const renderTile = (tile: Tile) => {
-        const isEmptyTile = tile.id === TOTAL_TILES - 1;
-        if (isEmptyTile) return null;
+    // Dağınık parça render
+    const renderScatteredTile = (tile: Tile) => {
+        if (tile.isPlaced) return null;
 
-        const tileIndex = tile.currentIndex;
-        const displayRow = Math.floor(tileIndex / GRID_SIZE);
-        const displayCol = tileIndex % GRID_SIZE;
+        const position = scatteredPositions[tile.id];
+        if (!position) return null;
 
-        // Orijinal konumdan görsel kesimi
-        const originalRow = tile.row;
-        const originalCol = tile.col;
+        const isSelected = selectedTile === tile.id;
 
         return (
             <TouchableOpacity
                 key={tile.id}
                 style={[
-                    styles.tile,
+                    styles.scatteredTile,
                     {
-                        width: tileSize - 2,
-                        height: tileSize - 2,
-                        left: displayCol * tileSize + 1,
-                        top: displayRow * tileSize + 1,
+                        width: tileSize,
+                        height: tileSize,
+                        left: position.x,
+                        top: position.y,
+                        borderWidth: isSelected ? 3 : 1,
+                        borderColor: isSelected ? '#FFD700' : '#fff',
+                        transform: [{ scale: isSelected ? 1.1 : 1 }],
+                        zIndex: isSelected ? 100 : 1,
                     },
                 ]}
-                onPress={() => handleTilePress(tileIndex)}
+                onPress={() => handleTileSelect(tile.id)}
                 activeOpacity={0.8}
             >
-                <View style={[styles.tileInner, { width: tileSize - 4, height: tileSize - 4 }]}>
+                <View style={[styles.tileInner, { width: tileSize - 6, height: tileSize - 6 }]}>
                     <Image
                         source={PUZZLE_IMAGE}
                         style={{
                             width: puzzleSize,
                             height: puzzleSize,
                             position: 'absolute',
-                            left: -originalCol * tileSize,
-                            top: -originalRow * tileSize,
+                            left: -tile.col * tileSize,
+                            top: -tile.row * tileSize,
                         }}
                         resizeMode="cover"
                     />
                 </View>
-                {/* Tile numarası (debug için) */}
-                {/* <Text style={styles.tileNumber}>{tile.id + 1}</Text> */}
             </TouchableOpacity>
         );
+    };
+
+    // Puzzle grid hücresi render
+    const renderGridCell = (row: number, col: number) => {
+        const placedTile = tiles.find(t => t.isPlaced && t.row === row && t.col === col);
+        const index = row * GRID_SIZE + col;
+
+        return (
+            <TouchableOpacity
+                key={index}
+                style={[
+                    styles.gridCell,
+                    {
+                        width: tileSize,
+                        height: tileSize,
+                        backgroundColor: placedTile ? 'transparent' : 'rgba(255,255,255,0.1)',
+                    },
+                ]}
+                onPress={() => handleCellPress(row, col)}
+                activeOpacity={0.7}
+            >
+                {placedTile ? (
+                    <View style={[styles.placedTileInner, { width: tileSize - 4, height: tileSize - 4 }]}>
+                        <Image
+                            source={PUZZLE_IMAGE}
+                            style={{
+                                width: puzzleSize,
+                                height: puzzleSize,
+                                position: 'absolute',
+                                left: -col * tileSize,
+                                top: -row * tileSize,
+                            }}
+                            resizeMode="cover"
+                        />
+                    </View>
+                ) : (
+                    <View style={styles.emptyCell}>
+                        <Text style={styles.cellNumber}>{index + 1}</Text>
+                    </View>
+                )}
+            </TouchableOpacity>
+        );
+    };
+
+    // Grid oluştur
+    const renderGrid = () => {
+        const rows = [];
+        for (let row = 0; row < GRID_SIZE; row++) {
+            const cells = [];
+            for (let col = 0; col < GRID_SIZE; col++) {
+                cells.push(renderGridCell(row, col));
+            }
+            rows.push(
+                <View key={row} style={styles.gridRow}>
+                    {cells}
+                </View>
+            );
+        }
+        return rows;
     };
 
     return (
@@ -267,8 +313,12 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 <TouchableOpacity style={styles.exitButton} onPress={onExit}>
                     <Ionicons name="arrow-back" size={28} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.title}>🧩 Yapboz Oyunu</Text>
+                <Text style={styles.title}>🧩 Yapboz</Text>
                 <View style={styles.statsContainer}>
+                    <View style={styles.statItem}>
+                        <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                        <Text style={styles.statText}>{placedTiles.size}/{TOTAL_TILES}</Text>
+                    </View>
                     <View style={styles.statItem}>
                         <Ionicons name="hand-left" size={20} color="#FFD54F" />
                         <Text style={styles.statText}>{moves}</Text>
@@ -276,79 +326,62 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 </View>
             </View>
 
-            {/* Önizleme veya Oyun Alanı */}
-            <View style={styles.gameArea}>
-                {showPreview ? (
-                    <View style={styles.previewContainer}>
-                        <Text style={styles.previewText}>Resmi iyi hatırla! 👀</Text>
-                        <View style={[styles.puzzleContainer, { width: puzzleSize, height: puzzleSize }]}>
-                            <Image
-                                source={PUZZLE_IMAGE}
-                                style={{ width: puzzleSize, height: puzzleSize, borderRadius: 12 }}
-                                resizeMode="cover"
-                            />
-                        </View>
-                        <Text style={styles.countdownText}>Oyun yakında başlıyor...</Text>
-                    </View>
-                ) : (
-                    <View style={styles.puzzleWrapper}>
-                        <Text style={styles.instruction}>
-                            {isComplete ? '🎉 Tebrikler!' : 'Parçaları yerine koy!'}
-                        </Text>
-                        <View style={[styles.puzzleContainer, { width: puzzleSize, height: puzzleSize }]}>
-                            {tiles.map(renderTile)}
-
-                            {/* Boş kutunun yeri */}
-                            <View
-                                style={[
-                                    styles.emptyTile,
-                                    {
-                                        width: tileSize - 2,
-                                        height: tileSize - 2,
-                                        left: (emptyIndex % GRID_SIZE) * tileSize + 1,
-                                        top: Math.floor(emptyIndex / GRID_SIZE) * tileSize + 1,
-                                    },
-                                ]}
-                            />
-                        </View>
-
-                        {/* Mini önizleme */}
-                        <View style={styles.miniPreview}>
-                            <Text style={styles.miniPreviewLabel}>Hedef:</Text>
-                            <Image
-                                source={PUZZLE_IMAGE}
-                                style={styles.miniPreviewImage}
-                                resizeMode="cover"
-                            />
-                        </View>
-                    </View>
-                )}
-
-                {/* Confetti */}
-                {isComplete &&
-                    confettiAnims.map((anim, i) => (
-                        <Animated.View
-                            key={i}
-                            style={[
-                                styles.confetti,
-                                {
-                                    backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'][i % 5],
-                                    transform: [
-                                        { translateX: anim.x },
-                                        { translateY: anim.y },
-                                        {
-                                            rotate: anim.rotate.interpolate({
-                                                inputRange: [0, 10],
-                                                outputRange: ['0deg', '360deg'],
-                                            }),
-                                        },
-                                    ],
-                                    opacity: anim.opacity,
-                                },
-                            ]}
+            {showPreview ? (
+                <View style={styles.previewContainer}>
+                    <Text style={styles.previewText}>Resmi iyi hatırla! 👀</Text>
+                    <View style={[styles.puzzleContainer, { width: puzzleSize, height: puzzleSize }]}>
+                        <Image
+                            source={PUZZLE_IMAGE}
+                            style={{ width: puzzleSize, height: puzzleSize, borderRadius: 12 }}
+                            resizeMode="cover"
                         />
-                    ))}
-            </View>
+                    </View>
+                    <Text style={styles.countdownText}>Oyun yakında başlıyor...</Text>
+                </View>
+            ) : (
+                <View style={styles.gameArea}>
+                    {/* Üstte hedef puzzle alanı */}
+                    <View style={styles.targetArea}>
+                        <Text style={styles.instruction}>
+                            {isComplete ? '🎉 Tebrikler! Yapbozu tamamladın!' : 'Parçayı seç, sonra yerine koy!'}
+                        </Text>
+                        <View style={[styles.puzzleGrid, { width: puzzleSize + 10, height: puzzleSize + 10 }]}>
+                            {renderGrid()}
+                        </View>
+                    </View>
+
+                    {/* Altta dağınık parçalar */}
+                    <View style={[styles.scatterArea, { height: scatterAreaHeight }]}>
+                        <Text style={styles.scatterLabel}>📦 Parçalar</Text>
+                        {tiles.map(renderScatteredTile)}
+                    </View>
+                </View>
+            )}
+
+            {/* Confetti */}
+            {isComplete &&
+                confettiAnims.map((anim, i) => (
+                    <Animated.View
+                        key={i}
+                        style={[
+                            styles.confetti,
+                            {
+                                backgroundColor: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181'][i % 5],
+                                transform: [
+                                    { translateX: anim.x },
+                                    { translateY: anim.y },
+                                    {
+                                        rotate: anim.rotate.interpolate({
+                                            inputRange: [0, 10],
+                                            outputRange: ['0deg', '360deg'],
+                                        }),
+                                    },
+                                ],
+                                opacity: anim.opacity,
+                            },
+                        ]}
+                    />
+                ))}
         </View>
     );
 }
@@ -379,28 +412,25 @@ const styles = StyleSheet.create({
     },
     statsContainer: {
         flexDirection: 'row',
-        gap: 15,
+        gap: 10,
     },
     statItem: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255,255,255,0.15)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
-        gap: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 15,
+        gap: 5,
     },
     statText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
     },
-    gameArea: {
+    previewContainer: {
         flex: 1,
         justifyContent: 'center',
-        alignItems: 'center',
-    },
-    previewContainer: {
         alignItems: 'center',
         gap: 20,
     },
@@ -415,76 +445,93 @@ const styles = StyleSheet.create({
         color: '#aaa',
         marginTop: 10,
     },
-    puzzleWrapper: {
-        alignItems: 'center',
-        gap: 20,
-    },
-    instruction: {
-        fontSize: 22,
-        fontWeight: 'bold',
-        color: '#fff',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
     puzzleContainer: {
-        backgroundColor: '#2d2d44',
         borderRadius: 12,
         overflow: 'hidden',
-        position: 'relative',
         borderWidth: 3,
         borderColor: '#4ECDC4',
     },
-    tile: {
+    gameArea: {
+        flex: 1,
+        padding: 20,
+    },
+    targetArea: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    instruction: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
+        textAlign: 'center',
+        marginBottom: 15,
+    },
+    puzzleGrid: {
+        backgroundColor: '#2d2d44',
+        borderRadius: 12,
+        padding: 5,
+        borderWidth: 3,
+        borderColor: '#4ECDC4',
+    },
+    gridRow: {
+        flexDirection: 'row',
+    },
+    gridCell: {
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.3)',
+        borderRadius: 4,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyCell: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cellNumber: {
+        color: 'rgba(255,255,255,0.3)',
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    placedTileInner: {
+        overflow: 'hidden',
+        borderRadius: 3,
+    },
+    scatterArea: {
+        flex: 1,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 15,
+        position: 'relative',
+        overflow: 'hidden',
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.1)',
+        borderStyle: 'dashed',
+    },
+    scatterLabel: {
         position: 'absolute',
-        borderRadius: 6,
+        top: 10,
+        left: 15,
+        color: '#aaa',
+        fontSize: 14,
+        fontWeight: 'bold',
+        zIndex: 0,
+    },
+    scatteredTile: {
+        position: 'absolute',
+        borderRadius: 8,
         overflow: 'hidden',
         backgroundColor: '#fff',
-        elevation: 4,
+        elevation: 5,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.3,
-        shadowRadius: 3,
+        shadowRadius: 4,
     },
     tileInner: {
         overflow: 'hidden',
-        borderRadius: 4,
-    },
-    tileNumber: {
-        position: 'absolute',
-        top: 5,
-        left: 5,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        color: '#fff',
-        fontSize: 12,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 8,
-        overflow: 'hidden',
-    },
-    emptyTile: {
-        position: 'absolute',
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        borderRadius: 6,
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.2)',
-        borderStyle: 'dashed',
-    },
-    miniPreview: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        padding: 10,
-        borderRadius: 12,
-        gap: 10,
-    },
-    miniPreviewLabel: {
-        color: '#aaa',
-        fontSize: 14,
-    },
-    miniPreviewImage: {
-        width: 60,
-        height: 60,
-        borderRadius: 8,
+        borderRadius: 5,
     },
     confetti: {
         position: 'absolute',
