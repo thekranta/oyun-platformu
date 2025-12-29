@@ -68,6 +68,14 @@ const SONGS: Song[] = [
         coverColor: '#42A5F5', // Mavi
         icon: 'checkmark-circle',
     },
+    {
+        id: '7',
+        title: 'Biz Bir Aileyiz',
+        artist: 'Aile Sevgisi',
+        source: require('@/assets/sounds/songs/BİZ BİR AİLEYİZ.mp3'),
+        coverColor: '#EC407A', // Pembe
+        icon: 'home',
+    },
 ];
 
 interface MuzikCalarProps {

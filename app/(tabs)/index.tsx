@@ -457,6 +457,23 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Çalışkan Arı</Text>
                   <Text style={styles.oyunAciklama}>Sorumluluk</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.oyunKarti, { backgroundColor: '#42A5F5' }]}
+                  onPress={() => { setSelectedSongIndex(5); oyunuBaslat('muzik-calar'); }}
+                >
+                  <Ionicons name="checkmark-circle" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Doğru Söylerim</Text>
+                  <Text style={styles.oyunAciklama}>Dürüstlük</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.oyunKarti, { backgroundColor: '#EC407A' }]}
+                  onPress={() => { setSelectedSongIndex(6); oyunuBaslat('muzik-calar'); }}
+                >
+                  <Ionicons name="home" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Biz Bir Aileyiz</Text>
+                  <Text style={styles.oyunAciklama}>Aile Sevgisi</Text>
+                </TouchableOpacity>
               </>
             )}
           </View>
