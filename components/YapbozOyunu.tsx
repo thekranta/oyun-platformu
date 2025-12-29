@@ -35,23 +35,29 @@ interface DraggablePieceProps {
     onLock: (id: number) => void;
     onMove: () => void;
     screenW: number;
+    screenH: number; // Added screenH for better fallback positioning
     isComplete: boolean;
 }
 
 // 1. Move Component Outside to prevent re-creation on every render
 const DraggablePiece = ({
-    id, row, col, puzzleSize, pieceSize, tileSize, gridFrame, isLocked, onLock, onMove, screenW, isComplete
+    id, row, col, puzzleSize, pieceSize, tileSize, gridFrame, isLocked, onLock, onMove, screenW, screenH, isComplete
 }: DraggablePieceProps) => {
 
     // Calculate initial position only once or when dimensions change
     // Using useMemo to keep it stable
     const initialPos = useMemo(() => {
-        // Grid bottom edge (approx)
-        // If gridFrame is not ready, we use a safe default
-        const gridBottom = (gridFrame?.y || 0) + puzzleSize;
+        // Safe default if gridFrame is missing: place pieces in the lower half of screen
+        // gameArea adds some padding, grid is at top. 
+        // puzzleSize is height of grid.
+        // So safe start Y is around puzzleSize + 60.
+        const safeGridY = 0; // Relative to GameArea top
+        const gridBottom = (gridFrame ? gridFrame.y : safeGridY) + puzzleSize;
         const startY = gridBottom + 40;
+
         const spacing = pieceSize + 15;
-        const totalRowWidth = 3 * spacing;
+        // Center relative to the container width (screenW)
+        const offsetX = (screenW - (3 * spacing)) / 2;
 
         // Shuffle logic
         const shuffle = [4, 7, 2, 8, 5, 0, 1, 6, 3];
@@ -59,9 +65,6 @@ const DraggablePiece = ({
 
         const r = Math.floor(idx / 3);
         const c = idx % 3;
-
-        // Center relative to the container width (screenW)
-        const offsetX = (screenW - (3 * spacing)) / 2;
 
         return {
             x: offsetX + c * spacing,
@@ -76,13 +79,23 @@ const DraggablePiece = ({
     // Track if we have set the initial position
     const [initialized, setInitialized] = useState(false);
 
-    // Initialize position when gridFrame becomes available
+    // Initialize position ASAP. Even if gridFrame is null, we set a default so it's visible.
+    // When gridFrame arrives, we might re-adjust if not moved yet? 
+    // Actually better to just set it once robustly. 
     useEffect(() => {
-        if (gridFrame && !initialized && !isLocked) {
+        if (!initialized && !isLocked) {
             pan.setValue(initialPos);
             setInitialized(true);
+        } else if (gridFrame && !hasBeenPlaced && !isLocked) {
+            // If we initialized with default (no gridFrame) and now have gridFrame,
+            // strictly speaking we might want to update, but usually the default (relative to GameArea) 
+            // is close enough if onGridLayout fires quickly. 
+            // Let's force update if the difference is significant?
+            // For now, let's trust initialPos updates via useMemo dependency.
+            // But pan.setValue needs to be called again if initialPos changed.
+            pan.setValue(initialPos);
         }
-    }, [gridFrame, initialPos, initialized, isLocked]);
+    }, [initialPos, initialized, isLocked, gridFrame, hasBeenPlaced]);
 
     // PanResponder
     const panResponder = useRef(
@@ -235,14 +248,6 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         setGridFrame({ x, y });
     };
 
-    // We do NOT use onGameAreaLayout anymore because we put pieces in same flow container or
-    // we just use the relative coordinates inside GameArea directly. 
-    // Actually, DraggablePiece is absolute positioned.
-    // If we make Grid and Pieces siblings inside 'GameArea', and Grid has margin/padding,
-    // onLayout of Grid gives X,Y relative to GameArea.
-    // Pieces are absolute 0,0 relative to GameArea.
-    // So Grid X,Y is exactly the offset we need. Correct.
-
     return (
         <View style={styles.container}>
             <View style={styles.header}>
@@ -290,9 +295,8 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                         <Image source={PUZZLE_IMAGE} style={styles.hintImage} />
                     </View>
 
-                    {/* Render Pieces - Only when gridFrame is ready */}
-                    {/* They are Absolute positioned relative to GameArea */}
-                    {gridFrame && Array.from({ length: TOTAL_TILES }).map((_, i) => {
+                    {/* Render Pieces - Unconditionally to ensure they appear */}
+                    {Array.from({ length: TOTAL_TILES }).map((_, i) => {
                         const row = Math.floor(i / GRID_SIZE);
                         const col = i % GRID_SIZE;
                         return (
@@ -309,6 +313,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                                 onLock={handleLock}
                                 onMove={handleMove}
                                 screenW={screenW}
+                                screenH={screenH}
                                 isComplete={isComplete}
                             />
                         );
