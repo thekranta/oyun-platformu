@@ -60,6 +60,14 @@ const SONGS: Song[] = [
         coverColor: '#66BB6A', // Yeşil
         icon: 'leaf',
     },
+    {
+        id: '6',
+        title: 'Doğru Söylerim',
+        artist: 'Dürüstlük',
+        source: require('@/assets/sounds/songs/DOĞRU SÖYLERİM.mp3'),
+        coverColor: '#42A5F5', // Mavi
+        icon: 'checkmark-circle',
+    },
 ];
 
 interface MuzikCalarProps {
