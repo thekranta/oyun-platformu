@@ -311,7 +311,7 @@ export default function App() {
               style={[styles.tabButton, activeTab === 'muzikler' && styles.activeTabButton]}
               onPress={() => setActiveTab('muzikler')}
             >
-              <Text style={[styles.tabText, activeTab === 'muzikler' && styles.activeTabText]}>🎵 Müzikler</Text>
+              <Text style={[styles.tabText, activeTab === 'muzikler' && styles.activeTabText]}>🎵 Müzik Kutusu</Text>
             </TouchableOpacity>
           </View>
 
