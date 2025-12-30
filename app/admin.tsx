@@ -26,6 +26,8 @@ interface Score {
     algilanan_kelime?: string;
     uzman_onayi?: boolean;
     onaylayan_uzman?: string;
+    toplam_tur_sayisi?: number;
+    mevcut_tur?: number;
 }
 
 interface StudentGroup {
@@ -322,6 +324,35 @@ export default function AdminPanel() {
                 }
             }
 
+            // === 4. TUR ANALİZİ (Bilişsel Yük ve Dikkat Sürdürülebilirliği) ===
+            const toplamTur = score.toplam_tur_sayisi || 0;
+            const mevcutTur = score.mevcut_tur || 0;
+            let turAnaliziNotu = '';
+            if (toplamTur > 0 && mevcutTur > 0) {
+                if (mevcutTur <= 2) {
+                    turAnaliziNotu = `
+## TUR ANALİZİ:
+- Mevcut Tur: ${mevcutTur}/${toplamTur} (Erken Tur - Temel Beceri Değerlendirmesi)
+- Bu turlardaki performans çocuğun "Temel Beceri" düzeyini gösterir.
+- Hata ve süre verilerini başlangıç referansı olarak kullan.`;
+                } else if (mevcutTur >= toplamTur - 1) {
+                    turAnaliziNotu = `
+## TUR ANALİZİ:
+- Mevcut Tur: ${mevcutTur}/${toplamTur} (Son Turlar - Bilişsel Yük Değerlendirmesi)
+- Son turlardaki performans "Bilişsel Yük Yönetimi" ve "Dikkat Sürdürülebilirliği" göstergesidir.
+- Eğer bu turlarda hata artışı veya süre uzaması varsa:
+  * "Yorulma" belirtisi olarak değerlendir
+  * "Karmaşık görevlerde iskele kurma (scaffolding) ihtiyacı" olarak tanımla
+  * Veliye: "Oyun süresi arttıkça kısa molalar verilebilir" önerisinde bulun`;
+                } else {
+                    turAnaliziNotu = `
+## TUR ANALİZİ:
+- Mevcut Tur: ${mevcutTur}/${toplamTur} (Orta Turlar)
+- Performans artışı "Öğrenme eğrisi" göstergesidir.
+- Performans düşüşü varsa "Dikkat dağılması" olarak değerlendir.`;
+                }
+            }
+
             let prompt = '';
 
             // Gelişim geçmişi bölümü
@@ -387,7 +418,8 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 - Oyun: ${oyunAdiTR} | Zorluk: ${zorluk}
 - Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
-${gelisimBolumu}${scaffoldingNotu}${teknikHataNotu}
+${toplamTur > 0 ? `- Tur Bilgisi: ${mevcutTur}/${toplamTur}` : ''}
+${gelisimBolumu}${scaffoldingNotu}${teknikHataNotu}${turAnaliziNotu}
 ## MAARİF MODELİ REFERANSI:
 - Alan: ${oyunBilgisi.alan} | Süreç: ${oyunBilgisi.surec}
 - Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
