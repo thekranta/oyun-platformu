@@ -161,21 +161,27 @@ export default function AdminPanel() {
 
         setProcessingId(score.id);
         try {
-            // Maarif Modeli Referans Matrisi - Oyun Eşleştirmeleri
+            // Maarif Modeli Referans Matrisi - Oyun Eşleştirmeleri (raw_curriculum.txt'ye göre)
             const maarifMatrisi: Record<string, { alan: string; surec: string; cikti: string; ciktiAciklama: string; deger?: string }> = {
-                'hafiza': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.2', ciktiAciklama: 'Nesne özelliklerini çözümleme' },
-                'yapboz': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.2', ciktiAciklama: 'Parça-bütün ilişkisini çözümleme' },
-                'sayilari-birlestir': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.2', ciktiAciklama: 'Sayı sırasını çözümleme' },
-                'siralama': { alan: 'Matematik', surec: 'Çıkarım Yapma', cikti: 'MAB.4', ciktiAciklama: 'Örüntü/Sıralama çıkarımı' },
-                'diziyi-tamamla': { alan: 'Matematik', surec: 'Çıkarım Yapma', cikti: 'MAB.4', ciktiAciklama: 'Örüntü çıkarımı yapma' },
-                'eksik-sayi-bul': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.5', ciktiAciklama: 'Eksik ögeyi fark etme' },
-                'gruplama': { alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Benzerlik/Farklılığa göre sınıflandırma' },
-                'bunu-soyle': { alan: 'Türkçe', surec: 'İçerik Oluşturma', cikti: 'TAKB.2', ciktiAciklama: 'Nesneyi sesletme (Telaffuz)' },
-                'kodlama': { alan: 'Matematik', surec: 'Strateji Geliştirme', cikti: 'MAB.7', ciktiAciklama: 'Algoritmik düşünme ve strateji geliştirme' },
-                'rakam-yazma': { alan: 'Türkçe (Erken Okuryazarlık)', surec: 'Yazma Öncesi Beceriler', cikti: 'TAEOB.6', ciktiAciklama: 'Rakam yazma becerileri' },
-                'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim (SDB)', surec: 'Değer Kazanımı', cikti: 'SDB.3', ciktiAciklama: 'Duyarlılık ve yardımseverlik', deger: 'Yardımseverlik' },
-                'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim (SDB)', surec: 'Değer Kazanımı', cikti: 'SDB.2.1', ciktiAciklama: 'Aile bütünlüğü ve aidiyet duygusu', deger: 'Aile Bütünlüğü' },
-                'kutuyu-bul': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.2', ciktiAciklama: 'Görsel tarama ve nesne bulma' },
+                // Matematik Alanı
+                'hafiza': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme' },
+                'yapboz': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Bir bütünü oluşturan parçaları gösterir, parçalar arası ilişkiyi açıklar' },
+                'sayilari-birlestir': { alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme (1-5 arası nesne/varlık sayısını söyler)' },
+                'siralama': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.4', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelere ilişkin çıkarım yapabilme (karşılaştırma)' },
+                'diziyi-tamamla': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.4', ciktiAciklama: 'Örüntüyü kuralına uygun olarak devam ettirir' },
+                'eksik-sayi-bul': { alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.5', ciktiAciklama: 'Matematiksel durumlara ilişkin eksik/fazla/uyumsuz olan parçaları söyler' },
+                'kodlama': { alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.7', ciktiAciklama: 'Matematiksel problemler ve çözümlerine ilişkin stratejiler geliştirebilme' },
+                'kutuyu-bul': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesnelerin özelliklerini çözümleyebilme, görsel tarama' },
+                // Fen Alanı
+                'gruplama': { alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Fene yönelik nesne, olayları benzerlik ve farklılıklarına göre sınıflandırabilme' },
+                // Türkçe Alanı
+                'bunu-soyle': { alan: 'Türkçe', surec: 'Konuşma / İçerik Oluşturma', cikti: 'TAKB.2', ciktiAciklama: 'Konuşma sürecinin içeriğini oluşturabilme' },
+                'rakam-yazma': { alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)' },
+                // Sanat Alanı
+                'yaratici-cizim': { alan: 'Sanat', surec: 'Sanatsal Uygulama Yapma', cikti: 'SNAB4', ciktiAciklama: 'Sanat etkinliklerinde yaratıcı ürünler oluşturur' },
+                // Sosyal-Duygusal Gelişim (Kullanıcının belirlediği kodlar)
+                'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim', surec: 'Değer Kazanımı', cikti: 'SDB.3', ciktiAciklama: 'Duyarlılık ve yardımseverlik', deger: 'Yardımseverlik' },
+                'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', surec: 'Değer Kazanımı', cikti: 'SDB.2.1', ciktiAciklama: 'Aile bütünlüğü ve aidiyet duygusu', deger: 'Aile Bütünlüğü' },
             };
 
             const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
