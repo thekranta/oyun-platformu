@@ -161,48 +161,139 @@ export default function AdminPanel() {
 
         setProcessingId(score.id);
         try {
+            // Maarif Modeli Referans Matrisi - Oyun Eşleştirmeleri
+            const maarifMatrisi: Record<string, { alan: string; surec: string; cikti: string; ciktiAciklama: string; deger?: string }> = {
+                'hafiza': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.2', ciktiAciklama: 'Nesne özelliklerini çözümleme' },
+                'yapboz': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.2', ciktiAciklama: 'Parça-bütün ilişkisini çözümleme' },
+                'sayilari-birlestir': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.2', ciktiAciklama: 'Sayı sırasını çözümleme' },
+                'siralama': { alan: 'Matematik', surec: 'Çıkarım Yapma', cikti: 'MAB.4', ciktiAciklama: 'Örüntü/Sıralama çıkarımı' },
+                'diziyi-tamamla': { alan: 'Matematik', surec: 'Çıkarım Yapma', cikti: 'MAB.4', ciktiAciklama: 'Örüntü çıkarımı yapma' },
+                'eksik-sayi-bul': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.5', ciktiAciklama: 'Eksik ögeyi fark etme' },
+                'gruplama': { alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Benzerlik/Farklılığa göre sınıflandırma' },
+                'bunu-soyle': { alan: 'Türkçe', surec: 'İçerik Oluşturma', cikti: 'TAKB.2', ciktiAciklama: 'Nesneyi sesletme (Telaffuz)' },
+                'kodlama': { alan: 'Matematik', surec: 'Strateji Geliştirme', cikti: 'MAB.7', ciktiAciklama: 'Algoritmik düşünme ve strateji geliştirme' },
+                'rakam-yazma': { alan: 'Türkçe (Erken Okuryazarlık)', surec: 'Yazma Öncesi Beceriler', cikti: 'TAEOB.6', ciktiAciklama: 'Rakam yazma becerileri' },
+                'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim (SDB)', surec: 'Değer Kazanımı', cikti: 'SDB.3', ciktiAciklama: 'Duyarlılık ve yardımseverlik', deger: 'Yardımseverlik' },
+                'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim (SDB)', surec: 'Değer Kazanımı', cikti: 'SDB.2.1', ciktiAciklama: 'Aile bütünlüğü ve aidiyet duygusu', deger: 'Aile Bütünlüğü' },
+                'kutuyu-bul': { alan: 'Matematik', surec: 'Çözümleme', cikti: 'MAB.2', ciktiAciklama: 'Görsel tarama ve nesne bulma' },
+            };
+
+            const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
+                alan: 'Genel Gelişim',
+                surec: 'Değerlendirme',
+                cikti: 'GB.1',
+                ciktiAciklama: 'Genel beceri değerlendirmesi'
+            };
+
+            // Oyun adını Türkçe'ye çevir
+            const oyunAdiMap: Record<string, string> = {
+                'hafiza': 'Çiftini Bul!',
+                'siralama': 'Sıralama',
+                'eksik-sayi-bul': 'Eksik Sayıyı Bul',
+                'gruplama': 'Gruplama',
+                'diziyi-tamamla': 'Diziyi Tamamla',
+                'bunu-soyle': 'Bunu Söyle!',
+                'kodlama': 'Minik Kaşif',
+                'rakam-yazma': 'Rakam Yazma',
+                'ceviz_macera': 'Ceviz Macerası',
+                'aile-sepeti': 'Aile Sepeti',
+                'yapboz': 'Yapboz',
+                'sayilari-birlestir': 'Sayıları Birleştir',
+                'kutuyu-bul': 'Kutuyu Bul!',
+            };
+            const oyunAdiTR = oyunAdiMap[score.oyun_turu] || score.oyun_turu;
+
+            // Gelişimsel dönem belirleme
+            const yasAy = score.ogrenci_yasi;
+            let gelisimselDonem = '';
+            if (yasAy < 36) gelisimselDonem = 'Erken Çocukluk (24-36 ay)';
+            else if (yasAy < 48) gelisimselDonem = 'Okul Öncesi Erken Dönem (36-48 ay)';
+            else if (yasAy < 60) gelisimselDonem = 'Okul Öncesi Geç Dönem (48-60 ay)';
+            else gelisimselDonem = 'Okula Hazırlık Dönemi (60+ ay)';
+
+            // Hata/Süre oranı yorumu
+            let performansEgilimi = '';
+            const sure = score.sure || 0;
+            const hata = score.hata_sayisi || 0;
+            if (hata <= 2 && sure > 60) performansEgilimi = 'Titiz ve Kontrollü';
+            else if (hata > 3 && sure < 30) performansEgilimi = 'Hızlı Karar Veren (Dürtüsel eğilim)';
+            else if (hata <= 2 && sure <= 60) performansEgilimi = 'Dengeli ve Başarılı';
+            else performansEgilimi = 'Gelişim Sürecinde';
+
             let prompt = '';
 
-            if (score.oyun_turu === 'ceviz_macera') {
-                const aiContext = score.yapay_zeka_yorumu || 'Bilinmiyor';
-                const ageMonths = score.ogrenci_yasi;
-
+            if (score.oyun_turu === 'ceviz_macera' || score.oyun_turu === 'aile-sepeti') {
+                // Sosyal-Duygusal oyunlar için özel prompt
+                const secilenYol = score.yapay_zeka_yorumu || 'Bilinmiyor';
                 prompt = `
-                    Sen uzman bir Gelişim Psikoloğusun. Aşağıdaki verileri kullanarak ebeveyne özel bir analiz yazacaksın.
+Sen, Türkiye Yüzyılı Maarif Modeli'ne tamamen hakim, Piaget ve Vygotsky'nin gelişim kuramlarını dijital öğrenme analitiği ile birleştiren uzman bir Okul Öncesi Eğitim Danışmanısın.
 
-                    GİRDİLER:
-                    - Çocuk Adı: ${score.ogrenci_adi}
-                    - Çocuk Yaşı: ${ageMonths} Ay
-                    - Seçilen Yol: ${aiContext} (Örn: 'Sosyal-Cozum-Isbirligi', 'Fiziksel-Cozum-Destek', 'Bilissel-Cozum-Yaraticilik')
+## VERİLER:
+- Öğrenci Adı: ${score.ogrenci_adi}
+- Yaş: ${yasAy} Ay (${gelisimselDonem})
+- Oyun: ${oyunAdiTR}
+- Seçilen Yol/Tercih: ${secilenYol}
+- Süre: ${sure} saniye
 
-                    GÖREVİN:
-                    Çocuğun yaptığı seçimi, YAŞINA GÖRE (Gelişimsel Dönem Özellikleri bağlamında) yorumla.
-                    Ebeveyne doğrudan, sıcak ve çocuğun gelişim seviyesine uygun bir dille hitap et.
-                    Maili samimi, profesyonel ve cesaretlendirici bir dille yaz.
+## MAARİF MODELİ REFERANSI:
+- Alan: ${oyunBilgisi.alan}
+- Süreç: ${oyunBilgisi.surec}
+- Öğrenme Çıktısı: ${oyunBilgisi.cikti} (${oyunBilgisi.ciktiAciklama})
+- Değer: ${oyunBilgisi.deger || 'Belirtilmemiş'}
+
+## ÇIKTI FORMATI (Mutlaka bu yapıda yanıt ver):
+
+**📚 AKADEMİK ANALİZ (Öğretmen İçin)**
+- Belirlenen Maarif Modeli Öğrenme Çıktısı: ${oyunBilgisi.cikti}
+- Çocuğun "Bütünleşik Beceri" düzeyini (${oyunBilgisi.surec}) veriyle açıkla.
+- "Erdem-Değer-Eylem" bağlamındaki gözlemi ekle.
+
+**💝 VELİ GERİ BİLDİRİMİ (Sıcak ve Destekleyici)**
+- Çocuğun çabasını takdir ederek başla.
+- Seçimlerini pedagojik bir başarı hikayesine dönüştür.
+- Evde yapılabilecek, Maarif Modeli'ne uygun bir "Eylem" önerisinde bulun.
+
+Yanıtının sonuna "ChildhoodTech Ekibi" imzasını ekle.
                 `;
             } else {
-                let oyunAdiTR = '';
-                if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
-                else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
-                else if (score.oyun_turu === 'eksik-sayi-bul') oyunAdiTR = 'Eksik Sayiyi Bul';
-                else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
-                else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
-                else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
-                else if (score.oyun_turu === 'rakam-yazma') oyunAdiTR = 'Rakam Yazma';
-                else oyunAdiTR = score.oyun_turu;
-
+                // Bilişsel oyunlar için standart prompt
                 prompt = `
-                    Sen bir okul öncesi eğitim uzmanısın. Aşağıdaki verilere göre çocuğun gelişimini değerlendir.
-                    
-                    Öğrenci: ${score.ogrenci_adi} (${score.ogrenci_yasi} yaşında)
-                    Oyun: ${oyunAdiTR}
-                    
-                    Performans Verileri:
-                    - Süre: ${score.sure || '?'} saniye
-                    - Hamle: ${score.hamle_sayisi}
-                    - Hata: ${score.hata_sayisi}
-                    
-                    Lütfen çocuğun dikkat, hafıza veya mantık becerileri hakkında yapıcı, motive edici ve ebeveyne yönelik kısa bir yorum yaz.
+Sen, Türkiye Yüzyılı Maarif Modeli'ne tamamen hakim, Piaget ve Vygotsky'nin gelişim kuramlarını dijital öğrenme analitiği ile birleştiren uzman bir Okul Öncesi Eğitim Danışmanısın.
+
+## VERİLER:
+- Öğrenci Adı: ${score.ogrenci_adi}
+- Yaş: ${yasAy} Ay (${gelisimselDonem})
+- Oyun: ${oyunAdiTR}
+- Zorluk Seviyesi: ${score.zorluk_seviyesi || 1}
+- Süre: ${sure} saniye
+- Hamle Sayısı: ${score.hamle_sayisi}
+- Hata Sayısı: ${hata}
+- Performans Eğilimi: ${performansEgilimi}
+
+## MAARİF MODELİ REFERANSI:
+- Alan: ${oyunBilgisi.alan}
+- Süreç: ${oyunBilgisi.surec}
+- Öğrenme Çıktısı: ${oyunBilgisi.cikti} (${oyunBilgisi.ciktiAciklama})
+
+## DEĞERLENDİRME KURALLARI:
+1. Tüm sayı oyunları 1-5 aralığındadır. Bu aralıktaki başarıyı MAB.1 (Ritmik/Algısal sayma) kapsamında "Sayı Duyusunun Temeli" olarak da yorumla.
+2. Hata az + Süre uzun = "Titiz ve Kontrollü" eğilim.
+3. Süre kısa + Hata çok = "Dürtüsel/Hızlı Karar Veren" eğilim.
+4. ${yasAy < 48 ? '36-48 ay arası çocuklarda somut işlemler henüz tam gelişmemiştir, bu nedenle hataları gelişimsel sürecin doğal bir parçası olarak değerlendir.' : '48-60 ay arası çocuklarda soyut düşünme becerileri gelişmektedir, performansı bu bağlamda yorumla.'}
+
+## ÇIKTI FORMATI (Mutlaka bu yapıda yanıt ver):
+
+**📚 AKADEMİK ANALİZ (Öğretmen İçin)**
+- Belirlenen Maarif Modeli Öğrenme Çıktısı: ${oyunBilgisi.cikti}
+- Çocuğun "${oyunBilgisi.surec}" sürecindeki performansını veriyle açıkla.
+- Gelişimsel dönem (${gelisimselDonem}) bağlamında değerlendir.
+
+**💝 VELİ GERİ BİLDİRİMİ (Sıcak ve Destekleyici)**
+- Çocuğun çabasını takdir ederek başla.
+- Sayısal verileri (${score.hamle_sayisi} hamle, ${hata} hata) pedagojik bir başarı hikayesine dönüştür.
+- Evde yapılabilecek, Maarif Modeli'ne uygun bir "Eylem" önerisinde bulun (örn: günlük hayatta sayma aktiviteleri, örüntü oyunları vb.).
+
+Yanıtının sonuna "ChildhoodTech Ekibi" imzasını ekle.
                 `;
             }
 
