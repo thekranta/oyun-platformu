@@ -76,6 +76,70 @@ const SONGS: Song[] = [
         coverColor: '#EC407A', // Pembe
         icon: 'home',
     },
+    {
+        id: '8',
+        title: 'Beklerim Sakince',
+        artist: 'Sabır',
+        source: require('@/assets/sounds/songs/BEKLERİM SAKİNCE.mp3'),
+        coverColor: '#78909C', // Gri Mavi
+        icon: 'hourglass',
+    },
+    {
+        id: '9',
+        title: 'Benim Özel Alanım',
+        artist: 'Mahremiyet',
+        source: require('@/assets/sounds/songs/BENİM ÖZEL ALANIM.mp3'),
+        coverColor: '#BA68C8', // Mor
+        icon: 'lock-closed',
+    },
+    {
+        id: '10',
+        title: 'Güzeli Görürüm',
+        artist: 'Pozitif Bakış',
+        source: require('@/assets/sounds/songs/GÜZELİ GÖRÜRÜM.mp3'),
+        coverColor: '#26A69A', // Yeşil
+        icon: 'eye',
+    },
+    {
+        id: '11',
+        title: 'Kalbim Duyarlı',
+        artist: 'Duyarlılık',
+        source: require('@/assets/sounds/songs/KALBİM DUYARLI.mp3'),
+        coverColor: '#FF7043', // Turuncu
+        icon: 'heart-circle',
+    },
+    {
+        id: '12',
+        title: 'Sadece Yaptım',
+        artist: 'Alçakgönüllülük',
+        source: require('@/assets/sounds/songs/SADECE YAPTIM.mp3'),
+        coverColor: '#5C6BC0', // İndigo
+        icon: 'star',
+    },
+    {
+        id: '13',
+        title: 'Seçerim, Söylerim',
+        artist: 'İfade Özgürlüğü',
+        source: require('@/assets/sounds/songs/SEÇERİM, SÖYLERİM.mp3'),
+        coverColor: '#FFA726', // Sarı Turuncu
+        icon: 'mic',
+    },
+    {
+        id: '14',
+        title: 'Yumuşacık Merhamet',
+        artist: 'Merhamet',
+        source: require('@/assets/sounds/songs/YUMUŞACIK MERHAMET.mp3'),
+        coverColor: '#F06292', // Açık Pembe
+        icon: 'rose',
+    },
+    {
+        id: '15',
+        title: 'Çıtır Çıtır Dostluk',
+        artist: 'Dostluk',
+        source: require('@/assets/sounds/songs/ÇITIR ÇITIR DOSTLUK.mp3'),
+        coverColor: '#8D6E63', // Kahverengi
+        icon: 'people-circle',
+    },
 ];
 
 interface MuzikCalarProps {

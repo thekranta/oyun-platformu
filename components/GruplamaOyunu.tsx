@@ -14,7 +14,7 @@ const GRUPLAMA_SORULARI = [
 ];
 
 interface GruplamaOyunuProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
     onExit?: () => void;
 }
 
@@ -73,7 +73,10 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                 setTimeout(() => {
                     const bitisZamani = new Date();
                     const sure = Math.round((bitisZamani.getTime() - baslangicZamani.getTime()) / 1000);
-                    onGameEnd('gruplama', sure, yeniHamle, hataSayisi);
+                    onGameEnd('gruplama', sure, yeniHamle, hataSayisi, undefined, {
+                        zorlukSeviyesi: 1,
+                        kazanimOdagi: 'Kategorilere Ayırma ve Sınıflandırma',
+                    });
                 }, 2000);
             }
         } else {

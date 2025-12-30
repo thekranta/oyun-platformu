@@ -20,6 +20,9 @@ interface Score {
     sure?: number;
     email?: string;
     cizim_verisi?: string;
+    zorluk_seviyesi?: number;
+    kazanim_odagi?: string;
+    deneme_no?: number;
 }
 
 interface StudentGroup {

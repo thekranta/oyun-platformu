@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    Dimensions,
-    Platform,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  Dimensions,
+  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
@@ -90,9 +90,9 @@ let isSpeaking = false;
 const speakTeacher = async (text: string) => {
   if (Platform.OS !== 'web') return;
   if (isSpeaking) return;
-  
+
   isSpeaking = true;
-  
+
   // Mevcut sesi durdur
   if (currentAudio) {
     currentAudio.pause();
@@ -101,7 +101,7 @@ const speakTeacher = async (text: string) => {
 
   // Önbellekte var mı?
   let audioUrl = audioCache.get(text);
-  
+
   if (!audioUrl) {
     try {
       // Gemini TTS dene
@@ -110,7 +110,7 @@ const speakTeacher = async (text: string) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voiceName: 'Kore' }),
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         if (data.audioContent) {
@@ -135,14 +135,14 @@ const speakTeacher = async (text: string) => {
       console.log('Audio play error');
     }
   }
-  
+
   // Fallback: Web Speech
   fallbackSpeak(text);
 };
 
 const fallbackSpeak = (text: string) => {
   if (!('speechSynthesis' in window)) { isSpeaking = false; return; }
-  
+
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'tr-TR';
@@ -150,11 +150,11 @@ const fallbackSpeak = (text: string) => {
   u.rate = 0.85;
   u.onend = () => { isSpeaking = false; };
   u.onerror = () => { isSpeaking = false; };
-  
+
   const voices = window.speechSynthesis.getVoices();
   const trVoice = voices.find(v => v.lang.includes('tr'));
   if (trVoice) u.voice = trVoice;
-  
+
   window.speechSynthesis.speak(u);
 };
 
@@ -194,12 +194,12 @@ let bgMusic: HTMLAudioElement | null = null;
 const startBgMusic = () => {
   if (Platform.OS !== 'web') return;
   if (bgMusic) return;
-  
+
   // Ücretsiz çocuk müziği URL'si (royalty-free)
   bgMusic = new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0ef91aed6.mp3');
   bgMusic.loop = true;
   bgMusic.volume = 0.3;
-  bgMusic.play().catch(() => {});
+  bgMusic.play().catch(() => { });
 };
 
 const stopBgMusic = () => {
@@ -218,7 +218,7 @@ const setBgMusicVolume = (on: boolean) => {
 
 // ============== COMPONENT ==============
 interface Props {
-  onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
+  onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
   onExit?: () => void;
 }
 
@@ -295,7 +295,10 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
   const nextLevel = useCallback(() => {
     if (levelIdx >= LEVELS.length - 1) {
       const time = Math.round((Date.now() - startTime.getTime()) / 1000);
-      onGameEnd('Kodlama Oyunu', time, moves, errors);
+      onGameEnd('Kodlama Oyunu', time, moves, errors, undefined, {
+        zorlukSeviyesi: levelIdx + 1,
+        kazanimOdagi: 'Algoritmik Düşünme ve Problem Çözme',
+      });
       return;
     }
     const next = LEVELS[levelIdx + 1];
@@ -465,7 +468,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
         {/* Top */}
         <View style={st.top}>
           <TouchableOpacity style={st.exitBtn} onPress={() => { stopBgMusic(); onExit?.(); }}><Text style={st.exitTxt}>✕</Text></TouchableOpacity>
-          
+
           <View style={st.levels}>
             {LEVELS.map((l, i) => (
               <TouchableOpacity key={l.id} style={[st.lvlBtn, levelIdx === i && mode === GameMode.PLAY && st.lvlActive, i > levelIdx && st.lvlLock]} onPress={() => i <= levelIdx && selectLvl(l, i)} disabled={i > levelIdx}>
@@ -559,7 +562,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
 // ============== STYLES ==============
 const st = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingTop: 30, paddingBottom: 10, paddingHorizontal: 6 },
-  
+
   // Top
   top: { flexDirection: 'row', alignItems: 'center', width: '100%', justifyContent: 'space-between' },
   exitBtn: { width: BTN_SIZE, height: BTN_SIZE, borderRadius: BTN_SIZE / 2, backgroundColor: '#EF5350', justifyContent: 'center', alignItems: 'center' },

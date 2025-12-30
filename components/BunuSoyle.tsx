@@ -17,7 +17,7 @@ const STAGES = [
 ];
 
 interface BunuSoyleProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
     onExit: () => void;
 }
 
@@ -191,7 +191,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
             autoStopTimer.current = setTimeout(() => {
                 stopRecording(true);
-            }, 3000);
+            }, 3000) as unknown as NodeJS.Timeout;
 
         } catch (err) {
             console.error('❌ Kayıt başlatılamadı:', err);
@@ -392,7 +392,10 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         } else {
             const duration = Math.floor((Date.now() - startTime) / 1000);
             const finalTranscriptString = allTranscripts.join(", ");
-            onGameEnd('bunu-soyle', duration, moves, errors, finalTranscriptString);
+            onGameEnd('bunu-soyle', duration, moves, errors, finalTranscriptString, {
+                zorlukSeviyesi: currentStage + 1,
+                kazanimOdagi: 'Dil Gelişimi ve Sözel İfade',
+            });
         }
     };
 

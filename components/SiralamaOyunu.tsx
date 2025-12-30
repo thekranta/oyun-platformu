@@ -11,7 +11,7 @@ const ITEM_SIZE = width > 600 ? 100 : 60; // Larger size for tablets/web
 const FONT_SIZE = width > 600 ? 40 : 24;
 
 interface SiralamaOyunuProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
     onExit?: () => void;
 }
 
@@ -77,7 +77,10 @@ export default function SiralamaOyunu({ onGameEnd, onExit }: SiralamaOyunuProps)
                     setTimeout(() => {
                         const now = new Date();
                         const totalDuration = startTime ? Math.round((now.getTime() - startTime.getTime()) / 1000) : 0;
-                        onGameEnd('siralama', totalDuration, totalHamle + 1, totalHata);
+                        onGameEnd('siralama', totalDuration, totalHamle + 1, totalHata, undefined, {
+                            zorlukSeviyesi: currentRound,
+                            kazanimOdagi: 'Sayı Sıralaması ve Ardışıklık',
+                        });
                     }, 2000);
                 }
             }

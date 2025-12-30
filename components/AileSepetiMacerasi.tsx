@@ -294,6 +294,9 @@ Yorumun en sonuna "ChildhoodTech Ekibi" yazarak bitir.`;
             sure: durationSeconds,
             yapay_zeka_yorumu: aiComment || `Seçilen yol: ${pathString}`,
             email: userEmail,
+            zorluk_seviyesi: null,
+            kazanim_odagi: 'Sosyal-Duygusal Gelişim',
+            deneme_no: null,
         };
 
         try {

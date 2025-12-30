@@ -5,7 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSound } from './SoundContext';
 
 interface DiziyiTamamlaProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
     onLogout: () => void;
 }
 
@@ -161,7 +161,10 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
             scaleAnim.setValue(1);
         } else {
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
-            onGameEnd('diziyi-tamamla', totalTime, totalMoves, totalErrors);
+            onGameEnd('diziyi-tamamla', totalTime, totalMoves, totalErrors, undefined, {
+                zorlukSeviyesi: currentStage + 1,
+                kazanimOdagi: 'Örüntü Algısı ve Mantıksal Düşünme',
+            });
         }
     };
 

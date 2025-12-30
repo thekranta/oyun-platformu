@@ -15,7 +15,7 @@ import {
 import { useSound } from './SoundContext';
 
 interface YapbozOyunuProps {
-    onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number) => void;
+    onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
     onExit: () => void;
 }
 
@@ -232,7 +232,10 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 setIsComplete(true);
                 setTimeout(() => {
                     const dur = Math.floor((Date.now() - startTime) / 1000);
-                    onGameEnd('Yapboz Oyunu', dur, moves, 0);
+                    onGameEnd('Yapboz Oyunu', dur, moves, 0, undefined, {
+                        zorlukSeviyesi: 1,
+                        kazanimOdagi: 'Uzamsal Algı ve Problem Çözme',
+                    });
                 }, 1500);
             }
             return next;

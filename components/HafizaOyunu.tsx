@@ -38,7 +38,7 @@ const AŞAMA_AYARLARI = [
 ];
 
 interface HafizaOyunuProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string }) => void;
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
     onExit?: () => void;
 }
 
@@ -267,7 +267,10 @@ export default function HafizaOyunu({ onGameEnd, onExit }: HafizaOyunuProps) {
             startStage(currentStageIndex + 1);
         } else {
             // Game Over
-            onGameEnd('hafiza', cumulativeTime, totalMoves, totalErrors);
+            onGameEnd('hafiza', cumulativeTime, totalMoves, totalErrors, undefined, {
+                zorlukSeviyesi: currentStageIndex + 1,
+                kazanimOdagi: 'Görsel Bellek ve Eşleştirme',
+            });
         }
     };
 

@@ -284,6 +284,9 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
             sure: durationSeconds,
             yapay_zeka_yorumu: analysisTag,
             email: userEmail,
+            zorluk_seviyesi: null,
+            kazanim_odagi: 'Sosyal-Duygusal Gelişim',
+            deneme_no: null,
         };
 
         try {

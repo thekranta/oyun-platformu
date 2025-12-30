@@ -10,6 +10,8 @@ interface Props {
         sure: number,
         finalHamle: number,
         finalHata: number,
+        algilananKelime?: string,
+        extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string },
     ) => void;
     onExit?: () => void;
 }
@@ -156,7 +158,10 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                         setStage(prev => prev + 1);
                     } else {
                         const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-                        onGameEnd('sayilari-birlestir', duration, moves + 1, errors);
+                        onGameEnd('sayilari-birlestir', duration, moves + 1, errors, undefined, {
+                            zorlukSeviyesi: stage,
+                            kazanimOdagi: 'Sayı Sırası ve El-Göz Koordinasyonu',
+                        });
                     }
                 }, 1500);
             } else {

@@ -13,7 +13,7 @@ interface Props {
         finalHamle: number,
         finalHata: number,
         algilananKelime?: string,
-        extraData?: { cizimVerisi?: string },
+        extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string },
     ) => void;
     onExit?: () => void;
 }
@@ -203,7 +203,10 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                 resetForNextNumber(currentNumber + 1);
             } else {
                 const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-                onGameEnd('rakam-yazma', duration, 5, 0);
+                onGameEnd('rakam-yazma', duration, 5, 0, undefined, {
+                    zorlukSeviyesi: currentNumber,
+                    kazanimOdagi: 'El-Göz Koordinasyonu ve Yazı Becerileri',
+                });
             }
         });
     }, [currentNumber, onGameEnd, resetForNextNumber, successAnim]);

@@ -11,7 +11,7 @@ interface EksikSayiBulProps {
     finalHamle: number,
     finalHata: number,
     algilananKelime?: string,
-    extraData?: { cizimVerisi?: string },
+    extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string },
   ) => void;
   onExit?: () => void;
 }
@@ -138,7 +138,10 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
       requestAnimationFrame(measureDropZone);
     } else {
       const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-      onGameEnd('eksik-sayi-bul', duration, movesRef.current, errorsRef.current);
+      onGameEnd('eksik-sayi-bul', duration, movesRef.current, errorsRef.current, undefined, {
+        zorlukSeviyesi: currentStage + 1,
+        kazanimOdagi: 'Sayı Dizisi Tamamlama',
+      });
     }
   };
 

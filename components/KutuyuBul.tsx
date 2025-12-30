@@ -10,6 +10,8 @@ interface Props {
         sure: number,
         finalHamle: number,
         finalHata: number,
+        algilananKelime?: string,
+        extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string },
     ) => void;
     onExit?: () => void;
 }
@@ -168,7 +170,10 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                     setStage(prev => prev + 1);
                 } else {
                     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-                    onGameEnd('kutuyu-bul', duration, moves + 1, errors);
+                    onGameEnd('kutuyu-bul', duration, moves + 1, errors, undefined, {
+                        zorlukSeviyesi: stage,
+                        kazanimOdagi: 'Görsel Arama ve Dikkat',
+                    });
                 }
             }, 1500);
         } else {

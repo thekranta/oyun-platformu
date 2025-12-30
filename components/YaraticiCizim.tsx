@@ -17,7 +17,7 @@ interface Props {
     finalHamle: number,
     finalHata: number,
     algilananKelime?: string,
-    extraData?: { cizimVerisi?: string; cizimResimBase64?: string; cizimResimFormat?: 'png' | 'jpeg' },
+    extraData?: { cizimVerisi?: string; cizimResimBase64?: string; cizimResimFormat?: 'png' | 'jpeg'; zorlukSeviyesi?: number; kazanimOdagi?: string },
   ) => void;
   onExit?: () => void;
 }
@@ -270,6 +270,8 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
       cizimVerisi: serialized,
       cizimResimBase64,
       cizimResimFormat: 'png',
+      zorlukSeviyesi: 1,
+      kazanimOdagi: 'Yaratıcılık ve Görsel İfade',
     });
     setSaved(true);
   };
