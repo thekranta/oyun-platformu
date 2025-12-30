@@ -40,6 +40,8 @@ type DrawingPayload = {
     imageUrl?: string;
     imagePath?: string;
     imageFormat?: string;
+    cizimResimBase64?: string;
+    cizimResimFormat?: string;
 };
 
 export default function AdminPanel() {
