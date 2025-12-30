@@ -313,11 +313,16 @@ export default function AdminPanel() {
         }
     };
 
-    const DrawingPreview = ({ data }: { data: string }) => {
+    const DrawingPreview = ({ data }: { data: string | any }) => {
         const parsed = useMemo<DrawingPayload | null>(() => {
             try {
-                const obj = JSON.parse(data);
-                if (obj?.strokes || obj?.imageUrl) return obj as DrawingPayload;
+                if (typeof data === 'object' && data !== null) {
+                    return data as DrawingPayload;
+                }
+                if (typeof data === 'string') {
+                    const obj = JSON.parse(data);
+                    if (obj?.strokes || obj?.imageUrl) return obj as DrawingPayload;
+                }
                 return null;
             } catch {
                 return null;
