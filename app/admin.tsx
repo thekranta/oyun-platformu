@@ -232,74 +232,89 @@ export default function AdminPanel() {
                 // Sosyal-Duygusal oyunlar için özel prompt
                 const secilenYol = score.yapay_zeka_yorumu || 'Bilinmiyor';
                 prompt = `
-Sen, Türkiye Yüzyılı Maarif Modeli'ne tamamen hakim, Piaget ve Vygotsky'nin gelişim kuramlarını dijital öğrenme analitiği ile birleştiren uzman bir Okul Öncesi Eğitim Danışmanısın.
+Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
 
 ## VERİLER:
-- Öğrenci Adı: ${score.ogrenci_adi}
-- Yaş: ${yasAy} Ay (${gelisimselDonem})
+- Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
 - Oyun: ${oyunAdiTR}
-- Seçilen Yol/Tercih: ${secilenYol}
+- Seçilen Yol: ${secilenYol}
 - Süre: ${sure} saniye
 
 ## MAARİF MODELİ REFERANSI:
-- Alan: ${oyunBilgisi.alan}
-- Süreç: ${oyunBilgisi.surec}
-- Öğrenme Çıktısı: ${oyunBilgisi.cikti} (${oyunBilgisi.ciktiAciklama})
+- Alan: ${oyunBilgisi.alan} | Süreç: ${oyunBilgisi.surec}
+- Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
 - Değer: ${oyunBilgisi.deger || 'Belirtilmemiş'}
 
-## ÇIKTI FORMATI (Mutlaka bu yapıda yanıt ver):
+## ÇIKTI KURALLARI:
+1. ASLA giriş cümlesi kullanma (ör: "Harika bir senaryo", "İşte rapor").
+2. Doğrudan rapor içeriğiyle başla.
+3. Aşağıdaki formatı BİREBİR uygula:
 
-**📚 AKADEMİK ANALİZ (Öğretmen İçin)**
-- Belirlenen Maarif Modeli Öğrenme Çıktısı: ${oyunBilgisi.cikti}
-- Çocuğun "Bütünleşik Beceri" düzeyini (${oyunBilgisi.surec}) veriyle açıkla.
-- "Erdem-Değer-Eylem" bağlamındaki gözlemi ekle.
+---
 
-**💝 VELİ GERİ BİLDİRİMİ (Sıcak ve Destekleyici)**
-- Çocuğun çabasını takdir ederek başla.
-- Seçimlerini pedagojik bir başarı hikayesine dönüştür.
-- Evde yapılabilecek, Maarif Modeli'ne uygun bir "Eylem" önerisinde bulun.
+**MAARİF MODELİ PEDAGOJİK ANALİZ**
 
-Yanıtının sonuna "ChildhoodTech Ekibi" imzasını ekle.
+**Öğrenme Çıktısı:** ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
+
+**Süreç Analizi:** [Çocuğun "${oyunBilgisi.surec}" sürecindeki performansını veriyle açıkla]
+
+**Gelişimsel Değerlendirme:** [${gelisimselDonem} bağlamında Erdem-Değer-Eylem ilişkisini yorumla]
+
+---
+
+**VELİ BİLGİLENDİRME NOTU**
+
+Sayın Veli,
+
+[${score.ogrenci_adi}'nin oyundaki seçimlerini samimi ama profesyonel bir dille açıkla. Evde yapılabilecek bir etkinlik öner.]
+
+Saygılarımızla,
+ChildhoodTech Ekibi
                 `;
             } else {
                 // Bilişsel oyunlar için standart prompt
                 prompt = `
-Sen, Türkiye Yüzyılı Maarif Modeli'ne tamamen hakim, Piaget ve Vygotsky'nin gelişim kuramlarını dijital öğrenme analitiği ile birleştiren uzman bir Okul Öncesi Eğitim Danışmanısın.
+Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
 
 ## VERİLER:
-- Öğrenci Adı: ${score.ogrenci_adi}
-- Yaş: ${yasAy} Ay (${gelisimselDonem})
-- Oyun: ${oyunAdiTR}
-- Zorluk Seviyesi: ${score.zorluk_seviyesi || 1}
-- Süre: ${sure} saniye
-- Hamle Sayısı: ${score.hamle_sayisi}
-- Hata Sayısı: ${hata}
+- Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
+- Oyun: ${oyunAdiTR} | Zorluk: ${score.zorluk_seviyesi || 1}
+- Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
 
 ## MAARİF MODELİ REFERANSI:
-- Alan: ${oyunBilgisi.alan}
-- Süreç: ${oyunBilgisi.surec}
-- Öğrenme Çıktısı: ${oyunBilgisi.cikti} (${oyunBilgisi.ciktiAciklama})
+- Alan: ${oyunBilgisi.alan} | Süreç: ${oyunBilgisi.surec}
+- Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
 
 ## DEĞERLENDİRME KURALLARI:
-1. Tüm sayı oyunları 1-5 aralığındadır. Bu aralıktaki başarıyı MAB.1 (Ritmik/Algısal sayma) kapsamında "Sayı Duyusunun Temeli" olarak da yorumla.
-2. Hata az + Süre uzun = "Titiz ve Kontrollü" eğilim.
-3. Süre kısa + Hata çok = "Dürtüsel/Hızlı Karar Veren" eğilim.
-4. ${yasAy < 48 ? '36-48 ay arası çocuklarda somut işlemler henüz tam gelişmemiştir, bu nedenle hataları gelişimsel sürecin doğal bir parçası olarak değerlendir.' : '48-60 ay arası çocuklarda soyut düşünme becerileri gelişmektedir, performansı bu bağlamda yorumla.'}
+- Sayı oyunları 1-5 aralığındadır (MAB.1 Sayı Duyusu).
+- ${yasAy < 48 ? '36-48 ay: somut işlemler gelişim aşamasında, hatalar doğaldır.' : '48-60 ay: soyut düşünme becerileri gelişmektedir.'}
 
-## ÇIKTI FORMATI (Mutlaka bu yapıda yanıt ver):
+## ÇIKTI KURALLARI:
+1. ASLA giriş cümlesi kullanma (ör: "Harika", "İşte rapor").
+2. Doğrudan rapor içeriğiyle başla.
+3. Aşağıdaki formatı BİREBİR uygula:
 
-**📚 AKADEMİK ANALİZ (Öğretmen İçin)**
-- Belirlenen Maarif Modeli Öğrenme Çıktısı: ${oyunBilgisi.cikti}
-- Çocuğun "${oyunBilgisi.surec}" sürecindeki performansını veriyle açıkla.
-- Gelişimsel dönem (${gelisimselDonem}) bağlamında değerlendir.
+---
 
-**💝 VELİ GERİ BİLDİRİMİ (Sıcak ve Destekleyici)**
-- Çocuğun çabasını takdir ederek başla.
-- Sayısal verileri (${score.hamle_sayisi} hamle, ${hata} hata) pedagojik bir başarı hikayesine dönüştür.
-- Evde yapılabilecek, Maarif Modeli'ne uygun bir "Eylem" önerisinde bulun (örn: günlük hayatta sayma aktiviteleri, örüntü oyunları vb.).
+**MAARİF MODELİ PEDAGOJİK ANALİZ**
 
-Yanıtının sonuna "ChildhoodTech Ekibi" imzasını ekle.
+**Öğrenme Çıktısı:** ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
+
+**Süreç Analizi:** [Çocuğun "${oyunBilgisi.surec}" sürecindeki performansını ${score.hamle_sayisi} hamle ve ${hata} hata verisiyle açıkla]
+
+**Gelişimsel Değerlendirme:** [${gelisimselDonem} ve performans eğilimi (${performansEgilimi}) bağlamında değerlendir]
+
+---
+
+**VELİ BİLGİLENDİRME NOTU**
+
+Sayın Veli,
+
+[${score.ogrenci_adi}'nin performansını samimi ama profesyonel bir dille açıkla. Evde yapılabilecek Maarif Modeli'ne uygun bir etkinlik öner.]
+
+Saygılarımızla,
+ChildhoodTech Ekibi
                 `;
             }
 
