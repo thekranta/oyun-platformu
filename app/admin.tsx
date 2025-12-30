@@ -264,7 +264,7 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 
 **VELİ BİLGİLENDİRME NOTU**
 
-Sayın Veli,
+Değerli Velimiz,
 
 [${score.ogrenci_adi}'nin oyundaki seçimlerini samimi ama profesyonel bir dille açıkla. Evde yapılabilecek bir etkinlik öner.]
 
@@ -309,7 +309,7 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 
 **VELİ BİLGİLENDİRME NOTU**
 
-Sayın Veli,
+Değerli Velimiz,
 
 [${score.ogrenci_adi}'nin performansını samimi ama profesyonel bir dille açıkla. Evde yapılabilecek Maarif Modeli'ne uygun bir etkinlik öner.]
 
