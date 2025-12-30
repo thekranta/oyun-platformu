@@ -23,6 +23,9 @@ interface Score {
     zorluk_seviyesi?: number;
     kazanim_odagi?: string;
     deneme_no?: number;
+    algilanan_kelime?: string;
+    uzman_onayi?: boolean;
+    onaylayan_uzman?: string;
 }
 
 interface StudentGroup {
@@ -149,6 +152,47 @@ export default function AdminPanel() {
         setStudentGroups(groupArray);
     };
 
+    // === 4. UZMAN ONAY SİSTEMİ ===
+    const approveReport = async (score: Score) => {
+        setProcessingId(score.id);
+        try {
+            const response = await fetch(
+                `${SUPABASE_URL}/rest/v1/oyun_skorlari?id=eq.${score.id}`,
+                {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY || '',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal',
+                    },
+                    body: JSON.stringify({
+                        uzman_onayi: true,
+                        onaylayan_uzman: 'Admin'
+                    }),
+                }
+            );
+
+            if (response.ok) {
+                // Lokal state güncelle
+                setStudentGroups(prev => prev.map(group => ({
+                    ...group,
+                    scores: group.scores.map(s =>
+                        s.id === score.id ? { ...s, uzman_onayi: true, onaylayan_uzman: 'Admin' } : s
+                    )
+                })));
+                alert('✅ Rapor uzman tarafından onaylandı!');
+            } else {
+                alert('❌ Onay kaydedilemedi.');
+            }
+        } catch (error) {
+            console.error('Onay hatası:', error);
+            alert('Bir hata oluştu.');
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
     const analyzeGame = async (score: Score) => {
         if (score.oyun_turu === 'yaratici-cizim') {
             alert('Yaratıcı çizim için yapay zeka yorumu oluşturulmaz.');
@@ -226,7 +270,68 @@ export default function AdminPanel() {
             else if (hata <= 2 && sure <= 60) performansEgilimi = 'Dengeli ve Başarılı';
             else performansEgilimi = 'Gelişim Sürecinde';
 
+            // === 1. GELİŞİM TAKİBİ: Son 3 skoru çek ===
+            let gelisimGecmisi = '';
+            try {
+                const oncekiSkorlarResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/oyun_skorlari?select=created_at,sure,hata_sayisi&ogrenci_adi=eq.${encodeURIComponent(score.ogrenci_adi)}&oyun_turu=eq.${score.oyun_turu}&id=neq.${score.id}&order=created_at.desc&limit=3`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY || '',
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        },
+                    }
+                );
+                const oncekiSkorlar = await oncekiSkorlarResponse.json();
+
+                if (oncekiSkorlar && oncekiSkorlar.length > 0) {
+                    gelisimGecmisi = oncekiSkorlar.map((s: { created_at: string; sure?: number; hata_sayisi?: number }) => {
+                        const tarih = new Date(s.created_at);
+                        const gun = Math.floor((Date.now() - tarih.getTime()) / (1000 * 60 * 60 * 24));
+                        return `- ${gun} gün önce: ${s.sure || '?'} sn, ${s.hata_sayisi || 0} hata`;
+                    }).join('\n');
+                }
+            } catch (e) { console.log('Gelişim geçmişi alınamadı:', e); }
+
+            // === 2. SCAFFOLDING ANALİZİ ===
+            const zorluk = score.zorluk_seviyesi || 1;
+            let scaffoldingNotu = '';
+            if (zorluk >= 4) {
+                scaffoldingNotu = `
+## İSKELE KURMA (SCAFFOLDING) ANALİZİ:
+- Zorluk Seviyesi: ${zorluk}/5 (Yüksek)
+- Maarif Modeli "Bireysel Farklılıklara Uygunluk" ilkesine göre değerlendir.
+- Eğer zorlanma belirtisi varsa, veliye şu önerileri sun:
+  * Materyalin somutlaştırılarak sunulması (fiziksel objeler kullanma)
+  * Basitleştirilmiş iskele kurma (adım adım yönlendirme)
+  * Görsel destekleyiciler ekleme`;
+            }
+
+            // === 3. TEKNİK HATA YÖNETİMİ ("Bunu Söyle!" Oyunu) ===
+            let teknikHataNotu = '';
+            if (score.oyun_turu === 'bunu-soyle') {
+                const algilananKelime = score.algilanan_kelime || '';
+                if (!algilananKelime || algilananKelime.trim() === '' || algilananKelime === 'hata') {
+                    teknikHataNotu = `
+## TEKNİK LİMİTASYON NOTU:
+- Algılanan Kelime: Boş veya hatalı
+- ÖNEMLİ: Bu durumu çocuğun başarısızlığı olarak DEĞERLENDİRME!
+- "Dijital ses işleme sınırlılığı" olarak kabul et.
+- Analizi çocuğun "Deneme yapma isteği" ve "Özgüven" eğilimine yönlendir.
+- Veliye: "Çocuğunuz cesurca denedi, teknolojik sınırlılıklar bazen ses algılamayı zorlaştırabilir" mesajı ver.`;
+                }
+            }
+
             let prompt = '';
+
+            // Gelişim geçmişi bölümü
+            const gelisimBolumu = gelisimGecmisi ? `
+## GELİŞİM GEÇMİŞİ (Son Oyunlar):
+${gelisimGecmisi}
+- Bugün: ${sure} sn, ${hata} hata
+
+Gemini olarak bu verileri kıyasla ve "Gelişim Seyri" analizi yap.
+` : '';
 
             if (score.oyun_turu === 'ceviz_macera' || score.oyun_turu === 'aile-sepeti') {
                 // Sosyal-Duygusal oyunlar için özel prompt
@@ -239,7 +344,7 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 - Oyun: ${oyunAdiTR}
 - Seçilen Yol: ${secilenYol}
 - Süre: ${sure} saniye
-
+${gelisimBolumu}
 ## MAARİF MODELİ REFERANSI:
 - Alan: ${oyunBilgisi.alan} | Süreç: ${oyunBilgisi.surec}
 - Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
@@ -259,6 +364,7 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 **Süreç Analizi:** [Çocuğun "${oyunBilgisi.surec}" sürecindeki performansını veriyle açıkla]
 
 **Gelişimsel Değerlendirme:** [${gelisimselDonem} bağlamında Erdem-Değer-Eylem ilişkisini yorumla]
+${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır, ilerleme veya gerileme analizi yap]' : ''}
 
 ---
 
@@ -278,10 +384,10 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 
 ## VERİLER:
 - Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
-- Oyun: ${oyunAdiTR} | Zorluk: ${score.zorluk_seviyesi || 1}
+- Oyun: ${oyunAdiTR} | Zorluk: ${zorluk}
 - Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
-
+${gelisimBolumu}${scaffoldingNotu}${teknikHataNotu}
 ## MAARİF MODELİ REFERANSI:
 - Alan: ${oyunBilgisi.alan} | Süreç: ${oyunBilgisi.surec}
 - Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
@@ -304,6 +410,8 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 **Süreç Analizi:** [Çocuğun "${oyunBilgisi.surec}" sürecindeki performansını ${score.hamle_sayisi} hamle ve ${hata} hata verisiyle açıkla]
 
 **Gelişimsel Değerlendirme:** [${gelisimselDonem} ve performans eğilimi (${performansEgilimi}) bağlamında değerlendir]
+${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır, yüzdelik ilerleme/gerileme analizi yap]' : ''}
+${zorluk >= 4 ? '\n**İskele Kurma Önerisi:** [Yüksek zorluk için somutlaştırma ve scaffolding önerileri]' : ''}
 
 ---
 
@@ -639,6 +747,32 @@ ChildhoodTech Ekibi
                                 return <Text key={index}>{part}</Text>;
                             })}
                         </Text>
+
+                        {/* Uzman Onay Bölümü */}
+                        <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: '#e0e0e0', paddingTop: 10 }}>
+                            {score.uzman_onayi ? (
+                                <View style={{ backgroundColor: '#e8f5e9', padding: 8, borderRadius: 6 }}>
+                                    <Text style={{ color: '#2e7d32', fontSize: 12, fontStyle: 'italic' }}>
+                                        ✅ Bu rapor AI tarafından oluşturulmuş ve alan uzmanı tarafından pedagojik olarak doğrulanmıştır.
+                                    </Text>
+                                    <Text style={{ color: '#558b2f', fontSize: 10, marginTop: 4 }}>
+                                        Onaylayan: {score.onaylayan_uzman || 'Admin'}
+                                    </Text>
+                                </View>
+                            ) : (
+                                <TouchableOpacity
+                                    style={{ backgroundColor: '#ff9800', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, alignSelf: 'flex-start' }}
+                                    onPress={() => approveReport(score)}
+                                    disabled={processingId === score.id}
+                                >
+                                    {processingId === score.id ? (
+                                        <ActivityIndicator size="small" color="white" />
+                                    ) : (
+                                        <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>✅ Uzman Onayı Ver</Text>
+                                    )}
+                                </TouchableOpacity>
+                            )}
+                        </View>
                     </View>
                 )}
             </View>
