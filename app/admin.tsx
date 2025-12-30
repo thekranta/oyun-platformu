@@ -341,42 +341,55 @@ export default function AdminPanel() {
             );
         }
 
-        if (!parsed.strokes) {
-            return <Text style={styles.drawingError}>Çizim yüklenemedi</Text>;
+        if (!parsed.strokes || parsed.strokes.length === 0) {
+            // Eğer resim yoksa ve strokes boşsa, base64 var mı kontrol et
+            if (parsed.cizimResimBase64) {
+                return (
+                    <View style={styles.drawingBox}>
+                        <Image
+                            source={{ uri: `data:image/${parsed.cizimResimFormat || 'png'};base64,${parsed.cizimResimBase64}` }}
+                            style={styles.drawingImage}
+                            resizeMode="contain"
+                        />
+                    </View>
+                );
+            }
+            return <Text style={styles.drawingError}>Çizim verisi eksik</Text>;
         }
+
+        // Strokes varsa, SVG benzeri bir yapıyla çizmeye çalışalım
+        // Veya daha basit, noktaları birleştirin.
+        // Ancak View tabanlı çizim bazen performanslı olmayabilir veya ölçekleme sorunu olabilir.
+        // Şimdilik existing mantığı koruyarak scale faktörünü ve container size'ı kontrol edelim.
 
         const baseW = parsed.size?.width || 320;
         const baseH = parsed.size?.height || 220;
-        const scale = Math.min(1, 160 / baseW);
+        // Ekrana sığdırmak için scale
+        const targetWidth = 200; // Sabit bir genişlik hedefleyelim
+        const scale = Math.min(1, targetWidth / baseW);
         const viewW = baseW * scale;
         const viewH = baseH * scale;
 
         return (
-            <View style={[styles.drawingBox, { width: viewW, height: viewH }]}>
-                {parsed.strokes.flatMap((stroke, si) =>
-                    (stroke.points || []).map((p, pi) => {
-                        const dot = {
-                            x: (p?.x || 0) * scale,
-                            y: (p?.y || 0) * scale,
-                            size: (stroke.size || 4) * scale,
-                        };
-                        return (
+            <View style={[styles.drawingBox, { width: viewW, height: viewH, overflow: 'hidden', backgroundColor: '#f9f9f9', borderWidth: 1, borderColor: '#eee' }]}>
+                {parsed.strokes.map((stroke, si) => (
+                    <View key={`stroke-${si}`} style={{ position: 'absolute', width: '100%', height: '100%' }}>
+                        {stroke.points.map((p, pi) => (
                             <View
                                 key={`${si}-${pi}`}
                                 style={{
                                     position: 'absolute',
-                                    left: dot.x - dot.size / 2,
-                                    top: dot.y - dot.size / 2,
-                                    width: dot.size,
-                                    height: dot.size,
-                                    borderRadius: dot.size / 2,
+                                    left: (p.x * scale), // Merkezlemek yerine doğrudan koordinat
+                                    top: (p.y * scale),
+                                    width: (stroke.size || 4) * scale,
+                                    height: (stroke.size || 4) * scale,
+                                    borderRadius: ((stroke.size || 4) * scale) / 2,
                                     backgroundColor: stroke.color || '#000',
-                                    opacity: 0.9,
                                 }}
                             />
-                        );
-                    })
-                )}
+                        ))}
+                    </View>
+                ))}
             </View>
         );
     };
