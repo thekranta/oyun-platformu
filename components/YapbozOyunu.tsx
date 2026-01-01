@@ -1,10 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
     Image,
-    LayoutChangeEvent,
     PanResponder,
     Platform,
     StyleSheet,
@@ -23,212 +22,79 @@ const GRID_SIZE = 3;
 const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
 const PUZZLE_IMAGE = require('@/assets/images/karpuz.png');
 
-interface DraggablePieceProps {
+// Karıştırma sırası (her parçanın başlangıç pozisyonu)
+const SHUFFLE_ORDER = [4, 7, 2, 8, 5, 0, 1, 6, 3];
+
+interface PieceData {
     id: number;
-    row: number;
-    col: number;
-    puzzleSize: number;
-    pieceSize: number;
-    tileSize: number;
-    gridFrame: { x: number; y: number } | null;
+    row: number; // Hedef satır
+    col: number; // Hedef sütun
     isLocked: boolean;
-    onLock: (id: number) => void;
-    onMove: () => void;
-    screenW: number;
-    screenH: number; // Added screenH for better fallback positioning
-    isComplete: boolean;
 }
-
-// 1. Move Component Outside to prevent re-creation on every render
-const DraggablePiece = ({
-    id, row, col, puzzleSize, pieceSize, tileSize, gridFrame, isLocked, onLock, onMove, screenW, screenH, isComplete
-}: DraggablePieceProps) => {
-
-    // Calculate initial position only once or when dimensions change
-    // Using useMemo to keep it stable
-    const initialPos = useMemo(() => {
-        // Safe default if gridFrame is missing: place pieces in the lower half of screen
-        // gameArea adds some padding, grid is at top. 
-        // puzzleSize is height of grid.
-        // So safe start Y is around puzzleSize + 60.
-        const safeGridY = 0; // Relative to GameArea top
-        const gridBottom = (gridFrame ? gridFrame.y : safeGridY) + puzzleSize;
-        const startY = gridBottom + 40;
-
-        const spacing = pieceSize + 15;
-        // Center relative to the container width (screenW)
-        const offsetX = (screenW - (3 * spacing)) / 2;
-
-        // Shuffle logic
-        const shuffle = [4, 7, 2, 8, 5, 0, 1, 6, 3];
-        const idx = shuffle.indexOf(id);
-
-        const r = Math.floor(idx / 3);
-        const c = idx % 3;
-
-        return {
-            x: offsetX + c * spacing,
-            y: startY + r * spacing
-        };
-    }, [screenW, pieceSize, puzzleSize, gridFrame?.y]); // Depend on Y mainly
-
-    const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
-
-    // Local state to track if we placed it, to avoid "transporting" it again
-    const [hasBeenPlaced, setHasBeenPlaced] = useState(false);
-    // Track if we have set the initial position
-    const [initialized, setInitialized] = useState(false);
-
-    // Initialize position ASAP. Even if gridFrame is null, we set a default so it's visible.
-    // When gridFrame arrives, we might re-adjust if not moved yet? 
-    // Actually better to just set it once robustly. 
-    useEffect(() => {
-        if (!initialized && !isLocked) {
-            pan.setValue(initialPos);
-            setInitialized(true);
-        } else if (gridFrame && !hasBeenPlaced && !isLocked) {
-            // If we initialized with default (no gridFrame) and now have gridFrame,
-            // strictly speaking we might want to update, but usually the default (relative to GameArea) 
-            // is close enough if onGridLayout fires quickly. 
-            // Let's force update if the difference is significant?
-            // For now, let's trust initialPos updates via useMemo dependency.
-            // But pan.setValue needs to be called again if initialPos changed.
-            pan.setValue(initialPos);
-        }
-    }, [initialPos, initialized, isLocked, gridFrame, hasBeenPlaced]);
-
-    // PanResponder
-    const panResponder = useRef(
-        PanResponder.create({
-            onStartShouldSetPanResponder: () => !isLocked && !isComplete && !hasBeenPlaced,
-            onMoveShouldSetPanResponder: () => !isLocked && !isComplete && !hasBeenPlaced,
-            onPanResponderGrant: () => {
-                // @ts-ignore
-                pan.setOffset({
-                    // @ts-ignore
-                    x: pan.x._value,
-                    // @ts-ignore
-                    y: pan.y._value
-                });
-                pan.setValue({ x: 0, y: 0 });
-            },
-            onPanResponderMove: Animated.event(
-                [null, { dx: pan.x, dy: pan.y }],
-                { useNativeDriver: false }
-            ),
-            onPanResponderRelease: (_, gestureState) => {
-                pan.flattenOffset();
-                onMove(); // Notify parent of move (increments counter)
-
-                // @ts-ignore
-                const currentX = pan.x._value;
-                // @ts-ignore
-                const currentY = pan.y._value;
-
-                if (gridFrame) {
-                    const targetX = gridFrame.x + col * tileSize + (tileSize - pieceSize) / 2;
-                    const targetY = gridFrame.y + row * tileSize + (tileSize - pieceSize) / 2;
-
-                    const centerX = currentX + pieceSize / 2;
-                    const centerY = currentY + pieceSize / 2;
-
-                    const targetCenterX = targetX + pieceSize / 2;
-                    const targetCenterY = targetY + pieceSize / 2;
-
-                    const dist = Math.sqrt(
-                        Math.pow(centerX - targetCenterX, 2) +
-                        Math.pow(centerY - targetCenterY, 2)
-                    );
-
-                    // Drop threshold
-                    if (dist < 60) {
-                        Animated.spring(pan, {
-                            toValue: { x: targetX, y: targetY },
-                            useNativeDriver: false,
-                            speed: 20,
-                            bounciness: 0
-                        }).start();
-
-                        setHasBeenPlaced(true);
-                        onLock(id);
-                        return;
-                    }
-                }
-            },
-        })
-    ).current;
-
-    // React to external lock (e.g. from saved state or logic)
-    useEffect(() => {
-        if (isLocked && gridFrame) {
-            const targetX = gridFrame.x + col * tileSize + (tileSize - pieceSize) / 2;
-            const targetY = gridFrame.y + row * tileSize + (tileSize - pieceSize) / 2;
-
-            // Snap visual to target if not already there
-            pan.setValue({ x: targetX, y: targetY });
-            setHasBeenPlaced(true);
-        }
-    }, [isLocked, gridFrame]);
-
-    return (
-        <Animated.View
-            {...(!isLocked ? panResponder.panHandlers : {})}
-            style={[
-                styles.piece,
-                {
-                    width: pieceSize,
-                    height: pieceSize,
-                    transform: pan.getTranslateTransform(),
-                    zIndex: isLocked ? 1 : 100,
-                    borderColor: isLocked ? '#4CAF50' : '#fff',
-                    borderWidth: isLocked ? 2 : 2,
-                    opacity: isLocked ? 1 : 1,
-                },
-            ]}
-        >
-            <View style={styles.pieceInner}>
-                <Image
-                    source={PUZZLE_IMAGE}
-                    style={{
-                        width: puzzleSize,
-                        height: puzzleSize,
-                        position: 'absolute',
-                        left: -col * tileSize,
-                        top: -row * tileSize,
-                    }}
-                    resizeMode="cover"
-                />
-            </View>
-        </Animated.View>
-    );
-};
 
 export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const { isMuted, toggleMute } = useSound();
-    const [lockedIds, setLockedIds] = useState<Set<number>>(new Set());
+    const [pieces, setPieces] = useState<PieceData[]>(() =>
+        Array.from({ length: TOTAL_TILES }, (_, i) => ({
+            id: i,
+            row: Math.floor(i / GRID_SIZE),
+            col: i % GRID_SIZE,
+            isLocked: false,
+        }))
+    );
     const [moves, setMoves] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
     const [startTime] = useState(Date.now());
-
-    // Coordinates
-    const [gridFrame, setGridFrame] = useState<{ x: number; y: number } | null>(null);
+    const [gameAreaLayout, setGameAreaLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
     const { width: screenW, height: screenH } = Dimensions.get('window');
-    const puzzleSize = Math.min(screenW * 0.75, screenH * 0.45, 320);
+    const puzzleSize = Math.min(screenW * 0.75, screenH * 0.4, 300);
     const tileSize = puzzleSize / GRID_SIZE;
-    const pieceSize = tileSize - 6;
+    const pieceSize = tileSize - 4;
+
+    // Animation values for each piece
+    const panRefs = useRef<Animated.ValueXY[]>(
+        Array.from({ length: TOTAL_TILES }, () => new Animated.ValueXY({ x: 0, y: 0 }))
+    ).current;
+
+    // Initialize piece positions
+    const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
         const t = setTimeout(() => setShowPreview(false), 2500);
         return () => clearTimeout(t);
     }, []);
 
+    // Set initial positions when game area layout is known
+    useEffect(() => {
+        if (gameAreaLayout && !initialized && !showPreview) {
+            const gridTop = 60; // instruction text height + margin
+            const gridLeft = (gameAreaLayout.width - puzzleSize) / 2;
+
+            // Start pieces below the grid and hint area
+            const startY = gridTop + puzzleSize + 100;
+            const spacing = pieceSize + 12;
+            const startX = (gameAreaLayout.width - 3 * spacing) / 2;
+
+            pieces.forEach((piece, i) => {
+                const shuffleIdx = SHUFFLE_ORDER.indexOf(piece.id);
+                const pRow = Math.floor(shuffleIdx / 3);
+                const pCol = shuffleIdx % 3;
+                panRefs[piece.id].setValue({
+                    x: startX + pCol * spacing,
+                    y: startY + pRow * spacing,
+                });
+            });
+            setInitialized(true);
+        }
+    }, [gameAreaLayout, initialized, showPreview, puzzleSize, pieceSize]);
+
     const handleLock = (id: number) => {
-        setLockedIds(prev => {
-            if (prev.has(id)) return prev;
-            const next = new Set(prev).add(id);
-            if (next.size === TOTAL_TILES) {
+        setPieces(prev => {
+            const next = prev.map(p => (p.id === id ? { ...p, isLocked: true } : p));
+            const lockedCount = next.filter(p => p.isLocked).length;
+            if (lockedCount === TOTAL_TILES) {
                 setIsComplete(true);
                 setTimeout(() => {
                     const dur = Math.floor((Date.now() - startTime) / 1000);
@@ -242,13 +108,140 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         });
     };
 
-    const handleMove = () => {
-        setMoves(m => m + 1);
+    const createPanResponder = (piece: PieceData) => {
+        const pan = panRefs[piece.id];
+
+        return PanResponder.create({
+            onStartShouldSetPanResponder: () => !piece.isLocked && !isComplete,
+            onMoveShouldSetPanResponder: () => !piece.isLocked && !isComplete,
+            onPanResponderGrant: () => {
+                // @ts-ignore
+                pan.setOffset({ x: pan.x._value, y: pan.y._value });
+                pan.setValue({ x: 0, y: 0 });
+            },
+            onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
+                useNativeDriver: false,
+            }),
+            onPanResponderRelease: () => {
+                pan.flattenOffset();
+                setMoves(m => m + 1);
+
+                // @ts-ignore
+                const currentX = pan.x._value;
+                // @ts-ignore
+                const currentY = pan.y._value;
+
+                if (gameAreaLayout) {
+                    const gridTop = 60;
+                    const gridLeft = (gameAreaLayout.width - puzzleSize) / 2;
+
+                    // Target position for this piece
+                    const targetX = gridLeft + piece.col * tileSize + (tileSize - pieceSize) / 2;
+                    const targetY = gridTop + piece.row * tileSize + (tileSize - pieceSize) / 2;
+
+                    // Center of current piece
+                    const centerX = currentX + pieceSize / 2;
+                    const centerY = currentY + pieceSize / 2;
+
+                    // Center of target cell
+                    const targetCenterX = targetX + pieceSize / 2;
+                    const targetCenterY = targetY + pieceSize / 2;
+
+                    const dist = Math.sqrt(
+                        Math.pow(centerX - targetCenterX, 2) + Math.pow(centerY - targetCenterY, 2)
+                    );
+
+                    // Snap if close enough
+                    if (dist < 50) {
+                        Animated.spring(pan, {
+                            toValue: { x: targetX, y: targetY },
+                            useNativeDriver: false,
+                            speed: 20,
+                            bounciness: 0,
+                        }).start(() => {
+                            handleLock(piece.id);
+                        });
+                    }
+                }
+            },
+        });
     };
 
-    const onGridLayout = (e: LayoutChangeEvent) => {
-        const { x, y } = e.nativeEvent.layout;
-        setGridFrame({ x, y });
+    // Create pan responders for all pieces
+    const panResponders = useRef<{ [key: number]: ReturnType<typeof PanResponder.create> }>({}).current;
+
+    pieces.forEach(piece => {
+        if (!panResponders[piece.id]) {
+            panResponders[piece.id] = createPanResponder(piece);
+        }
+    });
+
+    const renderGrid = () => {
+        const gridTop = 60;
+        const gridLeft = gameAreaLayout ? (gameAreaLayout.width - puzzleSize) / 2 : 0;
+
+        return (
+            <View
+                style={[
+                    styles.grid,
+                    {
+                        width: puzzleSize,
+                        height: puzzleSize,
+                        position: 'absolute',
+                        top: gridTop,
+                        left: gridLeft,
+                    },
+                ]}
+            >
+                {Array.from({ length: TOTAL_TILES }).map((_, i) => {
+                    const isLocked = pieces.find(p => p.id === i)?.isLocked;
+                    return (
+                        <View key={i} style={[styles.cell, { width: tileSize, height: tileSize }]}>
+                            {!isLocked && <View style={styles.cellGuide} />}
+                        </View>
+                    );
+                })}
+            </View>
+        );
+    };
+
+    const renderPieces = () => {
+        return pieces.map(piece => {
+            const pan = panRefs[piece.id];
+            const responder = panResponders[piece.id];
+
+            return (
+                <Animated.View
+                    key={piece.id}
+                    {...(piece.isLocked ? {} : responder?.panHandlers)}
+                    style={[
+                        styles.piece,
+                        {
+                            width: pieceSize,
+                            height: pieceSize,
+                            transform: pan.getTranslateTransform(),
+                            zIndex: piece.isLocked ? 1 : 100,
+                            borderColor: piece.isLocked ? '#4CAF50' : '#fff',
+                            borderWidth: 2,
+                        },
+                    ]}
+                >
+                    <View style={styles.pieceInner}>
+                        <Image
+                            source={PUZZLE_IMAGE}
+                            style={{
+                                width: puzzleSize,
+                                height: puzzleSize,
+                                position: 'absolute',
+                                left: -piece.col * tileSize,
+                                top: -piece.row * tileSize,
+                            }}
+                            resizeMode="cover"
+                        />
+                    </View>
+                </Animated.View>
+            );
+        });
     };
 
     return (
@@ -276,51 +269,29 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                     <Text style={styles.loadingText}>Oyun Hazırlanıyor...</Text>
                 </View>
             ) : (
-                <View style={styles.gameArea}>
+                <View
+                    style={styles.gameArea}
+                    onLayout={(e) => {
+                        const { x, y, width, height } = e.nativeEvent.layout;
+                        setGameAreaLayout({ x, y, width, height });
+                    }}
+                >
                     <Text style={styles.instruction}>
                         {isComplete ? '🎉 Mükemmel!' : 'Parçaları sürükle ve birleştir!'}
                     </Text>
 
-                    {/* Grid - Directly inside GameArea to ensure simple coordinates */}
-                    <View
-                        style={[styles.grid, { width: puzzleSize, height: puzzleSize }]}
-                        onLayout={onGridLayout}
-                    >
-                        {Array.from({ length: TOTAL_TILES }).map((_, i) => (
-                            <View key={i} style={[styles.cell, { width: tileSize, height: tileSize }]}>
-                                {!lockedIds.has(i) && <View style={styles.cellGuide} />}
-                            </View>
-                        ))}
-                    </View>
-
+                    {/* Hint */}
                     <View style={styles.hintContainer}>
                         <Text style={styles.hintText}>Hedef:</Text>
                         <Image source={PUZZLE_IMAGE} style={styles.hintImage} />
+                        <Text style={styles.movesText}>Hamle: {moves}</Text>
                     </View>
 
-                    {/* Render Pieces - Unconditionally to ensure they appear */}
-                    {Array.from({ length: TOTAL_TILES }).map((_, i) => {
-                        const row = Math.floor(i / GRID_SIZE);
-                        const col = i % GRID_SIZE;
-                        return (
-                            <DraggablePiece
-                                key={i}
-                                id={i}
-                                row={row}
-                                col={col}
-                                puzzleSize={puzzleSize}
-                                pieceSize={pieceSize}
-                                tileSize={tileSize}
-                                gridFrame={gridFrame}
-                                isLocked={lockedIds.has(i)}
-                                onLock={handleLock}
-                                onMove={handleMove}
-                                screenW={screenW}
-                                screenH={screenH}
-                                isComplete={isComplete}
-                            />
-                        );
-                    })}
+                    {/* Grid */}
+                    {renderGrid()}
+
+                    {/* Pieces */}
+                    {initialized && renderPieces()}
                 </View>
             )}
         </View>
@@ -346,51 +317,64 @@ const styles = StyleSheet.create({
     previewFrame: { borderWidth: 3, borderColor: '#4ECDC4', borderRadius: 12, overflow: 'hidden' },
     loadingText: { color: '#aaa', marginTop: 20, fontSize: 16 },
 
-    gameArea: { flex: 1, alignItems: 'center', justifyContent: 'flex-start', paddingTop: 20 },
-    instruction: { textAlign: 'center', color: '#fff', fontSize: 16, marginBottom: 20, fontWeight: '600' },
-
-    // Grid styles
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        borderWidth: 2,
-        borderColor: '#4ECDC4',
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        zIndex: 1, // Ensure grid is below pieces (pieces are zIndex 100)
+    gameArea: {
+        flex: 1,
+        position: 'relative',
     },
-    cell: {
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.3)',
-        justifyContent: 'center',
-        alignItems: 'center'
-    },
-    cellGuide: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: 'rgba(255,255,255,0.1)'
+    instruction: {
+        textAlign: 'center',
+        color: '#fff',
+        fontSize: 16,
+        marginTop: 10,
+        marginBottom: 10,
+        fontWeight: '600',
     },
 
     hintContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 20,
         gap: 10,
-        zIndex: 1,
+        zIndex: 200,
+        position: 'absolute',
+        top: 30,
+        right: 20,
     },
     hintText: { color: '#aaa', fontSize: 12 },
-    hintImage: { width: 50, height: 50, borderRadius: 4, opacity: 0.8 },
+    hintImage: { width: 40, height: 40, borderRadius: 4, opacity: 0.8 },
+    movesText: { color: '#4ECDC4', fontSize: 12, fontWeight: 'bold' },
+
+    grid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        borderWidth: 3,
+        borderColor: '#4ECDC4',
+        borderRadius: 8,
+        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+        zIndex: 1,
+    },
+    cell: {
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cellGuide: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+    },
 
     piece: {
         position: 'absolute',
-        borderRadius: 4,
+        borderRadius: 6,
         backgroundColor: '#fff',
-        elevation: 5,
+        elevation: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
     },
     pieceInner: { flex: 1, overflow: 'hidden', borderRadius: 4 },
 });
