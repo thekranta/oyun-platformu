@@ -162,10 +162,20 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 setTimeout(() => {
                     const dur = Math.floor((Date.now() - startTime) / 1000);
                     const puzzleName = currentPuzzle?.name || 'Yapboz';
-                    onGameEnd(`Yapboz - ${puzzleName}`, dur, moves, 0, undefined, {
+
+                    // Verileri kaydet (arka planda)
+                    // onGameEnd yerine sadece veriyi kaydetmek için çağır ama çıkış yapma
+                    // Not: onGameEnd normalde oyundan çıkış yapar, bu yüzden özel işlem
+                    // Burada veriyi kaydetmek için çağırıyoruz ama sonra seçim ekranına dönüyoruz
+                    onGameEnd(`Yapboz - ${puzzleName}`, dur, moves + 1, 0, undefined, {
                         zorlukSeviyesi: 1,
                         kazanimOdagi: 'Uzamsal Algı ve Problem Çözme',
                     });
+
+                    // 2 saniye sonra seçim ekranına dön
+                    setTimeout(() => {
+                        goBackToSelection();
+                    }, 500);
                 }, 1500);
             }
             return next;
@@ -176,6 +186,9 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         setSelectedPuzzle(null);
         setGameStarted(false);
         setShowPreview(false);
+        setIsComplete(false);
+        setLockedPieces(new Set());
+        setMoves(0);
     };
 
     const createPanResponder = (pieceId: number, targetRow: number, targetCol: number) => {
