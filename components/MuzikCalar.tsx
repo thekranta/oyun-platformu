@@ -140,6 +140,62 @@ const SONGS: Song[] = [
         coverColor: '#8D6E63', // Kahverengi
         icon: 'people-circle',
     },
+    {
+        id: '16',
+        title: 'Az Az Kullanırım',
+        artist: 'Teknoloji Kullanımı',
+        source: require('@/assets/sounds/songs/AZ AZ KULLANIRIM.mp3'),
+        coverColor: '#9575CD', // Açık Mor
+        icon: 'phone-portrait',
+    },
+    {
+        id: '17',
+        title: 'Benim Görevim',
+        artist: 'Sorumluluk',
+        source: require('@/assets/sounds/songs/BENİM GÖREVİM.mp3'),
+        coverColor: '#4DB6AC', // Turkuaz
+        icon: 'clipboard',
+    },
+    {
+        id: '18',
+        title: 'Kalbimde Sevgi Var',
+        artist: 'Sevgi',
+        source: require('@/assets/sounds/songs/KALBİMDE SEVGİ VAR.mp3'),
+        coverColor: '#E91E63', // Kırmızı Pembe
+        icon: 'heart',
+    },
+    {
+        id: '19',
+        title: 'Lütfen, Teşekkür',
+        artist: 'Nezaket',
+        source: require('@/assets/sounds/songs/LÜTFEN, TEŞEKKÜR.mp3'),
+        coverColor: '#81C784', // Yeşil
+        icon: 'happy',
+    },
+    {
+        id: '20',
+        title: 'Sağlıklı Yaşam',
+        artist: 'Sağlık',
+        source: require('@/assets/sounds/songs/SAĞLIKLI YAŞAM.mp3'),
+        coverColor: '#4CAF50', // Yeşil
+        icon: 'fitness',
+    },
+    {
+        id: '21',
+        title: 'Yurdumu Severim',
+        artist: 'Vatan Sevgisi',
+        source: require('@/assets/sounds/songs/YURDUMU SEVERİM.mp3'),
+        coverColor: '#E53935', // Kırmızı
+        icon: 'flag',
+    },
+    {
+        id: '22',
+        title: 'Şıp Şıp Tertemiz',
+        artist: 'Temizlik',
+        source: require('@/assets/sounds/songs/ŞIP ŞIP TERTEMİZ .mp3'),
+        coverColor: '#29B6F6', // Açık Mavi
+        icon: 'water',
+    },
 ];
 
 interface MuzikCalarProps {
