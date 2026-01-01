@@ -49,16 +49,57 @@ type DrawingPayload = {
     cizimResimFormat?: string;
 };
 
+// MAB Alan Renkleri
+const ALAN_COLORS: Record<string, string> = {
+    'Matematik': '#2196F3',
+    'Fen': '#4CAF50',
+    'Türkçe': '#FF9800',
+    'Sanat': '#9C27B0',
+    'Sosyal-Duygusal Gelişim': '#E91E63',
+    'Genel Gelişim': '#607D8B',
+};
+
+// Circular Progress Component
+const CircularProgress = ({ value, maxValue, size = 50, color, label }: { value: number; maxValue: number; size?: number; color: string; label: string }) => {
+    const percentage = Math.min((value / maxValue) * 100, 100);
+    const strokeWidth = 4;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+        <View style={{ alignItems: 'center', margin: 4 }}>
+            <View style={{ width: size, height: size, justifyContent: 'center', alignItems: 'center' }}>
+                <View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, borderWidth: strokeWidth, borderColor: '#e0e0e0' }} />
+                <View style={{ position: 'absolute', width: size, height: size, borderRadius: size / 2, borderWidth: strokeWidth, borderColor: color, borderTopColor: 'transparent', borderRightColor: percentage > 25 ? color : 'transparent', borderBottomColor: percentage > 50 ? color : 'transparent', transform: [{ rotate: '-90deg' }] }} />
+                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#333' }}>{value}</Text>
+            </View>
+            <Text style={{ fontSize: 9, color: '#666', marginTop: 2 }}>{label}</Text>
+        </View>
+    );
+};
+
+// MAB Skill Badge Component
+const SkillBadge = ({ code, alan }: { code: string; alan: string }) => {
+    const color = ALAN_COLORS[alan] || '#607D8B';
+    return (
+        <View style={{ backgroundColor: color, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, marginRight: 6 }}>
+            <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{code}</Text>
+        </View>
+    );
+};
+
 export default function AdminPanel() {
     const router = useRouter();
     const { width, height } = useWindowDimensions();
     const isLandscape = width > height;
+    const numColumns = isLandscape ? (width > 1200 ? 3 : 2) : 1;
     const [studentGroups, setStudentGroups] = useState<StudentGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<number | null>(null);
-    const { isMuted, toggleMute } = { isMuted: false, toggleMute: () => { } }; // Placeholder - using MusicButton instead
+    const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
 
-    // UI State - Lifted to prevent collapse on re-render
+    // UI State
     const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(new Set());
     const [visibleCommentIds, setVisibleCommentIds] = useState<Set<number>>(new Set());
 
@@ -66,6 +107,16 @@ export default function AdminPanel() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+
+    // Toggle detail visibility
+    const toggleDetailVisibility = (scoreId: number) => {
+        setExpandedDetails(prev => {
+            const next = new Set(prev);
+            if (next.has(scoreId)) next.delete(scoreId);
+            else next.add(scoreId);
+            return next;
+        });
+    };
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -692,31 +743,64 @@ ChildhoodTech Ekibi
         );
     };
 
+    // Maarif Matrisi yardımcı fonksiyonu
+    const getOyunBilgisi = (oyunTuru: string) => {
+        const maarifMatrisi: Record<string, { alan: string; cikti: string }> = {
+            'hafiza': { alan: 'Matematik', cikti: 'MAB.2' },
+            'yapboz': { alan: 'Matematik', cikti: 'MAB.2' },
+            'sayilari-birlestir': { alan: 'Matematik', cikti: 'MAB.1' },
+            'siralama': { alan: 'Matematik', cikti: 'MAB.4' },
+            'diziyi-tamamla': { alan: 'Matematik', cikti: 'MAB.4' },
+            'eksik-sayi-bul': { alan: 'Matematik', cikti: 'MAB.5' },
+            'kodlama': { alan: 'Matematik', cikti: 'MAB.7' },
+            'kutuyu-bul': { alan: 'Matematik', cikti: 'MAB.2' },
+            'gruplama': { alan: 'Fen', cikti: 'FAB.2' },
+            'bunu-soyle': { alan: 'Türkçe', cikti: 'TAKB.2' },
+            'rakam-yazma': { alan: 'Türkçe', cikti: 'TAEOB.6' },
+            'yaratici-cizim': { alan: 'Sanat', cikti: 'SNAB4' },
+            'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.3' },
+            'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.2.1' },
+        };
+        return maarifMatrisi[oyunTuru] || { alan: 'Genel Gelişim', cikti: 'GB.1' };
+    };
+
+    // Özet çıkarma fonksiyonu
+    const getSummary = (text: string) => {
+        if (!text) return { summary: '', details: '' };
+        const sentences = text.split(/(?<=[.!?])\s+/);
+        const summary = sentences.slice(0, 2).join(' ');
+        const details = sentences.slice(2).join(' ');
+        return { summary, details };
+    };
+
     const GameRow = ({ score, isLast }: { score: Score, isLast: boolean }) => {
         const showComment = visibleCommentIds.has(score.id);
+        const showDetails = expandedDetails.has(score.id);
         const isProcessing = processingId === score.id;
         const isDrawing = score.oyun_turu === 'yaratici-cizim';
+        const oyunBilgisi = getOyunBilgisi(score.oyun_turu);
+        const { summary, details } = getSummary(score.yapay_zeka_yorumu || '');
+
+        // Hata rengi hesaplama
+        const hataRenk = score.hata_sayisi <= 2 ? '#4CAF50' : score.hata_sayisi <= 5 ? '#FF9800' : '#f44336';
+        const sureRenk = (score.sure || 0) <= 60 ? '#4CAF50' : (score.sure || 0) <= 120 ? '#2196F3' : '#FF9800';
 
         return (
             <View style={[styles.gameRow, !isLast && styles.gameRowBorder]}>
+                {/* Header with MAB Badge */}
                 <View style={styles.gameHeader}>
-                    <Text style={styles.gameTypeBadge}>{score.oyun_turu.toUpperCase()}</Text>
-                    <Text style={styles.gameDate}>{new Date(score.created_at).toLocaleDateString('tr-TR')} {new Date(score.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <SkillBadge code={oyunBilgisi.cikti} alan={oyunBilgisi.alan} />
+                        <Text style={styles.gameTypeBadge}>{score.oyun_turu.replace(/-/g, ' ').toUpperCase()}</Text>
+                    </View>
+                    <Text style={styles.gameDate}>{new Date(score.created_at).toLocaleDateString('tr-TR')}</Text>
                 </View>
 
-                <View style={styles.statsRow}>
-                    <View style={styles.statItem}>
-                        <Ionicons name="time-outline" size={14} color="#666" />
-                        <Text style={styles.statValue}>{score.sure || '?'} sn</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <Ionicons name="finger-print-outline" size={14} color="#666" />
-                        <Text style={styles.statValue}>{score.hamle_sayisi} Hamle</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <Ionicons name="alert-circle-outline" size={14} color="#666" />
-                        <Text style={styles.statValue}>{score.hata_sayisi} Hata</Text>
-                    </View>
+                {/* Circular Progress Stats */}
+                <View style={styles.circularStatsRow}>
+                    <CircularProgress value={score.sure || 0} maxValue={120} size={52} color={sureRenk} label="Süre (sn)" />
+                    <CircularProgress value={score.hamle_sayisi} maxValue={50} size={52} color="#2196F3" label="Hamle" />
+                    <CircularProgress value={score.hata_sayisi} maxValue={10} size={52} color={hataRenk} label="Hata" />
                 </View>
 
                 {score.cizim_verisi && (
@@ -732,36 +816,23 @@ ChildhoodTech Ekibi
                     <View style={styles.actionRow}>
                         {(!score.yapay_zeka_yorumu || score.yapay_zeka_yorumu.includes('-Cozum-')) ? (
                             <View style={{ flexDirection: 'row', gap: 10 }}>
-                                <TouchableOpacity
-                                    style={[styles.actionButton, { backgroundColor: '#2196F3' }]}
-                                    onPress={() => analyzeGame(score)}
-                                    disabled={isProcessing}
-                                >
+                                <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#2196F3' }]} onPress={() => analyzeGame(score)} disabled={isProcessing}>
                                     {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>🤖 Analiz Et</Text>}
                                 </TouchableOpacity>
                                 {score.email && (
-                                    <TouchableOpacity
-                                        style={[styles.actionButton, { backgroundColor: '#4CAF50', paddingVertical: 4, paddingHorizontal: 8 }]}
-                                        onPress={() => sendEmail(score)}
-                                        disabled={isProcessing}
-                                    >
-                                        {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
+                                    <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#4CAF50' }]} onPress={() => sendEmail(score)} disabled={isProcessing}>
+                                        {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail</Text>}
                                     </TouchableOpacity>
                                 )}
                             </View>
                         ) : (
-                            <View style={{ flexDirection: 'row', gap: 10 }}>
+                            <View style={{ flexDirection: 'row', gap: 10, flexWrap: 'wrap' }}>
                                 <TouchableOpacity onPress={() => toggleCommentVisibility(score.id)} style={styles.aiToggle}>
-                                    <Text style={styles.aiToggleText}>🤖 Yorumu {showComment ? 'Gizle' : 'Göster'}</Text>
+                                    <Text style={styles.aiToggleText}>🤖 {showComment ? 'Gizle' : 'Göster'}</Text>
                                 </TouchableOpacity>
-
                                 {score.email && (
-                                    <TouchableOpacity
-                                        style={[styles.actionButton, { backgroundColor: '#4CAF50', paddingVertical: 4, paddingHorizontal: 8 }]}
-                                        onPress={() => sendEmail(score)}
-                                        disabled={isProcessing}
-                                    >
-                                        {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>📧 Mail Gönder</Text>}
+                                    <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#4CAF50' }]} onPress={() => sendEmail(score)} disabled={isProcessing}>
+                                        <Text style={styles.actionButtonText}>📧 Mail</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
@@ -769,38 +840,58 @@ ChildhoodTech Ekibi
                     </View>
                 )}
 
+                {/* AI Comment with Summary-Detail Separation */}
                 {showComment && score.yapay_zeka_yorumu && (
                     <View style={styles.aiCommentBox}>
-                        <Text style={styles.aiCommentText}>
-                            {score.yapay_zeka_yorumu.split(/(\*\*.*?\*\*)/g).map((part, index) => {
-                                if (part.startsWith('**') && part.endsWith('**')) {
-                                    return <Text key={index} style={{ fontWeight: 'bold' }}>{part.slice(2, -2)}</Text>;
-                                }
-                                return <Text key={index}>{part}</Text>;
-                            })}
-                        </Text>
+                        {/* Öne Çıkan Not */}
+                        <View style={styles.highlightNote}>
+                            <Text style={styles.highlightNoteTitle}>📌 Öne Çıkan Not</Text>
+                            <Text style={styles.highlightNoteText}>{summary}</Text>
+                        </View>
 
-                        {/* Uzman Onay Bölümü */}
-                        <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: '#e0e0e0', paddingTop: 10 }}>
+                        {/* Detayları Gör Butonu */}
+                        {details && (
+                            <TouchableOpacity onPress={() => toggleDetailVisibility(score.id)} style={styles.detailsToggle}>
+                                <Text style={styles.detailsToggleText}>{showDetails ? '▲ Detayları Gizle' : '▼ Detayları Gör'}</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        {/* Detaylı Analiz */}
+                        {showDetails && details && (
+                            <View style={styles.detailsBox}>
+                                <Text style={styles.aiCommentText}>
+                                    {details.split(/(\*\*.*?\*\*)/g).map((part, index) => {
+                                        if (part.startsWith('**') && part.endsWith('**')) {
+                                            return <Text key={index} style={{ fontWeight: 'bold' }}>{part.slice(2, -2)}</Text>;
+                                        }
+                                        return <Text key={index}>{part}</Text>;
+                                    })}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Uzman Onay Sertifikası */}
+                        <View style={styles.certContainer}>
                             {score.uzman_onayi ? (
-                                <View style={{ backgroundColor: '#e8f5e9', padding: 8, borderRadius: 6 }}>
-                                    <Text style={{ color: '#2e7d32', fontSize: 12, fontStyle: 'italic' }}>
-                                        ✅ Bu rapor AI tarafından oluşturulmuş ve alan uzmanı tarafından pedagojik olarak doğrulanmıştır.
-                                    </Text>
-                                    <Text style={{ color: '#558b2f', fontSize: 10, marginTop: 4 }}>
-                                        Onaylayan: {score.onaylayan_uzman || 'Admin'}
-                                    </Text>
+                                <View style={styles.certApproved}>
+                                    <View style={styles.certSeal}>
+                                        <Ionicons name="shield-checkmark" size={28} color="#2e7d32" />
+                                    </View>
+                                    <View style={styles.certContent}>
+                                        <Text style={styles.certTitle}>Pedagojik Olarak Doğrulanmıştır</Text>
+                                        <Text style={styles.certSubtitle}>Bu rapor AI tarafından oluşturulmuş ve alan uzmanı onayından geçmiştir.</Text>
+                                        <Text style={styles.certSigner}>✍️ {score.onaylayan_uzman || 'Admin'}</Text>
+                                    </View>
                                 </View>
                             ) : (
-                                <TouchableOpacity
-                                    style={{ backgroundColor: '#ff9800', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 6, alignSelf: 'flex-start' }}
-                                    onPress={() => approveReport(score)}
-                                    disabled={processingId === score.id}
-                                >
+                                <TouchableOpacity style={styles.certPending} onPress={() => approveReport(score)} disabled={processingId === score.id}>
                                     {processingId === score.id ? (
-                                        <ActivityIndicator size="small" color="white" />
+                                        <ActivityIndicator size="small" color="#ff9800" />
                                     ) : (
-                                        <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 12 }}>✅ Uzman Onayı Ver</Text>
+                                        <>
+                                            <Ionicons name="shield-outline" size={24} color="#ff9800" />
+                                            <Text style={styles.certPendingText}>Uzman Onayı Ver</Text>
+                                        </>
                                     )}
                                 </TouchableOpacity>
                             )}
@@ -863,6 +954,9 @@ ChildhoodTech Ekibi
                         data={studentGroups}
                         renderItem={({ item }) => <StudentCard student={item} />}
                         keyExtractor={(item) => item.id}
+                        numColumns={numColumns}
+                        key={numColumns}
+                        columnWrapperStyle={numColumns > 1 ? styles.gridRow : undefined}
                         contentContainerStyle={[styles.listContent, isLandscape && styles.listContentLandscape]}
                         ListEmptyComponent={<Text style={styles.emptyText}>Henüz kayıt yok.</Text>}
                     />
@@ -888,7 +982,7 @@ const styles = StyleSheet.create({
     emptyText: { textAlign: 'center', fontSize: 16, color: '#777', marginTop: 50 },
 
     // Student Card Styles
-    studentCard: { backgroundColor: 'white', borderRadius: 20, marginBottom: 15, elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, overflow: 'hidden', maxWidth: '100%' },
+    studentCard: { flex: 1, backgroundColor: 'white', borderRadius: 16, marginBottom: 12, marginHorizontal: 6, elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, overflow: 'hidden', minWidth: 280, maxWidth: 600 },
     studentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
     avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
     avatarText: { fontSize: 24, fontWeight: 'bold', color: '#2196F3' },
@@ -915,14 +1009,41 @@ const styles = StyleSheet.create({
     // AI Toggle & Comment
     aiToggle: { paddingVertical: 6, paddingHorizontal: 10, backgroundColor: '#E3F2FD', borderRadius: 8 },
     aiToggleText: { fontSize: 12, color: '#2196F3', fontWeight: 'bold' },
-    aiCommentBox: { marginTop: 10, backgroundColor: '#E8F5E9', padding: 12, borderRadius: 10 },
-    aiCommentText: { fontSize: 13, color: '#2E7D32', fontStyle: 'italic', lineHeight: 20 },
+    aiCommentBox: { marginTop: 10, backgroundColor: '#f8fffe', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#e0e0e0' },
+    aiCommentText: { fontSize: 13, color: '#333', lineHeight: 20 },
     infoNote: { marginTop: 6, color: '#666', fontSize: 12 },
     drawingPreviewWrap: { marginTop: 10, gap: 6 },
     drawingLabel: { fontSize: 12, color: '#555', fontWeight: '600' },
     drawingBox: { borderRadius: 12, backgroundColor: '#fdfaf3', borderWidth: 1, borderColor: '#e0d6c8', overflow: 'hidden' },
     drawingImage: { width: '100%', height: 160 },
     drawingError: { fontSize: 12, color: '#d32f2f' },
+
+    // Grid Layout
+    gridRow: { justifyContent: 'space-between', paddingHorizontal: 8 },
+
+    // Circular Stats
+    circularStatsRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 10, gap: 8 },
+
+    // Highlight Note (Summary)
+    highlightNote: { backgroundColor: '#fff9e6', padding: 12, borderRadius: 10, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: '#ffc107' },
+    highlightNoteTitle: { fontSize: 12, fontWeight: 'bold', color: '#f57c00', marginBottom: 4 },
+    highlightNoteText: { fontSize: 14, color: '#333', lineHeight: 20, fontWeight: '500' },
+
+    // Details Toggle
+    detailsToggle: { alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 16, backgroundColor: '#f0f0f0', borderRadius: 20, marginBottom: 10 },
+    detailsToggleText: { fontSize: 12, color: '#666', fontWeight: '600' },
+    detailsBox: { backgroundColor: '#f5f5f5', padding: 12, borderRadius: 8, marginBottom: 10 },
+
+    // Certificate Styles
+    certContainer: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e0e0e0' },
+    certApproved: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#e8f5e9', padding: 12, borderRadius: 10, borderWidth: 2, borderColor: '#a5d6a7' },
+    certSeal: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#c8e6c9', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+    certContent: { flex: 1 },
+    certTitle: { fontSize: 13, fontWeight: 'bold', color: '#2e7d32', marginBottom: 2 },
+    certSubtitle: { fontSize: 11, color: '#558b2f', lineHeight: 16 },
+    certSigner: { fontSize: 10, color: '#689f38', marginTop: 4, fontStyle: 'italic' },
+    certPending: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff3e0', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, borderWidth: 1, borderColor: '#ffcc80', alignSelf: 'flex-start' },
+    certPendingText: { fontSize: 12, color: '#e65100', fontWeight: 'bold' },
 
     // Login Styles
     loginBox: { width: '100%', maxWidth: 350, backgroundColor: 'white', padding: 30, borderRadius: 25, elevation: 5 },
