@@ -4,6 +4,7 @@ import {
     Animated,
     Dimensions,
     Image,
+    ImageBackground,
     ImageSourcePropType,
     PanResponder,
     Platform,
@@ -54,7 +55,6 @@ const ANIMALS: AnimalAsset[] = [
 
 const { width: screenW, height: screenH } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
-const isMobile = screenH < 700;
 
 // ============= TUR CONFIG =============
 const ROUND_CONFIGS = [
@@ -76,7 +76,7 @@ const MOTIVATION = [
     { round: 9, emoji: '🏆', text: 'Şampiyon!' },
 ];
 
-// ============= DRAGGABLE - Sadece görsel, kart yok =============
+// ============= DRAGGABLE =============
 function DraggableAnimal({ animal, size, isMatched, onDrop }: {
     animal: AnimalAsset;
     size: number;
@@ -93,12 +93,12 @@ function DraggableAnimal({ animal, size, isMatched, onDrop }: {
             // @ts-ignore
             pan.setOffset({ x: pan.x._value, y: pan.y._value });
             pan.setValue({ x: 0, y: 0 });
-            Animated.spring(scale, { toValue: 1.15, friction: 5, useNativeDriver: true }).start();
+            Animated.spring(scale, { toValue: 1.15, friction: 5, useNativeDriver: false }).start();
         },
         onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
         onPanResponderRelease: (_, g) => {
             pan.flattenOffset();
-            Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
+            Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: false }).start();
             if (!onDrop(animal.id, g.moveX, g.moveY)) {
                 Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 5, useNativeDriver: false }).start();
             }
@@ -150,12 +150,10 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     const totalItems = cfg.count + cfg.distractors;
     const getItemSize = () => {
         if (isWeb) {
-            // Web için daha büyük
             if (totalItems <= 4) return 100;
             if (totalItems <= 6) return 85;
             return 75;
         } else {
-            // Mobil için ekrana sığdır
             const maxPerRow = 3;
             const availableWidth = (screenW / 2) - 30;
             const maxSize = Math.floor(availableWidth / Math.min(totalItems, maxPerRow)) - 8;
@@ -199,7 +197,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
         }
 
         setShowSuccess(true);
-        Animated.spring(successScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+        Animated.spring(successScale, { toValue: 1, friction: 4, useNativeDriver: false }).start();
 
         setTimeout(() => {
             successScale.setValue(0);
@@ -243,18 +241,22 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     };
 
     return (
-        <View style={styles.container}>
-            {/* Background */}
-            <View style={styles.bgSky} />
-            <View style={styles.bgGrass} />
+        <ImageBackground
+            source={require('@/assets/images/green_background.png')}
+            style={styles.container}
+            blurRadius={Platform.OS === 'web' ? 3 : 5}
+            resizeMode="cover"
+        >
+            {/* Blur overlay */}
+            <View style={styles.blurOverlay} />
 
-            {/* Header */}
+            {/* Header - Sadece geri butonu ve tur */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
                     <Ionicons name="home" size={20} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.roundText}>Tur {round}/{TOTAL}</Text>
-                <Text style={styles.errorText}>❌ {errors}</Text>
+                <Text style={styles.roundText}>🔍 Tur {round}/{TOTAL}</Text>
+                <View style={{ width: 36 }} />
             </View>
 
             {/* Progress */}
@@ -262,7 +264,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                 <View style={[styles.progressFill, { width: `${(round / TOTAL) * 100}%` }]} />
             </View>
 
-            {/* Game Area - Yan yana */}
+            {/* Game Area */}
             <View style={styles.gameArea}>
                 {/* Hayvanlar */}
                 <View style={styles.column}>
@@ -324,14 +326,16 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                     <Text style={styles.motivationText}>{showMotivation.text}</Text>
                 </View>
             )}
-        </View>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    bgSky: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%', backgroundColor: '#87CEEB' },
-    bgGrass: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', backgroundColor: '#7CB342', borderTopLeftRadius: 40, borderTopRightRadius: 40 },
+    blurOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+    },
 
     header: {
         flexDirection: 'row',
@@ -342,11 +346,21 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
         zIndex: 20,
     },
-    exitBtn: { padding: 8, backgroundColor: '#EF5350', borderRadius: 15 },
-    roundText: { fontSize: 18, fontWeight: 'bold', color: '#fff', backgroundColor: '#4ECDC4', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 15 },
-    errorText: { fontSize: 14, fontWeight: 'bold', color: '#333', backgroundColor: '#FFE082', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+    exitBtn: { padding: 8, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 15 },
+    roundText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
+        backgroundColor: 'rgba(0,0,0,0.35)',
+        paddingHorizontal: 18,
+        paddingVertical: 8,
+        borderRadius: 20,
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 3,
+    },
 
-    progressBar: { height: 4, backgroundColor: 'rgba(0,0,0,0.15)', marginHorizontal: 15 },
+    progressBar: { height: 4, backgroundColor: 'rgba(0,0,0,0.2)', marginHorizontal: 15, borderRadius: 2 },
     progressFill: { height: '100%', backgroundColor: '#4CAF50', borderRadius: 2 },
 
     gameArea: {
@@ -365,19 +379,19 @@ const styles = StyleSheet.create({
         gap: 6,
         padding: 4,
     },
-    arrow: { fontSize: 28, color: '#5D4037', marginHorizontal: 5 },
+    arrow: { fontSize: 28, color: '#fff', marginHorizontal: 5, textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
 
     shadowSlot: {
-        backgroundColor: 'rgba(0,0,0,0.12)',
+        backgroundColor: 'rgba(0,0,0,0.15)',
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: 'rgba(0,0,0,0.15)',
+        borderColor: 'rgba(255,255,255,0.3)',
         borderStyle: 'dashed',
     },
     shadowMatched: {
-        backgroundColor: 'rgba(76,175,80,0.25)',
+        backgroundColor: 'rgba(76,175,80,0.35)',
         borderColor: '#4CAF50',
         borderStyle: 'solid',
     },
@@ -388,7 +402,7 @@ const styles = StyleSheet.create({
         top: '38%',
         left: '22%',
         right: '22%',
-        backgroundColor: '#fff',
+        backgroundColor: 'rgba(255,255,255,0.95)',
         borderRadius: 20,
         padding: 20,
         alignItems: 'center',
