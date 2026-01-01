@@ -244,8 +244,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
         <ImageBackground
             source={require('@/assets/images/green_background.png')}
             style={styles.container}
-            blurRadius={Platform.OS === 'web' ? 3 : 5}
-            resizeMode="cover"
+            imageStyle={styles.bgImage}
         >
             {/* Blur overlay */}
             <View style={styles.blurOverlay} />
@@ -331,10 +330,19 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
+    bgImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
+    },
     blurOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: 'rgba(255,255,255,0.15)',
     },
 
     header: {
