@@ -11,6 +11,7 @@ import KutuyuBul from '@/components/KutuyuBul';
 import MuzikCalar from '@/components/MuzikCalar';
 import RakamYazma from '@/components/RakamYazma';
 import SayilariBirlestir from '@/components/SayilariBirlestir';
+import ShadowDetective from '@/components/ShadowDetective';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
@@ -399,6 +400,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Yapboz</Text>
                   <Text style={styles.oyunAciklama}>3x3 Puzzle Oyunu</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#1565C0' }]} onPress={() => oyunuBaslat('golge-dedektifi')}>
+                  <Ionicons name="eye-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Gölge Dedektifi</Text>
+                  <Text style={styles.oyunAciklama}>Nesneleri Eşleştir</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -616,6 +623,16 @@ export default function App() {
 
   if (asama === 'yapboz') {
     return <YapbozOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'golge-dedektifi') {
+    return (
+      <ShadowDetective
+        config={{ level: 1, itemCount: 3, hasDistractors: false, assets: { objects: [], shadows: [] } }}
+        onGameEnd={oyunuBitir}
+        onExit={() => setAsama('menu')}
+      />
+    );
   }
 
   if (asama === 'ceviz-macera') {

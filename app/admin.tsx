@@ -301,6 +301,8 @@ export default function AdminPanel() {
                 // Sosyal-Duygusal Gelişim (Kullanıcının belirlediği kodlar)
                 'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim', surec: 'Değer Kazanımı', cikti: 'SDB.3', ciktiAciklama: 'Duyarlılık ve yardımseverlik', deger: 'Yardımseverlik' },
                 'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', surec: 'Değer Kazanımı', cikti: 'SDB.2.1', ciktiAciklama: 'Aile bütünlüğü ve aidiyet duygusu', deger: 'Aile Bütünlüğü' },
+                // Yeni Oyunlar
+                'golge-dedektifi': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme' },
             };
 
             const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
@@ -783,6 +785,7 @@ ChildhoodTech Ekibi
             'yaratici-cizim': { alan: 'Sanat', cikti: 'SNAB4' },
             'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.3' },
             'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.2.1' },
+            'golge-dedektifi': { alan: 'Matematik', cikti: 'MAB.2' },
         };
         // Bilinmeyen oyunlar için varsayılan: MAB.2 (Matematik - Muhakeme)
         // ASLA GB.1 veya 'Genel Gelişim' kullanma!
