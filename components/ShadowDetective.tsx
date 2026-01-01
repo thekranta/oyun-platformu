@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     Animated,
     Dimensions,
-    Easing,
     Image,
     ImageSourcePropType,
     PanResponder,
@@ -32,131 +31,89 @@ interface ShadowDetectiveProps {
     onExit: () => void;
 }
 
-// ============= ASSET GRUPLARI =============
+// ============= ASSETS =============
 interface AnimalAsset {
     id: string;
     name: string;
     source: ImageSourcePropType;
-    group: 'farm' | 'jungle' | 'sea';
+    color: string;
 }
 
-// FARM Grubu (Kara hayvanları)
-const FARM_ANIMALS: AnimalAsset[] = [
-    { id: 'horse', name: 'At', source: require('@/assets/images/animal_horse.png'), group: 'farm' },
-    { id: 'elephant', name: 'Fil', source: require('@/assets/images/animal_elephant.png'), group: 'farm' },
-    { id: 'lion', name: 'Aslan', source: require('@/assets/images/animal_lion.png'), group: 'farm' },
-    { id: 'monkey', name: 'Maymun', source: require('@/assets/images/animal_monkey.png'), group: 'farm' },
+const ANIMALS: AnimalAsset[] = [
+    { id: 'horse', name: 'At', source: require('@/assets/images/animal_horse.png'), color: '#8D6E63' },
+    { id: 'elephant', name: 'Fil', source: require('@/assets/images/animal_elephant.png'), color: '#78909C' },
+    { id: 'lion', name: 'Aslan', source: require('@/assets/images/animal_lion.png'), color: '#FFB74D' },
+    { id: 'monkey', name: 'Maymun', source: require('@/assets/images/animal_monkey.png'), color: '#A1887F' },
+    { id: 'giraffe', name: 'Zürafa', source: require('@/assets/images/animal_giraffe.png'), color: '#FFF176' },
+    { id: 'snake', name: 'Yılan', source: require('@/assets/images/animal_snake.png'), color: '#81C784' },
+    { id: 'bird', name: 'Kuş', source: require('@/assets/images/animal_bird.png'), color: '#FF8A65' },
+    { id: 'octopus', name: 'Ahtapot', source: require('@/assets/images/animal_octopus.png'), color: '#CE93D8' },
+    { id: 'crab', name: 'Yengeç', source: require('@/assets/images/animal_crab.png'), color: '#EF5350' },
+    { id: 'whale', name: 'Balina', source: require('@/assets/images/animal_whale.png'), color: '#64B5F6' },
+    { id: 'turtle', name: 'Kaplumbağa', source: require('@/assets/images/animal_turtle.png'), color: '#4DB6AC' },
 ];
-
-// JUNGLE Grubu
-const JUNGLE_ANIMALS: AnimalAsset[] = [
-    { id: 'giraffe', name: 'Zürafa', source: require('@/assets/images/animal_giraffe.png'), group: 'jungle' },
-    { id: 'snake', name: 'Yılan', source: require('@/assets/images/animal_snake.png'), group: 'jungle' },
-    { id: 'bird', name: 'Kuş', source: require('@/assets/images/animal_bird.png'), group: 'jungle' },
-    { id: 'lion2', name: 'Aslan', source: require('@/assets/images/animal_lion.png'), group: 'jungle' },
-    { id: 'monkey2', name: 'Maymun', source: require('@/assets/images/animal_monkey.png'), group: 'jungle' },
-    { id: 'elephant2', name: 'Fil', source: require('@/assets/images/animal_elephant.png'), group: 'jungle' },
-];
-
-// SEA Grubu
-const SEA_ANIMALS: AnimalAsset[] = [
-    { id: 'octopus', name: 'Ahtapot', source: require('@/assets/images/animal_octopus.png'), group: 'sea' },
-    { id: 'crab', name: 'Yengeç', source: require('@/assets/images/animal_crab.png'), group: 'sea' },
-    { id: 'whale', name: 'Balina', source: require('@/assets/images/animal_whale.png'), group: 'sea' },
-    { id: 'turtle', name: 'Kaplumbağa', source: require('@/assets/images/animal_turtle.png'), group: 'sea' },
-];
-
-// Tüm hayvanlar
-const ALL_ANIMALS = [...FARM_ANIMALS, ...JUNGLE_ANIMALS.slice(0, 4), ...SEA_ANIMALS];
 
 const { width: screenW, height: screenH } = Dimensions.get('window');
-const isSmallScreen = screenH < 700;
 
-// ============= TUR KONFIGÜRASYONU (10 TUR) =============
-interface RoundConfig {
-    group: 'farm' | 'jungle' | 'sea' | 'all';
-    itemCount: number;
-    distractors: number;
-    label: string;
-}
-
-const ROUND_CONFIGS: RoundConfig[] = [
-    // Tur 1-2: Isınma - farm
-    { group: 'farm', itemCount: 3, distractors: 0, label: 'Isınma' },
-    { group: 'farm', itemCount: 3, distractors: 0, label: 'Isınma' },
-    // Tur 3-4: Gelişim - jungle
-    { group: 'jungle', itemCount: 4, distractors: 0, label: 'Gelişim' },
-    { group: 'jungle', itemCount: 4, distractors: 0, label: 'Gelişim' },
-    // Tur 5-6: Dikkat - sea + çeldirici
-    { group: 'sea', itemCount: 4, distractors: 1, label: 'Dikkat' },
-    { group: 'sea', itemCount: 4, distractors: 1, label: 'Dikkat' },
-    // Tur 7-8: Karmaşıklık - karma
-    { group: 'all', itemCount: 5, distractors: 1, label: 'Karmaşıklık' },
-    { group: 'all', itemCount: 5, distractors: 1, label: 'Karmaşıklık' },
-    // Tur 9-10: Zirve - karma + 2 çeldirici
-    { group: 'all', itemCount: 6, distractors: 2, label: 'Zirve' },
-    { group: 'all', itemCount: 6, distractors: 2, label: 'Zirve' },
+// ============= TUR CONFIG =============
+const ROUND_CONFIGS = [
+    { count: 3, distractors: 0 },
+    { count: 3, distractors: 0 },
+    { count: 4, distractors: 0 },
+    { count: 4, distractors: 0 },
+    { count: 4, distractors: 1 },
+    { count: 4, distractors: 1 },
+    { count: 5, distractors: 1 },
+    { count: 5, distractors: 1 },
+    { count: 6, distractors: 2 },
+    { count: 6, distractors: 2 },
 ];
 
-// ============= MOTİVASYON MESAJLARI =============
-const MOTIVATION_MESSAGES = [
-    { round: 3, emoji: '🌟', message: 'Harikasın!' },
-    { round: 6, emoji: '⚡', message: 'Çok Hızlısın!' },
-    { round: 9, emoji: '🏆', message: 'Süpersin!' },
+const MOTIVATION = [
+    { round: 3, emoji: '🌟', text: 'Harikasın!' },
+    { round: 6, emoji: '⚡', text: 'Süper Hızlı!' },
+    { round: 9, emoji: '🏆', text: 'Şampiyon!' },
 ];
 
-// ============= TUR VERİSİ =============
-interface RoundData {
-    tur_no: number;
-    hata_sayisi: number;
-    sure: number;
-    grup: string;
-    nesne_sayisi: number;
-}
-
-// ============= DRAGGABLE ANIMAL =============
-interface DraggableAnimalProps {
+// ============= DRAGGABLE =============
+function DraggableAnimal({ animal, size, isMatched, onDrop }: {
     animal: AnimalAsset;
     size: number;
     isMatched: boolean;
-    isShaking: boolean;
-    shakeAnim: Animated.Value;
     onDrop: (id: string, x: number, y: number) => boolean;
-}
-
-function DraggableAnimal({ animal, size, isMatched, isShaking, shakeAnim, onDrop }: DraggableAnimalProps) {
+}) {
     const pan = useRef(new Animated.ValueXY()).current;
     const scale = useRef(new Animated.Value(1)).current;
+    const bounce = useRef(new Animated.Value(0)).current;
+
+    // Idle bounce animation
+    useEffect(() => {
+        if (!isMatched) {
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(bounce, { toValue: -5, duration: 800, useNativeDriver: true }),
+                    Animated.timing(bounce, { toValue: 5, duration: 800, useNativeDriver: true }),
+                ])
+            ).start();
+        }
+        return () => bounce.stopAnimation();
+    }, [isMatched]);
 
     const panResponder = useMemo(() => PanResponder.create({
         onStartShouldSetPanResponder: () => !isMatched,
         onMoveShouldSetPanResponder: () => !isMatched,
         onPanResponderGrant: () => {
-            pan.setOffset({
-                // @ts-ignore
-                x: pan.x._value,
-                // @ts-ignore
-                y: pan.y._value,
-            });
+            // @ts-ignore
+            pan.setOffset({ x: pan.x._value, y: pan.y._value });
             pan.setValue({ x: 0, y: 0 });
-            Animated.spring(scale, { toValue: 1.15, friction: 5, useNativeDriver: true }).start();
+            Animated.spring(scale, { toValue: 1.25, friction: 4, useNativeDriver: true }).start();
         },
-        onPanResponderMove: Animated.event(
-            [null, { dx: pan.x, dy: pan.y }],
-            { useNativeDriver: false }
-        ),
-        onPanResponderRelease: (_, gesture) => {
+        onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
+        onPanResponderRelease: (_, g) => {
             pan.flattenOffset();
-            Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
-
-            const success = onDrop(animal.id, gesture.moveX, gesture.moveY);
-
-            if (!success) {
-                Animated.spring(pan, {
-                    toValue: { x: 0, y: 0 },
-                    friction: 6,
-                    useNativeDriver: false,
-                }).start();
+            Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+            if (!onDrop(animal.id, g.moveX, g.moveY)) {
+                Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 5, useNativeDriver: false }).start();
             }
         },
     }), [isMatched, animal.id, onDrop]);
@@ -164,119 +121,81 @@ function DraggableAnimal({ animal, size, isMatched, isShaking, shakeAnim, onDrop
     return (
         <Animated.View
             style={[
-                styles.animalItem,
+                styles.animalCard,
                 {
                     width: size,
                     height: size,
-                    opacity: isMatched ? 0.25 : 1,
+                    backgroundColor: animal.color,
+                    opacity: isMatched ? 0.3 : 1,
                     transform: [
                         { translateX: pan.x },
                         { translateY: pan.y },
-                        { scale: scale },
-                        { translateX: isShaking ? shakeAnim : 0 },
+                        { translateY: bounce },
+                        { scale },
                     ],
-                    zIndex: isShaking ? 100 : 1,
                 },
             ]}
             {...panResponder.panHandlers}
         >
-            <Image source={animal.source} style={styles.animalImage} resizeMode="contain" />
+            <Image source={animal.source} style={styles.animalImg} resizeMode="contain" />
+            {!isMatched && <Text style={styles.animalName}>{animal.name}</Text>}
         </Animated.View>
     );
 }
 
-// ============= MAIN COMPONENT =============
+// ============= MAIN =============
 export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDetectiveProps) {
-    const TOTAL_ROUNDS = 10;
-
-    // State
+    const TOTAL = 10;
     const [round, setRound] = useState(1);
     const [animals, setAnimals] = useState<AnimalAsset[]>([]);
     const [shadows, setShadows] = useState<AnimalAsset[]>([]);
     const [matched, setMatched] = useState<Set<string>>(new Set());
-    const [roundErrors, setRoundErrors] = useState(0);
+    const [errors, setErrors] = useState(0);
     const [totalErrors, setTotalErrors] = useState(0);
-    const [totalMoves, setTotalMoves] = useState(0);
+    const [moves, setMoves] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
-    const [showMotivation, setShowMotivation] = useState<{ emoji: string; message: string } | null>(null);
-    const [gameStartTime] = useState(Date.now());
-    const [roundStartTime, setRoundStartTime] = useState(Date.now());
-    const [shakeId, setShakeId] = useState<string | null>(null);
-    const [roundDataList, setRoundDataList] = useState<RoundData[]>([]);
-    const [gameComplete, setGameComplete] = useState(false);
+    const [showMotivation, setShowMotivation] = useState<{ emoji: string; text: string } | null>(null);
+    const [gameStart] = useState(Date.now());
+    const [roundStart, setRoundStart] = useState(Date.now());
+    const [roundData, setRoundData] = useState<any[]>([]);
 
-    // Refs
-    const shakeAnim = useRef(new Animated.Value(0)).current;
     const successScale = useRef(new Animated.Value(0)).current;
-    const starAnims = useRef(Array(10).fill(0).map(() => new Animated.Value(0))).current;
-    const shadowLayoutsRef = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
+    const shadowRefs = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
 
-    // Sizes
-    const itemSize = isSmallScreen ? 85 : 110;
-    const shadowSize = isSmallScreen ? 80 : 105;
+    const cfg = ROUND_CONFIGS[round - 1] || ROUND_CONFIGS[0];
+    const itemSize = Math.min(screenW * 0.22, 120);
+    const shadowSize = itemSize * 0.9;
 
-    // Current config
-    const roundConfig = ROUND_CONFIGS[round - 1] || ROUND_CONFIGS[0];
-
-    // Get animals for group
-    const getAnimalsForGroup = (group: 'farm' | 'jungle' | 'sea' | 'all') => {
-        switch (group) {
-            case 'farm': return [...FARM_ANIMALS];
-            case 'jungle': return [...JUNGLE_ANIMALS];
-            case 'sea': return [...SEA_ANIMALS];
-            case 'all': return [...ALL_ANIMALS];
-        }
-    };
-
-    // Init round
-    useEffect(() => {
-        initRound();
-    }, [round]);
+    useEffect(() => { initRound(); }, [round]);
 
     const initRound = () => {
-        const pool = getAnimalsForGroup(roundConfig.group).sort(() => Math.random() - 0.5);
-        const selected = pool.slice(0, Math.min(roundConfig.itemCount, pool.length));
-
+        const shuffled = [...ANIMALS].sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, cfg.count);
         let shadowList = [...selected];
-        if (roundConfig.distractors > 0) {
-            const remaining = pool.filter(a => !selected.find(s => s.id === a.id));
-            shadowList = [...shadowList, ...remaining.slice(0, roundConfig.distractors)];
+        if (cfg.distractors > 0) {
+            const extra = shuffled.filter(a => !selected.find(s => s.id === a.id)).slice(0, cfg.distractors);
+            shadowList = [...shadowList, ...extra].sort(() => Math.random() - 0.5);
         }
-        shadowList = shadowList.sort(() => Math.random() - 0.5);
-
         setAnimals(selected);
         setShadows(shadowList);
         setMatched(new Set());
-        setRoundErrors(0);
-        setRoundStartTime(Date.now());
-        shadowLayoutsRef.current.clear();
+        setErrors(0);
+        setRoundStart(Date.now());
+        shadowRefs.current.clear();
     };
 
-    // Check round complete
     useEffect(() => {
-        if (matched.size === animals.length && animals.length > 0) {
-            handleRoundComplete();
-        }
+        if (matched.size === animals.length && animals.length > 0) completeRound();
     }, [matched, animals.length]);
 
-    const handleRoundComplete = () => {
-        // Save round data
-        const roundDuration = Math.floor((Date.now() - roundStartTime) / 1000);
-        const newData: RoundData = {
-            tur_no: round,
-            hata_sayisi: roundErrors,
-            sure: roundDuration,
-            grup: roundConfig.group,
-            nesne_sayisi: roundConfig.itemCount,
-        };
-        setRoundDataList(prev => [...prev, newData]);
+    const completeRound = () => {
+        const dur = Math.floor((Date.now() - roundStart) / 1000);
+        setRoundData(prev => [...prev, { tur: round, hata: errors, sure: dur }]);
 
-        // Check motivation
-        const motivation = MOTIVATION_MESSAGES.find(m => m.round === round);
-        if (motivation) {
-            setShowMotivation(motivation);
-            animateStars();
-            setTimeout(() => setShowMotivation(null), 2200);
+        const mot = MOTIVATION.find(m => m.round === round);
+        if (mot) {
+            setShowMotivation(mot);
+            setTimeout(() => setShowMotivation(null), 2000);
         }
 
         setShowSuccess(true);
@@ -285,75 +204,30 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
         setTimeout(() => {
             successScale.setValue(0);
             setShowSuccess(false);
-
-            if (round < TOTAL_ROUNDS) {
-                setRound(r => r + 1);
-            } else {
-                setGameComplete(true);
-                finishGame();
-            }
-        }, motivation ? 2500 : 1200);
-    };
-
-    const animateStars = () => {
-        starAnims.forEach((anim, i) => {
-            Animated.sequence([
-                Animated.delay(i * 60),
-                Animated.timing(anim, {
-                    toValue: 1,
-                    duration: 500,
-                    easing: Easing.out(Easing.back(2)),
-                    useNativeDriver: true,
-                }),
-            ]).start(() => anim.setValue(0));
-        });
+            if (round < TOTAL) setRound(r => r + 1);
+            else finishGame();
+        }, mot ? 2500 : 1200);
     };
 
     const finishGame = () => {
-        const totalDuration = Math.floor((Date.now() - gameStartTime) / 1000);
-
-        // Tur bazlı rapor
-        const turRaporu = roundDataList.map(r => ({
-            tur: r.tur_no,
-            hata: r.hata_sayisi,
-            sure: r.sure,
-            grup: r.grup,
-        }));
-
-        onGameEnd('Gölge Dedektifi', totalDuration, totalMoves, totalErrors, undefined, {
+        const dur = Math.floor((Date.now() - gameStart) / 1000);
+        onGameEnd('Gölge Dedektifi', dur, moves, totalErrors, undefined, {
             zorlukSeviyesi: config.level,
-            kazanimOdagi: 'Görsel Çözümleme ve Eşleştirme',
-            tamamlanan_tur: round,
-            toplam_tur: TOTAL_ROUNDS,
-            tur_bazli_veri: turRaporu,
+            kazanimOdagi: 'Görsel Çözümleme',
+            tur_verisi: roundData,
         });
     };
 
-    const triggerShake = (id: string) => {
-        setShakeId(id);
-        Animated.sequence([
-            Animated.timing(shakeAnim, { toValue: 12, duration: 40, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -12, duration: 40, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 12, duration: 40, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
-        ]).start(() => setShakeId(null));
-    };
-
-    const handleDrop = useCallback((animalId: string, dropX: number, dropY: number): boolean => {
-        setTotalMoves(m => m + 1);
-
-        for (const [shadowId, layout] of shadowLayoutsRef.current.entries()) {
-            const inX = dropX >= layout.x && dropX <= layout.x + layout.w;
-            const inY = dropY >= layout.y && dropY <= layout.y + layout.h;
-
-            if (inX && inY) {
-                if (animalId === shadowId) {
-                    setMatched(prev => new Set(prev).add(animalId));
+    const handleDrop = useCallback((id: string, x: number, y: number): boolean => {
+        setMoves(m => m + 1);
+        for (const [sid, layout] of shadowRefs.current.entries()) {
+            if (x >= layout.x && x <= layout.x + layout.w && y >= layout.y && y <= layout.y + layout.h) {
+                if (id === sid) {
+                    setMatched(prev => new Set(prev).add(id));
                     return true;
                 } else {
-                    setRoundErrors(e => e + 1);
+                    setErrors(e => e + 1);
                     setTotalErrors(e => e + 1);
-                    triggerShake(animalId);
                     return false;
                 }
             }
@@ -363,109 +237,118 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 
     const onShadowLayout = (id: string, ref: View | null) => {
         if (!ref) return;
-        ref.measure((x, y, w, h, pageX, pageY) => {
-            shadowLayoutsRef.current.set(id, { x: pageX, y: pageY, w, h });
+        ref.measure((x, y, w, h, px, py) => {
+            shadowRefs.current.set(id, { x: px, y: py, w, h });
         });
     };
 
     return (
         <View style={styles.container}>
-            {/* Pastel Background */}
-            <View style={styles.bg}>
-                <View style={styles.sky} />
-                <View style={styles.hills} />
-                <View style={styles.grass} />
-            </View>
+            {/* Colorful Background */}
+            <View style={styles.bgTop} />
+            <View style={styles.bgBottom} />
+
+            {/* Decorations */}
+            <View style={[styles.cloud, { left: 20, top: 80 }]} />
+            <View style={[styles.cloud, { right: 30, top: 120 }]} />
+            <View style={[styles.sun, { right: 20, top: 40 }]} />
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onExit} style={styles.backBtn}>
-                    <Ionicons name="close" size={20} color="#fff" />
+                <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
+                    <Ionicons name="home" size={22} color="#fff" />
                 </TouchableOpacity>
-                <View style={styles.headerCenter}>
-                    <Text style={styles.title}>Tur {round}/{TOTAL_ROUNDS}</Text>
-                    <Text style={styles.subtitle}>{roundConfig.label}</Text>
+                <View style={styles.roundBadge}>
+                    <Text style={styles.roundText}>🔍 Tur {round}/{TOTAL}</Text>
                 </View>
-                <View style={styles.headerStats}>
-                    <Text style={styles.statText}>✗ {roundErrors}</Text>
+                <View style={styles.errorBadge}>
+                    <Text style={styles.errorText}>❌ {errors}</Text>
                 </View>
             </View>
 
-            {/* Progress */}
-            <View style={styles.progressWrap}>
-                <View style={[styles.progressBar, { width: `${(round / TOTAL_ROUNDS) * 100}%` }]} />
+            {/* Progress Stars */}
+            <View style={styles.starsRow}>
+                {Array(TOTAL).fill(0).map((_, i) => (
+                    <Text key={i} style={[styles.star, i < round && styles.starActive]}>
+                        {i < round ? '⭐' : '☆'}
+                    </Text>
+                ))}
             </View>
 
-            {/* Game Area */}
-            <View style={styles.gameArea}>
-                {/* Animals */}
-                <View style={styles.column}>
-                    {animals.map(animal => (
-                        <DraggableAnimal
-                            key={`animal-${animal.id}-${round}`}
-                            animal={animal}
-                            size={itemSize}
-                            isMatched={matched.has(animal.id)}
-                            isShaking={shakeId === animal.id}
-                            shakeAnim={shakeAnim}
-                            onDrop={handleDrop}
-                        />
-                    ))}
-                </View>
-
-                {/* Shadows */}
-                <View style={styles.column}>
-                    {shadows.map((shadow, idx) => (
-                        <View
-                            key={`shadow-${shadow.id}-${idx}-${round}`}
-                            ref={ref => onShadowLayout(shadow.id, ref)}
-                            style={[
-                                styles.shadowSlot,
-                                { width: shadowSize, height: shadowSize },
-                                matched.has(shadow.id) && styles.shadowMatched,
-                            ]}
-                        >
-                            <Image
-                                source={shadow.source}
-                                style={[
-                                    styles.shadowImage,
-                                    { tintColor: matched.has(shadow.id) ? '#2E7D32' : '#000', opacity: matched.has(shadow.id) ? 1 : 0.55 },
-                                ]}
-                                resizeMode="contain"
+            {/* Main Game Area */}
+            <View style={styles.gameContainer}>
+                {/* Animals Side */}
+                <View style={styles.side}>
+                    <Text style={styles.sideTitle}>🎨 Renkli</Text>
+                    <View style={styles.itemsGrid}>
+                        {animals.map(a => (
+                            <DraggableAnimal
+                                key={`a-${a.id}-${round}`}
+                                animal={a}
+                                size={itemSize}
+                                isMatched={matched.has(a.id)}
+                                onDrop={handleDrop}
                             />
-                        </View>
-                    ))}
+                        ))}
+                    </View>
+                </View>
+
+                {/* Arrow */}
+                <View style={styles.arrowContainer}>
+                    <Text style={styles.arrow}>➡️</Text>
+                </View>
+
+                {/* Shadows Side */}
+                <View style={styles.side}>
+                    <Text style={styles.sideTitle}>👤 Gölge</Text>
+                    <View style={styles.itemsGrid}>
+                        {shadows.map((s, i) => (
+                            <View
+                                key={`s-${s.id}-${i}-${round}`}
+                                ref={r => onShadowLayout(s.id, r)}
+                                style={[
+                                    styles.shadowCard,
+                                    { width: shadowSize, height: shadowSize },
+                                    matched.has(s.id) && styles.shadowMatched,
+                                ]}
+                            >
+                                <Image
+                                    source={s.source}
+                                    style={[styles.shadowImg, { tintColor: matched.has(s.id) ? '#4CAF50' : '#1a1a1a' }]}
+                                    resizeMode="contain"
+                                />
+                                {matched.has(s.id) && <Text style={styles.checkMark}>✅</Text>}
+                            </View>
+                        ))}
+                    </View>
                 </View>
             </View>
 
-            {/* Success */}
+            {/* Instructions */}
+            <View style={styles.instructionBar}>
+                <Text style={styles.instructionText}>👆 Hayvanı sürükle → Gölgesine bırak!</Text>
+            </View>
+
+            {/* Success Popup */}
             {showSuccess && (
-                <Animated.View style={[styles.successBox, { transform: [{ scale: successScale }] }]}>
-                    <Text style={styles.successEmoji}>✅</Text>
+                <Animated.View style={[styles.successPopup, { transform: [{ scale: successScale }] }]}>
+                    <Text style={styles.successEmoji}>🎉</Text>
                     <Text style={styles.successText}>Tur {round} Tamam!</Text>
                 </Animated.View>
             )}
 
-            {/* Motivation */}
+            {/* Motivation Overlay */}
             {showMotivation && (
                 <View style={styles.motivationOverlay}>
                     <Text style={styles.motivationEmoji}>{showMotivation.emoji}</Text>
-                    <Text style={styles.motivationText}>{showMotivation.message}</Text>
-                    {starAnims.map((anim, i) => (
-                        <Animated.Text
-                            key={`star-${i}`}
-                            style={{
-                                position: 'absolute',
-                                fontSize: 28,
-                                left: 30 + (i % 5) * 55,
-                                top: 60 + Math.floor(i / 5) * 100,
-                                transform: [{ scale: anim }, { rotate: `${i * 36}deg` }],
-                                opacity: anim,
-                            }}
-                        >
-                            ⭐
-                        </Animated.Text>
-                    ))}
+                    <Text style={styles.motivationText}>{showMotivation.text}</Text>
+                    <View style={styles.starsExplosion}>
+                        {['⭐', '✨', '🌟', '💫', '⭐', '✨'].map((s, i) => (
+                            <Animated.Text key={i} style={[styles.explodeStar, { left: 30 + i * 45, top: 20 + (i % 2) * 60 }]}>
+                                {s}
+                            </Animated.Text>
+                        ))}
+                    </View>
                 </View>
             )}
         </View>
@@ -474,70 +357,100 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    bg: { ...StyleSheet.absoluteFillObject },
-    sky: { flex: 1, backgroundColor: '#B3E5FC' },
-    hills: { height: 80, backgroundColor: '#81C784', borderTopLeftRadius: 100, borderTopRightRadius: 100 },
-    grass: { height: 40, backgroundColor: '#4CAF50' },
+    bgTop: { position: 'absolute', top: 0, left: 0, right: 0, height: '60%', backgroundColor: '#87CEEB' },
+    bgBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '45%', backgroundColor: '#90EE90', borderTopLeftRadius: 50, borderTopRightRadius: 50 },
+    cloud: { position: 'absolute', width: 70, height: 30, backgroundColor: '#fff', borderRadius: 20, opacity: 0.8 },
+    sun: { position: 'absolute', width: 50, height: 50, backgroundColor: '#FFD700', borderRadius: 25 },
+
     header: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: Platform.OS === 'web' ? 10 : 45,
-        paddingHorizontal: 12,
-        paddingBottom: 8,
-        backgroundColor: 'rgba(55,71,79,0.85)',
-        zIndex: 20,
-    },
-    backBtn: { padding: 8, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.15)' },
-    headerCenter: { flex: 1, alignItems: 'center' },
-    title: { fontSize: 18, fontWeight: 'bold', color: '#fff' },
-    subtitle: { fontSize: 11, color: '#B0BEC5' },
-    headerStats: { paddingHorizontal: 10, paddingVertical: 4, backgroundColor: '#FF5252', borderRadius: 10 },
-    statText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
-    progressWrap: { position: 'absolute', top: Platform.OS === 'web' ? 60 : 95, left: 0, right: 0, height: 3, backgroundColor: 'rgba(0,0,0,0.1)', zIndex: 15 },
-    progressBar: { height: '100%', backgroundColor: '#4CAF50' },
-    gameArea: {
-        flex: 1,
-        flexDirection: 'row',
-        paddingTop: Platform.OS === 'web' ? 70 : 105,
-        paddingHorizontal: 10,
+        justifyContent: 'space-between',
+        paddingTop: Platform.OS === 'web' ? 15 : 50,
+        paddingHorizontal: 15,
         paddingBottom: 10,
+        zIndex: 10,
     },
-    column: {
+    exitBtn: { padding: 10, backgroundColor: '#FF6B6B', borderRadius: 20 },
+    roundBadge: { backgroundColor: '#4ECDC4', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20 },
+    roundText: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+    errorBadge: { backgroundColor: '#FFE66D', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 },
+    errorText: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+
+    starsRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 5,
+        paddingVertical: 8,
+    },
+    star: { fontSize: 18, color: '#ccc' },
+    starActive: { color: '#FFD700' },
+
+    gameContainer: {
         flex: 1,
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        alignContent: 'center',
-        gap: 10,
-    },
-    animalItem: { backgroundColor: 'transparent' },
-    animalImage: { width: '100%', height: '100%' },
-    shadowSlot: {
-        backgroundColor: 'rgba(0,0,0,0.08)',
-        borderRadius: 16,
-        justifyContent: 'center',
         alignItems: 'center',
+        paddingHorizontal: 10,
     },
-    shadowMatched: { backgroundColor: 'rgba(76,175,80,0.25)' },
-    shadowImage: { width: '80%', height: '80%' },
-    successBox: {
-        position: 'absolute',
-        top: '40%',
-        left: '25%',
-        right: '25%',
-        backgroundColor: '#fff',
+    side: { flex: 1, alignItems: 'center' },
+    sideTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)', paddingHorizontal: 15, paddingVertical: 5, borderRadius: 15 },
+    itemsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
+
+    arrowContainer: { paddingHorizontal: 10 },
+    arrow: { fontSize: 30 },
+
+    animalCard: {
         borderRadius: 20,
-        padding: 20,
+        padding: 8,
         alignItems: 'center',
-        elevation: 10,
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 8,
+    },
+    animalImg: { width: '75%', height: '65%' },
+    animalName: { fontSize: 11, fontWeight: 'bold', color: '#fff', marginTop: 3, textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 2 },
+
+    shadowCard: {
+        backgroundColor: 'rgba(50,50,50,0.15)',
+        borderRadius: 20,
+        borderWidth: 3,
+        borderColor: 'rgba(0,0,0,0.2)',
+        borderStyle: 'dashed',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    shadowMatched: { backgroundColor: 'rgba(76,175,80,0.3)', borderColor: '#4CAF50', borderStyle: 'solid' },
+    shadowImg: { width: '70%', height: '70%', opacity: 0.7 },
+    checkMark: { position: 'absolute', fontSize: 24 },
+
+    instructionBar: {
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        marginHorizontal: 20,
+        marginBottom: 15,
+        paddingVertical: 12,
+        borderRadius: 25,
+        alignItems: 'center',
+    },
+    instructionText: { fontSize: 15, fontWeight: '600', color: '#333' },
+
+    successPopup: {
+        position: 'absolute',
+        top: '35%',
+        left: '20%',
+        right: '20%',
+        backgroundColor: '#fff',
+        borderRadius: 25,
+        padding: 25,
+        alignItems: 'center',
+        elevation: 20,
         zIndex: 100,
     },
-    successEmoji: { fontSize: 40 },
-    successText: { fontSize: 18, fontWeight: 'bold', color: '#4CAF50', marginTop: 5 },
+    successEmoji: { fontSize: 50 },
+    successText: { fontSize: 22, fontWeight: 'bold', color: '#4CAF50', marginTop: 8 },
+
     motivationOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(255,193,7,0.95)',
@@ -545,6 +458,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         zIndex: 200,
     },
-    motivationEmoji: { fontSize: 70 },
-    motivationText: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginTop: 10 },
+    motivationEmoji: { fontSize: 80 },
+    motivationText: { fontSize: 36, fontWeight: 'bold', color: '#fff', marginTop: 15, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 5 },
+    starsExplosion: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+    explodeStar: { position: 'absolute', fontSize: 35 },
 });
