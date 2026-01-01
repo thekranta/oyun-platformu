@@ -44,22 +44,38 @@ const ANIMALS: AnimalAsset[] = [
     { id: 1, name: 'Fil', source: require('@/assets/images/animal_elephant.png') },
     { id: 2, name: 'Yılan', source: require('@/assets/images/animal_snake.png') },
     { id: 3, name: 'Kuş', source: require('@/assets/images/animal_bird.png') },
+    // Ek hayvanlar için meyveleri kullan
+    { id: 4, name: 'Elma', source: require('@/assets/images/elma.png') },
+    { id: 5, name: 'Kedi', source: require('@/assets/images/kedi.png') },
+    { id: 6, name: 'Top', source: require('@/assets/images/top.png') },
+    { id: 7, name: 'Ev', source: require('@/assets/images/ev.png') },
 ];
 
 const { width: screenW, height: screenH } = Dimensions.get('window');
 const isSmallScreen = screenH < 700;
 
-// ============= LEVEL CONFIG =============
-const getLevelConfig = (level: number) => {
-    const configs = [
-        { itemCount: 2, distractors: 0 },
-        { itemCount: 3, distractors: 0 },
-        { itemCount: 3, distractors: 1 },
-        { itemCount: 4, distractors: 0 },
-        { itemCount: 4, distractors: 1 },
-    ];
-    return configs[Math.min(level - 1, configs.length - 1)] || configs[0];
+// ============= TUR KONFIGÜRASYONU (10 TUR) =============
+const getRoundConfig = (round: number) => {
+    if (round <= 3) return { itemCount: 3, distractors: 0 };
+    if (round <= 7) return { itemCount: 5, distractors: 1 };
+    return { itemCount: 6, distractors: 2 };
 };
+
+// ============= MOTİVASYON MESAJLARI =============
+const MOTIVATION_MESSAGES = [
+    { round: 3, emoji: '🌟', message: 'Harikasın!' },
+    { round: 6, emoji: '⚡', message: 'Çok Hızlısın!' },
+    { round: 9, emoji: '🏆', message: 'Süpersin!' },
+];
+
+// ============= TUR VERİSİ =============
+interface RoundData {
+    tur_no: number;
+    hata_sayisi: number;
+    tamamlama_suresi: number;
+    nesne_sayisi: number;
+    celdirici_sayisi: number;
+}
 
 // ============= DRAGGABLE ANIMAL COMPONENT =============
 interface DraggableAnimalProps {
@@ -138,52 +154,76 @@ function DraggableAnimal({ animal, size, isMatched, isShaking, shakeAnim, onDrop
 
 // ============= MAIN COMPONENT =============
 export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDetectiveProps) {
-    const levelConfig = getLevelConfig(config.level);
-    const itemCount = levelConfig.itemCount;
-    const distractorCount = levelConfig.distractors;
+    const TOTAL_ROUNDS = 10;
+    const MAX_ERRORS_PER_ROUND = 5;
+    const ROUND_TIMEOUT_MS = 120000; // 2 dakika
 
     // State
     const [round, setRound] = useState(1);
     const [animals, setAnimals] = useState<AnimalAsset[]>([]);
     const [shadows, setShadows] = useState<AnimalAsset[]>([]);
     const [matched, setMatched] = useState<Set<number>>(new Set());
-    const [errors, setErrors] = useState(0);
-    const [moves, setMoves] = useState(0);
+    const [roundErrors, setRoundErrors] = useState(0);
+    const [totalErrors, setTotalErrors] = useState(0);
+    const [totalMoves, setTotalMoves] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
-    const [startTime] = useState(Date.now());
+    const [showMotivation, setShowMotivation] = useState<{ emoji: string; message: string } | null>(null);
+    const [showEarlyExit, setShowEarlyExit] = useState(false);
+    const [gameStartTime] = useState(Date.now());
+    const [roundStartTime, setRoundStartTime] = useState(Date.now());
     const [shakeId, setShakeId] = useState<number | null>(null);
+    const [roundDataList, setRoundDataList] = useState<RoundData[]>([]);
 
     // Animation refs
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const successScale = useRef(new Animated.Value(0)).current;
-    const confettiAnims = useRef(Array(12).fill(0).map(() => new Animated.Value(0))).current;
+    const starAnims = useRef(Array(8).fill(0).map(() => new Animated.Value(0))).current;
 
-    // Shadow positions for hit detection
+    // Shadow positions
     const shadowLayoutsRef = useRef<Map<number, { x: number; y: number; w: number; h: number }>>(new Map());
 
-    // Item size - DAHA BÜYÜK
-    const itemSize = isSmallScreen ? 100 : 130;
-    const shadowSize = isSmallScreen ? 95 : 125;
+    // Timeout ref
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Item size
+    const itemSize = isSmallScreen ? 90 : 120;
+    const shadowSize = isSmallScreen ? 85 : 115;
+
+    // Current round config
+    const roundConfig = getRoundConfig(round);
 
     // Initialize round
     useEffect(() => {
         initRound();
+        startRoundTimer();
+        return () => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        };
     }, [round]);
+
+    const startRoundTimer = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        timeoutRef.current = setTimeout(() => {
+            handleEarlyExit('timeout');
+        }, ROUND_TIMEOUT_MS);
+    };
 
     const initRound = () => {
         const shuffled = [...ANIMALS].sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, Math.min(itemCount, ANIMALS.length));
+        const selected = shuffled.slice(0, Math.min(roundConfig.itemCount, ANIMALS.length));
 
         let shadowList = [...selected];
-        if (distractorCount > 0) {
+        if (roundConfig.distractors > 0) {
             const remaining = shuffled.filter(a => !selected.includes(a));
-            shadowList = [...shadowList, ...remaining.slice(0, distractorCount)];
+            shadowList = [...shadowList, ...remaining.slice(0, roundConfig.distractors)];
         }
         shadowList = shadowList.sort(() => Math.random() - 0.5);
 
         setAnimals(selected);
         setShadows(shadowList);
         setMatched(new Set());
+        setRoundErrors(0);
+        setRoundStartTime(Date.now());
         shadowLayoutsRef.current.clear();
     };
 
@@ -194,43 +234,115 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
         }
     }, [matched, animals.length]);
 
+    // Check for max errors
+    useEffect(() => {
+        if (roundErrors >= MAX_ERRORS_PER_ROUND) {
+            handleEarlyExit('errors');
+        }
+    }, [roundErrors]);
+
+    const handleEarlyExit = (reason: 'errors' | 'timeout') => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        setShowEarlyExit(true);
+
+        setTimeout(() => {
+            finishGame();
+        }, 2500);
+    };
+
     const handleRoundComplete = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        // Kaydet tur verisini
+        const roundDuration = Math.floor((Date.now() - roundStartTime) / 1000);
+        const newRoundData: RoundData = {
+            tur_no: round,
+            hata_sayisi: roundErrors,
+            tamamlama_suresi: roundDuration,
+            nesne_sayisi: roundConfig.itemCount,
+            celdirici_sayisi: roundConfig.distractors,
+        };
+        setRoundDataList(prev => [...prev, newRoundData]);
+
+        // Motivasyon mesajı kontrol
+        const motivation = MOTIVATION_MESSAGES.find(m => m.round === round);
+        if (motivation) {
+            setShowMotivation(motivation);
+            animateStars();
+            setTimeout(() => setShowMotivation(null), 2000);
+        }
+
         setShowSuccess(true);
-
-        Animated.spring(successScale, {
-            toValue: 1,
-            friction: 4,
-            useNativeDriver: true,
-        }).start();
-
-        confettiAnims.forEach((anim, i) => {
-            Animated.sequence([
-                Animated.delay(i * 40),
-                Animated.timing(anim, {
-                    toValue: 1,
-                    duration: 1000,
-                    easing: Easing.out(Easing.quad),
-                    useNativeDriver: true,
-                }),
-            ]).start(() => anim.setValue(0));
-        });
+        Animated.spring(successScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
 
         setTimeout(() => {
             successScale.setValue(0);
             setShowSuccess(false);
 
-            if (round < 3) {
+            if (round < TOTAL_ROUNDS) {
                 setRound(r => r + 1);
             } else {
-                const duration = Math.floor((Date.now() - startTime) / 1000);
-                onGameEnd('Gölge Dedektifi', duration, moves, errors, undefined, {
-                    zorlukSeviyesi: config.level,
-                    kazanimOdagi: 'Görsel Çözümleme',
-                    complexity_level: itemCount,
-                    distractor_count: distractorCount,
-                });
+                finishGame();
             }
-        }, 1800);
+        }, motivation ? 2500 : 1500);
+    };
+
+    const animateStars = () => {
+        starAnims.forEach((anim, i) => {
+            Animated.sequence([
+                Animated.delay(i * 80),
+                Animated.timing(anim, {
+                    toValue: 1,
+                    duration: 600,
+                    easing: Easing.out(Easing.back(2)),
+                    useNativeDriver: true,
+                }),
+            ]).start(() => anim.setValue(0));
+        });
+    };
+
+    const finishGame = () => {
+        const totalDuration = Math.floor((Date.now() - gameStartTime) / 1000);
+
+        // Analiz için tur bazlı rapor hazırla
+        const turRaporu = roundDataList.map(r => ({
+            tur: r.tur_no,
+            hata: r.hata_sayisi,
+            sure: r.tamamlama_suresi,
+            zorluk: `${r.nesne_sayisi} nesne, ${r.celdirici_sayisi} çeldirici`,
+        }));
+
+        // Performans analizi
+        let analizNotlari: string[] = [];
+
+        // 8. turdan sonra yavaşlama kontrolü
+        const sonTurlar = roundDataList.filter(r => r.tur_no >= 8);
+        const ilkTurlar = roundDataList.filter(r => r.tur_no <= 3);
+        if (sonTurlar.length > 0 && ilkTurlar.length > 0) {
+            const sonOrt = sonTurlar.reduce((a, b) => a + b.tamamlama_suresi, 0) / sonTurlar.length;
+            const ilkOrt = ilkTurlar.reduce((a, b) => a + b.tamamlama_suresi, 0) / ilkTurlar.length;
+            if (sonOrt > ilkOrt * 1.5) {
+                analizNotlari.push('Öğrenci 8. turdan itibaren yavaşlamaya başladı - çalışan bellek yükü artıyor olabilir.');
+            }
+        }
+
+        // Hata oranı değişimi
+        const ilkHatalar = ilkTurlar.reduce((a, b) => a + b.hata_sayisi, 0);
+        const sonHatalar = sonTurlar.reduce((a, b) => a + b.hata_sayisi, 0);
+        if (sonHatalar <= ilkHatalar && sonTurlar.length > 0) {
+            analizNotlari.push('Zorluk arttıkça hata oranı değişmedi - görsel tarama kapasitesi güçlü.');
+        } else if (sonHatalar > ilkHatalar * 2) {
+            analizNotlari.push('Nesne sayısı arttıkça hata oranı yükseldi - görsel tarama kapasitesinin sınırlılığı.');
+        }
+
+        onGameEnd('Gölge Dedektifi', totalDuration, totalMoves, totalErrors, undefined, {
+            zorlukSeviyesi: config.level,
+            kazanimOdagi: 'Görsel Çözümleme ve Eşleştirme',
+            tamamlanan_tur: round,
+            toplam_tur: TOTAL_ROUNDS,
+            tur_bazli_veri: turRaporu,
+            analiz_notlari: analizNotlari,
+        });
     };
 
     const triggerShake = (id: number) => {
@@ -244,7 +356,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     };
 
     const handleDrop = useCallback((animalId: number, dropX: number, dropY: number): boolean => {
-        setMoves(m => m + 1);
+        setTotalMoves(m => m + 1);
 
         for (const [shadowId, layout] of shadowLayoutsRef.current.entries()) {
             const inX = dropX >= layout.x && dropX <= layout.x + layout.w;
@@ -255,7 +367,8 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                     setMatched(prev => new Set(prev).add(animalId));
                     return true;
                 } else {
-                    setErrors(e => e + 1);
+                    setRoundErrors(e => e + 1);
+                    setTotalErrors(e => e + 1);
                     triggerShake(animalId);
                     return false;
                 }
@@ -273,12 +386,10 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 
     return (
         <View style={styles.container}>
-            {/* Pastel Nature Background */}
+            {/* Background */}
             <View style={styles.bgGradient}>
                 <View style={styles.bgTree1} />
                 <View style={styles.bgTree2} />
-                <View style={styles.bgCloud1} />
-                <View style={styles.bgCloud2} />
                 <View style={styles.bgGrass} />
             </View>
 
@@ -289,16 +400,21 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                 </TouchableOpacity>
                 <View style={styles.headerInfo}>
                     <Text style={styles.title}>🔍 Gölge Dedektifi</Text>
-                    <Text style={styles.subtitle}>Tur {round}/3 • Seviye {config.level}</Text>
+                    <Text style={styles.subtitle}>Tur {round}/{TOTAL_ROUNDS}</Text>
                 </View>
                 <View style={styles.stats}>
                     <View style={[styles.statBadge, { backgroundColor: '#4CAF50' }]}>
                         <Text style={styles.statText}>✓ {matched.size}/{animals.length}</Text>
                     </View>
-                    <View style={[styles.statBadge, { backgroundColor: errors > 0 ? '#FF5252' : '#78909C' }]}>
-                        <Text style={styles.statText}>✗ {errors}</Text>
+                    <View style={[styles.statBadge, { backgroundColor: roundErrors > 0 ? '#FF5252' : '#78909C' }]}>
+                        <Text style={styles.statText}>✗ {roundErrors}</Text>
                     </View>
                 </View>
+            </View>
+
+            {/* Progress Bar */}
+            <View style={styles.progressContainer}>
+                <View style={[styles.progressBar, { width: `${(round / TOTAL_ROUNDS) * 100}%` }]} />
             </View>
 
             {/* Game Area */}
@@ -323,35 +439,31 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                 {/* Shadows (Right) */}
                 <View style={styles.shadowsArea}>
                     <View style={styles.itemsWrap}>
-                        {shadows.map((shadow, idx) => {
-                            const isMatched = matched.has(shadow.id);
-
-                            return (
-                                <View
-                                    key={`shadow-${shadow.id}-${idx}-${round}`}
-                                    ref={ref => onShadowLayout(shadow.id, ref)}
+                        {shadows.map((shadow, idx) => (
+                            <View
+                                key={`shadow-${shadow.id}-${idx}-${round}`}
+                                ref={ref => onShadowLayout(shadow.id, ref)}
+                                style={[
+                                    styles.shadowItem,
+                                    { width: shadowSize, height: shadowSize },
+                                    matched.has(shadow.id) && styles.shadowMatched,
+                                ]}
+                            >
+                                <Image
+                                    source={shadow.source}
                                     style={[
-                                        styles.shadowItem,
-                                        { width: shadowSize, height: shadowSize },
-                                        isMatched && styles.shadowMatched,
+                                        styles.shadowImage,
+                                        { tintColor: matched.has(shadow.id) ? '#4CAF50' : '#000', opacity: matched.has(shadow.id) ? 1 : 0.6 },
                                     ]}
-                                >
-                                    <Image
-                                        source={shadow.source}
-                                        style={[
-                                            styles.shadowImage,
-                                            { tintColor: isMatched ? '#4CAF50' : '#000', opacity: isMatched ? 1 : 0.6 },
-                                        ]}
-                                        resizeMode="contain"
-                                    />
-                                    {isMatched && (
-                                        <View style={styles.matchBadge}>
-                                            <Ionicons name="checkmark" size={14} color="#fff" />
-                                        </View>
-                                    )}
-                                </View>
-                            );
-                        })}
+                                    resizeMode="contain"
+                                />
+                                {matched.has(shadow.id) && (
+                                    <View style={styles.matchBadge}>
+                                        <Ionicons name="checkmark" size={14} color="#fff" />
+                                    </View>
+                                )}
+                            </View>
+                        ))}
                     </View>
                 </View>
             </View>
@@ -360,29 +472,45 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
             {showSuccess && (
                 <Animated.View style={[styles.successOverlay, { transform: [{ scale: successScale }] }]}>
                     <Text style={styles.successEmoji}>🎉</Text>
-                    <Text style={styles.successTitle}>Harika!</Text>
-                    <Text style={styles.successSub}>{round < 3 ? 'Sonraki tura geçiliyor...' : 'Oyun bitti!'}</Text>
+                    <Text style={styles.successTitle}>Tur {round} Tamamlandı!</Text>
                 </Animated.View>
             )}
 
-            {/* Confetti */}
-            {showSuccess && confettiAnims.map((anim, i) => (
-                <Animated.View
-                    key={`c-${i}`}
-                    style={{
-                        position: 'absolute',
-                        left: 20 + (i * (screenW - 40) / 12),
-                        top: -40,
-                        transform: [
-                            { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [0, screenH + 80] }) },
-                            { rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${360 + i * 30}deg`] }) },
-                        ],
-                        opacity: anim.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 1, 0] }),
-                    }}
-                >
-                    <Text style={{ fontSize: 22 }}>{['🌟', '⭐', '✨', '💚', '🎊', '🌈'][i % 6]}</Text>
-                </Animated.View>
-            ))}
+            {/* Motivation Overlay */}
+            {showMotivation && (
+                <View style={styles.motivationOverlay}>
+                    <Text style={styles.motivationEmoji}>{showMotivation.emoji}</Text>
+                    <Text style={styles.motivationText}>{showMotivation.message}</Text>
+                    {/* Stars */}
+                    {starAnims.map((anim, i) => (
+                        <Animated.Text
+                            key={`star-${i}`}
+                            style={{
+                                position: 'absolute',
+                                fontSize: 30,
+                                left: 50 + (i % 4) * 60,
+                                top: 20 + Math.floor(i / 4) * 80,
+                                transform: [
+                                    { scale: anim },
+                                    { rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
+                                ],
+                                opacity: anim,
+                            }}
+                        >
+                            ⭐
+                        </Animated.Text>
+                    ))}
+                </View>
+            )}
+
+            {/* Early Exit Overlay */}
+            {showEarlyExit && (
+                <View style={styles.earlyExitOverlay}>
+                    <Text style={styles.earlyExitEmoji}>🌙</Text>
+                    <Text style={styles.earlyExitTitle}>Bugünlük Bu Kadar!</Text>
+                    <Text style={styles.earlyExitSub}>{round} tur tamamladın. Harika iş!</Text>
+                </View>
+            )}
         </View>
     );
 }
@@ -398,114 +526,94 @@ const styles = StyleSheet.create({
     },
     bgTree1: {
         position: 'absolute',
-        left: 20,
-        bottom: 0,
-        width: 60,
-        height: 180,
-        backgroundColor: '#81C784',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-    },
-    bgTree2: {
-        position: 'absolute',
-        right: 30,
+        left: 15,
         bottom: 0,
         width: 50,
-        height: 140,
-        backgroundColor: '#66BB6A',
+        height: 150,
+        backgroundColor: '#81C784',
         borderTopLeftRadius: 25,
         borderTopRightRadius: 25,
     },
-    bgCloud1: {
+    bgTree2: {
         position: 'absolute',
-        top: 60,
-        left: 40,
-        width: 80,
-        height: 35,
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        borderRadius: 20,
-    },
-    bgCloud2: {
-        position: 'absolute',
-        top: 90,
-        right: 50,
-        width: 60,
-        height: 28,
-        backgroundColor: 'rgba(255,255,255,0.6)',
-        borderRadius: 15,
+        right: 20,
+        bottom: 0,
+        width: 40,
+        height: 120,
+        backgroundColor: '#66BB6A',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
     },
     bgGrass: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        height: 50,
+        height: 40,
         backgroundColor: '#4CAF50',
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: Platform.OS === 'web' ? 16 : 50,
-        paddingHorizontal: 16,
-        paddingBottom: 12,
+        paddingTop: Platform.OS === 'web' ? 12 : 45,
+        paddingHorizontal: 12,
+        paddingBottom: 8,
         backgroundColor: 'rgba(93, 64, 55, 0.9)',
         zIndex: 10,
     },
     backBtn: {
-        padding: 8,
-        borderRadius: 16,
+        padding: 6,
+        borderRadius: 14,
         backgroundColor: 'rgba(255,255,255,0.2)',
     },
     headerInfo: {
         flex: 1,
-        marginLeft: 12,
+        marginLeft: 10,
     },
     title: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 'bold',
         color: '#fff',
     },
     subtitle: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#D7CCC8',
     },
     stats: {
         flexDirection: 'row',
-        gap: 6,
+        gap: 5,
     },
     statBadge: {
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 10,
     },
     statText: {
         color: '#fff',
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 'bold',
+    },
+    progressContainer: {
+        height: 4,
+        backgroundColor: 'rgba(0,0,0,0.1)',
+    },
+    progressBar: {
+        height: '100%',
+        backgroundColor: '#4CAF50',
     },
     gameArea: {
         flex: 1,
         flexDirection: 'row',
-        padding: 16,
+        padding: 10,
         zIndex: 5,
     },
     animalsArea: {
         flex: 1,
-        marginRight: 8,
+        marginRight: 5,
     },
     shadowsArea: {
         flex: 1,
-        marginLeft: 8,
-    },
-    areaLabel: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#5D4037',
-        textAlign: 'center',
-        marginBottom: 12,
-        backgroundColor: 'rgba(255,255,255,0.7)',
-        paddingVertical: 6,
-        borderRadius: 12,
+        marginLeft: 5,
     },
     itemsWrap: {
         flex: 1,
@@ -513,7 +621,7 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'center',
         alignContent: 'center',
-        gap: 12,
+        gap: 8,
     },
     animalItem: {
         backgroundColor: 'transparent',
@@ -524,8 +632,8 @@ const styles = StyleSheet.create({
     },
     shadowItem: {
         backgroundColor: 'rgba(0,0,0,0.1)',
-        borderRadius: 16,
-        padding: 6,
+        borderRadius: 14,
+        padding: 5,
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -538,60 +646,82 @@ const styles = StyleSheet.create({
     },
     matchBadge: {
         position: 'absolute',
-        top: -4,
-        right: -4,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
+        top: -3,
+        right: -3,
+        width: 18,
+        height: 18,
+        borderRadius: 9,
         backgroundColor: '#4CAF50',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    instructions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        gap: 8,
-        backgroundColor: 'rgba(255,255,255,0.85)',
-        marginHorizontal: 16,
-        marginBottom: 16,
-        borderRadius: 16,
-        zIndex: 10,
-    },
-    instructionsText: {
-        fontSize: 14,
-        color: '#5D4037',
-        fontWeight: '600',
-    },
     successOverlay: {
         position: 'absolute',
-        top: '30%',
-        left: '15%',
-        right: '15%',
+        top: '35%',
+        left: '20%',
+        right: '20%',
         backgroundColor: 'rgba(255,255,255,0.95)',
-        borderRadius: 24,
-        padding: 30,
+        borderRadius: 20,
+        padding: 25,
         alignItems: 'center',
         zIndex: 200,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 16,
         elevation: 20,
     },
     successEmoji: {
-        fontSize: 60,
+        fontSize: 50,
     },
     successTitle: {
-        fontSize: 28,
+        fontSize: 22,
         fontWeight: 'bold',
         color: '#4CAF50',
-        marginTop: 10,
+        marginTop: 8,
     },
-    successSub: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 4,
+    motivationOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 193, 7, 0.95)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 300,
+    },
+    motivationEmoji: {
+        fontSize: 80,
+    },
+    motivationText: {
+        fontSize: 36,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginTop: 15,
+        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowOffset: { width: 2, height: 2 },
+        textShadowRadius: 4,
+    },
+    earlyExitOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(103, 58, 183, 0.95)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 300,
+    },
+    earlyExitEmoji: {
+        fontSize: 70,
+    },
+    earlyExitTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginTop: 15,
+    },
+    earlyExitSub: {
+        fontSize: 16,
+        color: '#E1BEE7',
+        marginTop: 8,
     },
 });
