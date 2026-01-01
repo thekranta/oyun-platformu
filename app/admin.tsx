@@ -49,14 +49,25 @@ type DrawingPayload = {
     cizimResimFormat?: string;
 };
 
-// MAB Alan Renkleri
+// MAB Alan Renkleri - Maarif Modeline Göre
+// MAB: Matematik (Mavi), FAB: Fen (Yeşil), TAKB: Türkçe (Kırmızı/Turuncu), SDB: Sosyal-Duygusal (Mor)
 const ALAN_COLORS: Record<string, string> = {
-    'Matematik': '#2196F3',
-    'Fen': '#4CAF50',
-    'Türkçe': '#FF9800',
-    'Sanat': '#9C27B0',
-    'Sosyal-Duygusal Gelişim': '#E91E63',
+    'Matematik': '#1976D2',     // MAB - Mavi
+    'Fen': '#388E3C',           // FAB - Yeşil
+    'Türkçe': '#D32F2F',         // TAKB - Kırmızı
+    'Sanat': '#7B1FA2',         // SNAB - Mor
+    'Sosyal-Duygusal Gelişim': '#8E24AA', // SDB - Mor
     'Genel Gelişim': '#607D8B',
+};
+
+// Kod prefiksi ile renk eşleştirme
+const getCodeColor = (code: string) => {
+    if (code.startsWith('MAB')) return '#1976D2';  // Mavi
+    if (code.startsWith('FAB')) return '#388E3C';  // Yeşil
+    if (code.startsWith('TAKB') || code.startsWith('TAEOB')) return '#D32F2F'; // Kırmızı
+    if (code.startsWith('SDB')) return '#8E24AA';  // Mor
+    if (code.startsWith('SNAB')) return '#7B1FA2'; // Mor
+    return '#607D8B'; // Gri
 };
 
 // Circular Progress Component
@@ -79,12 +90,23 @@ const CircularProgress = ({ value, maxValue, size = 50, color, label }: { value:
     );
 };
 
-// MAB Skill Badge Component
+// MAB Skill Badge Component - Renkli yuvarlatılmış kutucuk
 const SkillBadge = ({ code, alan }: { code: string; alan: string }) => {
-    const color = ALAN_COLORS[alan] || '#607D8B';
+    const color = getCodeColor(code);
     return (
-        <View style={{ backgroundColor: color, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 12, marginRight: 6 }}>
-            <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>{code}</Text>
+        <View style={{
+            backgroundColor: color,
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 14,
+            marginRight: 8,
+            shadowColor: color,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 3,
+            elevation: 3,
+        }}>
+            <Text style={{ color: 'white', fontSize: 11, fontWeight: 'bold', letterSpacing: 0.5 }}>{code}</Text>
         </View>
     );
 };
@@ -798,6 +820,14 @@ ChildhoodTech Ekibi
 
         return (
             <View style={[styles.gameRow, !isLast && styles.gameRowBorder]}>
+                {/* Uzman Onay Rozeti - Sağ üst köşede */}
+                {score.uzman_onayi && (
+                    <View style={styles.approvalCornerBadge}>
+                        <Ionicons name="shield-checkmark" size={12} color="#fff" />
+                        <Text style={styles.approvalCornerText}>Onaylı</Text>
+                    </View>
+                )}
+
                 {/* Header with MAB Badge */}
                 <View style={styles.gameHeader}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -987,8 +1017,24 @@ const styles = StyleSheet.create({
     listContentLandscape: { maxWidth: 1400, alignSelf: 'center', width: '100%' },
     emptyText: { textAlign: 'center', fontSize: 16, color: '#777', marginTop: 50 },
 
-    // Student Card Styles
-    studentCard: { flex: 1, backgroundColor: 'white', borderRadius: 16, marginBottom: 12, marginHorizontal: 6, elevation: 4, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, overflow: 'hidden', minWidth: 280, maxWidth: 600 },
+    // Student Card Styles - Gelişmiş gölgeleme
+    studentCard: {
+        flex: 1,
+        backgroundColor: 'white',
+        borderRadius: 16,
+        marginBottom: 12,
+        marginHorizontal: 6,
+        elevation: 6,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+        overflow: 'hidden',
+        minWidth: 280,
+        maxWidth: 600,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
+    },
     studentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: '#fff' },
     avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#E3F2FD', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
     avatarText: { fontSize: 24, fontWeight: 'bold', color: '#2196F3' },
@@ -1050,6 +1096,31 @@ const styles = StyleSheet.create({
     certSigner: { fontSize: 10, color: '#689f38', marginTop: 4, fontStyle: 'italic' },
     certPending: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff3e0', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, borderWidth: 1, borderColor: '#ffcc80', alignSelf: 'flex-start' },
     certPendingText: { fontSize: 12, color: '#e65100', fontWeight: 'bold' },
+
+    // Approval Corner Badge - Sağ üst köşe rozeti
+    approvalCornerBadge: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#2e7d32',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        gap: 4,
+        zIndex: 100,
+        shadowColor: '#2e7d32',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 4,
+    },
+    approvalCornerText: {
+        color: '#fff',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
 
     // Login Styles
     loginBox: { width: '100%', maxWidth: 350, backgroundColor: 'white', padding: 30, borderRadius: 25, elevation: 5 },
