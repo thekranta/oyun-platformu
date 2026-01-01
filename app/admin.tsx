@@ -773,6 +773,17 @@ ChildhoodTech Ekibi
         return { summary, details };
     };
 
+    // Markdown bold text renderer
+    const renderMarkdown = (text: string) => {
+        if (!text) return null;
+        return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) => {
+            if (part.startsWith('**') && part.endsWith('**')) {
+                return <Text key={index} style={{ fontWeight: 'bold', color: '#1a1a2e' }}>{part.slice(2, -2)}</Text>;
+            }
+            return <Text key={index}>{part}</Text>;
+        });
+    };
+
     const GameRow = ({ score, isLast }: { score: Score, isLast: boolean }) => {
         const showComment = visibleCommentIds.has(score.id);
         const showDetails = expandedDetails.has(score.id);
@@ -846,7 +857,7 @@ ChildhoodTech Ekibi
                         {/* Öne Çıkan Not */}
                         <View style={styles.highlightNote}>
                             <Text style={styles.highlightNoteTitle}>📌 Öne Çıkan Not</Text>
-                            <Text style={styles.highlightNoteText}>{summary}</Text>
+                            <Text style={styles.highlightNoteText}>{renderMarkdown(summary)}</Text>
                         </View>
 
                         {/* Detayları Gör Butonu */}
@@ -860,12 +871,7 @@ ChildhoodTech Ekibi
                         {showDetails && details && (
                             <View style={styles.detailsBox}>
                                 <Text style={styles.aiCommentText}>
-                                    {details.split(/(\*\*.*?\*\*)/g).map((part, index) => {
-                                        if (part.startsWith('**') && part.endsWith('**')) {
-                                            return <Text key={index} style={{ fontWeight: 'bold' }}>{part.slice(2, -2)}</Text>;
-                                        }
-                                        return <Text key={index}>{part}</Text>;
-                                    })}
+                                    {renderMarkdown(details)}
                                 </Text>
                             </View>
                         )}
