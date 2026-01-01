@@ -94,6 +94,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const [selectedPuzzle, setSelectedPuzzle] = useState<number | null>(null);
     const [lockedPieces, setLockedPieces] = useState<Set<number>>(new Set());
     const [moves, setMoves] = useState(0);
+    const [errors, setErrors] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
@@ -169,7 +170,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                     // onGameEnd yerine sadece veriyi kaydetmek için çağır ama çıkış yapma
                     // Not: onGameEnd normalde oyundan çıkış yapar, bu yüzden özel işlem
                     // Burada veriyi kaydetmek için çağırıyoruz ama sonra seçim ekranına dönüyoruz
-                    onGameEnd(`Yapboz - ${puzzleName}`, dur, moves + 1, 0, undefined, {
+                    onGameEnd(`Yapboz - ${puzzleName}`, dur, moves + 1, errors, undefined, {
                         zorlukSeviyesi: 1,
                         kazanimOdagi: 'Uzamsal Algı ve Problem Çözme',
                     });
@@ -191,6 +192,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         setIsComplete(false);
         setLockedPieces(new Set());
         setMoves(0);
+        setErrors(0);
     };
 
     const createPanResponder = (pieceId: number, targetRow: number, targetCol: number) => {
@@ -229,6 +231,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 );
 
                 if (dist < 50) {
+                    // Dogru yere bırakıldı - kilitle
                     Animated.spring(pan, {
                         toValue: { x: targetX, y: targetY },
                         useNativeDriver: false,
@@ -237,6 +240,9 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                     }).start(() => {
                         handleLock(pieceId);
                     });
+                } else {
+                    // Yanlış yere bırakıldı - hata say
+                    setErrors(e => e + 1);
                 }
             },
         });
