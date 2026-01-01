@@ -161,9 +161,9 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     // Shadow positions for hit detection
     const shadowLayoutsRef = useRef<Map<number, { x: number; y: number; w: number; h: number }>>(new Map());
 
-    // Item size
-    const itemSize = isSmallScreen ? 70 : 90;
-    const shadowSize = isSmallScreen ? 65 : 85;
+    // Item size - DAHA BÜYÜK
+    const itemSize = isSmallScreen ? 100 : 130;
+    const shadowSize = isSmallScreen ? 95 : 125;
 
     // Initialize round
     useEffect(() => {
@@ -305,7 +305,6 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
             <View style={styles.gameArea}>
                 {/* Animals (Left) */}
                 <View style={styles.animalsArea}>
-                    <Text style={styles.areaLabel}>🦒 Hayvanlar</Text>
                     <View style={styles.itemsWrap}>
                         {animals.map(animal => (
                             <DraggableAnimal
@@ -323,7 +322,6 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 
                 {/* Shadows (Right) */}
                 <View style={styles.shadowsArea}>
-                    <Text style={styles.areaLabel}>👤 Gölgeler</Text>
                     <View style={styles.itemsWrap}>
                         {shadows.map((shadow, idx) => {
                             const isMatched = matched.has(shadow.id);
@@ -356,12 +354,6 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                         })}
                     </View>
                 </View>
-            </View>
-
-            {/* Instructions */}
-            <View style={styles.instructions}>
-                <Ionicons name="hand-left-outline" size={18} color="#5D4037" />
-                <Text style={styles.instructionsText}>Hayvanı sürükle, gölgesine bırak!</Text>
             </View>
 
             {/* Success Overlay */}
