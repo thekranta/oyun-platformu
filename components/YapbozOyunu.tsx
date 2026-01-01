@@ -6,6 +6,7 @@ import {
     Image,
     PanResponder,
     Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -20,18 +21,83 @@ interface YapbozOyunuProps {
 
 const GRID_SIZE = 3;
 const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
-const PUZZLE_IMAGE = require('@/assets/images/karpuz.png');
 
-// Karıştırma sırası (her parçanın başlangıç pozisyonu)
+// 10 farklı yapboz tanımı
+const PUZZLES = [
+    {
+        id: 1,
+        name: 'Karpuz',
+        icon: '🍉',
+        source: require('@/assets/images/karpuz.png'),
+    },
+    {
+        id: 2,
+        name: 'Elma',
+        icon: '🍎',
+        source: require('@/assets/images/elma.png'),
+    },
+    {
+        id: 3,
+        name: 'Çilek',
+        icon: '🍓',
+        source: require('@/assets/images/cilek.png'),
+    },
+    {
+        id: 4,
+        name: 'Kedi',
+        icon: '🐱',
+        source: require('@/assets/images/kedi.png'),
+    },
+    {
+        id: 5,
+        name: 'Top',
+        icon: '⚽',
+        source: require('@/assets/images/top.png'),
+    },
+    {
+        id: 6,
+        name: 'Ev',
+        icon: '🏠',
+        source: require('@/assets/images/ev.png'),
+    },
+    {
+        id: 7,
+        name: 'Araba',
+        icon: '🚗',
+        source: require('@/assets/images/araba.png'),
+    },
+    {
+        id: 8,
+        name: 'Orman',
+        icon: '🌳',
+        source: require('@/assets/images/stories/ceviz_macera/intro_scene.png'),
+    },
+    {
+        id: 9,
+        name: 'Nehir',
+        icon: '🏞️',
+        source: require('@/assets/images/stories/ceviz_macera/scene_a_river.png'),
+    },
+    {
+        id: 10,
+        name: 'Aile',
+        icon: '👨‍👩‍👧',
+        source: require('@/assets/images/stories/aile_sepeti_macerasi/s02_final_bg_birlikte_aile.jpg'),
+    },
+];
+
+// Karıştırma sırası
 const SHUFFLE_ORDER = [4, 7, 2, 8, 5, 0, 1, 6, 3];
 
 export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const { isMuted, toggleMute } = useSound();
+    const [selectedPuzzle, setSelectedPuzzle] = useState<number | null>(null);
     const [lockedPieces, setLockedPieces] = useState<Set<number>>(new Set());
     const [moves, setMoves] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
-    const [showPreview, setShowPreview] = useState(true);
-    const [startTime] = useState(Date.now());
+    const [showPreview, setShowPreview] = useState(false);
+    const [gameStarted, setGameStarted] = useState(false);
+    const [startTime, setStartTime] = useState(Date.now());
 
     const { width: screenW, height: screenH } = Dimensions.get('window');
     const puzzleSize = Math.min(screenW * 0.6, screenH * 0.35, 280);
@@ -45,22 +111,37 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
 
     // Grid position ref (center of screen)
     const gridLeft = (screenW - puzzleSize) / 2;
-    const gridTop = 120; // Fixed position from top
+    const gridTop = 100;
 
     // Piece starting positions (below the grid)
     const pieceAreaTop = gridTop + puzzleSize + 40;
     const pieceSpacing = pieceSize + 15;
     const pieceAreaLeft = (screenW - 3 * pieceSpacing) / 2;
 
-    useEffect(() => {
-        const t = setTimeout(() => setShowPreview(false), 2500);
-        return () => clearTimeout(t);
-    }, []);
+    const currentPuzzle = selectedPuzzle !== null ? PUZZLES.find(p => p.id === selectedPuzzle) : null;
 
-    // Initialize piece positions on mount
+    // Start a puzzle
+    const startPuzzle = (puzzleId: number) => {
+        setSelectedPuzzle(puzzleId);
+        setShowPreview(true);
+        setLockedPieces(new Set());
+        setMoves(0);
+        setIsComplete(false);
+        setGameStarted(false);
+        setStartTime(Date.now());
+
+        // Reset piece positions
+        panRefs.forEach(pan => pan.setValue({ x: 0, y: 0 }));
+
+        setTimeout(() => {
+            setShowPreview(false);
+            setGameStarted(true);
+        }, 2500);
+    };
+
+    // Initialize piece positions when game starts
     useEffect(() => {
-        if (!showPreview) {
-            // Set initial positions for each piece based on shuffle order
+        if (gameStarted && !showPreview) {
             for (let i = 0; i < TOTAL_TILES; i++) {
                 const shuffleIdx = SHUFFLE_ORDER.indexOf(i);
                 const row = Math.floor(shuffleIdx / 3);
@@ -71,7 +152,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 });
             }
         }
-    }, [showPreview]);
+    }, [gameStarted, showPreview]);
 
     const handleLock = (id: number) => {
         setLockedPieces(prev => {
@@ -80,7 +161,8 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 setIsComplete(true);
                 setTimeout(() => {
                     const dur = Math.floor((Date.now() - startTime) / 1000);
-                    onGameEnd('Yapboz Oyunu', dur, moves, 0, undefined, {
+                    const puzzleName = currentPuzzle?.name || 'Yapboz';
+                    onGameEnd(`Yapboz - ${puzzleName}`, dur, moves, 0, undefined, {
                         zorlukSeviyesi: 1,
                         kazanimOdagi: 'Uzamsal Algı ve Problem Çözme',
                     });
@@ -88,6 +170,12 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             }
             return next;
         });
+    };
+
+    const goBackToSelection = () => {
+        setSelectedPuzzle(null);
+        setGameStarted(false);
+        setShowPreview(false);
     };
 
     const createPanResponder = (pieceId: number, targetRow: number, targetCol: number) => {
@@ -113,15 +201,11 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 // @ts-ignore
                 const currentY = pan.y._value;
 
-                // Target position for this piece in the grid
                 const targetX = gridLeft + targetCol * tileSize + (tileSize - pieceSize) / 2;
                 const targetY = gridTop + targetRow * tileSize + (tileSize - pieceSize) / 2;
 
-                // Center of current piece
                 const centerX = currentX + pieceSize / 2;
                 const centerY = currentY + pieceSize / 2;
-
-                // Center of target cell
                 const targetCenterX = targetX + pieceSize / 2;
                 const targetCenterY = targetY + pieceSize / 2;
 
@@ -129,7 +213,6 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                     Math.pow(centerX - targetCenterX, 2) + Math.pow(centerY - targetCenterY, 2)
                 );
 
-                // Snap if close enough
                 if (dist < 50) {
                     Animated.spring(pan, {
                         toValue: { x: targetX, y: targetY },
@@ -145,6 +228,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     };
 
     const renderPieces = () => {
+        if (!currentPuzzle) return null;
         const pieces = [];
         for (let i = 0; i < TOTAL_TILES; i++) {
             const targetRow = Math.floor(i / GRID_SIZE);
@@ -171,7 +255,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 >
                     <View style={styles.pieceInner}>
                         <Image
-                            source={PUZZLE_IMAGE}
+                            source={currentPuzzle.source}
                             style={{
                                 width: puzzleSize,
                                 height: puzzleSize,
@@ -188,83 +272,122 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         return pieces;
     };
 
+    // Puzzle Selection Screen
+    const renderPuzzleSelection = () => (
+        <View style={styles.selectionContainer}>
+            <Text style={styles.selectionTitle}>🧩 Bir Yapboz Seç!</Text>
+            <Text style={styles.selectionSubtitle}>Hangi resmi tamamlamak istersin?</Text>
+
+            <ScrollView
+                contentContainerStyle={styles.puzzleGrid}
+                showsVerticalScrollIndicator={false}
+            >
+                {PUZZLES.map(puzzle => (
+                    <TouchableOpacity
+                        key={puzzle.id}
+                        style={styles.puzzleCard}
+                        onPress={() => startPuzzle(puzzle.id)}
+                        activeOpacity={0.7}
+                    >
+                        <View style={styles.puzzleImageContainer}>
+                            <Image
+                                source={puzzle.source}
+                                style={styles.puzzleThumbnail}
+                                resizeMode="cover"
+                            />
+                        </View>
+                        <Text style={styles.puzzleIcon}>{puzzle.icon}</Text>
+                        <Text style={styles.puzzleName}>{puzzle.name}</Text>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+        </View>
+    );
+
+    // Preview Screen
+    const renderPreview = () => (
+        <View style={styles.previewContainer}>
+            <Text style={styles.previewTitle}>Resmi Hatırla! 👀</Text>
+            <View style={[styles.previewFrame, { width: puzzleSize, height: puzzleSize }]}>
+                <Image
+                    source={currentPuzzle?.source}
+                    style={{ width: '100%', height: '100%' }}
+                    resizeMode="cover"
+                />
+            </View>
+            <Text style={styles.loadingText}>Oyun Hazırlanıyor...</Text>
+        </View>
+    );
+
+    // Game Screen
+    const renderGame = () => (
+        <View style={styles.gameArea}>
+            <Text style={styles.instruction}>
+                {isComplete ? '🎉 Mükemmel!' : 'Parçaları sürükle ve birleştir!'}
+            </Text>
+
+            {/* Hint */}
+            <View style={[styles.hintContainer, { right: 20, top: gridTop }]}>
+                <Text style={styles.hintText}>Hedef:</Text>
+                <Image source={currentPuzzle?.source} style={styles.hintImage} />
+                <Text style={styles.movesText}>Hamle: {moves}</Text>
+            </View>
+
+            {/* Grid - 3x3 */}
+            <View
+                style={[
+                    styles.grid,
+                    {
+                        width: puzzleSize,
+                        height: puzzleSize,
+                        left: gridLeft,
+                        top: gridTop,
+                    },
+                ]}
+            >
+                {[0, 1, 2].map(row => (
+                    <View key={row} style={styles.gridRow}>
+                        {[0, 1, 2].map(col => {
+                            const idx = row * 3 + col;
+                            const isLocked = lockedPieces.has(idx);
+                            return (
+                                <View
+                                    key={col}
+                                    style={[styles.cell, { width: tileSize, height: tileSize }]}
+                                >
+                                    {!isLocked && <View style={styles.cellGuide} />}
+                                </View>
+                            );
+                        })}
+                    </View>
+                ))}
+            </View>
+
+            {/* Puzzle Pieces */}
+            {gameStarted && renderPieces()}
+        </View>
+    );
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.btn} onPress={onExit}>
+                <TouchableOpacity
+                    style={styles.btn}
+                    onPress={selectedPuzzle !== null ? goBackToSelection : onExit}
+                >
                     <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
-                <Text style={styles.title}>🧩 Yapboz</Text>
+                <Text style={styles.title}>
+                    {currentPuzzle ? `🧩 ${currentPuzzle.name}` : '🧩 Yapboz'}
+                </Text>
                 <TouchableOpacity style={styles.btn} onPress={toggleMute}>
                     <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={24} color="#fff" />
                 </TouchableOpacity>
             </View>
 
-            {showPreview ? (
-                <View style={styles.previewContainer}>
-                    <Text style={styles.previewTitle}>Resmi Hatırla! 👀</Text>
-                    <View style={[styles.previewFrame, { width: puzzleSize, height: puzzleSize }]}>
-                        <Image
-                            source={PUZZLE_IMAGE}
-                            style={{ width: '100%', height: '100%' }}
-                            resizeMode="cover"
-                        />
-                    </View>
-                    <Text style={styles.loadingText}>Oyun Hazırlanıyor...</Text>
-                </View>
-            ) : (
-                <View style={styles.gameArea}>
-                    <Text style={styles.instruction}>
-                        {isComplete ? '🎉 Mükemmel!' : 'Parçaları sürükle ve birleştir!'}
-                    </Text>
-
-                    {/* Hint */}
-                    <View style={[styles.hintContainer, { right: 20, top: gridTop }]}>
-                        <Text style={styles.hintText}>Hedef:</Text>
-                        <Image source={PUZZLE_IMAGE} style={styles.hintImage} />
-                        <Text style={styles.movesText}>Hamle: {moves}</Text>
-                    </View>
-
-                    {/* Grid - 3x3 */}
-                    <View
-                        style={[
-                            styles.grid,
-                            {
-                                width: puzzleSize,
-                                height: puzzleSize,
-                                left: gridLeft,
-                                top: gridTop,
-                            },
-                        ]}
-                    >
-                        {[0, 1, 2].map(row => (
-                            <View key={row} style={styles.gridRow}>
-                                {[0, 1, 2].map(col => {
-                                    const idx = row * 3 + col;
-                                    const isLocked = lockedPieces.has(idx);
-                                    return (
-                                        <View
-                                            key={col}
-                                            style={[
-                                                styles.cell,
-                                                {
-                                                    width: tileSize,
-                                                    height: tileSize,
-                                                },
-                                            ]}
-                                        >
-                                            {!isLocked && <View style={styles.cellGuide} />}
-                                        </View>
-                                    );
-                                })}
-                            </View>
-                        ))}
-                    </View>
-
-                    {/* Puzzle Pieces */}
-                    {renderPieces()}
-                </View>
-            )}
+            {selectedPuzzle === null && renderPuzzleSelection()}
+            {selectedPuzzle !== null && showPreview && renderPreview()}
+            {selectedPuzzle !== null && !showPreview && renderGame()}
         </View>
     );
 }
@@ -283,11 +406,71 @@ const styles = StyleSheet.create({
     },
     btn: { padding: 8, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.1)' },
     title: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+
+    // Selection Screen
+    selectionContainer: {
+        flex: 1,
+        paddingHorizontal: 20,
+        paddingTop: 20,
+    },
+    selectionTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#FFD54F',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    selectionSubtitle: {
+        fontSize: 16,
+        color: '#aaa',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    puzzleGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 15,
+        paddingBottom: 40,
+    },
+    puzzleCard: {
+        width: 100,
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 16,
+        padding: 10,
+        borderWidth: 2,
+        borderColor: 'rgba(78,205,196,0.3)',
+    },
+    puzzleImageContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginBottom: 8,
+    },
+    puzzleThumbnail: {
+        width: '100%',
+        height: '100%',
+    },
+    puzzleIcon: {
+        fontSize: 24,
+        marginBottom: 4,
+    },
+    puzzleName: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#fff',
+        textAlign: 'center',
+    },
+
+    // Preview Screen
     previewContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     previewTitle: { color: '#FFD54F', fontSize: 24, marginBottom: 20, fontWeight: 'bold' },
     previewFrame: { borderWidth: 3, borderColor: '#4ECDC4', borderRadius: 12, overflow: 'hidden' },
     loadingText: { color: '#aaa', marginTop: 20, fontSize: 16 },
 
+    // Game Screen
     gameArea: {
         flex: 1,
         position: 'relative',
