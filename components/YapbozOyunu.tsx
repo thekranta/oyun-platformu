@@ -100,7 +100,9 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const [startTime, setStartTime] = useState(Date.now());
 
     const { width: screenW, height: screenH } = Dimensions.get('window');
-    const puzzleSize = Math.min(screenW * 0.6, screenH * 0.35, 280);
+    // Mobil için daha küçük boyutlar
+    const isSmallScreen = screenH < 700;
+    const puzzleSize = Math.min(screenW * 0.55, screenH * 0.28, isSmallScreen ? 200 : 260);
     const tileSize = puzzleSize / GRID_SIZE;
     const pieceSize = tileSize - 4;
 
@@ -111,11 +113,11 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
 
     // Grid position ref (center of screen)
     const gridLeft = (screenW - puzzleSize) / 2;
-    const gridTop = 100;
+    const gridTop = isSmallScreen ? 60 : 80;
 
     // Piece starting positions (below the grid)
-    const pieceAreaTop = gridTop + puzzleSize + 40;
-    const pieceSpacing = pieceSize + 15;
+    const pieceAreaTop = gridTop + puzzleSize + (isSmallScreen ? 20 : 30);
+    const pieceSpacing = pieceSize + (isSmallScreen ? 8 : 12);
     const pieceAreaLeft = (screenW - 3 * pieceSpacing) / 2;
 
     const currentPuzzle = selectedPuzzle !== null ? PUZZLES.find(p => p.id === selectedPuzzle) : null;
@@ -340,10 +342,9 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             </Text>
 
             {/* Hint */}
-            <View style={[styles.hintContainer, { right: 20, top: gridTop }]}>
+            <View style={[styles.hintContainer, { right: 15, top: gridTop }]}>
                 <Text style={styles.hintText}>Hedef:</Text>
                 <Image source={currentPuzzle?.source} style={styles.hintImage} />
-                <Text style={styles.movesText}>Hamle: {moves}</Text>
             </View>
 
             {/* Grid - 3x3 */}
@@ -506,8 +507,7 @@ const styles = StyleSheet.create({
         zIndex: 150,
     },
     hintText: { color: '#aaa', fontSize: 12 },
-    hintImage: { width: 60, height: 60, borderRadius: 8, borderWidth: 2, borderColor: '#4ECDC4' },
-    movesText: { color: '#4ECDC4', fontSize: 14, fontWeight: 'bold' },
+    hintImage: { width: 50, height: 50, borderRadius: 6, borderWidth: 2, borderColor: '#4ECDC4' },
 
     grid: {
         position: 'absolute',
