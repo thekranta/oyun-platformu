@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -52,14 +52,89 @@ const isSmallScreen = screenH < 700;
 // ============= LEVEL CONFIG =============
 const getLevelConfig = (level: number) => {
     const configs = [
-        { itemCount: 2, distractors: 0 },  // Level 1
-        { itemCount: 3, distractors: 0 },  // Level 2
-        { itemCount: 3, distractors: 1 },  // Level 3
-        { itemCount: 4, distractors: 0 },  // Level 4
-        { itemCount: 4, distractors: 1 },  // Level 5
+        { itemCount: 2, distractors: 0 },
+        { itemCount: 3, distractors: 0 },
+        { itemCount: 3, distractors: 1 },
+        { itemCount: 4, distractors: 0 },
+        { itemCount: 4, distractors: 1 },
     ];
     return configs[Math.min(level - 1, configs.length - 1)] || configs[0];
 };
+
+// ============= DRAGGABLE ANIMAL COMPONENT =============
+interface DraggableAnimalProps {
+    animal: AnimalAsset;
+    size: number;
+    isMatched: boolean;
+    isShaking: boolean;
+    shakeAnim: Animated.Value;
+    onDrop: (id: number, x: number, y: number) => boolean;
+}
+
+function DraggableAnimal({ animal, size, isMatched, isShaking, shakeAnim, onDrop }: DraggableAnimalProps) {
+    const pan = useRef(new Animated.ValueXY()).current;
+    const scale = useRef(new Animated.Value(1)).current;
+
+    const panResponder = useMemo(() => PanResponder.create({
+        onStartShouldSetPanResponder: () => !isMatched,
+        onMoveShouldSetPanResponder: () => !isMatched,
+        onPanResponderGrant: () => {
+            pan.setOffset({
+                // @ts-ignore
+                x: pan.x._value,
+                // @ts-ignore
+                y: pan.y._value,
+            });
+            pan.setValue({ x: 0, y: 0 });
+            Animated.spring(scale, { toValue: 1.2, friction: 5, useNativeDriver: true }).start();
+        },
+        onPanResponderMove: Animated.event(
+            [null, { dx: pan.x, dy: pan.y }],
+            { useNativeDriver: false }
+        ),
+        onPanResponderRelease: (_, gesture) => {
+            pan.flattenOffset();
+            Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
+
+            const success = onDrop(animal.id, gesture.moveX, gesture.moveY);
+
+            if (!success) {
+                Animated.spring(pan, {
+                    toValue: { x: 0, y: 0 },
+                    friction: 5,
+                    useNativeDriver: false,
+                }).start();
+            }
+        },
+    }), [isMatched, animal.id, onDrop]);
+
+    return (
+        <Animated.View
+            style={[
+                styles.animalItem,
+                {
+                    width: size,
+                    height: size,
+                    opacity: isMatched ? 0.3 : 1,
+                    transform: [
+                        { translateX: pan.x },
+                        { translateY: pan.y },
+                        { scale: scale },
+                        { translateX: isShaking ? shakeAnim : 0 },
+                    ],
+                    zIndex: isShaking ? 100 : 1,
+                },
+            ]}
+            {...panResponder.panHandlers}
+        >
+            <Image
+                source={animal.source}
+                style={styles.animalImage}
+                resizeMode="contain"
+            />
+        </Animated.View>
+    );
+}
 
 // ============= MAIN COMPONENT =============
 export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDetectiveProps) {
@@ -79,14 +154,12 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     const [shakeId, setShakeId] = useState<number | null>(null);
 
     // Animation refs
-    const panRefs = useRef<Map<number, Animated.ValueXY>>(new Map());
-    const scaleRefs = useRef<Map<number, Animated.Value>>(new Map());
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const successScale = useRef(new Animated.Value(0)).current;
     const confettiAnims = useRef(Array(12).fill(0).map(() => new Animated.Value(0))).current;
 
     // Shadow positions for hit detection
-    const [shadowLayouts, setShadowLayouts] = useState<Map<number, { x: number; y: number; w: number; h: number }>>(new Map());
+    const shadowLayoutsRef = useRef<Map<number, { x: number; y: number; w: number; h: number }>>(new Map());
 
     // Item size
     const itemSize = isSmallScreen ? 70 : 90;
@@ -101,7 +174,6 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
         const shuffled = [...ANIMALS].sort(() => Math.random() - 0.5);
         const selected = shuffled.slice(0, Math.min(itemCount, ANIMALS.length));
 
-        // Add distractors to shadows
         let shadowList = [...selected];
         if (distractorCount > 0) {
             const remaining = shuffled.filter(a => !selected.includes(a));
@@ -112,14 +184,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
         setAnimals(selected);
         setShadows(shadowList);
         setMatched(new Set());
-
-        // Init pan values
-        panRefs.current.clear();
-        scaleRefs.current.clear();
-        selected.forEach(a => {
-            panRefs.current.set(a.id, new Animated.ValueXY({ x: 0, y: 0 }));
-            scaleRefs.current.set(a.id, new Animated.Value(1));
-        });
+        shadowLayoutsRef.current.clear();
     };
 
     // Check round complete
@@ -132,14 +197,12 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     const handleRoundComplete = () => {
         setShowSuccess(true);
 
-        // Success animation
         Animated.spring(successScale, {
             toValue: 1,
             friction: 4,
             useNativeDriver: true,
         }).start();
 
-        // Confetti
         confettiAnims.forEach((anim, i) => {
             Animated.sequence([
                 Animated.delay(i * 40),
@@ -159,7 +222,6 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
             if (round < 3) {
                 setRound(r => r + 1);
             } else {
-                // Game over - save to Supabase
                 const duration = Math.floor((Date.now() - startTime) / 1000);
                 onGameEnd('Gölge Dedektifi', duration, moves, errors, undefined, {
                     zorlukSeviyesi: config.level,
@@ -181,21 +243,18 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
         ]).start(() => setShakeId(null));
     };
 
-    const handleDrop = (animalId: number, dropX: number, dropY: number) => {
+    const handleDrop = useCallback((animalId: number, dropX: number, dropY: number): boolean => {
         setMoves(m => m + 1);
 
-        // Check against shadow layouts
-        for (const [shadowId, layout] of shadowLayouts.entries()) {
+        for (const [shadowId, layout] of shadowLayoutsRef.current.entries()) {
             const inX = dropX >= layout.x && dropX <= layout.x + layout.w;
             const inY = dropY >= layout.y && dropY <= layout.y + layout.h;
 
             if (inX && inY) {
                 if (animalId === shadowId) {
-                    // Correct match!
                     setMatched(prev => new Set(prev).add(animalId));
                     return true;
                 } else {
-                    // Wrong match
                     setErrors(e => e + 1);
                     triggerShake(animalId);
                     return false;
@@ -203,46 +262,12 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
             }
         }
         return false;
-    };
+    }, []);
 
-    const createPanResponder = (animal: AnimalAsset) => {
-        const pan = panRefs.current.get(animal.id);
-        const scale = scaleRefs.current.get(animal.id);
-        if (!pan || !scale) return null;
-
-        return PanResponder.create({
-            onStartShouldSetPanResponder: () => !matched.has(animal.id),
-            onMoveShouldSetPanResponder: () => !matched.has(animal.id),
-            onPanResponderGrant: () => {
-                // @ts-ignore
-                pan.setOffset({ x: pan.x._value, y: pan.y._value });
-                pan.setValue({ x: 0, y: 0 });
-                Animated.spring(scale, { toValue: 1.2, friction: 5, useNativeDriver: true }).start();
-            },
-            onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
-                useNativeDriver: false,
-            }),
-            onPanResponderRelease: (_, gesture) => {
-                pan.flattenOffset();
-                Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
-
-                const success = handleDrop(animal.id, gesture.moveX, gesture.moveY);
-
-                if (!success) {
-                    // Return to original
-                    Animated.spring(pan, {
-                        toValue: { x: 0, y: 0 },
-                        friction: 5,
-                        useNativeDriver: false,
-                    }).start();
-                }
-            },
-        });
-    };
-
-    const onShadowLayout = (id: number, e: any) => {
-        e.target.measure((x: number, y: number, w: number, h: number, pageX: number, pageY: number) => {
-            setShadowLayouts(prev => new Map(prev).set(id, { x: pageX, y: pageY, w, h }));
+    const onShadowLayout = (id: number, ref: View | null) => {
+        if (!ref) return;
+        ref.measure((x, y, w, h, pageX, pageY) => {
+            shadowLayoutsRef.current.set(id, { x: pageX, y: pageY, w, h });
         });
     };
 
@@ -282,42 +307,17 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                 <View style={styles.animalsArea}>
                     <Text style={styles.areaLabel}>🦒 Hayvanlar</Text>
                     <View style={styles.itemsWrap}>
-                        {animals.map(animal => {
-                            const pan = panRefs.current.get(animal.id);
-                            const scale = scaleRefs.current.get(animal.id);
-                            const responder = createPanResponder(animal);
-                            const isMatched = matched.has(animal.id);
-                            const isShaking = shakeId === animal.id;
-
-                            if (!pan || !scale || !responder) return null;
-
-                            return (
-                                <Animated.View
-                                    key={`animal-${animal.id}`}
-                                    style={[
-                                        styles.animalItem,
-                                        {
-                                            width: itemSize,
-                                            height: itemSize,
-                                            opacity: isMatched ? 0.3 : 1,
-                                            transform: [
-                                                ...pan.getTranslateTransform(),
-                                                { scale },
-                                                { translateX: isShaking ? shakeAnim : 0 },
-                                            ],
-                                            zIndex: isShaking ? 100 : 1,
-                                        },
-                                    ]}
-                                    {...responder.panHandlers}
-                                >
-                                    <Image
-                                        source={animal.source}
-                                        style={styles.animalImage}
-                                        resizeMode="contain"
-                                    />
-                                </Animated.View>
-                            );
-                        })}
+                        {animals.map(animal => (
+                            <DraggableAnimal
+                                key={`animal-${animal.id}-${round}`}
+                                animal={animal}
+                                size={itemSize}
+                                isMatched={matched.has(animal.id)}
+                                isShaking={shakeId === animal.id}
+                                shakeAnim={shakeAnim}
+                                onDrop={handleDrop}
+                            />
+                        ))}
                     </View>
                 </View>
 
@@ -330,8 +330,8 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 
                             return (
                                 <View
-                                    key={`shadow-${shadow.id}-${idx}`}
-                                    ref={ref => ref && !isMatched && onShadowLayout(shadow.id, { target: ref })}
+                                    key={`shadow-${shadow.id}-${idx}-${round}`}
+                                    ref={ref => onShadowLayout(shadow.id, ref)}
                                     style={[
                                         styles.shadowItem,
                                         { width: shadowSize, height: shadowSize },
@@ -342,7 +342,6 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                                         source={shadow.source}
                                         style={[
                                             styles.shadowImage,
-                                            // Programatic shadow: brightness(0) = black, opacity
                                             { tintColor: isMatched ? '#4CAF50' : '#000', opacity: isMatched ? 1 : 0.6 },
                                         ]}
                                         resizeMode="contain"
@@ -399,9 +398,8 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#A8D5BA', // Pastel yeşil
+        backgroundColor: '#A8D5BA',
     },
-    // Background elements
     bgGradient: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: '#C8E6C9',
@@ -452,7 +450,6 @@ const styles = StyleSheet.create({
         height: 50,
         backgroundColor: '#4CAF50',
     },
-    // Header
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -494,7 +491,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: 'bold',
     },
-    // Game Area
     gameArea: {
         flex: 1,
         flexDirection: 'row',
@@ -527,7 +523,6 @@ const styles = StyleSheet.create({
         alignContent: 'center',
         gap: 12,
     },
-    // Animal items - NO white box
     animalItem: {
         backgroundColor: 'transparent',
     },
@@ -535,7 +530,6 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
-    // Shadow items - transparent
     shadowItem: {
         backgroundColor: 'rgba(0,0,0,0.1)',
         borderRadius: 16,
@@ -561,7 +555,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    // Instructions
     instructions: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -579,7 +572,6 @@ const styles = StyleSheet.create({
         color: '#5D4037',
         fontWeight: '600',
     },
-    // Success
     successOverlay: {
         position: 'absolute',
         top: '30%',
