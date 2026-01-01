@@ -14,11 +14,9 @@ import {
     View
 } from 'react-native';
 
-// ============= CONFIG INTERFACE =============
+// ============= CONFIG =============
 export interface ShadowDetectiveConfig {
-    level: number;                    // 1-5 arası zorluk seviyesi
-    itemCount?: number;               // Başlangıç item sayısı (otomatik hesaplanır)
-    distractorCount?: number;         // Çeldirici sayısı (otomatik hesaplanır)
+    level: number;
 }
 
 interface ShadowDetectiveProps {
@@ -34,34 +32,31 @@ interface ShadowDetectiveProps {
     onExit: () => void;
 }
 
-// ============= ASSET YAPISI =============
-interface GameAsset {
+// ============= HAYVAN ASSET'LERİ =============
+interface AnimalAsset {
     id: number;
     name: string;
     source: ImageSourcePropType;
 }
 
-const GAME_ASSETS: GameAsset[] = [
-    { id: 0, name: 'Kedi', source: require('@/assets/images/kedi.png') },
-    { id: 1, name: 'Ev', source: require('@/assets/images/ev.png') },
-    { id: 2, name: 'Araba', source: require('@/assets/images/araba.png') },
-    { id: 3, name: 'Top', source: require('@/assets/images/top.png') },
-    { id: 4, name: 'Elma', source: require('@/assets/images/elma.png') },
-    { id: 5, name: 'Armut', source: require('@/assets/images/armut.png') },
-    { id: 6, name: 'Karpuz', source: require('@/assets/images/karpuz.png') },
-    { id: 7, name: 'Çilek', source: require('@/assets/images/cilek.png') },
+const ANIMALS: AnimalAsset[] = [
+    { id: 0, name: 'Zürafa', source: require('@/assets/images/animal_giraffe.png') },
+    { id: 1, name: 'Fil', source: require('@/assets/images/animal_elephant.png') },
+    { id: 2, name: 'Yılan', source: require('@/assets/images/animal_snake.png') },
+    { id: 3, name: 'Kuş', source: require('@/assets/images/animal_bird.png') },
 ];
 
 const { width: screenW, height: screenH } = Dimensions.get('window');
+const isSmallScreen = screenH < 700;
 
-// ============= LEVEL KONFIGÜRASYONU =============
+// ============= LEVEL CONFIG =============
 const getLevelConfig = (level: number) => {
     const configs = [
-        { itemCount: 3, distractorCount: 0 },  // Level 1
-        { itemCount: 4, distractorCount: 0 },  // Level 2
-        { itemCount: 4, distractorCount: 1 },  // Level 3
-        { itemCount: 5, distractorCount: 1 },  // Level 4
-        { itemCount: 6, distractorCount: 2 },  // Level 5
+        { itemCount: 2, distractors: 0 },  // Level 1
+        { itemCount: 3, distractors: 0 },  // Level 2
+        { itemCount: 3, distractors: 1 },  // Level 3
+        { itemCount: 4, distractors: 0 },  // Level 4
+        { itemCount: 4, distractors: 1 },  // Level 5
     ];
     return configs[Math.min(level - 1, configs.length - 1)] || configs[0];
 };
@@ -69,334 +64,292 @@ const getLevelConfig = (level: number) => {
 // ============= MAIN COMPONENT =============
 export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDetectiveProps) {
     const levelConfig = getLevelConfig(config.level);
-    const itemCount = config.itemCount || levelConfig.itemCount;
-    const distractorCount = config.distractorCount || levelConfig.distractorCount;
+    const itemCount = levelConfig.itemCount;
+    const distractorCount = levelConfig.distractors;
 
-    // Game state
+    // State
     const [round, setRound] = useState(1);
-    const [currentItems, setCurrentItems] = useState<GameAsset[]>([]);
-    const [shadowItems, setShadowItems] = useState<GameAsset[]>([]); // Includes distractors
-    const [matches, setMatches] = useState<Set<number>>(new Set());
-    const [wrongAttempts, setWrongAttempts] = useState(0);
-    const [totalMoves, setTotalMoves] = useState(0);
+    const [animals, setAnimals] = useState<AnimalAsset[]>([]);
+    const [shadows, setShadows] = useState<AnimalAsset[]>([]);
+    const [matched, setMatched] = useState<Set<number>>(new Set());
+    const [errors, setErrors] = useState(0);
+    const [moves, setMoves] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
     const [startTime] = useState(Date.now());
-    const [matchStartTime, setMatchStartTime] = useState(Date.now());
-    const [matchDurations, setMatchDurations] = useState<number[]>([]);
-    const [highlightedShadow, setHighlightedShadow] = useState<number | null>(null);
-    const [draggingId, setDraggingId] = useState<number | null>(null);
+    const [shakeId, setShakeId] = useState<number | null>(null);
 
-    // Animation values
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-    const successAnim = useRef(new Animated.Value(0)).current;
-    const confettiAnims = useRef(Array(10).fill(0).map(() => new Animated.Value(0))).current;
-
-    // Shadow positions for drop detection
-    const [shadowPositions, setShadowPositions] = useState<{ id: number; x: number; y: number }[]>([]);
-
-    // Pan refs for draggable items
+    // Animation refs
     const panRefs = useRef<Map<number, Animated.ValueXY>>(new Map());
+    const scaleRefs = useRef<Map<number, Animated.Value>>(new Map());
+    const shakeAnim = useRef(new Animated.Value(0)).current;
+    const successScale = useRef(new Animated.Value(0)).current;
+    const confettiAnims = useRef(Array(12).fill(0).map(() => new Animated.Value(0))).current;
 
-    // Layout calculations
-    const isSmallScreen = screenH < 700;
-    const itemSize = isSmallScreen ? 60 : 75;
-    const shadowSize = isSmallScreen ? 55 : 70;
+    // Shadow positions for hit detection
+    const [shadowLayouts, setShadowLayouts] = useState<Map<number, { x: number; y: number; w: number; h: number }>>(new Map());
+
+    // Item size
+    const itemSize = isSmallScreen ? 70 : 90;
+    const shadowSize = isSmallScreen ? 65 : 85;
 
     // Initialize round
     useEffect(() => {
-        initializeRound();
+        initRound();
     }, [round]);
 
-    const initializeRound = () => {
-        // Select random items for this round
-        const shuffled = [...GAME_ASSETS].sort(() => Math.random() - 0.5);
-        const selected = shuffled.slice(0, Math.min(itemCount, GAME_ASSETS.length));
+    const initRound = () => {
+        const shuffled = [...ANIMALS].sort(() => Math.random() - 0.5);
+        const selected = shuffled.slice(0, Math.min(itemCount, ANIMALS.length));
 
-        // Create shadow items with distractors
-        let shadows = [...selected];
+        // Add distractors to shadows
+        let shadowList = [...selected];
         if (distractorCount > 0) {
             const remaining = shuffled.filter(a => !selected.includes(a));
-            const distractors = remaining.slice(0, Math.min(distractorCount, remaining.length));
-            shadows = [...shadows, ...distractors];
+            shadowList = [...shadowList, ...remaining.slice(0, distractorCount)];
         }
-        // Shuffle shadows
-        shadows = shadows.sort(() => Math.random() - 0.5);
+        shadowList = shadowList.sort(() => Math.random() - 0.5);
 
-        setCurrentItems(selected);
-        setShadowItems(shadows);
-        setMatches(new Set());
-        setMatchStartTime(Date.now());
+        setAnimals(selected);
+        setShadows(shadowList);
+        setMatched(new Set());
 
-        // Initialize pan values
-        panRefs.current = new Map();
-        selected.forEach(item => {
-            panRefs.current.set(item.id, new Animated.ValueXY({ x: 0, y: 0 }));
+        // Init pan values
+        panRefs.current.clear();
+        scaleRefs.current.clear();
+        selected.forEach(a => {
+            panRefs.current.set(a.id, new Animated.ValueXY({ x: 0, y: 0 }));
+            scaleRefs.current.set(a.id, new Animated.Value(1));
         });
-
-        // Animate entrance
-        Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 5,
-            useNativeDriver: true,
-        }).start();
     };
 
-    // Check if round is complete
+    // Check round complete
     useEffect(() => {
-        if (matches.size === currentItems.length && currentItems.length > 0) {
+        if (matched.size === animals.length && animals.length > 0) {
             handleRoundComplete();
         }
-    }, [matches, currentItems.length]);
+    }, [matched, animals.length]);
 
     const handleRoundComplete = () => {
         setShowSuccess(true);
 
         // Success animation
-        Animated.sequence([
-            Animated.timing(successAnim, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-            }),
-            Animated.delay(1000),
-            Animated.timing(successAnim, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-            }),
-        ]).start(() => {
-            setShowSuccess(false);
-            if (round < 3) {
-                setRound(r => r + 1);
-            } else {
-                // Game complete - send analytics to Supabase
-                const duration = Math.floor((Date.now() - startTime) / 1000);
-                const avgMatchDuration = matchDurations.length > 0
-                    ? Math.round(matchDurations.reduce((a, b) => a + b, 0) / matchDurations.length)
-                    : 0;
+        Animated.spring(successScale, {
+            toValue: 1,
+            friction: 4,
+            useNativeDriver: true,
+        }).start();
 
-                onGameEnd('Gölge Dedektifi', duration, totalMoves, wrongAttempts, undefined, {
-                    zorlukSeviyesi: config.level,
-                    kazanimOdagi: 'Görsel Çözümleme ve Eşleştirme',
-                    match_duration_avg: avgMatchDuration,
-                    wrong_attempts: wrongAttempts,
-                    complexity_level: itemCount,
-                    distractor_count: distractorCount,
-                });
-            }
-        });
-
-        // Confetti animation
+        // Confetti
         confettiAnims.forEach((anim, i) => {
             Animated.sequence([
-                Animated.delay(i * 50),
+                Animated.delay(i * 40),
                 Animated.timing(anim, {
                     toValue: 1,
-                    duration: 800,
-                    easing: Easing.out(Easing.cubic),
+                    duration: 1000,
+                    easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
                 }),
             ]).start(() => anim.setValue(0));
         });
+
+        setTimeout(() => {
+            successScale.setValue(0);
+            setShowSuccess(false);
+
+            if (round < 3) {
+                setRound(r => r + 1);
+            } else {
+                // Game over - save to Supabase
+                const duration = Math.floor((Date.now() - startTime) / 1000);
+                onGameEnd('Gölge Dedektifi', duration, moves, errors, undefined, {
+                    zorlukSeviyesi: config.level,
+                    kazanimOdagi: 'Görsel Çözümleme',
+                    complexity_level: itemCount,
+                    distractor_count: distractorCount,
+                });
+            }
+        }, 1800);
     };
 
-    const handleMatch = (objectId: number, targetShadowId: number) => {
-        const matchDuration = Date.now() - matchStartTime;
-        setTotalMoves(m => m + 1);
+    const triggerShake = (id: number) => {
+        setShakeId(id);
+        Animated.sequence([
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+        ]).start(() => setShakeId(null));
+    };
 
-        if (objectId === targetShadowId) {
-            // Correct match
-            setMatches(prev => new Set(prev).add(objectId));
-            setMatchDurations(prev => [...prev, matchDuration]);
-            setHighlightedShadow(null);
+    const handleDrop = (animalId: number, dropX: number, dropY: number) => {
+        setMoves(m => m + 1);
 
-            // Success pulse animation
-            Animated.sequence([
-                Animated.timing(scaleAnim, { toValue: 1.1, duration: 100, useNativeDriver: true }),
-                Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-            ]).start();
-        } else {
-            // Wrong match
-            setWrongAttempts(e => e + 1);
+        // Check against shadow layouts
+        for (const [shadowId, layout] of shadowLayouts.entries()) {
+            const inX = dropX >= layout.x && dropX <= layout.x + layout.w;
+            const inY = dropY >= layout.y && dropY <= layout.y + layout.h;
 
-            // Briefly highlight the correct shadow
-            setHighlightedShadow(objectId);
-            setTimeout(() => setHighlightedShadow(null), 800);
+            if (inX && inY) {
+                if (animalId === shadowId) {
+                    // Correct match!
+                    setMatched(prev => new Set(prev).add(animalId));
+                    return true;
+                } else {
+                    // Wrong match
+                    setErrors(e => e + 1);
+                    triggerShake(animalId);
+                    return false;
+                }
+            }
         }
-
-        setMatchStartTime(Date.now());
+        return false;
     };
 
-    const createPanResponder = (item: GameAsset) => {
-        const pan = panRefs.current.get(item.id);
-        if (!pan) return null;
+    const createPanResponder = (animal: AnimalAsset) => {
+        const pan = panRefs.current.get(animal.id);
+        const scale = scaleRefs.current.get(animal.id);
+        if (!pan || !scale) return null;
 
         return PanResponder.create({
-            onStartShouldSetPanResponder: () => !matches.has(item.id),
-            onMoveShouldSetPanResponder: () => !matches.has(item.id),
+            onStartShouldSetPanResponder: () => !matched.has(animal.id),
+            onMoveShouldSetPanResponder: () => !matched.has(animal.id),
             onPanResponderGrant: () => {
-                setDraggingId(item.id);
                 // @ts-ignore
                 pan.setOffset({ x: pan.x._value, y: pan.y._value });
                 pan.setValue({ x: 0, y: 0 });
+                Animated.spring(scale, { toValue: 1.2, friction: 5, useNativeDriver: true }).start();
             },
             onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
                 useNativeDriver: false,
             }),
             onPanResponderRelease: (_, gesture) => {
                 pan.flattenOffset();
-                setDraggingId(null);
+                Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
 
-                // Check if dropped on a shadow
-                const dropX = gesture.moveX;
-                const dropY = gesture.moveY;
+                const success = handleDrop(animal.id, gesture.moveX, gesture.moveY);
 
-                // Find closest shadow
-                let matched = false;
-                for (const shadowPos of shadowPositions) {
-                    const dist = Math.sqrt(
-                        Math.pow(dropX - shadowPos.x, 2) + Math.pow(dropY - shadowPos.y, 2)
-                    );
-                    if (dist < shadowSize) {
-                        handleMatch(item.id, shadowPos.id);
-                        if (item.id === shadowPos.id) {
-                            matched = true;
-                        }
-                        break;
-                    }
-                }
-
-                if (!matched) {
-                    // Return to original position
+                if (!success) {
+                    // Return to original
                     Animated.spring(pan, {
                         toValue: { x: 0, y: 0 },
-                        useNativeDriver: false,
                         friction: 5,
+                        useNativeDriver: false,
                     }).start();
                 }
             },
         });
     };
 
-    // Register shadow position
-    const onShadowLayout = (id: number, event: any) => {
-        const { x, y, width, height } = event.nativeEvent.layout;
-        // Calculate center position
-        const centerX = x + width / 2;
-        const centerY = y + height / 2;
-        setShadowPositions(prev => {
-            const filtered = prev.filter(p => p.id !== id);
-            return [...filtered, { id, x: centerX + screenW / 2 + 30, y: centerY + 120 }];
+    const onShadowLayout = (id: number, e: any) => {
+        e.target.measure((x: number, y: number, w: number, h: number, pageX: number, pageY: number) => {
+            setShadowLayouts(prev => new Map(prev).set(id, { x: pageX, y: pageY, w, h }));
         });
     };
 
     return (
         <View style={styles.container}>
+            {/* Pastel Nature Background */}
+            <View style={styles.bgGradient}>
+                <View style={styles.bgTree1} />
+                <View style={styles.bgTree2} />
+                <View style={styles.bgCloud1} />
+                <View style={styles.bgCloud2} />
+                <View style={styles.bgGrass} />
+            </View>
+
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onExit} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
+                <TouchableOpacity onPress={onExit} style={styles.backBtn}>
+                    <Ionicons name="arrow-back" size={22} color="#fff" />
                 </TouchableOpacity>
                 <View style={styles.headerInfo}>
                     <Text style={styles.title}>🔍 Gölge Dedektifi</Text>
-                    <Text style={styles.subtitle}>
-                        Tur {round}/3 • Seviye {config.level} • {itemCount} nesne
-                        {distractorCount > 0 && ` + ${distractorCount} çeldirici`}
-                    </Text>
+                    <Text style={styles.subtitle}>Tur {round}/3 • Seviye {config.level}</Text>
                 </View>
-                <View style={styles.statsContainer}>
-                    <View style={styles.statBadge}>
-                        <Text style={styles.statText}>✓ {matches.size}/{currentItems.length}</Text>
+                <View style={styles.stats}>
+                    <View style={[styles.statBadge, { backgroundColor: '#4CAF50' }]}>
+                        <Text style={styles.statText}>✓ {matched.size}/{animals.length}</Text>
                     </View>
-                    <View style={[styles.statBadge, { backgroundColor: wrongAttempts > 0 ? '#FF5252' : '#4CAF50' }]}>
-                        <Text style={styles.statText}>✗ {wrongAttempts}</Text>
+                    <View style={[styles.statBadge, { backgroundColor: errors > 0 ? '#FF5252' : '#78909C' }]}>
+                        <Text style={styles.statText}>✗ {errors}</Text>
                     </View>
                 </View>
             </View>
 
             {/* Game Area */}
             <View style={styles.gameArea}>
-                {/* Objects Column (Left) */}
-                <View style={styles.objectsColumn}>
-                    <Text style={styles.columnTitle}>🎨 Nesneler</Text>
-                    <View style={styles.itemsContainer}>
-                        {currentItems.map((item) => {
-                            const pan = panRefs.current.get(item.id);
-                            const panResponder = createPanResponder(item);
-                            const isMatched = matches.has(item.id);
-                            const isDragging = draggingId === item.id;
+                {/* Animals (Left) */}
+                <View style={styles.animalsArea}>
+                    <Text style={styles.areaLabel}>🦒 Hayvanlar</Text>
+                    <View style={styles.itemsWrap}>
+                        {animals.map(animal => {
+                            const pan = panRefs.current.get(animal.id);
+                            const scale = scaleRefs.current.get(animal.id);
+                            const responder = createPanResponder(animal);
+                            const isMatched = matched.has(animal.id);
+                            const isShaking = shakeId === animal.id;
 
-                            if (!pan || !panResponder) return null;
+                            if (!pan || !scale || !responder) return null;
 
                             return (
                                 <Animated.View
-                                    key={`object-${item.id}`}
+                                    key={`animal-${animal.id}`}
                                     style={[
-                                        styles.objectCard,
-                                        isMatched && styles.objectCardMatched,
-                                        isDragging && styles.objectCardDragging,
+                                        styles.animalItem,
                                         {
                                             width: itemSize,
                                             height: itemSize,
+                                            opacity: isMatched ? 0.3 : 1,
                                             transform: [
                                                 ...pan.getTranslateTransform(),
-                                                { scale: isDragging ? 1.15 : 1 },
+                                                { scale },
+                                                { translateX: isShaking ? shakeAnim : 0 },
                                             ],
-                                            zIndex: isDragging ? 100 : 1,
-                                            opacity: isMatched ? 0.4 : 1,
+                                            zIndex: isShaking ? 100 : 1,
                                         },
                                     ]}
-                                    {...panResponder.panHandlers}
+                                    {...responder.panHandlers}
                                 >
                                     <Image
-                                        source={item.source}
-                                        style={styles.objectImage}
+                                        source={animal.source}
+                                        style={styles.animalImage}
                                         resizeMode="contain"
                                     />
-                                    {isMatched && (
-                                        <View style={styles.matchedCheck}>
-                                            <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                                        </View>
-                                    )}
                                 </Animated.View>
                             );
                         })}
                     </View>
                 </View>
 
-                {/* Shadows Column (Right) */}
-                <View style={styles.shadowsColumn}>
-                    <Text style={styles.columnTitle}>👤 Gölgeler</Text>
-                    <View style={styles.itemsContainer}>
-                        {shadowItems.map((item, index) => {
-                            const isMatched = matches.has(item.id);
-                            const isHighlighted = highlightedShadow === item.id;
-                            const isDistractor = !currentItems.find(i => i.id === item.id);
+                {/* Shadows (Right) */}
+                <View style={styles.shadowsArea}>
+                    <Text style={styles.areaLabel}>👤 Gölgeler</Text>
+                    <View style={styles.itemsWrap}>
+                        {shadows.map((shadow, idx) => {
+                            const isMatched = matched.has(shadow.id);
 
                             return (
                                 <View
-                                    key={`shadow-${item.id}-${index}`}
-                                    onLayout={(e) => onShadowLayout(item.id, e)}
+                                    key={`shadow-${shadow.id}-${idx}`}
+                                    ref={ref => ref && !isMatched && onShadowLayout(shadow.id, { target: ref })}
                                     style={[
-                                        styles.shadowCard,
-                                        isMatched && styles.shadowCardMatched,
-                                        isHighlighted && styles.shadowCardHighlighted,
-                                        isDistractor && styles.shadowCardDistractor,
+                                        styles.shadowItem,
                                         { width: shadowSize, height: shadowSize },
+                                        isMatched && styles.shadowMatched,
                                     ]}
                                 >
                                     <Image
-                                        source={item.source}
+                                        source={shadow.source}
                                         style={[
                                             styles.shadowImage,
-                                            // CSS Filter simulation - tintColor for black silhouette
-                                            { tintColor: isMatched ? '#4CAF50' : '#000000', opacity: isMatched ? 1 : 0.85 },
+                                            // Programatic shadow: brightness(0) = black, opacity
+                                            { tintColor: isMatched ? '#4CAF50' : '#000', opacity: isMatched ? 1 : 0.6 },
                                         ]}
                                         resizeMode="contain"
                                     />
                                     {isMatched && (
-                                        <View style={styles.shadowMatchedBadge}>
-                                            <Ionicons name="checkmark" size={16} color="#fff" />
+                                        <View style={styles.matchBadge}>
+                                            <Ionicons name="checkmark" size={14} color="#fff" />
                                         </View>
                                     )}
                                 </View>
@@ -406,47 +359,39 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                 </View>
             </View>
 
+            {/* Instructions */}
+            <View style={styles.instructions}>
+                <Ionicons name="hand-left-outline" size={18} color="#5D4037" />
+                <Text style={styles.instructionsText}>Hayvanı sürükle, gölgesine bırak!</Text>
+            </View>
+
             {/* Success Overlay */}
             {showSuccess && (
-                <Animated.View
-                    style={[
-                        styles.successOverlay,
-                        { opacity: successAnim, transform: [{ scale: successAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }] },
-                    ]}
-                >
+                <Animated.View style={[styles.successOverlay, { transform: [{ scale: successScale }] }]}>
                     <Text style={styles.successEmoji}>🎉</Text>
-                    <Text style={styles.successText}>Harika!</Text>
-                    {round < 3 && <Text style={styles.successSubtext}>Sonraki tura geçiliyor...</Text>}
-                    {round >= 3 && <Text style={styles.successSubtext}>Oyun tamamlandı!</Text>}
+                    <Text style={styles.successTitle}>Harika!</Text>
+                    <Text style={styles.successSub}>{round < 3 ? 'Sonraki tura geçiliyor...' : 'Oyun bitti!'}</Text>
                 </Animated.View>
             )}
 
             {/* Confetti */}
             {showSuccess && confettiAnims.map((anim, i) => (
                 <Animated.View
-                    key={`confetti-${i}`}
+                    key={`c-${i}`}
                     style={{
                         position: 'absolute',
-                        left: Math.random() * screenW,
-                        top: -50,
+                        left: 20 + (i * (screenW - 40) / 12),
+                        top: -40,
                         transform: [
-                            { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [0, screenH + 100] }) },
-                            { rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
+                            { translateY: anim.interpolate({ inputRange: [0, 1], outputRange: [0, screenH + 80] }) },
+                            { rotate: anim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${360 + i * 30}deg`] }) },
                         ],
-                        opacity: anim.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 1, 0] }),
+                        opacity: anim.interpolate({ inputRange: [0, 0.7, 1], outputRange: [1, 1, 0] }),
                     }}
                 >
-                    <Text style={{ fontSize: 24 }}>{['🌟', '⭐', '✨', '💫', '🎊'][i % 5]}</Text>
+                    <Text style={{ fontSize: 22 }}>{['🌟', '⭐', '✨', '💚', '🎊', '🌈'][i % 6]}</Text>
                 </Animated.View>
             ))}
-
-            {/* Instructions */}
-            <View style={styles.instructions}>
-                <Ionicons name="hand-left" size={16} color="#1565C0" />
-                <Text style={styles.instructionsText}>
-                    Nesneyi sürükle ve doğru gölgeye bırak!
-                </Text>
-            </View>
         </View>
     );
 }
@@ -454,26 +399,72 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#E3F2FD',
+        backgroundColor: '#A8D5BA', // Pastel yeşil
     },
+    // Background elements
+    bgGradient: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: '#C8E6C9',
+    },
+    bgTree1: {
+        position: 'absolute',
+        left: 20,
+        bottom: 0,
+        width: 60,
+        height: 180,
+        backgroundColor: '#81C784',
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+    },
+    bgTree2: {
+        position: 'absolute',
+        right: 30,
+        bottom: 0,
+        width: 50,
+        height: 140,
+        backgroundColor: '#66BB6A',
+        borderTopLeftRadius: 25,
+        borderTopRightRadius: 25,
+    },
+    bgCloud1: {
+        position: 'absolute',
+        top: 60,
+        left: 40,
+        width: 80,
+        height: 35,
+        backgroundColor: 'rgba(255,255,255,0.7)',
+        borderRadius: 20,
+    },
+    bgCloud2: {
+        position: 'absolute',
+        top: 90,
+        right: 50,
+        width: 60,
+        height: 28,
+        backgroundColor: 'rgba(255,255,255,0.6)',
+        borderRadius: 15,
+    },
+    bgGrass: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 50,
+        backgroundColor: '#4CAF50',
+    },
+    // Header
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingTop: Platform.OS === 'web' ? 20 : 50,
+        paddingTop: Platform.OS === 'web' ? 16 : 50,
         paddingHorizontal: 16,
         paddingBottom: 12,
-        backgroundColor: '#1565C0',
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 8,
+        backgroundColor: 'rgba(93, 64, 55, 0.9)',
+        zIndex: 10,
     },
-    backButton: {
-        padding: 10,
-        borderRadius: 20,
+    backBtn: {
+        padding: 8,
+        borderRadius: 16,
         backgroundColor: 'rgba(255,255,255,0.2)',
     },
     headerInfo: {
@@ -481,176 +472,142 @@ const styles = StyleSheet.create({
         marginLeft: 12,
     },
     title: {
-        fontSize: 22,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#fff',
     },
     subtitle: {
         fontSize: 12,
-        color: '#BBDEFB',
-        marginTop: 2,
+        color: '#D7CCC8',
     },
-    statsContainer: {
+    stats: {
         flexDirection: 'row',
-        gap: 8,
+        gap: 6,
     },
     statBadge: {
-        backgroundColor: '#4CAF50',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 14,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 12,
     },
     statText: {
         color: '#fff',
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: 'bold',
     },
+    // Game Area
     gameArea: {
         flex: 1,
         flexDirection: 'row',
         padding: 16,
-        gap: 12,
+        zIndex: 5,
     },
-    objectsColumn: {
+    animalsArea: {
         flex: 1,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        borderRadius: 20,
-        padding: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        marginRight: 8,
     },
-    shadowsColumn: {
+    shadowsArea: {
         flex: 1,
-        backgroundColor: 'rgba(66, 66, 66, 0.15)',
-        borderRadius: 20,
-        padding: 12,
+        marginLeft: 8,
     },
-    columnTitle: {
-        fontSize: 15,
+    areaLabel: {
+        fontSize: 14,
         fontWeight: 'bold',
-        color: '#1565C0',
+        color: '#5D4037',
         textAlign: 'center',
         marginBottom: 12,
+        backgroundColor: 'rgba(255,255,255,0.7)',
+        paddingVertical: 6,
+        borderRadius: 12,
     },
-    itemsContainer: {
+    itemsWrap: {
         flex: 1,
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        alignContent: 'flex-start',
-        gap: 10,
+        alignContent: 'center',
+        gap: 12,
     },
-    objectCard: {
-        backgroundColor: '#fff',
-        borderRadius: 16,
-        padding: 8,
-        elevation: 4,
-        shadowColor: '#1565C0',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        borderWidth: 2,
-        borderColor: '#E3F2FD',
+    // Animal items - NO white box
+    animalItem: {
+        backgroundColor: 'transparent',
     },
-    objectCardMatched: {
-        borderColor: '#4CAF50',
-        backgroundColor: '#E8F5E9',
-    },
-    objectCardDragging: {
-        borderColor: '#FF9800',
-        shadowOpacity: 0.4,
-        elevation: 10,
-    },
-    objectImage: {
+    animalImage: {
         width: '100%',
         height: '100%',
     },
-    matchedCheck: {
-        position: 'absolute',
-        top: -8,
-        right: -8,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-    },
-    shadowCard: {
-        backgroundColor: '#424242',
+    // Shadow items - transparent
+    shadowItem: {
+        backgroundColor: 'rgba(0,0,0,0.1)',
         borderRadius: 16,
-        padding: 8,
+        padding: 6,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#616161',
     },
-    shadowCardMatched: {
-        backgroundColor: '#2E7D32',
-        borderColor: '#4CAF50',
-    },
-    shadowCardHighlighted: {
-        borderColor: '#FFD700',
-        borderWidth: 3,
-        transform: [{ scale: 1.08 }],
-    },
-    shadowCardDistractor: {
-        backgroundColor: '#37474F',
-        borderColor: '#546E7A',
+    shadowMatched: {
+        backgroundColor: 'rgba(76, 175, 80, 0.3)',
     },
     shadowImage: {
-        width: '80%',
-        height: '80%',
+        width: '85%',
+        height: '85%',
     },
-    shadowMatchedBadge: {
+    matchBadge: {
         position: 'absolute',
-        top: -6,
-        right: -6,
-        backgroundColor: '#4CAF50',
-        borderRadius: 10,
+        top: -4,
+        right: -4,
         width: 20,
         height: 20,
+        borderRadius: 10,
+        backgroundColor: '#4CAF50',
         justifyContent: 'center',
         alignItems: 'center',
     },
-    successOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(21, 101, 192, 0.95)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 200,
-    },
-    successEmoji: {
-        fontSize: 80,
-    },
-    successText: {
-        fontSize: 36,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginTop: 16,
-    },
-    successSubtext: {
-        fontSize: 16,
-        color: '#BBDEFB',
-        marginTop: 8,
-    },
+    // Instructions
     instructions: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 12,
+        paddingVertical: 12,
         gap: 8,
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        backgroundColor: 'rgba(255,255,255,0.85)',
         marginHorizontal: 16,
         marginBottom: 16,
-        borderRadius: 12,
+        borderRadius: 16,
+        zIndex: 10,
     },
     instructionsText: {
         fontSize: 14,
-        color: '#1565C0',
+        color: '#5D4037',
         fontWeight: '600',
+    },
+    // Success
+    successOverlay: {
+        position: 'absolute',
+        top: '30%',
+        left: '15%',
+        right: '15%',
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        borderRadius: 24,
+        padding: 30,
+        alignItems: 'center',
+        zIndex: 200,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 20,
+    },
+    successEmoji: {
+        fontSize: 60,
+    },
+    successTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#4CAF50',
+        marginTop: 10,
+    },
+    successSub: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 4,
     },
 });
