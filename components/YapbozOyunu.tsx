@@ -25,31 +25,16 @@ const PUZZLE_IMAGE = require('@/assets/images/karpuz.png');
 // Karıştırma sırası (her parçanın başlangıç pozisyonu)
 const SHUFFLE_ORDER = [4, 7, 2, 8, 5, 0, 1, 6, 3];
 
-interface PieceData {
-    id: number;
-    row: number; // Hedef satır
-    col: number; // Hedef sütun
-    isLocked: boolean;
-}
-
 export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const { isMuted, toggleMute } = useSound();
-    const [pieces, setPieces] = useState<PieceData[]>(() =>
-        Array.from({ length: TOTAL_TILES }, (_, i) => ({
-            id: i,
-            row: Math.floor(i / GRID_SIZE),
-            col: i % GRID_SIZE,
-            isLocked: false,
-        }))
-    );
+    const [lockedPieces, setLockedPieces] = useState<Set<number>>(new Set());
     const [moves, setMoves] = useState(0);
     const [isComplete, setIsComplete] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
     const [startTime] = useState(Date.now());
-    const [gameAreaLayout, setGameAreaLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
     const { width: screenW, height: screenH } = Dimensions.get('window');
-    const puzzleSize = Math.min(screenW * 0.75, screenH * 0.4, 300);
+    const puzzleSize = Math.min(screenW * 0.6, screenH * 0.35, 280);
     const tileSize = puzzleSize / GRID_SIZE;
     const pieceSize = tileSize - 4;
 
@@ -58,43 +43,40 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         Array.from({ length: TOTAL_TILES }, () => new Animated.ValueXY({ x: 0, y: 0 }))
     ).current;
 
-    // Initialize piece positions
-    const [initialized, setInitialized] = useState(false);
+    // Grid position ref (center of screen)
+    const gridLeft = (screenW - puzzleSize) / 2;
+    const gridTop = 120; // Fixed position from top
+
+    // Piece starting positions (below the grid)
+    const pieceAreaTop = gridTop + puzzleSize + 40;
+    const pieceSpacing = pieceSize + 15;
+    const pieceAreaLeft = (screenW - 3 * pieceSpacing) / 2;
 
     useEffect(() => {
         const t = setTimeout(() => setShowPreview(false), 2500);
         return () => clearTimeout(t);
     }, []);
 
-    // Set initial positions when game area layout is known
+    // Initialize piece positions on mount
     useEffect(() => {
-        if (gameAreaLayout && !initialized && !showPreview) {
-            const gridTop = 60; // instruction text height + margin
-            const gridLeft = (gameAreaLayout.width - puzzleSize) / 2;
-
-            // Start pieces below the grid and hint area
-            const startY = gridTop + puzzleSize + 100;
-            const spacing = pieceSize + 12;
-            const startX = (gameAreaLayout.width - 3 * spacing) / 2;
-
-            pieces.forEach((piece, i) => {
-                const shuffleIdx = SHUFFLE_ORDER.indexOf(piece.id);
-                const pRow = Math.floor(shuffleIdx / 3);
-                const pCol = shuffleIdx % 3;
-                panRefs[piece.id].setValue({
-                    x: startX + pCol * spacing,
-                    y: startY + pRow * spacing,
+        if (!showPreview) {
+            // Set initial positions for each piece based on shuffle order
+            for (let i = 0; i < TOTAL_TILES; i++) {
+                const shuffleIdx = SHUFFLE_ORDER.indexOf(i);
+                const row = Math.floor(shuffleIdx / 3);
+                const col = shuffleIdx % 3;
+                panRefs[i].setValue({
+                    x: pieceAreaLeft + col * pieceSpacing,
+                    y: pieceAreaTop + row * pieceSpacing,
                 });
-            });
-            setInitialized(true);
+            }
         }
-    }, [gameAreaLayout, initialized, showPreview, puzzleSize, pieceSize]);
+    }, [showPreview]);
 
     const handleLock = (id: number) => {
-        setPieces(prev => {
-            const next = prev.map(p => (p.id === id ? { ...p, isLocked: true } : p));
-            const lockedCount = next.filter(p => p.isLocked).length;
-            if (lockedCount === TOTAL_TILES) {
+        setLockedPieces(prev => {
+            const next = new Set(prev).add(id);
+            if (next.size === TOTAL_TILES) {
                 setIsComplete(true);
                 setTimeout(() => {
                     const dur = Math.floor((Date.now() - startTime) / 1000);
@@ -108,12 +90,12 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         });
     };
 
-    const createPanResponder = (piece: PieceData) => {
-        const pan = panRefs[piece.id];
+    const createPanResponder = (pieceId: number, targetRow: number, targetCol: number) => {
+        const pan = panRefs[pieceId];
 
         return PanResponder.create({
-            onStartShouldSetPanResponder: () => !piece.isLocked && !isComplete,
-            onMoveShouldSetPanResponder: () => !piece.isLocked && !isComplete,
+            onStartShouldSetPanResponder: () => !lockedPieces.has(pieceId) && !isComplete,
+            onMoveShouldSetPanResponder: () => !lockedPieces.has(pieceId) && !isComplete,
             onPanResponderGrant: () => {
                 // @ts-ignore
                 pan.setOffset({ x: pan.x._value, y: pan.y._value });
@@ -131,97 +113,58 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 // @ts-ignore
                 const currentY = pan.y._value;
 
-                if (gameAreaLayout) {
-                    const gridTop = 60;
-                    const gridLeft = (gameAreaLayout.width - puzzleSize) / 2;
+                // Target position for this piece in the grid
+                const targetX = gridLeft + targetCol * tileSize + (tileSize - pieceSize) / 2;
+                const targetY = gridTop + targetRow * tileSize + (tileSize - pieceSize) / 2;
 
-                    // Target position for this piece
-                    const targetX = gridLeft + piece.col * tileSize + (tileSize - pieceSize) / 2;
-                    const targetY = gridTop + piece.row * tileSize + (tileSize - pieceSize) / 2;
+                // Center of current piece
+                const centerX = currentX + pieceSize / 2;
+                const centerY = currentY + pieceSize / 2;
 
-                    // Center of current piece
-                    const centerX = currentX + pieceSize / 2;
-                    const centerY = currentY + pieceSize / 2;
+                // Center of target cell
+                const targetCenterX = targetX + pieceSize / 2;
+                const targetCenterY = targetY + pieceSize / 2;
 
-                    // Center of target cell
-                    const targetCenterX = targetX + pieceSize / 2;
-                    const targetCenterY = targetY + pieceSize / 2;
+                const dist = Math.sqrt(
+                    Math.pow(centerX - targetCenterX, 2) + Math.pow(centerY - targetCenterY, 2)
+                );
 
-                    const dist = Math.sqrt(
-                        Math.pow(centerX - targetCenterX, 2) + Math.pow(centerY - targetCenterY, 2)
-                    );
-
-                    // Snap if close enough
-                    if (dist < 50) {
-                        Animated.spring(pan, {
-                            toValue: { x: targetX, y: targetY },
-                            useNativeDriver: false,
-                            speed: 20,
-                            bounciness: 0,
-                        }).start(() => {
-                            handleLock(piece.id);
-                        });
-                    }
+                // Snap if close enough
+                if (dist < 50) {
+                    Animated.spring(pan, {
+                        toValue: { x: targetX, y: targetY },
+                        useNativeDriver: false,
+                        speed: 20,
+                        bounciness: 0,
+                    }).start(() => {
+                        handleLock(pieceId);
+                    });
                 }
             },
         });
     };
 
-    // Create pan responders for all pieces
-    const panResponders = useRef<{ [key: number]: ReturnType<typeof PanResponder.create> }>({}).current;
-
-    pieces.forEach(piece => {
-        if (!panResponders[piece.id]) {
-            panResponders[piece.id] = createPanResponder(piece);
-        }
-    });
-
-    const renderGrid = () => {
-        const gridTop = 60;
-        const gridLeft = gameAreaLayout ? (gameAreaLayout.width - puzzleSize) / 2 : 0;
-
-        return (
-            <View
-                style={[
-                    styles.grid,
-                    {
-                        width: puzzleSize,
-                        height: puzzleSize,
-                        position: 'absolute',
-                        top: gridTop,
-                        left: gridLeft,
-                    },
-                ]}
-            >
-                {Array.from({ length: TOTAL_TILES }).map((_, i) => {
-                    const isLocked = pieces.find(p => p.id === i)?.isLocked;
-                    return (
-                        <View key={i} style={[styles.cell, { width: tileSize, height: tileSize }]}>
-                            {!isLocked && <View style={styles.cellGuide} />}
-                        </View>
-                    );
-                })}
-            </View>
-        );
-    };
-
     const renderPieces = () => {
-        return pieces.map(piece => {
-            const pan = panRefs[piece.id];
-            const responder = panResponders[piece.id];
+        const pieces = [];
+        for (let i = 0; i < TOTAL_TILES; i++) {
+            const targetRow = Math.floor(i / GRID_SIZE);
+            const targetCol = i % GRID_SIZE;
+            const pan = panRefs[i];
+            const isLocked = lockedPieces.has(i);
+            const responder = createPanResponder(i, targetRow, targetCol);
 
-            return (
+            pieces.push(
                 <Animated.View
-                    key={piece.id}
-                    {...(piece.isLocked ? {} : responder?.panHandlers)}
+                    key={i}
+                    {...(isLocked ? {} : responder.panHandlers)}
                     style={[
                         styles.piece,
                         {
                             width: pieceSize,
                             height: pieceSize,
                             transform: pan.getTranslateTransform(),
-                            zIndex: piece.isLocked ? 1 : 100,
-                            borderColor: piece.isLocked ? '#4CAF50' : '#fff',
+                            zIndex: isLocked ? 1 : 100,
+                            borderColor: isLocked ? '#4CAF50' : '#fff',
                             borderWidth: 2,
                         },
                     ]}
@@ -233,15 +176,16 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                                 width: puzzleSize,
                                 height: puzzleSize,
                                 position: 'absolute',
-                                left: -piece.col * tileSize,
-                                top: -piece.row * tileSize,
+                                left: -targetCol * tileSize,
+                                top: -targetRow * tileSize,
                             }}
                             resizeMode="cover"
                         />
                     </View>
                 </Animated.View>
             );
-        });
+        }
+        return pieces;
     };
 
     return (
@@ -269,29 +213,56 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                     <Text style={styles.loadingText}>Oyun Hazırlanıyor...</Text>
                 </View>
             ) : (
-                <View
-                    style={styles.gameArea}
-                    onLayout={(e) => {
-                        const { x, y, width, height } = e.nativeEvent.layout;
-                        setGameAreaLayout({ x, y, width, height });
-                    }}
-                >
+                <View style={styles.gameArea}>
                     <Text style={styles.instruction}>
                         {isComplete ? '🎉 Mükemmel!' : 'Parçaları sürükle ve birleştir!'}
                     </Text>
 
                     {/* Hint */}
-                    <View style={styles.hintContainer}>
+                    <View style={[styles.hintContainer, { right: 20, top: gridTop }]}>
                         <Text style={styles.hintText}>Hedef:</Text>
                         <Image source={PUZZLE_IMAGE} style={styles.hintImage} />
                         <Text style={styles.movesText}>Hamle: {moves}</Text>
                     </View>
 
-                    {/* Grid */}
-                    {renderGrid()}
+                    {/* Grid - 3x3 */}
+                    <View
+                        style={[
+                            styles.grid,
+                            {
+                                width: puzzleSize,
+                                height: puzzleSize,
+                                left: gridLeft,
+                                top: gridTop,
+                            },
+                        ]}
+                    >
+                        {[0, 1, 2].map(row => (
+                            <View key={row} style={styles.gridRow}>
+                                {[0, 1, 2].map(col => {
+                                    const idx = row * 3 + col;
+                                    const isLocked = lockedPieces.has(idx);
+                                    return (
+                                        <View
+                                            key={col}
+                                            style={[
+                                                styles.cell,
+                                                {
+                                                    width: tileSize,
+                                                    height: tileSize,
+                                                },
+                                            ]}
+                                        >
+                                            {!isLocked && <View style={styles.cellGuide} />}
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        ))}
+                    </View>
 
-                    {/* Pieces */}
-                    {initialized && renderPieces()}
+                    {/* Puzzle Pieces */}
+                    {renderPieces()}
                 </View>
             )}
         </View>
@@ -308,7 +279,7 @@ const styles = StyleSheet.create({
         paddingTop: Platform.OS === 'web' ? 20 : 50,
         paddingBottom: 10,
         backgroundColor: 'rgba(0,0,0,0.3)',
-        zIndex: 100,
+        zIndex: 200,
     },
     btn: { padding: 8, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.1)' },
     title: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
@@ -328,30 +299,31 @@ const styles = StyleSheet.create({
         marginTop: 10,
         marginBottom: 10,
         fontWeight: '600',
+        zIndex: 150,
     },
 
     hintContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-        zIndex: 200,
         position: 'absolute',
-        top: 30,
-        right: 20,
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 8,
+        zIndex: 150,
     },
     hintText: { color: '#aaa', fontSize: 12 },
-    hintImage: { width: 40, height: 40, borderRadius: 4, opacity: 0.8 },
-    movesText: { color: '#4ECDC4', fontSize: 12, fontWeight: 'bold' },
+    hintImage: { width: 60, height: 60, borderRadius: 8, borderWidth: 2, borderColor: '#4ECDC4' },
+    movesText: { color: '#4ECDC4', fontSize: 14, fontWeight: 'bold' },
 
     grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
+        position: 'absolute',
         borderWidth: 3,
         borderColor: '#4ECDC4',
         borderRadius: 8,
         backgroundColor: 'rgba(78, 205, 196, 0.1)',
         zIndex: 1,
+        overflow: 'hidden',
+    },
+    gridRow: {
+        flexDirection: 'row',
     },
     cell: {
         borderWidth: 1,
@@ -363,7 +335,7 @@ const styles = StyleSheet.create({
         width: 12,
         height: 12,
         borderRadius: 6,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        backgroundColor: 'rgba(255,255,255,0.2)',
     },
 
     piece: {
