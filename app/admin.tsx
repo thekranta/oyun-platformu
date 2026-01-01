@@ -304,10 +304,11 @@ export default function AdminPanel() {
             };
 
             const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
-                alan: 'Genel Gelişim',
-                surec: 'Değerlendirme',
-                cikti: 'GB.1',
-                ciktiAciklama: 'Genel beceri değerlendirmesi'
+                // Bilinmeyen oyunlar için varsayılan: Matematik - Muhakeme (en genel bilişsel beceri)
+                alan: 'Matematik',
+                surec: 'Matematiksel Muhakeme',
+                cikti: 'MAB.2',
+                ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme'
             };
 
             // Oyun adını Türkçe'ye çevir
@@ -783,7 +784,9 @@ ChildhoodTech Ekibi
             'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.3' },
             'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.2.1' },
         };
-        return maarifMatrisi[oyunTuru] || { alan: 'Genel Gelişim', cikti: 'GB.1' };
+        // Bilinmeyen oyunlar için varsayılan: MAB.2 (Matematik - Muhakeme)
+        // ASLA GB.1 veya 'Genel Gelişim' kullanma!
+        return maarifMatrisi[oyunTuru] || { alan: 'Matematik', cikti: 'MAB.2' };
     };
 
     // Özet çıkarma fonksiyonu
