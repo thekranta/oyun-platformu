@@ -36,24 +36,25 @@ interface AnimalAsset {
     id: string;
     name: string;
     source: ImageSourcePropType;
-    color: string;
 }
 
 const ANIMALS: AnimalAsset[] = [
-    { id: 'horse', name: 'At', source: require('@/assets/images/animal_horse.png'), color: '#8D6E63' },
-    { id: 'elephant', name: 'Fil', source: require('@/assets/images/animal_elephant.png'), color: '#78909C' },
-    { id: 'lion', name: 'Aslan', source: require('@/assets/images/animal_lion.png'), color: '#FFB74D' },
-    { id: 'monkey', name: 'Maymun', source: require('@/assets/images/animal_monkey.png'), color: '#A1887F' },
-    { id: 'giraffe', name: 'Zürafa', source: require('@/assets/images/animal_giraffe.png'), color: '#FFF176' },
-    { id: 'snake', name: 'Yılan', source: require('@/assets/images/animal_snake.png'), color: '#81C784' },
-    { id: 'bird', name: 'Kuş', source: require('@/assets/images/animal_bird.png'), color: '#FF8A65' },
-    { id: 'octopus', name: 'Ahtapot', source: require('@/assets/images/animal_octopus.png'), color: '#CE93D8' },
-    { id: 'crab', name: 'Yengeç', source: require('@/assets/images/animal_crab.png'), color: '#EF5350' },
-    { id: 'whale', name: 'Balina', source: require('@/assets/images/animal_whale.png'), color: '#64B5F6' },
-    { id: 'turtle', name: 'Kaplumbağa', source: require('@/assets/images/animal_turtle.png'), color: '#4DB6AC' },
+    { id: 'horse', name: 'At', source: require('@/assets/images/animal_horse.png') },
+    { id: 'elephant', name: 'Fil', source: require('@/assets/images/animal_elephant.png') },
+    { id: 'lion', name: 'Aslan', source: require('@/assets/images/animal_lion.png') },
+    { id: 'monkey', name: 'Maymun', source: require('@/assets/images/animal_monkey.png') },
+    { id: 'giraffe', name: 'Zürafa', source: require('@/assets/images/animal_giraffe.png') },
+    { id: 'snake', name: 'Yılan', source: require('@/assets/images/animal_snake.png') },
+    { id: 'bird', name: 'Kuş', source: require('@/assets/images/animal_bird.png') },
+    { id: 'octopus', name: 'Ahtapot', source: require('@/assets/images/animal_octopus.png') },
+    { id: 'crab', name: 'Yengeç', source: require('@/assets/images/animal_crab.png') },
+    { id: 'whale', name: 'Balina', source: require('@/assets/images/animal_whale.png') },
+    { id: 'turtle', name: 'Kaplumbağa', source: require('@/assets/images/animal_turtle.png') },
 ];
 
 const { width: screenW, height: screenH } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
+const isMobile = screenH < 700;
 
 // ============= TUR CONFIG =============
 const ROUND_CONFIGS = [
@@ -75,7 +76,7 @@ const MOTIVATION = [
     { round: 9, emoji: '🏆', text: 'Şampiyon!' },
 ];
 
-// ============= DRAGGABLE =============
+// ============= DRAGGABLE - Sadece görsel, kart yok =============
 function DraggableAnimal({ animal, size, isMatched, onDrop }: {
     animal: AnimalAsset;
     size: number;
@@ -84,20 +85,6 @@ function DraggableAnimal({ animal, size, isMatched, onDrop }: {
 }) {
     const pan = useRef(new Animated.ValueXY()).current;
     const scale = useRef(new Animated.Value(1)).current;
-    const bounce = useRef(new Animated.Value(0)).current;
-
-    // Idle bounce animation
-    useEffect(() => {
-        if (!isMatched) {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(bounce, { toValue: -5, duration: 800, useNativeDriver: true }),
-                    Animated.timing(bounce, { toValue: 5, duration: 800, useNativeDriver: true }),
-                ])
-            ).start();
-        }
-        return () => bounce.stopAnimation();
-    }, [isMatched]);
 
     const panResponder = useMemo(() => PanResponder.create({
         onStartShouldSetPanResponder: () => !isMatched,
@@ -106,12 +93,12 @@ function DraggableAnimal({ animal, size, isMatched, onDrop }: {
             // @ts-ignore
             pan.setOffset({ x: pan.x._value, y: pan.y._value });
             pan.setValue({ x: 0, y: 0 });
-            Animated.spring(scale, { toValue: 1.25, friction: 4, useNativeDriver: true }).start();
+            Animated.spring(scale, { toValue: 1.15, friction: 5, useNativeDriver: true }).start();
         },
         onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
         onPanResponderRelease: (_, g) => {
             pan.flattenOffset();
-            Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+            Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: true }).start();
             if (!onDrop(animal.id, g.moveX, g.moveY)) {
                 Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 5, useNativeDriver: false }).start();
             }
@@ -120,25 +107,20 @@ function DraggableAnimal({ animal, size, isMatched, onDrop }: {
 
     return (
         <Animated.View
-            style={[
-                styles.animalCard,
-                {
-                    width: size,
-                    height: size,
-                    backgroundColor: animal.color,
-                    opacity: isMatched ? 0.3 : 1,
-                    transform: [
-                        { translateX: pan.x },
-                        { translateY: pan.y },
-                        { translateY: bounce },
-                        { scale },
-                    ],
-                },
-            ]}
+            style={{
+                width: size,
+                height: size,
+                opacity: isMatched ? 0.25 : 1,
+                transform: [
+                    { translateX: pan.x },
+                    { translateY: pan.y },
+                    { scale },
+                ],
+                zIndex: 10,
+            }}
             {...panResponder.panHandlers}
         >
-            <Image source={animal.source} style={styles.animalImg} resizeMode="contain" />
-            {!isMatched && <Text style={styles.animalName}>{animal.name}</Text>}
+            <Image source={animal.source} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
         </Animated.View>
     );
 }
@@ -163,8 +145,26 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     const shadowRefs = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
 
     const cfg = ROUND_CONFIGS[round - 1] || ROUND_CONFIGS[0];
-    const itemSize = Math.min(screenW * 0.22, 120);
-    const shadowSize = itemSize * 0.9;
+
+    // Responsive boyutlandırma
+    const totalItems = cfg.count + cfg.distractors;
+    const getItemSize = () => {
+        if (isWeb) {
+            // Web için daha büyük
+            if (totalItems <= 4) return 100;
+            if (totalItems <= 6) return 85;
+            return 75;
+        } else {
+            // Mobil için ekrana sığdır
+            const maxPerRow = 3;
+            const availableWidth = (screenW / 2) - 30;
+            const maxSize = Math.floor(availableWidth / Math.min(totalItems, maxPerRow)) - 8;
+            return Math.min(Math.max(maxSize, 55), 90);
+        }
+    };
+
+    const itemSize = getItemSize();
+    const shadowSize = itemSize * 0.95;
 
     useEffect(() => { initRound(); }, [round]);
 
@@ -244,43 +244,29 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 
     return (
         <View style={styles.container}>
-            {/* Colorful Background */}
-            <View style={styles.bgTop} />
-            <View style={styles.bgBottom} />
-
-            {/* Decorations */}
-            <View style={[styles.cloud, { left: 20, top: 80 }]} />
-            <View style={[styles.cloud, { right: 30, top: 120 }]} />
-            <View style={[styles.sun, { right: 20, top: 40 }]} />
+            {/* Background */}
+            <View style={styles.bgSky} />
+            <View style={styles.bgGrass} />
 
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
-                    <Ionicons name="home" size={22} color="#fff" />
+                    <Ionicons name="home" size={20} color="#fff" />
                 </TouchableOpacity>
-                <View style={styles.roundBadge}>
-                    <Text style={styles.roundText}>🔍 Tur {round}/{TOTAL}</Text>
-                </View>
-                <View style={styles.errorBadge}>
-                    <Text style={styles.errorText}>❌ {errors}</Text>
-                </View>
+                <Text style={styles.roundText}>Tur {round}/{TOTAL}</Text>
+                <Text style={styles.errorText}>❌ {errors}</Text>
             </View>
 
-            {/* Progress Stars */}
-            <View style={styles.starsRow}>
-                {Array(TOTAL).fill(0).map((_, i) => (
-                    <Text key={i} style={[styles.star, i < round && styles.starActive]}>
-                        {i < round ? '⭐' : '☆'}
-                    </Text>
-                ))}
+            {/* Progress */}
+            <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${(round / TOTAL) * 100}%` }]} />
             </View>
 
-            {/* Main Game Area */}
-            <View style={styles.gameContainer}>
-                {/* Animals Side */}
-                <View style={styles.side}>
-                    <Text style={styles.sideTitle}>🎨 Renkli</Text>
-                    <View style={styles.itemsGrid}>
+            {/* Game Area - Yan yana */}
+            <View style={styles.gameArea}>
+                {/* Hayvanlar */}
+                <View style={styles.column}>
+                    <View style={styles.itemsWrap}>
                         {animals.map(a => (
                             <DraggableAnimal
                                 key={`a-${a.id}-${round}`}
@@ -293,62 +279,49 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
                     </View>
                 </View>
 
-                {/* Arrow */}
-                <View style={styles.arrowContainer}>
-                    <Text style={styles.arrow}>➡️</Text>
-                </View>
+                {/* Ok */}
+                <Text style={styles.arrow}>→</Text>
 
-                {/* Shadows Side */}
-                <View style={styles.side}>
-                    <Text style={styles.sideTitle}>👤 Gölge</Text>
-                    <View style={styles.itemsGrid}>
+                {/* Gölgeler */}
+                <View style={styles.column}>
+                    <View style={styles.itemsWrap}>
                         {shadows.map((s, i) => (
                             <View
                                 key={`s-${s.id}-${i}-${round}`}
                                 ref={r => onShadowLayout(s.id, r)}
                                 style={[
-                                    styles.shadowCard,
+                                    styles.shadowSlot,
                                     { width: shadowSize, height: shadowSize },
                                     matched.has(s.id) && styles.shadowMatched,
                                 ]}
                             >
                                 <Image
                                     source={s.source}
-                                    style={[styles.shadowImg, { tintColor: matched.has(s.id) ? '#4CAF50' : '#1a1a1a' }]}
+                                    style={[
+                                        styles.shadowImg,
+                                        { tintColor: matched.has(s.id) ? '#2E7D32' : '#000' },
+                                    ]}
                                     resizeMode="contain"
                                 />
-                                {matched.has(s.id) && <Text style={styles.checkMark}>✅</Text>}
                             </View>
                         ))}
                     </View>
                 </View>
             </View>
 
-            {/* Instructions */}
-            <View style={styles.instructionBar}>
-                <Text style={styles.instructionText}>👆 Hayvanı sürükle → Gölgesine bırak!</Text>
-            </View>
-
-            {/* Success Popup */}
+            {/* Success */}
             {showSuccess && (
-                <Animated.View style={[styles.successPopup, { transform: [{ scale: successScale }] }]}>
-                    <Text style={styles.successEmoji}>🎉</Text>
+                <Animated.View style={[styles.successBox, { transform: [{ scale: successScale }] }]}>
+                    <Text style={{ fontSize: 40 }}>🎉</Text>
                     <Text style={styles.successText}>Tur {round} Tamam!</Text>
                 </Animated.View>
             )}
 
-            {/* Motivation Overlay */}
+            {/* Motivation */}
             {showMotivation && (
-                <View style={styles.motivationOverlay}>
-                    <Text style={styles.motivationEmoji}>{showMotivation.emoji}</Text>
+                <View style={styles.motivationBox}>
+                    <Text style={{ fontSize: 60 }}>{showMotivation.emoji}</Text>
                     <Text style={styles.motivationText}>{showMotivation.text}</Text>
-                    <View style={styles.starsExplosion}>
-                        {['⭐', '✨', '🌟', '💫', '⭐', '✨'].map((s, i) => (
-                            <Animated.Text key={i} style={[styles.explodeStar, { left: 30 + i * 45, top: 20 + (i % 2) * 60 }]}>
-                                {s}
-                            </Animated.Text>
-                        ))}
-                    </View>
                 </View>
             )}
         </View>
@@ -357,109 +330,79 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
 
 const styles = StyleSheet.create({
     container: { flex: 1 },
-    bgTop: { position: 'absolute', top: 0, left: 0, right: 0, height: '60%', backgroundColor: '#87CEEB' },
-    bgBottom: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '45%', backgroundColor: '#90EE90', borderTopLeftRadius: 50, borderTopRightRadius: 50 },
-    cloud: { position: 'absolute', width: 70, height: 30, backgroundColor: '#fff', borderRadius: 20, opacity: 0.8 },
-    sun: { position: 'absolute', width: 50, height: 50, backgroundColor: '#FFD700', borderRadius: 25 },
+    bgSky: { position: 'absolute', top: 0, left: 0, right: 0, height: '55%', backgroundColor: '#87CEEB' },
+    bgGrass: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', backgroundColor: '#7CB342', borderTopLeftRadius: 40, borderTopRightRadius: 40 },
 
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingTop: Platform.OS === 'web' ? 15 : 50,
+        paddingTop: Platform.OS === 'web' ? 12 : 48,
         paddingHorizontal: 15,
-        paddingBottom: 10,
-        zIndex: 10,
+        paddingBottom: 8,
+        zIndex: 20,
     },
-    exitBtn: { padding: 10, backgroundColor: '#FF6B6B', borderRadius: 20 },
-    roundBadge: { backgroundColor: '#4ECDC4', paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20 },
-    roundText: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
-    errorBadge: { backgroundColor: '#FFE66D', paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20 },
-    errorText: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+    exitBtn: { padding: 8, backgroundColor: '#EF5350', borderRadius: 15 },
+    roundText: { fontSize: 18, fontWeight: 'bold', color: '#fff', backgroundColor: '#4ECDC4', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 15 },
+    errorText: { fontSize: 14, fontWeight: 'bold', color: '#333', backgroundColor: '#FFE082', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
 
-    starsRow: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 5,
-        paddingVertical: 8,
-    },
-    star: { fontSize: 18, color: '#ccc' },
-    starActive: { color: '#FFD700' },
+    progressBar: { height: 4, backgroundColor: 'rgba(0,0,0,0.15)', marginHorizontal: 15 },
+    progressFill: { height: '100%', backgroundColor: '#4CAF50', borderRadius: 2 },
 
-    gameContainer: {
+    gameArea: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 10,
     },
-    side: { flex: 1, alignItems: 'center' },
-    sideTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)', paddingHorizontal: 15, paddingVertical: 5, borderRadius: 15 },
-    itemsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
-
-    arrowContainer: { paddingHorizontal: 10 },
-    arrow: { fontSize: 30 },
-
-    animalCard: {
-        borderRadius: 20,
-        padding: 8,
-        alignItems: 'center',
+    column: { flex: 1 },
+    itemsWrap: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 5,
-        elevation: 8,
+        alignContent: 'center',
+        gap: 6,
+        padding: 4,
     },
-    animalImg: { width: '75%', height: '65%' },
-    animalName: { fontSize: 11, fontWeight: 'bold', color: '#fff', marginTop: 3, textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 2 },
+    arrow: { fontSize: 28, color: '#5D4037', marginHorizontal: 5 },
 
-    shadowCard: {
-        backgroundColor: 'rgba(50,50,50,0.15)',
-        borderRadius: 20,
-        borderWidth: 3,
-        borderColor: 'rgba(0,0,0,0.2)',
+    shadowSlot: {
+        backgroundColor: 'rgba(0,0,0,0.12)',
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: 'rgba(0,0,0,0.15)',
         borderStyle: 'dashed',
-        alignItems: 'center',
-        justifyContent: 'center',
     },
-    shadowMatched: { backgroundColor: 'rgba(76,175,80,0.3)', borderColor: '#4CAF50', borderStyle: 'solid' },
-    shadowImg: { width: '70%', height: '70%', opacity: 0.7 },
-    checkMark: { position: 'absolute', fontSize: 24 },
-
-    instructionBar: {
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        marginHorizontal: 20,
-        marginBottom: 15,
-        paddingVertical: 12,
-        borderRadius: 25,
-        alignItems: 'center',
+    shadowMatched: {
+        backgroundColor: 'rgba(76,175,80,0.25)',
+        borderColor: '#4CAF50',
+        borderStyle: 'solid',
     },
-    instructionText: { fontSize: 15, fontWeight: '600', color: '#333' },
+    shadowImg: { width: '80%', height: '80%', opacity: 0.65 },
 
-    successPopup: {
+    successBox: {
         position: 'absolute',
-        top: '35%',
-        left: '20%',
-        right: '20%',
+        top: '38%',
+        left: '22%',
+        right: '22%',
         backgroundColor: '#fff',
-        borderRadius: 25,
-        padding: 25,
+        borderRadius: 20,
+        padding: 20,
         alignItems: 'center',
-        elevation: 20,
+        elevation: 15,
         zIndex: 100,
     },
-    successEmoji: { fontSize: 50 },
-    successText: { fontSize: 22, fontWeight: 'bold', color: '#4CAF50', marginTop: 8 },
+    successText: { fontSize: 18, fontWeight: 'bold', color: '#4CAF50', marginTop: 5 },
 
-    motivationOverlay: {
+    motivationBox: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(255,193,7,0.95)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 200,
     },
-    motivationEmoji: { fontSize: 80 },
-    motivationText: { fontSize: 36, fontWeight: 'bold', color: '#fff', marginTop: 15, textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 5 },
-    starsExplosion: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-    explodeStar: { position: 'absolute', fontSize: 35 },
+    motivationText: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginTop: 10 },
 });
