@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -49,6 +49,16 @@ export default function App() {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
 
+  // Registration states
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [regAd, setRegAd] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regCinsiyet, setRegCinsiyet] = useState<'erkek' | 'kiz' | null>(null);
+  const [yasInputMode, setYasInputMode] = useState<'ay' | 'tarih'>('ay');
+  const [dogumTarihi, setDogumTarihi] = useState('');
+  const [regYasAy, setRegYasAy] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ visible: true, message, type });
   };
@@ -59,6 +69,10 @@ export default function App() {
 
     if (ad.trim() === '' || yas.trim() === '') {
       showToast('Lütfen isim ve yaş giriniz.', 'error');
+      return;
+    }
+    if (email.trim() === '') {
+      showToast('Lütfen e-posta giriniz.', 'error');
       return;
     }
     if (!/^\d+$/.test(yas)) {
@@ -78,6 +92,114 @@ export default function App() {
       setAsama('menu');
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  // Calculate age in months from birth date
+  const calculateAgeInMonths = (dateString: string): number | null => {
+    // Expected format: DD/MM/YYYY or DD-MM-YYYY or YYYY-MM-DD
+    let day, month, year;
+
+    if (dateString.includes('/')) {
+      const parts = dateString.split('/');
+      if (parts.length === 3) {
+        day = parseInt(parts[0]);
+        month = parseInt(parts[1]);
+        year = parseInt(parts[2]);
+      }
+    } else if (dateString.includes('-')) {
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        if (parts[0].length === 4) {
+          // YYYY-MM-DD format
+          year = parseInt(parts[0]);
+          month = parseInt(parts[1]);
+          day = parseInt(parts[2]);
+        } else {
+          // DD-MM-YYYY format
+          day = parseInt(parts[0]);
+          month = parseInt(parts[1]);
+          year = parseInt(parts[2]);
+        }
+      }
+    }
+
+    if (!day || !month || !year || isNaN(day) || isNaN(month) || isNaN(year)) {
+      return null;
+    }
+
+    const birthDate = new Date(year, month - 1, day);
+    const today = new Date();
+
+    const months = (today.getFullYear() - birthDate.getFullYear()) * 12 +
+      (today.getMonth() - birthDate.getMonth());
+
+    return months;
+  };
+
+  // Registration function
+  const kayitOl = async () => {
+    if (isRegistering) return;
+
+    if (regAd.trim() === '') {
+      showToast('Lütfen çocuğun adını giriniz.', 'error');
+      return;
+    }
+    if (regEmail.trim() === '') {
+      showToast('Lütfen e-posta adresini giriniz.', 'error');
+      return;
+    }
+    if (!regCinsiyet) {
+      showToast('Lütfen cinsiyet seçiniz.', 'error');
+      return;
+    }
+
+    let finalYasAy: number;
+    if (yasInputMode === 'tarih') {
+      const calculated = calculateAgeInMonths(dogumTarihi);
+      if (calculated === null || calculated < 24 || calculated > 75) {
+        showToast('Geçerli bir doğum tarihi giriniz (24-75 ay arası).', 'error');
+        return;
+      }
+      finalYasAy = calculated;
+    } else {
+      if (!/^\d+$/.test(regYasAy) || parseInt(regYasAy) < 24 || parseInt(regYasAy) > 75) {
+        showToast('Yaş 24 ile 75 ay arasında olmalıdır.', 'error');
+        return;
+      }
+      finalYasAy = parseInt(regYasAy);
+    }
+
+    setIsRegistering(true);
+    try {
+      // Save to Supabase
+      const kayitVerisi = {
+        ogrenci_adi: regAd.trim(),
+        email: regEmail.trim(),
+        ogrenci_yasi: finalYasAy,
+        cinsiyet: regCinsiyet,
+        kayit_tarihi: new Date().toISOString(),
+      };
+
+      // For now, we'll use this data directly for login
+      // In a real app, this would be saved to a users table
+      setAd(regAd.trim());
+      setYas(finalYasAy.toString());
+      setEmail(regEmail.trim());
+
+      showToast('Kayıt başarılı! Giriş yapabilirsiniz.', 'success');
+      setShowRegistration(false);
+
+      // Reset registration form
+      setRegAd('');
+      setRegEmail('');
+      setRegCinsiyet(null);
+      setDogumTarihi('');
+      setRegYasAy('');
+    } catch (error) {
+      showToast('Kayıt sırasında bir hata oluştu.', 'error');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -325,7 +447,7 @@ export default function App() {
               />
             </View>
 
-            {/* Email Input with Icon */}
+            {/* Email Input with Icon - REQUIRED */}
             <View style={[
               styles.inputContainer,
               focusedInput === 'email' && styles.inputContainerFocused
@@ -333,7 +455,7 @@ export default function App() {
               <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
                 style={styles.inputModern}
-                placeholder="Ebeveyn E-posta (İsteğe Bağlı)"
+                placeholder="Ebeveyn E-posta (Zorunlu)"
                 placeholderTextColor="#9E9E9E"
                 value={email}
                 onChangeText={setEmail}
@@ -370,7 +492,7 @@ export default function App() {
                 <Text style={styles.linkText}>Şifremi Unuttum</Text>
               </TouchableOpacity>
               <View style={styles.linkDivider} />
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowRegistration(true)}>
                 <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
               </TouchableOpacity>
             </View>
@@ -390,6 +512,179 @@ export default function App() {
           type={toast.type}
           onHide={() => setToast({ ...toast, visible: false })}
         />
+
+        {/* Registration Modal */}
+        <Modal
+          visible={showRegistration}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowRegistration(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { width: isMobile ? '95%' : 420 }]}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>🌟 Kayıt Ol</Text>
+                <TouchableOpacity onPress={() => setShowRegistration(false)} style={styles.modalCloseBtn}>
+                  <Text style={styles.modalCloseText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Child Name */}
+              <View style={[
+                styles.inputContainer,
+                focusedInput === 'regAd' && styles.inputContainerFocused
+              ]}>
+                <Text style={styles.inputIcon}>👶</Text>
+                <TextInput
+                  style={styles.inputModern}
+                  placeholder="Çocuğun Adı *"
+                  placeholderTextColor="#9E9E9E"
+                  value={regAd}
+                  onChangeText={setRegAd}
+                  onFocus={() => setFocusedInput('regAd')}
+                  onBlur={() => setFocusedInput(null)}
+                />
+              </View>
+
+              {/* Email - Required */}
+              <View style={[
+                styles.inputContainer,
+                focusedInput === 'regEmail' && styles.inputContainerFocused
+              ]}>
+                <Text style={styles.inputIcon}>✉️</Text>
+                <TextInput
+                  style={styles.inputModern}
+                  placeholder="Ebeveyn E-posta *"
+                  placeholderTextColor="#9E9E9E"
+                  value={regEmail}
+                  onChangeText={setRegEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  onFocus={() => setFocusedInput('regEmail')}
+                  onBlur={() => setFocusedInput(null)}
+                />
+              </View>
+
+              {/* Gender Selection - Required */}
+              <Text style={styles.fieldLabel}>Cinsiyet *</Text>
+              <View style={styles.genderContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.genderButton,
+                    regCinsiyet === 'erkek' && styles.genderButtonSelected
+                  ]}
+                  onPress={() => setRegCinsiyet('erkek')}
+                >
+                  <Text style={styles.genderEmoji}>👦</Text>
+                  <Text style={[
+                    styles.genderText,
+                    regCinsiyet === 'erkek' && styles.genderTextSelected
+                  ]}>Erkek</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.genderButton,
+                    regCinsiyet === 'kiz' && styles.genderButtonSelected
+                  ]}
+                  onPress={() => setRegCinsiyet('kiz')}
+                >
+                  <Text style={styles.genderEmoji}>👧</Text>
+                  <Text style={[
+                    styles.genderText,
+                    regCinsiyet === 'kiz' && styles.genderTextSelected
+                  ]}>Kız</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Age Input Mode Toggle */}
+              <Text style={styles.fieldLabel}>Yaş Bilgisi *</Text>
+              <View style={styles.ageModeContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.ageModeButton,
+                    yasInputMode === 'ay' && styles.ageModeButtonSelected
+                  ]}
+                  onPress={() => setYasInputMode('ay')}
+                >
+                  <Text style={[
+                    styles.ageModeText,
+                    yasInputMode === 'ay' && styles.ageModeTextSelected
+                  ]}>Ay Olarak</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.ageModeButton,
+                    yasInputMode === 'tarih' && styles.ageModeButtonSelected
+                  ]}
+                  onPress={() => setYasInputMode('tarih')}
+                >
+                  <Text style={[
+                    styles.ageModeText,
+                    yasInputMode === 'tarih' && styles.ageModeTextSelected
+                  ]}>Doğum Tarihi</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Age Input based on mode */}
+              {yasInputMode === 'ay' ? (
+                <View style={[
+                  styles.inputContainer,
+                  focusedInput === 'regYas' && styles.inputContainerFocused
+                ]}>
+                  <Text style={styles.inputIcon}>📅</Text>
+                  <TextInput
+                    style={styles.inputModern}
+                    placeholder="Yaş (24-75 ay)"
+                    placeholderTextColor="#9E9E9E"
+                    value={regYasAy}
+                    onChangeText={setRegYasAy}
+                    keyboardType="numeric"
+                    onFocus={() => setFocusedInput('regYas')}
+                    onBlur={() => setFocusedInput(null)}
+                  />
+                </View>
+              ) : (
+                <View style={[
+                  styles.inputContainer,
+                  focusedInput === 'regTarih' && styles.inputContainerFocused
+                ]}>
+                  <Text style={styles.inputIcon}>🎂</Text>
+                  <TextInput
+                    style={styles.inputModern}
+                    placeholder="Doğum Tarihi (GG/AA/YYYY)"
+                    placeholderTextColor="#9E9E9E"
+                    value={dogumTarihi}
+                    onChangeText={setDogumTarihi}
+                    onFocus={() => setFocusedInput('regTarih')}
+                    onBlur={() => setFocusedInput(null)}
+                  />
+                </View>
+              )}
+
+              {/* Register Button */}
+              <TouchableOpacity
+                style={[
+                  styles.gradientButton,
+                  { marginTop: 20 },
+                  isRegistering && styles.buttonDisabled
+                ]}
+                onPress={kayitOl}
+                disabled={isRegistering}
+              >
+                {isRegistering ? (
+                  <View style={styles.buttonContent}>
+                    <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+                    <Text style={styles.gradientButtonText}>Kayıt Yapılıyor...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.gradientButtonText}>Kayıt Ol ✨</Text>
+                )}
+              </TouchableOpacity>
+
+              <Text style={styles.requiredNote}>* Zorunlu alanlar</Text>
+            </View>
+          </View>
+        </Modal>
       </DynamicBackground>
     );
   }
@@ -855,6 +1150,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 14,
     color: '#37474F',
+    ...(Platform.OS === 'web' ? {
+      outline: 'none',
+    } : {}),
   },
 
   // Gradient Button Style
@@ -981,6 +1279,131 @@ const styles = StyleSheet.create({
   },
   tabText: { fontSize: 15, fontWeight: '700', color: '#546E7A', letterSpacing: 0.2 },
   activeTabText: { color: '#1B5E20' },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    padding: 25,
+    maxHeight: '90%',
+    ...(Platform.OS === 'web' ? {
+      backdropFilter: 'blur(10px)',
+    } : {}),
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1565C0',
+  },
+  modalCloseBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseText: {
+    fontSize: 18,
+    color: '#666',
+  },
+
+  // Field Label
+  fieldLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#546E7A',
+    marginBottom: 8,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+
+  // Gender Selection
+  genderContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+    width: '100%',
+  },
+  genderButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FAFAFA',
+  },
+  genderButtonSelected: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#E8F5E9',
+  },
+  genderEmoji: {
+    fontSize: 24,
+    marginRight: 8,
+  },
+  genderText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#666',
+  },
+  genderTextSelected: {
+    color: '#2E7D32',
+  },
+
+  // Age Mode Toggle
+  ageModeContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+    width: '100%',
+  },
+  ageModeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FAFAFA',
+    alignItems: 'center',
+  },
+  ageModeButtonSelected: {
+    borderColor: '#1976D2',
+    backgroundColor: '#E3F2FD',
+  },
+  ageModeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+  },
+  ageModeTextSelected: {
+    color: '#1565C0',
+  },
+
+  // Required Note
+  requiredNote: {
+    fontSize: 12,
+    color: '#9E9E9E',
+    marginTop: 15,
+    textAlign: 'center',
+  },
 });
 
 
