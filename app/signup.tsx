@@ -93,57 +93,88 @@ export default function SignUp() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    email: email.trim(),
+                    email: email.trim().toLowerCase(),
                     password: password,
+                    data: {
+                        parent_name: parentName.trim(),
+                        child_name: childName.trim(),
+                    }
                 }),
             });
 
             const authData = await authResponse.json();
 
+            // Handle specific error cases
             if (!authResponse.ok) {
-                throw new Error(authData.msg || authData.error_description || 'Kayıt başarısız oldu');
+                // Check for duplicate email
+                if (authData.msg?.includes('already registered') ||
+                    authData.error_description?.includes('already registered') ||
+                    authData.message?.includes('already registered')) {
+                    throw new Error('Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın veya farklı bir e-posta kullanın.');
+                }
+
+                // Check for invalid email format
+                if (authData.msg?.includes('invalid') || authData.error_description?.includes('invalid')) {
+                    throw new Error('Geçersiz e-posta formatı. Lütfen kontrol edin.');
+                }
+
+                // Check for weak password
+                if (authData.msg?.includes('password') || authData.error_description?.includes('password')) {
+                    throw new Error('Şifre çok zayıf. Lütfen daha güçlü bir şifre seçin.');
+                }
+
+                // Generic error
+                throw new Error(authData.msg || authData.error_description || authData.message || 'Kayıt işlemi başarısız oldu. Lütfen tekrar deneyin.');
             }
 
+            // Get the user ID from auth response
             const userId = authData.id || authData.user?.id;
 
-            // 2. Create profile in profiles table
-            const profileData = {
-                user_id: userId,
-                parent_name: parentName.trim(),
-                email: email.trim(),
-                child_name: childName.trim(),
-                child_age_months: parseInt(childAge),
-                data_consent: dataConsent,
-                created_at: new Date().toISOString(),
-            };
-
-            const profileResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_KEY || '',
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal',
-                },
-                body: JSON.stringify(profileData),
-            });
-
-            if (!profileResponse.ok) {
-                console.warn('Profil kaydı hatası:', await profileResponse.text());
-                // Continue anyway - user is created
+            if (!userId) {
+                console.warn('User ID alınamadı, profil kaydı atlanıyor');
             }
 
-            showToast('Kayıt başarılı! Hoş geldiniz.', 'success');
+            // 2. Create profile in profiles table
+            if (userId) {
+                const profileData = {
+                    user_id: userId,
+                    parent_name: parentName.trim(),
+                    email: email.trim().toLowerCase(),
+                    child_name: childName.trim(),
+                    child_age_months: parseInt(childAge),
+                    data_consent: dataConsent,
+                    created_at: new Date().toISOString(),
+                };
 
-            // Wait for toast to show, then redirect
+                const profileResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY || '',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal',
+                    },
+                    body: JSON.stringify(profileData),
+                });
+
+                if (!profileResponse.ok) {
+                    const profileError = await profileResponse.text();
+                    console.warn('Profil kaydı hatası:', profileError);
+                    // Don't throw - auth is successful, just log the profile error
+                }
+            }
+
+            // 3. Show success message with child's name
+            showToast(`🎉 Hoş geldin ${childName.trim()}! Kayıt başarılı.`, 'success');
+
+            // 4. Redirect to game selection after short delay
             setTimeout(() => {
-                // Navigate to main app (game selection)
                 router.replace('/(tabs)');
-            }, 1500);
+            }, 1800);
 
         } catch (error: any) {
             console.error('Kayıt hatası:', error);
-            showToast(error.message || 'Kayıt sırasında bir hata oluştu.', 'error');
+            showToast(error.message || 'Kayıt sırasında beklenmedik bir hata oluştu.', 'error');
         } finally {
             setIsLoading(false);
         }
