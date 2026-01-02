@@ -92,37 +92,16 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                 pan.flattenOffset();
 
                 // Drop Detection Logic
-                const dropX = gestureState.moveX;
-                const dropY = gestureState.moveY;
-                let droppedInCell = false;
+                // Mutlak koordinatlar (dropY) yerine bağıl hareket (dy) kullanıyoruz.
+                // Kullanıcı meyveyi yukarı doğru (negatif dy) sürüklediyse ve yeterince mesafe katettiyse kabul et.
+                const draggedDistanceY = gestureState.dy;
 
-                // Check all cells
-                for (let i = 0; i < 10; i++) {
-                    const layout = cellLayouts.current[i];
-                    if (layout) {
-                        // Basit çarpışma testi (Collision Detection)
-                        // Layout koordinatları view-relative olduğu için global'e çevirmemiz gerekebilir 
-                        // veya gestureState.moveX/Y window coordinate. 
-                        // En sağlıklısı View.measure ama burada basitlik için layout + offset tahmini yapacağız
-                        // Ancak React Native'de layout pozisyonu parent'a göredir. 
-                        // Bu yüzden onLayout'da `pageX` ve `pageY` alamıyoruz doğrudan.
-                        // Drop Zone tespiti için en güvenli yol: measureInWindow kullanımıdır ama ref gerektirir.
-                        // Alternatif: Drop alanının sınırlarını kabaca biliyoruz.
-
-                        // Şimdilik basitleştirilmiş mantık:
-                        // Eğer parmak grid alanındaysa en yakın boş hücreye snap et.
-                    }
-                }
-
-                // HACK: Absolute koordinatları tam alamadığımız için, 
-                // Grid'in kabaca nerede olduğunu varsayıyoruz (ekranın üst yarısı).
-                const gridTop = 150;
-                const gridBottom = 450;
-
-                if (dropY > gridTop && dropY < gridBottom) {
+                // Eğer yukarı doğru en az 100 birim sürüklendiyse grid'e atılmış sayalım.
+                // Bu, farklı ekran boyutlarında koordinat hesaplama derdini ortadan kaldırır.
+                if (draggedDistanceY < -100) {
                     handleFruitDrop();
                 } else {
-                    // Return to source animation
+                    // Yeterince sürüklenmediyse geri dön
                     Animated.spring(pan, {
                         toValue: { x: 0, y: 0 },
                         useNativeDriver: false
@@ -136,6 +115,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const handleFruitDrop = () => {
         const currentCount = placedFruits.filter(Boolean).length;
 
+        // Önce limit kontrolü
         if (currentCount >= targetNumber) {
             // Limit aşıldı
             playEffect('limit');
@@ -159,10 +139,12 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             newPlaced[firstEmptyIndex] = true;
             setPlacedFruits(newPlaced);
 
-            // Kaynak meyveyi yerine döndür (görünmez yapıp hemen döndür)
+            // Animasyon: Meyve kaybolup sepete geri dönsün
             setDraggedFruitOpacity(0);
             pan.setValue({ x: 0, y: 0 });
-            setTimeout(() => setDraggedFruitOpacity(1), 50);
+
+            // Kısa bir gecikmeyle görünür yap (titreme olmasın)
+            setTimeout(() => setDraggedFruitOpacity(1), 100);
 
             // Kontrol et: Hedef tamamlandı mı?
             const newCount = currentCount + 1;
@@ -262,22 +244,24 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             </View>
 
             {/* Source Basket (Drag Source) */}
+            {/* Z-Index artırıldı ve pozisyon düzeltildi */}
             <View style={styles.basketContainer}>
                 <Image
                     source={{ uri: 'https://cdn-icons-png.flaticon.com/512/1625/1625046.png' }} // Simple Basket Icon
                     style={styles.basketImage}
                 />
 
-                {/* Draggable Fruit */}
+                {/* Draggable Fruit - HitSlop eklendi */}
                 <Animated.View
                     style={{
                         transform: [{ translateX: pan.x }, { translateY: pan.y }],
                         opacity: draggedFruitOpacity,
                         position: 'absolute',
-                        top: -20,
-                        zIndex: 99
+                        top: -30, // Biraz daha yukarı alındı
+                        zIndex: 999, // En üstte olması için
                     }}
                     {...panResponder.panHandlers}
+                    hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }} // Dokunma alanı genişletildi
                 >
                     <View style={styles.draggableFruit}>
                         <Text style={styles.fruitEmoji}>🍎</Text>
