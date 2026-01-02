@@ -32,11 +32,14 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const { width, height } = dimensions;
     const isLandscape = width > height;
     const isSmallScreen = Math.min(width, height) < 400;
+    const isWeb = Platform.OS === 'web';
 
-    // Responsive sizing
-    const CELL_SIZE = isLandscape
-        ? Math.min((height - 180) / 3, 50)
-        : Math.min((width - 60) / 5.5, 55);
+    // Responsive sizing - Web'de daha büyük
+    const CELL_SIZE = isWeb
+        ? Math.min(width / 8, 70)  // Web: daha büyük
+        : isLandscape
+            ? Math.min((height - 150) / 3, 55)
+            : Math.min((width - 40) / 5.2, 60);
 
     // Game state
     const [round, setRound] = useState(1);

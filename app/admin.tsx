@@ -822,6 +822,10 @@ ChildhoodTech Ekibi
             'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.3' },
             'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.2.1' },
             'golge-dedektifi': { alan: 'Matematik', cikti: 'MAB.2' },
+            // Yeni Matematik Oyunları
+            'Onluk Çerçeve': { alan: 'Matematik', cikti: 'MAB.1' },
+            'Sayı Komşuları': { alan: 'Matematik', cikti: 'MAB.4' },
+            'Tartı Dengesi': { alan: 'Matematik', cikti: 'MAB.1' },
         };
         // Bilinmeyen oyunlar için varsayılan: MAB.2 (Matematik - Muhakeme)
         // ASLA GB.1 veya 'Genel Gelişim' kullanma!

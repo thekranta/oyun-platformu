@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
+    Dimensions,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -15,24 +16,27 @@ interface TartiDengesiProps {
 }
 
 interface Question {
-    leftSide: number;       // Sol kefedeki toplam ağırlık
-    rightSideFixed: number; // Sağ kefedeki sabit ağırlık (örn: 2 + ? ise 2)
-    missing: number;        // İstenen cevap
+    leftSide: number;
+    rightSideFixed: number;
+    missing: number;
 }
 
+const { width } = Dimensions.get('window');
+
 export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
-    const { isMuted, toggleMute, playSound } = useSound();
+    const { isMuted, toggleMute } = useSound();
     const [round, setRound] = useState(1);
     const [question, setQuestion] = useState<Question | null>(null);
     const [mistakes, setMistakes] = useState(0);
-    const [startTime, setStartTime] = useState(Date.now());
+    const [startTime] = useState(Date.now());
     const [roundData, setRoundData] = useState<any[]>([]);
+    const [showConfetti, setShowConfetti] = useState(false);
 
-    // Animasyon: Terazi dönüşü (0 deg = dengede)
-    // Başlangıçta sol kefe ağır basacak: -20 deg
-    const rotateAnim = new Animated.Value(-20);
+    // FIXED: useRef ile animation value
+    const rotateAnim = useRef(new Animated.Value(-20)).current;
     const [placedValue, setPlacedValue] = useState<number | null>(null);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
+    const [isBalanced, setIsBalanced] = useState(false);
 
     useEffect(() => {
         startRound();
@@ -41,26 +45,21 @@ export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
     const startRound = () => {
         setPlacedValue(null);
         setFeedback(null);
-        rotateAnim.setValue(-20); // Reset to unbalanced left
-
-        // Round 1-4: Basit Eşitlik (Sağ taraf 0)
-        // Round 5-10: Toplama Eşitliği
+        setIsBalanced(false);
+        setShowConfetti(false);
+        rotateAnim.setValue(-20);
 
         let target, rightFixed, missing;
-
         if (round <= 4) {
-            target = Math.floor(Math.random() * 5) + 1; // 1-5
+            target = Math.floor(Math.random() * 5) + 1;
             rightFixed = 0;
             missing = target;
         } else {
-            target = Math.floor(Math.random() * 5) + 6; // 6-10 (ağırlıklı)
+            target = Math.floor(Math.random() * 5) + 6;
             if (target > 10) target = 10;
-
-            // Sağ kefeye bir ağırlık koyalım
             rightFixed = Math.floor(Math.random() * (target - 1)) + 1;
             missing = target - rightFixed;
         }
-
         setQuestion({ leftSide: target, rightSideFixed: rightFixed, missing });
     };
 
@@ -72,25 +71,22 @@ export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
         const target = question?.leftSide || 0;
 
         if (currentRightTotal === target) {
-            // Correct -> Balance the scale
+            // Correct -> Balance!
             setFeedback('correct');
-            animateBalance(0); // 0 derece
+            setIsBalanced(true);
+            setShowConfetti(true);
+            animateBalance(0);
 
-            // Veri kaydı
-            setRoundData(prev => [...prev, {
-                round,
-                target: question?.leftSide,
-                result: 'success',
-                mistakesInRound: 0
-            }]);
+            setRoundData(prev => [...prev, { round, target, result: 'success' }]);
 
             setTimeout(() => {
+                setShowConfetti(false);
                 if (round < 10) {
                     setRound(r => r + 1);
                 } else {
                     finishGame();
                 }
-            }, 2000);
+            }, 1800);
         } else if (currentRightTotal > target) {
             // Wrong -> Too heavy on right
             setFeedback('wrong');
@@ -162,23 +158,29 @@ export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
 
     return (
         <View style={styles.container}>
+            {showConfetti && <ConfettiCannon count={80} origin={{ x: width / 2, y: 0 }} fadeOut />}
+
             <View style={styles.header}>
                 <TouchableOpacity onPress={onExit} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={28} color="#fff" />
+                    <Ionicons name="arrow-back" size={24} color="#fff" />
                 </TouchableOpacity>
                 <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreText}>Tur: {round}/10</Text>
+                    <Text style={styles.scoreText}>{round}/10</Text>
                 </View>
                 <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-                    <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={24} color="#fff" />
+                    <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={20} color="#fff" />
                 </TouchableOpacity>
             </View>
 
             <View style={styles.gameContent}>
                 <Text style={styles.title}>Teraziyi Dengele!</Text>
-                <Text style={styles.subtitle}>
-                    Sol taraftaki {question?.leftSide} kiloyu dengelemek için sağ tarafa kaç kilo eklemelisin?
-                </Text>
+                {isBalanced ? (
+                    <Text style={styles.balancedText}>✓ Dengede!</Text>
+                ) : (
+                    <Text style={styles.subtitle}>
+                        Sol: {question?.leftSide} kg = Sağ: {question?.rightSideFixed || 0} + ?
+                    </Text>
+                )}
 
                 {/* Balance Scale Visual */}
                 <View style={styles.scaleContainer}>
@@ -272,8 +274,9 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
     },
-    title: { fontSize: 24, fontWeight: 'bold', color: '#4A148C', marginBottom: 5 },
-    subtitle: { fontSize: 14, color: '#666', textAlign: 'center', maxWidth: 300, marginBottom: 30 },
+    title: { fontSize: 22, fontWeight: 'bold', color: '#4A148C', marginBottom: 5 },
+    subtitle: { fontSize: 14, color: '#666', textAlign: 'center', maxWidth: 300, marginBottom: 20 },
+    balancedText: { fontSize: 22, fontWeight: 'bold', color: '#4CAF50', marginBottom: 20 },
 
     scaleContainer: {
         height: 250,
