@@ -491,7 +491,7 @@ export default function App() {
               />
             </View>
 
-            {/* Cloudflare Turnstile CAPTCHA */}
+            {/* TODO: Cloudflare Turnstile CAPTCHA - Temporarily disabled due to import issues
             <CloudflareTurnstile
               siteKey={TURNSTILE_SITE_KEY}
               onVerify={(token) => setTurnstileToken(token)}
@@ -499,6 +499,7 @@ export default function App() {
               onExpire={() => setTurnstileToken(null)}
               theme="light"
             />
+            */}
 
             {/* Gradient Login Button with Spinner */}
             <TouchableOpacity

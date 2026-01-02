@@ -1,4 +1,3 @@
-import CloudflareTurnstile from '@/components/CloudflareTurnstile';
 import DynamicBackground from '@/components/DynamicBackground';
 import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
@@ -369,7 +368,7 @@ export default function SignUp() {
                             </TouchableOpacity>
                         </View>
 
-                        {/* Cloudflare Turnstile CAPTCHA */}
+                        {/* TODO: Cloudflare Turnstile CAPTCHA - Temporarily disabled
                         <CloudflareTurnstile
                             siteKey={TURNSTILE_SITE_KEY}
                             onVerify={(token: string) => setTurnstileToken(token)}
@@ -377,6 +376,7 @@ export default function SignUp() {
                             onExpire={() => setTurnstileToken(null)}
                             theme="light"
                         />
+                        */}
 
                         {/* Submit Button */}
                         <TouchableOpacity
