@@ -549,9 +549,7 @@ ChildhoodTech Ekibi
 
                 // 429 Rate Limit hatası için özel mesaj
                 if (response.status === 429) {
-                    alert('⏳ API kullanım limiti doldu!
-Lütfen 1 dakika bekleyip tekrar deneyin.
-Not: Çok fazla analiz isteği gönderildiğinde bu hata oluşur.');
+                    alert('⏳ API kullanım limiti doldu! Lütfen 1 dakika bekleyip tekrar deneyin. Not: Çok fazla analiz isteği gönderildiğinde bu hata oluşur.');
                     return; // Otomatik retry yapmıyoruz
                 }
 

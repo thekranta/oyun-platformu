@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -45,6 +45,8 @@ export default function App() {
   const [yas, setYas] = useState('');
   const [email, setEmail] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -52,22 +54,31 @@ export default function App() {
   };
 
   const girisYap = async () => {
+    // Throttle: prevent double-clicks
+    if (isLoggingIn) return;
+
     if (ad.trim() === '' || yas.trim() === '') {
-      showToast('L\u00fctfen isim ve ya\u015f giriniz.', 'error');
+      showToast('Lütfen isim ve yaş giriniz.', 'error');
       return;
     }
     if (!/^\d+$/.test(yas)) {
-      showToast('L\u00fctfen ya\u015f alan\u0131na sadece rakam giriniz.', 'error');
+      showToast('Lütfen yaş alanına sadece rakam giriniz.', 'error');
       return;
     }
     const yasNum = parseInt(yas);
     if (yasNum < 24 || yasNum > 75) {
-      showToast('Ya\u015f 24 ile 75 ay aras\u0131nda olmal\u0131d\u0131r.', 'error');
+      showToast('Yaş 24 ile 75 ay arasında olmalıdır.', 'error');
       return;
     }
-    // Start background music after first user interaction
-    await resumeAfterInteraction();
-    setAsama('menu');
+
+    setIsLoggingIn(true);
+    try {
+      // Start background music after first user interaction
+      await resumeAfterInteraction();
+      setAsama('menu');
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   const oyunuBaslat = (oyunTipi: string) => {
@@ -260,32 +271,118 @@ export default function App() {
 
   // === EKRANLAR ===
   if (asama === 'giris') {
+    const windowWidth = Dimensions.get('window').width;
+    const isMobile = windowWidth < 768;
+
     return (
       <DynamicBackground>
         <View style={styles.merkezContainer}>
-          <View style={styles.card}>
-            <Text style={styles.girisBaslik}>🎓 Okul Öncesi Akademi</Text>
-            <TextInput style={styles.input} placeholder="İsim (Örn: Ali)" value={ad} onChangeText={setAd} />
-            <TextInput style={styles.input} placeholder="Yaş (Ay)" value={yas} onChangeText={setYas} keyboardType="numeric" />
-            <TextInput
-              style={styles.input}
-              placeholder="Ebeveyn E-posta (İsteğe Bağlı)"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <TouchableOpacity style={styles.buton} onPress={girisYap}>
-              <Text style={styles.butonYazi}>Giriş Yap 🚀</Text>
+          <View style={[
+            styles.card,
+            styles.glassCard,
+            { width: isMobile ? '90%' : undefined, maxWidth: 420 }
+          ]}>
+            {/* Title with Icon */}
+            <View style={styles.titleContainer}>
+              <Text style={styles.titleEmoji}>🎓</Text>
+              <Text style={styles.girisBaslik}>Okul Öncesi Akademi</Text>
+              <Text style={styles.titleEmoji}>✏️</Text>
+            </View>
+            <Text style={styles.welcomeSubtitle}>Hoş geldin, küçük kaşif! 🌟</Text>
+
+            {/* Name Input with Icon */}
+            <View style={[
+              styles.inputContainer,
+              focusedInput === 'ad' && styles.inputContainerFocused
+            ]}>
+              <Text style={styles.inputIcon}>👤</Text>
+              <TextInput
+                style={styles.inputModern}
+                placeholder="İsim (Örn: Ali)"
+                placeholderTextColor="#9E9E9E"
+                value={ad}
+                onChangeText={setAd}
+                onFocus={() => setFocusedInput('ad')}
+                onBlur={() => setFocusedInput(null)}
+              />
+            </View>
+
+            {/* Age Input with Icon */}
+            <View style={[
+              styles.inputContainer,
+              focusedInput === 'yas' && styles.inputContainerFocused
+            ]}>
+              <Text style={styles.inputIcon}>📅</Text>
+              <TextInput
+                style={styles.inputModern}
+                placeholder="Yaş (Ay cinsinden)"
+                placeholderTextColor="#9E9E9E"
+                value={yas}
+                onChangeText={setYas}
+                keyboardType="numeric"
+                onFocus={() => setFocusedInput('yas')}
+                onBlur={() => setFocusedInput(null)}
+              />
+            </View>
+
+            {/* Email Input with Icon */}
+            <View style={[
+              styles.inputContainer,
+              focusedInput === 'email' && styles.inputContainerFocused
+            ]}>
+              <Text style={styles.inputIcon}>✉️</Text>
+              <TextInput
+                style={styles.inputModern}
+                placeholder="Ebeveyn E-posta (İsteğe Bağlı)"
+                placeholderTextColor="#9E9E9E"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onFocus={() => setFocusedInput('email')}
+                onBlur={() => setFocusedInput(null)}
+              />
+            </View>
+
+            {/* Gradient Login Button with Spinner */}
+            <TouchableOpacity
+              style={[
+                styles.gradientButton,
+                isLoggingIn && styles.buttonDisabled
+              ]}
+              onPress={girisYap}
+              disabled={isLoggingIn}
+              activeOpacity={0.8}
+            >
+              {isLoggingIn ? (
+                <View style={styles.buttonContent}>
+                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+                  <Text style={styles.gradientButtonText}>Giriş Yapılıyor...</Text>
+                </View>
+              ) : (
+                <Text style={styles.gradientButtonText}>Giriş Yap 🚀</Text>
+              )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.buton, { backgroundColor: '#90A4AE', marginTop: 20, paddingVertical: 10 }]}
-              onPress={() => router.push('/admin' as any)}
-            >
-              <Text style={[styles.butonYazi, { fontSize: 14 }]}>Admin Paneli 🔑</Text>
-            </TouchableOpacity>
+            {/* Helper Links */}
+            <View style={styles.linksContainer}>
+              <TouchableOpacity>
+                <Text style={styles.linkText}>Şifremi Unuttum</Text>
+              </TouchableOpacity>
+              <View style={styles.linkDivider} />
+              <TouchableOpacity>
+                <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
+              </TouchableOpacity>
+            </View>
           </View>
+
+          {/* Admin Button - Moved to Bottom */}
+          <TouchableOpacity
+            style={styles.adminButtonBottom}
+            onPress={() => router.push('/admin' as any)}
+          >
+            <Text style={styles.adminButtonText}>🔑 Admin Paneli</Text>
+          </TouchableOpacity>
         </View>
         <Toast
           visible={toast.visible}
@@ -682,7 +779,156 @@ const styles = StyleSheet.create({
   scrollContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
   headerContainer: { alignItems: 'center', marginBottom: 30, marginTop: 40 },
   card: { backgroundColor: 'white', padding: 30, borderRadius: 25, width: '100%', maxWidth: 400, alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 },
-  girisBaslik: { fontSize: 28, fontWeight: 'bold', marginBottom: 30, color: '#1565C0', textAlign: 'center' },
+
+  // Glassmorphism Card Style
+  glassCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderRadius: 35,
+    padding: 35,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+    ...(Platform.OS === 'web' ? {
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+    } : {}),
+  },
+
+  // Title Styles
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  titleEmoji: {
+    fontSize: 32,
+    marginHorizontal: 8,
+  },
+  girisBaslik: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#1565C0',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  welcomeSubtitle: {
+    fontSize: 16,
+    color: '#78909C',
+    marginBottom: 25,
+    textAlign: 'center',
+  },
+
+  // Modern Input Styles
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    backgroundColor: '#FAFAFA',
+    borderRadius: 18,
+    marginBottom: 14,
+    borderWidth: 2,
+    borderColor: '#E8E8E8',
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  inputContainerFocused: {
+    borderColor: '#B2DFDB', // Mint green on focus
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#B2DFDB',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  inputIcon: {
+    fontSize: 20,
+    marginRight: 12,
+  },
+  inputModern: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 14,
+    color: '#37474F',
+  },
+
+  // Gradient Button Style
+  gradientButton: {
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 20,
+    marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4CAF50',
+    ...(Platform.OS === 'web' ? {
+      background: 'linear-gradient(135deg, #66BB6A 0%, #43A047 50%, #2E7D32 100%)',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+    } : {}),
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gradientButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+
+  // Helper Links
+  linksContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  linkText: {
+    fontSize: 14,
+    color: '#78909C',
+    marginVertical: 6,
+  },
+  linkBold: {
+    fontWeight: 'bold',
+    color: '#1976D2',
+  },
+  linkDivider: {
+    width: 60,
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 8,
+  },
+
+  // Admin Button at Bottom
+  adminButtonBottom: {
+    position: 'absolute',
+    bottom: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: 'rgba(144, 164, 174, 0.25)',
+    borderWidth: 1,
+    borderColor: 'rgba(144, 164, 174, 0.4)',
+  },
+  adminButtonText: {
+    fontSize: 13,
+    color: '#546E7A',
+    fontWeight: '600',
+  },
+
   baslik: { fontSize: 28, fontWeight: 'bold', marginBottom: 5, color: '#37474F' },
   bilgi: { fontSize: 18, marginBottom: 20, color: '#546E7A' },
   input: { width: '100%', backgroundColor: '#F5F5F5', padding: 15, borderRadius: 15, marginBottom: 15, borderWidth: 1, borderColor: '#E0E0E0' },
