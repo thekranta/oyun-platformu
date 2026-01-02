@@ -542,14 +542,26 @@ ChildhoodTech Ekibi
                 `;
             }
 
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY?.trim()}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                }
-            );
+            // Fallback mekanizmalı Gemini çağrısı
+            const fetchGemini = async (model: string) => {
+                return fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY?.trim()}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    }
+                );
+            };
+
+            // Önce gemini-1.5-flash dene (Hızlı ve ekonomik)
+            let response = await fetchGemini('gemini-1.5-flash');
+
+            // Eğer model bulunamazsa veya desteklenmezse (404/400), gemini-pro dene (Legacy/Stable)
+            if (!response.ok && (response.status === 404 || response.status === 400)) {
+                console.log('⚠️ gemini-1.5-flash modeli bulunamadı, gemini-pro modeline geçiliyor...');
+                response = await fetchGemini('gemini-pro');
+            }
 
             if (!response.ok) {
                 const errorData = await response.json();
