@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -18,15 +18,23 @@ interface OnlukCerceveProps {
     onExit: () => void;
 }
 
-const { width, height } = Dimensions.get('window');
-const isSmallScreen = width < 400;
-const CELL_SIZE = isSmallScreen ? (width - 80) / 5 : 60;
-const FRUIT_SIZE = CELL_SIZE * 0.75;
-
 export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
+    const { width, height } = Dimensions.get('window');
+    const isLandscape = width > height;
+    const isSmallScreen = Math.min(width, height) < 400;
+
+    // Responsive sizing
+    const CELL_SIZE = isLandscape
+        ? Math.min((height - 200) / 3, 55)
+        : Math.min((width - 80) / 5, 60);
+
     const { isMuted, toggleMute } = useSound();
+
+    // İlk hedef sayıyı hemen hesapla (useState içinde)
+    const getInitialTarget = () => Math.floor(Math.random() * 5) + 1;
+
     const [round, setRound] = useState(1);
-    const [targetNumber, setTargetNumber] = useState(0);
+    const [targetNumber, setTargetNumber] = useState(getInitialTarget);
     const [placedFruits, setPlacedFruits] = useState<boolean[]>(Array(10).fill(false));
     const [mistakes, setMistakes] = useState(0);
     const [startTime] = useState(Date.now());
@@ -34,15 +42,17 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const [showConfetti, setShowConfetti] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-    // Draggable Fruit State
     const pan = useRef(new Animated.ValueXY()).current;
     const [draggedFruitOpacity, setDraggedFruitOpacity] = useState(1);
 
+    // Round değiştiğinde yeni hedef belirle
     useEffect(() => {
-        startRound();
+        if (round > 1) {
+            startNewRound();
+        }
     }, [round]);
 
-    const startRound = () => {
+    const startNewRound = useCallback(() => {
         setShowConfetti(false);
         setFeedbackMessage(null);
         setPlacedFruits(Array(10).fill(false));
@@ -55,23 +65,19 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             newTarget = Math.floor(Math.random() * 5) + 6;
             if (newTarget > 10) newTarget = 10;
         }
-
-        if (newTarget === targetNumber && round > 1) {
-            newTarget = newTarget === 10 ? 9 : newTarget + 1;
-        }
         setTargetNumber(newTarget);
-    };
+    }, [round, pan]);
 
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
             onPanResponderGrant: () => {
                 pan.setOffset({
                     x: (pan.x as any)._value,
                     y: (pan.y as any)._value
                 });
                 pan.setValue({ x: 0, y: 0 });
-                setDraggedFruitOpacity(1);
             },
             onPanResponderMove: Animated.event(
                 [null, { dx: pan.x, dy: pan.y }],
@@ -80,8 +86,10 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             onPanResponderRelease: (_, gestureState) => {
                 pan.flattenOffset();
 
-                // Yukarı sürüklediyse kabul
-                if (gestureState.dy < -60) {
+                // Herhangi bir yöne yeterince sürüklediyse kabul et (sadece yukarı değil)
+                const totalDistance = Math.sqrt(gestureState.dx ** 2 + gestureState.dy ** 2);
+
+                if (totalDistance > 50) {
                     handleFruitDrop();
                 } else {
                     Animated.spring(pan, {
@@ -96,16 +104,19 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const handleFruitDrop = () => {
         const currentCount = placedFruits.filter(Boolean).length;
 
+        // DEBUG: Konsola yazdır
+        console.log('Drop attempt:', { currentCount, targetNumber, placedFruits });
+
+        // HATA DÜZELTMESİ: >= değil > kullan (hedef sayıya ulaşana kadar izin ver)
         if (currentCount >= targetNumber) {
-            setFeedbackMessage('Yeter bu kadar! 🚫');
-            setMistakes(m => m + 1);
+            setFeedbackMessage('Tamamlandı! ✓');
 
             Animated.spring(pan, {
                 toValue: { x: 0, y: 0 },
                 useNativeDriver: false
             }).start();
 
-            setTimeout(() => setFeedbackMessage(null), 1200);
+            setTimeout(() => setFeedbackMessage(null), 1000);
             return;
         }
 
@@ -115,14 +126,21 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             newPlaced[firstEmptyIndex] = true;
             setPlacedFruits(newPlaced);
 
+            // Meyveyi geri döndür
             setDraggedFruitOpacity(0);
             pan.setValue({ x: 0, y: 0 });
-            setTimeout(() => setDraggedFruitOpacity(1), 80);
+            setTimeout(() => setDraggedFruitOpacity(1), 100);
 
             const newCount = currentCount + 1;
             if (newCount === targetNumber) {
                 handleSuccess();
             }
+        } else {
+            // Hiç boş hücre kalmadı
+            Animated.spring(pan, {
+                toValue: { x: 0, y: 0 },
+                useNativeDriver: false
+            }).start();
         }
     };
 
@@ -143,7 +161,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             } else {
                 finishGame();
             }
-        }, 2000);
+        }, 1800);
     };
 
     const finishGame = () => {
@@ -159,48 +177,61 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
 
     const currentCount = placedFruits.filter(Boolean).length;
 
+    // Dynamic styles for landscape
+    const dynamicStyles = {
+        container: {
+            flexDirection: isLandscape ? 'row' as const : 'column' as const,
+        },
+        gameArea: {
+            flex: isLandscape ? 1 : undefined,
+        }
+    };
+
     return (
-        <View style={styles.container}>
-            {showConfetti && <ConfettiCannon count={150} origin={{ x: width / 2, y: 0 }} fadeOut />}
+        <View style={[styles.container, dynamicStyles.container]}>
+            {showConfetti && <ConfettiCannon count={120} origin={{ x: width / 2, y: 0 }} fadeOut />}
 
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={onExit} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
-                <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreText}>Tur: {round}/10</Text>
+            {/* Left/Top Section */}
+            <View style={[styles.topSection, isLandscape && styles.leftSection]}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={onExit} style={styles.backButton}>
+                        <Ionicons name="arrow-back" size={22} color="#fff" />
+                    </TouchableOpacity>
+                    <View style={styles.scoreContainer}>
+                        <Text style={styles.scoreText}>Tur: {round}/10</Text>
+                    </View>
+                    <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
+                        <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={18} color="#fff" />
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-                    <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={20} color="#fff" />
-                </TouchableOpacity>
+
+                {/* Instruction */}
+                <View style={styles.instructionContainer}>
+                    <Text style={[styles.instructionText, isSmallScreen && { fontSize: 20 }]}>
+                        <Text style={styles.targetNumber}>{targetNumber}</Text> elma topla!
+                    </Text>
+                    <Text style={styles.countText}>{currentCount} / {targetNumber}</Text>
+                    {feedbackMessage && (
+                        <Text style={styles.feedbackText}>{feedbackMessage}</Text>
+                    )}
+                </View>
             </View>
 
-            {/* Instruction */}
-            <View style={styles.instructionContainer}>
-                <Text style={styles.instructionText}>
-                    <Text style={styles.targetNumber}>{targetNumber}</Text> elma topla!
-                </Text>
-                <Text style={styles.countText}>{currentCount} / {targetNumber}</Text>
-                {feedbackMessage && (
-                    <Text style={styles.feedbackText}>{feedbackMessage}</Text>
-                )}
-            </View>
-
-            {/* Ten Frame Grid */}
-            <View style={styles.gridWrapper}>
-                <View style={styles.gridContainer}>
+            {/* Grid Area */}
+            <View style={[styles.gridWrapper, dynamicStyles.gameArea]}>
+                <View style={[styles.gridContainer, { padding: isLandscape ? 8 : 12 }]}>
                     <View style={styles.gridRow}>
                         {[0, 1, 2, 3, 4].map(i => (
-                            <View key={i} style={styles.cell}>
-                                {placedFruits[i] && <Text style={styles.fruitEmoji}>🍎</Text>}
+                            <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
+                                {placedFruits[i] && <Text style={[styles.fruitEmoji, { fontSize: CELL_SIZE * 0.7 }]}>🍎</Text>}
                             </View>
                         ))}
                     </View>
                     <View style={styles.gridRow}>
                         {[5, 6, 7, 8, 9].map(i => (
-                            <View key={i} style={styles.cell}>
-                                {placedFruits[i] && <Text style={styles.fruitEmoji}>🍎</Text>}
+                            <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
+                                {placedFruits[i] && <Text style={[styles.fruitEmoji, { fontSize: CELL_SIZE * 0.7 }]}>🍎</Text>}
                             </View>
                         ))}
                     </View>
@@ -208,8 +239,8 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             </View>
 
             {/* Drag Source */}
-            <View style={styles.basketArea}>
-                <Text style={styles.basketLabel}>Elmayı yukarı sürükle!</Text>
+            <View style={[styles.basketArea, isLandscape && styles.basketAreaLandscape]}>
+                <Text style={styles.basketLabel}>Elmayı sürükle!</Text>
 
                 <Animated.View
                     style={[
@@ -217,19 +248,14 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                         {
                             transform: [{ translateX: pan.x }, { translateY: pan.y }],
                             opacity: draggedFruitOpacity,
-                        }
+                        },
+                        // Web'de metin seçimini engelle
+                        Platform.OS === 'web' && { userSelect: 'none', cursor: 'grab' } as any
                     ]}
                     {...panResponder.panHandlers}
                 >
-                    <Text style={styles.bigFruit}>🍎</Text>
+                    <Text style={[styles.bigFruit, Platform.OS === 'web' && { userSelect: 'none' } as any]}>🍎</Text>
                 </Animated.View>
-
-                {/* Decorative apples */}
-                <View style={styles.decorativeApples}>
-                    <Text style={styles.smallFruit}>🍎</Text>
-                    <Text style={styles.smallFruit}>🍎</Text>
-                    <Text style={styles.smallFruit}>🍎</Text>
-                </View>
             </View>
         </View>
     );
@@ -239,121 +265,120 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#E8F5E9',
-        paddingTop: Platform.OS === 'ios' ? 50 : 30,
+        paddingTop: Platform.OS === 'ios' ? 50 : 25,
+    },
+    topSection: {
+        paddingHorizontal: 15,
+    },
+    leftSection: {
+        flex: 0.4,
+        justifyContent: 'center',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 15,
-        marginBottom: 15,
+        marginBottom: 10,
     },
-    backButton: { backgroundColor: '#66BB6A', padding: 10, borderRadius: 25 },
-    soundButton: { backgroundColor: '#66BB6A', padding: 10, borderRadius: 25 },
+    backButton: { backgroundColor: '#66BB6A', padding: 8, borderRadius: 20 },
+    soundButton: { backgroundColor: '#66BB6A', padding: 8, borderRadius: 20 },
     scoreContainer: {
         backgroundColor: '#fff',
-        paddingHorizontal: 20,
-        paddingVertical: 8,
-        borderRadius: 20,
-        elevation: 3,
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: 16,
+        elevation: 2,
     },
-    scoreText: { fontSize: 16, fontWeight: 'bold', color: '#388E3C' },
+    scoreText: { fontSize: 14, fontWeight: 'bold', color: '#388E3C' },
 
     instructionContainer: {
         alignItems: 'center',
-        marginBottom: 15,
+        marginBottom: 10,
     },
     instructionText: {
-        fontSize: isSmallScreen ? 22 : 28,
+        fontSize: 24,
         color: '#2E7D32',
         fontWeight: '700',
     },
     targetNumber: {
-        fontSize: isSmallScreen ? 32 : 40,
+        fontSize: 34,
         color: '#C62828',
         fontWeight: 'bold',
     },
     countText: {
-        fontSize: 18,
+        fontSize: 16,
         color: '#558B2F',
-        marginTop: 5,
+        marginTop: 3,
         fontWeight: '600',
     },
     feedbackText: {
-        marginTop: 8,
-        fontSize: 20,
+        marginTop: 6,
+        fontSize: 18,
         color: '#FF6F00',
         fontWeight: 'bold',
         backgroundColor: 'rgba(255,255,255,0.9)',
-        paddingHorizontal: 15,
-        paddingVertical: 5,
-        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 8,
     },
 
     gridWrapper: {
-        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        paddingVertical: 10,
     },
     gridContainer: {
-        backgroundColor: 'rgba(255,255,255,0.85)',
-        padding: 12,
-        borderRadius: 20,
-        borderWidth: 3,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        borderRadius: 16,
+        borderWidth: 2,
         borderColor: '#81C784',
     },
     gridRow: {
         flexDirection: 'row',
-        gap: 6,
-        marginBottom: 6,
+        gap: 4,
+        marginBottom: 4,
     },
     cell: {
-        width: CELL_SIZE,
-        height: CELL_SIZE,
-        backgroundColor: 'rgba(200,230,201,0.5)',
+        backgroundColor: 'rgba(200,230,201,0.6)',
         borderWidth: 2,
         borderColor: '#A5D6A7',
-        borderRadius: 10,
+        borderRadius: 8,
         justifyContent: 'center',
         alignItems: 'center',
     },
     fruitEmoji: {
-        fontSize: FRUIT_SIZE,
+        // fontSize dynamic
     },
 
     basketArea: {
         alignItems: 'center',
-        paddingBottom: 40,
-        paddingTop: 20,
+        paddingBottom: 30,
+        paddingTop: 15,
+    },
+    basketAreaLandscape: {
+        flex: 0.3,
+        justifyContent: 'center',
+        paddingBottom: 0,
     },
     basketLabel: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#689F38',
-        marginBottom: 10,
+        marginBottom: 8,
     },
     draggableFruit: {
-        width: 80,
-        height: 80,
+        width: 70,
+        height: 70,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.6)',
-        borderRadius: 40,
-        elevation: 8,
+        backgroundColor: 'rgba(255,255,255,0.7)',
+        borderRadius: 35,
+        elevation: 6,
         shadowColor: '#000',
-        shadowOpacity: 0.25,
-        shadowRadius: 6,
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
         zIndex: 100,
     },
     bigFruit: {
-        fontSize: 50,
-    },
-    decorativeApples: {
-        flexDirection: 'row',
-        gap: 5,
-        marginTop: 10,
-        opacity: 0.5,
-    },
-    smallFruit: {
-        fontSize: 24,
+        fontSize: 42,
     },
 });

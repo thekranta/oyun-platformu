@@ -98,6 +98,15 @@ export default function App() {
     }
   };
 
+  // Hızlı Test Girişi - Doğrudan oyunlara git
+  const hizliTestGiris = async () => {
+    setAd('Test');
+    setYas('60');
+    setEmail('test@test.com');
+    await resumeAfterInteraction();
+    setAsama('menu');
+  };
+
   // Calculate age in months from birth date
   const calculateAgeInMonths = (dateString: string): number | null => {
     // Expected format: DD/MM/YYYY or DD-MM-YYYY or YYYY-MM-DD
@@ -497,6 +506,11 @@ export default function App() {
               <View style={styles.linkDivider} />
               <TouchableOpacity onPress={() => router.push('/signup' as any)}>
                 <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
+              </TouchableOpacity>
+              <View style={styles.linkDivider} />
+              {/* Hızlı Test Girişi */}
+              <TouchableOpacity onPress={hizliTestGiris}>
+                <Text style={[styles.linkText, { color: '#4CAF50', fontWeight: 'bold' }]}>⚡ Hızlı Test</Text>
               </TouchableOpacity>
             </View>
           </View>
