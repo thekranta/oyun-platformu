@@ -1,0 +1,577 @@
+import DynamicBackground from '@/components/DynamicBackground';
+import Toast from '@/components/Toast';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+    ActivityIndicator,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+
+export default function SignUp() {
+    const router = useRouter();
+    const windowWidth = Dimensions.get('window').width;
+    const isMobile = windowWidth < 768;
+
+    // Parent fields
+    const [parentName, setParentName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+
+    // Child fields
+    const [childName, setChildName] = useState('');
+    const [childAge, setChildAge] = useState('');
+
+    // State
+    const [dataConsent, setDataConsent] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [focusedInput, setFocusedInput] = useState<string | null>(null);
+    const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
+
+    const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+        setToast({ visible: true, message, type });
+    };
+
+    // Validation
+    const validateForm = (): boolean => {
+        if (!parentName.trim()) {
+            showToast('Lütfen ebeveyn adını giriniz.', 'error');
+            return false;
+        }
+        if (!email.trim()) {
+            showToast('Lütfen e-posta adresini giriniz.', 'error');
+            return false;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            showToast('Geçerli bir e-posta adresi giriniz.', 'error');
+            return false;
+        }
+        if (password.length < 6) {
+            showToast('Şifre en az 6 karakter olmalıdır.', 'error');
+            return false;
+        }
+        if (!childName.trim()) {
+            showToast('Lütfen çocuğun adını giriniz.', 'error');
+            return false;
+        }
+        const age = parseInt(childAge);
+        if (!childAge || isNaN(age) || age < 36 || age > 72) {
+            showToast('Çocuğun yaşı 36-72 ay arasında olmalıdır.', 'error');
+            return false;
+        }
+        if (!dataConsent) {
+            showToast('Lütfen veri kullanım iznini onaylayınız.', 'error');
+            return false;
+        }
+        return true;
+    };
+
+    // Sign up function
+    const handleSignUp = async () => {
+        if (isLoading) return;
+        if (!validateForm()) return;
+
+        setIsLoading(true);
+        try {
+            // 1. Create user in Supabase Auth
+            const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY || '',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email.trim(),
+                    password: password,
+                }),
+            });
+
+            const authData = await authResponse.json();
+
+            if (!authResponse.ok) {
+                throw new Error(authData.msg || authData.error_description || 'Kayıt başarısız oldu');
+            }
+
+            const userId = authData.id || authData.user?.id;
+
+            // 2. Create profile in profiles table
+            const profileData = {
+                user_id: userId,
+                parent_name: parentName.trim(),
+                email: email.trim(),
+                child_name: childName.trim(),
+                child_age_months: parseInt(childAge),
+                data_consent: dataConsent,
+                created_at: new Date().toISOString(),
+            };
+
+            const profileResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY || '',
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal',
+                },
+                body: JSON.stringify(profileData),
+            });
+
+            if (!profileResponse.ok) {
+                console.warn('Profil kaydı hatası:', await profileResponse.text());
+                // Continue anyway - user is created
+            }
+
+            showToast('Kayıt başarılı! Hoş geldiniz.', 'success');
+
+            // Wait for toast to show, then redirect
+            setTimeout(() => {
+                // Navigate to main app (game selection)
+                router.replace('/(tabs)');
+            }, 1500);
+
+        } catch (error: any) {
+            console.error('Kayıt hatası:', error);
+            showToast(error.message || 'Kayıt sırasında bir hata oluştu.', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Age picker buttons (36-72 months)
+    const ageOptions = [36, 42, 48, 54, 60, 66, 72];
+
+    return (
+        <DynamicBackground>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={{ flex: 1 }}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContainer}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={[
+                        styles.card,
+                        styles.glassCard,
+                        { width: isMobile ? '95%' : 450, maxWidth: 500 }
+                    ]}>
+                        {/* Header */}
+                        <View style={styles.headerContainer}>
+                            <Text style={styles.titleEmoji}>🌟</Text>
+                            <Text style={styles.title}>Kayıt Ol</Text>
+                        </View>
+                        <Text style={styles.subtitle}>Bulutların Üzerinde Akademi'ye hoş geldiniz!</Text>
+
+                        {/* Parent Section */}
+                        <View style={styles.sectionHeader}>
+                            <Ionicons name="person" size={20} color="#1565C0" />
+                            <Text style={styles.sectionTitle}>Ebeveyn Bilgileri</Text>
+                        </View>
+
+                        {/* Parent Name */}
+                        <View style={[
+                            styles.inputContainer,
+                            focusedInput === 'parentName' && styles.inputContainerFocused
+                        ]}>
+                            <Text style={styles.inputIcon}>👤</Text>
+                            <TextInput
+                                style={styles.inputModern}
+                                placeholder="Ad Soyad *"
+                                placeholderTextColor="#9E9E9E"
+                                value={parentName}
+                                onChangeText={setParentName}
+                                onFocus={() => setFocusedInput('parentName')}
+                                onBlur={() => setFocusedInput(null)}
+                            />
+                        </View>
+
+                        {/* Email */}
+                        <View style={[
+                            styles.inputContainer,
+                            focusedInput === 'email' && styles.inputContainerFocused
+                        ]}>
+                            <Text style={styles.inputIcon}>✉️</Text>
+                            <TextInput
+                                style={styles.inputModern}
+                                placeholder="E-posta *"
+                                placeholderTextColor="#9E9E9E"
+                                value={email}
+                                onChangeText={setEmail}
+                                keyboardType="email-address"
+                                autoCapitalize="none"
+                                onFocus={() => setFocusedInput('email')}
+                                onBlur={() => setFocusedInput(null)}
+                            />
+                        </View>
+
+                        {/* Password */}
+                        <View style={[
+                            styles.inputContainer,
+                            focusedInput === 'password' && styles.inputContainerFocused
+                        ]}>
+                            <Text style={styles.inputIcon}>🔒</Text>
+                            <TextInput
+                                style={[styles.inputModern, { flex: 1 }]}
+                                placeholder="Şifre (min. 6 karakter) *"
+                                placeholderTextColor="#9E9E9E"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry={!showPassword}
+                                onFocus={() => setFocusedInput('password')}
+                                onBlur={() => setFocusedInput(null)}
+                            />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                <Ionicons
+                                    name={showPassword ? 'eye-off' : 'eye'}
+                                    size={22}
+                                    color="#78909C"
+                                />
+                            </TouchableOpacity>
+                        </View>
+
+                        {/* Child Section */}
+                        <View style={[styles.sectionHeader, { marginTop: 20 }]}>
+                            <Ionicons name="happy" size={20} color="#1565C0" />
+                            <Text style={styles.sectionTitle}>Çocuk Bilgileri</Text>
+                        </View>
+
+                        {/* Child Name */}
+                        <View style={[
+                            styles.inputContainer,
+                            focusedInput === 'childName' && styles.inputContainerFocused
+                        ]}>
+                            <Text style={styles.inputIcon}>👶</Text>
+                            <TextInput
+                                style={styles.inputModern}
+                                placeholder="Çocuğun Adı *"
+                                placeholderTextColor="#9E9E9E"
+                                value={childName}
+                                onChangeText={setChildName}
+                                onFocus={() => setFocusedInput('childName')}
+                                onBlur={() => setFocusedInput(null)}
+                            />
+                        </View>
+
+                        {/* Child Age */}
+                        <Text style={styles.fieldLabel}>Yaş (Ay) *</Text>
+                        <View style={styles.agePickerContainer}>
+                            {ageOptions.map((age) => (
+                                <TouchableOpacity
+                                    key={age}
+                                    style={[
+                                        styles.ageButton,
+                                        childAge === age.toString() && styles.ageButtonSelected
+                                    ]}
+                                    onPress={() => setChildAge(age.toString())}
+                                >
+                                    <Text style={[
+                                        styles.ageButtonText,
+                                        childAge === age.toString() && styles.ageButtonTextSelected
+                                    ]}>
+                                        {age}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                        <Text style={styles.ageHint}>veya</Text>
+                        <View style={[
+                            styles.inputContainer,
+                            focusedInput === 'childAge' && styles.inputContainerFocused,
+                            { marginBottom: 16 }
+                        ]}>
+                            <Text style={styles.inputIcon}>📅</Text>
+                            <TextInput
+                                style={styles.inputModern}
+                                placeholder="Yaş girin (36-72 ay)"
+                                placeholderTextColor="#9E9E9E"
+                                value={childAge}
+                                onChangeText={setChildAge}
+                                keyboardType="numeric"
+                                onFocus={() => setFocusedInput('childAge')}
+                                onBlur={() => setFocusedInput(null)}
+                            />
+                        </View>
+
+                        {/* Data Consent */}
+                        <TouchableOpacity
+                            style={styles.consentContainer}
+                            onPress={() => setDataConsent(!dataConsent)}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.checkbox, dataConsent && styles.checkboxChecked]}>
+                                {dataConsent && <Ionicons name="checkmark" size={16} color="#fff" />}
+                            </View>
+                            <Text style={styles.consentText}>
+                                Verilerimin akademik araştırma kapsamında anonim olarak kullanılmasına izin veriyorum.
+                            </Text>
+                        </TouchableOpacity>
+
+                        {/* Submit Button */}
+                        <TouchableOpacity
+                            style={[styles.submitButton, isLoading && styles.buttonDisabled]}
+                            onPress={handleSignUp}
+                            disabled={isLoading}
+                            activeOpacity={0.8}
+                        >
+                            {isLoading ? (
+                                <View style={styles.buttonContent}>
+                                    <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+                                    <Text style={styles.submitButtonText}>Kayıt Yapılıyor...</Text>
+                                </View>
+                            ) : (
+                                <Text style={styles.submitButtonText}>Kayıt Ol ✨</Text>
+                            )}
+                        </TouchableOpacity>
+
+                        {/* Back to Login */}
+                        <TouchableOpacity
+                            style={styles.backLink}
+                            onPress={() => router.back()}
+                        >
+                            <Ionicons name="arrow-back" size={18} color="#1976D2" />
+                            <Text style={styles.backLinkText}>Giriş ekranına dön</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.requiredNote}>* Zorunlu alanlar</Text>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+            <Toast
+                visible={toast.visible}
+                message={toast.message}
+                type={toast.type}
+                onHide={() => setToast({ ...toast, visible: false })}
+            />
+        </DynamicBackground>
+    );
+}
+
+const styles = StyleSheet.create({
+    scrollContainer: {
+        flexGrow: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+        paddingVertical: 40,
+    },
+    card: {
+        backgroundColor: 'white',
+        padding: 30,
+        borderRadius: 25,
+        alignItems: 'center',
+    },
+    glassCard: {
+        backgroundColor: 'rgba(255, 255, 255, 0.92)',
+        borderRadius: 30,
+        padding: 28,
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 20,
+        elevation: 10,
+        ...(Platform.OS === 'web' ? {
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+        } : {}),
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    titleEmoji: {
+        fontSize: 32,
+        marginRight: 10,
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#1565C0',
+    },
+    subtitle: {
+        fontSize: 15,
+        color: '#78909C',
+        marginBottom: 24,
+        textAlign: 'center',
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
+        marginBottom: 12,
+        gap: 8,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1565C0',
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: '100%',
+        backgroundColor: '#FAFAFA',
+        borderRadius: 16,
+        marginBottom: 12,
+        borderWidth: 2,
+        borderColor: '#E8E8E8',
+        paddingHorizontal: 16,
+        minHeight: 52, // Touch-friendly height (h-12/h-14)
+    },
+    inputContainerFocused: {
+        borderColor: '#B2DFDB',
+        backgroundColor: '#FFFFFF',
+        shadowColor: '#B2DFDB',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 3,
+    },
+    inputIcon: {
+        fontSize: 18,
+        marginRight: 12,
+    },
+    inputModern: {
+        flex: 1,
+        fontSize: 15,
+        paddingVertical: 14,
+        color: '#37474F',
+        ...(Platform.OS === 'web' ? {
+            outline: 'none',
+        } : {}),
+    },
+    fieldLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#546E7A',
+        marginBottom: 10,
+        alignSelf: 'flex-start',
+    },
+    agePickerContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginBottom: 8,
+        width: '100%',
+        justifyContent: 'center',
+    },
+    ageButton: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: '#E0E0E0',
+        backgroundColor: '#FAFAFA',
+        minWidth: 52,
+        alignItems: 'center',
+    },
+    ageButtonSelected: {
+        borderColor: '#4CAF50',
+        backgroundColor: '#E8F5E9',
+    },
+    ageButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#666',
+    },
+    ageButtonTextSelected: {
+        color: '#2E7D32',
+    },
+    ageHint: {
+        fontSize: 12,
+        color: '#9E9E9E',
+        marginBottom: 8,
+    },
+    consentContainer: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        width: '100%',
+        marginTop: 8,
+        marginBottom: 16,
+        gap: 12,
+    },
+    checkbox: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: '#BDBDBD',
+        backgroundColor: '#FAFAFA',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 2,
+    },
+    checkboxChecked: {
+        backgroundColor: '#4CAF50',
+        borderColor: '#4CAF50',
+    },
+    consentText: {
+        flex: 1,
+        fontSize: 13,
+        color: '#546E7A',
+        lineHeight: 20,
+    },
+    submitButton: {
+        width: '100%',
+        paddingVertical: 16,
+        borderRadius: 18,
+        marginTop: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#4CAF50',
+        ...(Platform.OS === 'web' ? {
+            background: 'linear-gradient(135deg, #66BB6A 0%, #43A047 50%, #2E7D32 100%)',
+            transition: 'transform 0.2s ease',
+        } : {}),
+        shadowColor: '#4CAF50',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
+        elevation: 6,
+    },
+    buttonDisabled: {
+        opacity: 0.7,
+    },
+    buttonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    submitButtonText: {
+        color: '#FFFFFF',
+        fontSize: 17,
+        fontWeight: 'bold',
+        letterSpacing: 0.5,
+    },
+    backLink: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 20,
+        gap: 6,
+    },
+    backLinkText: {
+        fontSize: 14,
+        color: '#1976D2',
+        fontWeight: '500',
+    },
+    requiredNote: {
+        fontSize: 12,
+        color: '#9E9E9E',
+        marginTop: 16,
+    },
+});

@@ -492,7 +492,7 @@ export default function App() {
                 <Text style={styles.linkText}>Şifremi Unuttum</Text>
               </TouchableOpacity>
               <View style={styles.linkDivider} />
-              <TouchableOpacity onPress={() => setShowRegistration(true)}>
+              <TouchableOpacity onPress={() => router.push('/signup' as any)}>
                 <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
               </TouchableOpacity>
             </View>
