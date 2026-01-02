@@ -311,6 +311,10 @@ export default function AdminPanel() {
                 'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', surec: 'Değer Kazanımı', cikti: 'SDB.2.1', ciktiAciklama: 'Aile bütünlüğü ve aidiyet duygusu', deger: 'Aile Bütünlüğü' },
                 // Yeni Oyunlar
                 'golge-dedektifi': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme' },
+                // Yeni Bilişsel Oyunlar (Ocak 2026)
+                'onluk-cerceve': { alan: 'Matematik', surec: 'Sayısal Temsil', cikti: 'MAB.1', ciktiAciklama: 'Sayıları modellerle ifade etme ve çözümleme (1-10)' },
+                'sayi-komsulari': { alan: 'Matematik', surec: 'Sıralama', cikti: 'MAB.4', ciktiAciklama: 'Sayılar arasındaki ardışıklık ve konum ilişkisini belirleme' },
+                'tarti-dengesi': { alan: 'Matematik', surec: 'Eşitlik ve Denge', cikti: 'MAB.5', ciktiAciklama: 'Matematiksel eşitlik durumlarını kavrama ve dengeyi sağlama' },
             };
 
             const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
@@ -336,6 +340,10 @@ export default function AdminPanel() {
                 'yapboz': 'Yapboz',
                 'sayilari-birlestir': 'Sayıları Birleştir',
                 'kutuyu-bul': 'Kutuyu Bul!',
+                'golge-dedektifi': 'Gölge Dedektifi',
+                'onluk-cerceve': 'Onluk Çerçeve',
+                'sayi-komsulari': 'Sayı Komşuları',
+                'tarti-dengesi': 'Tartı Dengesi',
             };
             const oyunAdiTR = oyunAdiMap[score.oyun_turu] || score.oyun_turu;
 

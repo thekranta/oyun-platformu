@@ -9,11 +9,14 @@ import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
 import KutuyuBul from '@/components/KutuyuBul';
 import MuzikCalar from '@/components/MuzikCalar';
+import OnlukCerceve from '@/components/OnlukCerceve';
 import RakamYazma from '@/components/RakamYazma';
+import SayiKomsulari from '@/components/SayiKomsulari';
 import SayilariBirlestir from '@/components/SayilariBirlestir';
 import ShadowDetective from '@/components/ShadowDetective';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
+import TartiDengesi from '@/components/TartiDengesi';
 import Toast from '@/components/Toast';
 import YapbozOyunu from '@/components/YapbozOyunu';
 import YaraticiCizim from '@/components/YaraticiCizim';
@@ -798,6 +801,24 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Gölge Dedektifi</Text>
                   <Text style={styles.oyunAciklama}>Nesneleri Eşleştir</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FF7043' }]} onPress={() => oyunuBaslat('onluk-cerceve')}>
+                  <Ionicons name="grid-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Onluk Çerçeve</Text>
+                  <Text style={styles.oyunAciklama}>Sayıları Tamamla</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFA726' }]} onPress={() => oyunuBaslat('sayi-komsulari')}>
+                  <Ionicons name="train-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Sayı Komşuları</Text>
+                  <Text style={styles.oyunAciklama}>Eksik Sayıyı Bul</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#AB47BC' }]} onPress={() => oyunuBaslat('tarti-dengesi')}>
+                  <Ionicons name="color-filter-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Tartı Dengesi</Text>
+                  <Text style={styles.oyunAciklama}>Eşitliği Sağla</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -1025,6 +1046,18 @@ export default function App() {
         onExit={() => setAsama('menu')}
       />
     );
+  }
+
+  if (asama === 'onluk-cerceve') {
+    return <OnlukCerceve onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'sayi-komsulari') {
+    return <SayiKomsulari onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'tarti-dengesi') {
+    return <TartiDengesi onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'ceviz-macera') {
