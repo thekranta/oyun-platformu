@@ -19,78 +19,138 @@ interface OnlukCerceveProps {
 }
 
 export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
-    const { width, height } = Dimensions.get('window');
+    const { isMuted, toggleMute } = useSound();
+    const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+
+    useEffect(() => {
+        const subscription = Dimensions.addEventListener('change', ({ window }) => {
+            setDimensions(window);
+        });
+        return () => subscription?.remove();
+    }, []);
+
+    const { width, height } = dimensions;
     const isLandscape = width > height;
     const isSmallScreen = Math.min(width, height) < 400;
 
     // Responsive sizing
     const CELL_SIZE = isLandscape
-        ? Math.min((height - 200) / 3, 55)
-        : Math.min((width - 80) / 5, 60);
+        ? Math.min((height - 180) / 3, 50)
+        : Math.min((width - 60) / 5.5, 55);
 
-    const { isMuted, toggleMute } = useSound();
-
-    // İlk hedef sayıyı hemen hesapla (useState içinde)
-    const getInitialTarget = () => Math.floor(Math.random() * 5) + 1;
-
+    // Game state
     const [round, setRound] = useState(1);
-    const [targetNumber, setTargetNumber] = useState(getInitialTarget);
+    const [targetNumber, setTargetNumber] = useState(() => Math.floor(Math.random() * 5) + 1);
     const [placedFruits, setPlacedFruits] = useState<boolean[]>(Array(10).fill(false));
     const [mistakes, setMistakes] = useState(0);
     const [startTime] = useState(Date.now());
     const [roundData, setRoundData] = useState<any[]>([]);
     const [showConfetti, setShowConfetti] = useState(false);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+    const [dragCount, setDragCount] = useState(0); // Force re-render for drag
+
+    // useRef to access latest state in PanResponder callbacks
+    const placedFruitsRef = useRef(placedFruits);
+    const targetNumberRef = useRef(targetNumber);
+
+    useEffect(() => {
+        placedFruitsRef.current = placedFruits;
+    }, [placedFruits]);
+
+    useEffect(() => {
+        targetNumberRef.current = targetNumber;
+    }, [targetNumber]);
 
     const pan = useRef(new Animated.ValueXY()).current;
-    const [draggedFruitOpacity, setDraggedFruitOpacity] = useState(1);
 
-    // Round değiştiğinde yeni hedef belirle
+    // Start new round
     useEffect(() => {
         if (round > 1) {
-            startNewRound();
+            setShowConfetti(false);
+            setFeedbackMessage(null);
+            setPlacedFruits(Array(10).fill(false));
+            pan.setValue({ x: 0, y: 0 });
+
+            let newTarget;
+            if (round <= 4) {
+                newTarget = Math.floor(Math.random() * 5) + 1;
+            } else {
+                newTarget = Math.floor(Math.random() * 5) + 6;
+                if (newTarget > 10) newTarget = 10;
+            }
+            setTargetNumber(newTarget);
         }
     }, [round]);
 
-    const startNewRound = useCallback(() => {
-        setShowConfetti(false);
-        setFeedbackMessage(null);
-        setPlacedFruits(Array(10).fill(false));
-        pan.setValue({ x: 0, y: 0 });
+    const handleFruitDrop = useCallback(() => {
+        const currentPlaced = placedFruitsRef.current;
+        const target = targetNumberRef.current;
+        const currentCount = currentPlaced.filter(Boolean).length;
 
-        let newTarget;
-        if (round <= 4) {
-            newTarget = Math.floor(Math.random() * 5) + 1;
-        } else {
-            newTarget = Math.floor(Math.random() * 5) + 6;
-            if (newTarget > 10) newTarget = 10;
+        console.log('Drop:', { currentCount, target });
+
+        if (currentCount >= target) {
+            pan.setValue({ x: 0, y: 0 });
+            return;
         }
-        setTargetNumber(newTarget);
-    }, [round, pan]);
+
+        const firstEmptyIndex = currentPlaced.findIndex(x => !x);
+        if (firstEmptyIndex !== -1) {
+            const newPlaced = [...currentPlaced];
+            newPlaced[firstEmptyIndex] = true;
+            setPlacedFruits(newPlaced);
+            setDragCount(c => c + 1); // Force UI update
+
+            pan.setValue({ x: 0, y: 0 });
+
+            const newCount = currentCount + 1;
+            if (newCount === target) {
+                // Success!
+                setShowConfetti(true);
+                setFeedbackMessage('Harika! 🎉');
+                setRoundData(prev => [...prev, { round, target, result: 'success' }]);
+
+                setTimeout(() => {
+                    setShowConfetti(false);
+                    if (round < 10) {
+                        setRound(r => r + 1);
+                    } else {
+                        const duration = Math.floor((Date.now() - startTime) / 1000);
+                        onGameEnd('Onluk Çerçeve', duration, 10, mistakes, undefined, {
+                            cizimVerisi: JSON.stringify({ roundHistory: roundData }),
+                            zorlukSeviyesi: 1,
+                            kazanimOdagi: 'MAB.1 Sayı Kompozisyonu',
+                            algilananKelime: mistakes === 0 ? 'Mükemmel' : `${mistakes} hata`
+                        });
+                    }
+                }, 1500);
+            }
+        }
+    }, [round, mistakes, startTime, onGameEnd, roundData, pan]);
+
+    const handleFruitDropRef = useRef(handleFruitDrop);
+    useEffect(() => {
+        handleFruitDropRef.current = handleFruitDrop;
+    }, [handleFruitDrop]);
 
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onMoveShouldSetPanResponder: () => true,
             onPanResponderGrant: () => {
-                pan.setOffset({
-                    x: (pan.x as any)._value,
-                    y: (pan.y as any)._value
-                });
+                pan.setOffset({ x: 0, y: 0 });
                 pan.setValue({ x: 0, y: 0 });
             },
             onPanResponderMove: Animated.event(
                 [null, { dx: pan.x, dy: pan.y }],
                 { useNativeDriver: false }
             ),
-            onPanResponderRelease: (_, gestureState) => {
+            onPanResponderRelease: (_, gesture) => {
                 pan.flattenOffset();
+                const distance = Math.sqrt(gesture.dx ** 2 + gesture.dy ** 2);
 
-                // Herhangi bir yöne yeterince sürüklediyse kabul et (sadece yukarı değil)
-                const totalDistance = Math.sqrt(gestureState.dx ** 2 + gestureState.dy ** 2);
-
-                if (totalDistance > 50) {
-                    handleFruitDrop();
+                if (distance > 40) {
+                    handleFruitDropRef.current();
                 } else {
                     Animated.spring(pan, {
                         toValue: { x: 0, y: 0 },
@@ -101,161 +161,71 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
         })
     ).current;
 
-    const handleFruitDrop = () => {
-        const currentCount = placedFruits.filter(Boolean).length;
-
-        // DEBUG: Konsola yazdır
-        console.log('Drop attempt:', { currentCount, targetNumber, placedFruits });
-
-        // HATA DÜZELTMESİ: >= değil > kullan (hedef sayıya ulaşana kadar izin ver)
-        if (currentCount >= targetNumber) {
-            setFeedbackMessage('Tamamlandı! ✓');
-
-            Animated.spring(pan, {
-                toValue: { x: 0, y: 0 },
-                useNativeDriver: false
-            }).start();
-
-            setTimeout(() => setFeedbackMessage(null), 1000);
-            return;
-        }
-
-        const firstEmptyIndex = placedFruits.findIndex(x => !x);
-        if (firstEmptyIndex !== -1) {
-            const newPlaced = [...placedFruits];
-            newPlaced[firstEmptyIndex] = true;
-            setPlacedFruits(newPlaced);
-
-            // Meyveyi geri döndür
-            setDraggedFruitOpacity(0);
-            pan.setValue({ x: 0, y: 0 });
-            setTimeout(() => setDraggedFruitOpacity(1), 100);
-
-            const newCount = currentCount + 1;
-            if (newCount === targetNumber) {
-                handleSuccess();
-            }
-        } else {
-            // Hiç boş hücre kalmadı
-            Animated.spring(pan, {
-                toValue: { x: 0, y: 0 },
-                useNativeDriver: false
-            }).start();
-        }
-    };
-
-    const handleSuccess = () => {
-        setShowConfetti(true);
-        setFeedbackMessage('Harika! 🎉');
-
-        setRoundData(prev => [...prev, {
-            round,
-            target: targetNumber,
-            result: 'success',
-        }]);
-
-        setTimeout(() => {
-            setShowConfetti(false);
-            if (round < 10) {
-                setRound(r => r + 1);
-            } else {
-                finishGame();
-            }
-        }, 1800);
-    };
-
-    const finishGame = () => {
-        const duration = Math.floor((Date.now() - startTime) / 1000);
-        const extraData = {
-            cizimVerisi: JSON.stringify({ roundHistory: roundData }),
-            zorlukSeviyesi: 1,
-            kazanimOdagi: 'MAB.1 Sayı Kompozisyonu',
-            algilananKelime: mistakes === 0 ? 'Mükemmel' : `${mistakes} hata`
-        };
-        onGameEnd('Onluk Çerçeve', duration, 10, mistakes, undefined, extraData);
-    };
-
     const currentCount = placedFruits.filter(Boolean).length;
 
-    // Dynamic styles for landscape
-    const dynamicStyles = {
-        container: {
-            flexDirection: isLandscape ? 'row' as const : 'column' as const,
-        },
-        gameArea: {
-            flex: isLandscape ? 1 : undefined,
-        }
-    };
-
     return (
-        <View style={[styles.container, dynamicStyles.container]}>
-            {showConfetti && <ConfettiCannon count={120} origin={{ x: width / 2, y: 0 }} fadeOut />}
+        <View style={[styles.container, isLandscape && styles.containerLandscape]}>
+            {showConfetti && <ConfettiCannon count={100} origin={{ x: width / 2, y: 0 }} fadeOut />}
 
-            {/* Left/Top Section */}
-            <View style={[styles.topSection, isLandscape && styles.leftSection]}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={onExit} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={22} color="#fff" />
-                    </TouchableOpacity>
-                    <View style={styles.scoreContainer}>
-                        <Text style={styles.scoreText}>Tur: {round}/10</Text>
-                    </View>
-                    <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-                        <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={18} color="#fff" />
-                    </TouchableOpacity>
+            {/* Header Row - Always at top */}
+            <View style={styles.headerRow}>
+                <TouchableOpacity onPress={onExit} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={20} color="#fff" />
+                </TouchableOpacity>
+                <View style={styles.scoreContainer}>
+                    <Text style={styles.scoreText}>Tur: {round}/10</Text>
                 </View>
+                <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
+                    <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={18} color="#fff" />
+                </TouchableOpacity>
+            </View>
 
-                {/* Instruction */}
-                <View style={styles.instructionContainer}>
-                    <Text style={[styles.instructionText, isSmallScreen && { fontSize: 20 }]}>
+            {/* Main Content */}
+            <View style={[styles.mainContent, isLandscape && styles.mainContentLandscape]}>
+                {/* Info Panel */}
+                <View style={[styles.infoPanel, isLandscape && styles.infoPanelLandscape]}>
+                    <Text style={styles.instructionText}>
                         <Text style={styles.targetNumber}>{targetNumber}</Text> elma topla!
                     </Text>
                     <Text style={styles.countText}>{currentCount} / {targetNumber}</Text>
-                    {feedbackMessage && (
-                        <Text style={styles.feedbackText}>{feedbackMessage}</Text>
-                    )}
+                    {feedbackMessage && <Text style={styles.feedbackText}>{feedbackMessage}</Text>}
                 </View>
-            </View>
 
-            {/* Grid Area */}
-            <View style={[styles.gridWrapper, dynamicStyles.gameArea]}>
-                <View style={[styles.gridContainer, { padding: isLandscape ? 8 : 12 }]}>
-                    <View style={styles.gridRow}>
-                        {[0, 1, 2, 3, 4].map(i => (
-                            <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
-                                {placedFruits[i] && <Text style={[styles.fruitEmoji, { fontSize: CELL_SIZE * 0.7 }]}>🍎</Text>}
-                            </View>
-                        ))}
-                    </View>
-                    <View style={styles.gridRow}>
-                        {[5, 6, 7, 8, 9].map(i => (
-                            <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
-                                {placedFruits[i] && <Text style={[styles.fruitEmoji, { fontSize: CELL_SIZE * 0.7 }]}>🍎</Text>}
-                            </View>
-                        ))}
+                {/* Grid */}
+                <View style={styles.gridWrapper}>
+                    <View style={styles.gridContainer}>
+                        <View style={styles.gridRow}>
+                            {[0, 1, 2, 3, 4].map(i => (
+                                <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
+                                    {placedFruits[i] && <Text style={{ fontSize: CELL_SIZE * 0.65 }}>🍎</Text>}
+                                </View>
+                            ))}
+                        </View>
+                        <View style={styles.gridRow}>
+                            {[5, 6, 7, 8, 9].map(i => (
+                                <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
+                                    {placedFruits[i] && <Text style={{ fontSize: CELL_SIZE * 0.65 }}>🍎</Text>}
+                                </View>
+                            ))}
+                        </View>
                     </View>
                 </View>
-            </View>
 
-            {/* Drag Source */}
-            <View style={[styles.basketArea, isLandscape && styles.basketAreaLandscape]}>
-                <Text style={styles.basketLabel}>Elmayı sürükle!</Text>
-
-                <Animated.View
-                    style={[
-                        styles.draggableFruit,
-                        {
-                            transform: [{ translateX: pan.x }, { translateY: pan.y }],
-                            opacity: draggedFruitOpacity,
-                        },
-                        // Web'de metin seçimini engelle
-                        Platform.OS === 'web' && { userSelect: 'none', cursor: 'grab' } as any
-                    ]}
-                    {...panResponder.panHandlers}
-                >
-                    <Text style={[styles.bigFruit, Platform.OS === 'web' && { userSelect: 'none' } as any]}>🍎</Text>
-                </Animated.View>
+                {/* Drag Source */}
+                <View style={[styles.dragArea, isLandscape && styles.dragAreaLandscape]}>
+                    <Text style={styles.dragLabel}>Elmayı sürükle!</Text>
+                    <Animated.View
+                        key={dragCount}
+                        style={[
+                            styles.draggableFruit,
+                            { transform: [{ translateX: pan.x }, { translateY: pan.y }] },
+                            Platform.OS === 'web' && { userSelect: 'none', cursor: 'grab' } as any
+                        ]}
+                        {...panResponder.panHandlers}
+                    >
+                        <Text style={styles.fruitEmoji}>🍎</Text>
+                    </Animated.View>
+                </View>
             </View>
         </View>
     );
@@ -265,19 +235,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#E8F5E9',
-        paddingTop: Platform.OS === 'ios' ? 50 : 25,
+        paddingTop: Platform.OS === 'ios' ? 50 : 20,
     },
-    topSection: {
-        paddingHorizontal: 15,
+    containerLandscape: {
+        paddingTop: 10,
     },
-    leftSection: {
-        flex: 0.4,
-        justifyContent: 'center',
-    },
-    header: {
+    headerRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        paddingHorizontal: 15,
         marginBottom: 10,
     },
     backButton: { backgroundColor: '#66BB6A', padding: 8, borderRadius: 20 },
@@ -291,28 +258,44 @@ const styles = StyleSheet.create({
     },
     scoreText: { fontSize: 14, fontWeight: 'bold', color: '#388E3C' },
 
-    instructionContainer: {
+    mainContent: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        paddingHorizontal: 10,
+    },
+    mainContentLandscape: {
+        flexDirection: 'row',
+        justifyContent: 'space-evenly',
+    },
+
+    infoPanel: {
         alignItems: 'center',
         marginBottom: 10,
     },
+    infoPanelLandscape: {
+        flex: 0.25,
+        justifyContent: 'center',
+        marginBottom: 0,
+    },
     instructionText: {
-        fontSize: 24,
+        fontSize: 22,
         color: '#2E7D32',
         fontWeight: '700',
     },
     targetNumber: {
-        fontSize: 34,
+        fontSize: 32,
         color: '#C62828',
         fontWeight: 'bold',
     },
     countText: {
-        fontSize: 16,
+        fontSize: 18,
         color: '#558B2F',
-        marginTop: 3,
+        marginTop: 5,
         fontWeight: '600',
     },
     feedbackText: {
-        marginTop: 6,
+        marginTop: 8,
         fontSize: 18,
         color: '#FF6F00',
         fontWeight: 'bold',
@@ -323,12 +306,12 @@ const styles = StyleSheet.create({
     },
 
     gridWrapper: {
-        justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 10,
+        justifyContent: 'center',
     },
     gridContainer: {
         backgroundColor: 'rgba(255,255,255,0.9)',
+        padding: 8,
         borderRadius: 16,
         borderWidth: 2,
         borderColor: '#81C784',
@@ -346,39 +329,35 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    fruitEmoji: {
-        // fontSize dynamic
-    },
 
-    basketArea: {
+    dragArea: {
         alignItems: 'center',
-        paddingBottom: 30,
-        paddingTop: 15,
+        paddingVertical: 15,
     },
-    basketAreaLandscape: {
-        flex: 0.3,
+    dragAreaLandscape: {
+        flex: 0.25,
         justifyContent: 'center',
-        paddingBottom: 0,
+        paddingVertical: 0,
     },
-    basketLabel: {
+    dragLabel: {
         fontSize: 13,
         color: '#689F38',
         marginBottom: 8,
     },
     draggableFruit: {
-        width: 70,
-        height: 70,
+        width: 65,
+        height: 65,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.7)',
+        backgroundColor: 'rgba(255,255,255,0.8)',
         borderRadius: 35,
-        elevation: 6,
+        elevation: 5,
         shadowColor: '#000',
         shadowOpacity: 0.2,
-        shadowRadius: 5,
+        shadowRadius: 4,
         zIndex: 100,
     },
-    bigFruit: {
-        fontSize: 42,
+    fruitEmoji: {
+        fontSize: 38,
     },
 });
