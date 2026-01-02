@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -35,8 +35,8 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [wrongSelection, setWrongSelection] = useState<number | null>(null);
 
-    // Animasyonlar
-    const fadeAnim = new Animated.Value(0);
+    // Animasyonlar - useRef kullanımı düzeltildi
+    const fadeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         startRound();
