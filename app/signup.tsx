@@ -20,9 +20,6 @@ import {
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
-// Cloudflare Turnstile Sitekey
-const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
-
 export default function SignUp() {
     const router = useRouter();
     const windowWidth = Dimensions.get('window').width;
@@ -44,9 +41,6 @@ export default function SignUp() {
     const [isLoading, setIsLoading] = useState(false);
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
-
-    // Turnstile CAPTCHA token
-    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
         setToast({ visible: true, message, type });
@@ -81,11 +75,6 @@ export default function SignUp() {
         }
         if (!dataConsent) {
             showToast('Lütfen veri kullanım iznini onaylayınız.', 'error');
-            return false;
-        }
-        // Turnstile CAPTCHA doğrulama (Web'de zorunlu)
-        if (Platform.OS === 'web' && !turnstileToken) {
-            showToast('Lütfen güvenlik doğrulamasını tamamlayın.', 'error');
             return false;
         }
         return true;
@@ -367,15 +356,6 @@ export default function SignUp() {
                                 <Text style={styles.learnMoreLink}>Daha Fazla Öğren</Text>
                             </TouchableOpacity>
                         </View>
-
-                        {/* Cloudflare Turnstile CAPTCHA */}
-                        <CloudflareTurnstile
-                            siteKey={TURNSTILE_SITE_KEY}
-                            onVerify={(token: string) => setTurnstileToken(token)}
-                            onError={() => setTurnstileToken(null)}
-                            onExpire={() => setTurnstileToken(null)}
-                            theme="light"
-                        />
 
                         {/* Submit Button */}
                         <TouchableOpacity

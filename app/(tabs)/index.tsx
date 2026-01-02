@@ -1,7 +1,6 @@
 import AileSepetiMacerasi from '@/components/AileSepetiMacerasi';
 import BunuSoyle from '@/components/BunuSoyle';
 import CevizMacera from '@/components/CevizMacera';
-import CloudflareTurnstile from '@/components/CloudflareTurnstile';
 import DiziyiTamamla from '@/components/DiziyiTamamla';
 import DynamicBackground from '@/components/DynamicBackground';
 import EksikSayiBul from '@/components/EksikSayiBul';
@@ -491,15 +490,6 @@ export default function App() {
                 onBlur={() => setFocusedInput(null)}
               />
             </View>
-
-            {/* Cloudflare Turnstile CAPTCHA */}
-            <CloudflareTurnstile
-              siteKey={TURNSTILE_SITE_KEY}
-              onVerify={(token: string) => setTurnstileToken(token)}
-              onError={() => setTurnstileToken(null)}
-              onExpire={() => setTurnstileToken(null)}
-              theme="light"
-            />
 
             {/* Gradient Login Button with Spinner */}
             <TouchableOpacity
