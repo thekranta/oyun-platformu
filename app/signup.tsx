@@ -368,7 +368,7 @@ export default function SignUp() {
                             </TouchableOpacity>
                         </View>
 
-                        {/* TODO: Cloudflare Turnstile CAPTCHA - Temporarily disabled
+                        {/* Cloudflare Turnstile CAPTCHA */}
                         <CloudflareTurnstile
                             siteKey={TURNSTILE_SITE_KEY}
                             onVerify={(token: string) => setTurnstileToken(token)}
@@ -376,7 +376,6 @@ export default function SignUp() {
                             onExpire={() => setTurnstileToken(null)}
                             theme="light"
                         />
-                        */}
 
                         {/* Submit Button */}
                         <TouchableOpacity

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
 
 interface TurnstileProps {
@@ -10,135 +10,188 @@ interface TurnstileProps {
     size?: 'normal' | 'compact';
 }
 
-// Web-only Turnstile Container - Platform.select ile conditional export
-const TurnstileContainer = Platform.select({
-    web: () => {
-        // Web'de çalışacak bileşen
-        const WebTurnstile = ({ siteKey, onVerify, onError, onExpire, theme, size }: TurnstileProps) => {
-            const containerRef = useRef<HTMLDivElement | null>(null);
-            const widgetIdRef = useRef<string | null>(null);
-            const [isLoaded, setIsLoaded] = useState(false);
+// Sadece Web platformunda çalışır
+function CloudflareTurnstile({
+    siteKey,
+    onVerify,
+    onError,
+    onExpire,
+    theme = 'light',
+    size = 'normal'
+}: TurnstileProps) {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const containerId = useRef(`turnstile-${Math.random().toString(36).substr(2, 9)}`);
+    const widgetId = useRef<string | null>(null);
 
-            useEffect(() => {
-                const loadTurnstileScript = () => {
-                    return new Promise<void>((resolve, reject) => {
-                        if ((window as any).turnstile) {
-                            resolve();
-                            return;
-                        }
+    // Script yükleme
+    const loadScript = useCallback((): Promise<void> => {
+        return new Promise((resolve, reject) => {
+            // Zaten yüklüyse
+            if (typeof window !== 'undefined' && (window as any).turnstile) {
+                resolve();
+                return;
+            }
 
-                        const existingScript = document.querySelector('script[src*="turnstile"]');
-                        if (existingScript) {
-                            existingScript.addEventListener('load', () => resolve());
-                            return;
-                        }
+            // Script zaten DOM'da mı?
+            if (typeof document !== 'undefined') {
+                const existing = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+                if (existing) {
+                    existing.addEventListener('load', () => resolve());
+                    if ((window as any).turnstile) resolve();
+                    return;
+                }
 
-                        const script = document.createElement('script');
-                        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
-                        script.async = true;
-                        script.defer = true;
-                        script.onload = () => resolve();
-                        script.onerror = () => reject(new Error('Turnstile script yüklenemedi'));
-                        document.head.appendChild(script);
-                    });
+                // Script ekle
+                const script = document.createElement('script');
+                script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+                script.async = true;
+                script.defer = true;
+                script.onload = () => {
+                    console.log('Turnstile script loaded');
+                    resolve();
                 };
+                script.onerror = () => reject(new Error('Script load failed'));
+                document.head.appendChild(script);
+            } else {
+                reject(new Error('Document not available'));
+            }
+        });
+    }, []);
 
-                const initWidget = async () => {
-                    try {
-                        await loadTurnstileScript();
-                        setIsLoaded(true);
+    // Widget render
+    const renderWidget = useCallback(() => {
+        if (typeof window === 'undefined' || !(window as any).turnstile) return;
 
-                        if (containerRef.current && (window as any).turnstile) {
-                            if (widgetIdRef.current) {
-                                try {
-                                    (window as any).turnstile.remove(widgetIdRef.current);
-                                } catch (e) { }
-                            }
+        const container = document.getElementById(containerId.current);
+        if (!container) {
+            console.error('Turnstile container not found');
+            return;
+        }
 
-                            widgetIdRef.current = (window as any).turnstile.render(containerRef.current, {
-                                sitekey: siteKey,
-                                theme: theme || 'light',
-                                size: size || 'normal',
-                                callback: (token: string) => {
-                                    console.log('Turnstile verified');
-                                    onVerify(token);
-                                },
-                                'error-callback': () => {
-                                    console.log('Turnstile error');
-                                    onError?.();
-                                },
-                                'expired-callback': () => {
-                                    console.log('Turnstile expired');
-                                    onExpire?.();
-                                },
-                            });
-                        }
-                    } catch (error) {
-                        console.error('Turnstile init error:', error);
+        // Önceki widget'ı temizle
+        if (widgetId.current) {
+            try {
+                (window as any).turnstile.remove(widgetId.current);
+            } catch (e) { }
+        }
+
+        try {
+            widgetId.current = (window as any).turnstile.render(`#${containerId.current}`, {
+                sitekey: siteKey,
+                theme: theme,
+                size: size,
+                callback: (token: string) => {
+                    console.log('Turnstile verified successfully');
+                    onVerify(token);
+                },
+                'error-callback': () => {
+                    console.error('Turnstile error callback');
+                    setError('Doğrulama hatası');
+                    onError?.();
+                },
+                'expired-callback': () => {
+                    console.log('Turnstile token expired');
+                    onExpire?.();
+                },
+            });
+            setIsLoaded(true);
+        } catch (e) {
+            console.error('Turnstile render error:', e);
+            setError('Widget yüklenemedi');
+        }
+    }, [siteKey, theme, size, onVerify, onError, onExpire]);
+
+    useEffect(() => {
+        if (Platform.OS !== 'web') return;
+
+        let mounted = true;
+
+        const init = async () => {
+            try {
+                await loadScript();
+
+                // Script yüklendikten sonra DOM hazır olana kadar bekle
+                const checkAndRender = () => {
+                    if (!mounted) return;
+
+                    const container = document.getElementById(containerId.current);
+                    if (container && (window as any).turnstile) {
+                        renderWidget();
+                    } else {
+                        // Container henüz hazır değilse tekrar dene
+                        setTimeout(checkAndRender, 100);
                     }
                 };
 
-                initWidget();
-
-                return () => {
-                    if (widgetIdRef.current && (window as any).turnstile) {
-                        try {
-                            (window as any).turnstile.remove(widgetIdRef.current);
-                        } catch (e) { }
-                    }
-                };
-            }, [siteKey, theme, size, onVerify, onError, onExpire]);
-
-            return (
-                <View style={styles.container}>
-                    {!isLoaded && (
-                        <Text style={styles.loadingText}>Güvenlik yükleniyor...</Text>
-                    )}
-                    <View
-                        ref={containerRef as any}
-                        style={{ minHeight: 65, minWidth: 300 }}
-                    />
-                </View>
-            );
+                // Biraz bekle, sonra render et
+                setTimeout(checkAndRender, 200);
+            } catch (e) {
+                if (mounted) {
+                    console.error('Turnstile init error:', e);
+                    setError('Güvenlik yüklenemedi');
+                }
+            }
         };
-        return WebTurnstile;
-    },
-    default: () => {
-        // Mobil platformlarda boş bileşen
-        const NullComponent = () => null;
-        return NullComponent;
-    },
-})();
 
-// Ana export - platform'a göre doğru bileşeni döndürür
-export default function CloudflareTurnstile(props: TurnstileProps) {
+        init();
+
+        return () => {
+            mounted = false;
+            if (widgetId.current && (window as any).turnstile) {
+                try {
+                    (window as any).turnstile.remove(widgetId.current);
+                } catch (e) { }
+            }
+        };
+    }, [loadScript, renderWidget]);
+
+    // Mobil'de görünmez
     if (Platform.OS !== 'web') {
         return null;
     }
 
-    // TurnstileContainer'ı çağır
-    return <TurnstileContainer {...props} />;
+    // Web'de native div render et
+    return (
+        <View style={styles.container}>
+            {!isLoaded && !error && (
+                <Text style={styles.loadingText}>Güvenlik yükleniyor...</Text>
+            )}
+            {error && (
+                <Text style={styles.errorText}>{error}</Text>
+            )}
+            {/* Native HTML div - React Native Web bu şekilde destekler */}
+            <div
+                id={containerId.current}
+                style={{
+                    minHeight: 65,
+                    minWidth: 300,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}
+            />
+        </View>
+    );
 }
 
-// Widget'ı resetlemek için
-export const resetTurnstile = () => {
-    if (Platform.OS === 'web' && (window as any).turnstile) {
-        try {
-            (window as any).turnstile.reset();
-        } catch (e) { }
-    }
-};
+export default CloudflareTurnstile;
 
 const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         justifyContent: 'center',
         marginVertical: 15,
-        minHeight: 65,
+        minHeight: 70,
     },
     loadingText: {
         fontSize: 12,
         color: '#9E9E9E',
-        position: 'absolute',
+        marginBottom: 8,
+    },
+    errorText: {
+        fontSize: 12,
+        color: '#f44336',
+        marginBottom: 8,
     },
 });
