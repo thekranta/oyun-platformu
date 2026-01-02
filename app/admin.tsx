@@ -120,6 +120,7 @@ export default function AdminPanel() {
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState<number | null>(null);
     const [expandedDetails, setExpandedDetails] = useState<Set<number>>(new Set());
+    const [isAnalyzing, setIsAnalyzing] = useState(false); // Global loading state for Gemini API
 
     // UI State
     const [expandedGroupIds, setExpandedGroupIds] = useState<Set<string>>(new Set());
@@ -269,6 +270,11 @@ export default function AdminPanel() {
     };
 
     const analyzeGame = async (score: Score) => {
+        // Prevent multiple simultaneous API calls (429 protection)
+        if (isAnalyzing) {
+            console.log('Gemini isteği zaten devam ediyor, yeni istek engellendi.');
+            return;
+        }
         if (score.oyun_turu === 'yaratici-cizim') {
             alert('Yaratıcı çizim için yapay zeka yorumu oluşturulmaz.');
             return;
@@ -278,7 +284,9 @@ export default function AdminPanel() {
             return;
         }
 
+        setIsAnalyzing(true); // Block all other analysis requests
         setProcessingId(score.id);
+        console.log('Gemini isteği gönderildi', { scoreId: score.id, oyunTuru: score.oyun_turu });
         try {
             // Maarif Modeli Referans Matrisi - Oyun Eşleştirmeleri (raw_curriculum.txt'ye göre)
             const maarifMatrisi: Record<string, { alan: string; surec: string; cikti: string; ciktiAciklama: string; deger?: string }> = {
@@ -598,6 +606,7 @@ ChildhoodTech Ekibi
             alert(`Analiz hatası: ${error.message}`);
         } finally {
             setProcessingId(null);
+            setIsAnalyzing(false); // Release the global lock
         }
     };
 
@@ -870,8 +879,12 @@ ChildhoodTech Ekibi
                     <View style={styles.actionRow}>
                         {(!score.yapay_zeka_yorumu || score.yapay_zeka_yorumu.includes('-Cozum-')) ? (
                             <View style={{ flexDirection: 'row', gap: 10 }}>
-                                <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#2196F3' }]} onPress={() => analyzeGame(score)} disabled={isProcessing}>
-                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>🤖 Analiz Et</Text>}
+                                <TouchableOpacity
+                                    style={[styles.actionButton, { backgroundColor: isAnalyzing ? '#9E9E9E' : '#2196F3' }]}
+                                    onPress={() => analyzeGame(score)}
+                                    disabled={isProcessing || isAnalyzing}
+                                >
+                                    {isProcessing ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.actionButtonText}>{isAnalyzing ? '⏳ Bekleyin...' : '🤖 Analiz Et'}</Text>}
                                 </TouchableOpacity>
                                 {score.email && (
                                     <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#4CAF50' }]} onPress={() => sendEmail(score)} disabled={isProcessing}>
