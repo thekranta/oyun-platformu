@@ -30,6 +30,9 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const DRAWING_BUCKET = 'cizimler';
 
+// Cloudflare Turnstile Sitekey
+const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
+
 const slugifyName = (name: string) => {
   const normalized = name
     .trim()
@@ -62,6 +65,10 @@ export default function App() {
   const [regYasAy, setRegYasAy] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
+  // Turnstile CAPTCHA token state
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [regTurnstileToken, setRegTurnstileToken] = useState<string | null>(null);
+
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setToast({ visible: true, message, type });
   };
@@ -85,6 +92,12 @@ export default function App() {
     const yasNum = parseInt(yas);
     if (yasNum < 24 || yasNum > 75) {
       showToast('Yaş 24 ile 75 ay arasında olmalıdır.', 'error');
+      return;
+    }
+
+    // Turnstile CAPTCHA doğrulama (sadece web'de zorunlu)
+    if (Platform.OS === 'web' && !turnstileToken) {
+      showToast('Lütfen güvenlik doğrulamasını tamamlayın.', 'error');
       return;
     }
 
@@ -477,6 +490,15 @@ export default function App() {
                 onBlur={() => setFocusedInput(null)}
               />
             </View>
+
+            {/* Cloudflare Turnstile CAPTCHA */}
+            <CloudflareTurnstile
+              siteKey={TURNSTILE_SITE_KEY}
+              onVerify={(token) => setTurnstileToken(token)}
+              onError={() => setTurnstileToken(null)}
+              onExpire={() => setTurnstileToken(null)}
+              theme="light"
+            />
 
             {/* Gradient Login Button with Spinner */}
             <TouchableOpacity
