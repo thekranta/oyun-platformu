@@ -7,6 +7,7 @@ import {
     ActivityIndicator,
     Dimensions,
     KeyboardAvoidingView,
+    Modal,
     Platform,
     ScrollView,
     StyleSheet,
@@ -36,6 +37,7 @@ export default function SignUp() {
 
     // State
     const [dataConsent, setDataConsent] = useState(false);
+    const [showConsentModal, setShowConsentModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
@@ -337,18 +339,23 @@ export default function SignUp() {
                         </View>
 
                         {/* Data Consent */}
-                        <TouchableOpacity
-                            style={styles.consentContainer}
-                            onPress={() => setDataConsent(!dataConsent)}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.checkbox, dataConsent && styles.checkboxChecked]}>
-                                {dataConsent && <Ionicons name="checkmark" size={16} color="#fff" />}
-                            </View>
-                            <Text style={styles.consentText}>
-                                Verilerimin akademik araştırma kapsamında anonim olarak kullanılmasına izin veriyorum.
-                            </Text>
-                        </TouchableOpacity>
+                        <View style={styles.consentSection}>
+                            <TouchableOpacity
+                                style={styles.consentContainer}
+                                onPress={() => setDataConsent(!dataConsent)}
+                                activeOpacity={0.7}
+                            >
+                                <View style={[styles.checkbox, dataConsent && styles.checkboxChecked]}>
+                                    {dataConsent && <Ionicons name="checkmark" size={16} color="#fff" />}
+                                </View>
+                                <Text style={styles.consentText}>
+                                    Verilerimin akademik araştırma kapsamında anonim olarak kullanılmasına izin veriyorum.
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setShowConsentModal(true)}>
+                                <Text style={styles.learnMoreLink}>Daha Fazla Öğren</Text>
+                            </TouchableOpacity>
+                        </View>
 
                         {/* Submit Button */}
                         <TouchableOpacity
@@ -386,6 +393,60 @@ export default function SignUp() {
                 type={toast.type}
                 onHide={() => setToast({ ...toast, visible: false })}
             />
+
+            {/* Consent Info Modal */}
+            <Modal
+                visible={showConsentModal}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setShowConsentModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { width: isMobile ? '95%' : 550 }]}>
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            <Text style={styles.modalTitle}>📋 BİLGİLENDİRİLMİŞ GÖNÜLLÜ OLUR FORMU</Text>
+                            <Text style={styles.modalSubtitle}>(Aydınlatılmış Onam)</Text>
+
+                            <Text style={styles.modalParagraph}>
+                                <Text style={styles.modalBold}>Değerli Ebeveyn,</Text>{"\n\n"}
+                                Bu platform, okul öncesi dönemdeki çocukların bilişsel, matematiksel ve sosyal-duygusal becerilerini oyun temelli bir ortamda analiz etmek amacıyla geliştirilmiş akademik tabanlı bir eğitim teknolojisi projesidir. Çocuğunuzun platform üzerindeki etkileşimleri, bir yapay zeka modeli (Gemini AI) tarafından Milli Eğitim Bakanlığı "Türkiye Yüzyılı Maarif Modeli" göstergeleri doğrultusunda değerlendirilmektedir.
+                            </Text>
+
+                            <Text style={styles.modalSectionTitle}>📊 Verilerin Kullanım Amacı</Text>
+                            <Text style={styles.modalParagraph}>
+                                Platform üzerinden toplanan oyun verileri (tamamlama süresi, hata sayısı, çözümleme stratejileri vb.) şu amaçlarla kullanılacaktır:{"\n\n"}
+                                • Çocuğun gelişimsel seyrini takip ederek ebeveyne pedagojik geri bildirim sunmak.{"\n"}
+                                • Yapay zeka modelinin eğitimsel analiz doğruluğunu ölçmek.{"\n"}
+                                • Elde edilen anonim verileri bilimsel makale, bildiri ve akademik yayınlarda istatistiksel veri olarak kullanmak.
+                            </Text>
+
+                            <Text style={styles.modalSectionTitle}>🔒 Gizlilik ve Güvenlik</Text>
+                            <Text style={styles.modalParagraph}>
+                                <Text style={styles.modalBold}>Anonimleştirme:</Text> Çocuğunuzun gerçek ismi ve sizin iletişim bilgileriniz akademik yayınlarda kesinlikle kullanılmayacaktır. Veriler, "Öğrenci A", "44 Aylık Katılımcı" gibi anonim kodlarla raporlanacaktır.{"\n\n"}
+                                <Text style={styles.modalBold}>Veri Koruma:</Text> Toplanan veriler güvenli bulut sunucularında (Supabase) saklanmakta ve üçüncü şahıslarla ticari amaçla paylaşılmamaktadır.{"\n\n"}
+                                <Text style={styles.modalBold}>Gönüllülük Esası:</Text> Bu çalışmaya katılım tamamen gönüllülük esasına dayanır. İstediğiniz zaman kaydınızı silme ve verilerinizin kullanım onayını geri çekme hakkına sahipsiniz.
+                            </Text>
+
+                            <Text style={styles.modalSectionTitle}>✅ Onayınızın Önemi</Text>
+                            <Text style={styles.modalParagraph}>
+                                Kayıt ekranındaki kutucuğu işaretleyerek; yukarıdaki bilgilendirmeyi okuduğunuzu, verilerin akademik araştırma kapsamında kullanılmasını kabul ettiğinizi ve platformun kullanım şartlarına onay verdiğinizi beyan etmiş olursunuz.
+                            </Text>
+
+                            <Text style={styles.modalSectionTitle}>📧 İletişim</Text>
+                            <Text style={styles.modalParagraph}>
+                                Araştırma süreci veya verilerin kullanımıyla ilgili her türlü sorunuz için ChildhoodTech Ekibi ve ilgili araştırmacılarla e-posta yoluyla iletişime geçebilirsiniz.
+                            </Text>
+
+                            <TouchableOpacity
+                                style={styles.modalCloseButton}
+                                onPress={() => setShowConsentModal(false)}
+                            >
+                                <Text style={styles.modalCloseButtonText}>Kapat</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
         </DynamicBackground>
     );
 }
@@ -604,5 +665,82 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#9E9E9E',
         marginTop: 16,
+    },
+
+    // Consent Section
+    consentSection: {
+        width: '100%',
+        marginBottom: 8,
+    },
+    learnMoreLink: {
+        fontSize: 13,
+        color: '#1976D2',
+        fontWeight: '600',
+        marginTop: 8,
+        marginLeft: 36,
+        textDecorationLine: 'underline',
+    },
+
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    modalContent: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 24,
+        maxHeight: '85%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 15,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#1565C0',
+        textAlign: 'center',
+        marginBottom: 4,
+    },
+    modalSubtitle: {
+        fontSize: 14,
+        color: '#78909C',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    modalSectionTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#2E7D32',
+        marginTop: 16,
+        marginBottom: 8,
+    },
+    modalParagraph: {
+        fontSize: 14,
+        color: '#37474F',
+        lineHeight: 22,
+        textAlign: 'justify',
+    },
+    modalBold: {
+        fontWeight: '700',
+        color: '#1a1a2e',
+    },
+    modalCloseButton: {
+        backgroundColor: '#1976D2',
+        paddingVertical: 14,
+        paddingHorizontal: 40,
+        borderRadius: 12,
+        marginTop: 24,
+        alignSelf: 'center',
+    },
+    modalCloseButtonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
