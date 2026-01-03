@@ -561,13 +561,10 @@ ChildhoodTech Ekibi
                 const errorData = await response.json();
                 console.error('Gemini API Hatası:', errorData);
 
-                // API hatası bilgilendirmesi
-                if (response.status === 429) {
-                    alert('API hatası oluştu. Lütfen birkaç saniye sonra tekrar deneyin.');
-                    return;
-                }
-
-                throw new Error(errorData.error?.message || 'API isteği başarısız oldu');
+                // Detaylı hata mesajı göster
+                const errorMessage = errorData.error?.message || `Status: ${response.status}`;
+                alert(`API Hatası: ${errorMessage}`);
+                return;
             }
 
             const data = await response.json();
