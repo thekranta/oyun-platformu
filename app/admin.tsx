@@ -270,11 +270,7 @@ export default function AdminPanel() {
     };
 
     const analyzeGame = async (score: Score) => {
-        // Prevent multiple simultaneous API calls (429 protection)
-        if (isAnalyzing) {
-            console.log('Gemini isteği zaten devam ediyor, yeni istek engellendi.');
-            return;
-        }
+        // Ücretli katman: Paralel isteklere izin ver (rate-limit koruması kaldırıldı)
         if (score.oyun_turu === 'yaratici-cizim') {
             alert('Yaratıcı çizim için yapay zeka yorumu oluşturulmaz.');
             return;
@@ -551,35 +547,24 @@ ChildhoodTech Ekibi
                 `;
             }
 
-            // Fallback mekanizmalı Gemini çağrısı
-            const fetchGemini = async (model: string) => {
-                return fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY?.trim()}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                    }
-                );
-            };
-
-            // Önce gemini-1.5-flash dene (Hızlı ve ekonomik)
-            let response = await fetchGemini('gemini-1.5-flash');
-
-            // Eğer model bulunamazsa veya desteklenmezse (404/400), gemini-pro dene (Legacy/Stable)
-            if (!response.ok && (response.status === 404 || response.status === 400)) {
-                console.log('⚠️ gemini-1.5-flash modeli bulunamadı, gemini-pro modeline geçiliyor...');
-                response = await fetchGemini('gemini-pro');
-            }
+            // Ücretli katman: Doğrudan gemini-1.5-flash kullan (en güncel ve stabil model)
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY?.trim()}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                }
+            );
 
             if (!response.ok) {
                 const errorData = await response.json();
                 console.error('Gemini API Hatası:', errorData);
 
-                // 429 Rate Limit hatası için özel mesaj
+                // API hatası bilgilendirmesi
                 if (response.status === 429) {
-                    alert('⏳ API kullanım limiti doldu! Lütfen 1 dakika bekleyip tekrar deneyin. Not: Çok fazla analiz isteği gönderildiğinde bu hata oluşur.');
-                    return; // Otomatik retry yapmıyoruz
+                    alert('API hatası oluştu. Lütfen birkaç saniye sonra tekrar deneyin.');
+                    return;
                 }
 
                 throw new Error(errorData.error?.message || 'API isteği başarısız oldu');
