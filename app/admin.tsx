@@ -547,23 +547,51 @@ ChildhoodTech Ekibi
                 `;
             }
 
-            // Ücretli katman: gemini-2.0-flash kullan (en güncel ve stabil model)
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY?.trim()}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            // Model fallback mekanizması - birden fazla model dene
+            const models = [
+                { name: 'gemini-2.0-flash', version: 'v1' },
+                { name: 'gemini-1.5-flash', version: 'v1' },
+                { name: 'gemini-1.5-pro', version: 'v1' },
+                { name: 'gemini-pro', version: 'v1beta' },
+            ];
+
+            let response: Response | null = null;
+            let lastError = '';
+
+            for (const model of models) {
+                try {
+                    console.log(`🔄 Deneniyor: ${model.name} (${model.version})`);
+                    response = await fetch(
+                        `https://generativelanguage.googleapis.com/${model.version}/models/${model.name}:generateContent?key=${GEMINI_API_KEY?.trim()}`,
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                        }
+                    );
+
+                    if (response.ok) {
+                        console.log(`✅ Başarılı model: ${model.name}`);
+                        break;
+                    }
+
+                    const errorData = await response.json();
+                    lastError = errorData.error?.message || `Status: ${response.status}`;
+                    console.log(`❌ ${model.name} başarısız: ${lastError}`);
+
+                    // Sadece model bulunamadı hatalarında diğer modeli dene
+                    if (response.status !== 404 && response.status !== 400) {
+                        break; // Quota veya başka hata - döngüden çık
+                    }
+                    response = null;
+                } catch (e: any) {
+                    lastError = e.message;
+                    console.error(`❌ ${model.name} hata:`, e);
                 }
-            );
+            }
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Gemini API Hatası:', errorData);
-
-                // Detaylı hata mesajı göster
-                const errorMessage = errorData.error?.message || `Status: ${response.status}`;
-                alert(`API Hatası: ${errorMessage}`);
+            if (!response || !response.ok) {
+                alert(`API Hatası: ${lastError}`);
                 return;
             }
 
