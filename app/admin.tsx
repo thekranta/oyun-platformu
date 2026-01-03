@@ -826,7 +826,7 @@ ChildhoodTech Ekibi
             'Onluk Çerçeve': { alan: 'Matematik', cikti: 'MAB.1' },
             'Sayı Komşuları': { alan: 'Matematik', cikti: 'MAB.4' },
             'Tartı Dengesi': { alan: 'Matematik', cikti: 'MAB.1' },
-            'Miktar Karşılaştırma': { alan: 'Matematik', cikti: 'MAB.1' },
+            'Miktar Avcısı': { alan: 'Matematik', cikti: 'MAB.1' },
         };
         // Bilinmeyen oyunlar için varsayılan: MAB.2 (Matematik - Muhakeme)
         // ASLA GB.1 veya 'Genel Gelişim' kullanma!

@@ -850,7 +850,7 @@ export default function App() {
 
                 <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#1E88E5' }]} onPress={() => oyunuBaslat('miktar-karsilastirma')}>
                   <Ionicons name="bar-chart-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Miktar Karşılaştırma</Text>
+                  <Text style={styles.oyunBaslik}>Miktar Avcısı</Text>
                   <Text style={styles.oyunAciklama}>Hangisi Daha Çok?</Text>
                 </TouchableOpacity>
               </>

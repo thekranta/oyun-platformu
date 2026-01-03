@@ -182,18 +182,25 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
 
     const finishGame = () => {
         const duration = Math.floor((Date.now() - startTime) / 1000);
-        const avgResponseTime = roundHistory.reduce((a, b) => a + b.responseTime, 0) / roundHistory.length;
-        const avgDistanceEffect = roundHistory.reduce((a, b) => a + b.distanceEffect, 0) / roundHistory.length;
+        const avgResponseTime = roundHistory.length > 0
+            ? Math.round(roundHistory.reduce((a, b) => a + b.responseTime, 0) / roundHistory.length)
+            : 0;
+        const avgDistanceEffect = roundHistory.length > 0
+            ? roundHistory.reduce((a, b) => a + b.distanceEffect, 0) / roundHistory.length
+            : 0;
 
-        onGameEnd('Miktar Karşılaştırma', duration, 10, mistakes, undefined, {
+        // Veri kaydı: distance_effect, response_time ve round_history
+        onGameEnd('Miktar Avcısı', duration, 10, mistakes, undefined, {
             cizimVerisi: JSON.stringify({
                 roundHistory,
-                averageResponseTime: Math.round(avgResponseTime),
-                averageDistanceEffect: avgDistanceEffect.toFixed(2)
+                distance_effect: avgDistanceEffect.toFixed(2),
+                response_time: avgResponseTime,
+                totalRounds: 10,
+                correctAnswers: roundHistory.filter(r => r.isCorrect).length
             }),
             zorlukSeviyesi: 1,
-            kazanimOdagi: 'MAB.1 Sayı-Miktar İlişkisi',
-            algilananKelime: `Ort. yanıt: ${Math.round(avgResponseTime)}ms`
+            kazanimOdagi: 'MAB.1 Sayı-Miktar İlişkisi ve Hızlı Karar Verme',
+            algilananKelime: `Ort: ${avgResponseTime}ms, Fark: ${avgDistanceEffect.toFixed(1)}`
         });
     };
 
@@ -233,7 +240,7 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
                         <Ionicons name="arrow-back-circle" size={30} color="#2196F3" />
                     </TouchableOpacity>
                     <View style={styles.roundBadge}>
-                        <Text style={styles.roundText}>🔢 Tur {round}/10</Text>
+                        <Text style={styles.roundText}>🎯 Miktar Avcısı - Tur {round}/10</Text>
                     </View>
                     <TouchableOpacity onPress={toggleMute}>
                         <Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={26} color="#2196F3" />
