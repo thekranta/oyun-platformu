@@ -548,6 +548,14 @@ export default function App() {
           >
             <Text style={styles.adminButtonText}>🔑 Admin Paneli</Text>
           </TouchableOpacity>
+
+          {/* Veli Dashboard Button */}
+          <TouchableOpacity
+            style={[styles.adminButtonBottom, { backgroundColor: '#7B1FA2', marginTop: 8 }]}
+            onPress={() => router.push('/veli-dashboard' as any)}
+          >
+            <Text style={styles.adminButtonText}>👨‍👩‍👧 Veli Paneli</Text>
+          </TouchableOpacity>
         </View>
         <Toast
           visible={toast.visible}
