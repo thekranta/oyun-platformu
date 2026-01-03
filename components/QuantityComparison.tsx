@@ -24,7 +24,7 @@ interface RoundData {
     questionType: QuestionType;
     leftCount: number;
     rightCount: number;
-    correctAnswer: 'left' | 'right' | 'equal';
+    correctAnswer: 'left' | 'right';
     userAnswer: 'left' | 'right' | null;
     isCorrect: boolean;
     distanceEffect: number;
@@ -151,7 +151,7 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
         setSelectedSide(choice);
         const responseTime = Date.now() - roundStartTime;
         const correct = getCorrectAnswer();
-        const isCorrect = choice === correct || (correct === 'equal');
+        const isCorrect = choice === correct;
         const distanceEffect = Math.abs(leftCount - rightCount);
 
         // Scale animation
