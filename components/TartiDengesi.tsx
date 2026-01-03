@@ -3,11 +3,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
+    PanResponder,
     Platform,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSound } from './SoundContext';
@@ -17,136 +18,103 @@ interface TartiDengesiProps {
     onExit: () => void;
 }
 
-interface Question {
-    leftSide: number;
-    rightSideFixed: number;
-    missing: number;
-}
-
 export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
     const { isMuted, toggleMute } = useSound();
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
     useEffect(() => {
-        const subscription = Dimensions.addEventListener('change', ({ window }) => {
-            setDimensions(window);
-        });
-        return () => subscription?.remove();
+        const sub = Dimensions.addEventListener('change', ({ window }) => setDimensions(window));
+        return () => sub?.remove();
     }, []);
 
     const { width: screenWidth, height: screenHeight } = dimensions;
+    const isPortrait = screenHeight > screenWidth;
 
-    // 16:9 Aspect Ratio Container
-    const containerWidth = Math.min(screenWidth * 0.95, 900);
-    const containerHeight = containerWidth * (9 / 16);
+    // Responsive container
+    const containerWidth = isPortrait ? Math.min(screenWidth * 0.92, 500) : Math.min(screenWidth * 0.85, 850);
+    const containerHeight = containerWidth * (isPortrait ? 0.8 : 9 / 16);
 
-    // Responsive sizing
-    const SCALE_HEIGHT = containerHeight * 0.45;
-    const WEIGHT_SIZE = containerHeight * 0.1;
-    const OPTION_SIZE = containerHeight * 0.14;
+    // Sizing
+    const WEIGHT_SIZE = containerHeight * 0.12;
+    const OPTION_SIZE = containerHeight * 0.13;
+
+    // Floating animations
+    const float1 = useRef(new Animated.Value(0)).current;
+    const float2 = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        const anim = (a: Animated.Value, d: number) => Animated.loop(Animated.sequence([
+            Animated.timing(a, { toValue: 10, duration: d, useNativeDriver: true }),
+            Animated.timing(a, { toValue: 0, duration: d, useNativeDriver: true }),
+        ])).start();
+        anim(float1, 4500);
+        anim(float2, 6000);
+    }, []);
 
     const [round, setRound] = useState(1);
-    const [question, setQuestion] = useState<Question | null>(null);
+    const [targetNumber, setTargetNumber] = useState(1);
     const [mistakes, setMistakes] = useState(0);
     const [startTime] = useState(Date.now());
-    const [roundData, setRoundData] = useState<any[]>([]);
     const [showConfetti, setShowConfetti] = useState(false);
-
-    const rotateAnim = useRef(new Animated.Value(-15)).current;
     const [placedValue, setPlacedValue] = useState<number | null>(null);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [isBalanced, setIsBalanced] = useState(false);
 
-    useEffect(() => {
-        startRound();
-    }, [round]);
+    const rotateAnim = useRef(new Animated.Value(-12)).current;
+    const pan = useRef(new Animated.ValueXY()).current;
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+    const [draggingValue, setDraggingValue] = useState<number | null>(null);
 
-    const startRound = () => {
+    useEffect(() => {
         setPlacedValue(null);
         setFeedback(null);
         setIsBalanced(false);
         setShowConfetti(false);
-        rotateAnim.setValue(-15);
-
-        let target, rightFixed, missing;
-        if (round <= 4) {
-            target = Math.floor(Math.random() * 5) + 1;
-            rightFixed = 0;
-            missing = target;
-        } else {
-            target = Math.floor(Math.random() * 5) + 6;
-            if (target > 10) target = 10;
-            rightFixed = Math.floor(Math.random() * (target - 1)) + 1;
-            missing = target - rightFixed;
-        }
-        setQuestion({ leftSide: target, rightSideFixed: rightFixed, missing });
-    };
+        rotateAnim.setValue(-12);
+        // Her iki kefede aynı sayı olacak - işlem yok!
+        const newTarget = round <= 4
+            ? Math.floor(Math.random() * 5) + 1
+            : Math.min(Math.floor(Math.random() * 5) + 6, 10);
+        setTargetNumber(newTarget);
+    }, [round]);
 
     const handleDrop = (val: number) => {
         if (feedback) return;
         setPlacedValue(val);
+        setDraggingValue(null);
+        pan.setValue({ x: 0, y: 0 });
 
-        const currentRightTotal = (question?.rightSideFixed || 0) + val;
-        const target = question?.leftSide || 0;
-
-        if (currentRightTotal === target) {
+        if (val === targetNumber) {
             setFeedback('correct');
             setIsBalanced(true);
             setShowConfetti(true);
             animateBalance(0);
-            setRoundData(prev => [...prev, { round, target, result: 'success' }]);
-
             setTimeout(() => {
                 setShowConfetti(false);
-                if (round < 10) {
-                    setRound(r => r + 1);
-                } else {
-                    finishGame();
+                if (round < 10) setRound(r => r + 1);
+                else {
+                    const d = Math.floor((Date.now() - startTime) / 1000);
+                    onGameEnd('Tartı Dengesi', d, 10, mistakes, undefined, { zorlukSeviyesi: 1, kazanimOdagi: 'MAB.1 Sayısal Denge' });
                 }
-            }, 1800);
-        } else if (currentRightTotal > target) {
+            }, 1500);
+        } else if (val > targetNumber) {
             setFeedback('wrong');
             setMistakes(m => m + 1);
-            animateBalance(15);
-            handleErrorLogic();
+            animateBalance(10);
+            setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000);
         } else {
             setFeedback('wrong');
             setMistakes(m => m + 1);
-            animateBalance(-8);
-            handleErrorLogic();
+            animateBalance(-6);
+            setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000);
         }
     };
 
-    const handleErrorLogic = () => {
-        setTimeout(() => {
-            setPlacedValue(null);
-            setFeedback(null);
-            animateBalance(-15);
-        }, 1200);
-    };
-
-    const animateBalance = (toDeg: number) => {
-        Animated.spring(rotateAnim, {
-            toValue: toDeg,
-            friction: 6,
-            tension: 50,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const finishGame = () => {
-        const duration = Math.floor((Date.now() - startTime) / 1000);
-        onGameEnd('Tartı Dengesi', duration, 10, mistakes, undefined, {
-            zorlukSeviyesi: 1,
-            kazanimOdagi: 'MAB.1 Sayısal Denge',
-            algilananKelime: mistakes === 0 ? 'Mükemmel' : `${mistakes} hata`
-        });
+    const animateBalance = (deg: number) => {
+        Animated.spring(rotateAnim, { toValue: deg, friction: 6, tension: 50, useNativeDriver: true }).start();
     };
 
     const generateOptions = () => {
-        if (!question) return [];
-        const correct = question.missing;
-        const opts = [correct];
+        const opts = [targetNumber];
         while (opts.length < 3) {
             const r = Math.floor(Math.random() * 9) + 1;
             if (!opts.includes(r)) opts.push(r);
@@ -156,86 +124,86 @@ export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
 
     const options = generateOptions();
 
+    // Create pan responder for each option
+    const createPanResponder = (val: number) => PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: () => {
+            setDraggingValue(val);
+            pan.setOffset({ x: 0, y: 0 });
+            pan.setValue({ x: 0, y: 0 });
+            Animated.spring(scaleAnim, { toValue: 1.2, useNativeDriver: true }).start();
+        },
+        onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
+        onPanResponderRelease: (_, g) => {
+            pan.flattenOffset();
+            Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
+            // Eğer yeterince yukarı sürüklediyse
+            if (g.dy < -30) handleDrop(val);
+            else {
+                setDraggingValue(null);
+                pan.setValue({ x: 0, y: 0 });
+            }
+        }
+    });
+
     const rotateInterpolate = rotateAnim.interpolate({
-        inputRange: [-15, 0, 15],
-        outputRange: ['-12deg', '0deg', '12deg']
+        inputRange: [-12, 0, 12],
+        outputRange: ['-10deg', '0deg', '10deg']
     });
 
     return (
         <View style={styles.outerContainer}>
-            {showConfetti && <ConfettiCannon count={120} origin={{ x: screenWidth / 2, y: 0 }} fadeOut />}
+            {/* Floating */}
+            <Animated.Text style={[styles.floatingCloud, { top: '15%', left: '8%', transform: [{ translateY: float1 }] }]}>☁️</Animated.Text>
+            <Animated.Text style={[styles.floatingCloud, { top: '30%', right: '6%', opacity: 0.4, transform: [{ translateY: float2 }] }]}>☁️</Animated.Text>
+            <Animated.Text style={[styles.floatingStar, { bottom: '22%', right: '12%', transform: [{ translateY: float1 }] }]}>💜</Animated.Text>
 
-            {/* Game Container - 16:9 */}
+            {showConfetti && <ConfettiCannon count={100} origin={{ x: screenWidth / 2, y: 0 }} fadeOut />}
+
             <View style={[styles.gameContainer, { width: containerWidth, height: containerHeight }]}>
-
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={onExit} style={styles.headerBtn}>
-                        <Ionicons name="arrow-back-circle" size={32} color="#9C27B0" />
-                    </TouchableOpacity>
-                    <View style={styles.roundBadge}>
-                        <Text style={styles.roundText}>⚖️ Tur {round}/10</Text>
-                    </View>
-                    <TouchableOpacity onPress={toggleMute} style={styles.headerBtn}>
-                        <Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={28} color="#9C27B0" />
-                    </TouchableOpacity>
+                    <TouchableOpacity onPress={onExit}><Ionicons name="arrow-back-circle" size={30} color="#9C27B0" /></TouchableOpacity>
+                    <View style={styles.roundBadge}><Text style={styles.roundText}>⚖️ Tur {round}/10</Text></View>
+                    <TouchableOpacity onPress={toggleMute}><Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={26} color="#9C27B0" /></TouchableOpacity>
                 </View>
 
-                {/* Main Area */}
+                {/* Main */}
                 <View style={styles.mainArea}>
-
-                    {/* Left - Question */}
-                    <View style={styles.questionPanel}>
-                        <View style={styles.questionCard}>
-                            <Text style={styles.questionTitle}>Teraziyi Dengele!</Text>
-                            {isBalanced ? (
-                                <Text style={styles.balancedText}>✓ Dengede!</Text>
-                            ) : (
-                                <Text style={styles.questionSub}>
-                                    Sol: <Text style={styles.highlight}>{question?.leftSide}</Text> kg
-                                    {question?.rightSideFixed ? ` = Sağ: ${question.rightSideFixed} + ?` : ' = Sağ: ?'}
-                                </Text>
-                            )}
-                        </View>
+                    {/* Question */}
+                    <View style={styles.questionBox}>
+                        <Text style={styles.questionText}>Teraziyi Dengele!</Text>
+                        {isBalanced ? (
+                            <Text style={styles.balancedText}>✓ Dengede!</Text>
+                        ) : (
+                            <Text style={styles.hintText}>Sol: <Text style={styles.highlight}>{targetNumber}</Text> kg = Sağ: ?</Text>
+                        )}
                     </View>
 
-                    {/* Center - Scale */}
-                    <View style={[styles.scaleArea, { height: SCALE_HEIGHT }]}>
-                        {/* Base */}
-                        <View style={[styles.scaleBase, { width: containerWidth * 0.08, height: containerHeight * 0.06 }]} />
-                        <View style={[styles.scalePole, { height: SCALE_HEIGHT * 0.65, width: containerWidth * 0.02 }]} />
-
-                        {/* Beam */}
+                    {/* Scale */}
+                    <View style={styles.scaleWrapper}>
+                        <View style={[styles.scaleBase, { width: containerWidth * 0.06, height: containerHeight * 0.05 }]} />
+                        <View style={[styles.scalePole, { height: containerHeight * 0.3, width: containerWidth * 0.015 }]} />
                         <Animated.View style={[
-                            styles.beam,
-                            {
-                                width: containerWidth * 0.35,
-                                bottom: SCALE_HEIGHT * 0.6,
-                                transform: [{ rotate: rotateInterpolate }]
-                            }
+                            styles.beam, { width: containerWidth * 0.4, bottom: containerHeight * 0.28, transform: [{ rotate: rotateInterpolate }] }
                         ]}>
-                            {/* Left Pan */}
+                            {/* Left */}
                             <View style={[styles.panContainer, { left: 0 }]}>
-                                <View style={[styles.string, { height: SCALE_HEIGHT * 0.2 }]} />
-                                <View style={[styles.pan, { width: containerWidth * 0.1 }]}>
-                                    <View style={[styles.weightBlock, styles.leftWeight, { width: WEIGHT_SIZE, height: WEIGHT_SIZE }]}>
-                                        <Text style={[styles.weightText, { fontSize: WEIGHT_SIZE * 0.5 }]}>{question?.leftSide}</Text>
+                                <View style={[styles.string, { height: containerHeight * 0.1 }]} />
+                                <View style={[styles.pan, { width: WEIGHT_SIZE * 1.3 }]}>
+                                    <View style={[styles.weight, styles.leftWeight, { width: WEIGHT_SIZE, height: WEIGHT_SIZE }]}>
+                                        <Text style={[styles.weightText, { fontSize: WEIGHT_SIZE * 0.45 }]}>{targetNumber}</Text>
                                     </View>
                                 </View>
                             </View>
-
-                            {/* Right Pan */}
+                            {/* Right */}
                             <View style={[styles.panContainer, { right: 0 }]}>
-                                <View style={[styles.string, { height: SCALE_HEIGHT * 0.2 }]} />
-                                <View style={[styles.pan, { width: containerWidth * 0.12 }]}>
-                                    {question && question.rightSideFixed > 0 && (
-                                        <View style={[styles.weightBlock, styles.fixedWeight, { width: WEIGHT_SIZE * 0.7, height: WEIGHT_SIZE * 0.7, left: -WEIGHT_SIZE * 0.3 }]}>
-                                            <Text style={[styles.weightText, { fontSize: WEIGHT_SIZE * 0.35 }]}>{question.rightSideFixed}</Text>
-                                        </View>
-                                    )}
+                                <View style={[styles.string, { height: containerHeight * 0.1 }]} />
+                                <View style={[styles.pan, { width: WEIGHT_SIZE * 1.3 }]}>
                                     {placedValue !== null ? (
-                                        <View style={[styles.weightBlock, styles.placedWeight, { width: WEIGHT_SIZE, height: WEIGHT_SIZE, right: -WEIGHT_SIZE * 0.2 }]}>
-                                            <Text style={[styles.weightText, { fontSize: WEIGHT_SIZE * 0.5 }]}>{placedValue}</Text>
+                                        <View style={[styles.weight, styles.placedWeight, { width: WEIGHT_SIZE, height: WEIGHT_SIZE }]}>
+                                            <Text style={[styles.weightText, { fontSize: WEIGHT_SIZE * 0.45 }]}>{placedValue}</Text>
                                         </View>
                                     ) : (
                                         <View style={[styles.placeholder, { width: WEIGHT_SIZE, height: WEIGHT_SIZE }]}>
@@ -247,39 +215,36 @@ export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
                         </Animated.View>
                     </View>
 
-                    {/* Right - Options */}
-                    <View style={styles.optionsPanel}>
-                        <Text style={styles.optionsTitle}>Seç:</Text>
-                        <View style={styles.optionsGrid}>
-                            {options.map((opt, idx) => (
-                                <TouchableOpacity
-                                    key={idx}
+                    {/* Draggable Options */}
+                    <Text style={styles.dragLabel}>⬆️ Sürükleyip teraziye bırak!</Text>
+                    <View style={styles.optionsRow}>
+                        {options.map((opt, idx) => {
+                            const pr = createPanResponder(opt);
+                            const isDragging = draggingValue === opt;
+                            return (
+                                <Animated.View
+                                    key={`${round}-${idx}`}
                                     style={[
-                                        styles.optionBtn,
-                                        { width: OPTION_SIZE, height: OPTION_SIZE },
+                                        styles.optionBtn, { width: OPTION_SIZE, height: OPTION_SIZE },
+                                        isDragging && { transform: [{ translateX: pan.x }, { translateY: pan.y }, { scale: scaleAnim }], zIndex: 100 },
                                         feedback === 'correct' && placedValue === opt && styles.optCorrect,
-                                        feedback === 'wrong' && placedValue === opt && styles.optWrong
+                                        feedback === 'wrong' && placedValue === opt && styles.optWrong,
+                                        Platform.OS === 'web' && { cursor: 'grab' } as any
                                     ]}
-                                    onPress={() => handleDrop(opt)}
-                                    disabled={!!feedback}
-                                    activeOpacity={0.7}
+                                    {...pr.panHandlers}
                                 >
                                     <Text style={[styles.optionText, { fontSize: OPTION_SIZE * 0.4 }]}>{opt}</Text>
                                     <Text style={styles.kgLabel}>kg</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                                </Animated.View>
+                            );
+                        })}
                     </View>
                 </View>
 
-                {/* Progress Bar */}
+                {/* Progress */}
                 <View style={styles.progressBar}>
                     {Array.from({ length: 10 }).map((_, i) => (
-                        <View key={i} style={[
-                            styles.progressDot,
-                            i < round && styles.progressDotActive,
-                            i === round - 1 && styles.progressDotCurrent
-                        ]} />
+                        <View key={i} style={[styles.progressDot, i < round && styles.progressDotActive, i === round - 1 && styles.progressDotCurrent]} />
                     ))}
                 </View>
             </View>
@@ -288,170 +253,51 @@ export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
 }
 
 const styles = StyleSheet.create({
-    outerContainer: {
-        flex: 1,
-        backgroundColor: '#E1BEE7',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+    outerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#CE93D8' },
+    floatingCloud: { position: 'absolute', fontSize: 36, opacity: 0.35, zIndex: 0 },
+    floatingStar: { position: 'absolute', fontSize: 24, opacity: 0.4, zIndex: 0 },
     gameContainer: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 24,
-        overflow: 'hidden',
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.2,
-        shadowRadius: 15,
-        ...(Platform.OS === 'web' && { boxShadow: '0 8px 32px rgba(0,0,0,0.15)' } as any),
+        backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 20, overflow: 'hidden', zIndex: 10,
+        ...(Platform.OS === 'web' ? { boxShadow: '0 12px 40px rgba(0,0,0,0.12)' } as any : { elevation: 12, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 20 }),
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: '3%',
-        paddingVertical: '2%',
-        backgroundColor: '#F3E5F5',
-        borderBottomWidth: 2,
-        borderBottomColor: '#CE93D8',
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        paddingHorizontal: '3%', paddingVertical: '1.5%', backgroundColor: 'rgba(243,229,245,0.9)', borderBottomWidth: 1, borderBottomColor: '#E1BEE7',
     },
-    headerBtn: { padding: 4 },
-    roundBadge: {
-        backgroundColor: '#FFF',
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: '#BA68C8',
-    },
-    roundText: { fontSize: 14, fontWeight: 'bold', color: '#7B1FA2' },
-
-    mainArea: {
-        flex: 1,
-        flexDirection: 'row',
-        padding: '2%',
-    },
-
-    questionPanel: {
-        flex: 0.25,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    questionCard: {
-        backgroundColor: '#FCE4EC',
-        borderRadius: 12,
-        padding: '8%',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#F48FB1',
-    },
-    questionTitle: { fontSize: 14, fontWeight: 'bold', color: '#AD1457', marginBottom: 4 },
-    questionSub: { fontSize: 12, color: '#6D4C41', textAlign: 'center' },
-    highlight: { fontSize: 18, fontWeight: 'bold', color: '#D32F2F' },
+    roundBadge: { backgroundColor: '#FFF', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 14, borderWidth: 2, borderColor: '#BA68C8' },
+    roundText: { fontSize: 13, fontWeight: 'bold', color: '#7B1FA2' },
+    mainArea: { flex: 1, alignItems: 'center', padding: '2%' },
+    questionBox: { alignItems: 'center', marginBottom: 8 },
+    questionText: { fontSize: 15, fontWeight: 'bold', color: '#4A148C' },
+    hintText: { fontSize: 12, color: '#6D4C41' },
+    highlight: { fontSize: 16, fontWeight: 'bold', color: '#D32F2F' },
     balancedText: { fontSize: 16, fontWeight: 'bold', color: '#4CAF50' },
-
-    scaleArea: {
-        flex: 0.5,
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        position: 'relative',
-    },
-    scaleBase: {
-        backgroundColor: '#5D4037',
-        borderTopLeftRadius: 8,
-        borderTopRightRadius: 8,
-        zIndex: 2,
-    },
-    scalePole: {
-        position: 'absolute',
-        bottom: 0,
-        backgroundColor: '#795548',
-        zIndex: 1,
-    },
-    beam: {
-        position: 'absolute',
-        height: 8,
-        backgroundColor: '#8D6E63',
-        borderRadius: 4,
-    },
-    panContainer: {
-        position: 'absolute',
-        top: 4,
-        alignItems: 'center',
-    },
-    string: {
-        width: 2,
-        backgroundColor: '#BDBDBD',
-    },
-    pan: {
-        height: 6,
-        backgroundColor: '#5D4037',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'flex-end',
-    },
-    weightBlock: {
-        borderRadius: 6,
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'absolute',
-        bottom: 6,
-    },
+    scaleWrapper: { alignItems: 'center', justifyContent: 'flex-end', height: '45%', position: 'relative', width: '100%' },
+    scaleBase: { backgroundColor: '#5D4037', borderTopLeftRadius: 6, borderTopRightRadius: 6, zIndex: 2 },
+    scalePole: { position: 'absolute', bottom: 0, backgroundColor: '#795548', zIndex: 1 },
+    beam: { position: 'absolute', height: 6, backgroundColor: '#8D6E63', borderRadius: 3 },
+    panContainer: { position: 'absolute', top: 3, alignItems: 'center' },
+    string: { width: 2, backgroundColor: '#BDBDBD' },
+    pan: { height: 4, backgroundColor: '#5D4037', alignItems: 'center', justifyContent: 'flex-end' },
+    weight: { borderRadius: 6, justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 4 },
     leftWeight: { backgroundColor: '#EF5350' },
-    fixedWeight: { backgroundColor: '#42A5F5' },
     placedWeight: { backgroundColor: '#66BB6A' },
+    placeholder: { borderWidth: 2, borderColor: '#BDBDBD', borderStyle: 'dashed', borderRadius: 6, justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 4 },
+    placeholderText: { fontSize: 16, color: '#9E9E9E' },
     weightText: { color: '#FFF', fontWeight: 'bold' },
-    placeholder: {
-        borderWidth: 2,
-        borderColor: '#BDBDBD',
-        borderStyle: 'dashed',
-        borderRadius: 6,
-        justifyContent: 'center',
-        alignItems: 'center',
-        position: 'absolute',
-        bottom: 6,
-    },
-    placeholderText: { fontSize: 18, color: '#9E9E9E' },
-
-    optionsPanel: {
-        flex: 0.25,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    optionsTitle: { fontSize: 13, color: '#7B1FA2', fontWeight: 'bold', marginBottom: 8 },
-    optionsGrid: {
-        flexDirection: 'column',
-        gap: 8,
-    },
+    dragLabel: { fontSize: 11, color: '#7B1FA2', marginTop: 4, marginBottom: 8 },
+    optionsRow: { flexDirection: 'row', gap: 10 },
     optionBtn: {
-        borderRadius: 100,
-        backgroundColor: '#FFF',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 3,
-        borderColor: '#CE93D8',
-        elevation: 3,
+        borderRadius: 100, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center',
+        borderWidth: 3, borderColor: '#CE93D8',
+        ...(Platform.OS === 'web' ? { boxShadow: '0 3px 8px rgba(0,0,0,0.1)' } as any : { elevation: 4, shadowColor: '#000', shadowOpacity: 0.1 }),
     },
     optCorrect: { backgroundColor: '#C8E6C9', borderColor: '#4CAF50' },
     optWrong: { backgroundColor: '#FFCDD2', borderColor: '#F44336' },
     optionText: { fontWeight: 'bold', color: '#7B1FA2' },
-    kgLabel: { fontSize: 10, color: '#9E9E9E' },
-
-    progressBar: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 6,
-        paddingVertical: '1.5%',
-        backgroundColor: '#F3E5F5',
-    },
-    progressDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: '#E1BEE7',
-        borderWidth: 2,
-        borderColor: '#CE93D8',
-    },
+    kgLabel: { fontSize: 8, color: '#9E9E9E' },
+    progressBar: { flexDirection: 'row', justifyContent: 'center', gap: 5, paddingVertical: '1%', backgroundColor: 'rgba(243,229,245,0.9)' },
+    progressDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E1BEE7', borderWidth: 1, borderColor: '#CE93D8' },
     progressDotActive: { backgroundColor: '#9C27B0', borderColor: '#7B1FA2' },
     progressDotCurrent: { backgroundColor: '#FF9800', borderColor: '#E65100', transform: [{ scale: 1.3 }] },
 });
