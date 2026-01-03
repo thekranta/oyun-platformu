@@ -59,6 +59,7 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [showConfetti, setShowConfetti] = useState(false);
     const [droppedAnswer, setDroppedAnswer] = useState<number | null>(null);
+    const [prevCorrect, setPrevCorrect] = useState(0); // Prevent consecutive same
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -76,16 +77,22 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
             type = (['next', 'prev', 'between'] as QuestionType[])[Math.floor(Math.random() * 3)];
             max = 10;
         }
-        let num1, correct;
-        switch (type) {
-            case 'next': num1 = Math.floor(Math.random() * (max - 2)) + 1; correct = num1 + 2;
-                return { type, numbers: [num1, num1 + 1, null], correctAnswer: correct, options: genOpts(correct) };
-            case 'prev': num1 = Math.floor(Math.random() * (max - 2)) + 2; correct = num1 - 1;
-                return { type, numbers: [null, num1, num1 + 1], correctAnswer: correct, options: genOpts(correct) };
-            case 'between': num1 = Math.floor(Math.random() * (max - 2)) + 1; correct = num1 + 1;
-                return { type, numbers: [num1, null, num1 + 2], correctAnswer: correct, options: genOpts(correct) };
-            default: return { type: 'next', numbers: [1, 2, null], correctAnswer: 3, options: [1, 3, 4] };
-        }
+        let num1: number, correct: number, result: Question;
+        let attempts = 0;
+        do {
+            switch (type) {
+                case 'next': num1 = Math.floor(Math.random() * (max - 2)) + 1; correct = num1 + 2;
+                    result = { type, numbers: [num1, num1 + 1, null], correctAnswer: correct, options: genOpts(correct) }; break;
+                case 'prev': num1 = Math.floor(Math.random() * (max - 2)) + 2; correct = num1 - 1;
+                    result = { type, numbers: [null, num1, num1 + 1], correctAnswer: correct, options: genOpts(correct) }; break;
+                case 'between': num1 = Math.floor(Math.random() * (max - 2)) + 1; correct = num1 + 1;
+                    result = { type, numbers: [num1, null, num1 + 2], correctAnswer: correct, options: genOpts(correct) }; break;
+                default: result = { type: 'next', numbers: [1, 2, null], correctAnswer: 3, options: [1, 3, 4] };
+            }
+            attempts++;
+        } while (result!.correctAnswer === prevCorrect && attempts < 10);
+        setPrevCorrect(result!.correctAnswer);
+        return result!;
     };
 
     const genOpts = (c: number) => {

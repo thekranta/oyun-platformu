@@ -63,6 +63,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     // Game state
     const [round, setRound] = useState(1);
     const [targetNumber, setTargetNumber] = useState(() => Math.floor(Math.random() * 5) + 1);
+    const [prevTarget, setPrevTarget] = useState(0); // Prevent consecutive same
     const [placedFruits, setPlacedFruits] = useState<boolean[]>(Array(10).fill(false));
     const [mistakes, setMistakes] = useState(0);
     const [startTime] = useState(Date.now());
@@ -93,9 +94,14 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             setShowSuccess(false);
             setPlacedFruits(Array(10).fill(false));
             pan.setValue({ x: 0, y: 0 });
-            const newTarget = round <= 4
-                ? Math.floor(Math.random() * 5) + 1
-                : Math.min(Math.floor(Math.random() * 5) + 6, 10);
+            // Prevent consecutive same target
+            let newTarget: number;
+            do {
+                newTarget = round <= 4
+                    ? Math.floor(Math.random() * 5) + 1
+                    : Math.min(Math.floor(Math.random() * 5) + 6, 10);
+            } while (newTarget === prevTarget);
+            setPrevTarget(newTarget);
             setTargetNumber(newTarget);
         }
     }, [round]);
