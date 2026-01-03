@@ -214,8 +214,11 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                                                 🍎
                                             </Animated.Text>
                                         )}
-                                        {!placedFruits[i] && (
+                                        {!placedFruits[i] && round <= 4 && (
                                             <Text style={[styles.cellNumber, { fontSize: CELL_SIZE * 0.3 }]}>{i + 1}</Text>
+                                        )}
+                                        {!placedFruits[i] && round > 4 && (
+                                            <Text style={[styles.cellArrow, { fontSize: CELL_SIZE * 0.4 }]}>→</Text>
                                         )}
                                     </View>
                                 ))}
@@ -229,8 +232,11 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                                                 🍎
                                             </Animated.Text>
                                         )}
-                                        {!placedFruits[i] && (
+                                        {!placedFruits[i] && round <= 4 && (
                                             <Text style={[styles.cellNumber, { fontSize: CELL_SIZE * 0.3 }]}>{i + 1}</Text>
+                                        )}
+                                        {!placedFruits[i] && round > 4 && (
+                                            <Text style={[styles.cellArrow, { fontSize: CELL_SIZE * 0.4 }]}>→</Text>
                                         )}
                                     </View>
                                 ))}
@@ -238,13 +244,9 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                         </View>
                     </View>
 
-                    {/* Right Panel - Basket */}
+                    {/* Right Panel - Draggable Apple */}
                     <View style={styles.basketPanel}>
-                        <Text style={styles.basketLabel}>⬆️ Sürükle!</Text>
-
-                        <View style={[styles.basket, { width: BASKET_APPLE_SIZE * 1.6, height: BASKET_APPLE_SIZE * 1.2 }]}>
-                            <Text style={styles.basketEmoji}>🧺</Text>
-                        </View>
+                        <Text style={styles.basketLabel}>👆 Sürükle ve bırak!</Text>
 
                         <Animated.View
                             key={dragCount}
@@ -265,6 +267,8 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                         >
                             <Text style={{ fontSize: BASKET_APPLE_SIZE * 0.7 }}>🍎</Text>
                         </Animated.View>
+
+                        <Text style={styles.dragHint}>⬆️ Tabloya taşı</Text>
                     </View>
                 </View>
 
@@ -405,6 +409,10 @@ const styles = StyleSheet.create({
         color: '#C8B900',
         fontWeight: 'bold',
     },
+    cellArrow: {
+        color: '#E0E0E0',
+        fontWeight: 'bold',
+    },
     fruitInCell: {
         // fontSize is dynamic
     },
@@ -414,15 +422,16 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     basketLabel: {
-        fontSize: 14,
-        color: '#689F38',
+        fontSize: 13,
+        color: '#4CAF50',
         fontWeight: 'bold',
-        marginBottom: 8,
+        marginBottom: 12,
+        textAlign: 'center',
     },
-    basket: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 8,
+    dragHint: {
+        fontSize: 12,
+        color: '#8BC34A',
+        marginTop: 12,
     },
     basketEmoji: {
         fontSize: 48,
