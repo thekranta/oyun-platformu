@@ -96,11 +96,11 @@ export default function App() {
       return;
     }
 
-    // Turnstile CAPTCHA doğrulama (sadece web'de zorunlu)
-    if (Platform.OS === 'web' && !turnstileToken) {
-      showToast('Lütfen güvenlik doğrulamasını tamamlayın.', 'error');
-      return;
-    }
+    // Turnstile CAPTCHA doğrulama (geçici olarak devre dışı)
+    // if (Platform.OS === 'web' && !turnstileToken) {
+    //   showToast('Lütfen güvenlik doğrulamasını tamamlayın.', 'error');
+    //   return;
+    // }
 
     setIsLoggingIn(true);
     try {
