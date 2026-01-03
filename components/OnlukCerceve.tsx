@@ -29,17 +29,16 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
         return () => subscription?.remove();
     }, []);
 
-    const { width, height } = dimensions;
-    const isLandscape = width > height;
-    const isSmallScreen = Math.min(width, height) < 400;
-    const isWeb = Platform.OS === 'web';
+    const { width: screenWidth, height: screenHeight } = dimensions;
 
-    // Responsive sizing - Web'de daha büyük
-    const CELL_SIZE = isWeb
-        ? Math.min(width / 8, 70)  // Web: daha büyük
-        : isLandscape
-            ? Math.min((height - 150) / 3, 55)
-            : Math.min((width - 40) / 5.2, 60);
+    // 16:9 Aspect Ratio Container - max 900px, 95vw
+    const containerWidth = Math.min(screenWidth * 0.95, 900);
+    const containerHeight = containerWidth * (9 / 16);
+
+    // Grid sizing based on container (percentage-based)
+    const CELL_SIZE = containerHeight * 0.12; // 12% of container height
+    const APPLE_SIZE = CELL_SIZE * 0.85;
+    const BASKET_APPLE_SIZE = containerHeight * 0.15;
 
     // Game state
     const [round, setRound] = useState(1);
@@ -49,38 +48,39 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const [startTime] = useState(Date.now());
     const [roundData, setRoundData] = useState<any[]>([]);
     const [showConfetti, setShowConfetti] = useState(false);
-    const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-    const [dragCount, setDragCount] = useState(0); // Force re-render for drag
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [dragCount, setDragCount] = useState(0);
 
-    // useRef to access latest state in PanResponder callbacks
+    // Refs for state access in PanResponder
     const placedFruitsRef = useRef(placedFruits);
     const targetNumberRef = useRef(targetNumber);
 
-    useEffect(() => {
-        placedFruitsRef.current = placedFruits;
-    }, [placedFruits]);
-
-    useEffect(() => {
-        targetNumberRef.current = targetNumber;
-    }, [targetNumber]);
+    useEffect(() => { placedFruitsRef.current = placedFruits; }, [placedFruits]);
+    useEffect(() => { targetNumberRef.current = targetNumber; }, [targetNumber]);
 
     const pan = useRef(new Animated.ValueXY()).current;
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+    const countPulse = useRef(new Animated.Value(1)).current;
 
-    // Start new round
+    // Animate count when fruit is placed
+    const pulseCount = () => {
+        Animated.sequence([
+            Animated.timing(countPulse, { toValue: 1.3, duration: 150, useNativeDriver: true }),
+            Animated.timing(countPulse, { toValue: 1, duration: 150, useNativeDriver: true }),
+        ]).start();
+    };
+
+    // New round
     useEffect(() => {
         if (round > 1) {
             setShowConfetti(false);
-            setFeedbackMessage(null);
+            setShowSuccess(false);
             setPlacedFruits(Array(10).fill(false));
             pan.setValue({ x: 0, y: 0 });
 
-            let newTarget;
-            if (round <= 4) {
-                newTarget = Math.floor(Math.random() * 5) + 1;
-            } else {
-                newTarget = Math.floor(Math.random() * 5) + 6;
-                if (newTarget > 10) newTarget = 10;
-            }
+            const newTarget = round <= 4
+                ? Math.floor(Math.random() * 5) + 1
+                : Math.min(Math.floor(Math.random() * 5) + 6, 10);
             setTargetNumber(newTarget);
         }
     }, [round]);
@@ -89,8 +89,6 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
         const currentPlaced = placedFruitsRef.current;
         const target = targetNumberRef.current;
         const currentCount = currentPlaced.filter(Boolean).length;
-
-        console.log('Drop:', { currentCount, target });
 
         if (currentCount >= target) {
             pan.setValue({ x: 0, y: 0 });
@@ -102,39 +100,35 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             const newPlaced = [...currentPlaced];
             newPlaced[firstEmptyIndex] = true;
             setPlacedFruits(newPlaced);
-            setDragCount(c => c + 1); // Force UI update
-
+            setDragCount(c => c + 1);
+            pulseCount();
             pan.setValue({ x: 0, y: 0 });
 
             const newCount = currentCount + 1;
             if (newCount === target) {
                 // Success!
                 setShowConfetti(true);
-                setFeedbackMessage('Harika! 🎉');
+                setShowSuccess(true);
                 setRoundData(prev => [...prev, { round, target, result: 'success' }]);
 
                 setTimeout(() => {
-                    setShowConfetti(false);
                     if (round < 10) {
                         setRound(r => r + 1);
                     } else {
                         const duration = Math.floor((Date.now() - startTime) / 1000);
                         onGameEnd('Onluk Çerçeve', duration, 10, mistakes, undefined, {
-                            cizimVerisi: JSON.stringify({ roundHistory: roundData }),
                             zorlukSeviyesi: 1,
                             kazanimOdagi: 'MAB.1 Sayı Kompozisyonu',
                             algilananKelime: mistakes === 0 ? 'Mükemmel' : `${mistakes} hata`
                         });
                     }
-                }, 1500);
+                }, 1800);
             }
         }
-    }, [round, mistakes, startTime, onGameEnd, roundData, pan]);
+    }, [round, mistakes, startTime, onGameEnd, pan]);
 
     const handleFruitDropRef = useRef(handleFruitDrop);
-    useEffect(() => {
-        handleFruitDropRef.current = handleFruitDrop;
-    }, [handleFruitDrop]);
+    useEffect(() => { handleFruitDropRef.current = handleFruitDrop; }, [handleFruitDrop]);
 
     const panResponder = useRef(
         PanResponder.create({
@@ -143,6 +137,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             onPanResponderGrant: () => {
                 pan.setOffset({ x: 0, y: 0 });
                 pan.setValue({ x: 0, y: 0 });
+                Animated.spring(scaleAnim, { toValue: 1.2, useNativeDriver: true }).start();
             },
             onPanResponderMove: Animated.event(
                 [null, { dx: pan.x, dy: pan.y }],
@@ -150,15 +145,14 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             ),
             onPanResponderRelease: (_, gesture) => {
                 pan.flattenOffset();
-                const distance = Math.sqrt(gesture.dx ** 2 + gesture.dy ** 2);
+                Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
 
-                if (distance > 40) {
+                // Any significant drag triggers drop
+                const distance = Math.sqrt(gesture.dx ** 2 + gesture.dy ** 2);
+                if (distance > 30) {
                     handleFruitDropRef.current();
                 } else {
-                    Animated.spring(pan, {
-                        toValue: { x: 0, y: 0 },
-                        useNativeDriver: false
-                    }).start();
+                    Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
                 }
             }
         })
@@ -167,67 +161,122 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const currentCount = placedFruits.filter(Boolean).length;
 
     return (
-        <View style={[styles.container, isLandscape && styles.containerLandscape]}>
-            {showConfetti && <ConfettiCannon count={100} origin={{ x: width / 2, y: 0 }} fadeOut />}
+        <View style={styles.outerContainer}>
+            {showConfetti && <ConfettiCannon count={150} origin={{ x: screenWidth / 2, y: 0 }} fadeOut explosionSpeed={400} />}
 
-            {/* Header Row - Always at top */}
-            <View style={styles.headerRow}>
-                <TouchableOpacity onPress={onExit} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={20} color="#fff" />
-                </TouchableOpacity>
-                <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreText}>Tur: {round}/10</Text>
-                </View>
-                <TouchableOpacity onPress={toggleMute} style={styles.soundButton}>
-                    <Ionicons name={isMuted ? 'volume-mute' : 'volume-high'} size={18} color="#fff" />
-                </TouchableOpacity>
-            </View>
+            {/* Game Container - 16:9 Aspect Ratio */}
+            <View style={[styles.gameContainer, { width: containerWidth, height: containerHeight }]}>
 
-            {/* Main Content */}
-            <View style={[styles.mainContent, isLandscape && styles.mainContentLandscape]}>
-                {/* Info Panel */}
-                <View style={[styles.infoPanel, isLandscape && styles.infoPanelLandscape]}>
-                    <Text style={styles.instructionText}>
-                        <Text style={styles.targetNumber}>{targetNumber}</Text> elma topla!
-                    </Text>
-                    <Text style={styles.countText}>{currentCount} / {targetNumber}</Text>
-                    {feedbackMessage && <Text style={styles.feedbackText}>{feedbackMessage}</Text>}
+                {/* Header Bar */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={onExit} style={styles.headerBtn}>
+                        <Ionicons name="arrow-back-circle" size={36} color="#4CAF50" />
+                    </TouchableOpacity>
+
+                    <View style={styles.roundBadge}>
+                        <Text style={styles.roundText}>🎯 Tur {round}/10</Text>
+                    </View>
+
+                    <TouchableOpacity onPress={toggleMute} style={styles.headerBtn}>
+                        <Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={32} color="#4CAF50" />
+                    </TouchableOpacity>
                 </View>
 
-                {/* Grid */}
-                <View style={styles.gridWrapper}>
-                    <View style={styles.gridContainer}>
-                        <View style={styles.gridRow}>
-                            {[0, 1, 2, 3, 4].map(i => (
-                                <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
-                                    {placedFruits[i] && <Text style={{ fontSize: CELL_SIZE * 0.65 }}>🍎</Text>}
-                                </View>
-                            ))}
+                {/* Main Game Area */}
+                <View style={styles.mainArea}>
+
+                    {/* Left Panel - Instructions */}
+                    <View style={styles.instructionPanel}>
+                        <View style={styles.targetCard}>
+                            <Text style={styles.targetEmoji}>🍎</Text>
+                            <Text style={[styles.targetNumber, { fontSize: containerHeight * 0.12 }]}>{targetNumber}</Text>
+                            <Text style={styles.targetLabel}>elma topla!</Text>
                         </View>
-                        <View style={styles.gridRow}>
-                            {[5, 6, 7, 8, 9].map(i => (
-                                <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
-                                    {placedFruits[i] && <Text style={{ fontSize: CELL_SIZE * 0.65 }}>🍎</Text>}
-                                </View>
-                            ))}
+
+                        {/* Live Counter */}
+                        <Animated.View style={[styles.counterBox, { transform: [{ scale: countPulse }] }]}>
+                            <Text style={[styles.counterText, { fontSize: containerHeight * 0.08 }]}>
+                                {currentCount} / {targetNumber}
+                            </Text>
+                            {showSuccess && <Text style={styles.successText}>🎉 Harika!</Text>}
+                        </Animated.View>
+                    </View>
+
+                    {/* Center - Grid Area */}
+                    <View style={styles.gridArea}>
+                        <View style={[styles.gridContainer, { padding: CELL_SIZE * 0.15 }]}>
+                            {/* Row 1 */}
+                            <View style={styles.gridRow}>
+                                {[0, 1, 2, 3, 4].map(i => (
+                                    <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
+                                        {placedFruits[i] && (
+                                            <Animated.Text style={[styles.fruitInCell, { fontSize: APPLE_SIZE }]}>
+                                                🍎
+                                            </Animated.Text>
+                                        )}
+                                        {!placedFruits[i] && (
+                                            <Text style={[styles.cellNumber, { fontSize: CELL_SIZE * 0.3 }]}>{i + 1}</Text>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                            {/* Row 2 */}
+                            <View style={styles.gridRow}>
+                                {[5, 6, 7, 8, 9].map(i => (
+                                    <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
+                                        {placedFruits[i] && (
+                                            <Animated.Text style={[styles.fruitInCell, { fontSize: APPLE_SIZE }]}>
+                                                🍎
+                                            </Animated.Text>
+                                        )}
+                                        {!placedFruits[i] && (
+                                            <Text style={[styles.cellNumber, { fontSize: CELL_SIZE * 0.3 }]}>{i + 1}</Text>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
                         </View>
+                    </View>
+
+                    {/* Right Panel - Basket */}
+                    <View style={styles.basketPanel}>
+                        <Text style={styles.basketLabel}>⬆️ Sürükle!</Text>
+
+                        <View style={[styles.basket, { width: BASKET_APPLE_SIZE * 1.6, height: BASKET_APPLE_SIZE * 1.2 }]}>
+                            <Text style={styles.basketEmoji}>🧺</Text>
+                        </View>
+
+                        <Animated.View
+                            key={dragCount}
+                            style={[
+                                styles.draggableApple,
+                                {
+                                    width: BASKET_APPLE_SIZE,
+                                    height: BASKET_APPLE_SIZE,
+                                    transform: [
+                                        { translateX: pan.x },
+                                        { translateY: pan.y },
+                                        { scale: scaleAnim }
+                                    ]
+                                },
+                                Platform.OS === 'web' && { cursor: 'grab', userSelect: 'none' } as any
+                            ]}
+                            {...panResponder.panHandlers}
+                        >
+                            <Text style={{ fontSize: BASKET_APPLE_SIZE * 0.7 }}>🍎</Text>
+                        </Animated.View>
                     </View>
                 </View>
 
-                {/* Drag Source */}
-                <View style={[styles.dragArea, isLandscape && styles.dragAreaLandscape]}>
-                    <Text style={styles.dragLabel}>Elmayı sürükle!</Text>
-                    <Animated.View
-                        key={dragCount}
-                        style={[
-                            styles.draggableFruit,
-                            { transform: [{ translateX: pan.x }, { translateY: pan.y }] },
-                            Platform.OS === 'web' && { userSelect: 'none', cursor: 'grab' } as any
-                        ]}
-                        {...panResponder.panHandlers}
-                    >
-                        <Text style={styles.fruitEmoji}>🍎</Text>
-                    </Animated.View>
+                {/* Progress Dots */}
+                <View style={styles.progressBar}>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                        <View key={i} style={[
+                            styles.progressDot,
+                            i < round && styles.progressDotActive,
+                            i === round - 1 && styles.progressDotCurrent
+                        ]} />
+                    ))}
                 </View>
             </View>
         </View>
@@ -235,132 +284,184 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
 }
 
 const styles = StyleSheet.create({
-    container: {
+    outerContainer: {
         flex: 1,
-        backgroundColor: '#E8F5E9',
-        paddingTop: Platform.OS === 'ios' ? 50 : 20,
+        backgroundColor: '#C8E6C9', // Soft green background
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    containerLandscape: {
-        paddingTop: 10,
+    gameContainer: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 24,
+        overflow: 'hidden',
+        elevation: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.2,
+        shadowRadius: 15,
+        ...(Platform.OS === 'web' && { boxShadow: '0 8px 32px rgba(0,0,0,0.15)' } as any),
     },
-    headerRow: {
+    header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 15,
-        marginBottom: 10,
+        paddingHorizontal: '3%',
+        paddingVertical: '2%',
+        backgroundColor: '#E8F5E9',
+        borderBottomWidth: 2,
+        borderBottomColor: '#A5D6A7',
     },
-    backButton: { backgroundColor: '#66BB6A', padding: 8, borderRadius: 20 },
-    soundButton: { backgroundColor: '#66BB6A', padding: 8, borderRadius: 20 },
-    scoreContainer: {
-        backgroundColor: '#fff',
+    headerBtn: {
+        padding: 4,
+    },
+    roundBadge: {
+        backgroundColor: '#FFF',
         paddingHorizontal: 16,
         paddingVertical: 6,
-        borderRadius: 16,
-        elevation: 2,
+        borderRadius: 20,
+        borderWidth: 2,
+        borderColor: '#81C784',
     },
-    scoreText: { fontSize: 14, fontWeight: 'bold', color: '#388E3C' },
-
-    mainContent: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        paddingHorizontal: 10,
-    },
-    mainContentLandscape: {
-        flexDirection: 'row',
-        justifyContent: 'space-evenly',
-    },
-
-    infoPanel: {
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    infoPanelLandscape: {
-        flex: 0.25,
-        justifyContent: 'center',
-        marginBottom: 0,
-    },
-    instructionText: {
-        fontSize: 22,
+    roundText: {
+        fontSize: 16,
+        fontWeight: 'bold',
         color: '#2E7D32',
-        fontWeight: '700',
+    },
+    mainArea: {
+        flex: 1,
+        flexDirection: 'row',
+        padding: '2%',
+    },
+    instructionPanel: {
+        flex: 0.25,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    targetCard: {
+        backgroundColor: '#FFECB3',
+        borderRadius: 16,
+        padding: '8%',
+        alignItems: 'center',
+        borderWidth: 3,
+        borderColor: '#FFB300',
+        marginBottom: '10%',
+    },
+    targetEmoji: {
+        fontSize: 32,
     },
     targetNumber: {
-        fontSize: 32,
-        color: '#C62828',
         fontWeight: 'bold',
+        color: '#E65100',
     },
-    countText: {
-        fontSize: 18,
-        color: '#558B2F',
-        marginTop: 5,
+    targetLabel: {
+        fontSize: 14,
+        color: '#5D4037',
         fontWeight: '600',
+        marginTop: 4,
     },
-    feedbackText: {
-        marginTop: 8,
-        fontSize: 18,
-        color: '#FF6F00',
+    counterBox: {
+        backgroundColor: '#E3F2FD',
+        borderRadius: 12,
+        padding: '6%',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#64B5F6',
+    },
+    counterText: {
         fontWeight: 'bold',
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 8,
+        color: '#1565C0',
     },
-
-    gridWrapper: {
+    successText: {
+        fontSize: 16,
+        color: '#4CAF50',
+        fontWeight: 'bold',
+        marginTop: 4,
+    },
+    gridArea: {
+        flex: 0.5,
         alignItems: 'center',
         justifyContent: 'center',
     },
     gridContainer: {
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        padding: 8,
+        backgroundColor: '#FFF9C4',
         borderRadius: 16,
-        borderWidth: 2,
-        borderColor: '#81C784',
+        borderWidth: 4,
+        borderColor: '#FBC02D',
     },
     gridRow: {
         flexDirection: 'row',
-        gap: 4,
-        marginBottom: 4,
+        gap: 6,
+        marginBottom: 6,
     },
     cell: {
-        backgroundColor: 'rgba(200,230,201,0.6)',
-        borderWidth: 2,
-        borderColor: '#A5D6A7',
-        borderRadius: 8,
+        backgroundColor: '#FFFDE7',
+        borderWidth: 3,
+        borderColor: '#FFEB3B',
+        borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
     },
-
-    dragArea: {
-        alignItems: 'center',
-        paddingVertical: 15,
+    cellNumber: {
+        color: '#C8B900',
+        fontWeight: 'bold',
     },
-    dragAreaLandscape: {
+    fruitInCell: {
+        // fontSize is dynamic
+    },
+    basketPanel: {
         flex: 0.25,
+        alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: 0,
     },
-    dragLabel: {
-        fontSize: 13,
+    basketLabel: {
+        fontSize: 14,
         color: '#689F38',
+        fontWeight: 'bold',
         marginBottom: 8,
     },
-    draggableFruit: {
-        width: 65,
-        height: 65,
+    basket: {
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.8)',
-        borderRadius: 35,
-        elevation: 5,
+        marginBottom: 8,
+    },
+    basketEmoji: {
+        fontSize: 48,
+    },
+    draggableApple: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        borderRadius: 100,
+        elevation: 8,
         shadowColor: '#000',
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        borderWidth: 3,
+        borderColor: '#E57373',
         zIndex: 100,
     },
-    fruitEmoji: {
-        fontSize: 38,
+    progressBar: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 8,
+        paddingVertical: '1.5%',
+        backgroundColor: '#F1F8E9',
+    },
+    progressDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        backgroundColor: '#C8E6C9',
+        borderWidth: 2,
+        borderColor: '#A5D6A7',
+    },
+    progressDotActive: {
+        backgroundColor: '#4CAF50',
+        borderColor: '#2E7D32',
+    },
+    progressDotCurrent: {
+        backgroundColor: '#FF9800',
+        borderColor: '#E65100',
+        transform: [{ scale: 1.3 }],
     },
 });
