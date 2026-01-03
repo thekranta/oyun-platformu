@@ -107,15 +107,11 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
         let left: number, right: number;
 
         // Round-specific difficulty
-        if (round === 9) {
-            // Close numbers (8 vs 9)
-            left = Math.random() > 0.5 ? 8 : 9;
-            right = left === 8 ? 9 : 8;
-        } else if (round === 10) {
-            // Equal scenario - special case
-            const equalVal = Math.floor(Math.random() * 4) + 5;
-            left = equalVal;
-            right = equalVal;
+        if (round === 9 || round === 10) {
+            // Close numbers (8 vs 9 or 9 vs 10)
+            const baseNum = round === 9 ? 8 : 9;
+            left = Math.random() > 0.5 ? baseNum : baseNum + 1;
+            right = left === baseNum ? baseNum + 1 : baseNum;
         } else if (round <= 4) {
             // Easy: Big difference (1-5)
             do {
@@ -141,8 +137,7 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
         setRightCount(right);
     };
 
-    const getCorrectAnswer = (): 'left' | 'right' | 'equal' => {
-        if (leftCount === rightCount) return 'equal';
+    const getCorrectAnswer = (): 'left' | 'right' => {
         if (questionType === 'MORE') {
             return leftCount > rightCount ? 'left' : 'right';
         } else {
