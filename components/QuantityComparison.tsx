@@ -206,13 +206,13 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
         const cognitiveSpeedScore = Math.round((correctAnswers / 10) * 100 - (avgResponseTime / 100));
 
         onGameEnd('Miktar Avcısı', duration, 10, mistakes, undefined, {
-            cizimVerisi: JSON.stringify({
-                round_history: roundHistory,
-                distance_effect: parseFloat(avgDistanceEffect.toFixed(2)),
-                response_time: avgResponseTime,
-                correct_answers: correctAnswers,
-                cognitive_speed_score: cognitiveSpeedScore
-            }),
+            // Separate columns for Supabase
+            distance_effect: parseFloat(avgDistanceEffect.toFixed(2)),
+            response_time: avgResponseTime,
+            round_history: roundHistory,
+            correct_answers: correctAnswers,
+            cognitive_speed_score: cognitiveSpeedScore,
+            // Standard fields
             zorlukSeviyesi: 1,
             kazanimOdagi: 'MAB.1 Sayı-Miktar İlişkisi ve Hızlı Karar Verme',
             algilananKelime: `${correctAnswers}/10 doğru, ${avgResponseTime}ms`

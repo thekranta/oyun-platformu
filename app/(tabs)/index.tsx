@@ -273,6 +273,12 @@ export default function App() {
       zorlukSeviyesi?: number;
       kazanimOdagi?: string;
       denemeNo?: number;
+      // Miktar Avcısı specific fields
+      distance_effect?: number;
+      response_time?: number;
+      round_history?: any;
+      correct_answers?: number;
+      cognitive_speed_score?: number;
     },
   ) => {
     setYukleniyor(true);
@@ -339,6 +345,12 @@ export default function App() {
         zorluk_seviyesi: extraData?.zorlukSeviyesi ?? null,
         kazanim_odagi: extraData?.kazanimOdagi ?? null,
         deneme_no: extraData?.denemeNo ?? null,
+        // Miktar Avcısı specific columns
+        distance_effect: extraData?.distance_effect ?? null,
+        response_time: extraData?.response_time ?? null,
+        round_history: extraData?.round_history ? JSON.stringify(extraData.round_history) : null,
+        correct_answers: extraData?.correct_answers ?? null,
+        cognitive_speed_score: extraData?.cognitive_speed_score ?? null,
       };
 
       if (extraData?.cizimVerisi || uploadResult?.imageUrl) {
