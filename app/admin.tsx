@@ -344,6 +344,7 @@ export default function AdminPanel() {
                 'onluk-cerceve': 'Onluk Çerçeve',
                 'sayi-komsulari': 'Sayı Komşuları',
                 'tarti-dengesi': 'Tartı Dengesi',
+                'miktar-avcisi': 'Miktar Avcısı',
             };
             const oyunAdiTR = oyunAdiMap[score.oyun_turu] || score.oyun_turu;
 
@@ -823,10 +824,10 @@ ChildhoodTech Ekibi
             'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.2.1' },
             'golge-dedektifi': { alan: 'Matematik', cikti: 'MAB.2' },
             // Yeni Matematik Oyunları
-            'Onluk Çerçeve': { alan: 'Matematik', cikti: 'MAB.1' },
-            'Sayı Komşuları': { alan: 'Matematik', cikti: 'MAB.4' },
-            'Tartı Dengesi': { alan: 'Matematik', cikti: 'MAB.1' },
-            'Miktar Avcısı': { alan: 'Matematik', cikti: 'MAB.1' },
+            'onluk-cerceve': { alan: 'Matematik', cikti: 'MAB.1' },
+            'sayi-komsulari': { alan: 'Matematik', cikti: 'MAB.4' },
+            'tarti-dengesi': { alan: 'Matematik', cikti: 'MAB.1' },
+            'miktar-avcisi': { alan: 'Matematik', cikti: 'MAB.1' },
         };
         // Bilinmeyen oyunlar için varsayılan: MAB.2 (Matematik - Muhakeme)
         // ASLA GB.1 veya 'Genel Gelişim' kullanma!

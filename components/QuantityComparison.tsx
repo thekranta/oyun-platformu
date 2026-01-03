@@ -205,7 +205,7 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
         // Cognitive speed score: lower response time + higher accuracy = higher score
         const cognitiveSpeedScore = Math.round((correctAnswers / 10) * 100 - (avgResponseTime / 100));
 
-        onGameEnd('Miktar Avcısı', duration, 10, mistakes, undefined, {
+        onGameEnd('miktar-avcisi', duration, 10, mistakes, undefined, {
             // Separate columns for Supabase
             distance_effect: parseFloat(avgDistanceEffect.toFixed(2)),
             response_time: avgResponseTime,
