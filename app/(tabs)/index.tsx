@@ -10,6 +10,7 @@ import KodlamaOyunu from '@/components/KodlamaOyunu';
 import KutuyuBul from '@/components/KutuyuBul';
 import MuzikCalar from '@/components/MuzikCalar';
 import OnlukCerceve from '@/components/OnlukCerceve';
+import QuantityComparison from '@/components/QuantityComparison';
 import RakamYazma from '@/components/RakamYazma';
 import SayiKomsulari from '@/components/SayiKomsulari';
 import SayilariBirlestir from '@/components/SayilariBirlestir';
@@ -846,6 +847,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Tartı Dengesi</Text>
                   <Text style={styles.oyunAciklama}>Eşitliği Sağla</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#1E88E5' }]} onPress={() => oyunuBaslat('miktar-karsilastirma')}>
+                  <Ionicons name="bar-chart-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Miktar Karşılaştırma</Text>
+                  <Text style={styles.oyunAciklama}>Hangisi Daha Çok?</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -1085,6 +1092,10 @@ export default function App() {
 
   if (asama === 'tarti-dengesi') {
     return <TartiDengesi onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'miktar-karsilastirma') {
+    return <QuantityComparison onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'ceviz-macera') {
