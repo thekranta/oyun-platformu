@@ -640,9 +640,18 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                 doc.setTextColor(38, 50, 56);
 
                 const cleanText = pdfAIComment
-                    .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-                    .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
-                    .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
+                    // Strip markdown bold/italic syntax
+                    .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold** -> bold
+                    .replace(/\*([^*]+)\*/g, '$1')      // *italic* -> italic
+                    .replace(/__([^_]+)__/g, '$1')      // __bold__ -> bold
+                    .replace(/_([^_]+)_/g, '$1')        // _italic_ -> italic
+                    // Turkish character transliteration for PDF compatibility
+                    .replace(/ş/g, 's').replace(/Ş/g, 'S')
+                    .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+                    .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+                    .replace(/ö/g, 'o').replace(/Ö/g, 'O')
+                    .replace(/ı/g, 'i').replace(/İ/g, 'I')
+                    .replace(/ç/g, 'c').replace(/Ç/g, 'C');
 
                 const lines = doc.splitTextToSize(cleanText, pageWidth - 2 * margin - 5);
                 lines.forEach((line: string) => {

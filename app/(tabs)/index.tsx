@@ -925,25 +925,33 @@ export default function App() {
                   ))}
                 </ScrollView>
 
-                {/* 2. Değerler Eğitimi */}
+                {/* 2. Değerler Eğitimi - Grid Layout */}
                 <Text style={styles.sectionTitle}>🌟 Değerler Eğitimi</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 5, paddingBottom: 15 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 5, justifyContent: 'flex-start' }}>
                   {SONGS.filter(s => !s.artist.includes('Matematik') && !s.title.includes('ChildhoodTech')).map((song) => (
                     <TouchableOpacity
                       key={song.id}
-                      style={[styles.oyunKarti, { backgroundColor: song.coverColor, marginRight: 12, width: 120, height: 130 }]}
+                      style={[styles.oyunKarti, {
+                        backgroundColor: song.coverColor,
+                        marginRight: 10,
+                        marginBottom: 10,
+                        width: 100,
+                        height: 110,
+                        paddingHorizontal: 8,
+                        paddingVertical: 10,
+                      }]}
                       onPress={() => {
                         const realIndex = SONGS.findIndex(s => s.id === song.id);
                         setSelectedSongIndex(realIndex);
                         oyunuBaslat('muzik-calar');
                       }}
                     >
-                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 13 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 10 }]} numberOfLines={1}>{song.artist}</Text>
+                      <Ionicons name={song.icon} size={24} color="white" style={{ marginBottom: 4 }} />
+                      <Text style={[styles.oyunBaslik, { fontSize: 11 }]} numberOfLines={2}>{song.title}</Text>
+                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
+                </View>
 
                 {/* 3. Özel Koleksiyon */}
                 <Text style={styles.sectionTitle}>🎵 Özel Koleksiyon (ChildhoodTech)</Text>
