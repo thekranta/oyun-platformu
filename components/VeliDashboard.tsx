@@ -215,17 +215,38 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         ? scores[selectedGameIndex].yapay_zeka_yorumu
         : latestAIComment;
 
-    // Time series data for charts (reverse to show oldest first)
-    const getTimeSeriesData = (field: 'cognitive_speed_score' | 'correct_answers') => {
+    // Time series data for charts - works with all game types
+    const getTimeSeriesData = (field: 'score' | 'time') => {
         return [...scores]
             .reverse()
-            .map((s, idx) => ({
-                index: idx,
-                value: s[field] || 0,
-                date: new Date(s.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
-                hasData: (s[field] || 0) > 0
-            }))
-            .filter(d => d.hasData); // Filter out zero values
+            .slice(-10) // Last 10 games
+            .map((s, idx) => {
+                // Calculate score from various fields
+                let value = 0;
+                if (field === 'score') {
+                    // Try correct_answers first, then derive from hata_sayisi
+                    if (s.correct_answers !== null && s.correct_answers > 0) {
+                        value = s.correct_answers;
+                    } else if (s.hata_sayisi !== null && s.hata_sayisi !== undefined) {
+                        value = Math.max(0, 10 - s.hata_sayisi); // Assume 10 questions
+                    }
+                } else if (field === 'time') {
+                    // Response time in seconds
+                    if (s.response_time !== null && s.response_time > 0) {
+                        value = Math.round(s.response_time / 1000); // Convert ms to seconds
+                    } else if (s.sure !== null && s.sure > 0) {
+                        value = s.sure; // Already in seconds
+                    }
+                }
+
+                return {
+                    index: idx,
+                    value,
+                    date: new Date(s.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
+                    hasData: value > 0
+                };
+            })
+            .filter(d => d.hasData);
     };
 
     // Best achievement detection
@@ -648,16 +669,22 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     };
 
     // Timeline item for game history
+    // Timeline item for game history
     const TimelineItem = ({ game, index, isSelected }: { game: GameScore, index: number, isSelected: boolean }) => {
         const gameLabels: Record<string, { emoji: string, name: string }> = {
             'miktar-avcisi': { emoji: '🎯', name: 'Miktar Avcısı' },
             'golge-dedektifi': { emoji: '🔍', name: 'Gölge Dedektifi' },
             'diziyi-tamamla': { emoji: '🔢', name: 'Diziyi Tamamla' },
+            'dizi-tamamla': { emoji: '🔢', name: 'Dizi Tamamla' },
             'rakam-yazma': { emoji: '✏️', name: 'Rakam Yazma' },
             'yapboz': { emoji: '🧩', name: 'Yapboz' },
+            'ceviz-macera': { emoji: '🌰', name: 'Ceviz Macerası' },
+            'aile-sepeti': { emoji: '🧱', name: 'Aile Sepeti Macerası' },
+            'sayi-komsulari': { emoji: '🔗', name: 'Sayı Komşuları' },
+            'sayilari-birlestir': { emoji: '🔗', name: 'Sayıları Birleştir' },
         };
 
-        const gameInfo = gameLabels[game.oyun_turu] || { emoji: '🎮', name: game.oyun_turu };
+        const gameInfo = gameLabels[game.oyun_turu] || { emoji: '🎮', name: game.oyun_turu?.replace(/-/g, ' ') || 'Oyun' };
         const gameDate = new Date(game.created_at).toLocaleDateString('tr-TR', {
             day: 'numeric',
             month: 'short',
@@ -833,14 +860,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     {/* Time Series Charts */}
                     <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>📈 Gelişim Grafikleri</Text>
                     <SimpleLineChart
-                        data={getTimeSeriesData('correct_answers')}
+                        data={getTimeSeriesData('score')}
                         color={COLORS.chartGreen}
-                        label="🎯 Doğru Cevap Trendi"
+                        label="🎯 Doğru Cevap Trendi (Son 10 Oyun)"
                     />
                     <SimpleLineChart
-                        data={getTimeSeriesData('cognitive_speed_score')}
+                        data={getTimeSeriesData('time')}
                         color={COLORS.chartBlue}
-                        label="⚡ Bilişsel Hız Trendi"
+                        label="⏱️ Süre Trendi (Saniye)"
                     />
 
                     {/* Metrics Grid */}
@@ -1113,7 +1140,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     {/* AI Report Section */}
                     <View style={styles.aiSection}>
                         <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>🤖 AI Pedagojik Rapor</Text>
+                            <Text style={styles.sectionTitle}>
+                                🤖 AI Pedagojik Rapor
+                                {selectedGameIndex !== null && scores[selectedGameIndex] && (
+                                    <Text style={{ fontSize: 12, color: COLORS.textLight }}>
+                                        {' '}({scores[selectedGameIndex].oyun_turu?.replace(/-/g, ' ')})
+                                    </Text>
+                                )}
+                            </Text>
                             {!isPremium && (
                                 <View style={styles.lockIcon}>
                                     <Ionicons name="lock-closed" size={16} color="#fff" />
@@ -1122,15 +1156,15 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         </View>
                         <TouchableOpacity
                             style={[styles.aiCard, !isPremium && styles.aiCardBlurred]}
-                            onPress={() => isPremium && latestAIComment && setAiReportExpanded(!aiReportExpanded)}
-                            activeOpacity={isPremium && latestAIComment ? 0.7 : 1}
+                            onPress={() => isPremium && selectedGameAIComment && setAiReportExpanded(!aiReportExpanded)}
+                            activeOpacity={isPremium && selectedGameAIComment ? 0.7 : 1}
                         >
-                            {latestAIComment ? (
+                            {selectedGameAIComment ? (
                                 <>
                                     <Text style={styles.aiText}>
-                                        {aiReportExpanded ? latestAIComment : latestAIComment.substring(0, 300) + (latestAIComment.length > 300 ? '...' : '')}
+                                        {aiReportExpanded ? selectedGameAIComment : selectedGameAIComment.substring(0, 300) + (selectedGameAIComment.length > 300 ? '...' : '')}
                                     </Text>
-                                    {isPremium && latestAIComment.length > 300 && (
+                                    {isPremium && selectedGameAIComment.length > 300 && (
                                         <View style={styles.aiExpandButton}>
                                             <Ionicons
                                                 name={aiReportExpanded ? "chevron-up" : "chevron-down"}
@@ -1144,9 +1178,25 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     )}
                                 </>
                             ) : (
-                                <Text style={styles.aiPlaceholder}>
-                                    Henüz bir AI analizi yok. Oyun oynandıktan sonra analiz yapılacak! 🎮
-                                </Text>
+                                <View style={{ alignItems: 'center' }}>
+                                    <Text style={styles.aiPlaceholder}>
+                                        {selectedGameIndex !== null
+                                            ? 'Bu oyun için henüz AI analizi yapılmamış.'
+                                            : 'Henüz bir AI analizi yok. Oyun oynandıktan sonra analiz yapılacak! 🎮'}
+                                    </Text>
+                                    {isPremium && selectedGameIndex !== null && !scores[selectedGameIndex]?.yapay_zeka_yorumu && (
+                                        <TouchableOpacity
+                                            style={styles.analyzeButton}
+                                            onPress={() => {
+                                                // TODO: Call analyze API like admin panel
+                                                Alert.alert('Analiz', 'Bu özellik yakında eklenecek. Şimdilik Admin panelinden analiz yapabilirsiniz.');
+                                            }}
+                                        >
+                                            <Ionicons name="sparkles" size={16} color="#fff" />
+                                            <Text style={styles.analyzeButtonText}>Bu Oyunu Analiz Et</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             )}
                         </TouchableOpacity>
                         {!isPremium && (
@@ -2201,5 +2251,22 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: 'rgba(255,255,255,0.8)',
         marginTop: 4,
+    },
+
+    // Analyze Button Styles
+    analyzeButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.primary,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        marginTop: 12,
+    },
+    analyzeButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginLeft: 8,
     },
 });
