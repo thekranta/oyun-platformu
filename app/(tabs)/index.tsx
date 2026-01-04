@@ -15,6 +15,7 @@ import RakamYazma from '@/components/RakamYazma';
 import SayiKomsulari from '@/components/SayiKomsulari';
 import SayilariBirlestir from '@/components/SayilariBirlestir';
 import ShadowDetective from '@/components/ShadowDetective';
+import SihirliSiseler from '@/components/SihirliSiseler';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
 import TartiDengesi from '@/components/TartiDengesi';
@@ -874,6 +875,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Miktar Avcısı</Text>
                   <Text style={styles.oyunAciklama}>Hangisi Daha Çok?</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#4CAF50' }]} onPress={() => oyunuBaslat('sihirli-siseler')}>
+                  <Ionicons name="flask-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Sihirli Şişeler</Text>
+                  <Text style={styles.oyunAciklama}>Renkleri Grupla</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -1080,6 +1087,18 @@ export default function App() {
 
   if (asama === 'muzik-calar') {
     return <MuzikCalar onExit={() => setAsama('menu')} initialSongIndex={selectedSongIndex} />;
+  }
+
+  if (asama === 'sihirli-siseler') {
+    return (
+      <SihirliSiseler
+        childName={ad}
+        childAge={parseInt(yas) || 48}
+        email={email}
+        onClose={() => setAsama('menu')}
+        onGameEnd={(data) => oyunuBitir('sihirli-siseler', data.response_time, data.total_moves, 0)}
+      />
+    );
   }
 
   if (asama === 'sonuc') {

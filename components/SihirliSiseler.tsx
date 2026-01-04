@@ -1,0 +1,821 @@
+import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+    Animated,
+    Dimensions,
+    Platform,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+
+const { width, height } = Dimensions.get('window');
+
+// Color palette for liquids
+const LIQUID_COLORS = [
+    { main: '#FF6B6B', light: '#FF8E8E', dark: '#E05555' }, // Red
+    { main: '#4ECDC4', light: '#7EDAD3', dark: '#3CB5AD' }, // Teal
+    { main: '#FFE66D', light: '#FFF09E', dark: '#E6CE55' }, // Yellow
+    { main: '#95E1D3', light: '#B8EDE3', dark: '#7BC9BC' }, // Mint
+    { main: '#A8D8EA', light: '#C5E8F5', dark: '#8FC5D6' }, // Sky Blue
+    { main: '#DDA0DD', light: '#E8C0E8', dark: '#C589C5' }, // Plum
+    { main: '#98D8C8', light: '#B5E5D9', dark: '#7DC5B3' }, // Seafoam
+];
+
+const BOTTLE_HEIGHT = 180;
+const BOTTLE_WIDTH = 55;
+const LAYER_HEIGHT = 40;
+const MAX_LAYERS = 4;
+
+interface Bottle {
+    id: number;
+    layers: number[]; // Color indices, bottom to top
+}
+
+interface GameState {
+    bottles: Bottle[];
+    selectedBottle: number | null;
+    moves: number;
+    startTime: number;
+    moveHistory: string[];
+    undoCount: number;
+    isComplete: boolean;
+}
+
+interface SihirliSiselerProps {
+    childName: string;
+    childAge: number;
+    email?: string;
+    onClose: () => void;
+    onGameEnd?: (data: any) => void;
+}
+
+// Supabase config
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY || '';
+
+export default function SihirliSiseler({ childName, childAge, email, onClose, onGameEnd }: SihirliSiselerProps) {
+    const [gameState, setGameState] = useState<GameState>({
+        bottles: [],
+        selectedBottle: null,
+        moves: 0,
+        startTime: Date.now(),
+        moveHistory: [],
+        undoCount: 0,
+        isComplete: false,
+    });
+    const [showCelebration, setShowCelebration] = useState(false);
+    const [confettiPieces, setConfettiPieces] = useState<any[]>([]);
+
+    // Animations
+    const pourAnim = useRef(new Animated.Value(0)).current;
+    const selectedGlow = useRef(new Animated.Value(0)).current;
+    const celebrateScale = useRef(new Animated.Value(0)).current;
+    const bottleAnims = useRef<Animated.Value[]>([]);
+
+    // Sound refs
+    const pourSound = useRef<Audio.Sound | null>(null);
+    const completeSound = useRef<Audio.Sound | null>(null);
+    const winSound = useRef<Audio.Sound | null>(null);
+
+    // Get difficulty based on age
+    const getDifficulty = useCallback(() => {
+        if (childAge <= 42) return { bottles: 4, colors: 2, empty: 1 };
+        if (childAge <= 54) return { bottles: 5, colors: 3, empty: 1 };
+        if (childAge <= 66) return { bottles: 6, colors: 4, empty: 2 };
+        return { bottles: 7, colors: 5, empty: 2 };
+    }, [childAge]);
+
+    // Initialize game
+    const initializeGame = useCallback(() => {
+        const { bottles: bottleCount, colors, empty } = getDifficulty();
+        const filledBottles = bottleCount - empty;
+
+        // Create layers for each color
+        const allLayers: number[] = [];
+        for (let color = 0; color < colors; color++) {
+            for (let i = 0; i < MAX_LAYERS; i++) {
+                allLayers.push(color);
+            }
+        }
+
+        // Shuffle layers
+        for (let i = allLayers.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [allLayers[i], allLayers[j]] = [allLayers[j], allLayers[i]];
+        }
+
+        // Distribute to bottles
+        const bottles: Bottle[] = [];
+        for (let i = 0; i < filledBottles; i++) {
+            bottles.push({
+                id: i,
+                layers: allLayers.slice(i * MAX_LAYERS, (i + 1) * MAX_LAYERS),
+            });
+        }
+
+        // Add empty bottles
+        for (let i = 0; i < empty; i++) {
+            bottles.push({
+                id: filledBottles + i,
+                layers: [],
+            });
+        }
+
+        // Initialize bottle animations
+        bottleAnims.current = bottles.map(() => new Animated.Value(0));
+
+        setGameState({
+            bottles,
+            selectedBottle: null,
+            moves: 0,
+            startTime: Date.now(),
+            moveHistory: [],
+            undoCount: 0,
+            isComplete: false,
+        });
+        setShowCelebration(false);
+    }, [getDifficulty]);
+
+    useEffect(() => {
+        initializeGame();
+        loadSounds();
+        return () => {
+            // Cleanup sounds synchronously
+            unloadSounds();
+        };
+    }, [initializeGame]);
+
+    // Sound functions
+    const loadSounds = async () => {
+        try {
+            // We'll use placeholder since actual sound files may not exist
+            // In production, load actual sound files
+        } catch (e) {
+            console.log('Sound loading skipped');
+        }
+    };
+
+    const unloadSounds = async () => {
+        if (pourSound.current) await pourSound.current.unloadAsync();
+        if (completeSound.current) await completeSound.current.unloadAsync();
+        if (winSound.current) await winSound.current.unloadAsync();
+    };
+
+    const playSound = async (type: 'pour' | 'complete' | 'win') => {
+        // Sound playback placeholder
+        // In production, implement actual sound playing
+    };
+
+    // Check if a bottle is complete (all same color)
+    const isBottleComplete = (bottle: Bottle): boolean => {
+        if (bottle.layers.length !== MAX_LAYERS) return false;
+        return bottle.layers.every(layer => layer === bottle.layers[0]);
+    };
+
+    // Check if game is won
+    const checkWin = (bottles: Bottle[]): boolean => {
+        return bottles.every(bottle =>
+            bottle.layers.length === 0 || isBottleComplete(bottle)
+        );
+    };
+
+    // Handle bottle tap
+    const handleBottleTap = (bottleIndex: number) => {
+        if (gameState.isComplete) return;
+
+        const { selectedBottle, bottles } = gameState;
+
+        if (selectedBottle === null) {
+            // Select bottle if it has layers
+            if (bottles[bottleIndex].layers.length > 0) {
+                setGameState(prev => ({ ...prev, selectedBottle: bottleIndex }));
+
+                // Glow animation
+                Animated.loop(
+                    Animated.sequence([
+                        Animated.timing(selectedGlow, { toValue: 1, duration: 500, useNativeDriver: true }),
+                        Animated.timing(selectedGlow, { toValue: 0.5, duration: 500, useNativeDriver: true }),
+                    ])
+                ).start();
+            }
+        } else if (selectedBottle === bottleIndex) {
+            // Deselect
+            setGameState(prev => ({ ...prev, selectedBottle: null }));
+            selectedGlow.stopAnimation();
+            selectedGlow.setValue(0);
+        } else {
+            // Try to pour
+            const sourceBottle = bottles[selectedBottle];
+            const targetBottle = bottles[bottleIndex];
+
+            const canPour =
+                targetBottle.layers.length < MAX_LAYERS &&
+                (targetBottle.layers.length === 0 ||
+                    targetBottle.layers[targetBottle.layers.length - 1] === sourceBottle.layers[sourceBottle.layers.length - 1]);
+
+            if (canPour) {
+                // Pour animation
+                animatePour(selectedBottle, bottleIndex);
+
+                // Update game state
+                const newBottles = [...bottles];
+                const topColor = sourceBottle.layers[sourceBottle.layers.length - 1];
+
+                // Count consecutive same-color layers from top
+                let pourCount = 0;
+                for (let i = sourceBottle.layers.length - 1; i >= 0; i--) {
+                    if (sourceBottle.layers[i] === topColor &&
+                        targetBottle.layers.length + pourCount < MAX_LAYERS) {
+                        pourCount++;
+                    } else {
+                        break;
+                    }
+                }
+
+                // Transfer layers
+                const pouredLayers = newBottles[selectedBottle].layers.splice(-pourCount);
+                newBottles[bottleIndex].layers.push(...pouredLayers);
+
+                const newMoves = gameState.moves + 1;
+                const newHistory = [...gameState.moveHistory, `${selectedBottle}->${bottleIndex}`];
+
+                // Check for completed bottle
+                if (isBottleComplete(newBottles[bottleIndex])) {
+                    playSound('complete');
+                    animateBottleComplete(bottleIndex);
+                }
+
+                // Check for win
+                const won = checkWin(newBottles);
+
+                setGameState(prev => ({
+                    ...prev,
+                    bottles: newBottles,
+                    selectedBottle: null,
+                    moves: newMoves,
+                    moveHistory: newHistory,
+                    isComplete: won,
+                }));
+
+                selectedGlow.stopAnimation();
+                selectedGlow.setValue(0);
+
+                if (won) {
+                    handleWin(newMoves, newHistory);
+                }
+
+                playSound('pour');
+            } else {
+                // Invalid move - deselect
+                setGameState(prev => ({ ...prev, selectedBottle: null }));
+                selectedGlow.stopAnimation();
+                selectedGlow.setValue(0);
+            }
+        }
+    };
+
+    // Pour animation
+    const animatePour = (from: number, to: number) => {
+        pourAnim.setValue(0);
+        Animated.timing(pourAnim, {
+            toValue: 1,
+            duration: 400,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    // Bottle complete animation
+    const animateBottleComplete = (bottleIndex: number) => {
+        if (bottleAnims.current[bottleIndex]) {
+            Animated.sequence([
+                Animated.timing(bottleAnims.current[bottleIndex], {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(bottleAnims.current[bottleIndex], {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        }
+    };
+
+    // Handle win
+    const handleWin = async (moves: number, history: string[]) => {
+        playSound('win');
+        setShowCelebration(true);
+
+        // Celebration animation
+        Animated.spring(celebrateScale, {
+            toValue: 1,
+            friction: 4,
+            useNativeDriver: true,
+        }).start();
+
+        // Generate confetti
+        const pieces = Array.from({ length: 50 }, (_, i) => ({
+            id: i,
+            x: Math.random() * width,
+            y: -20,
+            color: LIQUID_COLORS[i % LIQUID_COLORS.length].main,
+            rotation: Math.random() * 360,
+            scale: 0.5 + Math.random() * 0.5,
+        }));
+        setConfettiPieces(pieces);
+
+        // Calculate response time
+        const responseTime = Date.now() - gameState.startTime;
+        const { colors } = getDifficulty();
+
+        // Determine strategy
+        const avgMoveTime = responseTime / moves;
+        const strategy = avgMoveTime > 5000 ? 'methodical' : 'trial_error';
+
+        // Save to Supabase
+        const gameData = {
+            ogrenci_adi: childName,
+            email: email || '',
+            yas: childAge,
+            oyun_turu: 'sihirli-siseler',
+            response_time: responseTime,
+            total_moves: moves,
+            correct_answers: colors, // Number of completed bottles
+            round_history: JSON.stringify({
+                strategy,
+                undo_count: gameState.undoCount,
+                move_sequence: history,
+                difficulty: getDifficulty(),
+            }),
+        };
+
+        try {
+            await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal',
+                },
+                body: JSON.stringify(gameData),
+            });
+            console.log('✅ Game saved to Supabase');
+        } catch (error) {
+            console.error('Failed to save game:', error);
+        }
+
+        onGameEnd?.(gameData);
+    };
+
+    // Render a single bottle
+    const renderBottle = (bottle: Bottle, index: number) => {
+        const isSelected = gameState.selectedBottle === index;
+        const isComplete = isBottleComplete(bottle);
+
+        const bottleScale = bottleAnims.current[index]?.interpolate({
+            inputRange: [0, 1],
+            outputRange: [1, 1.1],
+        }) || 1;
+
+        return (
+            <TouchableOpacity
+                key={bottle.id}
+                onPress={() => handleBottleTap(index)}
+                activeOpacity={0.8}
+            >
+                <Animated.View
+                    style={[
+                        styles.bottle,
+                        isSelected && styles.bottleSelected,
+                        isComplete && styles.bottleComplete,
+                        {
+                            transform: [{ scale: bottleScale }],
+                            shadowOpacity: isSelected ? 0.6 : 0.3,
+                        },
+                    ]}
+                >
+                    {/* Bottle neck */}
+                    <View style={styles.bottleNeck} />
+
+                    {/* Bottle body with layers */}
+                    <View style={styles.bottleBody}>
+                        {/* Glass reflection */}
+                        <View style={styles.glassReflection} />
+
+                        {/* Liquid layers */}
+                        {bottle.layers.map((colorIndex, layerIndex) => (
+                            <Animated.View
+                                key={layerIndex}
+                                style={[
+                                    styles.liquidLayer,
+                                    {
+                                        backgroundColor: LIQUID_COLORS[colorIndex].main,
+                                        bottom: layerIndex * LAYER_HEIGHT,
+                                        // Wave effect
+                                        borderTopLeftRadius: layerIndex === bottle.layers.length - 1 ? 8 : 0,
+                                        borderTopRightRadius: layerIndex === bottle.layers.length - 1 ? 8 : 0,
+                                    },
+                                ]}
+                            >
+                                {/* Liquid shine */}
+                                <View style={[styles.liquidShine, { backgroundColor: LIQUID_COLORS[colorIndex].light }]} />
+                            </Animated.View>
+                        ))}
+
+                        {/* Bubbles for complete bottles */}
+                        {isComplete && (
+                            <View style={styles.bubbleContainer}>
+                                {[...Array(5)].map((_, i) => (
+                                    <Animated.View
+                                        key={i}
+                                        style={[
+                                            styles.bubble,
+                                            {
+                                                left: 10 + Math.random() * 25,
+                                                bottom: 20 + Math.random() * 100,
+                                                width: 4 + Math.random() * 8,
+                                                height: 4 + Math.random() * 8,
+                                            },
+                                        ]}
+                                    />
+                                ))}
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Selection glow */}
+                    {isSelected && (
+                        <Animated.View
+                            style={[
+                                styles.selectionGlow,
+                                { opacity: selectedGlow },
+                            ]}
+                        />
+                    )}
+                </Animated.View>
+            </TouchableOpacity>
+        );
+    };
+
+    return (
+        <View style={styles.container}>
+            {/* Background */}
+            <View style={styles.background}>
+                <View style={styles.bgCircle1} />
+                <View style={styles.bgCircle2} />
+                <View style={styles.bgCircle3} />
+            </View>
+
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                    <Ionicons name="arrow-back" size={28} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.title}>🧪 Sihirli Şişeler</Text>
+                <View style={styles.statsContainer}>
+                    <Text style={styles.statsText}>Hamle: {gameState.moves}</Text>
+                </View>
+            </View>
+
+            {/* Instructions */}
+            <Text style={styles.instructions}>
+                Her şişede aynı rengi topla! 🎨
+            </Text>
+
+            {/* Bottles Grid */}
+            <View style={styles.bottlesContainer}>
+                <View style={styles.bottlesGrid}>
+                    {gameState.bottles.map((bottle, index) => renderBottle(bottle, index))}
+                </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.actionButtons}>
+                <TouchableOpacity
+                    style={styles.restartButton}
+                    onPress={initializeGame}
+                >
+                    <Ionicons name="refresh" size={24} color="#fff" />
+                    <Text style={styles.buttonText}>Yeniden Başla</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Celebration Overlay */}
+            {showCelebration && (
+                <View style={styles.celebrationOverlay}>
+                    {/* Confetti */}
+                    {confettiPieces.map(piece => (
+                        <Animated.View
+                            key={piece.id}
+                            style={[
+                                styles.confetti,
+                                {
+                                    left: piece.x,
+                                    top: piece.y + (Date.now() % 1000) * 0.5,
+                                    backgroundColor: piece.color,
+                                    transform: [
+                                        { rotate: `${piece.rotation}deg` },
+                                        { scale: piece.scale },
+                                    ],
+                                },
+                            ]}
+                        />
+                    ))}
+
+                    {/* Win message */}
+                    <Animated.View
+                        style={[
+                            styles.winCard,
+                            { transform: [{ scale: celebrateScale }] },
+                        ]}
+                    >
+                        <Text style={styles.winEmoji}>🏆</Text>
+                        <Text style={styles.winTitle}>{childName}, Harika Bir Kimyagersin!</Text>
+                        <Text style={styles.winStats}>
+                            🎯 {gameState.moves} hamlede tamamladın!
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.playAgainButton}
+                            onPress={() => {
+                                setShowCelebration(false);
+                                initializeGame();
+                            }}
+                        >
+                            <Text style={styles.playAgainText}>Tekrar Oyna 🔄</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.exitButton}
+                            onPress={onClose}
+                        >
+                            <Text style={styles.exitText}>Ana Menü 🏠</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                </View>
+            )}
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#E8F5E9',
+    },
+    background: {
+        ...StyleSheet.absoluteFillObject,
+        overflow: 'hidden',
+    },
+    bgCircle1: {
+        position: 'absolute',
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: 'rgba(156, 204, 101, 0.3)',
+        top: -100,
+        right: -50,
+    },
+    bgCircle2: {
+        position: 'absolute',
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: 'rgba(129, 199, 132, 0.3)',
+        bottom: 100,
+        left: -50,
+    },
+    bgCircle3: {
+        position: 'absolute',
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        backgroundColor: 'rgba(165, 214, 167, 0.4)',
+        top: height / 2,
+        right: -30,
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingBottom: 15,
+        backgroundColor: '#4CAF50',
+        borderBottomLeftRadius: 25,
+        borderBottomRightRadius: 25,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 8,
+    },
+    closeButton: {
+        padding: 8,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    statsContainer: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 15,
+    },
+    statsText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    instructions: {
+        textAlign: 'center',
+        fontSize: 18,
+        color: '#2E7D32',
+        marginTop: 20,
+        fontWeight: '500',
+    },
+    bottlesContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+    },
+    bottlesGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 15,
+    },
+    bottle: {
+        width: BOTTLE_WIDTH,
+        height: BOTTLE_HEIGHT,
+        alignItems: 'center',
+        marginHorizontal: 8,
+        marginVertical: 10,
+    },
+    bottleNeck: {
+        width: 30,
+        height: 20,
+        backgroundColor: 'rgba(255,255,255,0.6)',
+        borderTopLeftRadius: 6,
+        borderTopRightRadius: 6,
+        borderWidth: 2,
+        borderColor: 'rgba(0,0,0,0.1)',
+        borderBottomWidth: 0,
+    },
+    bottleBody: {
+        width: BOTTLE_WIDTH,
+        height: BOTTLE_HEIGHT - 25,
+        backgroundColor: 'rgba(255,255,255,0.7)',
+        borderRadius: 12,
+        borderTopLeftRadius: 8,
+        borderTopRightRadius: 8,
+        borderWidth: 3,
+        borderColor: 'rgba(255,255,255,0.9)',
+        overflow: 'hidden',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+        elevation: 6,
+    },
+    glassReflection: {
+        position: 'absolute',
+        left: 5,
+        top: 10,
+        width: 8,
+        height: '60%',
+        backgroundColor: 'rgba(255,255,255,0.5)',
+        borderRadius: 4,
+        zIndex: 10,
+    },
+    liquidLayer: {
+        position: 'absolute',
+        left: 3,
+        right: 3,
+        height: LAYER_HEIGHT,
+    },
+    liquidShine: {
+        position: 'absolute',
+        left: 5,
+        top: 5,
+        width: 15,
+        height: 8,
+        borderRadius: 4,
+        opacity: 0.5,
+    },
+    bottleSelected: {
+        transform: [{ scale: 1.05 }],
+    },
+    bottleComplete: {
+        borderColor: '#FFD700',
+        shadowColor: '#FFD700',
+        shadowOpacity: 0.5,
+    },
+    selectionGlow: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(255,215,0,0.3)',
+        borderRadius: 15,
+    },
+    bubbleContainer: {
+        ...StyleSheet.absoluteFillObject,
+    },
+    bubble: {
+        position: 'absolute',
+        backgroundColor: 'rgba(255,255,255,0.6)',
+        borderRadius: 10,
+    },
+    actionButtons: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        paddingBottom: 40,
+        gap: 15,
+    },
+    restartButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#FF7043',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 25,
+        gap: 8,
+        shadowColor: '#FF7043',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    buttonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    celebrationOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    confetti: {
+        position: 'absolute',
+        width: 12,
+        height: 12,
+        borderRadius: 2,
+    },
+    winCard: {
+        backgroundColor: '#fff',
+        borderRadius: 30,
+        padding: 30,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.3,
+        shadowRadius: 20,
+        elevation: 15,
+        maxWidth: width - 60,
+    },
+    winEmoji: {
+        fontSize: 80,
+        marginBottom: 10,
+    },
+    winTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#2E7D32',
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    winStats: {
+        fontSize: 18,
+        color: '#666',
+        marginBottom: 25,
+    },
+    playAgainButton: {
+        backgroundColor: '#4CAF50',
+        paddingHorizontal: 40,
+        paddingVertical: 15,
+        borderRadius: 30,
+        marginBottom: 12,
+    },
+    playAgainText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    exitButton: {
+        backgroundColor: '#FF7043',
+        paddingHorizontal: 40,
+        paddingVertical: 12,
+        borderRadius: 25,
+    },
+    exitText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+});
