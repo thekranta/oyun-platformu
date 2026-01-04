@@ -63,6 +63,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const [scores, setScores] = useState<GameScore[]>([]);
     const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'standard' | 'premium'>(initialTier || 'free');
     const [generatingPDF, setGeneratingPDF] = useState(false);
+    const [aiReportExpanded, setAiReportExpanded] = useState(false);
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -91,6 +92,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const fetchData = async () => {
         setLoading(true);
         try {
+            // First try with childName
+            console.log('🔍 Fetching scores for childName:', childName);
+            let scoresData: GameScore[] = [];
+
             const scoresResponse = await fetch(
                 `${SUPABASE_URL}/rest/v1/oyun_skorlari?ogrenci_adi=eq.${encodeURIComponent(childName)}&order=created_at.desc&limit=50`,
                 {
@@ -100,8 +105,27 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     },
                 }
             );
-            const scoresData = await scoresResponse.json();
-            setScores(scoresData || []);
+            scoresData = await scoresResponse.json();
+            console.log('📦 Scores by childName:', scoresData?.length || 0);
+
+            // If no scores found by childName, try by email
+            if (!scoresData || scoresData.length === 0) {
+                console.log('🔄 No scores by childName, trying by email:', email);
+                const emailScoresResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/oyun_skorlari?email=eq.${encodeURIComponent(email)}&order=created_at.desc&limit=50`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY || '',
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        },
+                    }
+                );
+                scoresData = await emailScoresResponse.json();
+                console.log('📦 Scores by email:', scoresData?.length || 0);
+            }
+
+            setScores(Array.isArray(scoresData) ? scoresData : []);
+            console.log('✅ Total scores loaded:', Array.isArray(scoresData) ? scoresData.length : 0);
 
             const profileResponse = await fetch(
                 `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=subscription_tier`,
@@ -118,17 +142,21 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                 setSubscriptionTier(profileData[0].subscription_tier || 'free');
             }
         } catch (error) {
-            console.error('Dashboard veri çekme hatası:', error);
+            console.error('❌ Dashboard veri çekme hatası:', error);
         } finally {
             setLoading(false);
         }
     };
 
+    // Get miktar avcisi specific scores
     const miktarAvcisiScores = scores.filter(s => s.oyun_turu === 'miktar-avcisi');
 
+    // Calculate averages from miktar avcisi if available, otherwise from all scores
     const avgCorrectAnswers = miktarAvcisiScores.length > 0
         ? Math.round(miktarAvcisiScores.reduce((a, b) => a + (b.correct_answers || 0), 0) / miktarAvcisiScores.length)
-        : 0;
+        : scores.length > 0
+            ? Math.round(scores.reduce((a, b) => a + ((10 - (b.hata_sayisi || 0))), 0) / scores.length)
+            : 0;
 
     const avgCognitiveSpeed = miktarAvcisiScores.length > 0
         ? Math.round(miktarAvcisiScores.reduce((a, b) => a + (b.cognitive_speed_score || 0), 0) / miktarAvcisiScores.length)
@@ -140,8 +168,16 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
     const avgResponseTime = miktarAvcisiScores.length > 0
         ? Math.round(miktarAvcisiScores.reduce((a, b) => a + (b.response_time || 0), 0) / miktarAvcisiScores.length)
-        : 0;
+        : scores.length > 0
+            ? Math.round(scores.reduce((a, b) => a + ((b.sure || 0) * 1000), 0) / scores.length)
+            : 0;
 
+    // Get all AI comments
+    const allAIComments = scores.filter(s => s.yapay_zeka_yorumu).map(s => ({
+        oyun: s.oyun_turu,
+        tarih: s.created_at,
+        yorum: s.yapay_zeka_yorumu
+    }));
     const latestAIComment = scores.find(s => s.yapay_zeka_yorumu)?.yapay_zeka_yorumu || null;
     const isPremium = subscriptionTier === 'premium';
     const successRate = avgCorrectAnswers * 10;
@@ -694,15 +730,35 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 </View>
                             )}
                         </View>
-                        <View style={[styles.aiCard, !isPremium && styles.aiCardBlurred]}>
+                        <TouchableOpacity
+                            style={[styles.aiCard, !isPremium && styles.aiCardBlurred]}
+                            onPress={() => isPremium && latestAIComment && setAiReportExpanded(!aiReportExpanded)}
+                            activeOpacity={isPremium && latestAIComment ? 0.7 : 1}
+                        >
                             {latestAIComment ? (
-                                <Text style={styles.aiText}>{latestAIComment.substring(0, 300)}...</Text>
+                                <>
+                                    <Text style={styles.aiText}>
+                                        {aiReportExpanded ? latestAIComment : latestAIComment.substring(0, 300) + (latestAIComment.length > 300 ? '...' : '')}
+                                    </Text>
+                                    {isPremium && latestAIComment.length > 300 && (
+                                        <View style={styles.aiExpandButton}>
+                                            <Ionicons
+                                                name={aiReportExpanded ? "chevron-up" : "chevron-down"}
+                                                size={20}
+                                                color={COLORS.primary}
+                                            />
+                                            <Text style={styles.aiExpandText}>
+                                                {aiReportExpanded ? 'Küçült' : 'Tamamını Göster'}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </>
                             ) : (
                                 <Text style={styles.aiPlaceholder}>
                                     Henüz bir AI analizi yok. Oyun oynandıktan sonra analiz yapılacak! 🎮
                                 </Text>
                             )}
-                        </View>
+                        </TouchableOpacity>
                         {!isPremium && (
                             <Animated.View style={[styles.premiumOverlay, { transform: [{ scale: pulseAnim }] }]}>
                                 <View style={styles.premiumBox}>
@@ -1132,6 +1188,21 @@ const styles = StyleSheet.create({
         color: COLORS.textLight,
         textAlign: 'center',
         marginTop: 30,
+    },
+    aiExpandButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 16,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0,0,0,0.1)',
+    },
+    aiExpandText: {
+        fontSize: 14,
+        color: COLORS.primary,
+        fontWeight: '600',
+        marginLeft: 6,
     },
     premiumOverlay: {
         position: 'absolute',
