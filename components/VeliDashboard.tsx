@@ -370,26 +370,6 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                             <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>📊 Veli Paneli</Text>
-                        <View style={styles.headerRight}>
-                            <TouchableOpacity
-                                onPress={handleDownloadPDF}
-                                style={[styles.pdfButton, !isPremium && styles.pdfButtonDisabled]}
-                                disabled={generatingPDF}
-                            >
-                                {generatingPDF ? (
-                                    <ActivityIndicator size="small" color="#fff" />
-                                ) : (
-                                    <>
-                                        <Ionicons name="download-outline" size={18} color="#fff" />
-                                        <Text style={styles.pdfButtonText}>PDF</Text>
-                                    </>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
-                    {/* Tier Badge */}
-                    <View style={styles.tierBadgeContainer}>
                         <View style={[styles.tierBadge, { backgroundColor: isPremium ? COLORS.premium : COLORS.textLight }]}>
                             <Text style={styles.tierBadgeText}>
                                 {isPremium ? '👑 Premium' : subscriptionTier === 'standard' ? '⭐ Standard' : '🆓 Free'}
@@ -727,6 +707,42 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                                 </View>
                             </Animated.View>
                         )}
+                    </View>
+
+                    {/* PDF DOWNLOAD CARD - Modern centered design */}
+                    <View style={styles.pdfSection}>
+                        <TouchableOpacity
+                            style={[styles.pdfCard, !isPremium && styles.pdfCardLocked]}
+                            onPress={handleDownloadPDF}
+                            disabled={generatingPDF}
+                        >
+                            <View style={styles.pdfCardGradient}>
+                                {generatingPDF ? (
+                                    <ActivityIndicator size="large" color="#fff" />
+                                ) : (
+                                    <>
+                                        <View style={styles.pdfIconContainer}>
+                                            <Ionicons name="document-text" size={32} color="#fff" />
+                                        </View>
+                                        <Text style={styles.pdfCardTitle}>
+                                            {isPremium ? '📄 Akademik Raporu İndir' : '🔒 Rapor İndirmek İçin Premium'}
+                                        </Text>
+                                        <Text style={styles.pdfCardSubtitle}>
+                                            {isPremium
+                                                ? 'Detaylı performans analizi ve AI önerilerini PDF olarak kaydedin'
+                                                : 'Full PDF raporu almak için paketinizi yükseltin'
+                                            }
+                                        </Text>
+                                        <View style={styles.pdfCardButton}>
+                                            <Ionicons name={isPremium ? "download" : "lock-closed"} size={20} color={isPremium ? COLORS.primary : COLORS.textLight} />
+                                            <Text style={[styles.pdfCardButtonText, !isPremium && { color: COLORS.textLight }]}>
+                                                {isPremium ? 'PDF İndir' : 'Premium\'a Yükselt'}
+                                            </Text>
+                                        </View>
+                                    </>
+                                )}
+                            </View>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Footer */}
@@ -1404,5 +1420,67 @@ const styles = StyleSheet.create({
     tierBadgeContainer: {
         alignItems: 'center',
         marginBottom: 8,
+    },
+
+    // PDF Download Card
+    pdfSection: {
+        marginBottom: 24,
+    },
+    pdfCard: {
+        borderRadius: 20,
+        overflow: 'hidden',
+        ...Platform.select({
+            web: { boxShadow: '0 8px 24px rgba(156, 39, 176, 0.25)' },
+            default: { elevation: 8 },
+        }),
+    },
+    pdfCardLocked: {
+        opacity: 0.85,
+    },
+    pdfCardGradient: {
+        backgroundColor: COLORS.premium,
+        padding: 28,
+        alignItems: 'center',
+        ...Platform.select({
+            web: { background: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)` } as any,
+            default: {},
+        }),
+    },
+    pdfIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    pdfCardTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#fff',
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    pdfCardSubtitle: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.85)',
+        textAlign: 'center',
+        marginBottom: 20,
+        lineHeight: 20,
+    },
+    pdfCardButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        paddingVertical: 14,
+        paddingHorizontal: 28,
+        borderRadius: 28,
+        gap: 8,
+    },
+    pdfCardButtonText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.primary,
     },
 });
