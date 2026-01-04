@@ -20,11 +20,19 @@ import {
 // Web-compatible alert function
 const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: 'cancel' | 'default' | 'destructive' }>) => {
     if (Platform.OS === 'web') {
-        const result = window.confirm(`${title}\n\n${message}`);
-        if (result && buttons && buttons.length > 1) {
-            // If confirmed and there's a second button (usually the action button), call its onPress
+        if (buttons && buttons.length > 1) {
+            // Two buttons: use confirm dialog
+            // First button (cancel) = Cancel button, Second button = OK button
+            const cancelButton = buttons.find(b => b.style === 'cancel');
             const actionButton = buttons.find(b => b.style !== 'cancel');
-            if (actionButton?.onPress) actionButton.onPress();
+            const result = window.confirm(`${title}\n\n${message}\n\n[OK = ${actionButton?.text || 'Yes'}, Cancel = ${cancelButton?.text || 'Cancel'}]`);
+            if (result && actionButton?.onPress) {
+                actionButton.onPress();
+            }
+            // If result is false (Cancel clicked), do nothing
+        } else {
+            // Single button or no buttons: just show alert
+            window.alert(`${title}\n\n${message}`);
         }
     } else {
         Alert.alert(title, message, buttons);
@@ -67,8 +75,9 @@ export default function VeliDashboardPage() {
 
         setLoading(true);
         try {
+            // Use ilike for case-insensitive email matching
             const response = await fetch(
-                `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email.trim())}`,
+                `${SUPABASE_URL}/rest/v1/profiles?email=ilike.${encodeURIComponent(email.trim().toLowerCase())}`,
                 {
                     headers: {
                         'apikey': SUPABASE_KEY!,
@@ -79,14 +88,14 @@ export default function VeliDashboardPage() {
             const data = await response.json();
             console.log('Profile response:', data);
 
-            if (data && data.length > 0) {
+            if (data && Array.isArray(data) && data.length > 0) {
                 setProfile(data[0]);
             } else {
                 showAlert(
                     'Kayıt Bulunamadı',
-                    'Bu email ile kayıtlı bir hesap bulunamadı. Önce ana ekrandan "Kayıt Ol" butonuyla kayıt olmanız gerekmektedir. Test için "Demo Giriş" butonunu kullanabilirsiniz.',
+                    'Bu email ile kayıtlı bir hesap bulunamadı.\n\nÖnce ana ekrandan "Kayıt Ol" ile kayıt olun veya Demo ile devam edin.',
                     [
-                        { text: 'Tamam', style: 'cancel' },
+                        { text: 'Kapat', style: 'cancel' },
                         { text: 'Demo Giriş', onPress: useDemoProfile }
                     ]
                 );
