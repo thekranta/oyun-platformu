@@ -541,21 +541,22 @@ export default function App() {
             </View>
           </View>
 
-          {/* Admin Button - Moved to Bottom */}
-          <TouchableOpacity
-            style={styles.adminButtonBottom}
-            onPress={() => router.push('/admin' as any)}
-          >
-            <Text style={styles.adminButtonText}>🔑 Admin Paneli</Text>
-          </TouchableOpacity>
+          {/* Bottom Buttons Container */}
+          <View style={{ position: 'absolute', bottom: 30, flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity
+              style={styles.adminButtonBottom}
+              onPress={() => router.push('/admin' as any)}
+            >
+              <Text style={styles.adminButtonText}>🔑 Admin</Text>
+            </TouchableOpacity>
 
-          {/* Veli Dashboard Button */}
-          <TouchableOpacity
-            style={[styles.adminButtonBottom, { backgroundColor: '#7B1FA2', marginTop: 8 }]}
-            onPress={() => router.push('/veli-dashboard' as any)}
-          >
-            <Text style={styles.adminButtonText}>👨‍👩‍👧 Veli Paneli</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.adminButtonBottom, { backgroundColor: 'rgba(123, 31, 162, 0.25)', borderColor: 'rgba(123, 31, 162, 0.4)' }]}
+              onPress={() => router.push('/veli-dashboard' as any)}
+            >
+              <Text style={[styles.adminButtonText, { color: '#7B1FA2' }]}>👨‍👩‍👧 Veli Paneli</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <Toast
           visible={toast.visible}
@@ -1303,10 +1304,8 @@ const styles = StyleSheet.create({
 
   // Admin Button at Bottom
   adminButtonBottom: {
-    position: 'absolute',
-    bottom: 30,
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderRadius: 20,
     backgroundColor: 'rgba(144, 164, 174, 0.25)',
     borderWidth: 1,

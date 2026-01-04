@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Animated,
     Dimensions,
     Platform,
     ScrollView,
@@ -35,23 +36,19 @@ interface GameScore {
     sure: number;
 }
 
-interface ProfileData {
-    subscription_tier: 'free' | 'standard' | 'premium';
-}
-
-// Renk paleti (Pıtır, Filo, Maviş karakterleri)
+// Fun color palette inspired by Pıtır, Filo, Maviş
 const COLORS = {
-    primary: '#1976D2',      // Mavi (Maviş)
-    secondary: '#FFB74D',    // Sarı/Turuncu (Pıtır)
-    accent: '#4CAF50',       // Yeşil
-    premium: '#7B1FA2',      // Mor (Premium)
-    background: '#F5F7FA',
+    primary: '#1E88E5',      // Bright Blue (Maviş)
+    secondary: '#FFB300',    // Warm Yellow (Pıtır)
+    accent: '#66BB6A',       // Fresh Green
+    premium: '#9C27B0',      // Vibrant Purple
+    pink: '#EC407A',         // Fun Pink
+    orange: '#FF7043',       // Playful Orange
     card: '#FFFFFF',
-    text: '#37474F',
-    textLight: '#78909C',
-    success: '#4CAF50',
-    warning: '#FF9800',
-    error: '#F44336',
+    text: '#263238',
+    textLight: '#607D8B',
+    gradient1: '#667eea',
+    gradient2: '#764ba2',
 };
 
 export default function VeliDashboard({ childName, childAge, email, onClose }: VeliDashboardProps) {
@@ -62,14 +59,33 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
     const [scores, setScores] = useState<GameScore[]>([]);
     const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'standard' | 'premium'>('free');
 
+    // Animations
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(50)).current;
+    const scaleAnim = useRef(new Animated.Value(0.9)).current;
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+
     useEffect(() => {
         fetchData();
+        // Entrance animations
+        Animated.parallel([
+            Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+            Animated.timing(slideAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
+            Animated.spring(scaleAnim, { toValue: 1, friction: 6, useNativeDriver: true }),
+        ]).start();
+
+        // Continuous pulse animation
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, { toValue: 1.05, duration: 1500, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: 1, duration: 1500, useNativeDriver: true }),
+            ])
+        ).start();
     }, []);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            // Fetch game scores
             const scoresResponse = await fetch(
                 `${SUPABASE_URL}/rest/v1/oyun_skorlari?ogrenci_adi=eq.${encodeURIComponent(childName)}&order=created_at.desc&limit=50`,
                 {
@@ -82,7 +98,6 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
             const scoresData = await scoresResponse.json();
             setScores(scoresData || []);
 
-            // Fetch profile with subscription tier
             const profileResponse = await fetch(
                 `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=subscription_tier`,
                 {
@@ -103,10 +118,8 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
         }
     };
 
-    // Miktar Avcısı verilerini filtrele
     const miktarAvcisiScores = scores.filter(s => s.oyun_turu === 'miktar-avcisi');
 
-    // Ortalama hesaplamaları
     const avgCorrectAnswers = miktarAvcisiScores.length > 0
         ? Math.round(miktarAvcisiScores.reduce((a, b) => a + (b.correct_answers || 0), 0) / miktarAvcisiScores.length)
         : 0;
@@ -123,46 +136,63 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
         ? Math.round(miktarAvcisiScores.reduce((a, b) => a + (b.response_time || 0), 0) / miktarAvcisiScores.length)
         : 0;
 
-    // Son AI yorumu
     const latestAIComment = scores.find(s => s.yapay_zeka_yorumu)?.yapay_zeka_yorumu || null;
-
     const isPremium = subscriptionTier === 'premium';
+    const successRate = avgCorrectAnswers * 10;
 
-    // Progress bar component
-    const ProgressBar = ({ value, max, color }: { value: number; max: number; color: string }) => {
-        const percentage = Math.min((value / max) * 100, 100);
-        return (
-            <View style={styles.progressBarContainer}>
-                <View style={[styles.progressBarFill, { width: `${percentage}%`, backgroundColor: color }]} />
-            </View>
-        );
+    // Fun emoji based on performance
+    const getPerformanceEmoji = () => {
+        if (successRate >= 80) return '🌟';
+        if (successRate >= 60) return '⭐';
+        if (successRate >= 40) return '👍';
+        return '💪';
     };
 
-    // Stat card component
-    const StatCard = ({ icon, label, value, subLabel, color }: {
-        icon: string;
-        label: string;
+    // Fun metric card with animation
+    const MetricCard = ({ emoji, title, value, subtitle, color, delay = 0 }: {
+        emoji: string;
+        title: string;
         value: string | number;
-        subLabel?: string;
+        subtitle: string;
         color: string;
-    }) => (
-        <View style={[styles.statCard, { borderLeftColor: color }]}>
-            <View style={[styles.statIconContainer, { backgroundColor: `${color}20` }]}>
-                <Ionicons name={icon as any} size={24} color={color} />
-            </View>
-            <View style={styles.statContent}>
-                <Text style={styles.statLabel}>{label}</Text>
-                <Text style={[styles.statValue, { color }]}>{value}</Text>
-                {subLabel && <Text style={styles.statSubLabel}>{subLabel}</Text>}
-            </View>
-        </View>
-    );
+        delay?: number;
+    }) => {
+        const cardAnim = useRef(new Animated.Value(0)).current;
+
+        useEffect(() => {
+            Animated.timing(cardAnim, {
+                toValue: 1,
+                duration: 500,
+                delay,
+                useNativeDriver: true,
+            }).start();
+        }, []);
+
+        return (
+            <Animated.View style={[
+                styles.metricCard,
+                {
+                    opacity: cardAnim,
+                    transform: [{ scale: cardAnim.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }],
+                    borderTopColor: color,
+                }
+            ]}>
+                <Text style={styles.metricEmoji}>{emoji}</Text>
+                <Text style={styles.metricTitle}>{title}</Text>
+                <Text style={[styles.metricValue, { color }]}>{value}</Text>
+                <Text style={styles.metricSubtitle}>{subtitle}</Text>
+            </Animated.View>
+        );
+    };
 
     if (loading) {
         return (
             <DynamicBackground>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color={COLORS.primary} />
+                    <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                        <Text style={styles.loadingEmoji}>🎓</Text>
+                    </Animated.View>
+                    <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 16 }} />
                     <Text style={styles.loadingText}>Veriler yükleniyor...</Text>
                 </View>
             </DynamicBackground>
@@ -171,153 +201,185 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
 
     return (
         <DynamicBackground>
-            <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-                {/* Header */}
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={onClose} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
-                    </TouchableOpacity>
-                    <View style={styles.headerTitleContainer}>
-                        <Text style={styles.headerTitle}>Veli Paneli</Text>
+            <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Header */}
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={onClose} style={styles.backButton}>
+                            <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
+                        </TouchableOpacity>
+                        <Text style={styles.headerTitle}>📊 Veli Paneli</Text>
                         <View style={[styles.tierBadge, { backgroundColor: isPremium ? COLORS.premium : COLORS.textLight }]}>
                             <Text style={styles.tierBadgeText}>
-                                {subscriptionTier === 'premium' ? '👑 Premium' : subscriptionTier === 'standard' ? '⭐ Standard' : '🆓 Free'}
+                                {isPremium ? '👑 Premium' : subscriptionTier === 'standard' ? '⭐ Standard' : '🆓 Free'}
                             </Text>
                         </View>
                     </View>
-                    <View style={{ width: 40 }} />
-                </View>
 
-                {/* Child Profile Card */}
-                <View style={styles.profileCard}>
-                    <View style={styles.avatarContainer}>
-                        <Text style={styles.avatarText}>{childName.charAt(0).toUpperCase()}</Text>
-                    </View>
-                    <View style={styles.profileInfo}>
-                        <Text style={styles.childName}>{childName}</Text>
-                        <Text style={styles.childAge}>{childAge} Ay • {miktarAvcisiScores.length} Oyun Kaydı</Text>
-                    </View>
-                </View>
-
-                {/* Akademik Gelişim Radarı */}
-                <View style={styles.sectionContainer}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons name="analytics" size={22} color={COLORS.primary} />
-                        <Text style={styles.sectionTitle}>Akademik Gelişim Radarı</Text>
-                    </View>
-                    <View style={[styles.statsGrid, isTablet && styles.statsGridTablet]}>
-                        <StatCard
-                            icon="checkmark-circle"
-                            label="Doğru Cevap Ortalaması"
-                            value={`${avgCorrectAnswers}/10`}
-                            subLabel="Miktar Avcısı"
-                            color={COLORS.success}
-                        />
-                        <StatCard
-                            icon="flash"
-                            label="Bilişsel Hız Skoru"
-                            value={avgCognitiveSpeed}
-                            subLabel="Puan"
-                            color={COLORS.secondary}
-                        />
-                    </View>
-                    <View style={styles.progressSection}>
-                        <Text style={styles.progressLabel}>Başarı Oranı</Text>
-                        <ProgressBar value={avgCorrectAnswers} max={10} color={COLORS.success} />
-                        <Text style={styles.progressValue}>{avgCorrectAnswers * 10}%</Text>
-                    </View>
-                </View>
-
-                {/* Mesafe Etkisi Analizi */}
-                <View style={styles.sectionContainer}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons name="resize" size={22} color={COLORS.primary} />
-                        <Text style={styles.sectionTitle}>Mesafe Etkisi Analizi</Text>
-                    </View>
-                    <View style={styles.distanceCard}>
-                        <View style={styles.distanceValueContainer}>
-                            <Text style={styles.distanceValue}>{avgDistanceEffect}</Text>
-                            <Text style={styles.distanceUnit}>ort. fark</Text>
-                        </View>
-                        <View style={styles.distanceExplanation}>
-                            <Text style={styles.distanceTitle}>Miktar Algısı Derinliği</Text>
-                            <Text style={styles.distanceText}>
-                                {parseFloat(avgDistanceEffect) >= 3
-                                    ? '✅ Çocuğunuz büyük farkları kolayca ayırt edebiliyor.'
-                                    : parseFloat(avgDistanceEffect) >= 2
-                                        ? '📊 Normal seviye - Yakın miktarları ayırt etme becerisi gelişiyor.'
-                                        : '🎯 Güçlü miktar algısı - Küçük farkları bile hızlıca ayırt edebiliyor.'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Tepki Süresi Grafiği */}
-                <View style={styles.sectionContainer}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons name="timer" size={22} color={COLORS.primary} />
-                        <Text style={styles.sectionTitle}>Tepki Süresi Analizi</Text>
-                    </View>
-                    <View style={styles.responseTimeCard}>
-                        <View style={styles.responseTimeMain}>
-                            <Text style={styles.responseTimeValue}>{avgResponseTime}</Text>
-                            <Text style={styles.responseTimeUnit}>ms</Text>
-                        </View>
-                        <Text style={styles.responseTimeLabel}>Ortalama Tepki Süresi</Text>
-                        <View style={styles.responseTimeBar}>
-                            {miktarAvcisiScores.slice(0, 7).reverse().map((score, index) => (
-                                <View key={index} style={styles.responseTimeBarItem}>
-                                    <View
-                                        style={[
-                                            styles.responseTimeBarFill,
-                                            {
-                                                height: `${Math.min(((score.response_time || 0) / 5000) * 100, 100)}%`,
-                                                backgroundColor: (score.response_time || 0) < 2000 ? COLORS.success : (score.response_time || 0) < 3500 ? COLORS.secondary : COLORS.error
-                                            }
-                                        ]}
-                                    />
+                    {/* Child Profile Hero */}
+                    <Animated.View style={[
+                        styles.heroCard,
+                        { transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }
+                    ]}>
+                        <View style={styles.heroGradient}>
+                            <View style={styles.avatarLarge}>
+                                <Text style={styles.avatarTextLarge}>{childName.charAt(0).toUpperCase()}</Text>
+                            </View>
+                            <Text style={styles.heroName}>{childName}</Text>
+                            <Text style={styles.heroAge}>{childAge} Aylık • Küçük Kaşif 🔍</Text>
+                            <View style={styles.heroStats}>
+                                <View style={styles.heroStatItem}>
+                                    <Text style={styles.heroStatValue}>{scores.length}</Text>
+                                    <Text style={styles.heroStatLabel}>Oyun</Text>
                                 </View>
-                            ))}
-                        </View>
-                        <Text style={styles.responseTimeHint}>Son 7 oyun</Text>
-                    </View>
-                </View>
-
-                {/* AI Pedagojik Rapor */}
-                <View style={styles.sectionContainer}>
-                    <View style={styles.sectionHeader}>
-                        <Ionicons name="school" size={22} color={COLORS.premium} />
-                        <Text style={styles.sectionTitle}>AI Pedagojik Rapor</Text>
-                        {!isPremium && <View style={styles.lockBadge}><Ionicons name="lock-closed" size={14} color="#fff" /></View>}
-                    </View>
-                    <View style={[styles.aiReportCard, !isPremium && styles.aiReportBlurred]}>
-                        {latestAIComment ? (
-                            <Text style={styles.aiReportText}>{latestAIComment}</Text>
-                        ) : (
-                            <Text style={styles.aiReportPlaceholder}>Henüz bir AI analizi bulunmuyor.</Text>
-                        )}
-                    </View>
-                    {!isPremium && (
-                        <View style={styles.premiumOverlay}>
-                            <View style={styles.premiumCard}>
-                                <Ionicons name="diamond" size={32} color={COLORS.premium} />
-                                <Text style={styles.premiumTitle}>Detaylı Akademik Analiz</Text>
-                                <Text style={styles.premiumText}>
-                                    Yapay zeka destekli pedagojik değerlendirmeler için Premium'a geçin.
-                                </Text>
-                                <TouchableOpacity style={styles.premiumButton}>
-                                    <Text style={styles.premiumButtonText}>Premium'a Geç 👑</Text>
-                                </TouchableOpacity>
+                                <View style={styles.heroStatDivider} />
+                                <View style={styles.heroStatItem}>
+                                    <Text style={styles.heroStatValue}>{getPerformanceEmoji()}</Text>
+                                    <Text style={styles.heroStatLabel}>Seviye</Text>
+                                </View>
+                                <View style={styles.heroStatDivider} />
+                                <View style={styles.heroStatItem}>
+                                    <Text style={styles.heroStatValue}>{successRate}%</Text>
+                                    <Text style={styles.heroStatLabel}>Başarı</Text>
+                                </View>
                             </View>
                         </View>
-                    )}
-                </View>
+                    </Animated.View>
 
-                {/* Footer */}
-                <View style={styles.footer}>
-                    <Text style={styles.footerText}>ChildhoodTech Akademi © 2026</Text>
-                </View>
-            </ScrollView>
+                    {/* Metrics Grid */}
+                    <Text style={styles.sectionTitle}>🎯 Performans Metrikleri</Text>
+                    <View style={[styles.metricsGrid, isTablet && styles.metricsGridTablet]}>
+                        <MetricCard
+                            emoji="✅"
+                            title="Doğru Cevaplar"
+                            value={`${avgCorrectAnswers}/10`}
+                            subtitle="Miktar Avcısı"
+                            color={COLORS.accent}
+                            delay={100}
+                        />
+                        <MetricCard
+                            emoji="⚡"
+                            title="Bilişsel Hız"
+                            value={avgCognitiveSpeed}
+                            subtitle="Puan"
+                            color={COLORS.secondary}
+                            delay={200}
+                        />
+                        <MetricCard
+                            emoji="🎯"
+                            title="Mesafe Algısı"
+                            value={avgDistanceEffect}
+                            subtitle="Ort. Fark"
+                            color={COLORS.primary}
+                            delay={300}
+                        />
+                        <MetricCard
+                            emoji="⏱️"
+                            title="Tepki Süresi"
+                            value={`${avgResponseTime}ms`}
+                            subtitle="Ortalama"
+                            color={COLORS.orange}
+                            delay={400}
+                        />
+                    </View>
+
+                    {/* Progress Ring Section */}
+                    <View style={styles.progressSection}>
+                        <Text style={styles.sectionTitle}>📈 Gelişim Durumu</Text>
+                        <View style={styles.progressCard}>
+                            <View style={styles.progressRing}>
+                                <View style={[styles.progressRingFill, {
+                                    borderColor: successRate >= 70 ? COLORS.accent : successRate >= 40 ? COLORS.secondary : COLORS.orange
+                                }]} />
+                                <View style={styles.progressRingInner}>
+                                    <Text style={styles.progressRingValue}>{successRate}%</Text>
+                                    <Text style={styles.progressRingLabel}>Başarı</Text>
+                                </View>
+                            </View>
+                            <View style={styles.progressInfo}>
+                                <View style={styles.progressInfoItem}>
+                                    <Text style={styles.progressInfoEmoji}>🧠</Text>
+                                    <Text style={styles.progressInfoText}>
+                                        {successRate >= 70 ? 'Harika ilerleme!' : successRate >= 40 ? 'İyi gidiyorsun!' : 'Devam et!'}
+                                    </Text>
+                                </View>
+                                <View style={styles.progressInfoItem}>
+                                    <Text style={styles.progressInfoEmoji}>🎮</Text>
+                                    <Text style={styles.progressInfoText}>{miktarAvcisiScores.length} oyun tamamlandı</Text>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Response Time Timeline */}
+                    <View style={styles.timelineSection}>
+                        <Text style={styles.sectionTitle}>⏰ Tepki Süresi Grafiği</Text>
+                        <View style={styles.timelineCard}>
+                            <View style={styles.timelineChart}>
+                                {miktarAvcisiScores.slice(0, 7).reverse().map((score, index) => {
+                                    const rt = score.response_time || 0;
+                                    const height = Math.min((rt / 5000) * 100, 100);
+                                    const color = rt < 2000 ? COLORS.accent : rt < 3500 ? COLORS.secondary : COLORS.orange;
+                                    return (
+                                        <View key={index} style={styles.timelineBarContainer}>
+                                            <View style={[styles.timelineBar, { height: `${height}%`, backgroundColor: color }]}>
+                                                <Text style={styles.timelineBarText}>{Math.round(rt / 1000)}s</Text>
+                                            </View>
+                                            <Text style={styles.timelineBarLabel}>{index + 1}</Text>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                            <Text style={styles.timelineHint}>📊 Son 7 oyun - Hızlı tepki = Yeşil</Text>
+                        </View>
+                    </View>
+
+                    {/* AI Report Section */}
+                    <View style={styles.aiSection}>
+                        <View style={styles.sectionHeader}>
+                            <Text style={styles.sectionTitle}>🤖 AI Pedagojik Rapor</Text>
+                            {!isPremium && (
+                                <View style={styles.lockIcon}>
+                                    <Ionicons name="lock-closed" size={16} color="#fff" />
+                                </View>
+                            )}
+                        </View>
+                        <View style={[styles.aiCard, !isPremium && styles.aiCardBlurred]}>
+                            {latestAIComment ? (
+                                <Text style={styles.aiText}>{latestAIComment.substring(0, 300)}...</Text>
+                            ) : (
+                                <Text style={styles.aiPlaceholder}>
+                                    Henüz bir AI analizi yok. Oyun oynandıktan sonra analiz yapılacak! 🎮
+                                </Text>
+                            )}
+                        </View>
+                        {!isPremium && (
+                            <Animated.View style={[styles.premiumOverlay, { transform: [{ scale: pulseAnim }] }]}>
+                                <View style={styles.premiumBox}>
+                                    <Text style={styles.premiumEmoji}>👑</Text>
+                                    <Text style={styles.premiumTitle}>Premium ile Daha Fazla!</Text>
+                                    <Text style={styles.premiumText}>
+                                        Detaylı AI analizleri ve özel öneriler için Premium'a geç!
+                                    </Text>
+                                    <TouchableOpacity style={styles.premiumButton}>
+                                        <Text style={styles.premiumButtonText}>Premium'a Geç ✨</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </Animated.View>
+                        )}
+                    </View>
+
+                    {/* Footer */}
+                    <View style={styles.footer}>
+                        <Text style={styles.footerEmoji}>🎓</Text>
+                        <Text style={styles.footerText}>ChildhoodTech Akademi</Text>
+                        <Text style={styles.footerSubtext}>Çocuğunuzun gelişimini birlikte takip ediyoruz 💜</Text>
+                    </View>
+                </ScrollView>
+            </Animated.View>
         </DynamicBackground>
     );
 }
@@ -328,17 +390,21 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         padding: 16,
-        paddingBottom: 40,
+        paddingBottom: 60,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
     },
+    loadingEmoji: {
+        fontSize: 60,
+    },
     loadingText: {
         marginTop: 16,
         fontSize: 16,
         color: COLORS.textLight,
+        fontWeight: '500',
     },
 
     // Header
@@ -346,22 +412,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: 16,
+        paddingVertical: 8,
     },
     backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         backgroundColor: COLORS.card,
         justifyContent: 'center',
         alignItems: 'center',
         ...Platform.select({
-            web: { boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
-            default: { elevation: 3 },
+            web: { boxShadow: '0 4px 12px rgba(0,0,0,0.1)' },
+            default: { elevation: 4 },
         }),
-    },
-    headerTitleContainer: {
-        alignItems: 'center',
     },
     headerTitle: {
         fontSize: 22,
@@ -369,278 +433,314 @@ const styles = StyleSheet.create({
         color: COLORS.text,
     },
     tierBadge: {
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
-        marginTop: 4,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 16,
     },
     tierBadgeText: {
         color: '#fff',
         fontSize: 12,
-        fontWeight: '600',
+        fontWeight: '700',
     },
 
-    // Profile Card
-    profileCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: COLORS.card,
-        borderRadius: 20,
-        padding: 20,
-        marginBottom: 20,
+    // Hero Card
+    heroCard: {
+        borderRadius: 24,
+        overflow: 'hidden',
+        marginBottom: 24,
         ...Platform.select({
-            web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
-            default: { elevation: 4 },
+            web: { boxShadow: '0 8px 32px rgba(30, 136, 229, 0.2)' },
+            default: { elevation: 8 },
         }),
     },
-    avatarContainer: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
+    heroGradient: {
         backgroundColor: COLORS.primary,
+        padding: 28,
+        alignItems: 'center',
+        ...Platform.select({
+            web: { background: `linear-gradient(135deg, ${COLORS.gradient1} 0%, ${COLORS.gradient2} 100%)` } as any,
+            default: {},
+        }),
+    },
+    avatarLarge: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: 'rgba(255,255,255,0.3)',
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 3,
+        borderColor: '#fff',
     },
-    avatarText: {
-        fontSize: 28,
+    avatarTextLarge: {
+        fontSize: 36,
         fontWeight: 'bold',
         color: '#fff',
     },
-    profileInfo: {
-        marginLeft: 16,
-    },
-    childName: {
-        fontSize: 20,
+    heroName: {
+        fontSize: 26,
         fontWeight: 'bold',
-        color: COLORS.text,
+        color: '#fff',
+        marginTop: 12,
     },
-    childAge: {
-        fontSize: 14,
-        color: COLORS.textLight,
+    heroAge: {
+        fontSize: 15,
+        color: 'rgba(255,255,255,0.85)',
         marginTop: 4,
     },
-
-    // Section
-    sectionContainer: {
-        backgroundColor: COLORS.card,
-        borderRadius: 20,
-        padding: 20,
-        marginBottom: 16,
-        ...Platform.select({
-            web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
-            default: { elevation: 4 },
-        }),
-    },
-    sectionHeader: {
+    heroStats: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 16,
-        gap: 8,
+        marginTop: 20,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 16,
+        padding: 16,
     },
+    heroStatItem: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    heroStatValue: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    heroStatLabel: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.8)',
+        marginTop: 4,
+    },
+    heroStatDivider: {
+        width: 1,
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        marginHorizontal: 16,
+    },
+
+    // Section Title
     sectionTitle: {
         fontSize: 18,
         fontWeight: '700',
         color: COLORS.text,
-        flex: 1,
+        marginBottom: 14,
+        marginTop: 8,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 14,
     },
 
-    // Stats Grid
-    statsGrid: {
+    // Metrics Grid
+    metricsGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
         gap: 12,
+        marginBottom: 24,
     },
-    statsGridTablet: {
-        flexDirection: 'row',
+    metricsGridTablet: {
+        justifyContent: 'space-between',
     },
-    statCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#F8FAFC',
-        borderRadius: 14,
+    metricCard: {
+        width: '47%',
+        backgroundColor: COLORS.card,
+        borderRadius: 20,
         padding: 16,
-        borderLeftWidth: 4,
-        flex: 1,
-    },
-    statIconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 12,
-        justifyContent: 'center',
         alignItems: 'center',
+        borderTopWidth: 4,
+        ...Platform.select({
+            web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+            default: { elevation: 4 },
+        }),
     },
-    statContent: {
-        marginLeft: 14,
+    metricEmoji: {
+        fontSize: 32,
+        marginBottom: 8,
     },
-    statLabel: {
+    metricTitle: {
         fontSize: 12,
         color: COLORS.textLight,
+        textAlign: 'center',
     },
-    statValue: {
-        fontSize: 24,
+    metricValue: {
+        fontSize: 28,
         fontWeight: 'bold',
+        marginVertical: 4,
     },
-    statSubLabel: {
+    metricSubtitle: {
         fontSize: 11,
         color: COLORS.textLight,
     },
 
-    // Progress
+    // Progress Section
     progressSection: {
-        marginTop: 16,
+        marginBottom: 24,
     },
-    progressLabel: {
-        fontSize: 13,
-        color: COLORS.textLight,
-        marginBottom: 8,
-    },
-    progressBarContainer: {
-        height: 10,
-        backgroundColor: '#E0E0E0',
-        borderRadius: 5,
-        overflow: 'hidden',
-    },
-    progressBarFill: {
-        height: '100%',
-        borderRadius: 5,
-    },
-    progressValue: {
-        fontSize: 12,
-        color: COLORS.textLight,
-        textAlign: 'right',
-        marginTop: 4,
-    },
-
-    // Distance Effect
-    distanceCard: {
+    progressCard: {
+        backgroundColor: COLORS.card,
+        borderRadius: 20,
+        padding: 24,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#E3F2FD',
-        borderRadius: 14,
-        padding: 20,
+        ...Platform.select({
+            web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+            default: { elevation: 4 },
+        }),
     },
-    distanceValueContainer: {
+    progressRing: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        backgroundColor: '#E8F5E9',
+        justifyContent: 'center',
         alignItems: 'center',
         marginRight: 20,
     },
-    distanceValue: {
-        fontSize: 42,
-        fontWeight: 'bold',
-        color: COLORS.primary,
+    progressRingFill: {
+        position: 'absolute',
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        borderWidth: 8,
+        borderColor: COLORS.accent,
     },
-    distanceUnit: {
-        fontSize: 12,
-        color: COLORS.textLight,
-    },
-    distanceExplanation: {
-        flex: 1,
-    },
-    distanceTitle: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: COLORS.text,
-        marginBottom: 6,
-    },
-    distanceText: {
-        fontSize: 13,
-        color: COLORS.textLight,
-        lineHeight: 20,
-    },
-
-    // Response Time
-    responseTimeCard: {
+    progressRingInner: {
         alignItems: 'center',
-        padding: 16,
     },
-    responseTimeMain: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-    },
-    responseTimeValue: {
-        fontSize: 48,
+    progressRingValue: {
+        fontSize: 24,
         fontWeight: 'bold',
-        color: COLORS.secondary,
+        color: COLORS.text,
     },
-    responseTimeUnit: {
-        fontSize: 18,
-        color: COLORS.textLight,
-        marginLeft: 4,
-    },
-    responseTimeLabel: {
-        fontSize: 14,
-        color: COLORS.textLight,
-        marginTop: 4,
-    },
-    responseTimeBar: {
-        flexDirection: 'row',
-        height: 80,
-        gap: 8,
-        marginTop: 20,
-        alignItems: 'flex-end',
-    },
-    responseTimeBarItem: {
-        width: 24,
-        height: '100%',
-        backgroundColor: '#E0E0E0',
-        borderRadius: 4,
-        overflow: 'hidden',
-        justifyContent: 'flex-end',
-    },
-    responseTimeBarFill: {
-        width: '100%',
-        borderRadius: 4,
-    },
-    responseTimeHint: {
+    progressRingLabel: {
         fontSize: 11,
         color: COLORS.textLight,
+    },
+    progressInfo: {
+        flex: 1,
+    },
+    progressInfoItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    progressInfoEmoji: {
+        fontSize: 20,
+        marginRight: 10,
+    },
+    progressInfoText: {
+        fontSize: 14,
+        color: COLORS.text,
+        fontWeight: '500',
+    },
+
+    // Timeline Section
+    timelineSection: {
+        marginBottom: 24,
+    },
+    timelineCard: {
+        backgroundColor: COLORS.card,
+        borderRadius: 20,
+        padding: 20,
+        ...Platform.select({
+            web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+            default: { elevation: 4 },
+        }),
+    },
+    timelineChart: {
+        flexDirection: 'row',
+        height: 120,
+        alignItems: 'flex-end',
+        justifyContent: 'space-around',
+        marginBottom: 10,
+    },
+    timelineBarContainer: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    timelineBar: {
+        width: 28,
+        borderRadius: 8,
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        paddingBottom: 4,
+        minHeight: 20,
+    },
+    timelineBarText: {
+        fontSize: 9,
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    timelineBarLabel: {
+        fontSize: 11,
+        color: COLORS.textLight,
+        marginTop: 6,
+    },
+    timelineHint: {
+        fontSize: 12,
+        color: COLORS.textLight,
+        textAlign: 'center',
         marginTop: 8,
     },
 
-    // AI Report
-    aiReportCard: {
-        backgroundColor: '#F3E5F5',
-        borderRadius: 14,
-        padding: 20,
-        minHeight: 150,
+    // AI Section
+    aiSection: {
+        marginBottom: 24,
+        position: 'relative',
     },
-    aiReportBlurred: {
+    lockIcon: {
+        backgroundColor: COLORS.premium,
+        borderRadius: 12,
+        padding: 6,
+    },
+    aiCard: {
+        backgroundColor: '#F3E5F5',
+        borderRadius: 20,
+        padding: 20,
+        minHeight: 140,
+    },
+    aiCardBlurred: {
         ...Platform.select({
-            web: { filter: 'blur(6px)' } as any,
-            default: { opacity: 0.3 },
+            web: { filter: 'blur(5px)' } as any,
+            default: { opacity: 0.25 },
         }),
     },
-    aiReportText: {
+    aiText: {
         fontSize: 14,
         color: COLORS.text,
         lineHeight: 22,
     },
-    aiReportPlaceholder: {
+    aiPlaceholder: {
         fontSize: 14,
         color: COLORS.textLight,
         textAlign: 'center',
-        marginTop: 40,
+        marginTop: 30,
     },
     premiumOverlay: {
         position: 'absolute',
-        top: 60,
-        left: 0,
-        right: 0,
+        top: 50,
+        left: 20,
+        right: 20,
         alignItems: 'center',
     },
-    premiumCard: {
+    premiumBox: {
         backgroundColor: COLORS.card,
-        borderRadius: 16,
+        borderRadius: 20,
         padding: 24,
         alignItems: 'center',
-        width: '85%',
+        width: '100%',
         ...Platform.select({
-            web: { boxShadow: '0 8px 24px rgba(123, 31, 162, 0.2)' },
-            default: { elevation: 8 },
+            web: { boxShadow: '0 12px 40px rgba(156, 39, 176, 0.25)' },
+            default: { elevation: 10 },
         }),
+    },
+    premiumEmoji: {
+        fontSize: 40,
     },
     premiumTitle: {
         fontSize: 18,
         fontWeight: 'bold',
         color: COLORS.premium,
-        marginTop: 12,
+        marginTop: 10,
     },
     premiumText: {
         fontSize: 13,
@@ -651,9 +751,9 @@ const styles = StyleSheet.create({
     },
     premiumButton: {
         backgroundColor: COLORS.premium,
-        paddingVertical: 12,
-        paddingHorizontal: 32,
-        borderRadius: 24,
+        paddingVertical: 14,
+        paddingHorizontal: 36,
+        borderRadius: 28,
         marginTop: 16,
     },
     premiumButtonText: {
@@ -661,19 +761,25 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 15,
     },
-    lockBadge: {
-        backgroundColor: COLORS.premium,
-        borderRadius: 10,
-        padding: 4,
-    },
 
     // Footer
     footer: {
         alignItems: 'center',
         marginTop: 20,
+        paddingVertical: 20,
+    },
+    footerEmoji: {
+        fontSize: 32,
     },
     footerText: {
-        fontSize: 12,
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.text,
+        marginTop: 8,
+    },
+    footerSubtext: {
+        fontSize: 13,
         color: COLORS.textLight,
+        marginTop: 4,
     },
 });
