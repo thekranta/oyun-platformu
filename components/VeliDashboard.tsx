@@ -150,7 +150,7 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
         return '💪';
     };
 
-    // PDF Generation Function
+    // PDF Generation Function - Uses CDN to avoid Metro bundler issues
     const handleDownloadPDF = async () => {
         if (!isPremium) {
             Alert.alert(
@@ -171,9 +171,22 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
 
         setGeneratingPDF(true);
         try {
-            // Dynamic import for web only (avoids Metro bundler issues)
-            const jsPDFModule = await import('jspdf');
-            const jsPDF = jsPDFModule.default;
+            // Load jsPDF from CDN at runtime (avoids Metro bundler issues)
+            const loadJsPDF = (): Promise<any> => {
+                return new Promise((resolve, reject) => {
+                    if ((window as any).jspdf) {
+                        resolve((window as any).jspdf.jsPDF);
+                        return;
+                    }
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    script.onload = () => resolve((window as any).jspdf.jsPDF);
+                    script.onerror = () => reject(new Error('jsPDF yüklenemedi'));
+                    document.head.appendChild(script);
+                });
+            };
+
+            const jsPDF = await loadJsPDF();
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = 210;
             const pageHeight = 297;
@@ -191,7 +204,7 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
 
             doc.setFontSize(14);
             doc.setFont('helvetica', 'normal');
-            doc.text('Akademik Gelişim Raporu', pageWidth / 2, 25, { align: 'center' });
+            doc.text('Akademik Gelisim Raporu', pageWidth / 2, 25, { align: 'center' });
 
             const today = new Date();
             const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
@@ -204,11 +217,11 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
             doc.setTextColor(38, 50, 56);
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text(`Öğrenci: ${childName}`, margin, yPos);
+            doc.text(`Ogrenci: ${childName}`, margin, yPos);
             yPos += 8;
             doc.setFontSize(12);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Yaş: ${childAge} aylık`, margin, yPos);
+            doc.text(`Yas: ${childAge} aylik`, margin, yPos);
             yPos += 15;
 
             // Performance Summary
@@ -218,14 +231,14 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(46, 125, 50);
-            doc.text('Performans Özeti', margin + 5, yPos + 10);
+            doc.text('Performans Ozeti', margin + 5, yPos + 10);
 
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(38, 50, 56);
-            doc.text(`Doğru Cevap Ortalaması: ${avgCorrectAnswers}/10`, margin + 5, yPos + 20);
-            doc.text(`Bilişsel Hız Skoru: ${avgCognitiveSpeed}`, margin + 5, yPos + 28);
-            doc.text(`Ortalama Tepki Süresi: ${avgResponseTime}ms`, margin + 100, yPos + 20);
+            doc.text(`Dogru Cevap Ortalamasi: ${avgCorrectAnswers}/10`, margin + 5, yPos + 20);
+            doc.text(`Bilissel Hiz Skoru: ${avgCognitiveSpeed}`, margin + 5, yPos + 28);
+            doc.text(`Ortalama Tepki Suresi: ${avgResponseTime}ms`, margin + 100, yPos + 20);
             doc.text(`Mesafe Etkisi: ${avgDistanceEffect}`, margin + 100, yPos + 28);
 
             yPos += 45;
@@ -236,7 +249,7 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(123, 31, 162);
-            doc.text('🎓 Pedagojik Rapor (AI Analizi)', margin + 5, yPos + 10);
+            doc.text('Pedagojik Rapor (AI Analizi)', margin + 5, yPos + 10);
             yPos += 20;
 
             if (latestAIComment) {
@@ -244,7 +257,16 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(38, 50, 56);
 
-                const lines = doc.splitTextToSize(latestAIComment, pageWidth - 2 * margin - 5);
+                // Clean Turkish characters for basic PDF font
+                const cleanText = latestAIComment
+                    .replace(/ş/g, 's').replace(/Ş/g, 'S')
+                    .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+                    .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+                    .replace(/ö/g, 'o').replace(/Ö/g, 'O')
+                    .replace(/ı/g, 'i').replace(/İ/g, 'I')
+                    .replace(/ç/g, 'c').replace(/Ç/g, 'C');
+
+                const lines = doc.splitTextToSize(cleanText, pageWidth - 2 * margin - 5);
                 lines.forEach((line: string) => {
                     if (yPos > pageHeight - 40) {
                         doc.addPage();
@@ -256,7 +278,7 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
             } else {
                 doc.setFontSize(11);
                 doc.setTextColor(96, 125, 139);
-                doc.text('Henüz bir AI analizi bulunmamaktadır.', margin + 5, yPos);
+                doc.text('Henuz bir AI analizi bulunmamaktadir.', margin + 5, yPos);
                 yPos += 10;
             }
 
@@ -269,16 +291,16 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
             doc.setFontSize(9);
             doc.setFont('helvetica', 'italic');
             doc.setTextColor(120, 144, 156);
-            doc.text('Bu rapor Türkiye Yüzyılı Maarif Modeli kriterlerine göre hazırlanmıştır.', pageWidth / 2, yPos, { align: 'center' });
+            doc.text('Bu rapor Turkiye Yuzyili Maarif Modeli kriterlerine gore hazirlanmistir.', pageWidth / 2, yPos, { align: 'center' });
             yPos += 6;
-            doc.text('© childhoodtech.com - Erken Çocukluk Eğitim Teknolojileri', pageWidth / 2, yPos, { align: 'center' });
+            doc.text('childhoodtech.com - Erken Cocukluk Egitim Teknolojileri', pageWidth / 2, yPos, { align: 'center' });
 
             // Download
             doc.save(`${childName}_Akademik_Rapor_${dateStr.replace(/\//g, '-')}.pdf`);
 
         } catch (error) {
-            console.error('PDF oluşturma hatası:', error);
-            Alert.alert('Hata', 'PDF oluşturulurken bir hata oluştu.');
+            console.error('PDF olusturma hatasi:', error);
+            Alert.alert('Hata', 'PDF olusturulurken bir hata olustu.');
         } finally {
             setGeneratingPDF(false);
         }
