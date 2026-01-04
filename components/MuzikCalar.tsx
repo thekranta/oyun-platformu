@@ -196,6 +196,55 @@ const SONGS: Song[] = [
         coverColor: '#29B6F6', // Açık Mavi
         icon: 'water',
     },
+    // === MATEMATİK ŞARKILARI ===
+    {
+        id: '23',
+        title: 'Bir Bakışta Kaç?',
+        artist: 'Matematik - Subitizing',
+        source: require('@/assets/sounds/songs/Bir Bakışta Kaç_.mp3'),
+        coverColor: '#7E57C2', // Mor
+        icon: 'eye',
+    },
+    {
+        id: '24',
+        title: 'Birden Ona Ritmim Var',
+        artist: 'Matematik - 1\'den 10\'a',
+        source: require('@/assets/sounds/songs/Birden Ona Ritmim Var.mp3'),
+        coverColor: '#26C6DA', // Cyan
+        icon: 'musical-notes',
+    },
+    {
+        id: '25',
+        title: 'Birer Birer Say!',
+        artist: 'Matematik - Sayma',
+        source: require('@/assets/sounds/songs/Birer Birer Say!.mp3'),
+        coverColor: '#66BB6A', // Yeşil
+        icon: 'calculator',
+    },
+    {
+        id: '26',
+        title: 'On Birden Yirmiye Tren',
+        artist: 'Matematik - 11\'den 20\'ye',
+        source: require('@/assets/sounds/songs/On Birden Yirmiye Tren.mp3'),
+        coverColor: '#EF5350', // Kırmızı
+        icon: 'train',
+    },
+    {
+        id: '27',
+        title: 'Sayıdan Başla!',
+        artist: 'Matematik - İleriye Sayma',
+        source: require('@/assets/sounds/songs/Sayıdan Başla!.mp3'),
+        coverColor: '#FFA726', // Turuncu
+        icon: 'arrow-forward',
+    },
+    {
+        id: '28',
+        title: 'Çok mu, Az mı?',
+        artist: 'Matematik - Karşılaştırma',
+        source: require('@/assets/sounds/songs/Çok mu, Az mı_.mp3'),
+        coverColor: '#42A5F5', // Mavi
+        icon: 'scale',
+    },
 ];
 
 interface MuzikCalarProps {
