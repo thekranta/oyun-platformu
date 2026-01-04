@@ -14,14 +14,6 @@ import {
 } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 
-// PDF Libraries (Web only)
-let jsPDF: any = null;
-let html2canvas: any = null;
-if (Platform.OS === 'web') {
-    jsPDF = require('jspdf').default;
-    html2canvas = require('html2canvas').default;
-}
-
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -179,6 +171,9 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
 
         setGeneratingPDF(true);
         try {
+            // Dynamic import for web only (avoids Metro bundler issues)
+            const jsPDFModule = await import('jspdf');
+            const jsPDF = jsPDFModule.default;
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = 210;
             const pageHeight = 297;
