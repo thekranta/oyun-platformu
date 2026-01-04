@@ -342,20 +342,26 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
         const avgMoveTime = responseTime / moves;
         const strategy = avgMoveTime > 5000 ? 'methodical' : 'trial_error';
 
-        // Save to Supabase
+        // Save to Supabase - include all required fields
+        const difficulty = getDifficulty();
         const gameData = {
             ogrenci_adi: childName,
             email: email || '',
             yas: childAge,
             oyun_turu: 'sihirli-siseler',
-            response_time: responseTime,
-            total_moves: moves,
-            correct_answers: colors, // Number of completed bottles
+            sure: Math.round(responseTime / 1000), // Duration in seconds
+            hata_sayisi: 0, // No errors in this game type
+            correct_answers: difficulty.colors, // Number of completed bottles
+            response_time: responseTime, // Total time in ms
+            cognitive_speed_score: Math.max(0, 100 - Math.round(moves / difficulty.colors * 10)), // Score based on efficiency
+            zorluk_seviyesi: difficulty.bottles, // Difficulty level = number of bottles
             round_history: JSON.stringify({
                 strategy,
+                total_moves: moves,
                 undo_count: gameState.undoCount,
                 move_sequence: history,
-                difficulty: getDifficulty(),
+                difficulty: difficulty,
+                avg_move_time_ms: Math.round(avgMoveTime),
             }),
         };
 
