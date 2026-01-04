@@ -624,12 +624,22 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             doc.text('AI Pedagojik Analiz', margin + 5, yPos + 8);
             yPos += 18;
 
-            if (latestAIComment) {
+            // Choose the most relevant AI comment:
+            // 1. Cumulative report if available
+            // 2. Selected game's AI comment if game is selected
+            // 3. Latest AI comment as fallback
+            const pdfAIComment = cumulativeReport
+                ? cumulativeReport
+                : (selectedGameIndex !== null && scores[selectedGameIndex]?.yapay_zeka_yorumu)
+                    ? scores[selectedGameIndex].yapay_zeka_yorumu
+                    : latestAIComment;
+
+            if (pdfAIComment) {
                 doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(38, 50, 56);
 
-                const cleanText = latestAIComment
+                const cleanText = pdfAIComment
                     .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
                     .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
                     .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
@@ -1157,14 +1167,18 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                         <Text style={{ color: COLORS.text, fontSize: 14, lineHeight: 22 }}>
                                             {cumulativeReport}
                                         </Text>
-                                        <TouchableOpacity
-                                            style={[styles.analyzeButton, { backgroundColor: COLORS.accent, marginTop: 12 }]}
-                                            onPress={handleGenerateCumulativeReport}
-                                            disabled={isAnalyzing}
-                                        >
-                                            <Ionicons name="refresh" size={16} color="#fff" />
-                                            <Text style={styles.analyzeButtonText}>Yeniden Analiz Et</Text>
-                                        </TouchableOpacity>
+                                        <Text style={{ color: COLORS.textLight, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
+                                            ℹ️ Çocuğunuz yeni oyun oynarsa analiz güncellenecektir.
+                                        </Text>
+                                        {Platform.OS === 'web' && (
+                                            <TouchableOpacity
+                                                style={[styles.analyzeButton, { backgroundColor: COLORS.primary, marginTop: 10 }]}
+                                                onPress={handleDownloadPDF}
+                                            >
+                                                <Ionicons name="document-text" size={16} color="#fff" />
+                                                <Text style={styles.analyzeButtonText}>Raporu PDF Olarak İndir</Text>
+                                            </TouchableOpacity>
+                                        )}
                                     </View>
                                 ) : (
                                     <TouchableOpacity
@@ -1216,6 +1230,21 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             <View style={styles.timelineSection}>
                                 <Text style={styles.sectionTitle}>⏰ Tepki Süresi Analizi</Text>
                                 <View style={styles.timelineCard}>
+                                    {/* Color Legend */}
+                                    <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16, marginBottom: 4 }}>
+                                            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.accent, marginRight: 4 }} />
+                                            <Text style={{ fontSize: 11, color: COLORS.textLight }}>Hızlı (&lt;2sn)</Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16, marginBottom: 4 }}>
+                                            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.secondary, marginRight: 4 }} />
+                                            <Text style={{ fontSize: 11, color: COLORS.textLight }}>Normal (2-3.5sn)</Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.orange, marginRight: 4 }} />
+                                            <Text style={{ fontSize: 11, color: COLORS.textLight }}>Yavaş (&gt;3.5sn)</Text>
+                                        </View>
+                                    </View>
                                     <View style={styles.timelineChart}>
                                         {((selectedGameIndex !== null && scores[selectedGameIndex]
                                             ? scores.filter(s => normalizeGameName(s.oyun_turu) === normalizeGameName(scores[selectedGameIndex].oyun_turu))
@@ -1227,14 +1256,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             return (
                                                 <View key={index} style={styles.timelineBarContainer}>
                                                     <View style={[styles.timelineBar, { height: `${height}%`, backgroundColor: color }]}>
-                                                        <Text style={styles.timelineBarText}>{Math.round(rt / 1000)}s</Text>
+                                                        <Text style={styles.timelineBarText}>{formatTime(rt)}</Text>
                                                     </View>
-                                                    <Text style={styles.timelineBarLabel}>{index + 1}</Text>
+                                                    <Text style={styles.timelineBarLabel}>Oyun {index + 1}</Text>
                                                 </View>
                                             );
                                         })}
                                     </View>
-                                    <Text style={styles.timelineHint}>📊 Son oyunlar - Kısa çubuk = Daha hızlı</Text>
+                                    <Text style={styles.timelineHint}>📊 Son 7 oyunun tepki süreleri (kısa çubuk = daha hızlı yanıt)</Text>
                                 </View>
                             </View>
                         </Animated.View>

@@ -931,16 +931,16 @@ export default function App() {
                   {SONGS.filter(s => !s.artist.includes('Matematik') && !s.title.includes('ChildhoodTech')).map((song) => (
                     <TouchableOpacity
                       key={song.id}
-                      style={[styles.oyunKarti, { backgroundColor: song.coverColor, marginRight: 15, width: 150, height: 160 }]}
+                      style={[styles.oyunKarti, { backgroundColor: song.coverColor, marginRight: 12, width: 120, height: 130 }]}
                       onPress={() => {
                         const realIndex = SONGS.findIndex(s => s.id === song.id);
                         setSelectedSongIndex(realIndex);
                         oyunuBaslat('muzik-calar');
                       }}
                     >
-                      <Ionicons name={song.icon} size={36} color="white" style={{ marginBottom: 10 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 16 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 11 }]} numberOfLines={1}>{song.artist}</Text>
+                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
+                      <Text style={[styles.oyunBaslik, { fontSize: 13 }]} numberOfLines={2}>{song.title}</Text>
+                      <Text style={[styles.oyunAciklama, { fontSize: 10 }]} numberOfLines={1}>{song.artist}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
