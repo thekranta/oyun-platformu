@@ -90,6 +90,7 @@ interface GameScore {
     distance_effect: number | null;
     response_time: number | null;
     yapay_zeka_yorumu: string | null;
+    kumulatif_ai_yorumu: string | null;  // Separate column for cumulative AI reports
     hata_sayisi: number;
     sure: number;
 }
@@ -197,7 +198,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     'Content-Type': 'application/json',
                                     'Prefer': 'return=minimal',
                                 },
-                                body: JSON.stringify({ yapay_zeka_yorumu: report }),
+                                body: JSON.stringify({ kumulatif_ai_yorumu: report }),
                             }
                         );
                         console.log('💾 Cumulative report saved to Supabase');
@@ -314,16 +315,13 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             setScores(Array.isArray(scoresData) ? scoresData : []);
             console.log('✅ Total scores loaded:', Array.isArray(scoresData) ? scoresData.length : 0);
 
-            // Cache check: If the latest score has a cumulative AI comment, use it
+            // Cache check: If the latest score has a cumulative AI report, use it
             if (Array.isArray(scoresData) && scoresData.length > 0) {
                 const latestScore = scoresData[0];
-                // Check if there's an existing cumulative report (contains trend analysis keywords)
-                if (latestScore.yapay_zeka_yorumu &&
-                    (latestScore.yapay_zeka_yorumu.includes('trend') ||
-                        latestScore.yapay_zeka_yorumu.includes('gelişim') ||
-                        latestScore.yapay_zeka_yorumu.includes('son') && latestScore.yapay_zeka_yorumu.length > 500)) {
+                // Check for existing cumulative report in dedicated column
+                if (latestScore.kumulatif_ai_yorumu) {
                     console.log('📋 Using cached cumulative report from Supabase');
-                    setCumulativeReport(latestScore.yapay_zeka_yorumu);
+                    setCumulativeReport(latestScore.kumulatif_ai_yorumu);
                 }
             }
 
