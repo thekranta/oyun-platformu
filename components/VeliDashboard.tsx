@@ -16,6 +16,62 @@ import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+
+// Cumulative AI Analysis Function - Sends last 12 games to Gemini for trend analysis
+const analyzeWithGemini = async (childName: string, childAge: number, games: GameScore[]): Promise<string | null> => {
+    if (!GEMINI_API_KEY || games.length === 0) return null;
+
+    const last12Games = games.slice(0, 12);
+    const gamesData = last12Games.map((g, idx) => ({
+        oyun: idx + 1,
+        oyun_turu: g.oyun_turu,
+        tarih: new Date(g.created_at).toLocaleDateString('tr-TR'),
+        dogru_cevap: g.correct_answers ?? (10 - (g.hata_sayisi || 0)),
+        hata_sayisi: g.hata_sayisi,
+        sure_saniye: g.sure || Math.round((g.response_time || 0) / 1000),
+        bilisselHiz: g.cognitive_speed_score || 0,
+    }));
+
+    const prompt = `Sen bir okul öncesi eğitim uzmanısın. ${childName} (${childAge} aylık) isimli çocuğun son ${last12Games.length} oyunluk performans verilerini analiz et.
+
+VERİLER (JSON):
+${JSON.stringify(gamesData, null, 2)}
+
+GÖREV:
+1. Sadece son oyunu değil, İLK oyundan SON oyuna kadar TREND ANALİZİ yap
+2. Gelişim gösterilen alanları vurgula (Örn: "Son 3 oyunda tepki hızı %20 arttı")
+3. Düşüş varsa nazikçe belirt ve öneri sun
+4. Çocuğun yaşına uygun pedagojik öneriler ver
+5. Raporu 3-4 paragraf halinde, sıcak ve veliye hitap eden bir dille yaz
+
+ÖNEMLİ: Raporu Türkçe yaz, teknik terimlerden kaçın, veli anlayacak şekilde samimi bir dil kullan.`;
+
+    try {
+        const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY.trim()}`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            console.error('Gemini API hatası:', await response.text());
+            return null;
+        }
+
+        const data = await response.json();
+        return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    } catch (error) {
+        console.error('Gemini analiz hatası:', error);
+        return null;
+    }
+};
 
 interface VeliDashboardProps {
     childName: string;
@@ -79,6 +135,26 @@ const CHARACTERS = {
     mavis: '🐦',  // Bird
 };
 
+// Helper: Format milliseconds to readable time (e.g., "84sn" or "1dk 24sn")
+const formatTime = (ms: number | null): string => {
+    if (!ms || ms <= 0) return 'Analiz Ediliyor...';
+    const totalSeconds = Math.round(ms / 1000);
+    if (totalSeconds < 60) return `${totalSeconds}sn`;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return seconds > 0 ? `${minutes}dk ${seconds}sn` : `${minutes}dk`;
+};
+
+// Helper: Calculate cognitive speed score with new formula
+// Formula: (correct_answers / response_time_seconds) * difficulty_multiplier
+const calculateCognitiveSpeed = (correctAnswers: number, responseTimeMs: number, difficultyLevel: number = 1): number => {
+    if (!responseTimeMs || responseTimeMs <= 0) return 0;
+    const responseTimeSeconds = responseTimeMs / 1000;
+    const difficultyMultiplier = 1 + (difficultyLevel * 0.1);
+    const score = (correctAnswers / responseTimeSeconds) * difficultyMultiplier * 100;
+    return Math.round(Math.min(100, score)); // Cap at 100
+};
+
 export default function VeliDashboard({ childName, childAge, email, subscriptionTier: initialTier, onClose }: VeliDashboardProps) {
     const { width, height } = Dimensions.get('window');
     const isTablet = width >= 768;
@@ -94,6 +170,30 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
 
     const [showTimeline, setShowTimeline] = useState(true);
+
+    // Cumulative AI Analysis state
+    const [cumulativeReport, setCumulativeReport] = useState<string | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+    // Handler for generating cumulative AI report
+    const handleGenerateCumulativeReport = async () => {
+        if (isAnalyzing || scores.length === 0) return;
+        setIsAnalyzing(true);
+        try {
+            const report = await analyzeWithGemini(childName, childAge, scores);
+            if (report) {
+                setCumulativeReport(report);
+                Alert.alert('✅ Analiz Tamamlandı', 'Kümülatif AI raporu oluşturuldu!');
+            } else {
+                Alert.alert('⚠️ Hata', 'Analiz oluşturulamadı. Lütfen tekrar deneyin.');
+            }
+        } catch (error) {
+            console.error('Cumulative analysis error:', error);
+            Alert.alert('❌ Hata', 'Bir sorun oluştu.');
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -234,6 +334,23 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         ? Math.round(miktarAvcisiScores.reduce((a, b) => a + (b.response_time || 0), 0) / miktarAvcisiScores.length)
         : scores.length > 0
             ? Math.round(scores.reduce((a, b) => a + ((b.sure || 0) * 1000), 0) / scores.length)
+            : 0;
+
+    // Recalculated cognitive speed with new formula
+    const recalculatedCognitiveSpeed = miktarAvcisiScores.length > 0
+        ? Math.round(
+            miktarAvcisiScores.reduce((a, b) => {
+                const correct = b.correct_answers || (10 - (b.hata_sayisi || 0));
+                return a + calculateCognitiveSpeed(correct, b.response_time || (b.sure || 0) * 1000, 1);
+            }, 0) / miktarAvcisiScores.length
+        )
+        : scores.length > 0
+            ? Math.round(
+                scores.reduce((a, b) => {
+                    const correct = 10 - (b.hata_sayisi || 0);
+                    return a + calculateCognitiveSpeed(correct, (b.sure || 0) * 1000, 1);
+                }, 0) / scores.length
+            )
             : 0;
 
     // Get all AI comments
@@ -457,7 +574,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             doc.roundedRect(margin + cardWidth + gap, yPos, cardWidth, cardHeight, 4, 4, 'F');
             doc.setFontSize(20);
             doc.setFont('helvetica', 'bold');
-            doc.text(`${avgCognitiveSpeed}`, margin + cardWidth + gap + cardWidth / 2, yPos + 12, { align: 'center' });
+            doc.text(`${recalculatedCognitiveSpeed}`, margin + cardWidth + gap + cardWidth / 2, yPos + 12, { align: 'center' });
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.text('Bilissel Hiz', margin + cardWidth + gap + cardWidth / 2, yPos + 22, { align: 'center' });
@@ -469,7 +586,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             doc.roundedRect(margin, yPos, cardWidth, cardHeight, 4, 4, 'F');
             doc.setFontSize(20);
             doc.setFont('helvetica', 'bold');
-            doc.text(`${avgResponseTime}ms`, margin + cardWidth / 2, yPos + 12, { align: 'center' });
+            doc.text(formatTime(avgResponseTime), margin + cardWidth / 2, yPos + 12, { align: 'center' });
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.text('Tepki Suresi', margin + cardWidth / 2, yPos + 22, { align: 'center' });
@@ -534,16 +651,19 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             }
 
             // ========== FOOTER ==========
-            yPos = pageHeight - 20;
+            yPos = pageHeight - 25;
             doc.setFillColor(102, 126, 234);
-            doc.rect(0, yPos - 5, pageWidth, 25, 'F');
+            doc.rect(0, yPos - 5, pageWidth, 30, 'F');
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(8);
-            doc.text('Turkiye Yuzyili Maarif Modeli kriterlerine uygun hazirlanmistir', pageWidth / 2, yPos + 3, { align: 'center' });
-            doc.setFontSize(10);
+            doc.text('Turkiye Yuzyili Maarif Modeli kriterlerine uygun hazirlanmistir', pageWidth / 2, yPos + 2, { align: 'center' });
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.text('childhoodtech.com - Erken Cocukluk Egitim Teknolojileri', pageWidth / 2, yPos + 12, { align: 'center' });
+            doc.text('ChildhoodTech Ekibi', pageWidth / 2, yPos + 12, { align: 'center' });
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('childhoodtech.com - Erken Cocukluk Egitim Teknolojileri', pageWidth / 2, yPos + 20, { align: 'center' });
 
             // Download
             doc.save(`${cleanChildName}_Infografik_Rapor_${dateStr.replace(/\//g, '-')}.pdf`);
@@ -630,9 +750,12 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             ctx.fillStyle = '#607D8B';
             ctx.fillText('Dogru Cevap', 780, 820);
 
-            // Branding
+            // Branding - ChildhoodTech Ekibi
             ctx.fillStyle = '#9C27B0';
-            ctx.font = 'bold 28px Arial';
+            ctx.font = 'bold 32px Arial';
+            ctx.fillText('ChildhoodTech Ekibi', 540, 920);
+            ctx.font = '22px Arial';
+            ctx.fillStyle = '#607D8B';
             ctx.fillText('childhoodtech.com', 540, 960);
 
             // Download
@@ -907,7 +1030,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 <MetricCard
                                     emoji="⚡"
                                     title="Bilişsel Hız"
-                                    value={avgCognitiveSpeed}
+                                    value={recalculatedCognitiveSpeed > 0 ? recalculatedCognitiveSpeed : 'Analiz Ediliyor...'}
                                     subtitle="Puan"
                                     color={COLORS.secondary}
                                     delay={200}
@@ -915,7 +1038,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 <MetricCard
                                     emoji="⏱️"
                                     title="Tepki Süresi"
-                                    value={`${avgResponseTime}ms`}
+                                    value={formatTime(avgResponseTime)}
                                     subtitle="Ortalama"
                                     color={COLORS.orange}
                                     delay={400}
@@ -1019,6 +1142,53 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     {/* GELISIM TAB */}
                     {activeTab === 'gelisim' && (
                         <Animated.View style={{ opacity: fadeAnim }}>
+                            {/* Cumulative AI Analysis Card */}
+                            <View style={[styles.chartCard, { marginBottom: 20, borderWidth: 2, borderColor: COLORS.premium }]}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                                    <Text style={{ fontSize: 24, marginRight: 10 }}>🧠</Text>
+                                    <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Kümülatif AI Analizi</Text>
+                                </View>
+                                <Text style={{ color: COLORS.textLight, fontSize: 13, marginBottom: 12 }}>
+                                    Son 12 oyunluk veriler Gemini AI tarafından analiz edilir ve trend raporu oluşturulur.
+                                </Text>
+
+                                {cumulativeReport ? (
+                                    <View>
+                                        <Text style={{ color: COLORS.text, fontSize: 14, lineHeight: 22 }}>
+                                            {cumulativeReport}
+                                        </Text>
+                                        <TouchableOpacity
+                                            style={[styles.analyzeButton, { backgroundColor: COLORS.accent, marginTop: 12 }]}
+                                            onPress={handleGenerateCumulativeReport}
+                                            disabled={isAnalyzing}
+                                        >
+                                            <Ionicons name="refresh" size={16} color="#fff" />
+                                            <Text style={styles.analyzeButtonText}>Yeniden Analiz Et</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                ) : (
+                                    <TouchableOpacity
+                                        style={[styles.analyzeButton, { backgroundColor: COLORS.premium }]}
+                                        onPress={handleGenerateCumulativeReport}
+                                        disabled={isAnalyzing || scores.length === 0}
+                                    >
+                                        {isAnalyzing ? (
+                                            <ActivityIndicator size="small" color="#fff" />
+                                        ) : (
+                                            <>
+                                                <Ionicons name="sparkles" size={18} color="#fff" />
+                                                <Text style={styles.analyzeButtonText}>
+                                                    {scores.length === 0 ? 'Veri Bekleniyor...' : 'Son 12 Oyunu Analiz Et'}
+                                                </Text>
+                                            </>
+                                        )}
+                                    </TouchableOpacity>
+                                )}
+                                <Text style={{ color: '#888', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
+                                    Gemini 2.0 Flash ile güçlendirilmiştir
+                                </Text>
+                            </View>
+
                             {selectedGameIndex === null && (
                                 <View style={{ backgroundColor: '#fff3cd', padding: 10, borderRadius: 8, marginHorizontal: 16, marginBottom: 16 }}>
                                     <Text style={{ color: '#856404', fontSize: 13, textAlign: 'center' }}>
