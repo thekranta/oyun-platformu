@@ -10,7 +10,7 @@ import {
     View
 } from 'react-native';
 
-interface Song {
+export interface Song {
     id: string;
     title: string;
     artist: string;
@@ -19,7 +19,7 @@ interface Song {
     icon: keyof typeof Ionicons.glyphMap;
 }
 
-const SONGS: Song[] = [
+export const SONGS: Song[] = [
     {
         id: '1',
         title: 'ChildhoodTech Şarkısı V1',

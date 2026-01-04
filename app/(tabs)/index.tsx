@@ -8,7 +8,7 @@ import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
 import KutuyuBul from '@/components/KutuyuBul';
-import MuzikCalar from '@/components/MuzikCalar';
+import MuzikCalar, { SONGS } from '@/components/MuzikCalar';
 import OnlukCerceve from '@/components/OnlukCerceve';
 import QuantityComparison from '@/components/QuantityComparison';
 import RakamYazma from '@/components/RakamYazma';
@@ -905,139 +905,17 @@ export default function App() {
 
             {activeTab === 'muzikler' && (
               <>
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#FFD54F' }]}
-                  onPress={() => { setSelectedSongIndex(0); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="musical-notes" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>ChildhoodTech V1</Text>
-                  <Text style={styles.oyunAciklama}>Web Sitemiz İçin</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#4ECDC4' }]}
-                  onPress={() => { setSelectedSongIndex(1); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="planet" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>ChildhoodTech V2</Text>
-                  <Text style={styles.oyunAciklama}>Tanıtım Müziği</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#FF7043' }]}
-                  onPress={() => { setSelectedSongIndex(2); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="heart" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Adil Oyun</Text>
-                  <Text style={styles.oyunAciklama}>Güzel Oyun</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#AB47BC' }]}
-                  onPress={() => { setSelectedSongIndex(3); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="people" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Paylaşınca Güzel</Text>
-                  <Text style={styles.oyunAciklama}>Arkadaşlık</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#66BB6A' }]}
-                  onPress={() => { setSelectedSongIndex(4); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="leaf" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Çalışkan Arı</Text>
-                  <Text style={styles.oyunAciklama}>Sorumluluk</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#42A5F5' }]}
-                  onPress={() => { setSelectedSongIndex(5); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="checkmark-circle" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Doğru Söylerim</Text>
-                  <Text style={styles.oyunAciklama}>Dürüstlük</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#EC407A' }]}
-                  onPress={() => { setSelectedSongIndex(6); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="home" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Biz Bir Aileyiz</Text>
-                  <Text style={styles.oyunAciklama}>Aile Sevgisi</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#78909C' }]}
-                  onPress={() => { setSelectedSongIndex(7); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="hourglass" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Beklerim Sakince</Text>
-                  <Text style={styles.oyunAciklama}>Sabır</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#BA68C8' }]}
-                  onPress={() => { setSelectedSongIndex(8); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="lock-closed" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Benim Özel Alanım</Text>
-                  <Text style={styles.oyunAciklama}>Mahremiyet</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#26A69A' }]}
-                  onPress={() => { setSelectedSongIndex(9); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="eye" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Güzeli Görürüm</Text>
-                  <Text style={styles.oyunAciklama}>Pozitif Bakış</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#FF7043' }]}
-                  onPress={() => { setSelectedSongIndex(10); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="heart-circle" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Kalbim Duyarlı</Text>
-                  <Text style={styles.oyunAciklama}>Duyarlılık</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#5C6BC0' }]}
-                  onPress={() => { setSelectedSongIndex(11); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="star" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Sadece Yaptım</Text>
-                  <Text style={styles.oyunAciklama}>Alçakgönüllülük</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#FFA726' }]}
-                  onPress={() => { setSelectedSongIndex(12); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="mic" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Seçerim, Söylerim</Text>
-                  <Text style={styles.oyunAciklama}>İfade Özgürlüğü</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#F06292' }]}
-                  onPress={() => { setSelectedSongIndex(13); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="rose" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Yumuşacık Merhamet</Text>
-                  <Text style={styles.oyunAciklama}>Merhamet</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.oyunKarti, { backgroundColor: '#8D6E63' }]}
-                  onPress={() => { setSelectedSongIndex(14); oyunuBaslat('muzik-calar'); }}
-                >
-                  <Ionicons name="people-circle" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Çıtır Çıtır Dostluk</Text>
-                  <Text style={styles.oyunAciklama}>Dostluk</Text>
-                </TouchableOpacity>
+                {SONGS.map((song, index) => (
+                  <TouchableOpacity
+                    key={song.id}
+                    style={[styles.oyunKarti, { backgroundColor: song.coverColor }]}
+                    onPress={() => { setSelectedSongIndex(index); oyunuBaslat('muzik-calar'); }}
+                  >
+                    <Ionicons name={song.icon} size={40} color="white" style={{ marginBottom: 10 }} />
+                    <Text style={styles.oyunBaslik} numberOfLines={2}>{song.title}</Text>
+                    <Text style={styles.oyunAciklama} numberOfLines={1}>{song.artist}</Text>
+                  </TouchableOpacity>
+                ))}
               </>
             )}
           </View>
