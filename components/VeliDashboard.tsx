@@ -183,7 +183,30 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             const report = await analyzeWithGemini(childName, childAge, scores);
             if (report) {
                 setCumulativeReport(report);
-                Alert.alert('✅ Analiz Tamamlandı', 'Kümülatif AI raporu oluşturuldu!');
+
+                // Save to Supabase - Update the latest score with cumulative report
+                if (scores.length > 0 && scores[0].id) {
+                    try {
+                        await fetch(
+                            `${SUPABASE_URL}/rest/v1/oyun_skorlari?id=eq.${scores[0].id}`,
+                            {
+                                method: 'PATCH',
+                                headers: {
+                                    'apikey': SUPABASE_KEY || '',
+                                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                    'Content-Type': 'application/json',
+                                    'Prefer': 'return=minimal',
+                                },
+                                body: JSON.stringify({ yapay_zeka_yorumu: report }),
+                            }
+                        );
+                        console.log('💾 Cumulative report saved to Supabase');
+                    } catch (saveError) {
+                        console.error('Failed to save report to Supabase:', saveError);
+                    }
+                }
+
+                Alert.alert('✅ Analiz Tamamlandı', 'Kümülatif AI raporu oluşturuldu ve kaydedildi!');
             } else {
                 Alert.alert('⚠️ Hata', 'Analiz oluşturulamadı. Lütfen tekrar deneyin.');
             }
@@ -290,6 +313,19 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
             setScores(Array.isArray(scoresData) ? scoresData : []);
             console.log('✅ Total scores loaded:', Array.isArray(scoresData) ? scoresData.length : 0);
+
+            // Cache check: If the latest score has a cumulative AI comment, use it
+            if (Array.isArray(scoresData) && scoresData.length > 0) {
+                const latestScore = scoresData[0];
+                // Check if there's an existing cumulative report (contains trend analysis keywords)
+                if (latestScore.yapay_zeka_yorumu &&
+                    (latestScore.yapay_zeka_yorumu.includes('trend') ||
+                        latestScore.yapay_zeka_yorumu.includes('gelişim') ||
+                        latestScore.yapay_zeka_yorumu.includes('son') && latestScore.yapay_zeka_yorumu.length > 500)) {
+                    console.log('📋 Using cached cumulative report from Supabase');
+                    setCumulativeReport(latestScore.yapay_zeka_yorumu);
+                }
+            }
 
             const profileResponse = await fetch(
                 `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=subscription_tier`,
@@ -468,8 +504,33 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                 });
             };
 
-            const jsPDF = await loadJsPDF();
+            // Load Roboto font from CDN for Turkish character support
+            const loadRobotoFont = async (): Promise<string | null> => {
+                try {
+                    const fontResponse = await fetch(
+                        'https://raw.githubusercontent.com/nicktaras/roboto-font-base64/main/Roboto-Regular.txt'
+                    );
+                    if (fontResponse.ok) {
+                        return await fontResponse.text();
+                    }
+                    return null;
+                } catch {
+                    console.warn('Roboto font yüklenemedi, varsayılan font kullanılacak');
+                    return null;
+                }
+            };
+
+            const [jsPDF, robotoBase64] = await Promise.all([loadJsPDF(), loadRobotoFont()]);
             const doc = new jsPDF('p', 'mm', 'a4');
+
+            // Embed Roboto font if loaded successfully
+            if (robotoBase64) {
+                doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
+                doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+                doc.setFont('Roboto');
+                console.log('✅ Roboto font embedded for Turkish support');
+            }
+
             const pageWidth = 210;
             const pageHeight = 297;
             const margin = 15;
@@ -636,22 +697,27 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
             if (pdfAIComment) {
                 doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
+                // Use Roboto if available, otherwise fallback to helvetica
+                doc.setFont(robotoBase64 ? 'Roboto' : 'helvetica', 'normal');
                 doc.setTextColor(38, 50, 56);
 
-                const cleanText = pdfAIComment
+                let cleanText = pdfAIComment
                     // Strip markdown bold/italic syntax
                     .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold** -> bold
                     .replace(/\*([^*]+)\*/g, '$1')      // *italic* -> italic
                     .replace(/__([^_]+)__/g, '$1')      // __bold__ -> bold
-                    .replace(/_([^_]+)_/g, '$1')        // _italic_ -> italic
-                    // Turkish character transliteration for PDF compatibility
-                    .replace(/ş/g, 's').replace(/Ş/g, 'S')
-                    .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-                    .replace(/ü/g, 'u').replace(/Ü/g, 'U')
-                    .replace(/ö/g, 'o').replace(/Ö/g, 'O')
-                    .replace(/ı/g, 'i').replace(/İ/g, 'I')
-                    .replace(/ç/g, 'c').replace(/Ç/g, 'C');
+                    .replace(/_([^_]+)_/g, '$1');       // _italic_ -> italic
+
+                // Only transliterate if Roboto font not loaded (fallback)
+                if (!robotoBase64) {
+                    cleanText = cleanText
+                        .replace(/ş/g, 's').replace(/Ş/g, 'S')
+                        .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+                        .replace(/ü/g, 'u').replace(/Ü/g, 'U')
+                        .replace(/ö/g, 'o').replace(/Ö/g, 'O')
+                        .replace(/ı/g, 'i').replace(/İ/g, 'I')
+                        .replace(/ç/g, 'c').replace(/Ç/g, 'C');
+                }
 
                 const lines = doc.splitTextToSize(cleanText, pageWidth - 2 * margin - 5);
                 lines.forEach((line: string) => {
