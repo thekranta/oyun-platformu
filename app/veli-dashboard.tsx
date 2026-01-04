@@ -75,25 +75,41 @@ export default function VeliDashboardPage() {
 
         setLoading(true);
         try {
-            // Use ilike for case-insensitive email matching
-            const response = await fetch(
-                `${SUPABASE_URL}/rest/v1/profiles?email=ilike.${encodeURIComponent(email.trim().toLowerCase())}`,
-                {
-                    headers: {
-                        'apikey': SUPABASE_KEY!,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    },
-                }
-            );
+            const emailValue = email.trim();
+            const queryUrl = `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(emailValue)}`;
+
+            console.log('🔍 Supabase Query URL:', queryUrl);
+            console.log('🔍 Looking for email:', emailValue);
+
+            const response = await fetch(queryUrl, {
+                headers: {
+                    'apikey': SUPABASE_KEY!,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response ok:', response.ok);
+
             const data = await response.json();
-            console.log('Profile response:', data);
+            console.log('📦 Profile response data:', JSON.stringify(data, null, 2));
+            console.log('📦 Data type:', typeof data);
+            console.log('📦 Is array:', Array.isArray(data));
+            console.log('📦 Length:', Array.isArray(data) ? data.length : 'N/A');
 
             if (data && Array.isArray(data) && data.length > 0) {
+                console.log('✅ Profile found:', data[0]);
                 setProfile(data[0]);
+            } else if (data && data.message) {
+                // Supabase error response
+                console.error('❌ Supabase error:', data.message);
+                showAlert('API Hatası', `Supabase: ${data.message}`);
             } else {
+                console.log('⚠️ No profile found for email:', emailValue);
                 showAlert(
                     'Kayıt Bulunamadı',
-                    'Bu email ile kayıtlı bir hesap bulunamadı.\n\nÖnce ana ekrandan "Kayıt Ol" ile kayıt olun veya Demo ile devam edin.',
+                    `"${emailValue}" ile kayıtlı hesap bulunamadı.\n\nÖnce ana ekrandan "Kayıt Ol" ile kayıt olun veya Demo ile devam edin.`,
                     [
                         { text: 'Kapat', style: 'cancel' },
                         { text: 'Demo Giriş', onPress: useDemoProfile }
@@ -101,8 +117,8 @@ export default function VeliDashboardPage() {
                 );
             }
         } catch (error) {
-            console.error('Profil yükleme hatası:', error);
-            showAlert('Hata', 'Profil yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.');
+            console.error('❌ Profil yükleme hatası:', error);
+            showAlert('Hata', `Profil yüklenirken bir hata oluştu: ${error}`);
         } finally {
             setLoading(false);
         }
