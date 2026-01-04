@@ -38,19 +38,45 @@ interface GameScore {
     sure: number;
 }
 
-// Fun color palette inspired by Pıtır, Filo, Maviş
+// Pastel color palette - soft and child-friendly
 const COLORS = {
-    primary: '#1E88E5',      // Bright Blue (Maviş)
-    secondary: '#FFB300',    // Warm Yellow (Pıtır)
-    accent: '#66BB6A',       // Fresh Green
-    premium: '#9C27B0',      // Vibrant Purple
-    pink: '#EC407A',         // Fun Pink
-    orange: '#FF7043',       // Playful Orange
-    card: '#FFFFFF',
+    // Backgrounds
+    background: '#FFF9E6',      // Soft cream yellow
+    backgroundAlt: '#E3F2FD',   // Baby blue
+    backgroundGradient1: '#FFECD2', // Peach
+    backgroundGradient2: '#FCB69F', // Soft coral
+
+    // Primary colors  
+    primary: '#1E88E5',         // Bright Blue (Maviş)
+    secondary: '#FFB300',       // Warm Yellow (Pıtır)
+    accent: '#66BB6A',          // Fresh Green (Filo)
+    premium: '#9C27B0',         // Vibrant Purple
+
+    // Accent colors
+    pink: '#F8BBD9',            // Soft Pink
+    orange: '#FFCCBC',          // Soft Orange
+    mint: '#B2DFDB',            // Soft Mint
+    lavender: '#E1BEE7',        // Soft Lavender
+
+    // Text and UI
+    card: 'rgba(255,255,255,0.95)',
+    cardAlt: 'rgba(255,243,224,0.9)',
     text: '#263238',
     textLight: '#607D8B',
     gradient1: '#667eea',
     gradient2: '#764ba2',
+
+    // Chart colors
+    chartBlue: '#42A5F5',
+    chartGreen: '#66BB6A',
+    chartOrange: '#FF7043',
+};
+
+// Character emojis for fun UI
+const CHARACTERS = {
+    pitir: '🐿️',  // Squirrel
+    filo: '🦊',   // Fox
+    mavis: '🐦',  // Bird
 };
 
 export default function VeliDashboard({ childName, childAge, email, subscriptionTier: initialTier, onClose }: VeliDashboardProps) {
@@ -64,6 +90,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'standard' | 'premium'>(initialTier || 'free');
     const [generatingPDF, setGeneratingPDF] = useState(false);
     const [aiReportExpanded, setAiReportExpanded] = useState(false);
+    const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
+    const [showTimeline, setShowTimeline] = useState(true);
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -181,6 +209,38 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const latestAIComment = scores.find(s => s.yapay_zeka_yorumu)?.yapay_zeka_yorumu || null;
     const isPremium = subscriptionTier === 'premium';
     const successRate = avgCorrectAnswers * 10;
+
+    // Selected game's AI comment for timeline
+    const selectedGameAIComment = selectedGameIndex !== null && scores[selectedGameIndex]?.yapay_zeka_yorumu
+        ? scores[selectedGameIndex].yapay_zeka_yorumu
+        : latestAIComment;
+
+    // Time series data for charts (reverse to show oldest first)
+    const getTimeSeriesData = (field: 'cognitive_speed_score' | 'correct_answers') => {
+        return [...scores]
+            .reverse()
+            .map((s, idx) => ({
+                index: idx,
+                value: s[field] || 0,
+                date: new Date(s.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }),
+                hasData: (s[field] || 0) > 0
+            }))
+            .filter(d => d.hasData); // Filter out zero values
+    };
+
+    // Best achievement detection
+    const getBestAchievement = () => {
+        if (scores.length === 0) return { title: 'Başlangıç Yolcusu', emoji: '🚀', description: 'İlk oyununu oynamaya hazır!' };
+
+        if (avgCorrectAnswers >= 9) return { title: 'Bilgi Şampiyonu', emoji: '🏆', description: 'Neredeyse hatasız performans!' };
+        if (avgCognitiveSpeed >= 80) return { title: 'Hız Ustası', emoji: '⚡', description: 'Çok hızlı düşünme yeteneği!' };
+        if (successRate >= 80) return { title: 'Yıldız Öğrenci', emoji: '🌟', description: 'Harika bir başarı oranı!' };
+        if (scores.length >= 10) return { title: 'Azimli Kaşif', emoji: '🎯', description: 'Düzenli pratik yapıyor!' };
+
+        return { title: 'Gelişen Yetenek', emoji: '🌱', description: 'Her gün biraz daha iyi!' };
+    };
+
+    const bestAchievement = getBestAchievement();
 
     // Fun emoji based on performance
     const getPerformanceEmoji = () => {
@@ -346,6 +406,120 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         }
     };
 
+    // Simple line chart using View elements (no external library needed)
+    const SimpleLineChart = ({ data, color, label }: { data: Array<{ index: number, value: number, date: string }>, color: string, label: string }) => {
+        if (data.length === 0) {
+            return (
+                <View style={styles.chartEmpty}>
+                    <Text style={styles.chartEmptyEmoji}>📊</Text>
+                    <Text style={styles.chartEmptyText}>Analiz Bekleniyor...</Text>
+                </View>
+            );
+        }
+
+        const maxValue = Math.max(...data.map(d => d.value), 10);
+        const chartWidth = width - 80;
+        const chartHeight = 120;
+        const pointSpacing = data.length > 1 ? chartWidth / (data.length - 1) : chartWidth / 2;
+
+        return (
+            <View style={styles.chartContainer}>
+                <Text style={styles.chartLabel}>{label}</Text>
+                <View style={[styles.chartArea, { height: chartHeight }]}>
+                    {/* Grid lines */}
+                    {[0, 25, 50, 75, 100].map((pct, i) => (
+                        <View key={i} style={[styles.chartGridLine, { bottom: chartHeight * pct / 100 }]} />
+                    ))}
+
+                    {/* Data points and lines */}
+                    {data.map((point, idx) => {
+                        const x = idx * pointSpacing;
+                        const y = (point.value / maxValue) * (chartHeight - 20);
+
+                        return (
+                            <View key={idx}>
+                                {/* Line to next point */}
+                                {idx < data.length - 1 && (
+                                    <View style={[
+                                        styles.chartLine,
+                                        {
+                                            left: x + 6,
+                                            bottom: y + 6,
+                                            width: pointSpacing,
+                                            backgroundColor: color,
+                                            transform: [{
+                                                rotate: `${Math.atan2(
+                                                    ((data[idx + 1].value / maxValue) * (chartHeight - 20)) - y,
+                                                    pointSpacing
+                                                ) * 180 / Math.PI}deg`
+                                            }],
+                                        }
+                                    ]} />
+                                )}
+                                {/* Point */}
+                                <View style={[
+                                    styles.chartPoint,
+                                    { left: x, bottom: y, backgroundColor: color }
+                                ]}>
+                                    <Text style={styles.chartPointValue}>{point.value}</Text>
+                                </View>
+                            </View>
+                        );
+                    })}
+                </View>
+                {/* X-axis labels */}
+                <View style={styles.chartXAxis}>
+                    {data.slice(0, 5).map((point, idx) => (
+                        <Text key={idx} style={styles.chartXLabel}>{point.date}</Text>
+                    ))}
+                </View>
+            </View>
+        );
+    };
+
+    // Timeline item for game history
+    const TimelineItem = ({ game, index, isSelected }: { game: GameScore, index: number, isSelected: boolean }) => {
+        const gameLabels: Record<string, { emoji: string, name: string }> = {
+            'miktar-avcisi': { emoji: '🎯', name: 'Miktar Avcısı' },
+            'golge-dedektifi': { emoji: '🔍', name: 'Gölge Dedektifi' },
+            'diziyi-tamamla': { emoji: '🔢', name: 'Diziyi Tamamla' },
+            'rakam-yazma': { emoji: '✏️', name: 'Rakam Yazma' },
+            'yapboz': { emoji: '🧩', name: 'Yapboz' },
+        };
+
+        const gameInfo = gameLabels[game.oyun_turu] || { emoji: '🎮', name: game.oyun_turu };
+        const gameDate = new Date(game.created_at).toLocaleDateString('tr-TR', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+
+        return (
+            <TouchableOpacity
+                style={[
+                    styles.timelineItem,
+                    isSelected && styles.timelineItemSelected
+                ]}
+                onPress={() => setSelectedGameIndex(index)}
+            >
+                <View style={styles.timelineDot} />
+                <View style={styles.timelineContent}>
+                    <Text style={styles.timelineEmoji}>{gameInfo.emoji}</Text>
+                    <View style={styles.timelineInfo}>
+                        <Text style={styles.timelineGameName}>{gameInfo.name}</Text>
+                        <Text style={styles.timelineDate}>{gameDate}</Text>
+                    </View>
+                    {game.yapay_zeka_yorumu && (
+                        <View style={styles.timelineAIBadge}>
+                            <Text style={styles.timelineAIBadgeText}>AI</Text>
+                        </View>
+                    )}
+                </View>
+            </TouchableOpacity>
+        );
+    };
+
     // Fun metric card with animation
     const MetricCard = ({ emoji, title, value, subtitle, color, delay = 0 }: {
         emoji: string;
@@ -452,6 +626,52 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             </View>
                         </View>
                     </Animated.View>
+
+                    {/* Best Achievement Badge */}
+                    <View style={styles.achievementCard}>
+                        <Text style={styles.achievementEmoji}>{bestAchievement.emoji}</Text>
+                        <Text style={styles.achievementTitle}>{bestAchievement.title}</Text>
+                        <Text style={styles.achievementDescription}>{bestAchievement.description}</Text>
+                        <View style={{ flexDirection: 'row', marginTop: 8 }}>
+                            <Text style={styles.achievementEmoji}>{CHARACTERS.pitir}</Text>
+                            <Text style={styles.achievementEmoji}>{CHARACTERS.filo}</Text>
+                            <Text style={styles.achievementEmoji}>{CHARACTERS.mavis}</Text>
+                        </View>
+                    </View>
+
+                    {/* Game History Timeline */}
+                    {scores.length > 0 && (
+                        <View style={styles.timelineSidebar}>
+                            <TouchableOpacity
+                                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                                onPress={() => setShowTimeline(!showTimeline)}
+                            >
+                                <Text style={styles.timelineSidebarTitle}>📅 Oyun Geçmişi ({scores.length})</Text>
+                                <Ionicons name={showTimeline ? "chevron-up" : "chevron-down"} size={20} color={COLORS.textLight} />
+                            </TouchableOpacity>
+                            {showTimeline && scores.slice(0, 10).map((score, index) => (
+                                <TimelineItem
+                                    key={score.id}
+                                    game={score}
+                                    index={index}
+                                    isSelected={selectedGameIndex === index}
+                                />
+                            ))}
+                        </View>
+                    )}
+
+                    {/* Time Series Charts */}
+                    <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>📈 Gelişim Grafikleri</Text>
+                    <SimpleLineChart
+                        data={getTimeSeriesData('correct_answers')}
+                        color={COLORS.chartGreen}
+                        label="🎯 Doğru Cevap Trendi"
+                    />
+                    <SimpleLineChart
+                        data={getTimeSeriesData('cognitive_speed_score')}
+                        color={COLORS.chartBlue}
+                        label="⚡ Bilişsel Hız Trendi"
+                    />
 
                     {/* Metrics Grid */}
                     <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>🎯 Performans Metrikleri</Text>
@@ -1599,5 +1819,179 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '700',
         color: COLORS.primary,
+    },
+
+    // Chart styles
+    chartContainer: {
+        backgroundColor: COLORS.card,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+    },
+    chartLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: COLORS.text,
+        marginBottom: 12,
+    },
+    chartArea: {
+        position: 'relative',
+        backgroundColor: COLORS.backgroundAlt,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    chartGridLine: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        height: 1,
+        backgroundColor: 'rgba(0,0,0,0.05)',
+    },
+    chartLine: {
+        position: 'absolute',
+        height: 3,
+        borderRadius: 2,
+        transformOrigin: 'left center',
+    },
+    chartPoint: {
+        position: 'absolute',
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        borderWidth: 2,
+        borderColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    chartPointValue: {
+        fontSize: 8,
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    chartXAxis: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingTop: 8,
+    },
+    chartXLabel: {
+        fontSize: 10,
+        color: COLORS.textLight,
+    },
+    chartEmpty: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 32,
+        backgroundColor: COLORS.card,
+        borderRadius: 16,
+        marginBottom: 16,
+    },
+    chartEmptyEmoji: {
+        fontSize: 32,
+        marginBottom: 8,
+    },
+    chartEmptyText: {
+        fontSize: 14,
+        color: COLORS.textLight,
+    },
+
+    // Timeline styles
+    timelineItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 12,
+        backgroundColor: COLORS.card,
+        borderRadius: 12,
+        marginBottom: 8,
+        borderLeftWidth: 3,
+        borderLeftColor: COLORS.primary,
+    },
+    timelineItemSelected: {
+        backgroundColor: COLORS.backgroundAlt,
+        borderLeftColor: COLORS.accent,
+        borderLeftWidth: 4,
+    },
+    timelineDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: COLORS.primary,
+        marginRight: 12,
+    },
+    timelineContent: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    timelineEmoji: {
+        fontSize: 20,
+        marginRight: 10,
+    },
+    timelineInfo: {
+        flex: 1,
+    },
+    timelineGameName: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: COLORS.text,
+    },
+    timelineDate: {
+        fontSize: 11,
+        color: COLORS.textLight,
+        marginTop: 2,
+    },
+    timelineAIBadge: {
+        backgroundColor: COLORS.premium,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 10,
+    },
+    timelineAIBadgeText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+
+    // Timeline sidebar
+    timelineSidebar: {
+        backgroundColor: COLORS.card,
+        borderRadius: 20,
+        padding: 16,
+        marginBottom: 24,
+    },
+    timelineSidebarTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.text,
+        marginBottom: 12,
+    },
+
+    // Achievement badge
+    achievementCard: {
+        backgroundColor: COLORS.secondary,
+        borderRadius: 20,
+        padding: 20,
+        alignItems: 'center',
+        marginBottom: 24,
+        ...Platform.select({
+            web: { boxShadow: '0 4px 16px rgba(255,179,0,0.3)' },
+            default: { elevation: 4 },
+        }),
+    },
+    achievementEmoji: {
+        fontSize: 48,
+        marginBottom: 12,
+    },
+    achievementTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#fff',
+        textAlign: 'center',
+    },
+    achievementDescription: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.9)',
+        textAlign: 'center',
+        marginTop: 4,
     },
 });
