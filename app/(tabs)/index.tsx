@@ -907,36 +907,15 @@ export default function App() {
               <View style={{ width: '100%', paddingBottom: 40 }}>
                 {/* 1. Matematik Şarkıları */}
                 <Text style={styles.sectionTitle}>🔢 Matematik Şarkıları</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 5, paddingBottom: 15 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
                   {SONGS.filter(s => s.artist.includes('Matematik')).map((song) => (
-                    <TouchableOpacity
-                      key={song.id}
-                      style={[styles.oyunKarti, { backgroundColor: song.coverColor, marginRight: 15, width: 150, height: 160 }]}
-                      onPress={() => {
-                        const realIndex = SONGS.findIndex(s => s.id === song.id);
-                        setSelectedSongIndex(realIndex);
-                        oyunuBaslat('muzik-calar');
-                      }}
-                    >
-                      <Ionicons name={song.icon} size={36} color="white" style={{ marginBottom: 10 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 16 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 11 }]} numberOfLines={1}>{song.artist}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-
-                {/* 2. Değerler Eğitimi - Grid Layout */}
-                <Text style={styles.sectionTitle}>🌟 Değerler Eğitimi</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 5, justifyContent: 'flex-start' }}>
-                  {SONGS.filter(s => !s.artist.includes('Matematik') && !s.title.includes('ChildhoodTech')).map((song) => (
                     <TouchableOpacity
                       key={song.id}
                       style={[styles.oyunKarti, {
                         backgroundColor: song.coverColor,
-                        marginRight: 10,
-                        marginBottom: 10,
-                        width: 100,
-                        height: 110,
+                        margin: 6,
+                        width: 105,
+                        height: 115,
                         paddingHorizontal: 8,
                         paddingVertical: 10,
                       }]}
@@ -946,8 +925,35 @@ export default function App() {
                         oyunuBaslat('muzik-calar');
                       }}
                     >
-                      <Ionicons name={song.icon} size={24} color="white" style={{ marginBottom: 4 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 11 }]} numberOfLines={2}>{song.title}</Text>
+                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
+                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
+                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* 2. Değerler Eğitimi */}
+                <Text style={styles.sectionTitle}>🌟 Değerler Eğitimi</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
+                  {SONGS.filter(s => !s.artist.includes('Matematik') && !s.title.includes('ChildhoodTech')).map((song) => (
+                    <TouchableOpacity
+                      key={song.id}
+                      style={[styles.oyunKarti, {
+                        backgroundColor: song.coverColor,
+                        margin: 6,
+                        width: 105,
+                        height: 115,
+                        paddingHorizontal: 8,
+                        paddingVertical: 10,
+                      }]}
+                      onPress={() => {
+                        const realIndex = SONGS.findIndex(s => s.id === song.id);
+                        setSelectedSongIndex(realIndex);
+                        oyunuBaslat('muzik-calar');
+                      }}
+                    >
+                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
+                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
                       <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
                     </TouchableOpacity>
                   ))}
@@ -955,23 +961,30 @@ export default function App() {
 
                 {/* 3. Özel Koleksiyon */}
                 <Text style={styles.sectionTitle}>🎵 Özel Koleksiyon (ChildhoodTech)</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 5, paddingBottom: 15 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
                   {SONGS.filter(s => s.title.includes('ChildhoodTech')).map((song) => (
                     <TouchableOpacity
                       key={song.id}
-                      style={[styles.oyunKarti, { backgroundColor: song.coverColor, marginRight: 15, width: 150, height: 160 }]}
+                      style={[styles.oyunKarti, {
+                        backgroundColor: song.coverColor,
+                        margin: 6,
+                        width: 105,
+                        height: 115,
+                        paddingHorizontal: 8,
+                        paddingVertical: 10,
+                      }]}
                       onPress={() => {
                         const realIndex = SONGS.findIndex(s => s.id === song.id);
                         setSelectedSongIndex(realIndex);
                         oyunuBaslat('muzik-calar');
                       }}
                     >
-                      <Ionicons name={song.icon} size={36} color="white" style={{ marginBottom: 10 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 16 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 11 }]} numberOfLines={1}>{song.artist}</Text>
+                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
+                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
+                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
+                </View>
               </View>
             )}
           </View>
