@@ -117,6 +117,40 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         ).start();
     }, []);
 
+    // Helper to normalize game names from DB
+    const normalizeGameName = (name: string) => {
+        if (!name) return 'bilinmeyen-oyun';
+        return name.toLowerCase()
+            .trim()
+            .replace(/_/g, '-')
+            .replace(/\s+/g, '-')
+            .replace(/ı/g, 'i').replace(/İ/g, 'i')
+            .replace(/ş/g, 's').replace(/Ş/g, 's')
+            .replace(/ğ/g, 'g').replace(/Ğ/g, 'g')
+            .replace(/ü/g, 'u').replace(/Ü/g, 'u')
+            .replace(/ö/g, 'o').replace(/Ö/g, 'o')
+            .replace(/ç/g, 'c').replace(/Ç/g, 'c');
+    };
+
+    // Game Labels Mapping (Updated with DB variations)
+    const gameLabels: Record<string, { emoji: string, name: string }> = {
+        'miktar-avcisi': { emoji: '🎯', name: 'Miktar Avcısı' },
+        'golge-dedektifi': { emoji: '🔍', name: 'Gölge Dedektifi' },
+        'diziyi-tamamla': { emoji: '🔢', name: 'Diziyi Tamamla' },
+        'dizi-tamamla': { emoji: '🔢', name: 'Dizi Tamamla' },
+        'rakam-yazma': { emoji: '✏️', name: 'Rakam Yazma' },
+        'yapboz': { emoji: '🧩', name: 'Yapboz' },
+        'ceviz-macera': { emoji: '🌰', name: 'Ceviz Macerası' },
+        'aile-sepeti': { emoji: '🧱', name: 'Aile Sepeti' },
+        'sayi-komsulari': { emoji: '🔗', name: 'Sayı Komşuları' },
+        'sayilari-birlestir': { emoji: '🔗', name: 'Sayıları Birleştir' },
+        'tarti-dengesi': { emoji: '⚖️', name: 'Tartı Dengesi' },
+        'onluk-cerceve': { emoji: '🧮', name: 'Onluk Çerçeve' },
+        'bunu-soyle': { emoji: '🗣️', name: 'Bunu Söyle' },
+        'eslestirme': { emoji: '🃏', name: 'Eşleştirme' },
+        'ritmik-sayma': { emoji: '🔢', name: 'Ritmik Sayma' },
+    };
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -669,22 +703,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     };
 
     // Timeline item for game history
-    // Timeline item for game history
     const TimelineItem = ({ game, index, isSelected }: { game: GameScore, index: number, isSelected: boolean }) => {
-        const gameLabels: Record<string, { emoji: string, name: string }> = {
-            'miktar-avcisi': { emoji: '🎯', name: 'Miktar Avcısı' },
-            'golge-dedektifi': { emoji: '🔍', name: 'Gölge Dedektifi' },
-            'diziyi-tamamla': { emoji: '🔢', name: 'Diziyi Tamamla' },
-            'dizi-tamamla': { emoji: '🔢', name: 'Dizi Tamamla' },
-            'rakam-yazma': { emoji: '✏️', name: 'Rakam Yazma' },
-            'yapboz': { emoji: '🧩', name: 'Yapboz' },
-            'ceviz-macera': { emoji: '🌰', name: 'Ceviz Macerası' },
-            'aile-sepeti': { emoji: '🧱', name: 'Aile Sepeti Macerası' },
-            'sayi-komsulari': { emoji: '🔗', name: 'Sayı Komşuları' },
-            'sayilari-birlestir': { emoji: '🔗', name: 'Sayıları Birleştir' },
-        };
+        const normalizedType = normalizeGameName(game.oyun_turu);
+        const gameInfo = gameLabels[normalizedType] || { emoji: '🎮', name: game.oyun_turu?.replace(/-/g, ' ') || 'Oyun' };
 
-        const gameInfo = gameLabels[game.oyun_turu] || { emoji: '🎮', name: game.oyun_turu?.replace(/-/g, ' ') || 'Oyun' };
         const gameDate = new Date(game.created_at).toLocaleDateString('tr-TR', {
             day: 'numeric',
             month: 'short',
@@ -1005,29 +1027,19 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     return acc;
                                 }, {});
                                 const total = scores.length || 1;
-                                const gameEmojis: Record<string, string> = {
-                                    'miktar-avcisi': '🎯',
-                                    'golge-dedektifi': '👤',
-                                    'dizi-tamamla': '🔢',
-                                    'rakam-yazma': '✏️',
-                                    'ceviz-macera': '🌰',
-                                };
-                                const gameLabels: Record<string, string> = {
-                                    'miktar-avcisi': 'Miktar Avcısı',
-                                    'golge-dedektifi': 'Gölge Dedektifi',
-                                    'dizi-tamamla': 'Dizi Tamamla',
-                                    'rakam-yazma': 'Rakam Yazma',
-                                    'ceviz-macera': 'Ceviz Macera',
-                                };
                                 const colors = [COLORS.primary, COLORS.secondary, COLORS.accent, COLORS.orange, COLORS.pink];
+
 
                                 return Object.entries(gameTypes).slice(0, 5).map(([type, count], index) => {
                                     const percent = Math.round((count / total) * 100);
+                                    const normalizedType = normalizeGameName(type);
+                                    const info = gameLabels[normalizedType] || { emoji: '🎮', name: type };
+
                                     return (
                                         <View key={type} style={styles.distributionRow}>
                                             <View style={styles.distributionLabel}>
-                                                <Text style={styles.distributionEmoji}>{gameEmojis[type] || '🎮'}</Text>
-                                                <Text style={styles.distributionName}>{gameLabels[type] || type}</Text>
+                                                <Text style={styles.distributionEmoji}>{info.emoji}</Text>
+                                                <Text style={styles.distributionName}>{info.name}</Text>
                                             </View>
                                             <View style={styles.distributionBarContainer}>
                                                 <View style={[styles.distributionBar, { width: `${percent}%`, backgroundColor: colors[index] }]} />
@@ -1120,7 +1132,13 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     (score.correct_answers || 0) >= 5 ? '⭐' : '💪';
                                 return (
                                     <View key={index} style={[styles.historyRow, index % 2 === 0 && styles.historyRowAlt]}>
-                                        <Text style={[styles.historyCell, { flex: 2 }]}>{gameLabel}</Text>
+                                        <Text
+                                            style={[styles.historyCell, { flex: 2 }]}
+                                            numberOfLines={1}
+                                            ellipsizeMode="tail"
+                                        >
+                                            {gameLabels[normalizeGameName(score.oyun_turu)]?.name || score.oyun_turu}
+                                        </Text>
                                         <Text style={[styles.historyCell, { flex: 1 }]}>{formattedDate}</Text>
                                         <Text style={[styles.historyCell, { flex: 1 }]}>
                                             {score.correct_answers !== null ? `${score.correct_answers}/10 ${scoreEmoji}` : `${10 - score.hata_sayisi}/10`}
