@@ -53,8 +53,10 @@ const COLORS = {
 };
 
 export default function VeliDashboard({ childName, childAge, email, onClose }: VeliDashboardProps) {
-    const { width } = Dimensions.get('window');
+    const { width, height } = Dimensions.get('window');
     const isTablet = width >= 768;
+    const isLandscape = width > height;
+    const isCompact = isLandscape && height < 500;
 
     const [loading, setLoading] = useState(true);
     const [scores, setScores] = useState<GameScore[]>([]);
@@ -361,7 +363,10 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
         <DynamicBackground>
             <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
                 <ScrollView
-                    contentContainerStyle={styles.scrollContent}
+                    contentContainerStyle={[
+                        styles.scrollContent,
+                        isCompact && styles.scrollContentCompact
+                    ]}
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Header */}
@@ -380,9 +385,10 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                     {/* Child Profile Hero */}
                     <Animated.View style={[
                         styles.heroCard,
+                        isCompact && styles.heroCardCompact,
                         { transform: [{ translateY: slideAnim }, { scale: scaleAnim }] }
                     ]}>
-                        <View style={styles.heroGradient}>
+                        <View style={[styles.heroGradient, isCompact && styles.heroGradientCompact]}>
                             <View style={styles.avatarLarge}>
                                 <Text style={styles.avatarTextLarge}>{childName.charAt(0).toUpperCase()}</Text>
                             </View>
@@ -408,8 +414,8 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                     </Animated.View>
 
                     {/* Metrics Grid */}
-                    <Text style={styles.sectionTitle}>🎯 Performans Metrikleri</Text>
-                    <View style={[styles.metricsGrid, isTablet && styles.metricsGridTablet]}>
+                    <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>🎯 Performans Metrikleri</Text>
+                    <View style={[styles.metricsGrid, isTablet && styles.metricsGridTablet, isCompact && styles.metricsGridCompact]}>
                         <MetricCard
                             emoji="✅"
                             title="Doğru Cevaplar"
@@ -752,8 +758,8 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                         <Text style={styles.footerSubtext}>Çocuğunuzun gelişimini birlikte takip ediyoruz 💜</Text>
                     </View>
                 </ScrollView>
-            </Animated.View>
-        </DynamicBackground>
+            </Animated.View >
+        </DynamicBackground >
     );
 }
 
@@ -764,6 +770,10 @@ const styles = StyleSheet.create({
     scrollContent: {
         padding: 16,
         paddingBottom: 60,
+    },
+    scrollContentCompact: {
+        padding: 12,
+        paddingBottom: 40,
     },
     loadingContainer: {
         flex: 1,
@@ -826,6 +836,10 @@ const styles = StyleSheet.create({
             default: { elevation: 8 },
         }),
     },
+    heroCardCompact: {
+        marginBottom: 16,
+        borderRadius: 20,
+    },
     heroGradient: {
         backgroundColor: COLORS.primary,
         padding: 28,
@@ -834,6 +848,9 @@ const styles = StyleSheet.create({
             web: { background: `linear-gradient(135deg, ${COLORS.gradient1} 0%, ${COLORS.gradient2} 100%)` } as any,
             default: {},
         }),
+    },
+    heroGradientCompact: {
+        padding: 16,
     },
     avatarLarge: {
         width: 80,
@@ -896,6 +913,11 @@ const styles = StyleSheet.create({
         marginBottom: 14,
         marginTop: 8,
     },
+    sectionTitleCompact: {
+        fontSize: 15,
+        marginBottom: 10,
+        marginTop: 4,
+    },
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -909,6 +931,10 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         gap: 12,
         marginBottom: 24,
+    },
+    metricsGridCompact: {
+        gap: 8,
+        marginBottom: 16,
     },
     metricsGridTablet: {
         justifyContent: 'space-between',

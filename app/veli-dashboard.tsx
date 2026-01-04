@@ -6,8 +6,10 @@ import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Dimensions,
     KeyboardAvoidingView,
     Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -32,6 +34,17 @@ export default function VeliDashboardPage() {
     const [loading, setLoading] = useState(false);
     const [profile, setProfile] = useState<ProfileData | null>(null);
 
+    // Test modu için demo profili
+    const useDemoProfile = () => {
+        setProfile({
+            email: 'demo@test.com',
+            parent_name: 'Demo Veli',
+            child_name: 'Demo Çocuk',
+            child_age_months: 60,
+            subscription_tier: 'premium',
+        });
+    };
+
     const handleLogin = async () => {
         if (!email.trim()) {
             Alert.alert('Hata', 'Lütfen email adresinizi girin');
@@ -50,19 +63,23 @@ export default function VeliDashboardPage() {
                 }
             );
             const data = await response.json();
+            console.log('Profile response:', data);
 
             if (data && data.length > 0) {
                 setProfile(data[0]);
             } else {
                 Alert.alert(
                     'Kayıt Bulunamadı',
-                    'Bu email ile kayıtlı bir hesap bulunamadı. Lütfen kayıt olduğunuz email adresini girin.',
-                    [{ text: 'Tamam' }]
+                    'Bu email ile kayıtlı bir hesap bulunamadı.\n\nÖnce ana ekrandan "Kayıt Ol" butonuyla kayıt olmanız gerekmektedir.\n\nTest için "Demo Giriş" butonunu kullanabilirsiniz.',
+                    [
+                        { text: 'Tamam', style: 'cancel' },
+                        { text: 'Demo Giriş', onPress: useDemoProfile }
+                    ]
                 );
             }
         } catch (error) {
             console.error('Profil yükleme hatası:', error);
-            Alert.alert('Hata', 'Profil yüklenirken bir hata oluştu');
+            Alert.alert('Hata', 'Profil yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.');
         } finally {
             setLoading(false);
         }
@@ -81,32 +98,47 @@ export default function VeliDashboardPage() {
     }
 
     // Show login form
+    const { width, height } = Dimensions.get('window');
+    const isLandscape = width > height;
+    const isSmallScreen = height < 500;
+
     return (
         <DynamicBackground>
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <View style={styles.content}>
+                <ScrollView
+                    contentContainerStyle={[
+                        styles.content,
+                        isLandscape && styles.contentLandscape,
+                        isSmallScreen && styles.contentCompact
+                    ]}
+                    showsVerticalScrollIndicator={false}
+                >
                     {/* Back Button */}
                     <TouchableOpacity
-                        style={styles.backButton}
+                        style={[styles.backButton, isLandscape && styles.backButtonLandscape]}
                         onPress={() => router.back()}
                     >
                         <Ionicons name="arrow-back" size={24} color="#1E88E5" />
                     </TouchableOpacity>
 
                     {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={styles.emoji}>👨‍👩‍👧</Text>
-                        <Text style={styles.title}>Veli Paneli</Text>
+                    <View style={[styles.header, isLandscape && styles.headerLandscape]}>
+                        <Text style={[styles.emoji, isSmallScreen && { fontSize: 40 }]}>👨‍👩‍👧</Text>
+                        <Text style={[styles.title, isSmallScreen && { fontSize: 22 }]}>Veli Paneli</Text>
                         <Text style={styles.subtitle}>
                             Çocuğunuzun gelişimini takip edin
                         </Text>
                     </View>
 
                     {/* Login Card */}
-                    <View style={styles.card}>
+                    <View style={[
+                        styles.card,
+                        isLandscape && styles.cardLandscape,
+                        { maxWidth: isLandscape ? 400 : undefined }
+                    ]}>
                         <Text style={styles.cardTitle}>Giriş Yapın</Text>
                         <Text style={styles.cardSubtitle}>
                             Kayıt olurken kullandığınız email adresini girin
@@ -126,20 +158,31 @@ export default function VeliDashboardPage() {
                             />
                         </View>
 
-                        <TouchableOpacity
-                            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-                            onPress={handleLogin}
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <ActivityIndicator color="#fff" />
-                            ) : (
-                                <>
-                                    <Text style={styles.loginButtonText}>Giriş Yap</Text>
-                                    <Ionicons name="arrow-forward" size={20} color="#fff" />
-                                </>
-                            )}
-                        </TouchableOpacity>
+                        <View style={styles.buttonRow}>
+                            <TouchableOpacity
+                                style={[styles.loginButton, styles.loginButtonFlex, loading && styles.loginButtonDisabled]}
+                                onPress={handleLogin}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <ActivityIndicator color="#fff" />
+                                ) : (
+                                    <>
+                                        <Text style={styles.loginButtonText}>Giriş Yap</Text>
+                                        <Ionicons name="arrow-forward" size={20} color="#fff" />
+                                    </>
+                                )}
+                            </TouchableOpacity>
+
+                            {/* Demo Login Button */}
+                            <TouchableOpacity
+                                style={styles.demoButton}
+                                onPress={useDemoProfile}
+                            >
+                                <Ionicons name="flash" size={18} color="#4CAF50" />
+                                <Text style={styles.demoButtonText}>Demo</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
 
                     {/* Info */}
@@ -149,7 +192,7 @@ export default function VeliDashboardPage() {
                             Hesabınız yok mu? Ana ekrandan kayıt olabilirsiniz.
                         </Text>
                     </View>
-                </View>
+                </ScrollView>
             </KeyboardAvoidingView>
         </DynamicBackground>
     );
@@ -160,9 +203,19 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     content: {
-        flex: 1,
+        flexGrow: 1,
         padding: 24,
         justifyContent: 'center',
+        alignItems: 'center',
+    },
+    contentLandscape: {
+        flexDirection: 'column',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 40,
+    },
+    contentCompact: {
+        paddingVertical: 12,
     },
     backButton: {
         position: 'absolute',
@@ -179,20 +232,32 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+        zIndex: 10,
+    },
+    backButtonLandscape: {
+        top: 12,
+        left: 12,
+        width: 38,
+        height: 38,
     },
     header: {
         alignItems: 'center',
-        marginBottom: 32,
+        marginBottom: 24,
+        width: '100%',
+    },
+    headerLandscape: {
+        marginBottom: 12,
+        marginTop: 20,
     },
     emoji: {
         fontSize: 64,
-        marginBottom: 16,
+        marginBottom: 12,
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
         color: '#263238',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     subtitle: {
         fontSize: 16,
@@ -202,12 +267,17 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#fff',
         borderRadius: 24,
-        padding: 28,
+        padding: 24,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
         shadowRadius: 12,
         elevation: 5,
+        width: '100%',
+        maxWidth: 420,
+    },
+    cardLandscape: {
+        padding: 20,
     },
     cardTitle: {
         fontSize: 20,
@@ -237,14 +307,21 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#263238',
     },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
     loginButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#9C27B0',
         borderRadius: 16,
-        height: 56,
+        height: 52,
         gap: 8,
+    },
+    loginButtonFlex: {
+        flex: 1,
     },
     loginButtonDisabled: {
         opacity: 0.7,
@@ -254,11 +331,29 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#fff',
     },
+    demoButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#E8F5E9',
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        height: 52,
+        gap: 6,
+        borderWidth: 2,
+        borderColor: '#4CAF50',
+    },
+    demoButtonText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#4CAF50',
+    },
     info: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 24,
+        marginTop: 20,
+        marginBottom: 20,
         gap: 6,
     },
     infoText: {
