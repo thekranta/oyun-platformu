@@ -337,6 +337,62 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                         </View>
                     </View>
 
+                    {/* FREE TIER BANNER - Only show if not premium */}
+                    {!isPremium && (
+                        <View style={styles.freeBanner}>
+                            <View style={styles.freeBannerContent}>
+                                <Text style={styles.freeBannerEmoji}>🆓</Text>
+                                <View style={styles.freeBannerText}>
+                                    <Text style={styles.freeBannerTitle}>Ücretsiz Plan Kullanıyorsunuz</Text>
+                                    <Text style={styles.freeBannerSubtitle}>Premium ile tüm özelliklere erişin!</Text>
+                                </View>
+                            </View>
+                            <TouchableOpacity style={styles.freeBannerButton}>
+                                <Text style={styles.freeBannerButtonText}>Yükselt 🚀</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {/* GAME HISTORY TABLE */}
+                    <View style={styles.historySection}>
+                        <Text style={styles.sectionTitle}>📋 Oyun Geçmişi</Text>
+                        <View style={styles.historyCard}>
+                            {/* Header Row */}
+                            <View style={styles.historyHeader}>
+                                <Text style={[styles.historyHeaderText, { flex: 2 }]}>Oyun</Text>
+                                <Text style={[styles.historyHeaderText, { flex: 1 }]}>Tarih</Text>
+                                <Text style={[styles.historyHeaderText, { flex: 1 }]}>Skor</Text>
+                                <Text style={[styles.historyHeaderText, { flex: 1 }]}>Süre</Text>
+                            </View>
+                            {/* Game Rows */}
+                            {scores.slice(0, 10).map((score, index) => {
+                                const date = new Date(score.created_at);
+                                const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
+                                const gameLabel = score.oyun_turu === 'miktar-avcisi' ? '🎯 Miktar' :
+                                    score.oyun_turu === 'golge-dedektifi' ? '👤 Gölge' :
+                                        score.oyun_turu === 'dizi-tamamla' ? '🔢 Dizi' :
+                                            score.oyun_turu?.substring(0, 8) || 'Oyun';
+                                const scoreEmoji = (score.correct_answers || 0) >= 8 ? '🌟' :
+                                    (score.correct_answers || 0) >= 5 ? '⭐' : '💪';
+                                return (
+                                    <View key={index} style={[styles.historyRow, index % 2 === 0 && styles.historyRowAlt]}>
+                                        <Text style={[styles.historyCell, { flex: 2 }]}>{gameLabel}</Text>
+                                        <Text style={[styles.historyCell, { flex: 1 }]}>{formattedDate}</Text>
+                                        <Text style={[styles.historyCell, { flex: 1 }]}>
+                                            {score.correct_answers !== null ? `${score.correct_answers}/10 ${scoreEmoji}` : `${10 - score.hata_sayisi}/10`}
+                                        </Text>
+                                        <Text style={[styles.historyCell, { flex: 1 }]}>{score.sure}s</Text>
+                                    </View>
+                                );
+                            })}
+                            {scores.length === 0 && (
+                                <View style={styles.historyEmpty}>
+                                    <Text style={styles.historyEmptyText}>Henüz oyun oynamadınız 🎮</Text>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+
                     {/* AI Report Section */}
                     <View style={styles.aiSection}>
                         <View style={styles.sectionHeader}>
@@ -781,5 +837,99 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: COLORS.textLight,
         marginTop: 4,
+    },
+
+    // Free Banner
+    freeBanner: {
+        backgroundColor: '#FFF3E0',
+        borderRadius: 16,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 24,
+        borderWidth: 2,
+        borderColor: '#FFB74D',
+        borderStyle: 'dashed',
+    },
+    freeBannerContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    freeBannerEmoji: {
+        fontSize: 32,
+        marginRight: 12,
+    },
+    freeBannerText: {
+        flex: 1,
+    },
+    freeBannerTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#E65100',
+    },
+    freeBannerSubtitle: {
+        fontSize: 12,
+        color: '#F57C00',
+        marginTop: 2,
+    },
+    freeBannerButton: {
+        backgroundColor: '#FF9800',
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+    },
+    freeBannerButtonText: {
+        color: '#fff',
+        fontWeight: '700',
+        fontSize: 13,
+    },
+
+    // History Section
+    historySection: {
+        marginBottom: 24,
+    },
+    historyCard: {
+        backgroundColor: COLORS.card,
+        borderRadius: 16,
+        overflow: 'hidden',
+        ...Platform.select({
+            web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+            default: { elevation: 4 },
+        }),
+    },
+    historyHeader: {
+        flexDirection: 'row',
+        backgroundColor: COLORS.primary,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+    },
+    historyHeaderText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    historyRow: {
+        flexDirection: 'row',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#F0F0F0',
+    },
+    historyRowAlt: {
+        backgroundColor: '#FAFAFA',
+    },
+    historyCell: {
+        fontSize: 13,
+        color: COLORS.text,
+    },
+    historyEmpty: {
+        padding: 40,
+        alignItems: 'center',
+    },
+    historyEmptyText: {
+        fontSize: 14,
+        color: COLORS.textLight,
     },
 });
