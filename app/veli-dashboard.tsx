@@ -92,6 +92,7 @@ export default function VeliDashboardPage() {
                 childName={profile.child_name}
                 childAge={profile.child_age_months}
                 email={profile.email}
+                subscriptionTier={profile.subscription_tier}
                 onClose={() => setProfile(null)} // Go back to login
             />
         );

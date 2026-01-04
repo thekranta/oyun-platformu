@@ -21,6 +21,7 @@ interface VeliDashboardProps {
     childName: string;
     childAge: number;
     email: string;
+    subscriptionTier?: 'free' | 'standard' | 'premium';
     onClose: () => void;
 }
 
@@ -52,7 +53,7 @@ const COLORS = {
     gradient2: '#764ba2',
 };
 
-export default function VeliDashboard({ childName, childAge, email, onClose }: VeliDashboardProps) {
+export default function VeliDashboard({ childName, childAge, email, subscriptionTier: initialTier, onClose }: VeliDashboardProps) {
     const { width, height } = Dimensions.get('window');
     const isTablet = width >= 768;
     const isLandscape = width > height;
@@ -60,7 +61,7 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
 
     const [loading, setLoading] = useState(true);
     const [scores, setScores] = useState<GameScore[]>([]);
-    const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'standard' | 'premium'>('free');
+    const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'standard' | 'premium'>(initialTier || 'free');
     const [generatingPDF, setGeneratingPDF] = useState(false);
 
     // Animations
@@ -112,7 +113,8 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                 }
             );
             const profileData = await profileResponse.json();
-            if (profileData && profileData.length > 0) {
+            // Only update if we got data AND we didn't receive a prop value
+            if (profileData && profileData.length > 0 && !initialTier) {
                 setSubscriptionTier(profileData[0].subscription_tier || 'free');
             }
         } catch (error) {
@@ -1085,6 +1087,7 @@ const styles = StyleSheet.create({
     aiSection: {
         marginBottom: 24,
         position: 'relative',
+        minHeight: 200,
     },
     lockIcon: {
         backgroundColor: COLORS.premium,
@@ -1116,10 +1119,11 @@ const styles = StyleSheet.create({
     },
     premiumOverlay: {
         position: 'absolute',
-        top: 50,
-        left: 20,
-        right: 20,
+        top: 40,
+        left: 10,
+        right: 10,
         alignItems: 'center',
+        zIndex: 10,
     },
     premiumBox: {
         backgroundColor: COLORS.card,
