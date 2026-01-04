@@ -290,119 +290,289 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             const doc = new jsPDF('p', 'mm', 'a4');
             const pageWidth = 210;
             const pageHeight = 297;
-            const margin = 20;
+            const margin = 15;
             let yPos = margin;
 
-            // Header
-            doc.setFillColor(30, 136, 229);
-            doc.rect(0, 0, pageWidth, 40, 'F');
+            // ========== COLORFUL GRADIENT HEADER ==========
+            // Main gradient header
+            doc.setFillColor(102, 126, 234); // Purple gradient start
+            doc.rect(0, 0, pageWidth, 50, 'F');
+            doc.setFillColor(118, 75, 162); // Purple gradient end
+            doc.rect(0, 25, pageWidth, 25, 'F');
+
+            // Logo area
+            doc.setFillColor(255, 255, 255);
+            doc.circle(pageWidth / 2, 28, 18, 'F');
+            doc.setTextColor(102, 126, 234);
+            doc.setFontSize(24);
+            doc.text('CT', pageWidth / 2, 33, { align: 'center' });
 
             doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            doc.text('childhoodtech.com', pageWidth / 2, 48, { align: 'center' });
+
+            yPos = 58;
+
+            // ========== CHILD INFO CARD ==========
+            // Rounded card with soft colors
+            doc.setFillColor(255, 249, 230); // Soft cream
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 30, 5, 5, 'F');
+
+            doc.setTextColor(38, 50, 56);
             doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
-            doc.text('childhoodtech.com', pageWidth / 2, 15, { align: 'center' });
-
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Akademik Gelisim Raporu', pageWidth / 2, 25, { align: 'center' });
-
-            const today = new Date();
-            const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-            doc.setFontSize(10);
-            doc.text(dateStr, pageWidth / 2, 35, { align: 'center' });
-
-            yPos = 55;
-
-            // Child Info
-            doc.setTextColor(38, 50, 56);
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Ogrenci: ${childName}`, margin, yPos);
-            yPos += 8;
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Yas: ${childAge} aylik`, margin, yPos);
-            yPos += 15;
-
-            // Performance Summary
-            doc.setFillColor(232, 245, 233);
-            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 35, 3, 3, 'F');
-
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            doc.setTextColor(46, 125, 50);
-            doc.text('Performans Ozeti', margin + 5, yPos + 10);
-
+            const cleanChildName = childName
+                .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+                .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
+                .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
+            doc.text(cleanChildName, margin + 10, yPos + 15);
             doc.setFontSize(11);
             doc.setFont('helvetica', 'normal');
-            doc.setTextColor(38, 50, 56);
-            doc.text(`Dogru Cevap Ortalamasi: ${avgCorrectAnswers}/10`, margin + 5, yPos + 20);
-            doc.text(`Bilissel Hiz Skoru: ${avgCognitiveSpeed}`, margin + 5, yPos + 28);
-            doc.text(`Ortalama Tepki Suresi: ${avgResponseTime}ms`, margin + 100, yPos + 20);
-            doc.text(`Mesafe Etkisi: ${avgDistanceEffect}`, margin + 100, yPos + 28);
+            doc.text(`${childAge} aylik`, margin + 10, yPos + 23);
 
-            yPos += 45;
+            // Date badge
+            const today = new Date();
+            const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+            doc.setFillColor(30, 136, 229);
+            doc.roundedRect(pageWidth - margin - 45, yPos + 8, 40, 14, 3, 3, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(9);
+            doc.text(dateStr, pageWidth - margin - 25, yPos + 17, { align: 'center' });
 
-            // Pedagojik Rapor
-            doc.setFillColor(243, 229, 245);
-            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 15, 3, 3, 'F');
+            yPos += 38;
+
+            // ========== ACHIEVEMENT BADGE ==========
+            doc.setFillColor(255, 179, 0); // Golden yellow
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 25, 5, 5, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.text('TROPHY', margin + 12, yPos + 16); // Placeholder for emoji
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(123, 31, 162);
-            doc.text('Pedagojik Rapor (AI Analizi)', margin + 5, yPos + 10);
+            const cleanAchievement = bestAchievement.title
+                .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+                .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
+                .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
+            doc.text(cleanAchievement, margin + 35, yPos + 12);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            const cleanDesc = bestAchievement.description
+                .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+                .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
+                .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
+            doc.text(cleanDesc, margin + 35, yPos + 20);
+
+            yPos += 33;
+
+            // ========== STATS GRID (4 colorful cards) ==========
+            const cardWidth = (pageWidth - 2 * margin - 15) / 2;
+            const cardHeight = 28;
+            const gap = 5;
+
+            // Card 1 - Green (Correct Answers)
+            doc.setFillColor(102, 187, 106);
+            doc.roundedRect(margin, yPos, cardWidth, cardHeight, 4, 4, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${avgCorrectAnswers}/10`, margin + cardWidth / 2, yPos + 12, { align: 'center' });
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Dogru Cevap', margin + cardWidth / 2, yPos + 22, { align: 'center' });
+
+            // Card 2 - Blue (Cognitive Speed)
+            doc.setFillColor(66, 165, 245);
+            doc.roundedRect(margin + cardWidth + gap, yPos, cardWidth, cardHeight, 4, 4, 'F');
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${avgCognitiveSpeed}`, margin + cardWidth + gap + cardWidth / 2, yPos + 12, { align: 'center' });
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Bilissel Hiz', margin + cardWidth + gap + cardWidth / 2, yPos + 22, { align: 'center' });
+
+            yPos += cardHeight + gap;
+
+            // Card 3 - Orange (Response Time)
+            doc.setFillColor(255, 112, 67);
+            doc.roundedRect(margin, yPos, cardWidth, cardHeight, 4, 4, 'F');
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${avgResponseTime}ms`, margin + cardWidth / 2, yPos + 12, { align: 'center' });
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Tepki Suresi', margin + cardWidth / 2, yPos + 22, { align: 'center' });
+
+            // Card 4 - Purple (Total Games)
+            doc.setFillColor(156, 39, 176);
+            doc.roundedRect(margin + cardWidth + gap, yPos, cardWidth, cardHeight, 4, 4, 'F');
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${scores.length}`, margin + cardWidth + gap + cardWidth / 2, yPos + 12, { align: 'center' });
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Toplam Oyun', margin + cardWidth + gap + cardWidth / 2, yPos + 22, { align: 'center' });
+
+            yPos += cardHeight + 10;
+
+            // ========== SUCCESS RATE BAR ==========
+            doc.setFillColor(224, 224, 224);
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
+            doc.setFillColor(76, 175, 80);
+            doc.roundedRect(margin, yPos, (pageWidth - 2 * margin) * (successRate / 100), 12, 3, 3, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Basari Orani: %${successRate}`, pageWidth / 2, yPos + 8, { align: 'center' });
+
             yPos += 20;
 
+            // ========== AI REPORT SECTION ==========
+            doc.setFillColor(243, 229, 245); // Light purple
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
+            doc.setTextColor(123, 31, 162);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('AI Pedagojik Analiz', margin + 5, yPos + 8);
+            yPos += 18;
+
             if (latestAIComment) {
-                doc.setFontSize(11);
+                doc.setFontSize(10);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(38, 50, 56);
 
-                // Clean Turkish characters for basic PDF font
                 const cleanText = latestAIComment
-                    .replace(/ş/g, 's').replace(/Ş/g, 'S')
-                    .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-                    .replace(/ü/g, 'u').replace(/Ü/g, 'U')
-                    .replace(/ö/g, 'o').replace(/Ö/g, 'O')
-                    .replace(/ı/g, 'i').replace(/İ/g, 'I')
-                    .replace(/ç/g, 'c').replace(/Ç/g, 'C');
+                    .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
+                    .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
+                    .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
 
                 const lines = doc.splitTextToSize(cleanText, pageWidth - 2 * margin - 5);
                 lines.forEach((line: string) => {
-                    if (yPos > pageHeight - 40) {
+                    if (yPos > pageHeight - 35) {
                         doc.addPage();
                         yPos = margin;
                     }
                     doc.text(line, margin + 2, yPos);
-                    yPos += 6;
+                    yPos += 5;
                 });
             } else {
-                doc.setFontSize(11);
+                doc.setFontSize(10);
                 doc.setTextColor(96, 125, 139);
                 doc.text('Henuz bir AI analizi bulunmamaktadir.', margin + 5, yPos);
                 yPos += 10;
             }
 
-            // Footer
-            yPos = pageHeight - 25;
-            doc.setDrawColor(200, 200, 200);
-            doc.line(margin, yPos, pageWidth - margin, yPos);
-            yPos += 8;
+            // ========== FOOTER ==========
+            yPos = pageHeight - 20;
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, yPos - 5, pageWidth, 25, 'F');
 
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'italic');
-            doc.setTextColor(120, 144, 156);
-            doc.text('Bu rapor Turkiye Yuzyili Maarif Modeli kriterlerine gore hazirlanmistir.', pageWidth / 2, yPos, { align: 'center' });
-            yPos += 6;
-            doc.text('childhoodtech.com - Erken Cocukluk Egitim Teknolojileri', pageWidth / 2, yPos, { align: 'center' });
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(8);
+            doc.text('Turkiye Yuzyili Maarif Modeli kriterlerine uygun hazirlanmistir', pageWidth / 2, yPos + 3, { align: 'center' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('childhoodtech.com - Erken Cocukluk Egitim Teknolojileri', pageWidth / 2, yPos + 12, { align: 'center' });
 
             // Download
-            doc.save(`${childName}_Akademik_Rapor_${dateStr.replace(/\//g, '-')}.pdf`);
+            doc.save(`${cleanChildName}_Infografik_Rapor_${dateStr.replace(/\//g, '-')}.pdf`);
 
         } catch (error) {
             console.error('PDF olusturma hatasi:', error);
             Alert.alert('Hata', 'PDF olusturulurken bir hata olustu.');
         } finally {
             setGeneratingPDF(false);
+        }
+    };
+
+    // Generate shareable achievement image (1080x1080 square for social media)
+    const handleGenerateShareImage = async () => {
+        if (Platform.OS !== 'web') {
+            Alert.alert('Bilgi', 'Bu ozellik sadece web uzerinde kullanilabilir.');
+            return;
+        }
+
+        try {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1080;
+            canvas.height = 1080;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 1080, 1080);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1080, 1080);
+
+            // White card in center
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            ctx.roundRect(80, 80, 920, 920, 40);
+            ctx.fill();
+
+            // Child name
+            ctx.fillStyle = '#263238';
+            ctx.font = 'bold 64px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(childName, 540, 200);
+
+            // Age
+            ctx.font = '32px Arial';
+            ctx.fillStyle = '#607D8B';
+            ctx.fillText(`${childAge} Aylik`, 540, 260);
+
+            // Achievement badge
+            ctx.fillStyle = '#FFB300';
+            ctx.beginPath();
+            ctx.roundRect(240, 320, 600, 120, 20);
+            ctx.fill();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 48px Arial';
+            ctx.fillText(bestAchievement.emoji, 320, 395);
+            ctx.font = 'bold 36px Arial';
+            ctx.fillText(bestAchievement.title, 580, 390);
+
+            // Stats
+            ctx.fillStyle = '#263238';
+            ctx.font = 'bold 120px Arial';
+            ctx.fillText(`%${successRate}`, 540, 600);
+            ctx.font = '28px Arial';
+            ctx.fillStyle = '#607D8B';
+            ctx.fillText('Basari Orani', 540, 650);
+
+            // Games played
+            ctx.font = 'bold 48px Arial';
+            ctx.fillStyle = '#1E88E5';
+            ctx.fillText(`${scores.length}`, 300, 780);
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#607D8B';
+            ctx.fillText('Oyun', 300, 820);
+
+            // Correct answers
+            ctx.font = 'bold 48px Arial';
+            ctx.fillStyle = '#66BB6A';
+            ctx.fillText(`${avgCorrectAnswers}/10`, 780, 780);
+            ctx.font = '24px Arial';
+            ctx.fillStyle = '#607D8B';
+            ctx.fillText('Dogru Cevap', 780, 820);
+
+            // Branding
+            ctx.fillStyle = '#9C27B0';
+            ctx.font = 'bold 28px Arial';
+            ctx.fillText('childhoodtech.com', 540, 960);
+
+            // Download
+            const link = document.createElement('a');
+            link.download = `${childName}_Basari_Karti.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+        } catch (error) {
+            console.error('Share image error:', error);
+            Alert.alert('Hata', 'Gorsel olusturulurken bir hata olustu.');
         }
     };
 
@@ -1029,6 +1199,20 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 )}
                             </View>
                         </TouchableOpacity>
+
+                        {/* Share Image Button - Instagram Ready */}
+                        {isPremium && Platform.OS === 'web' && (
+                            <TouchableOpacity
+                                style={styles.shareImageButton}
+                                onPress={handleGenerateShareImage}
+                            >
+                                <View style={styles.shareImageGradient}>
+                                    <Ionicons name="share-social" size={24} color="#fff" />
+                                    <Text style={styles.shareImageText}>📸 Başarı Kartı Oluştur</Text>
+                                    <Text style={styles.shareImageSubtext}>Instagram'da paylaş!</Text>
+                                </View>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     {/* Footer */}
@@ -1992,6 +2176,30 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: 'rgba(255,255,255,0.9)',
         textAlign: 'center',
+        marginTop: 4,
+    },
+
+    // Share Image Button Styles
+    shareImageButton: {
+        borderRadius: 20,
+        overflow: 'hidden',
+        marginTop: 16,
+    },
+    shareImageGradient: {
+        backgroundColor: '#E91E63',
+        padding: 20,
+        alignItems: 'center',
+        borderRadius: 20,
+    },
+    shareImageText: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#fff',
+        marginTop: 8,
+    },
+    shareImageSubtext: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.8)',
         marginTop: 4,
     },
 });
