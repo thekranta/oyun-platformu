@@ -87,10 +87,12 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
     const [loading, setLoading] = useState(true);
     const [scores, setScores] = useState<GameScore[]>([]);
+    const [activeTab, setActiveTab] = useState<'ozet' | 'gelisim' | 'gecmis'>('ozet');
     const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'standard' | 'premium'>(initialTier || 'free');
     const [generatingPDF, setGeneratingPDF] = useState(false);
     const [aiReportExpanded, setAiReportExpanded] = useState(false);
     const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
+
     const [showTimeline, setShowTimeline] = useState(true);
 
     // Animations
@@ -251,9 +253,17 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
     // Time series data for charts - works with all game types
     const getTimeSeriesData = (field: 'score' | 'time') => {
-        return [...scores]
+        let filteredScores = [...scores];
+
+        // If a game is selected, filter charts to show only that game type's history
+        if (selectedGameIndex !== null && scores[selectedGameIndex]) {
+            const selectedType = normalizeGameName(scores[selectedGameIndex].oyun_turu);
+            filteredScores = filteredScores.filter(s => normalizeGameName(s.oyun_turu) === selectedType);
+        }
+
+        return filteredScores
             .reverse()
-            .slice(-10) // Last 10 games
+            .slice(-15) // Last 15 games
             .map((s, idx) => {
                 // Calculate score from various fields
                 let value = 0;
@@ -360,7 +370,13 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             doc.circle(pageWidth / 2, 28, 18, 'F');
             doc.setTextColor(102, 126, 234);
             doc.setFontSize(24);
-            doc.text('CT', pageWidth / 2, 33, { align: 'center' });
+            // Dynamic Title based on selection
+            let reportTitle = "Akademik Gelişim Raporu";
+            if (selectedGameIndex !== null && scores[selectedGameIndex]) {
+                const gameName = gameLabels[normalizeGameName(scores[selectedGameIndex].oyun_turu)]?.name || scores[selectedGameIndex].oyun_turu;
+                reportTitle = `${gameName} Analiz Raporu`;
+            }
+            doc.text(reportTitle, pageWidth / 2, 33, { align: 'center' });
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(10);
@@ -846,392 +862,342 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         </View>
                     </Animated.View>
 
-                    {/* Best Achievement Badge */}
-                    <View style={styles.achievementCard}>
-                        <Text style={styles.achievementEmoji}>{bestAchievement.emoji}</Text>
-                        <Text style={styles.achievementTitle}>{bestAchievement.title}</Text>
-                        <Text style={styles.achievementDescription}>{bestAchievement.description}</Text>
-                        <View style={{ flexDirection: 'row', marginTop: 8 }}>
-                            <Text style={styles.achievementEmoji}>{CHARACTERS.pitir}</Text>
-                            <Text style={styles.achievementEmoji}>{CHARACTERS.filo}</Text>
-                            <Text style={styles.achievementEmoji}>{CHARACTERS.mavis}</Text>
-                        </View>
+                    {/* Tab Navigation */}
+                    <View style={styles.tabContainer}>
+                        <TouchableOpacity style={[styles.tabButton, activeTab === 'ozet' && styles.tabButtonActive]} onPress={() => setActiveTab('ozet')}>
+                            <Ionicons name="grid-outline" size={18} color={activeTab === 'ozet' ? '#fff' : COLORS.textLight} />
+                            <Text style={[styles.tabText, activeTab === 'ozet' && styles.tabTextActive]}>Özet</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.tabButton, activeTab === 'gelisim' && styles.tabButtonActive]} onPress={() => setActiveTab('gelisim')}>
+                            <Ionicons name="trending-up-outline" size={18} color={activeTab === 'gelisim' ? '#fff' : COLORS.textLight} />
+                            <Text style={[styles.tabText, activeTab === 'gelisim' && styles.tabTextActive]}>Gelişim</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.tabButton, activeTab === 'gecmis' && styles.tabButtonActive]} onPress={() => setActiveTab('gecmis')}>
+                            <Ionicons name="time-outline" size={18} color={activeTab === 'gecmis' ? '#fff' : COLORS.textLight} />
+                            <Text style={[styles.tabText, activeTab === 'gecmis' && styles.tabTextActive]}>Geçmiş</Text>
+                        </TouchableOpacity>
                     </View>
 
-                    {/* Game History Timeline */}
-                    {scores.length > 0 && (
-                        <View style={styles.timelineSidebar}>
-                            <TouchableOpacity
-                                style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-                                onPress={() => setShowTimeline(!showTimeline)}
-                            >
-                                <Text style={styles.timelineSidebarTitle}>📅 Oyun Geçmişi ({scores.length})</Text>
-                                <Ionicons name={showTimeline ? "chevron-up" : "chevron-down"} size={20} color={COLORS.textLight} />
-                            </TouchableOpacity>
-                            {showTimeline && scores.slice(0, 10).map((score, index) => (
-                                <TimelineItem
-                                    key={score.id}
-                                    game={score}
-                                    index={index}
-                                    isSelected={selectedGameIndex === index}
+                    {/* OZET TAB */}
+                    {activeTab === 'ozet' && (
+                        <Animated.View style={{ opacity: fadeAnim }}>
+                            {/* Best Achievement Badge */}
+                            <View style={styles.achievementCard}>
+                                <Text style={styles.achievementEmoji}>{bestAchievement.emoji}</Text>
+                                <Text style={styles.achievementTitle}>{bestAchievement.title}</Text>
+                                <Text style={styles.achievementDescription}>{bestAchievement.description}</Text>
+                                <View style={{ flexDirection: 'row', marginTop: 8 }}>
+                                    <Text style={styles.achievementEmoji}>{CHARACTERS.pitir}</Text>
+                                    <Text style={styles.achievementEmoji}>{CHARACTERS.filo}</Text>
+                                    <Text style={styles.achievementEmoji}>{CHARACTERS.mavis}</Text>
+                                </View>
+                            </View>
+
+                            {/* Metrics Grid */}
+                            <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>🎯 Performans Metrikleri</Text>
+                            <View style={[styles.metricsGrid, isTablet && styles.metricsGridTablet, isCompact && styles.metricsGridCompact]}>
+                                <MetricCard
+                                    emoji="✅"
+                                    title="Doğru Cevaplar"
+                                    value={`${avgCorrectAnswers}/10`}
+                                    subtitle="Genel Ort."
+                                    color={COLORS.accent}
+                                    delay={100}
                                 />
-                            ))}
-                        </View>
+                                <MetricCard
+                                    emoji="⚡"
+                                    title="Bilişsel Hız"
+                                    value={avgCognitiveSpeed}
+                                    subtitle="Puan"
+                                    color={COLORS.secondary}
+                                    delay={200}
+                                />
+                                <MetricCard
+                                    emoji="⏱️"
+                                    title="Tepki Süresi"
+                                    value={`${avgResponseTime}ms`}
+                                    subtitle="Ortalama"
+                                    color={COLORS.orange}
+                                    delay={400}
+                                />
+                            </View>
+
+                            {/* GAME DISTRIBUTION CHART */}
+                            <View style={styles.chartSection}>
+                                <Text style={styles.sectionTitle}>🎮 Oyun Dağılımı</Text>
+                                <View style={styles.chartCard}>
+                                    {(() => {
+                                        const gameTypes = scores.reduce((acc: Record<string, number>, s) => {
+                                            const type = s.oyun_turu || 'diger';
+                                            acc[type] = (acc[type] || 0) + 1;
+                                            return acc;
+                                        }, {});
+                                        const total = scores.length || 1;
+                                        const colors = [COLORS.primary, COLORS.secondary, COLORS.accent, COLORS.orange, COLORS.pink];
+
+                                        return Object.entries(gameTypes).slice(0, 5).map(([type, count], index) => {
+                                            const percent = Math.round((count / total) * 100);
+                                            const normalizedType = normalizeGameName(type);
+                                            const info = gameLabels[normalizedType] || { emoji: '🎮', name: type };
+
+                                            return (
+                                                <View key={type} style={styles.distributionRow}>
+                                                    <View style={styles.distributionLabel}>
+                                                        <Text style={styles.distributionEmoji}>{info.emoji}</Text>
+                                                        <Text style={styles.distributionName}>{info.name}</Text>
+                                                    </View>
+                                                    <View style={styles.distributionBarContainer}>
+                                                        <View style={[styles.distributionBar, { width: `${percent}%`, backgroundColor: colors[index] }]} />
+                                                    </View>
+                                                    <Text style={styles.distributionPercent}>{percent}%</Text>
+                                                </View>
+                                            );
+                                        });
+                                    })()}
+                                </View>
+                            </View>
+
+                            {/* WEEKLY ACTIVITY CHART */}
+                            <View style={styles.chartSection}>
+                                <Text style={styles.sectionTitle}>📅 Son 7 Gün Aktivite</Text>
+                                <View style={styles.chartCard}>
+                                    <View style={styles.weeklyChart}>
+                                        {(() => {
+                                            const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+                                            const today = new Date();
+                                            const last7Days = Array.from({ length: 7 }, (_, i) => {
+                                                const d = new Date(today);
+                                                d.setDate(d.getDate() - (6 - i));
+                                                return d;
+                                            });
+
+                                            return last7Days.map((date, index) => {
+                                                const dayScores = scores.filter(s => {
+                                                    const scoreDate = new Date(s.created_at);
+                                                    return scoreDate.toDateString() === date.toDateString();
+                                                });
+                                                const count = dayScores.length;
+                                                const maxHeight = 60;
+                                                const height = Math.min(count * 15, maxHeight);
+                                                const dayName = days[date.getDay() === 0 ? 6 : date.getDay() - 1];
+
+                                                return (
+                                                    <View key={index} style={styles.weeklyDayContainer}>
+                                                        <View style={styles.weeklyBarOuter}>
+                                                            <View style={[styles.weeklyBar, { height, backgroundColor: count > 0 ? COLORS.primary : '#E0E0E0' }]}>
+                                                                {count > 0 && <Text style={styles.weeklyBarCount}>{count}</Text>}
+                                                            </View>
+                                                        </View>
+                                                        <Text style={styles.weeklyDayLabel}>{dayName}</Text>
+                                                    </View>
+                                                );
+                                            });
+                                        })()}
+                                    </View>
+                                    <Text style={styles.chartHint}>Son 7 gündeki oyun aktivitesi</Text>
+                                </View>
+                            </View>
+
+                            {/* FREE TIER BANNER */}
+                            {!isPremium && (
+                                <View style={styles.freeBanner}>
+                                    <View style={styles.freeBannerContent}>
+                                        <Text style={styles.freeBannerEmoji}>🆓</Text>
+                                        <View style={styles.freeBannerText}>
+                                            <Text style={styles.freeBannerTitle}>Ücretsiz Plan Kullanıyorsunuz</Text>
+                                            <Text style={styles.freeBannerSubtitle}>Premium ile tüm özelliklere erişin!</Text>
+                                        </View>
+                                    </View>
+                                    <TouchableOpacity style={styles.freeBannerButton}>
+                                        <Text style={styles.freeBannerButtonText}>Yükselt 🚀</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </Animated.View>
                     )}
 
-                    {/* Time Series Charts */}
-                    <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>📈 Gelişim Grafikleri</Text>
-                    <SimpleLineChart
-                        data={getTimeSeriesData('score')}
-                        color={COLORS.chartGreen}
-                        label="🎯 Doğru Cevap Trendi (Son 10 Oyun)"
-                    />
-                    <SimpleLineChart
-                        data={getTimeSeriesData('time')}
-                        color={COLORS.chartBlue}
-                        label="⏱️ Süre Trendi (Saniye)"
-                    />
-
-                    {/* Metrics Grid */}
-                    <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>🎯 Performans Metrikleri</Text>
-                    <View style={[styles.metricsGrid, isTablet && styles.metricsGridTablet, isCompact && styles.metricsGridCompact]}>
-                        <MetricCard
-                            emoji="✅"
-                            title="Doğru Cevaplar"
-                            value={`${avgCorrectAnswers}/10`}
-                            subtitle="Miktar Avcısı"
-                            color={COLORS.accent}
-                            delay={100}
-                        />
-                        <MetricCard
-                            emoji="⚡"
-                            title="Bilişsel Hız"
-                            value={avgCognitiveSpeed}
-                            subtitle="Puan"
-                            color={COLORS.secondary}
-                            delay={200}
-                        />
-                        <MetricCard
-                            emoji="🎯"
-                            title="Mesafe Algısı"
-                            value={avgDistanceEffect}
-                            subtitle="Ort. Fark"
-                            color={COLORS.primary}
-                            delay={300}
-                        />
-                        <MetricCard
-                            emoji="⏱️"
-                            title="Tepki Süresi"
-                            value={`${avgResponseTime}ms`}
-                            subtitle="Ortalama"
-                            color={COLORS.orange}
-                            delay={400}
-                        />
-                    </View>
-
-                    {/* Progress Ring Section */}
-                    <View style={styles.progressSection}>
-                        <Text style={styles.sectionTitle}>📈 Gelişim Durumu</Text>
-                        <View style={styles.progressCard}>
-                            <View style={styles.progressRing}>
-                                <View style={[styles.progressRingFill, {
-                                    borderColor: successRate >= 70 ? COLORS.accent : successRate >= 40 ? COLORS.secondary : COLORS.orange
-                                }]} />
-                                <View style={styles.progressRingInner}>
-                                    <Text style={styles.progressRingValue}>{successRate}%</Text>
-                                    <Text style={styles.progressRingLabel}>Başarı</Text>
-                                </View>
-                            </View>
-                            <View style={styles.progressInfo}>
-                                <View style={styles.progressInfoItem}>
-                                    <Text style={styles.progressInfoEmoji}>🧠</Text>
-                                    <Text style={styles.progressInfoText}>
-                                        {successRate >= 70 ? 'Harika ilerleme!' : successRate >= 40 ? 'İyi gidiyorsun!' : 'Devam et!'}
+                    {/* GELISIM TAB */}
+                    {activeTab === 'gelisim' && (
+                        <Animated.View style={{ opacity: fadeAnim }}>
+                            {selectedGameIndex === null && (
+                                <View style={{ backgroundColor: '#fff3cd', padding: 10, borderRadius: 8, marginHorizontal: 16, marginBottom: 16 }}>
+                                    <Text style={{ color: '#856404', fontSize: 13, textAlign: 'center' }}>
+                                        💡 İpucu: Belirli bir oyunun detaylı grafiğini görmek için "Geçmiş" sekmesinden o oyunu seçin.
                                     </Text>
                                 </View>
-                                <View style={styles.progressInfoItem}>
-                                    <Text style={styles.progressInfoEmoji}>🎮</Text>
-                                    <Text style={styles.progressInfoText}>{miktarAvcisiScores.length} oyun tamamlandı</Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
+                            )}
 
-                    {/* Response Time Timeline */}
-                    <View style={styles.timelineSection}>
-                        <Text style={styles.sectionTitle}>⏰ Tepki Süresi Grafiği</Text>
-                        <View style={styles.timelineCard}>
-                            <View style={styles.timelineChart}>
-                                {miktarAvcisiScores.slice(0, 7).reverse().map((score, index) => {
-                                    const rt = score.response_time || 0;
-                                    const height = Math.min((rt / 5000) * 100, 100);
-                                    const color = rt < 2000 ? COLORS.accent : rt < 3500 ? COLORS.secondary : COLORS.orange;
-                                    return (
-                                        <View key={index} style={styles.timelineBarContainer}>
-                                            <View style={[styles.timelineBar, { height: `${height}%`, backgroundColor: color }]}>
-                                                <Text style={styles.timelineBarText}>{Math.round(rt / 1000)}s</Text>
-                                            </View>
-                                            <Text style={styles.timelineBarLabel}>{index + 1}</Text>
-                                        </View>
-                                    );
-                                })}
-                            </View>
-                            <Text style={styles.timelineHint}>📊 Son 7 oyun - Hızlı tepki = Yeşil</Text>
-                        </View>
-                    </View>
+                            {/* Time Series Charts */}
+                            <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>
+                                📈 {selectedGameIndex !== null && scores[selectedGameIndex] ? `${gameLabels[normalizeGameName(scores[selectedGameIndex].oyun_turu)]?.name} Gelişimi` : 'Genel Gelişim Grafikleri'}
+                            </Text>
+                            <SimpleLineChart
+                                data={getTimeSeriesData('score')}
+                                color={COLORS.chartGreen}
+                                label="🎯 Doğru Cevap Trendi (Son 15 Oyun)"
+                            />
+                            <SimpleLineChart
+                                data={getTimeSeriesData('time')}
+                                color={COLORS.orange}
+                                label="⏱️ Süre Trendi (Saniye)"
+                            />
 
-                    {/* SCORE TREND CHART */}
-                    <View style={styles.chartSection}>
-                        <Text style={styles.sectionTitle}>📈 Başarı Trendi</Text>
-                        <View style={styles.chartCard}>
-                            <View style={styles.lineChartContainer}>
-                                {/* Y-axis labels */}
-                                <View style={styles.lineChartYAxis}>
-                                    <Text style={styles.lineChartYLabel}>10</Text>
-                                    <Text style={styles.lineChartYLabel}>5</Text>
-                                    <Text style={styles.lineChartYLabel}>0</Text>
-                                </View>
-                                {/* Chart area */}
-                                <View style={styles.lineChartArea}>
-                                    {/* Grid lines */}
-                                    <View style={[styles.lineChartGridLine, { top: '0%' }]} />
-                                    <View style={[styles.lineChartGridLine, { top: '50%' }]} />
-                                    <View style={[styles.lineChartGridLine, { top: '100%' }]} />
-                                    {/* Data points */}
-                                    <View style={styles.lineChartPoints}>
-                                        {miktarAvcisiScores.slice(0, 7).reverse().map((score, index) => {
-                                            const correct = score.correct_answers || 5;
-                                            const bottomPercent = (correct / 10) * 100;
+                            {/* Response Time Timeline */}
+                            <View style={styles.timelineSection}>
+                                <Text style={styles.sectionTitle}>⏰ Tepki Süresi Analizi</Text>
+                                <View style={styles.timelineCard}>
+                                    <View style={styles.timelineChart}>
+                                        {((selectedGameIndex !== null && scores[selectedGameIndex]
+                                            ? scores.filter(s => normalizeGameName(s.oyun_turu) === normalizeGameName(scores[selectedGameIndex].oyun_turu))
+                                            : scores)
+                                        ).slice(0, 7).reverse().map((score, index) => {
+                                            const rt = score.response_time || (score.sure ? score.sure * 1000 : 0);
+                                            const height = Math.min((rt / 5000) * 100, 100);
+                                            const color = rt < 2000 ? COLORS.accent : rt < 3500 ? COLORS.secondary : COLORS.orange;
                                             return (
-                                                <View key={index} style={styles.lineChartPointContainer}>
-                                                    <View style={[styles.lineChartPoint, { bottom: `${bottomPercent - 5}%`, backgroundColor: correct >= 7 ? COLORS.accent : correct >= 5 ? COLORS.secondary : COLORS.orange }]} />
-                                                    <Text style={styles.lineChartPointLabel}>{index + 1}</Text>
+                                                <View key={index} style={styles.timelineBarContainer}>
+                                                    <View style={[styles.timelineBar, { height: `${height}%`, backgroundColor: color }]}>
+                                                        <Text style={styles.timelineBarText}>{Math.round(rt / 1000)}s</Text>
+                                                    </View>
+                                                    <Text style={styles.timelineBarLabel}>{index + 1}</Text>
                                                 </View>
                                             );
                                         })}
                                     </View>
+                                    <Text style={styles.timelineHint}>📊 Son oyunlar - Kısa çubuk = Daha hızlı</Text>
                                 </View>
                             </View>
-                            <Text style={styles.chartHint}>🎯 Doğru cevap sayısı (son 7 oyun)</Text>
-                        </View>
-                    </View>
-
-                    {/* GAME DISTRIBUTION CHART */}
-                    <View style={styles.chartSection}>
-                        <Text style={styles.sectionTitle}>🎮 Oyun Dağılımı</Text>
-                        <View style={styles.chartCard}>
-                            {(() => {
-                                const gameTypes = scores.reduce((acc: Record<string, number>, s) => {
-                                    const type = s.oyun_turu || 'diger';
-                                    acc[type] = (acc[type] || 0) + 1;
-                                    return acc;
-                                }, {});
-                                const total = scores.length || 1;
-                                const colors = [COLORS.primary, COLORS.secondary, COLORS.accent, COLORS.orange, COLORS.pink];
-
-
-                                return Object.entries(gameTypes).slice(0, 5).map(([type, count], index) => {
-                                    const percent = Math.round((count / total) * 100);
-                                    const normalizedType = normalizeGameName(type);
-                                    const info = gameLabels[normalizedType] || { emoji: '🎮', name: type };
-
-                                    return (
-                                        <View key={type} style={styles.distributionRow}>
-                                            <View style={styles.distributionLabel}>
-                                                <Text style={styles.distributionEmoji}>{info.emoji}</Text>
-                                                <Text style={styles.distributionName}>{info.name}</Text>
-                                            </View>
-                                            <View style={styles.distributionBarContainer}>
-                                                <View style={[styles.distributionBar, { width: `${percent}%`, backgroundColor: colors[index] }]} />
-                                            </View>
-                                            <Text style={styles.distributionPercent}>{percent}%</Text>
-                                        </View>
-                                    );
-                                });
-                            })()}
-                        </View>
-                    </View>
-
-                    {/* WEEKLY ACTIVITY CHART */}
-                    <View style={styles.chartSection}>
-                        <Text style={styles.sectionTitle}>📅 Son 7 Gün Aktivite</Text>
-                        <View style={styles.chartCard}>
-                            <View style={styles.weeklyChart}>
-                                {(() => {
-                                    const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
-                                    const today = new Date();
-                                    const last7Days = Array.from({ length: 7 }, (_, i) => {
-                                        const d = new Date(today);
-                                        d.setDate(d.getDate() - (6 - i));
-                                        return d;
-                                    });
-
-                                    return last7Days.map((date, index) => {
-                                        const dayScores = scores.filter(s => {
-                                            const scoreDate = new Date(s.created_at);
-                                            return scoreDate.toDateString() === date.toDateString();
-                                        });
-                                        const count = dayScores.length;
-                                        const maxHeight = 60;
-                                        const height = Math.min(count * 15, maxHeight);
-                                        const dayName = days[date.getDay() === 0 ? 6 : date.getDay() - 1];
-
-                                        return (
-                                            <View key={index} style={styles.weeklyDayContainer}>
-                                                <View style={styles.weeklyBarOuter}>
-                                                    <View style={[styles.weeklyBar, { height, backgroundColor: count > 0 ? COLORS.primary : '#E0E0E0' }]}>
-                                                        {count > 0 && <Text style={styles.weeklyBarCount}>{count}</Text>}
-                                                    </View>
-                                                </View>
-                                                <Text style={styles.weeklyDayLabel}>{dayName}</Text>
-                                            </View>
-                                        );
-                                    });
-                                })()}
-                            </View>
-                            <Text style={styles.chartHint}>🕹️ Her gün kaç oyun oynandı</Text>
-                        </View>
-                    </View>
-
-                    {/* FREE TIER BANNER - Only show if not premium */}
-                    {!isPremium && (
-                        <View style={styles.freeBanner}>
-                            <View style={styles.freeBannerContent}>
-                                <Text style={styles.freeBannerEmoji}>🆓</Text>
-                                <View style={styles.freeBannerText}>
-                                    <Text style={styles.freeBannerTitle}>Ücretsiz Plan Kullanıyorsunuz</Text>
-                                    <Text style={styles.freeBannerSubtitle}>Premium ile tüm özelliklere erişin!</Text>
-                                </View>
-                            </View>
-                            <TouchableOpacity style={styles.freeBannerButton}>
-                                <Text style={styles.freeBannerButtonText}>Yükselt 🚀</Text>
-                            </TouchableOpacity>
-                        </View>
+                        </Animated.View>
                     )}
 
-                    {/* GAME HISTORY TABLE */}
-                    <View style={styles.historySection}>
-                        <Text style={styles.sectionTitle}>📋 Oyun Geçmişi</Text>
-                        <View style={styles.historyCard}>
-                            {/* Header Row */}
-                            <View style={styles.historyHeader}>
-                                <Text style={[styles.historyHeaderText, { flex: 2 }]}>Oyun</Text>
-                                <Text style={[styles.historyHeaderText, { flex: 1 }]}>Tarih</Text>
-                                <Text style={[styles.historyHeaderText, { flex: 1 }]}>Skor</Text>
-                                <Text style={[styles.historyHeaderText, { flex: 1 }]}>Süre</Text>
-                            </View>
-                            {/* Game Rows */}
-                            {scores.slice(0, 10).map((score, index) => {
-                                const date = new Date(score.created_at);
-                                const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
-                                const gameLabel = score.oyun_turu === 'miktar-avcisi' ? '🎯 Miktar' :
-                                    score.oyun_turu === 'golge-dedektifi' ? '👤 Gölge' :
-                                        score.oyun_turu === 'dizi-tamamla' ? '🔢 Dizi' :
-                                            score.oyun_turu?.substring(0, 8) || 'Oyun';
-                                const scoreEmoji = (score.correct_answers || 0) >= 8 ? '🌟' :
-                                    (score.correct_answers || 0) >= 5 ? '⭐' : '💪';
-                                return (
-                                    <View key={index} style={[styles.historyRow, index % 2 === 0 && styles.historyRowAlt]}>
-                                        <Text
-                                            style={[styles.historyCell, { flex: 2 }]}
-                                            numberOfLines={1}
-                                            ellipsizeMode="tail"
-                                        >
-                                            {gameLabels[normalizeGameName(score.oyun_turu)]?.name || score.oyun_turu}
-                                        </Text>
-                                        <Text style={[styles.historyCell, { flex: 1 }]}>{formattedDate}</Text>
-                                        <Text style={[styles.historyCell, { flex: 1 }]}>
-                                            {score.correct_answers !== null ? `${score.correct_answers}/10 ${scoreEmoji}` : `${10 - score.hata_sayisi}/10`}
-                                        </Text>
-                                        <Text style={[styles.historyCell, { flex: 1 }]}>{score.sure}s</Text>
-                                    </View>
-                                );
-                            })}
-                            {scores.length === 0 && (
-                                <View style={styles.historyEmpty}>
-                                    <Text style={styles.historyEmptyText}>Henüz oyun oynamadınız 🎮</Text>
-                                </View>
-                            )}
-                        </View>
-                    </View>
+                    {/* GECMIS TAB */}
+                    {activeTab === 'gecmis' && (
+                        <Animated.View style={{ opacity: fadeAnim }}>
 
-                    {/* AI Report Section */}
-                    <View style={styles.aiSection}>
-                        <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>
-                                🤖 AI Pedagojik Rapor
-                                {selectedGameIndex !== null && scores[selectedGameIndex] && (
-                                    <Text style={{ fontSize: 12, color: COLORS.textLight }}>
-                                        {' '}({scores[selectedGameIndex].oyun_turu?.replace(/-/g, ' ')})
+                            {/* Game History Timeline */}
+                            {scores.length > 0 && (
+                                <View style={styles.timelineSidebar}>
+                                    <Text style={styles.timelineSidebarTitle}>📅 Oyun Geçmişi</Text>
+                                    <Text style={{ fontSize: 12, color: COLORS.textLight, marginBottom: 12, paddingHorizontal: 4 }}>
+                                        Detaylı analiz ve grafik filtrelemek için bir oyuna dokunun 👇
                                     </Text>
-                                )}
-                            </Text>
-                            {!isPremium && (
-                                <View style={styles.lockIcon}>
-                                    <Ionicons name="lock-closed" size={16} color="#fff" />
+                                    {scores.slice(0, 50).map((score, index) => (
+                                        <TimelineItem
+                                            key={score.id}
+                                            game={score}
+                                            index={index}
+                                            isSelected={selectedGameIndex === index}
+                                        />
+                                    ))}
                                 </View>
                             )}
-                        </View>
-                        <TouchableOpacity
-                            style={[styles.aiCard, !isPremium && styles.aiCardBlurred]}
-                            onPress={() => isPremium && selectedGameAIComment && setAiReportExpanded(!aiReportExpanded)}
-                            activeOpacity={isPremium && selectedGameAIComment ? 0.7 : 1}
-                        >
-                            {selectedGameAIComment ? (
-                                <>
-                                    <Text style={styles.aiText}>
-                                        {aiReportExpanded ? selectedGameAIComment : selectedGameAIComment.substring(0, 300) + (selectedGameAIComment.length > 300 ? '...' : '')}
+
+                            {/* AI Report Section */}
+                            <View style={styles.aiSection}>
+                                <View style={styles.sectionHeader}>
+                                    <Text style={styles.sectionTitle}>
+                                        🤖 AI Analiz Raporu
                                     </Text>
-                                    {isPremium && selectedGameAIComment.length > 300 && (
-                                        <View style={styles.aiExpandButton}>
-                                            <Ionicons
-                                                name={aiReportExpanded ? "chevron-up" : "chevron-down"}
-                                                size={20}
-                                                color={COLORS.primary}
-                                            />
-                                            <Text style={styles.aiExpandText}>
-                                                {aiReportExpanded ? 'Küçült' : 'Tamamını Göster'}
+                                    {selectedGameIndex !== null && scores[selectedGameIndex] && (
+                                        <View style={{ backgroundColor: COLORS.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginLeft: 8 }}>
+                                            <Text style={{ fontSize: 11, color: '#fff', fontWeight: 'bold' }}>
+                                                {gameLabels[normalizeGameName(scores[selectedGameIndex].oyun_turu)]?.name || 'Seçili Oyun'}
                                             </Text>
                                         </View>
                                     )}
-                                </>
-                            ) : (
-                                <View style={{ alignItems: 'center' }}>
-                                    <Text style={styles.aiPlaceholder}>
-                                        {selectedGameIndex !== null
-                                            ? 'Bu oyun için henüz AI analizi yapılmamış.'
-                                            : 'Henüz bir AI analizi yok. Oyun oynandıktan sonra analiz yapılacak! 🎮'}
-                                    </Text>
-                                    {isPremium && selectedGameIndex !== null && !scores[selectedGameIndex]?.yapay_zeka_yorumu && (
-                                        <TouchableOpacity
-                                            style={styles.analyzeButton}
-                                            onPress={() => {
-                                                // TODO: Call analyze API like admin panel
-                                                Alert.alert('Analiz', 'Bu özellik yakında eklenecek. Şimdilik Admin panelinden analiz yapabilirsiniz.');
-                                            }}
-                                        >
-                                            <Ionicons name="sparkles" size={16} color="#fff" />
-                                            <Text style={styles.analyzeButtonText}>Bu Oyunu Analiz Et</Text>
-                                        </TouchableOpacity>
+                                    {!isPremium && (
+                                        <View style={styles.lockIcon}>
+                                            <Ionicons name="lock-closed" size={16} color="#fff" />
+                                        </View>
                                     )}
                                 </View>
-                            )}
-                        </TouchableOpacity>
-                        {!isPremium && (
-                            <Animated.View style={[styles.premiumOverlay, { transform: [{ scale: pulseAnim }] }]}>
-                                <View style={styles.premiumBox}>
-                                    <Text style={styles.premiumEmoji}>👑</Text>
-                                    <Text style={styles.premiumTitle}>Premium ile Daha Fazla!</Text>
-                                    <Text style={styles.premiumText}>
-                                        Detaylı AI analizleri ve özel öneriler için Premium'a geç!
-                                    </Text>
-                                    <TouchableOpacity style={styles.premiumButton}>
-                                        <Text style={styles.premiumButtonText}>Premium'a Geç ✨</Text>
-                                    </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.aiCard, !isPremium && styles.aiCardBlurred]}
+                                    onPress={() => isPremium && selectedGameAIComment && setAiReportExpanded(!aiReportExpanded)}
+                                    activeOpacity={isPremium && selectedGameAIComment ? 0.7 : 1}
+                                >
+                                    {selectedGameAIComment ? (
+                                        <>
+                                            <Text style={styles.aiText}>
+                                                {aiReportExpanded ? selectedGameAIComment : selectedGameAIComment.substring(0, 300) + (selectedGameAIComment.length > 300 ? '...' : '')}
+                                            </Text>
+                                            {isPremium && selectedGameAIComment.length > 300 && (
+                                                <View style={styles.aiExpandButton}>
+                                                    <Ionicons
+                                                        name={aiReportExpanded ? "chevron-up" : "chevron-down"}
+                                                        size={20}
+                                                        color={COLORS.primary}
+                                                    />
+                                                    <Text style={styles.aiExpandText}>
+                                                        {aiReportExpanded ? 'Küçült' : 'Tamamını Göster'}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <View style={{ alignItems: 'center' }}>
+                                            <Text style={styles.aiPlaceholder}>
+                                                {selectedGameIndex !== null
+                                                    ? 'Bu oyun için henüz AI analizi bulunmuyor veya analiz devam ediyor.'
+                                                    : 'Lütfen analizini görmek istediğiniz oyunu yukarıdaki listeden seçin.'}
+                                            </Text>
+                                            {isPremium && selectedGameIndex !== null && !scores[selectedGameIndex]?.yapay_zeka_yorumu && (
+                                                <TouchableOpacity
+                                                    style={styles.analyzeButton}
+                                                    onPress={() => {
+                                                        Alert.alert('Analiz', 'Talep alındı! AI asistanımız bu oyun için analiz hazırlıyor.');
+                                                    }}
+                                                >
+                                                    <Ionicons name="sparkles" size={16} color="#fff" />
+                                                    <Text style={styles.analyzeButtonText}>Şimdi Analiz Et</Text>
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* GAME HISTORY TABLE */}
+                            <View style={styles.historySection}>
+                                <Text style={styles.sectionTitle}>📋 Detaylı Liste</Text>
+                                <View style={styles.historyCard}>
+                                    {/* Header Row */}
+                                    <View style={styles.historyHeader}>
+                                        <Text style={[styles.historyHeaderText, { flex: 2 }]}>Oyun</Text>
+                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>Tarih</Text>
+                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>Skor</Text>
+                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>Süre</Text>
+                                    </View>
+                                    {/* Game Rows */}
+                                    {scores.slice(0, 20).map((score, index) => {
+                                        const date = new Date(score.created_at);
+                                        const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
+                                        const info = gameLabels[normalizeGameName(score.oyun_turu)] || { emoji: '🎮', name: score.oyun_turu };
+
+                                        const scoreEmoji = (score.correct_answers || 0) >= 8 ? '🌟' :
+                                            (score.correct_answers || 0) >= 5 ? '⭐' : '💪';
+                                        return (
+                                            <View key={index} style={[styles.historyRow, index % 2 === 0 && styles.historyRowAlt]}>
+                                                <Text
+                                                    style={[styles.historyCell, { flex: 2 }]}
+                                                    numberOfLines={1}
+                                                    ellipsizeMode="tail"
+                                                >
+                                                    {info.name}
+                                                </Text>
+                                                <Text style={[styles.historyCell, { flex: 1 }]}>{formattedDate}</Text>
+                                                <Text style={[styles.historyCell, { flex: 1 }]}>
+                                                    {score.correct_answers !== null ? `${score.correct_answers}/10 ${scoreEmoji}` : `${10 - (score.hata_sayisi || 0)}/10`}
+                                                </Text>
+                                                <Text style={[styles.historyCell, { flex: 1 }]}>{score.sure || Math.round((score.response_time || 0) / 1000)}s</Text>
+                                            </View>
+                                        );
+                                    })}
                                 </View>
-                            </Animated.View>
-                        )}
-                    </View>
+                            </View>
+                        </Animated.View>
+                    )}
+
 
                     {/* PDF DOWNLOAD CARD - Modern centered design */}
                     <View style={styles.pdfSection}>
@@ -2286,5 +2252,38 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: 'bold',
         marginLeft: 8,
+    },
+    // Tab Styles
+    tabContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#ffffff',
+        marginHorizontal: 16,
+        marginBottom: 16,
+        borderRadius: 12,
+        padding: 4,
+        ...Platform.select({
+            web: { boxShadow: '0 2px 8px rgba(0,0,0,0.05)' },
+            default: { elevation: 2 },
+        }),
+    },
+    tabButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 10,
+        borderRadius: 8,
+        gap: 6
+    },
+    tabButtonActive: {
+        backgroundColor: COLORS.primary,
+    },
+    tabText: {
+        fontSize: 14,
+        color: COLORS.textLight,
+        fontWeight: '600',
+    },
+    tabTextActive: {
+        color: '#ffffff',
     },
 });
