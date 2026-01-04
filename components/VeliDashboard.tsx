@@ -1070,19 +1070,15 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         </View>
                     </Animated.View>
 
-                    {/* Tab Navigation */}
+                    {/* Tab Navigation - Simplified to 2 tabs */}
                     <View style={styles.tabContainer}>
                         <TouchableOpacity style={[styles.tabButton, activeTab === 'ozet' && styles.tabButtonActive]} onPress={() => setActiveTab('ozet')}>
-                            <Ionicons name="grid-outline" size={18} color={activeTab === 'ozet' ? '#fff' : COLORS.textLight} />
+                            <Ionicons name="home-outline" size={18} color={activeTab === 'ozet' ? '#fff' : COLORS.textLight} />
                             <Text style={[styles.tabText, activeTab === 'ozet' && styles.tabTextActive]}>Özet</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.tabButton, activeTab === 'gelisim' && styles.tabButtonActive]} onPress={() => setActiveTab('gelisim')}>
-                            <Ionicons name="trending-up-outline" size={18} color={activeTab === 'gelisim' ? '#fff' : COLORS.textLight} />
-                            <Text style={[styles.tabText, activeTab === 'gelisim' && styles.tabTextActive]}>Gelişim</Text>
-                        </TouchableOpacity>
                         <TouchableOpacity style={[styles.tabButton, activeTab === 'gecmis' && styles.tabButtonActive]} onPress={() => setActiveTab('gecmis')}>
-                            <Ionicons name="time-outline" size={18} color={activeTab === 'gecmis' ? '#fff' : COLORS.textLight} />
-                            <Text style={[styles.tabText, activeTab === 'gecmis' && styles.tabTextActive]}>Geçmiş</Text>
+                            <Ionicons name="folder-outline" size={18} color={activeTab === 'gecmis' ? '#fff' : COLORS.textLight} />
+                            <Text style={[styles.tabText, activeTab === 'gecmis' && styles.tabTextActive]}>Arşiv</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -1205,36 +1201,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     <Text style={styles.chartHint}>Son 7 gündeki oyun aktivitesi</Text>
                                 </View>
                             </View>
-
-                            {/* FREE TIER BANNER */}
-                            {!isPremium && (
-                                <View style={styles.freeBanner}>
-                                    <View style={styles.freeBannerContent}>
-                                        <Text style={styles.freeBannerEmoji}>🆓</Text>
-                                        <View style={styles.freeBannerText}>
-                                            <Text style={styles.freeBannerTitle}>Ücretsiz Plan Kullanıyorsunuz</Text>
-                                            <Text style={styles.freeBannerSubtitle}>Premium ile tüm özelliklere erişin!</Text>
-                                        </View>
-                                    </View>
-                                    <TouchableOpacity style={styles.freeBannerButton}>
-                                        <Text style={styles.freeBannerButtonText}>Yükselt 🚀</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            )}
-                        </Animated.View>
-                    )}
-
-                    {/* GELISIM TAB */}
-                    {activeTab === 'gelisim' && (
-                        <Animated.View style={{ opacity: fadeAnim }}>
-                            {/* Cumulative AI Analysis Card */}
+                            {/* CUMULATIVE AI ANALYSIS - Main Feature */}
                             <View style={[styles.chartCard, { marginBottom: 20, borderWidth: 2, borderColor: COLORS.premium }]}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                                     <Text style={{ fontSize: 24, marginRight: 10 }}>🧠</Text>
                                     <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Kümülatif AI Analizi</Text>
                                 </View>
                                 <Text style={{ color: COLORS.textLight, fontSize: 13, marginBottom: 12 }}>
-                                    Son 12 oyunluk veriler Gemini AI tarafından analiz edilir ve trend raporu oluşturulur.
+                                    Tüm oyun verileri Gemini AI tarafından analiz edilir.
                                 </Text>
 
                                 {cumulativeReport ? (
@@ -1243,7 +1217,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             {cumulativeReport}
                                         </Text>
                                         <Text style={{ color: COLORS.textLight, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
-                                            ℹ️ Çocuğunuz yeni oyun oynarsa analiz güncellenecektir.
+                                            ℹ️ Yeni oyun oynanırsa analiz otomatik güncellenir.
                                         </Text>
                                         {Platform.OS === 'web' && (
                                             <TouchableOpacity
@@ -1251,7 +1225,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                                 onPress={handleDownloadPDF}
                                             >
                                                 <Ionicons name="document-text" size={16} color="#fff" />
-                                                <Text style={styles.analyzeButtonText}>Raporu PDF Olarak İndir</Text>
+                                                <Text style={styles.analyzeButtonText}>PDF İndir</Text>
                                             </TouchableOpacity>
                                         )}
                                     </View>
@@ -1267,80 +1241,32 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             <>
                                                 <Ionicons name="sparkles" size={18} color="#fff" />
                                                 <Text style={styles.analyzeButtonText}>
-                                                    {scores.length === 0 ? 'Veri Bekleniyor...' : 'Son 12 Oyunu Analiz Et'}
+                                                    {scores.length === 0 ? 'Veri Bekleniyor...' : 'AI Analiz Yap'}
                                                 </Text>
                                             </>
                                         )}
                                     </TouchableOpacity>
                                 )}
                                 <Text style={{ color: '#888', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
-                                    Gemini 2.0 Flash ile güçlendirilmiştir
+                                    Gemini 2.0 Flash
                                 </Text>
                             </View>
 
-                            {selectedGameIndex === null && (
-                                <View style={{ backgroundColor: '#fff3cd', padding: 10, borderRadius: 8, marginHorizontal: 16, marginBottom: 16 }}>
-                                    <Text style={{ color: '#856404', fontSize: 13, textAlign: 'center' }}>
-                                        💡 İpucu: Belirli bir oyunun detaylı grafiğini görmek için "Geçmiş" sekmesinden o oyunu seçin.
-                                    </Text>
+                            {/* FREE TIER BANNER */}
+                            {!isPremium && (
+                                <View style={styles.freeBanner}>
+                                    <View style={styles.freeBannerContent}>
+                                        <Text style={styles.freeBannerEmoji}>🆓</Text>
+                                        <View style={styles.freeBannerText}>
+                                            <Text style={styles.freeBannerTitle}>Ücretsiz Plan</Text>
+                                            <Text style={styles.freeBannerSubtitle}>Premium ile tüm özelliklere erişin!</Text>
+                                        </View>
+                                    </View>
+                                    <TouchableOpacity style={styles.freeBannerButton}>
+                                        <Text style={styles.freeBannerButtonText}>Yükselt 🚀</Text>
+                                    </TouchableOpacity>
                                 </View>
                             )}
-
-                            {/* Time Series Charts */}
-                            <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>
-                                📈 {selectedGameIndex !== null && scores[selectedGameIndex] ? `${gameLabels[normalizeGameName(scores[selectedGameIndex].oyun_turu)]?.name} Gelişimi` : 'Genel Gelişim Grafikleri'}
-                            </Text>
-                            <SimpleLineChart
-                                data={getTimeSeriesData('score')}
-                                color={COLORS.chartGreen}
-                                label="🎯 Doğru Cevap Trendi (Son 15 Oyun)"
-                            />
-                            <SimpleLineChart
-                                data={getTimeSeriesData('time')}
-                                color={COLORS.orange}
-                                label="⏱️ Süre Trendi (Saniye)"
-                            />
-
-                            {/* Response Time Timeline */}
-                            <View style={styles.timelineSection}>
-                                <Text style={styles.sectionTitle}>⏰ Tepki Süresi Analizi</Text>
-                                <View style={styles.timelineCard}>
-                                    {/* Color Legend */}
-                                    <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16, marginBottom: 4 }}>
-                                            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.accent, marginRight: 4 }} />
-                                            <Text style={{ fontSize: 11, color: COLORS.textLight }}>Hızlı (&lt;2sn)</Text>
-                                        </View>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16, marginBottom: 4 }}>
-                                            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.secondary, marginRight: 4 }} />
-                                            <Text style={{ fontSize: 11, color: COLORS.textLight }}>Normal (2-3.5sn)</Text>
-                                        </View>
-                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                                            <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.orange, marginRight: 4 }} />
-                                            <Text style={{ fontSize: 11, color: COLORS.textLight }}>Yavaş (&gt;3.5sn)</Text>
-                                        </View>
-                                    </View>
-                                    <View style={styles.timelineChart}>
-                                        {((selectedGameIndex !== null && scores[selectedGameIndex]
-                                            ? scores.filter(s => normalizeGameName(s.oyun_turu) === normalizeGameName(scores[selectedGameIndex].oyun_turu))
-                                            : scores)
-                                        ).slice(0, 7).reverse().map((score, index) => {
-                                            const rt = score.response_time || (score.sure ? score.sure * 1000 : 0);
-                                            const height = Math.min((rt / 5000) * 100, 100);
-                                            const color = rt < 2000 ? COLORS.accent : rt < 3500 ? COLORS.secondary : COLORS.orange;
-                                            return (
-                                                <View key={index} style={styles.timelineBarContainer}>
-                                                    <View style={[styles.timelineBar, { height: `${height}%`, backgroundColor: color }]}>
-                                                        <Text style={styles.timelineBarText}>{formatTime(rt)}</Text>
-                                                    </View>
-                                                    <Text style={styles.timelineBarLabel}>Oyun {index + 1}</Text>
-                                                </View>
-                                            );
-                                        })}
-                                    </View>
-                                    <Text style={styles.timelineHint}>📊 Son 7 oyunun tepki süreleri (kısa çubuk = daha hızlı yanıt)</Text>
-                                </View>
-                            </View>
                         </Animated.View>
                     )}
 
