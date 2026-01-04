@@ -337,6 +337,129 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                         </View>
                     </View>
 
+                    {/* SCORE TREND CHART */}
+                    <View style={styles.chartSection}>
+                        <Text style={styles.sectionTitle}>📈 Başarı Trendi</Text>
+                        <View style={styles.chartCard}>
+                            <View style={styles.lineChartContainer}>
+                                {/* Y-axis labels */}
+                                <View style={styles.lineChartYAxis}>
+                                    <Text style={styles.lineChartYLabel}>10</Text>
+                                    <Text style={styles.lineChartYLabel}>5</Text>
+                                    <Text style={styles.lineChartYLabel}>0</Text>
+                                </View>
+                                {/* Chart area */}
+                                <View style={styles.lineChartArea}>
+                                    {/* Grid lines */}
+                                    <View style={[styles.lineChartGridLine, { top: '0%' }]} />
+                                    <View style={[styles.lineChartGridLine, { top: '50%' }]} />
+                                    <View style={[styles.lineChartGridLine, { top: '100%' }]} />
+                                    {/* Data points */}
+                                    <View style={styles.lineChartPoints}>
+                                        {miktarAvcisiScores.slice(0, 7).reverse().map((score, index) => {
+                                            const correct = score.correct_answers || 5;
+                                            const bottomPercent = (correct / 10) * 100;
+                                            return (
+                                                <View key={index} style={styles.lineChartPointContainer}>
+                                                    <View style={[styles.lineChartPoint, { bottom: `${bottomPercent - 5}%`, backgroundColor: correct >= 7 ? COLORS.accent : correct >= 5 ? COLORS.secondary : COLORS.orange }]} />
+                                                    <Text style={styles.lineChartPointLabel}>{index + 1}</Text>
+                                                </View>
+                                            );
+                                        })}
+                                    </View>
+                                </View>
+                            </View>
+                            <Text style={styles.chartHint}>🎯 Doğru cevap sayısı (son 7 oyun)</Text>
+                        </View>
+                    </View>
+
+                    {/* GAME DISTRIBUTION CHART */}
+                    <View style={styles.chartSection}>
+                        <Text style={styles.sectionTitle}>🎮 Oyun Dağılımı</Text>
+                        <View style={styles.chartCard}>
+                            {(() => {
+                                const gameTypes = scores.reduce((acc: Record<string, number>, s) => {
+                                    const type = s.oyun_turu || 'diger';
+                                    acc[type] = (acc[type] || 0) + 1;
+                                    return acc;
+                                }, {});
+                                const total = scores.length || 1;
+                                const gameEmojis: Record<string, string> = {
+                                    'miktar-avcisi': '🎯',
+                                    'golge-dedektifi': '👤',
+                                    'dizi-tamamla': '🔢',
+                                    'rakam-yazma': '✏️',
+                                    'ceviz-macera': '🌰',
+                                };
+                                const gameLabels: Record<string, string> = {
+                                    'miktar-avcisi': 'Miktar Avcısı',
+                                    'golge-dedektifi': 'Gölge Dedektifi',
+                                    'dizi-tamamla': 'Dizi Tamamla',
+                                    'rakam-yazma': 'Rakam Yazma',
+                                    'ceviz-macera': 'Ceviz Macera',
+                                };
+                                const colors = [COLORS.primary, COLORS.secondary, COLORS.accent, COLORS.orange, COLORS.pink];
+
+                                return Object.entries(gameTypes).slice(0, 5).map(([type, count], index) => {
+                                    const percent = Math.round((count / total) * 100);
+                                    return (
+                                        <View key={type} style={styles.distributionRow}>
+                                            <View style={styles.distributionLabel}>
+                                                <Text style={styles.distributionEmoji}>{gameEmojis[type] || '🎮'}</Text>
+                                                <Text style={styles.distributionName}>{gameLabels[type] || type}</Text>
+                                            </View>
+                                            <View style={styles.distributionBarContainer}>
+                                                <View style={[styles.distributionBar, { width: `${percent}%`, backgroundColor: colors[index] }]} />
+                                            </View>
+                                            <Text style={styles.distributionPercent}>{percent}%</Text>
+                                        </View>
+                                    );
+                                });
+                            })()}
+                        </View>
+                    </View>
+
+                    {/* WEEKLY ACTIVITY CHART */}
+                    <View style={styles.chartSection}>
+                        <Text style={styles.sectionTitle}>📅 Son 7 Gün Aktivite</Text>
+                        <View style={styles.chartCard}>
+                            <View style={styles.weeklyChart}>
+                                {(() => {
+                                    const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+                                    const today = new Date();
+                                    const last7Days = Array.from({ length: 7 }, (_, i) => {
+                                        const d = new Date(today);
+                                        d.setDate(d.getDate() - (6 - i));
+                                        return d;
+                                    });
+
+                                    return last7Days.map((date, index) => {
+                                        const dayScores = scores.filter(s => {
+                                            const scoreDate = new Date(s.created_at);
+                                            return scoreDate.toDateString() === date.toDateString();
+                                        });
+                                        const count = dayScores.length;
+                                        const maxHeight = 60;
+                                        const height = Math.min(count * 15, maxHeight);
+                                        const dayName = days[date.getDay() === 0 ? 6 : date.getDay() - 1];
+
+                                        return (
+                                            <View key={index} style={styles.weeklyDayContainer}>
+                                                <View style={styles.weeklyBarOuter}>
+                                                    <View style={[styles.weeklyBar, { height, backgroundColor: count > 0 ? COLORS.primary : '#E0E0E0' }]}>
+                                                        {count > 0 && <Text style={styles.weeklyBarCount}>{count}</Text>}
+                                                    </View>
+                                                </View>
+                                                <Text style={styles.weeklyDayLabel}>{dayName}</Text>
+                                            </View>
+                                        );
+                                    });
+                                })()}
+                            </View>
+                            <Text style={styles.chartHint}>🕹️ Her gün kaç oyun oynandı</Text>
+                        </View>
+                    </View>
+
                     {/* FREE TIER BANNER - Only show if not premium */}
                     {!isPremium && (
                         <View style={styles.freeBanner}>
@@ -931,5 +1054,150 @@ const styles = StyleSheet.create({
     historyEmptyText: {
         fontSize: 14,
         color: COLORS.textLight,
+    },
+
+    // Chart Sections
+    chartSection: {
+        marginBottom: 24,
+    },
+    chartCard: {
+        backgroundColor: COLORS.card,
+        borderRadius: 20,
+        padding: 20,
+        ...Platform.select({
+            web: { boxShadow: '0 4px 16px rgba(0,0,0,0.08)' },
+            default: { elevation: 4 },
+        }),
+    },
+    chartHint: {
+        fontSize: 12,
+        color: COLORS.textLight,
+        textAlign: 'center',
+        marginTop: 12,
+    },
+
+    // Line Chart
+    lineChartContainer: {
+        flexDirection: 'row',
+        height: 120,
+    },
+    lineChartYAxis: {
+        width: 25,
+        justifyContent: 'space-between',
+        paddingRight: 8,
+    },
+    lineChartYLabel: {
+        fontSize: 10,
+        color: COLORS.textLight,
+    },
+    lineChartArea: {
+        flex: 1,
+        position: 'relative',
+    },
+    lineChartGridLine: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        height: 1,
+        backgroundColor: '#E0E0E0',
+    },
+    lineChartPoints: {
+        flexDirection: 'row',
+        height: '100%',
+        alignItems: 'flex-end',
+        justifyContent: 'space-around',
+    },
+    lineChartPointContainer: {
+        alignItems: 'center',
+        flex: 1,
+        height: '100%',
+        position: 'relative',
+    },
+    lineChartPoint: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        position: 'absolute',
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    lineChartPointLabel: {
+        position: 'absolute',
+        bottom: -18,
+        fontSize: 10,
+        color: COLORS.textLight,
+    },
+
+    // Distribution Chart
+    distributionRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    distributionLabel: {
+        width: 100,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    distributionEmoji: {
+        fontSize: 16,
+        marginRight: 6,
+    },
+    distributionName: {
+        fontSize: 11,
+        color: COLORS.text,
+    },
+    distributionBarContainer: {
+        flex: 1,
+        height: 16,
+        backgroundColor: '#F0F0F0',
+        borderRadius: 8,
+        marginHorizontal: 10,
+        overflow: 'hidden',
+    },
+    distributionBar: {
+        height: '100%',
+        borderRadius: 8,
+    },
+    distributionPercent: {
+        width: 35,
+        fontSize: 12,
+        fontWeight: '700',
+        color: COLORS.text,
+        textAlign: 'right',
+    },
+
+    // Weekly Activity Chart
+    weeklyChart: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'flex-end',
+        height: 100,
+    },
+    weeklyDayContainer: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    weeklyBarOuter: {
+        height: 70,
+        justifyContent: 'flex-end',
+    },
+    weeklyBar: {
+        width: 24,
+        borderRadius: 6,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 8,
+    },
+    weeklyBarCount: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    weeklyDayLabel: {
+        marginTop: 6,
+        fontSize: 11,
+        color: COLORS.textLight,
+        fontWeight: '500',
     },
 });
