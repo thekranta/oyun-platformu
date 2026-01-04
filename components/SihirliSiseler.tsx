@@ -524,7 +524,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                     ]}>
                         🐥
                     </Text>
-                    <Text style={styles.characterName}>Pıtır</Text>
+
                     {completedBottles > 0 && (
                         <View style={styles.speechBubble}>
                             <Text style={styles.speechText}>
@@ -552,7 +552,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                     ]}>
                         🐸
                     </Text>
-                    <Text style={styles.characterName}>Filo</Text>
+
                     {completedBottles > 1 && (
                         <View style={styles.speechBubble}>
                             <Text style={styles.speechText}>
@@ -567,21 +567,16 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 </View>
             )}
 
-            {/* Header */}
+            {/* Header - simplified */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                     <Ionicons name="arrow-back" size={28} color="#fff" />
                 </TouchableOpacity>
                 <Text style={styles.title}>🧪 Sihirli Şişeler</Text>
-                <View style={styles.statsContainer}>
-                    <Text style={styles.statsText}>Hamle: {gameState.moves}</Text>
-                </View>
+                <TouchableOpacity onPress={initializeGame} style={styles.restartIconButton}>
+                    <Ionicons name="refresh" size={24} color="#fff" />
+                </TouchableOpacity>
             </View>
-
-            {/* Instructions */}
-            <Text style={styles.instructions}>
-                Her şişede aynı rengi topla! 🎨
-            </Text>
 
             {/* Bottles Grid - Centered with responsive gap */}
             <View style={styles.bottlesContainer}>
@@ -590,16 +585,6 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 </View>
             </View>
 
-            {/* Action Buttons */}
-            <View style={styles.actionButtons}>
-                <TouchableOpacity
-                    style={styles.restartButton}
-                    onPress={initializeGame}
-                >
-                    <Ionicons name="refresh" size={24} color="#fff" />
-                    <Text style={styles.buttonText}>Yeniden Başla</Text>
-                </TouchableOpacity>
-            </View>
 
             {/* Celebration Overlay */}
             {showCelebration && (
@@ -808,6 +793,11 @@ const styles = StyleSheet.create({
     },
     closeButton: {
         padding: 8,
+    },
+    restartIconButton: {
+        padding: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 20,
     },
     title: {
         fontSize: 24,
