@@ -12,21 +12,23 @@ import {
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
+const isWeb = Platform.OS === 'web';
 
-// Color palette for liquids
+// High-contrast color palette with symbols for accessibility
 const LIQUID_COLORS = [
-    { main: '#FF6B6B', light: '#FF8E8E', dark: '#E05555' }, // Red
-    { main: '#4ECDC4', light: '#7EDAD3', dark: '#3CB5AD' }, // Teal
-    { main: '#FFE66D', light: '#FFF09E', dark: '#E6CE55' }, // Yellow
-    { main: '#95E1D3', light: '#B8EDE3', dark: '#7BC9BC' }, // Mint
-    { main: '#A8D8EA', light: '#C5E8F5', dark: '#8FC5D6' }, // Sky Blue
-    { main: '#DDA0DD', light: '#E8C0E8', dark: '#C589C5' }, // Plum
-    { main: '#98D8C8', light: '#B5E5D9', dark: '#7DC5B3' }, // Seafoam
+    { main: '#FF3B3B', light: '#FF6B6B', dark: '#CC2222', symbol: '★', name: 'Kırmızı' },  // Bright Red - Star
+    { main: '#FFD700', light: '#FFE44D', dark: '#CCB000', symbol: '●', name: 'Sarı' },     // Vivid Yellow - Circle
+    { main: '#1E88E5', light: '#64B5F6', dark: '#1565C0', symbol: '▲', name: 'Mavi' },     // Deep Blue - Triangle
+    { main: '#4CAF50', light: '#81C784', dark: '#388E3C', symbol: '◆', name: 'Yeşil' },    // Grass Green - Diamond
+    { main: '#9C27B0', light: '#BA68C8', dark: '#7B1FA2', symbol: '♦', name: 'Mor' },      // Purple - Diamond Alt
+    { main: '#FF9800', light: '#FFB74D', dark: '#F57C00', symbol: '♥', name: 'Turuncu' },  // Orange - Heart
+    { main: '#00BCD4', light: '#4DD0E1', dark: '#0097A7', symbol: '✦', name: 'Turkuaz' },  // Cyan - Sparkle
 ];
 
-const BOTTLE_HEIGHT = 180;
-const BOTTLE_WIDTH = 55;
-const LAYER_HEIGHT = 40;
+// Responsive sizing
+const BOTTLE_HEIGHT = isWeb ? Math.min(220, height * 0.32) : 180;
+const BOTTLE_WIDTH = isWeb ? Math.min(70, width * 0.08) : 55;
+const LAYER_HEIGHT = BOTTLE_HEIGHT / 4.5;
 const MAX_LAYERS = 4;
 
 interface Bottle {
@@ -68,6 +70,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
     });
     const [showCelebration, setShowCelebration] = useState(false);
     const [confettiPieces, setConfettiPieces] = useState<any[]>([]);
+    const [completedBottles, setCompletedBottles] = useState(0); // Track for interactive elements
 
     // Animations
     const pourAnim = useRef(new Animated.Value(0)).current;
@@ -242,10 +245,13 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 const newMoves = gameState.moves + 1;
                 const newHistory = [...gameState.moveHistory, `${selectedBottle}->${bottleIndex}`];
 
-                // Check for completed bottle
+                // Check for completed bottle and update count
                 if (isBottleComplete(newBottles[bottleIndex])) {
                     playSound('complete');
                     animateBottleComplete(bottleIndex);
+                    // Update completed bottles count for interactive elements
+                    const totalCompleted = newBottles.filter(b => isBottleComplete(b)).length;
+                    setCompletedBottles(totalCompleted);
                 }
 
                 // Check for win
@@ -416,14 +422,22 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                                     {
                                         backgroundColor: LIQUID_COLORS[colorIndex].main,
                                         bottom: layerIndex * LAYER_HEIGHT,
-                                        // Wave effect
                                         borderTopLeftRadius: layerIndex === bottle.layers.length - 1 ? 8 : 0,
                                         borderTopRightRadius: layerIndex === bottle.layers.length - 1 ? 8 : 0,
+                                        height: LAYER_HEIGHT,
                                     },
                                 ]}
                             >
                                 {/* Liquid shine */}
                                 <View style={[styles.liquidShine, { backgroundColor: LIQUID_COLORS[colorIndex].light }]} />
+
+                                {/* Symbol for colorblind accessibility */}
+                                <Text style={styles.layerSymbol}>{LIQUID_COLORS[colorIndex].symbol}</Text>
+
+                                {/* Separator line between layers */}
+                                {layerIndex < bottle.layers.length - 1 && (
+                                    <View style={styles.layerSeparator} />
+                                )}
                             </Animated.View>
                         ))}
 
@@ -464,12 +478,94 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
 
     return (
         <View style={styles.container}>
-            {/* Background */}
+            {/* Lab-themed Background */}
             <View style={styles.background}>
-                <View style={styles.bgCircle1} />
-                <View style={styles.bgCircle2} />
-                <View style={styles.bgCircle3} />
+                {/* Gradient-like Lab Atmosphere */}
+                <View style={styles.labGradient} />
+
+                {/* Lab Equipment Decorations */}
+                <View style={[styles.labDecor, { left: 20, top: height * 0.15 }]}>
+                    <Text style={styles.labDekorEmoji}>🔬</Text>
+                </View>
+                <View style={[styles.labDecor, { right: 20, top: height * 0.2 }]}>
+                    <Text style={styles.labDekorEmoji}>⚗️</Text>
+                </View>
+                <View style={[styles.labDecor, { left: 30, bottom: height * 0.25 }]}>
+                    <Text style={styles.labDekorEmoji}>🧬</Text>
+                </View>
+                <View style={[styles.labDecor, { right: 30, bottom: height * 0.3 }]}>
+                    <Text style={styles.labDekorEmoji}>💡</Text>
+                </View>
+
+                {/* Bubbles floating in background */}
+                {[...Array(8)].map((_, i) => (
+                    <View
+                        key={i}
+                        style={[
+                            styles.bgBubble,
+                            {
+                                left: `${10 + (i * 12)}%`,
+                                top: `${20 + (i % 3) * 25}%`,
+                                width: 10 + (i % 4) * 8,
+                                height: 10 + (i % 4) * 8,
+                                opacity: 0.3 + (i % 3) * 0.1,
+                            },
+                        ]}
+                    />
+                ))}
             </View>
+
+            {/* Left Side Interactive Character - Pıtır */}
+            {isWeb && (
+                <View style={styles.leftCharacter}>
+                    <Text style={[
+                        styles.characterEmoji,
+                        completedBottles > 0 && styles.characterHappy,
+                    ]}>
+                        🐥
+                    </Text>
+                    <Text style={styles.characterName}>Pıtır</Text>
+                    {completedBottles > 0 && (
+                        <View style={styles.speechBubble}>
+                            <Text style={styles.speechText}>
+                                {completedBottles === 1 ? 'Harika!' : completedBottles >= 2 ? 'Süpersin!' : '👍'}
+                            </Text>
+                        </View>
+                    )}
+                    {/* Glowing lamp that reacts to progress */}
+                    <View style={[
+                        styles.reactiveLamp,
+                        { backgroundColor: completedBottles > 0 ? '#FFD700' : '#555' },
+                        completedBottles > 2 && styles.lampGlowing,
+                    ]}>
+                        <Text style={styles.lampEmoji}>💡</Text>
+                    </View>
+                </View>
+            )}
+
+            {/* Right Side Interactive Character - Filo */}
+            {isWeb && (
+                <View style={styles.rightCharacter}>
+                    <Text style={[
+                        styles.characterEmoji,
+                        completedBottles > 1 && styles.characterHappy,
+                    ]}>
+                        🐸
+                    </Text>
+                    <Text style={styles.characterName}>Filo</Text>
+                    {completedBottles > 1 && (
+                        <View style={styles.speechBubble}>
+                            <Text style={styles.speechText}>
+                                {completedBottles >= 3 ? 'Dahisin!' : 'Çok iyi! 🎉'}
+                            </Text>
+                        </View>
+                    )}
+                    {/* Progress indicator */}
+                    <View style={styles.progressMeter}>
+                        <View style={[styles.progressFill, { height: `${Math.min(completedBottles * 25, 100)}%` }]} />
+                    </View>
+                </View>
+            )}
 
             {/* Header */}
             <View style={styles.header}>
@@ -487,9 +583,9 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 Her şişede aynı rengi topla! 🎨
             </Text>
 
-            {/* Bottles Grid */}
+            {/* Bottles Grid - Centered with responsive gap */}
             <View style={styles.bottlesContainer}>
-                <View style={styles.bottlesGrid}>
+                <View style={[styles.bottlesGrid, isWeb && styles.bottlesGridWeb]}>
                     {gameState.bottles.map((bottle, index) => renderBottle(bottle, index))}
                 </View>
             </View>
@@ -596,6 +692,103 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(165, 214, 167, 0.4)',
         top: height / 2,
         right: -30,
+    },
+    // Lab-themed background styles
+    labGradient: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: '#E3F2FD',
+    },
+    labDecor: {
+        position: 'absolute',
+        zIndex: 1,
+    },
+    labDekorEmoji: {
+        fontSize: 40,
+        opacity: 0.3,
+    },
+    bgBubble: {
+        position: 'absolute',
+        backgroundColor: 'rgba(100, 181, 246, 0.3)',
+        borderRadius: 50,
+    },
+    // Interactive character styles
+    leftCharacter: {
+        position: 'absolute',
+        left: 20,
+        top: height * 0.35,
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    rightCharacter: {
+        position: 'absolute',
+        right: 20,
+        top: height * 0.35,
+        alignItems: 'center',
+        zIndex: 10,
+    },
+    characterEmoji: {
+        fontSize: 60,
+    },
+    characterHappy: {
+        transform: [{ scale: 1.2 }],
+    },
+    characterName: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#2E7D32',
+        marginTop: 5,
+    },
+    speechBubble: {
+        backgroundColor: '#fff',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 15,
+        marginTop: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    speechText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#4CAF50',
+    },
+    reactiveLamp: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        marginTop: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    lampGlowing: {
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 15,
+    },
+    lampEmoji: {
+        fontSize: 20,
+    },
+    progressMeter: {
+        width: 30,
+        height: 80,
+        backgroundColor: 'rgba(0,0,0,0.1)',
+        borderRadius: 15,
+        marginTop: 10,
+        overflow: 'hidden',
+        justifyContent: 'flex-end',
+    },
+    progressFill: {
+        width: '100%',
+        backgroundColor: '#4CAF50',
+        borderRadius: 15,
+    },
+    bottlesGridWeb: {
+        gap: 25,
+        maxWidth: 700,
     },
     header: {
         flexDirection: 'row',
@@ -708,6 +901,25 @@ const styles = StyleSheet.create({
         height: 8,
         borderRadius: 4,
         opacity: 0.5,
+    },
+    layerSymbol: {
+        position: 'absolute',
+        right: 8,
+        top: '50%',
+        marginTop: -8,
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.8)',
+        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+    },
+    layerSeparator: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 2,
+        backgroundColor: 'rgba(255,255,255,0.4)',
     },
     bottleSelected: {
         transform: [{ scale: 1.05 }],
