@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     Animated,
     Dimensions,
     Platform,
@@ -12,6 +13,14 @@ import {
     View,
 } from 'react-native';
 import DynamicBackground from './DynamicBackground';
+
+// PDF Libraries (Web only)
+let jsPDF: any = null;
+let html2canvas: any = null;
+if (Platform.OS === 'web') {
+    jsPDF = require('jspdf').default;
+    html2canvas = require('html2canvas').default;
+}
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -58,6 +67,7 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
     const [loading, setLoading] = useState(true);
     const [scores, setScores] = useState<GameScore[]>([]);
     const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'standard' | 'premium'>('free');
+    const [generatingPDF, setGeneratingPDF] = useState(false);
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -148,6 +158,137 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
         return '💪';
     };
 
+    // PDF Generation Function
+    const handleDownloadPDF = async () => {
+        if (!isPremium) {
+            Alert.alert(
+                '🔒 Premium Özellik',
+                'Tam rapor çıktısı almak için paketinizi yükseltin!',
+                [
+                    { text: 'Tamam', style: 'cancel' },
+                    { text: 'Premium\'a Geç', onPress: () => { /* Navigate to upgrade */ } }
+                ]
+            );
+            return;
+        }
+
+        if (Platform.OS !== 'web') {
+            Alert.alert('Bilgi', 'PDF indirme şu an sadece web versiyonunda desteklenmektedir.');
+            return;
+        }
+
+        setGeneratingPDF(true);
+        try {
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = 210;
+            const pageHeight = 297;
+            const margin = 20;
+            let yPos = margin;
+
+            // Header
+            doc.setFillColor(30, 136, 229);
+            doc.rect(0, 0, pageWidth, 40, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('childhoodtech.com', pageWidth / 2, 15, { align: 'center' });
+
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Akademik Gelişim Raporu', pageWidth / 2, 25, { align: 'center' });
+
+            const today = new Date();
+            const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+            doc.setFontSize(10);
+            doc.text(dateStr, pageWidth / 2, 35, { align: 'center' });
+
+            yPos = 55;
+
+            // Child Info
+            doc.setTextColor(38, 50, 56);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Öğrenci: ${childName}`, margin, yPos);
+            yPos += 8;
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Yaş: ${childAge} aylık`, margin, yPos);
+            yPos += 15;
+
+            // Performance Summary
+            doc.setFillColor(232, 245, 233);
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 35, 3, 3, 'F');
+
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(46, 125, 50);
+            doc.text('Performans Özeti', margin + 5, yPos + 10);
+
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(38, 50, 56);
+            doc.text(`Doğru Cevap Ortalaması: ${avgCorrectAnswers}/10`, margin + 5, yPos + 20);
+            doc.text(`Bilişsel Hız Skoru: ${avgCognitiveSpeed}`, margin + 5, yPos + 28);
+            doc.text(`Ortalama Tepki Süresi: ${avgResponseTime}ms`, margin + 100, yPos + 20);
+            doc.text(`Mesafe Etkisi: ${avgDistanceEffect}`, margin + 100, yPos + 28);
+
+            yPos += 45;
+
+            // Pedagojik Rapor
+            doc.setFillColor(243, 229, 245);
+            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 15, 3, 3, 'F');
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(123, 31, 162);
+            doc.text('🎓 Pedagojik Rapor (AI Analizi)', margin + 5, yPos + 10);
+            yPos += 20;
+
+            if (latestAIComment) {
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(38, 50, 56);
+
+                const lines = doc.splitTextToSize(latestAIComment, pageWidth - 2 * margin - 5);
+                lines.forEach((line: string) => {
+                    if (yPos > pageHeight - 40) {
+                        doc.addPage();
+                        yPos = margin;
+                    }
+                    doc.text(line, margin + 2, yPos);
+                    yPos += 6;
+                });
+            } else {
+                doc.setFontSize(11);
+                doc.setTextColor(96, 125, 139);
+                doc.text('Henüz bir AI analizi bulunmamaktadır.', margin + 5, yPos);
+                yPos += 10;
+            }
+
+            // Footer
+            yPos = pageHeight - 25;
+            doc.setDrawColor(200, 200, 200);
+            doc.line(margin, yPos, pageWidth - margin, yPos);
+            yPos += 8;
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'italic');
+            doc.setTextColor(120, 144, 156);
+            doc.text('Bu rapor Türkiye Yüzyılı Maarif Modeli kriterlerine göre hazırlanmıştır.', pageWidth / 2, yPos, { align: 'center' });
+            yPos += 6;
+            doc.text('© childhoodtech.com - Erken Çocukluk Eğitim Teknolojileri', pageWidth / 2, yPos, { align: 'center' });
+
+            // Download
+            doc.save(`${childName}_Akademik_Rapor_${dateStr.replace(/\//g, '-')}.pdf`);
+
+        } catch (error) {
+            console.error('PDF oluşturma hatası:', error);
+            Alert.alert('Hata', 'PDF oluşturulurken bir hata oluştu.');
+        } finally {
+            setGeneratingPDF(false);
+        }
+    };
+
     // Fun metric card with animation
     const MetricCard = ({ emoji, title, value, subtitle, color, delay = 0 }: {
         emoji: string;
@@ -212,6 +353,26 @@ export default function VeliDashboard({ childName, childAge, email, onClose }: V
                             <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>📊 Veli Paneli</Text>
+                        <View style={styles.headerRight}>
+                            <TouchableOpacity
+                                onPress={handleDownloadPDF}
+                                style={[styles.pdfButton, !isPremium && styles.pdfButtonDisabled]}
+                                disabled={generatingPDF}
+                            >
+                                {generatingPDF ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <>
+                                        <Ionicons name="download-outline" size={18} color="#fff" />
+                                        <Text style={styles.pdfButtonText}>PDF</Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* Tier Badge */}
+                    <View style={styles.tierBadgeContainer}>
                         <View style={[styles.tierBadge, { backgroundColor: isPremium ? COLORS.premium : COLORS.textLight }]}>
                             <Text style={styles.tierBadgeText}>
                                 {isPremium ? '👑 Premium' : subscriptionTier === 'standard' ? '⭐ Standard' : '🆓 Free'}
@@ -1199,5 +1360,32 @@ const styles = StyleSheet.create({
         fontSize: 11,
         color: COLORS.textLight,
         fontWeight: '500',
+    },
+
+    // PDF Button
+    headerRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    pdfButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.premium,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 16,
+        gap: 4,
+    },
+    pdfButtonDisabled: {
+        backgroundColor: COLORS.textLight,
+    },
+    pdfButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    tierBadgeContainer: {
+        alignItems: 'center',
+        marginBottom: 8,
     },
 });
