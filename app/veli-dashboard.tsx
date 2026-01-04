@@ -17,6 +17,20 @@ import {
     View,
 } from 'react-native';
 
+// Web-compatible alert function
+const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: 'cancel' | 'default' | 'destructive' }>) => {
+    if (Platform.OS === 'web') {
+        const result = window.confirm(`${title}\n\n${message}`);
+        if (result && buttons && buttons.length > 1) {
+            // If confirmed and there's a second button (usually the action button), call its onPress
+            const actionButton = buttons.find(b => b.style !== 'cancel');
+            if (actionButton?.onPress) actionButton.onPress();
+        }
+    } else {
+        Alert.alert(title, message, buttons);
+    }
+};
+
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -47,7 +61,7 @@ export default function VeliDashboardPage() {
 
     const handleLogin = async () => {
         if (!email.trim()) {
-            Alert.alert('Hata', 'Lütfen email adresinizi girin');
+            showAlert('Hata', 'Lütfen email adresinizi girin');
             return;
         }
 
@@ -68,9 +82,9 @@ export default function VeliDashboardPage() {
             if (data && data.length > 0) {
                 setProfile(data[0]);
             } else {
-                Alert.alert(
+                showAlert(
                     'Kayıt Bulunamadı',
-                    'Bu email ile kayıtlı bir hesap bulunamadı.\n\nÖnce ana ekrandan "Kayıt Ol" butonuyla kayıt olmanız gerekmektedir.\n\nTest için "Demo Giriş" butonunu kullanabilirsiniz.',
+                    'Bu email ile kayıtlı bir hesap bulunamadı. Önce ana ekrandan "Kayıt Ol" butonuyla kayıt olmanız gerekmektedir. Test için "Demo Giriş" butonunu kullanabilirsiniz.',
                     [
                         { text: 'Tamam', style: 'cancel' },
                         { text: 'Demo Giriş', onPress: useDemoProfile }
@@ -79,7 +93,7 @@ export default function VeliDashboardPage() {
             }
         } catch (error) {
             console.error('Profil yükleme hatası:', error);
-            Alert.alert('Hata', 'Profil yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.');
+            showAlert('Hata', 'Profil yüklenirken bir hata oluştu. Lütfen internet bağlantınızı kontrol edin.');
         } finally {
             setLoading(false);
         }

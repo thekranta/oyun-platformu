@@ -377,11 +377,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>📊 Veli Paneli</Text>
-                        <View style={[styles.tierBadge, { backgroundColor: isPremium ? COLORS.premium : COLORS.textLight }]}>
-                            <Text style={styles.tierBadgeText}>
-                                {isPremium ? '👑 Premium' : subscriptionTier === 'standard' ? '⭐ Standard' : '🆓 Free'}
-                            </Text>
-                        </View>
+                        <View style={{ width: 44 }} />
                     </View>
 
                     {/* Child Profile Hero */}
@@ -393,6 +389,12 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         <View style={[styles.heroGradient, isCompact && styles.heroGradientCompact]}>
                             <View style={styles.avatarLarge}>
                                 <Text style={styles.avatarTextLarge}>{childName.charAt(0).toUpperCase()}</Text>
+                            </View>
+                            {/* Premium Badge - Prominent Position */}
+                            <View style={styles.heroPremiumBadge}>
+                                <Text style={styles.heroPremiumBadgeText}>
+                                    {isPremium ? '👑 Premium' : subscriptionTier === 'standard' ? '⭐ Standard' : '🆓 Free'}
+                                </Text>
                             </View>
                             <Text style={styles.heroName}>{childName}</Text>
                             <Text style={styles.heroAge}>{childAge} Aylık • Küçük Kaşif 🔍</Text>
@@ -868,6 +870,20 @@ const styles = StyleSheet.create({
         fontSize: 36,
         fontWeight: 'bold',
         color: '#fff',
+    },
+    heroPremiumBadge: {
+        backgroundColor: 'rgba(255,255,255,0.25)',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        marginTop: 12,
+        borderWidth: 2,
+        borderColor: 'rgba(255,255,255,0.5)',
+    },
+    heroPremiumBadgeText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '700',
     },
     heroName: {
         fontSize: 26,
