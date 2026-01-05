@@ -69,7 +69,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         })();
     }, []);
 
-    // Aşama değiştiğinde otomatik başlat
+    // Aşama değiştiğinde: İLK AŞAMA HARİÇ otomatik başlat
     useEffect(() => {
         let isMounted = true;
 
@@ -77,11 +77,16 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             // Önceki kaydı temizle
             await stopRecording(false);
 
-            if (isMounted) {
-                // Daha uzun bir gecikme ile yeni kaydı başlat (Kullanıcının hazırlanması için)
+            // İLK AŞAMADA: Otomatik başlatma, kullanıcının mikrofona tıklamasını bekle
+            // SONRAKI AŞAMALARDA: Otomatik başlat
+            if (currentStage > 0 && isMounted) {
+                // Sonraki aşamalarda gecikme ile otomatik başlat
                 setTimeout(() => {
                     if (isMounted) startRecording();
                 }, 1500);
+            } else {
+                // İlk aşamada kullanıcının tıklamasını bekle
+                setRecordingStatus('Mikrofona Dokun 🎤');
             }
         };
 
