@@ -909,6 +909,50 @@ ChildhoodTech Ekibi
                     </View>
                 )}
 
+                {/* Bunu Söyle - Telaffuz Sonuçları */}
+                {score.oyun_turu === 'bunu-soyle' && score.algilanan_kelime && (() => {
+                    try {
+                        const pronunciationData = JSON.parse(score.algilanan_kelime);
+                        if (pronunciationData.results && Array.isArray(pronunciationData.results)) {
+                            return (
+                                <View style={styles.pronunciationBox}>
+                                    <Text style={styles.pronunciationTitle}>🎙️ Telaffuz Analizi</Text>
+                                    <View style={styles.pronunciationHeader}>
+                                        <Text style={styles.pronunciationHeaderText}>Beklenen</Text>
+                                        <Text style={styles.pronunciationHeaderText}>Algılanan</Text>
+                                        <Text style={styles.pronunciationHeaderText}>Sonuç</Text>
+                                    </View>
+                                    {pronunciationData.results.map((r: any, idx: number) => (
+                                        <View key={idx} style={styles.pronunciationRow}>
+                                            <Text style={styles.pronunciationExpected}>{r.expected}</Text>
+                                            <Text style={[
+                                                styles.pronunciationTranscribed,
+                                                !r.isCorrect && styles.pronunciationError
+                                            ]}>{r.transcribed}</Text>
+                                            <View style={[
+                                                styles.pronunciationBadge,
+                                                r.isCorrect ? styles.pronunciationCorrect : styles.pronunciationWrong
+                                            ]}>
+                                                <Text style={styles.pronunciationBadgeText}>
+                                                    {r.isCorrect ? '✓' : '✗'}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    ))}
+                                    <View style={styles.pronunciationSummary}>
+                                        <Text style={styles.pronunciationSummaryText}>
+                                            Doğruluk: {pronunciationData.accuracy}% ({pronunciationData.totalCorrect}/{pronunciationData.totalStages})
+                                        </Text>
+                                    </View>
+                                </View>
+                            );
+                        }
+                    } catch (e) {
+                        // JSON parse hatası - eski format olabilir
+                    }
+                    return null;
+                })()}
+
                 {isDrawing ? (
                     <Text style={styles.infoNote}>Yaratıcı çizimde yapay zeka yorumu oluşturulmaz.</Text>
                 ) : (
@@ -1191,6 +1235,91 @@ const styles = StyleSheet.create({
     loginButton: { backgroundColor: '#4CAF50', padding: 15, borderRadius: 15, alignItems: 'center', marginTop: 10 },
     loginButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
     backButtonSimple: { marginTop: 15, alignItems: 'center' },
+
+    // Pronunciation Analysis Styles (Bunu Söyle)
+    pronunciationBox: {
+        marginTop: 10,
+        backgroundColor: '#f8f9fa',
+        padding: 12,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: '#e0e0e0'
+    },
+    pronunciationTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 10
+    },
+    pronunciationHeader: {
+        flexDirection: 'row',
+        paddingBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+        marginBottom: 6
+    },
+    pronunciationHeaderText: {
+        flex: 1,
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#666',
+        textAlign: 'center'
+    },
+    pronunciationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 6,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0'
+    },
+    pronunciationExpected: {
+        flex: 1,
+        fontSize: 13,
+        color: '#333',
+        textAlign: 'center',
+        fontWeight: '500'
+    },
+    pronunciationTranscribed: {
+        flex: 1,
+        fontSize: 13,
+        color: '#333',
+        textAlign: 'center'
+    },
+    pronunciationError: {
+        color: '#d32f2f',
+        fontWeight: '600'
+    },
+    pronunciationBadge: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 8
+    },
+    pronunciationCorrect: {
+        backgroundColor: '#4CAF50'
+    },
+    pronunciationWrong: {
+        backgroundColor: '#f44336'
+    },
+    pronunciationBadgeText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: 'bold'
+    },
+    pronunciationSummary: {
+        marginTop: 10,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: '#ddd',
+        alignItems: 'center'
+    },
+    pronunciationSummaryText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#2196F3'
+    },
 });
 
 

@@ -78,10 +78,10 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             await stopRecording(false);
 
             if (isMounted) {
-                // Kısa bir gecikme ile yeni kaydı başlat (Race condition önlemek için)
+                // Daha uzun bir gecikme ile yeni kaydı başlat (Kullanıcının hazırlanması için)
                 setTimeout(() => {
                     if (isMounted) startRecording();
-                }, 500);
+                }, 1500);
             }
         };
 
@@ -282,11 +282,12 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 isCorrect: false,
                 timestamp: Date.now()
             };
-            setStageResults(prev => [...prev, silentResult]);
+            const updatedResults = [...stageResults, silentResult];
+            setStageResults(updatedResults);
 
             // Otomatik olarak bir sonraki aşamaya geç
             setTimeout(() => {
-                handleNextStage();
+                handleNextStage(updatedResults);
             }, 2000);
             return;
         }
@@ -385,18 +386,19 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     isCorrect: isCorrect,
                     timestamp: Date.now()
                 };
-                setStageResults(prev => [...prev, stageResult]);
+                const updatedResults = [...stageResults, stageResult];
+                setStageResults(updatedResults);
 
                 if (isCorrect) {
                     // Doğru cevap - hata yok
                     setRecordingStatus('Harika! 🎉');
-                    setTimeout(() => handleNextStage(), 2000);
+                    setTimeout(() => handleNextStage(updatedResults), 2000);
                 } else {
                     // Yanlış cevap - hata kaydet ve yine de devam et
                     setErrors(e => e + 1);
                     setRecordingStatus(`"${transcript}" ❌`);
                     // Otomatik olarak bir sonraki aşamaya geç
-                    setTimeout(() => handleNextStage(), 2000);
+                    setTimeout(() => handleNextStage(updatedResults), 2000);
                 }
             } catch (fetchError: any) {
                 clearTimeout(timeoutId);
@@ -417,30 +419,35 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 isCorrect: false,
                 timestamp: Date.now()
             };
-            setStageResults(prev => [...prev, errorResult]);
+            const updatedResults = [...stageResults, errorResult];
+            setStageResults(updatedResults);
 
             setErrors(e => e + 1);
             setMoves(m => m + 1);
             setRecordingStatus('API Hatası ⚠️');
-            setTimeout(() => handleNextStage(), 2000);
+            setTimeout(() => handleNextStage(updatedResults), 2000);
         }
     };
 
-    const handleNextStage = () => {
+
+    const handleNextStage = (latestResults?: StageResult[]) => {
+        // Use provided results or fall back to state (for non-analysis calls)
+        const resultsToUse = latestResults || stageResults;
+
         if (currentStage < STAGES.length - 1) {
             setCurrentStage(prev => prev + 1);
         } else {
             const duration = Math.floor((Date.now() - startTime) / 1000);
 
             // Hesaplamalar
-            const totalCorrect = stageResults.filter(r => r.isCorrect).length;
-            const accuracy = stageResults.length > 0
-                ? Math.round((totalCorrect / stageResults.length) * 100 * 100) / 100
+            const totalCorrect = resultsToUse.filter(r => r.isCorrect).length;
+            const accuracy = resultsToUse.length > 0
+                ? Math.round((totalCorrect / resultsToUse.length) * 100 * 100) / 100
                 : 0;
 
             // Yapılandırılmış JSON olarak sonuçları gönder
             const pronunciationData = JSON.stringify({
-                results: stageResults,
+                results: resultsToUse,
                 totalCorrect: totalCorrect,
                 totalStages: STAGES.length,
                 accuracy: accuracy
