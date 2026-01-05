@@ -21,6 +21,15 @@ interface BunuSoyleProps {
     onExit: () => void;
 }
 
+// Interface for tracking pronunciation results per stage
+interface StageResult {
+    stage: number;
+    expected: string;
+    transcribed: string;
+    isCorrect: boolean;
+    timestamp: number;
+}
+
 export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const { stopSound, playSound } = useSound();
     const [currentStage, setCurrentStage] = useState(0);
@@ -30,6 +39,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const [moves, setMoves] = useState(0);
     const [errors, setErrors] = useState(0);
     const [allTranscripts, setAllTranscripts] = useState<string[]>([]);
+    const [stageResults, setStageResults] = useState<StageResult[]>([]);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
 
     // Recording Ref: Asenkron işlemlerde state'in güncel olmama sorununu çözmek için
@@ -264,6 +274,16 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             setAllTranscripts(prev => [...prev, "(Sessiz)"]);
             setMoves(m => m + 1);
 
+            // Record silent result
+            const silentResult: StageResult = {
+                stage: currentStage + 1,
+                expected: beklenenKelime,
+                transcribed: "(Sessiz)",
+                isCorrect: false,
+                timestamp: Date.now()
+            };
+            setStageResults(prev => [...prev, silentResult]);
+
             // Otomatik olarak bir sonraki aşamaya geç
             setTimeout(() => {
                 handleNextStage();
@@ -272,77 +292,73 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         }
 
         try {
-            // Platform-specific Base64 encoding
-            let base64Audio: string;
+            // Platform-specific audio blob handling
+            let audioBlob: Blob;
 
             if (Platform.OS === 'web') {
-                // WEB: fetch + FileReader kullan
+                // WEB: fetch ile blob al
                 console.log('🌐 Web platformu tespit edildi, fetch kullanılıyor...');
                 const response = await fetch(audioUri);
-                const blob = await response.blob();
-
-                base64Audio = await new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const result = reader.result as string;
-                        // "data:audio/...;base64," başlığını temizle
-                        const base64 = result.split(',')[1];
-                        resolve(base64);
-                    };
-                    reader.onerror = reject;
-                    reader.readAsDataURL(blob);
-                });
+                audioBlob = await response.blob();
             } else {
-                // MOBILE: expo-file-system kullan
+                // MOBILE: expo-file-system ile base64 oku ve blob'a çevir
                 console.log('📱 Mobil platform tespit edildi, FileSystem kullanılıyor...');
-                base64Audio = await FileSystem.readAsStringAsync(audioUri, {
+                const base64Audio = await FileSystem.readAsStringAsync(audioUri, {
                     encoding: 'base64',
                 });
+                // Base64'ü Blob'a çevir
+                const byteCharacters = atob(base64Audio);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                audioBlob = new Blob([byteArray], { type: 'audio/webm' });
             }
 
-            // Google Speech-to-Text API çağrısı
-            const apiKey = process.env.EXPO_PUBLIC_SPEECH_API_KEY;
+            // OpenAI Whisper API çağrısı
+            const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
             if (!apiKey) {
-                throw new Error('API key bulunamadı');
+                throw new Error('OpenAI API key bulunamadı. Lütfen .env dosyasına EXPO_PUBLIC_OPENAI_API_KEY ekleyin.');
             }
 
-            console.log('🎤 Google Speech-to-Text API çağrılıyor...');
+            console.log('🎤 OpenAI Whisper API çağrılıyor...');
+
+            // FormData oluştur
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'audio.webm');
+            formData.append('model', 'whisper-1');
+            formData.append('language', 'tr');
 
             // API çağrısı için AbortController ile timeout ekle
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 saniye timeout
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 saniye timeout
 
             try {
                 const response = await fetch(
-                    `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`,
+                    'https://api.openai.com/v1/audio/transcriptions',
                     {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`,
                         },
-                        body: JSON.stringify({
-                            config: {
-                                encoding: Platform.OS === 'web' ? 'WEBM_OPUS' : 'LINEAR16',
-                                sampleRateHertz: Platform.OS === 'web' ? 48000 : 44100,
-                                languageCode: 'tr-TR',
-                            },
-                            audio: {
-                                content: base64Audio,
-                            },
-                        }),
+                        body: formData,
                         signal: controller.signal
                     }
                 );
                 clearTimeout(timeoutId);
 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Whisper API Hata Yanıtı:', errorText);
+                    throw new Error(`Whisper API hatası: ${response.status}`);
+                }
+
                 const data = await response.json();
-                console.log('📥 API Yanıtı:', data);
+                console.log('📥 Whisper API Yanıtı:', data);
 
                 // Transcript'i çıkar
-                let transcript = '';
-                if (data.results && data.results.length > 0) {
-                    transcript = data.results[0].alternatives[0].transcript || '';
-                }
+                let transcript = data.text || '';
 
                 if (!transcript) {
                     transcript = '(Anlaşılamadı)';
@@ -351,20 +367,34 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 console.log('✅ Algılanan kelime:', transcript);
                 setAllTranscripts(prev => [...prev, transcript]);
 
-                const temizlenenTranscript = transcript.toLowerCase().trim();
+                const temizlenenTranscript = transcript.toLowerCase().trim().replace(/[.,!?]/g, '');
                 const temizlenenBeklenen = beklenenKelime.toLowerCase().trim();
+
+                // Karşılaştırma - kelime içeriyor mu kontrol et (daha esnek)
+                const isCorrect = temizlenenTranscript === temizlenenBeklenen ||
+                    temizlenenTranscript.includes(temizlenenBeklenen);
 
                 // Her durumda hareketi kaydet
                 setMoves(m => m + 1);
 
-                if (temizlenenTranscript === temizlenenBeklenen) {
+                // Stage result kaydet
+                const stageResult: StageResult = {
+                    stage: currentStage + 1,
+                    expected: beklenenKelime,
+                    transcribed: transcript,
+                    isCorrect: isCorrect,
+                    timestamp: Date.now()
+                };
+                setStageResults(prev => [...prev, stageResult]);
+
+                if (isCorrect) {
                     // Doğru cevap - hata yok
                     setRecordingStatus('Harika! 🎉');
                     setTimeout(() => handleNextStage(), 2000);
                 } else {
                     // Yanlış cevap - hata kaydet ve yine de devam et
                     setErrors(e => e + 1);
-                    setRecordingStatus(`Tekrar Dene ❌ ("${transcript}")`);
+                    setRecordingStatus(`"${transcript}" ❌`);
                     // Otomatik olarak bir sonraki aşamaya geç
                     setTimeout(() => handleNextStage(), 2000);
                 }
@@ -376,9 +406,19 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 throw fetchError;
             }
         } catch (error) {
-            console.error('❌ Speech API hatası:', error);
+            console.error('❌ Whisper API hatası:', error);
             // Hata durumunda bile kaydet ve devam et
             setAllTranscripts(prev => [...prev, '(API Hatası)']);
+
+            const errorResult: StageResult = {
+                stage: currentStage + 1,
+                expected: beklenenKelime,
+                transcribed: "(API Hatası)",
+                isCorrect: false,
+                timestamp: Date.now()
+            };
+            setStageResults(prev => [...prev, errorResult]);
+
             setErrors(e => e + 1);
             setMoves(m => m + 1);
             setRecordingStatus('API Hatası ⚠️');
@@ -391,8 +431,24 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             setCurrentStage(prev => prev + 1);
         } else {
             const duration = Math.floor((Date.now() - startTime) / 1000);
-            const finalTranscriptString = allTranscripts.join(", ");
-            onGameEnd('bunu-soyle', duration, moves, errors, finalTranscriptString, {
+
+            // Hesaplamalar
+            const totalCorrect = stageResults.filter(r => r.isCorrect).length;
+            const accuracy = stageResults.length > 0
+                ? Math.round((totalCorrect / stageResults.length) * 100 * 100) / 100
+                : 0;
+
+            // Yapılandırılmış JSON olarak sonuçları gönder
+            const pronunciationData = JSON.stringify({
+                results: stageResults,
+                totalCorrect: totalCorrect,
+                totalStages: STAGES.length,
+                accuracy: accuracy
+            });
+
+            console.log('📊 Telaffuz Analizi:', pronunciationData);
+
+            onGameEnd('bunu-soyle', duration, moves, errors, pronunciationData, {
                 zorlukSeviyesi: currentStage + 1,
                 kazanimOdagi: 'Dil Gelişimi ve Sözel İfade',
             });
