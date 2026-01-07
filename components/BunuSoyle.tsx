@@ -57,7 +57,6 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         new Animated.Value(10)
     ]).current;
 
-    const autoStopTimer = useRef<NodeJS.Timeout | null>(null);
     const currentItem = STAGES[currentStage];
 
     // İzin kontrolü
@@ -69,7 +68,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         })();
     }, []);
 
-    // Aşama değiştiğinde: İLK AŞAMA HARİÇ otomatik başlat
+    // Aşama değiştiğinde: Her zaman kullanıcının basılı tutmasını bekle (push-to-talk)
     useEffect(() => {
         let isMounted = true;
 
@@ -77,16 +76,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             // Önceki kaydı temizle
             await stopRecording(false);
 
-            // İLK AŞAMADA: Otomatik başlatma, kullanıcının mikrofona tıklamasını bekle
-            // SONRAKI AŞAMALARDA: Otomatik başlat
-            if (currentStage > 0 && isMounted) {
-                // Sonraki aşamalarda gecikme ile otomatik başlat
-                setTimeout(() => {
-                    if (isMounted) startRecording();
-                }, 1500);
-            } else {
-                // İlk aşamada kullanıcının tıklamasını bekle
-                setRecordingStatus('Mikrofona Dokun 🎤');
+            // PUSH-TO-TALK: Her aşamada kullanıcının mikrofona basılı tutmasını bekle
+            if (isMounted) {
+                setRecordingStatus('Basılı Tut ve Söyle 🎤');
             }
         };
 
@@ -94,7 +86,6 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
         return () => {
             isMounted = false;
-            if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
             // Cleanup sırasında asenkron durdurma yapıyoruz ama await edemeyiz
             // Bu yüzden best-effort durdurma yapıyoruz
             if (recordingRef.current) {
@@ -203,22 +194,18 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             setRecordingStatus('SİSTEM DİNLİYOR...');
             setMaxAudioLevel(-160);
 
-            if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
-            autoStopTimer.current = setTimeout(() => {
-                stopRecording(true);
-            }, 3000) as unknown as NodeJS.Timeout;
+            // Push-to-talk: Otomatik durma yok, kullanıcı bıraktığında duracak
 
         } catch (err) {
             console.error('❌ Kayıt başlatılamadı:', err);
             // Hata olsa bile kullanıcıya tekrar deneme şansı ver
             setIsRecording(false);
-            setRecordingStatus('Mikrofona Dokun 🔴');
+            setRecordingStatus('Basılı Tut ve Söyle 🔴');
         }
     };
 
     const stopRecording = async (shouldAnalyze = true) => {
         console.log('🛑 stopRecording çağrıldı. Analiz:', shouldAnalyze);
-        if (autoStopTimer.current) clearTimeout(autoStopTimer.current);
 
         let audioUri: string | null = null;
 
@@ -265,9 +252,6 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         }
     };
 
-    const handleRetry = () => {
-        startRecording();
-    };
 
     const analyzeSpeech = async (beklenenKelime: string, audioUri: string) => {
         // SESSİZLİK KONTROLÜ
@@ -488,7 +472,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     {isRecording ? (
                         <TouchableOpacity
                             style={styles.recordingFeedback}
-                            onPress={() => stopRecording(true)}
+                            onPressOut={() => stopRecording(true)}
                             activeOpacity={0.9}
                         >
                             <Text style={styles.promptText}>ŞİMDİ SÖYLE: {currentItem.word}</Text>
@@ -504,16 +488,19 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                                         />
                                     ))}
                                 </View>
-                                <Text style={styles.listeningText}>SİSTEM DİNLİYOR... (Durdur)</Text>
+                                <Text style={styles.listeningText}>🔴 DİNLİYOR... (Bırak = Gönder)</Text>
                             </View>
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
                             style={styles.recordButton}
-                            onPress={handleRetry}
+                            onPressIn={startRecording}
+                            onPressOut={() => stopRecording(true)}
                             activeOpacity={0.7}
+                            delayPressIn={0}
                         >
                             <Ionicons name="mic" size={50} color="white" />
+                            <Text style={styles.holdToRecordText}>BASILI TUT</Text>
                         </TouchableOpacity>
                     )}
 
@@ -671,5 +658,12 @@ const styles = StyleSheet.create({
     statusRecording: { color: '#E74C3C', fontWeight: 'bold' },
     statusProcessing: { color: '#F39C12', fontWeight: 'bold' },
     statusSuccess: { color: '#2ECC71', fontWeight: 'bold' },
-    statusError: { color: '#E74C3C', fontWeight: 'bold' }
+    statusError: { color: '#E74C3C', fontWeight: 'bold' },
+    holdToRecordText: {
+        color: 'white',
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginTop: 4,
+        letterSpacing: 1,
+    }
 });
