@@ -311,6 +311,13 @@ export default function AdminPanel() {
                 'onluk-cerceve': { alan: 'Matematik', surec: 'Sayısal Temsil', cikti: 'MAB.1', ciktiAciklama: 'Sayıları modellerle ifade etme ve çözümleme (1-10)' },
                 'sayi-komsulari': { alan: 'Matematik', surec: 'Sıralama', cikti: 'MAB.4', ciktiAciklama: 'Sayılar arasındaki ardışıklık ve konum ilişkisini belirleme' },
                 'tarti-dengesi': { alan: 'Matematik', surec: 'Eşitlik ve Denge', cikti: 'MAB.5', ciktiAciklama: 'Matematiksel eşitlik durumlarını kavrama ve dengeyi sağlama' },
+                // Sihirli Tuval - Görsel-Uzamsal Analiz
+                'sihirli-tuval': {
+                    alan: 'Matematik',
+                    surec: 'Görsel-Uzamsal Analiz',
+                    cikti: 'MAB.2.1',
+                    ciktiAciklama: 'Nesneleri özelliklerine göre eşleştirme ve görsel dikkat - Görsel tarama yoluyla nesne-sembol ilişkisi kurma'
+                },
             };
 
             const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
@@ -341,6 +348,7 @@ export default function AdminPanel() {
                 'sayi-komsulari': 'Sayı Komşuları',
                 'tarti-dengesi': 'Tartı Dengesi',
                 'miktar-avcisi': 'Miktar Avcısı',
+                'sihirli-tuval': 'Sihirli Tuval: Sayılarla Boyama',
             };
             const oyunAdiTR = oyunAdiMap[score.oyun_turu] || score.oyun_turu;
 
@@ -493,6 +501,63 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır, il
 Değerli Velimiz,
 
 [${score.ogrenci_adi}'nin oyundaki seçimlerini samimi ama profesyonel bir dille açıkla. Evde yapılabilecek bir etkinlik öner.]
+
+Saygılarımızla,
+ChildhoodTech Ekibi
+                `;
+            } else if (score.oyun_turu === 'sihirli-tuval') {
+                // === SİHİRLİ TUVAL - GÖRSEL-UZAMSAL ANALİZ ===
+                prompt = `
+Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
+Bu oyun bir "Görsel Dikkat ve Sembolik Eşleme" görevidir, sadece boyama değil!
+
+## VERİLER:
+- Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
+- Oyun: Sihirli Tuval: Sayılarla Boyama
+- Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
+- Performans Eğilimi: ${performansEgilimi}
+${gelisimBolumu}
+## MAARİF MODELİ REFERANSI:
+- Alan: Matematik | Süreç: Görsel-Uzamsal Analiz
+- Öğrenme Çıktısı: MAB.2.1 - Nesneleri özelliklerine göre eşleştirme ve görsel dikkat
+
+## ANALİZ KRİTERLERİ (ÖNEMLİ):
+1. **Görsel Tarama Hızı:** Çocuğun alttaki rakamı seçtikten sonra tuval üzerindeki doğru rakamı bulma süresini "Görsel Tarama Hızı" olarak yorumla.
+2. **Hata Analizi (KRİTİK):** Eğer yanlış bir rakama dokunmuşsa bunu ASLA "sayı bilmeme" olarak DEĞERLENDİRME!
+   - Bunun yerine "Görsel Ayırt Etme Karışıklığı" (benzer şekiller) veya
+   - "Dürtüsellik" (hızlıca dokunma isteği) olarak analiz et.
+3. **Beceri Odağı:** Bu oyun sayı sayma değil, "sembol-mekan eşlemesi" becerisi geliştirir.
+
+## VELİ PANELİ İÇİN BAŞLIKLAR:
+- Akademik Karşılık: MAB.2.1 - Matematiksel Nesne Çözümleme
+- Beceri Karşılığı: Görsel Odaklanma ve Sayı Eşleştirme
+
+## ÇIKTI KURALLARI:
+1. ASLA giriş cümlesi kullanma.
+2. Doğrudan rapor içeriğiyle başla.
+3. Aşağıdaki formatı BİREBİR uygula:
+
+---
+
+**MAARİF MODELİ PEDAGOJİK ANALİZ**
+
+**Akademik Karşılık:** MAB.2.1 - Matematiksel Nesne Çözümleme
+**Beceri Karşılığı:** Görsel Odaklanma ve Sayı Eşleştirme
+
+**Görsel Tarama Analizi:** [Çocuğun görsel tarama yoluyla nesne-sembol ilişkisi kurma becerisini değerlendir]
+
+**Performans Değerlendirmesi:** [${hata} hata için "Görsel Ayırt Etme" veya "Dürtüsellik" bağlamında analiz yap. ASLA "sayı bilmiyor" deme!]
+
+**Gelişimsel Değerlendirme:** [${gelisimselDonem} bağlamında görsel-motor koordinasyon becerilerini değerlendir]
+${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır]' : ''}
+
+---
+
+**VELİ BİLGİLENDİRME NOTU**
+
+Değerli Velimiz,
+
+[${score.ogrenci_adi}'nin görsel tarama ve sembol eşleme becerisini samimi bir dille açıkla. Evde yapılabilecek "renk-sayı eşleme" etkinliği öner.]
 
 Saygılarımızla,
 ChildhoodTech Ekibi
@@ -838,6 +903,8 @@ ChildhoodTech Ekibi
             'sayi-komsulari': { alan: 'Matematik', cikti: 'MAB.4' },
             'tarti-dengesi': { alan: 'Matematik', cikti: 'MAB.1' },
             'miktar-avcisi': { alan: 'Matematik', cikti: 'MAB.1' },
+            'sihirli-tuval': { alan: 'Matematik', cikti: 'MAB.2.1' },
+            'sihirli-siseler': { alan: 'Matematik', cikti: 'MAB.2' },
         };
         // Bilinmeyen oyunlar için varsayılan: MAB.2 (Matematik - Muhakeme)
         // ASLA GB.1 veya 'Genel Gelişim' kullanma!

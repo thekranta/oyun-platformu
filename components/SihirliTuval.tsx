@@ -274,7 +274,7 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
 
         onGameEnd('sihirli-tuval', duration, totalMoves, errors, undefined, {
             zorlukSeviyesi: 1,
-            kazanimOdagi: 'Görsel Motor Koordinasyon ve Sayı Tanıma',
+            kazanimOdagi: 'Görsel Dikkat ve Sembolik Eşleme (MAB.2.1)',
             response_time: Math.round(avgResponseTime),
             correct_answers: correctAnswers,
             cognitive_speed_score: Math.round(finalCognitiveSpeed * 1000) / 1000,
