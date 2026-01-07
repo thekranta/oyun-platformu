@@ -4,13 +4,14 @@ import {
     Animated,
     Dimensions,
     Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     Vibration,
     View,
 } from 'react-native';
-import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
+import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from 'react-native-svg';
 
 // ============= TYPES =============
 interface SihirliTuvalProps {
@@ -28,11 +29,14 @@ interface SihirliTuvalProps {
 interface ColorRegion {
     id: string;
     colorNumber: number;
-    pathType: 'path' | 'circle';
+    pathType: 'path' | 'circle' | 'ellipse';
     d?: string;
     cx?: number;
     cy?: number;
     r?: number;
+    rx?: number;
+    ry?: number;
+    strokeWidth?: number;
     labelX: number;
     labelY: number;
     isFilled: boolean;
@@ -51,83 +55,146 @@ interface MoveData {
 const { width: screenW, height: screenH } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
-// Color palette (only colors used in the SVG)
+// Color palette 1-10 with vibrant colors
 const COLOR_PALETTE = [
-    { number: 3, color: '#87CEEB', name: 'Gökyüzü Mavisi' },  // Sky & Sun
-    { number: 7, color: '#F4A460', name: 'Kum Rengi' },       // Sand & Leaves  
-    { number: 9, color: '#8B4513', name: 'Kahverengi' },      // Tree trunk
-    { number: 10, color: '#1E90FF', name: 'Deniz Mavisi' },   // Sea
+    { number: 1, color: '#1a1a4e', name: 'Lacivert' },      // Uzay Boşluğu
+    { number: 2, color: '#FFD700', name: 'Sarı' },          // Büyük Ay
+    { number: 3, color: '#DAA520', name: 'Altın' },         // Yıldızlar
+    { number: 4, color: '#DC143C', name: 'Kırmızı' },       // Roket Gövdesi
+    { number: 5, color: '#C0C0C0', name: 'Gümüş' },         // Roket Burnu
+    { number: 6, color: '#708090', name: 'Gri' },           // Roket Kanatları
+    { number: 7, color: '#87CEEB', name: 'Açık Mavi' },     // Pencere
+    { number: 8, color: '#FF8C00', name: 'Turuncu' },       // Roket Ateşi (Dış)
+    { number: 9, color: '#FF4500', name: 'Koyu Turuncu' },  // Roket Ateşi (İç)
+    { number: 10, color: '#9932CC', name: 'Mor' },          // Gezegen
 ];
 
-// SVG Regions based on provided structure
-const SVG_REGIONS: ColorRegion[] = [
-    // Gökyüzü - No: 3
+// Uzay Serüveni SVG Regions
+const SPACE_ADVENTURE_REGIONS: ColorRegion[] = [
+    // 1. Uzay Boşluğu (Arka Plan)
     {
-        id: 'sky',
-        colorNumber: 3,
+        id: 'space',
+        colorNumber: 1,
         pathType: 'path',
-        d: 'M0 0 L400 0 L400 250 L0 250 Z',
-        labelX: 300,
-        labelY: 50,
+        d: 'M0 0 L400 0 L400 400 L0 400 Z',
+        strokeWidth: 2,
+        labelX: 20,
+        labelY: 30,
         isFilled: false
     },
-    // Güneş - No: 3
+    // 2. Büyük Ay
     {
-        id: 'sun',
-        colorNumber: 3,
+        id: 'moon',
+        colorNumber: 2,
         pathType: 'circle',
-        cx: 80,
-        cy: 80,
-        r: 40,
-        labelX: 80,
-        labelY: 85,
+        cx: 330,
+        cy: 70,
+        r: 50,
+        strokeWidth: 2,
+        labelX: 330,
+        labelY: 75,
         isFilled: false
     },
-    // Deniz - No: 10
+    // 3. Yıldız 1
     {
-        id: 'sea',
-        colorNumber: 10,
+        id: 'star1',
+        colorNumber: 3,
         pathType: 'path',
-        d: 'M0 250 L400 250 L400 400 L0 400 Z',
-        labelX: 200,
-        labelY: 320,
+        d: 'M50 50 l5 15 h15 l-12 10 l5 15 l-13-10 l-13 10 l5-15 l-12-10 h15 z',
+        labelX: 50,
+        labelY: 55,
         isFilled: false
     },
-    // Ada/Kum - No: 7
+    // 3. Yıldız 2 (aynı numara)
     {
-        id: 'island',
+        id: 'star2',
+        colorNumber: 3,
+        pathType: 'path',
+        d: 'M300 300 l3 8 h8 l-7 5 l3 8 l-7-5 l-7 5 l3-8 l-7-5 h8 z',
+        labelX: 300,
+        labelY: 305,
+        isFilled: false
+    },
+    // 4. Roket Gövdesi
+    {
+        id: 'rocket-body',
+        colorNumber: 4,
+        pathType: 'path',
+        d: 'M150 300 Q200 100 250 300 Z',
+        strokeWidth: 2,
+        labelX: 200,
+        labelY: 240,
+        isFilled: false
+    },
+    // 5. Roket Burnu
+    {
+        id: 'rocket-nose',
+        colorNumber: 5,
+        pathType: 'path',
+        d: 'M175 125 Q200 75 225 125 Z',
+        labelX: 200,
+        labelY: 105,
+        isFilled: false
+    },
+    // 6. Roket Kanatları
+    {
+        id: 'rocket-wings',
+        colorNumber: 6,
+        pathType: 'path',
+        d: 'M150 250 L120 300 L150 300 Z M250 250 L280 300 L250 300 Z',
+        labelX: 120,
+        labelY: 280,
+        isFilled: false
+    },
+    // 7. Pencere
+    {
+        id: 'window',
         colorNumber: 7,
-        pathType: 'path',
-        d: 'M50 250 Q200 180 350 250 Z',
+        pathType: 'circle',
+        cx: 200,
+        cy: 180,
+        r: 25,
         labelX: 200,
-        labelY: 230,
+        labelY: 185,
         isFilled: false
     },
-    // Ağaç Gövdesi - No: 9
+    // 8. Roket Ateşi (Dış)
     {
-        id: 'trunk',
+        id: 'flame-outer',
+        colorNumber: 8,
+        pathType: 'path',
+        d: 'M170 300 Q200 380 230 300 Z',
+        labelX: 200,
+        labelY: 350,
+        isFilled: false
+    },
+    // 9. Roket Ateşi (İç)
+    {
+        id: 'flame-inner',
         colorNumber: 9,
         pathType: 'path',
-        d: 'M190 250 L210 250 L220 150 L200 150 Z',
-        labelX: 205,
-        labelY: 210,
+        d: 'M185 300 Q200 340 215 300 Z',
+        labelX: 200,
+        labelY: 325,
         isFilled: false
     },
-    // Yapraklar - No: 7
+    // 10. Gezegen (Satürn)
     {
-        id: 'leaves',
-        colorNumber: 7,
-        pathType: 'path',
-        d: 'M210 150 Q260 100 310 160 Q260 140 210 150 M210 150 Q160 100 110 160 Q160 140 210 150',
-        labelX: 250,
-        labelY: 130,
+        id: 'planet',
+        colorNumber: 10,
+        pathType: 'circle',
+        cx: 70,
+        cy: 330,
+        r: 30,
+        labelX: 70,
+        labelY: 335,
         isFilled: false
     },
 ];
 
 // ============= MAIN COMPONENT =============
 export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
-    const [regions, setRegions] = useState<ColorRegion[]>(SVG_REGIONS.map(r => ({ ...r })));
+    const [regions, setRegions] = useState<ColorRegion[]>(SPACE_ADVENTURE_REGIONS.map(r => ({ ...r })));
     const [selectedColorNumber, setSelectedColorNumber] = useState<number | null>(null);
     const [moveHistory, setMoveHistory] = useState<MoveData[]>([]);
     const [errors, setErrors] = useState(0);
@@ -136,7 +203,7 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
     const [lastColorSelectTime, setLastColorSelectTime] = useState<number>(Date.now());
     const [score, setScore] = useState(0);
     const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error'; regionId: string } | null>(null);
-    const [timeLeft, setTimeLeft] = useState(180); // 3 dakika
+    const [timeLeft, setTimeLeft] = useState(300); // 5 dakika
     const [isGameComplete, setIsGameComplete] = useState(false);
     const [cognitiveSpeed, setCognitiveSpeed] = useState(0);
 
@@ -144,6 +211,21 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const flashAnim = useRef(new Animated.Value(0)).current;
     const selectedButtonScale = useRef(new Animated.Value(1)).current;
+    const pulseAnim = useRef(new Animated.Value(1)).current;
+
+    // Pulse animation for selected button
+    useEffect(() => {
+        if (selectedColorNumber) {
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(pulseAnim, { toValue: 1.1, duration: 500, useNativeDriver: true }),
+                    Animated.timing(pulseAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+                ])
+            ).start();
+        } else {
+            pulseAnim.setValue(1);
+        }
+    }, [selectedColorNumber]);
 
     // Timer
     useEffect(() => {
@@ -165,10 +247,10 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
 
     // Calculate cognitive speed whenever correctAnswers changes
     useEffect(() => {
-        const elapsedTime = (Date.now() - gameStart) / 1000; // seconds
+        const elapsedTime = (Date.now() - gameStart) / 1000;
         if (elapsedTime > 0 && correctAnswers > 0) {
             const speed = correctAnswers / elapsedTime;
-            setCognitiveSpeed(Math.round(speed * 100) / 100); // Round to 2 decimals
+            setCognitiveSpeed(Math.round(speed * 100) / 100);
         }
     }, [correctAnswers, gameStart]);
 
@@ -188,7 +270,6 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
             ? moveHistory.reduce((sum, m) => sum + m.responseTime, 0) / moveHistory.length
             : 0;
 
-        // Calculate final cognitive speed
         const finalCognitiveSpeed = duration > 0 ? correctAnswers / duration : 0;
 
         onGameEnd('sihirli-tuval', duration, totalMoves, errors, undefined, {
@@ -210,23 +291,21 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
 
         // Shake animation
         Animated.sequence([
-            Animated.timing(shakeAnim, { toValue: 15, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -15, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 15, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -15, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 20, duration: 40, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -20, duration: 40, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 20, duration: 40, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -20, duration: 40, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
         ]).start();
 
-        // Vibration on mobile
         if (Platform.OS !== 'web') {
             Vibration.vibrate(150);
         }
     };
 
     const playSuccessFeedback = () => {
-        // Quick pulse animation
         Animated.sequence([
-            Animated.timing(selectedButtonScale, { toValue: 1.2, duration: 100, useNativeDriver: true }),
+            Animated.timing(selectedButtonScale, { toValue: 1.3, duration: 100, useNativeDriver: true }),
             Animated.timing(selectedButtonScale, { toValue: 1, duration: 100, useNativeDriver: true }),
         ]).start();
     };
@@ -235,10 +314,9 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
         setSelectedColorNumber(colorNumber);
         setLastColorSelectTime(Date.now());
 
-        // Button press animation
         Animated.sequence([
-            Animated.timing(selectedButtonScale, { toValue: 0.9, duration: 50, useNativeDriver: true }),
-            Animated.timing(selectedButtonScale, { toValue: 1.1, duration: 100, useNativeDriver: true }),
+            Animated.timing(selectedButtonScale, { toValue: 0.85, duration: 50, useNativeDriver: true }),
+            Animated.timing(selectedButtonScale, { toValue: 1.15, duration: 100, useNativeDriver: true }),
             Animated.timing(selectedButtonScale, { toValue: 1, duration: 50, useNativeDriver: true }),
         ]).start();
     }, []);
@@ -264,22 +342,22 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
         setMoveHistory(prev => [...prev, moveData]);
 
         if (isCorrect) {
-            // Correct coloring
+            // Aynı numaraya sahip TÜM bölgeleri boya
             setRegions(prev => prev.map(r =>
-                r.id === regionId ? { ...r, isFilled: true } : r
+                r.colorNumber === selectedColorNumber ? { ...r, isFilled: true } : r
             ));
-            setCorrectAnswers(prev => prev + 1);
-            setScore(prev => prev + 10);
+            // Kaç bölge boyandı say
+            const filledCount = regions.filter(r => r.colorNumber === selectedColorNumber).length;
+            setCorrectAnswers(prev => prev + filledCount);
+            setScore(prev => prev + (10 * filledCount));
             playSuccessFeedback();
             setShowFeedback({ type: 'success', regionId });
         } else {
-            // Wrong coloring - shake and flash red
             setErrors(prev => prev + 1);
             playErrorFeedback();
             setShowFeedback({ type: 'error', regionId });
         }
 
-        // Clear feedback after a short delay
         setTimeout(() => setShowFeedback(null), 500);
         setSelectedColorNumber(null);
     }, [selectedColorNumber, regions, lastColorSelectTime]);
@@ -289,14 +367,14 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
             const colorData = COLOR_PALETTE.find(c => c.number === region.colorNumber);
             return colorData?.color || '#FFFFFF';
         }
-        return '#F5F5F5'; // Light gray for unfilled
+        return '#FCFCFC';
     };
 
     const getRegionStroke = (region: ColorRegion): string => {
         if (showFeedback?.regionId === region.id) {
-            return showFeedback.type === 'success' ? '#4CAF50' : '#F44336';
+            return showFeedback.type === 'success' ? '#00FF00' : '#FF0000';
         }
-        return '#CCCCCC';
+        return '#333333';
     };
 
     const formatTime = (seconds: number): string => {
@@ -305,31 +383,32 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    const progress = regions.filter(r => r.isFilled).length / regions.length;
+    // Unique color numbers için progress hesapla
+    const uniqueColorNumbers = [...new Set(SPACE_ADVENTURE_REGIONS.map(r => r.colorNumber))];
+    const filledColorNumbers = [...new Set(regions.filter(r => r.isFilled).map(r => r.colorNumber))];
+    const progress = filledColorNumbers.length / uniqueColorNumbers.length;
 
-    // Interpolate flash animation for red overlay
     const flashOpacity = flashAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 0.3],
+        outputRange: [0, 0.4],
     });
 
-    // Calculate SVG dimensions
-    const svgWidth = isWeb ? 400 : screenW - 60;
-    const svgHeight = isWeb ? 400 : 350;
+    const svgWidth = isWeb ? 380 : screenW - 50;
+    const svgHeight = isWeb ? 380 : screenW - 50;
 
     return (
         <View style={styles.container}>
-            {/* Wood texture background */}
+            {/* Dark Wood texture background */}
             <View style={styles.woodBackground}>
-                {/* Wood grain lines */}
-                {[...Array(25)].map((_, i) => (
+                {[...Array(30)].map((_, i) => (
                     <View
                         key={i}
                         style={[
                             styles.woodGrain,
                             {
-                                top: i * 35,
-                                opacity: 0.15 + (i % 3) * 0.1,
+                                top: i * 28,
+                                opacity: 0.2 + (i % 4) * 0.08,
+                                height: 2 + (i % 3),
                             }
                         ]}
                     />
@@ -339,36 +418,35 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
-                    <Ionicons name="home" size={24} color="#FFF" />
+                    <Ionicons name="home" size={22} color="#FFF" />
                 </TouchableOpacity>
 
-                {/* Timer (Hourglass style) */}
                 <View style={styles.timerContainer}>
-                    <Text style={styles.timerIcon}>⏳</Text>
+                    <Text style={styles.timerIcon}>🚀</Text>
                     <View style={styles.timerBar}>
-                        <View style={[styles.timerFill, { width: `${(timeLeft / 180) * 100}%` }]} />
+                        <View style={[styles.timerFill, { width: `${(timeLeft / 300) * 100}%` }]} />
                     </View>
                     <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
                 </View>
 
-                {/* Score & Cognitive Speed */}
                 <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreIcon}>🎓</Text>
+                    <Text style={styles.scoreIcon}>⭐</Text>
                     <Text style={styles.scoreText}>{score}</Text>
-                    <Text style={styles.speedText}>⚡{cognitiveSpeed.toFixed(2)}</Text>
                 </View>
             </View>
 
             {/* Title */}
-            <Text style={styles.title}>🎨 Sihirli Tuval: Sayılarla Boyama</Text>
+            <Text style={styles.title}>🌌 Uzay Serüveni: Sayılarla Boyama</Text>
 
             {/* Instructions */}
             <View style={styles.instructionContainer}>
                 {!selectedColorNumber ? (
-                    <Text style={styles.instructionText}>👇 Önce aşağıdan bir numaralı renk seç!</Text>
+                    <Text style={styles.instructionText}>👇 Aşağıdan bir numara seç!</Text>
                 ) : (
                     <Text style={styles.instructionText}>
-                        👆 Şimdi <Text style={styles.numberHighlight}>{selectedColorNumber}</Text> numaralı alana dokun!
+                        🎯 <Text style={[styles.numberHighlight, { color: COLOR_PALETTE.find(c => c.number === selectedColorNumber)?.color }]}>
+                            {selectedColorNumber}
+                        </Text> numaralı alana dokun!
                     </Text>
                 )}
             </View>
@@ -384,12 +462,8 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                 styles.canvasContainer,
                 { transform: [{ translateX: shakeAnim }] }
             ]}>
-                {/* Red flash overlay */}
                 <Animated.View
-                    style={[
-                        styles.flashOverlay,
-                        { opacity: flashOpacity }
-                    ]}
+                    style={[styles.flashOverlay, { opacity: flashOpacity }]}
                     pointerEvents="none"
                 />
 
@@ -400,49 +474,49 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                         viewBox="0 0 400 400"
                         style={styles.svgCanvas}
                     >
-                        {/* Render all regions */}
+                        {/* Render all regions - order matters for layering */}
                         {regions.map(region => (
                             <G key={region.id}>
-                                {region.pathType === 'path' ? (
+                                {region.pathType === 'path' && (
                                     <Path
                                         d={region.d}
                                         fill={getRegionFillColor(region)}
                                         stroke={getRegionStroke(region)}
-                                        strokeWidth={showFeedback?.regionId === region.id ? 4 : 2}
+                                        strokeWidth={region.strokeWidth || 1.5}
                                         onPress={() => handleRegionPress(region.id)}
                                     />
-                                ) : (
+                                )}
+                                {region.pathType === 'circle' && (
                                     <Circle
                                         cx={region.cx}
                                         cy={region.cy}
                                         r={region.r}
                                         fill={getRegionFillColor(region)}
                                         stroke={getRegionStroke(region)}
-                                        strokeWidth={showFeedback?.regionId === region.id ? 4 : 2}
+                                        strokeWidth={region.strokeWidth || 1.5}
                                         onPress={() => handleRegionPress(region.id)}
                                     />
                                 )}
-                                {/* Number label - only show if not filled */}
+                                {/* Number label */}
                                 {!region.isFilled && (
                                     <SvgText
                                         x={region.labelX}
                                         y={region.labelY}
-                                        fontSize={20}
+                                        fontSize={16}
                                         fontWeight="bold"
-                                        fill="#666"
+                                        fill="#888"
                                         textAnchor="middle"
                                         onPress={() => handleRegionPress(region.id)}
                                     >
                                         {region.colorNumber}
                                     </SvgText>
                                 )}
-                                {/* Checkmark for filled regions */}
                                 {region.isFilled && (
                                     <SvgText
                                         x={region.labelX}
                                         y={region.labelY}
-                                        fontSize={24}
-                                        fill="#FFFFFF"
+                                        fontSize={18}
+                                        fill={region.colorNumber === 1 ? '#FFF' : '#FFF'}
                                         textAnchor="middle"
                                     >
                                         ✓
@@ -450,14 +524,25 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                                 )}
                             </G>
                         ))}
+
+                        {/* Saturn ring - decorative, always visible */}
+                        <Ellipse
+                            cx={70}
+                            cy={330}
+                            rx={50}
+                            ry={10}
+                            fill="none"
+                            stroke={regions.find(r => r.id === 'planet')?.isFilled ? '#7B68EE' : '#333'}
+                            strokeWidth={2}
+                        />
                     </Svg>
                 </View>
 
                 {/* Selected color indicator */}
                 {selectedColorNumber && (
-                    <View style={styles.selectedIndicator}>
+                    <Animated.View style={[styles.selectedIndicator, { transform: [{ scale: pulseAnim }] }]}>
                         <Text style={styles.selectedText}>
-                            Seçili: {COLOR_PALETTE.find(c => c.number === selectedColorNumber)?.name}
+                            {COLOR_PALETTE.find(c => c.number === selectedColorNumber)?.name}
                         </Text>
                         <View style={[
                             styles.selectedColorPreview,
@@ -465,62 +550,76 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                         ]}>
                             <Text style={styles.selectedNumber}>{selectedColorNumber}</Text>
                         </View>
-                    </View>
+                    </Animated.View>
                 )}
             </Animated.View>
 
             {/* Color Palette - Claymorphism style */}
             <View style={styles.paletteContainer}>
-                <Text style={styles.paletteTitle}>Renk Paleti</Text>
-                <View style={styles.palette}>
-                    {COLOR_PALETTE.map(colorItem => (
-                        <Animated.View
-                            key={colorItem.number}
-                            style={[
-                                selectedColorNumber === colorItem.number && {
-                                    transform: [{ scale: selectedButtonScale }]
-                                }
-                            ]}
-                        >
-                            <TouchableOpacity
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.paletteScroll}
+                >
+                    {COLOR_PALETTE.map(colorItem => {
+                        const isColored = regions.some(r => r.colorNumber === colorItem.number && r.isFilled);
+                        return (
+                            <Animated.View
+                                key={colorItem.number}
                                 style={[
-                                    styles.colorButton,
-                                    { backgroundColor: colorItem.color },
-                                    selectedColorNumber === colorItem.number && styles.colorButtonSelected,
+                                    selectedColorNumber === colorItem.number && {
+                                        transform: [{ scale: selectedButtonScale }]
+                                    }
                                 ]}
-                                onPress={() => handleColorSelect(colorItem.number)}
-                                activeOpacity={0.7}
                             >
-                                <Text style={styles.colorNumber}>{colorItem.number}</Text>
-                            </TouchableOpacity>
-                            <Text style={styles.colorName}>{colorItem.name}</Text>
-                        </Animated.View>
-                    ))}
-                </View>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.colorButton,
+                                        { backgroundColor: colorItem.color },
+                                        selectedColorNumber === colorItem.number && styles.colorButtonSelected,
+                                        isColored && styles.colorButtonUsed,
+                                    ]}
+                                    onPress={() => handleColorSelect(colorItem.number)}
+                                    activeOpacity={0.7}
+                                    disabled={isColored}
+                                >
+                                    <Text style={[
+                                        styles.colorNumber,
+                                        colorItem.number === 1 && { color: '#FFF' }
+                                    ]}>
+                                        {isColored ? '✓' : colorItem.number}
+                                    </Text>
+                                </TouchableOpacity>
+                                <Text style={styles.colorName} numberOfLines={1}>{colorItem.name}</Text>
+                            </Animated.View>
+                        );
+                    })}
+                </ScrollView>
             </View>
-
-            {/* Feedback emoji overlay */}
-            {showFeedback && (
-                <View style={styles.feedbackOverlay}>
-                    <Text style={styles.feedbackEmoji}>
-                        {showFeedback.type === 'success' ? '✨' : '❌'}
-                    </Text>
-                </View>
-            )}
 
             {/* Stats overlay */}
             <View style={styles.statsOverlay}>
                 <Text style={styles.statText}>✅ {correctAnswers}</Text>
                 <Text style={styles.statText}>❌ {errors}</Text>
+                <Text style={styles.statText}>⚡ {cognitiveSpeed.toFixed(2)}</Text>
             </View>
+
+            {/* Feedback emoji */}
+            {showFeedback && (
+                <View style={styles.feedbackOverlay}>
+                    <Text style={styles.feedbackEmoji}>
+                        {showFeedback.type === 'success' ? '🌟' : '💥'}
+                    </Text>
+                </View>
+            )}
 
             {/* Game complete overlay */}
             {isGameComplete && (
                 <View style={styles.completeOverlay}>
                     <View style={styles.completeCard}>
-                        <Text style={styles.completeEmoji}>🎉</Text>
-                        <Text style={styles.completeTitle}>Harika!</Text>
-                        <Text style={styles.completeText}>Resmi tamamladın!</Text>
+                        <Text style={styles.completeEmoji}>🚀🎉</Text>
+                        <Text style={styles.completeTitle}>Uzay Görevi Tamamlandı!</Text>
+                        <Text style={styles.completeText}>Harika bir astronot oldun!</Text>
                         <View style={styles.statsRow}>
                             <View style={styles.statBox}>
                                 <Text style={styles.statLabel}>Puan</Text>
@@ -549,19 +648,18 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#8B4513',
+        backgroundColor: '#1a0a00',
     },
     woodBackground: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: '#A0522D',
+        backgroundColor: '#2d1810',
         overflow: 'hidden',
     },
     woodGrain: {
         position: 'absolute',
         left: 0,
         right: 0,
-        height: 3,
-        backgroundColor: '#5D2E0C',
+        backgroundColor: '#1a0a00',
     },
 
     // Header
@@ -569,47 +667,45 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingTop: Platform.OS === 'web' ? 15 : 50,
-        paddingHorizontal: 15,
-        paddingBottom: 10,
+        paddingTop: Platform.OS === 'web' ? 12 : 48,
+        paddingHorizontal: 12,
+        paddingBottom: 8,
         zIndex: 20,
     },
     exitBtn: {
         padding: 10,
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
     },
     timerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
-        gap: 8,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 18,
+        gap: 6,
         elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
     },
     timerIcon: {
-        fontSize: 18,
+        fontSize: 16,
     },
     timerBar: {
-        width: 60,
-        height: 8,
+        width: 50,
+        height: 6,
         backgroundColor: '#E0E0E0',
-        borderRadius: 4,
+        borderRadius: 3,
         overflow: 'hidden',
     },
     timerFill: {
         height: '100%',
         backgroundColor: '#4CAF50',
-        borderRadius: 4,
+        borderRadius: 3,
     },
     timerText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
         color: '#333',
     },
@@ -617,39 +713,29 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
-        gap: 6,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
+        borderRadius: 18,
+        gap: 4,
         elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
     },
     scoreIcon: {
-        fontSize: 18,
+        fontSize: 16,
     },
     scoreText: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#333',
-    },
-    speedText: {
-        fontSize: 12,
-        fontWeight: '600',
-        color: '#FF9800',
-        marginLeft: 5,
     },
 
     // Title
     title: {
-        fontSize: isWeb ? 24 : 18,
+        fontSize: isWeb ? 22 : 17,
         fontWeight: 'bold',
         color: '#FFF',
         textAlign: 'center',
-        marginVertical: 5,
-        textShadowColor: 'rgba(0,0,0,0.6)',
+        marginVertical: 4,
+        textShadowColor: 'rgba(0,0,0,0.8)',
         textShadowOffset: { width: 2, height: 2 },
         textShadowRadius: 4,
     },
@@ -657,32 +743,31 @@ const styles = StyleSheet.create({
     // Instructions
     instructionContainer: {
         backgroundColor: 'rgba(255,255,255,0.95)',
-        marginHorizontal: 20,
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 15,
-        marginBottom: 8,
+        marginHorizontal: 15,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        marginBottom: 6,
         elevation: 3,
     },
     instructionText: {
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: '600',
         color: '#333',
         textAlign: 'center',
     },
     numberHighlight: {
-        color: '#E91E63',
         fontWeight: 'bold',
         fontSize: 18,
     },
 
     // Progress
     progressContainer: {
-        height: 22,
-        backgroundColor: 'rgba(255,255,255,0.3)',
-        marginHorizontal: 20,
-        borderRadius: 11,
-        marginBottom: 10,
+        height: 18,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        marginHorizontal: 15,
+        borderRadius: 9,
+        marginBottom: 8,
         overflow: 'hidden',
         justifyContent: 'center',
     },
@@ -691,15 +776,15 @@ const styles = StyleSheet.create({
         left: 0,
         top: 0,
         bottom: 0,
-        backgroundColor: '#4CAF50',
-        borderRadius: 11,
+        backgroundColor: '#FFD700',
+        borderRadius: 9,
     },
     progressText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 'bold',
         color: '#FFF',
         textAlign: 'center',
-        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowColor: 'rgba(0,0,0,0.5)',
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 2,
     },
@@ -709,7 +794,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 15,
+        paddingHorizontal: 10,
         position: 'relative',
     },
     flashOverlay: {
@@ -720,47 +805,47 @@ const styles = StyleSheet.create({
     },
     canvasFrame: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 15,
-        padding: 10,
-        elevation: 12,
+        borderRadius: 18,
+        padding: 8,
+        elevation: 15,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.35,
-        shadowRadius: 12,
-        borderWidth: 6,
-        borderColor: '#DEB887',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 15,
+        borderWidth: 5,
+        borderColor: '#8B4513',
     },
     svgCanvas: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 10,
+        borderRadius: 12,
     },
     selectedIndicator: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 12,
+        marginTop: 10,
         backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 18,
-        paddingVertical: 10,
-        borderRadius: 25,
-        gap: 12,
+        paddingHorizontal: 15,
+        paddingVertical: 8,
+        borderRadius: 20,
+        gap: 10,
         elevation: 5,
     },
     selectedText: {
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: '600',
         color: '#333',
     },
     selectedColorPreview: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
         borderWidth: 3,
         borderColor: '#333',
         justifyContent: 'center',
         alignItems: 'center',
     },
     selectedNumber: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
         color: '#FFF',
         textShadowColor: 'rgba(0,0,0,0.5)',
@@ -770,154 +855,148 @@ const styles = StyleSheet.create({
 
     // Palette - Claymorphism
     paletteContainer: {
-        paddingVertical: 15,
-        paddingHorizontal: 10,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        paddingVertical: 12,
+        backgroundColor: 'rgba(0,0,0,0.3)',
     },
-    paletteTitle: {
-        fontSize: 14,
+    paletteScroll: {
+        paddingHorizontal: 10,
+    },
+    colorButton: {
+        width: isWeb ? 58 : 52,
+        height: isWeb ? 58 : 52,
+        borderRadius: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginHorizontal: 5,
+        // Claymorphism
+        shadowColor: '#000',
+        shadowOffset: { width: 5, height: 5 },
+        shadowOpacity: 0.4,
+        shadowRadius: 6,
+        elevation: 10,
+        borderWidth: 3,
+        borderTopColor: 'rgba(255,255,255,0.5)',
+        borderLeftColor: 'rgba(255,255,255,0.5)',
+        borderRightColor: 'rgba(0,0,0,0.2)',
+        borderBottomColor: 'rgba(0,0,0,0.25)',
+    },
+    colorButtonSelected: {
+        borderColor: '#FFD700',
+        borderWidth: 4,
+        transform: [{ scale: 1.15 }],
+    },
+    colorButtonUsed: {
+        opacity: 0.5,
+    },
+    colorNumber: {
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#FFF',
-        textAlign: 'center',
-        marginBottom: 10,
-        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowColor: 'rgba(0,0,0,0.6)',
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 2,
     },
-    palette: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 15,
-    },
-    colorButton: {
-        width: isWeb ? 70 : 65,
-        height: isWeb ? 70 : 65,
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        // Claymorphism effect
-        shadowColor: '#000',
-        shadowOffset: { width: 6, height: 6 },
-        shadowOpacity: 0.35,
-        shadowRadius: 8,
-        elevation: 10,
-        borderWidth: 4,
-        borderTopColor: 'rgba(255,255,255,0.6)',
-        borderLeftColor: 'rgba(255,255,255,0.6)',
-        borderRightColor: 'rgba(0,0,0,0.15)',
-        borderBottomColor: 'rgba(0,0,0,0.2)',
-    },
-    colorButtonSelected: {
-        borderColor: '#333',
-        borderWidth: 5,
-        transform: [{ scale: 1.15 }],
-    },
-    colorNumber: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#FFF',
-        textShadowColor: 'rgba(0,0,0,0.5)',
-        textShadowOffset: { width: 2, height: 2 },
-        textShadowRadius: 3,
-    },
     colorName: {
-        fontSize: 10,
-        color: '#FFF',
+        fontSize: 9,
+        color: '#CCC',
         textAlign: 'center',
-        marginTop: 5,
+        marginTop: 3,
         fontWeight: '500',
+        width: isWeb ? 58 : 52,
     },
 
-    // Stats overlay
+    // Stats
     statsOverlay: {
         position: 'absolute',
-        top: Platform.OS === 'web' ? 60 : 95,
-        right: 15,
+        top: Platform.OS === 'web' ? 55 : 90,
+        right: 10,
         flexDirection: 'row',
-        gap: 10,
+        gap: 8,
         zIndex: 30,
     },
     statText: {
-        fontSize: 14,
+        fontSize: 12,
         fontWeight: 'bold',
         color: '#FFF',
-        backgroundColor: 'rgba(0,0,0,0.4)',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 10,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 8,
     },
 
     // Feedback
     feedbackOverlay: {
         position: 'absolute',
-        top: '45%',
+        top: '42%',
         left: 0,
         right: 0,
         alignItems: 'center',
-        justifyContent: 'center',
         zIndex: 100,
     },
     feedbackEmoji: {
-        fontSize: 80,
+        fontSize: 70,
     },
 
     // Complete
     completeOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.75)',
+        backgroundColor: 'rgba(0,0,0,0.85)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 200,
     },
     completeCard: {
-        backgroundColor: '#FFF',
-        borderRadius: 30,
-        padding: 35,
+        backgroundColor: '#1a1a4e',
+        borderRadius: 25,
+        padding: 30,
         alignItems: 'center',
         elevation: 25,
-        width: isWeb ? 350 : screenW - 60,
+        width: isWeb ? 360 : screenW - 50,
+        borderWidth: 3,
+        borderColor: '#FFD700',
     },
     completeEmoji: {
-        fontSize: 70,
-        marginBottom: 15,
+        fontSize: 60,
+        marginBottom: 12,
     },
     completeTitle: {
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#4CAF50',
-        marginBottom: 8,
+        color: '#FFD700',
+        marginBottom: 6,
+        textAlign: 'center',
     },
     completeText: {
-        fontSize: 18,
-        color: '#666',
-        marginBottom: 20,
+        fontSize: 16,
+        color: '#CCC',
+        marginBottom: 18,
     },
     statsRow: {
         flexDirection: 'row',
-        gap: 20,
-        marginBottom: 15,
+        gap: 15,
+        marginBottom: 12,
     },
     statBox: {
         alignItems: 'center',
-        backgroundColor: '#F5F5F5',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        borderRadius: 15,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderRadius: 12,
     },
     statLabel: {
-        fontSize: 12,
-        color: '#888',
-        marginBottom: 4,
+        fontSize: 11,
+        color: '#AAA',
+        marginBottom: 3,
     },
     statValue: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#FFF',
     },
     cognitiveLabel: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: '600',
-        color: '#FF9800',
-        marginTop: 10,
+        color: '#FFD700',
+        marginTop: 8,
     },
 });
