@@ -249,6 +249,14 @@ export default function App() {
       zorlukSeviyesi?: number;
       kazanimOdagi?: string;
       denemeNo?: number;
+      // Miktar Avcısı specific fields
+      distance_effect?: number;
+      response_time?: number;
+      round_history?: any;
+      correct_answers?: number;
+      cognitive_speed_score?: number;
+      // Sihirli Tuval specific field
+      visual_attention_score?: number;
     },
   ) => {
     setAsama('sonuc');
@@ -281,6 +289,8 @@ export default function App() {
       round_history?: any;
       correct_answers?: number;
       cognitive_speed_score?: number;
+      // Sihirli Tuval specific field
+      visual_attention_score?: number;
     },
   ) => {
     setYukleniyor(true);
@@ -353,6 +363,8 @@ export default function App() {
         round_history: extraData?.round_history ? JSON.stringify(extraData.round_history) : null,
         correct_answers: extraData?.correct_answers ?? null,
         cognitive_speed_score: extraData?.cognitive_speed_score ?? null,
+        // Sihirli Tuval specific column
+        visual_attention_score: extraData?.visual_attention_score ?? null,
       };
 
       if (extraData?.cizimVerisi || uploadResult?.imageUrl) {

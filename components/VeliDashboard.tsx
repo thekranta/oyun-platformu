@@ -93,6 +93,7 @@ interface GameScore {
     kumulatif_ai_yorumu: string | null;  // Separate column for cumulative AI reports
     hata_sayisi: number;
     sure: number;
+    visual_attention_score: number | null;  // Sihirli Tuval specific - Görsel Dikkat Skoru
 }
 
 // Pastel color palette - soft and child-friendly
@@ -275,6 +276,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         'bunu-soyle': { emoji: '🗣️', name: 'Bunu Söyle' },
         'eslestirme': { emoji: '🃏', name: 'Eşleştirme' },
         'ritmik-sayma': { emoji: '🔢', name: 'Ritmik Sayma' },
+        'sihirli-tuval': { emoji: '🎨', name: 'Sihirli Tuval' },
+        'sihirli-siseler': { emoji: '✨', name: 'Sihirli Şişeler' },
     };
 
     const fetchData = async () => {
@@ -386,6 +389,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                 }, 0) / scores.length
             )
             : 0;
+
+    // Get Sihirli Tuval specific scores
+    const sihirliTuvalScores = scores.filter(s => s.oyun_turu === 'sihirli-tuval');
+
+    // Calculate average Visual Attention Score for Sihirli Tuval
+    const avgVisualAttentionScore = sihirliTuvalScores.length > 0
+        ? Math.round(sihirliTuvalScores.reduce((a, b) => a + (b.visual_attention_score || 0), 0) / sihirliTuvalScores.length)
+        : 0;
 
     // Get all AI comments
     const allAIComments = scores.filter(s => s.yapay_zeka_yorumu).map(s => ({
@@ -660,9 +671,26 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             doc.setFont('helvetica', 'normal');
             doc.text('Toplam Oyun', margin + cardWidth + gap + cardWidth / 2, yPos + 22, { align: 'center' });
 
-            yPos += cardHeight + 10;
+            yPos += cardHeight + gap;
 
-            // ========== SUCCESS RATE BAR ==========
+            // ========== GÖRSEL DİKKAT SKORU (Sihirli Tuval için) ==========
+            if (sihirliTuvalScores.length > 0) {
+                // Card 5 - Green (Visual Attention Score)
+                doc.setFillColor(76, 175, 80); // Green
+                doc.roundedRect(margin, yPos, pageWidth - 2 * margin, cardHeight + 8, 4, 4, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(24);
+                doc.setFont('helvetica', 'bold');
+                doc.text(`${avgVisualAttentionScore}/100`, pageWidth / 2, yPos + 14, { align: 'center' });
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'normal');
+                doc.text('Gorsel Dikkat Skoru', pageWidth / 2, yPos + 26, { align: 'center' });
+                doc.setFontSize(8);
+                doc.text('Gorsel tarama ve odaklanma becerisini temsil eder', pageWidth / 2, yPos + 34, { align: 'center' });
+                yPos += cardHeight + 16;
+            }
+
+            yPos += 4;
             doc.setFillColor(224, 224, 224);
             doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
             doc.setFillColor(76, 175, 80);

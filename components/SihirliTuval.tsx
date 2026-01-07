@@ -272,12 +272,18 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
 
         const finalCognitiveSpeed = duration > 0 ? correctAnswers / duration : 0;
 
+        // Görsel Dikkat Skoru: (Dogru_Boyama / Toplam_Sure) * 100, max 100
+        const visualAttentionScore = duration > 0
+            ? Math.min(100, Math.round((correctAnswers / duration) * 100))
+            : 0;
+
         onGameEnd('sihirli-tuval', duration, totalMoves, errors, undefined, {
             zorlukSeviyesi: 1,
             kazanimOdagi: 'Görsel Dikkat ve Sembolik Eşleme (MAB.2.1)',
             response_time: Math.round(avgResponseTime),
             correct_answers: correctAnswers,
             cognitive_speed_score: Math.round(finalCognitiveSpeed * 1000) / 1000,
+            visual_attention_score: visualAttentionScore,
             round_history: moveHistory,
         });
     };
@@ -393,8 +399,8 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
         outputRange: [0, 0.4],
     });
 
-    const svgWidth = isWeb ? 380 : screenW - 50;
-    const svgHeight = isWeb ? 380 : screenW - 50;
+    const svgWidth = isWeb ? 340 : Math.min(screenW - 40, screenH * 0.45);
+    const svgHeight = isWeb ? 340 : Math.min(screenW - 40, screenH * 0.45);
 
     return (
         <View style={styles.container}>
@@ -433,28 +439,6 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                     <Text style={styles.scoreIcon}>⭐</Text>
                     <Text style={styles.scoreText}>{score}</Text>
                 </View>
-            </View>
-
-            {/* Title */}
-            <Text style={styles.title}>🌌 Uzay Serüveni: Sayılarla Boyama</Text>
-
-            {/* Instructions */}
-            <View style={styles.instructionContainer}>
-                {!selectedColorNumber ? (
-                    <Text style={styles.instructionText}>👇 Aşağıdan bir numara seç!</Text>
-                ) : (
-                    <Text style={styles.instructionText}>
-                        🎯 <Text style={[styles.numberHighlight, { color: COLOR_PALETTE.find(c => c.number === selectedColorNumber)?.color }]}>
-                            {selectedColorNumber}
-                        </Text> numaralı alana dokun!
-                    </Text>
-                )}
-            </View>
-
-            {/* Progress bar */}
-            <View style={styles.progressContainer}>
-                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                <Text style={styles.progressText}>{Math.round(progress * 100)}% Tamamlandı</Text>
             </View>
 
             {/* SVG Canvas */}
@@ -590,18 +574,10 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                                         {isColored ? '✓' : colorItem.number}
                                     </Text>
                                 </TouchableOpacity>
-                                <Text style={styles.colorName} numberOfLines={1}>{colorItem.name}</Text>
                             </Animated.View>
                         );
                     })}
                 </ScrollView>
-            </View>
-
-            {/* Stats overlay */}
-            <View style={styles.statsOverlay}>
-                <Text style={styles.statText}>✅ {correctAnswers}</Text>
-                <Text style={styles.statText}>❌ {errors}</Text>
-                <Text style={styles.statText}>⚡ {cognitiveSpeed.toFixed(2)}</Text>
             </View>
 
             {/* Feedback emoji */}
@@ -791,10 +767,10 @@ const styles = StyleSheet.create({
 
     // Canvas
     canvasContainer: {
-        flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 10,
+        paddingVertical: 10,
         position: 'relative',
     },
     flashOverlay: {
@@ -855,7 +831,9 @@ const styles = StyleSheet.create({
 
     // Palette - Claymorphism
     paletteContainer: {
-        paddingVertical: 12,
+        paddingVertical: 15,
+        paddingBottom: Platform.OS === 'web' ? 15 : 30,
+        marginTop: 15,
         backgroundColor: 'rgba(0,0,0,0.3)',
     },
     paletteScroll: {
