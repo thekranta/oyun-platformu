@@ -4,12 +4,11 @@ import {
     Animated,
     Dimensions,
     Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     Vibration,
-    View,
+    View
 } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from 'react-native-svg';
 
@@ -521,30 +520,11 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                         />
                     </Svg>
                 </View>
-
-                {/* Selected color indicator */}
-                {selectedColorNumber && (
-                    <Animated.View style={[styles.selectedIndicator, { transform: [{ scale: pulseAnim }] }]}>
-                        <Text style={styles.selectedText}>
-                            {COLOR_PALETTE.find(c => c.number === selectedColorNumber)?.name}
-                        </Text>
-                        <View style={[
-                            styles.selectedColorPreview,
-                            { backgroundColor: COLOR_PALETTE.find(c => c.number === selectedColorNumber)?.color }
-                        ]}>
-                            <Text style={styles.selectedNumber}>{selectedColorNumber}</Text>
-                        </View>
-                    </Animated.View>
-                )}
             </Animated.View>
 
             {/* Color Palette - Claymorphism style */}
             <View style={styles.paletteContainer}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.paletteScroll}
-                >
+                <View style={styles.paletteRow}>
                     {COLOR_PALETTE.map(colorItem => {
                         const isColored = regions.some(r => r.colorNumber === colorItem.number && r.isFilled);
                         return (
@@ -565,7 +545,6 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                                     ]}
                                     onPress={() => handleColorSelect(colorItem.number)}
                                     activeOpacity={0.7}
-                                    disabled={isColored}
                                 >
                                     <Text style={[
                                         styles.colorNumber,
@@ -577,7 +556,7 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                             </Animated.View>
                         );
                     })}
-                </ScrollView>
+                </View>
             </View>
 
             {/* Feedback emoji */}
@@ -836,7 +815,12 @@ const styles = StyleSheet.create({
         marginTop: 15,
         backgroundColor: 'rgba(0,0,0,0.3)',
     },
-    paletteScroll: {
+    paletteRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 8,
         paddingHorizontal: 10,
     },
     colorButton: {
