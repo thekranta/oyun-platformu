@@ -16,6 +16,7 @@ import SayiKomsulari from '@/components/SayiKomsulari';
 import SayilariBirlestir from '@/components/SayilariBirlestir';
 import ShadowDetective from '@/components/ShadowDetective';
 import SihirliSiseler from '@/components/SihirliSiseler';
+import SihirliTuval from '@/components/SihirliTuval';
 import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
 import TartiDengesi from '@/components/TartiDengesi';
@@ -907,6 +908,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Hayal Defteri</Text>
                   <Text style={styles.oyunAciklama}>Boş sayfada çizim yap</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8B4513' }]} onPress={() => oyunuBaslat('sihirli-tuval')}>
+                  <Ionicons name="color-palette" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Sihirli Tuval</Text>
+                  <Text style={styles.oyunAciklama}>Sayılarla Boyama</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -1099,6 +1106,10 @@ export default function App() {
         onGameEnd={(data) => oyunuBitir('sihirli-siseler', data.response_time, data.total_moves, 0)}
       />
     );
+  }
+
+  if (asama === 'sihirli-tuval') {
+    return <SihirliTuval onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
   }
 
   if (asama === 'sonuc') {
