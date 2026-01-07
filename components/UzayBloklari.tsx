@@ -109,7 +109,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             if (Platform.OS === 'web') {
                 try {
                     const utterance = new SpeechSynthesisUtterance(
-                        `Merhaba ${childName}, bugün yıldızları dizmemize yardım eder misin?`
+                        `Merhaba ${childName}, bugün blokları yerleştirmemize yardım eder misin?`
                     );
                     utterance.lang = 'tr-TR';
                     utterance.rate = 0.9;
@@ -293,6 +293,35 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         setSelectedBlock(block);
     };
 
+    // Rotate block shape 90 degrees clockwise
+    const handleRotateBlock = () => {
+        if (!selectedBlock) return;
+
+        const rotateShape = (shape: number[][]): number[][] => {
+            const rows = shape.length;
+            const cols = shape[0].length;
+            const rotated: number[][] = [];
+            for (let c = 0; c < cols; c++) {
+                const newRow: number[] = [];
+                for (let r = rows - 1; r >= 0; r--) {
+                    newRow.push(shape[r][c]);
+                }
+                rotated.push(newRow);
+            }
+            return rotated;
+        };
+
+        const newShape = rotateShape(selectedBlock.shape);
+
+        // Update blocks array with rotated shape
+        setBlocks(prev => prev.map(b =>
+            b.id === selectedBlock.id ? { ...b, shape: newShape } : b
+        ));
+
+        // Update selected block reference
+        setSelectedBlock(prev => prev ? { ...prev, shape: newShape } : null);
+    };
+
     const handleGridCellPress = (row: number, col: number) => {
         if (!selectedBlock || grid[row][col].filled) return;
 
@@ -370,12 +399,12 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     <View style={styles.timerBar}>
                         <View style={[styles.timerFill, { width: `${(timeLeft / 180) * 100}%` }]} />
                     </View>
-                    <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
                 </View>
 
-                <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreIcon}>🌟</Text>
-                    <Text style={styles.scoreText}>{score}</Text>
+                {/* Progress - moved to header */}
+                <View style={styles.progressContainerHeader}>
+                    <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
+                    <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
                 </View>
             </View>
 
@@ -416,11 +445,13 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 </Animated.View>
             </View>
 
-            {/* Progress */}
-            <View style={styles.progressContainer}>
-                <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
-            </View>
+            {/* Rotate Button - showed when block is selected */}
+            {selectedBlock && (
+                <TouchableOpacity style={styles.rotateButton} onPress={handleRotateBlock}>
+                    <Ionicons name="refresh" size={24} color="#FFF" />
+                    <Text style={styles.rotateButtonText}>Döndür</Text>
+                </TouchableOpacity>
+            )}
 
             {/* Blocks Palette */}
             <View style={styles.blocksContainer}>
@@ -467,39 +498,44 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                         <Text style={styles.flameEmoji}>🔥</Text>
                     </View>
                 </Animated.View>
-            )}
+            )
+            }
 
             {/* Confetti */}
-            {showConfetti && (
-                <ConfettiCannon
-                    count={200}
-                    origin={{ x: screenW / 2, y: 0 }}
-                    fallSpeed={3000}
-                    fadeOut
-                />
-            )}
+            {
+                showConfetti && (
+                    <ConfettiCannon
+                        count={200}
+                        origin={{ x: screenW / 2, y: 0 }}
+                        fallSpeed={3000}
+                        fadeOut
+                    />
+                )
+            }
 
             {/* Game Complete Overlay */}
-            {isGameComplete && !rocketLaunch && (
-                <View style={styles.completeOverlay}>
-                    <View style={styles.completeCard}>
-                        <Text style={styles.completeEmoji}>🌌🎉</Text>
-                        <Text style={styles.completeTitle}>Yıldızları Dizdin!</Text>
-                        <Text style={styles.completeText}>Harika bir mimar oldun!</Text>
-                        <View style={styles.statsRow}>
-                            <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Puan</Text>
-                                <Text style={styles.statValue}>{score}</Text>
-                            </View>
-                            <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Hata</Text>
-                                <Text style={[styles.statValue, { color: '#F44336' }]}>{errors}</Text>
+            {
+                isGameComplete && !rocketLaunch && (
+                    <View style={styles.completeOverlay}>
+                        <View style={styles.completeCard}>
+                            <Text style={styles.completeEmoji}>🌌🎉</Text>
+                            <Text style={styles.completeTitle}>Blokları Yerleştirdin!</Text>
+                            <Text style={styles.completeText}>Harika bir mimar oldun!</Text>
+                            <View style={styles.statsRow}>
+                                <View style={styles.statBox}>
+                                    <Text style={styles.statLabel}>Puan</Text>
+                                    <Text style={styles.statValue}>{score}</Text>
+                                </View>
+                                <View style={styles.statBox}>
+                                    <Text style={styles.statLabel}>Hata</Text>
+                                    <Text style={[styles.statValue, { color: '#F44336' }]}>{errors}</Text>
+                                </View>
                             </View>
                         </View>
                     </View>
-                </View>
-            )}
-        </View>
+                )
+            }
+        </View >
     );
 }
 
@@ -657,6 +693,14 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         justifyContent: 'center',
     },
+    progressContainerHeader: {
+        height: 16,
+        width: 80,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderRadius: 8,
+        overflow: 'hidden',
+        justifyContent: 'center',
+    },
     progressFill: {
         position: 'absolute',
         left: 0,
@@ -670,6 +714,30 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFF',
         textAlign: 'center',
+    },
+
+    // Rotate Button
+    rotateButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#BF40BF',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 25,
+        marginVertical: 10,
+        alignSelf: 'center',
+        gap: 8,
+        shadowColor: '#BF40BF',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 8,
+        elevation: 5,
+    },
+    rotateButtonText: {
+        color: '#FFF',
+        fontSize: 14,
+        fontWeight: 'bold',
     },
 
     // Blocks
