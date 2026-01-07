@@ -318,6 +318,13 @@ export default function AdminPanel() {
                     cikti: 'MAB.2.1',
                     ciktiAciklama: 'Nesneleri özelliklerine göre eşleştirme ve görsel dikkat - Görsel tarama yoluyla nesne-sembol ilişkisi kurma'
                 },
+                // Uzay Blokları: Yıldız Mimarı - Problem Çözme ve Uzamsal Algı
+                'uzay-bloklari': {
+                    alan: 'Bilişsel Gelişim',
+                    surec: 'Problem Çözme ve Uzamsal Algı',
+                    cikti: 'KB.2.4',
+                    ciktiAciklama: 'Görsel-Uzamsal becerileri kullanır (Şekil döndürme, bütünleştirme, yerleştirme)'
+                },
             };
 
             const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
@@ -349,6 +356,7 @@ export default function AdminPanel() {
                 'tarti-dengesi': 'Tartı Dengesi',
                 'miktar-avcisi': 'Miktar Avcısı',
                 'sihirli-tuval': 'Sihirli Tuval: Sayılarla Boyama',
+                'uzay-bloklari': 'Uzay Blokları: Yıldız Mimarı',
             };
             const oyunAdiTR = oyunAdiMap[score.oyun_turu] || score.oyun_turu;
 
@@ -558,6 +566,60 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır]' :
 Değerli Velimiz,
 
 [${score.ogrenci_adi}'nin görsel tarama ve sembol eşleme becerisini samimi bir dille açıkla. Evde yapılabilecek "renk-sayı eşleme" etkinliği öner.]
+
+Saygılarımızla,
+ChildhoodTech Ekibi
+                `;
+            } else if (score.oyun_turu === 'uzay-bloklari') {
+                // === UZAY BLOKLARI - PROBLEM ÇÖZME VE UZAMSAL ALGI ===
+                prompt = `
+Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
+
+## VERİLER:
+- Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
+- Oyun: Uzay Blokları: Yıldız Mimarı
+- Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
+- Performans Eğilimi: ${performansEgilimi}
+${gelisimBolumu}
+## MAARİF MODELİ REFERANSI:
+- Alan: Bilişsel Gelişim | Süreç: Problem Çözme ve Uzamsal Algı
+- Öğrenme Çıktısı: KB.2.4 - Görsel-Uzamsal becerileri kullanır (Şekil döndürme, yerleştirme)
+
+## ANALİZ KRİTERLERİ (ÖNEMLİ):
+1. **Uzamsal Planlama:** Çocuğun blokları yerleştirmeden önce zihninde döndürüp döndüremediğini (deneme-yanılma sayısı ile) analiz et.
+2. **Problem Çözme:** Hatadan sonra strateji değiştirip değiştirmediğini değerlendir.
+3. **Parça-Bütün İlişkisi:** Karmaşık şekilleri boşluğa sığdırma becerisini yorumla.
+
+## VELİ PANELİ İÇİN BAŞLIKLAR:
+- Akademik Karşılık: KB.2.4 - Uzamsal Düşünme ve Şekil Algısı
+- Beceri Karşılığı: Problem Çözme ve Parça-Bütün İlişkisi
+
+## ÇIKTI KURALLARI:
+1. ASLA giriş cümlesi kullanma.
+2. Doğrudan rapor içeriğiyle başla.
+3. Aşağıdaki formatı BİREBİR uygula:
+
+---
+
+**MAARİF MODELİ PEDAGOJİK ANALİZ**
+
+**Akademik Karşılık:** KB.2.4 - Uzamsal Düşünme ve Şekil Algısı
+**Beceri Karşılığı:** Problem Çözme ve Parça-Bütün İlişkisi
+
+**Uzamsal Planlama Analizi:** [Çocuğun blokları yerleştirme süresi (${sure} sn) ve hata sayısı (${hata}) üzerinden zihinsel rotasyon becerisini değerlendir]
+
+**Problem Çözme Stratejisi:** [Hata yaptıktan sonraki düzeltme hızı ve yaklaşımını analiz et]
+
+**Gelişimsel Değerlendirme:** [${gelisimselDonem} bağlamında parça-bütün ilişkisi kurma becerisini değerlendir]
+${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır]' : ''}
+
+---
+
+**VELİ BİLGİLENDİRME NOTU**
+
+Değerli Velimiz,
+
+[${score.ogrenci_adi}'nin problem çözme ve uzamsal algı becerisini samimi bir dille açıkla. Evde yapılabilecek "lego/blok" veya "kutu yerleştirme" etkinliği öner.]
 
 Saygılarımızla,
 ChildhoodTech Ekibi

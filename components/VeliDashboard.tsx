@@ -12,6 +12,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -278,6 +279,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         'ritmik-sayma': { emoji: '🔢', name: 'Ritmik Sayma' },
         'sihirli-tuval': { emoji: '🎨', name: 'Sihirli Tuval' },
         'sihirli-siseler': { emoji: '✨', name: 'Sihirli Şişeler' },
+        'uzay-bloklari': { emoji: '🌌', name: 'Uzay Blokları' },
     };
 
     const fetchData = async () => {
@@ -390,12 +392,12 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             )
             : 0;
 
-    // Get Sihirli Tuval specific scores
-    const sihirliTuvalScores = scores.filter(s => s.oyun_turu === 'sihirli-tuval');
+    // Get scores that have Visual Attention Score (Sihirli Tuval + Uzay Blokları)
+    const visualAttentionGameScores = scores.filter(s => (s.oyun_turu === 'sihirli-tuval' || s.oyun_turu === 'uzay-bloklari') && s.visual_attention_score !== undefined);
 
-    // Calculate average Visual Attention Score for Sihirli Tuval
-    const avgVisualAttentionScore = sihirliTuvalScores.length > 0
-        ? Math.round(sihirliTuvalScores.reduce((a, b) => a + (b.visual_attention_score || 0), 0) / sihirliTuvalScores.length)
+    // Calculate average Visual Attention Score
+    const avgVisualAttentionScore = visualAttentionGameScores.length > 0
+        ? Math.round(visualAttentionGameScores.reduce((a, b) => a + (b.visual_attention_score || 0), 0) / visualAttentionGameScores.length)
         : 0;
 
     // Get all AI comments
@@ -673,8 +675,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
             yPos += cardHeight + gap;
 
-            // ========== GÖRSEL DİKKAT SKORU (Sihirli Tuval için) ==========
-            if (sihirliTuvalScores.length > 0) {
+            // ========== GÖRSEL DİKKAT SKORU (Sihirli Tuval ve Uzay Blokları için) ==========
+            if (visualAttentionGameScores.length > 0) {
                 // Card 5 - Green (Visual Attention Score)
                 doc.setFillColor(76, 175, 80); // Green
                 doc.roundedRect(margin, yPos, pageWidth - 2 * margin, cardHeight + 8, 4, 4, 'F');
@@ -1227,6 +1229,87 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     <Text style={styles.chartHint}>Son 7 gündeki oyun aktivitesi</Text>
                                 </View>
                             </View>
+
+                            {/* VISUAL ATTENTION TREND CHART */}
+                            {visualAttentionGameScores.length >= 2 && (
+                                <View style={[styles.chartCard, { marginBottom: 20 }]}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
+                                        <Text style={{ fontSize: 20, marginRight: 10 }}>👁️</Text>
+                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Görsel Dikkat Trendi</Text>
+                                    </View>
+
+                                    {(() => {
+                                        const chartData = [...visualAttentionGameScores].reverse().slice(-10); // Last 10 games chronological
+                                        const scores = chartData.map(d => d.visual_attention_score || 0);
+                                        const chartHeight = 150;
+                                        const screenWidth = Dimensions.get('window').width;
+                                        const chartWidth = Math.min(screenWidth - 80, 500); // Max width for web
+                                        const maxScore = 100;
+
+                                        const points = scores.map((score, index) => {
+                                            const x = (index / (scores.length - 1)) * chartWidth;
+                                            const y = chartHeight - (score / maxScore) * chartHeight;
+                                            return `${x},${y}`;
+                                        }).join(' ');
+
+                                        return (
+                                            <View style={{ alignItems: 'center' }}>
+                                                <Svg height={chartHeight + 10} width={chartWidth + 10} style={{ overflow: 'visible' }}>
+                                                    {/* Background Lines */}
+                                                    {[0, 25, 50, 75, 100].map(val => (
+                                                        <Line
+                                                            key={val}
+                                                            x1="0"
+                                                            y1={chartHeight - (val / 100) * chartHeight}
+                                                            x2={chartWidth}
+                                                            y2={chartHeight - (val / 100) * chartHeight}
+                                                            stroke="#f0f0f0"
+                                                            strokeWidth="1"
+                                                        />
+                                                    ))}
+
+                                                    {/* Trend Line - GREEN */}
+                                                    <Polyline
+                                                        points={points}
+                                                        fill="none"
+                                                        stroke="#4CAF50"
+                                                        strokeWidth="3"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                    />
+
+                                                    {/* Points */}
+                                                    {scores.map((score, index) => {
+                                                        const x = (index / (scores.length - 1)) * chartWidth;
+                                                        const y = chartHeight - (score / maxScore) * chartHeight;
+                                                        return (
+                                                            <Circle
+                                                                key={index}
+                                                                cx={x}
+                                                                cy={y}
+                                                                r="4"
+                                                                fill="#FFF"
+                                                                stroke="#4CAF50"
+                                                                strokeWidth="2"
+                                                            />
+                                                        );
+                                                    })}
+                                                </Svg>
+
+                                                {/* Labels */}
+                                                <View style={{ width: chartWidth, flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                                                    <Text style={{ fontSize: 10, color: '#999' }}>
+                                                        {new Date(chartData[0].created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 10, color: '#999' }}>
+                                                        {new Date(chartData[chartData.length - 1].created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        );
+                                    })()}
+                                </View>
+                            )}
                             {/* CUMULATIVE AI ANALYSIS - Main Feature */}
                             <View style={[styles.chartCard, { marginBottom: 20, borderWidth: 2, borderColor: COLORS.premium }]}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>

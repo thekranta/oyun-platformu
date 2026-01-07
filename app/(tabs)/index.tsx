@@ -21,6 +21,7 @@ import SiralamaOyunu from '@/components/SiralamaOyunu';
 import { useSound } from '@/components/SoundContext';
 import TartiDengesi from '@/components/TartiDengesi';
 import Toast from '@/components/Toast';
+import UzayBloklari from '@/components/UzayBloklari';
 import YapbozOyunu from '@/components/YapbozOyunu';
 import YaraticiCizim from '@/components/YaraticiCizim';
 import { Ionicons } from '@expo/vector-icons';
@@ -894,6 +895,18 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Sihirli Şişeler</Text>
                   <Text style={styles.oyunAciklama}>Renkleri Grupla</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#3F51B5' }]} onPress={() => oyunuBaslat('sihirli-tuval')}>
+                  <Ionicons name="color-palette-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Sihirli Tuval</Text>
+                  <Text style={styles.oyunAciklama}>Uzay Boyama</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#1a1a4e' }]} onPress={() => oyunuBaslat('uzay-bloklari')}>
+                  <Ionicons name="planet-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Uzay Blokları</Text>
+                  <Text style={styles.oyunAciklama}>Yıldız Mimarı</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -1122,6 +1135,10 @@ export default function App() {
 
   if (asama === 'sihirli-tuval') {
     return <SihirliTuval onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+  }
+
+  if (asama === 'uzay-bloklari') {
+    return <UzayBloklari onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
   }
 
   if (asama === 'sonuc') {
