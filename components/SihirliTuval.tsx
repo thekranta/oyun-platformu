@@ -4,13 +4,13 @@ import {
     Animated,
     Dimensions,
     Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
     Vibration,
     View,
 } from 'react-native';
+import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 
 // ============= TYPES =============
 interface SihirliTuvalProps {
@@ -28,8 +28,13 @@ interface SihirliTuvalProps {
 interface ColorRegion {
     id: string;
     colorNumber: number;
-    name: string;
-    emoji: string;
+    pathType: 'path' | 'circle';
+    d?: string;
+    cx?: number;
+    cy?: number;
+    r?: number;
+    labelX: number;
+    labelY: number;
     isFilled: boolean;
 }
 
@@ -46,51 +51,83 @@ interface MoveData {
 const { width: screenW, height: screenH } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 
-// Color palette with claymorphism effect (1-10)
+// Color palette (only colors used in the SVG)
 const COLOR_PALETTE = [
-    { number: 1, color: '#FF6B6B', name: 'Kırmızı' },
-    { number: 2, color: '#4ECDC4', name: 'Turkuaz' },
-    { number: 3, color: '#45B7D1', name: 'Mavi' },
-    { number: 4, color: '#96CEB4', name: 'Yeşil' },
-    { number: 5, color: '#FFEAA7', name: 'Sarı' },
-    { number: 6, color: '#DDA0DD', name: 'Mor' },
-    { number: 7, color: '#FF8C00', name: 'Turuncu' },
-    { number: 8, color: '#87CEEB', name: 'Açık Mavi' },
-    { number: 9, color: '#FFB6C1', name: 'Pembe' },
-    { number: 10, color: '#98D8C8', name: 'Mint' },
+    { number: 3, color: '#87CEEB', name: 'Gökyüzü Mavisi' },  // Sky & Sun
+    { number: 7, color: '#F4A460', name: 'Kum Rengi' },       // Sand & Leaves  
+    { number: 9, color: '#8B4513', name: 'Kahverengi' },      // Tree trunk
+    { number: 10, color: '#1E90FF', name: 'Deniz Mavisi' },   // Sea
 ];
 
-// Palm Island illustration regions - simplified grid layout
-const PALM_ISLAND_REGIONS: ColorRegion[] = [
-    // Row 1 - Sky
-    { id: 'sky1', colorNumber: 8, name: 'Gökyüzü', emoji: '☁️', isFilled: false },
-    { id: 'sun', colorNumber: 5, name: 'Güneş', emoji: '☀️', isFilled: false },
-    { id: 'sky2', colorNumber: 8, name: 'Gökyüzü', emoji: '🌤️', isFilled: false },
-
-    // Row 2 - Palm tree top
-    { id: 'leaf1', colorNumber: 4, name: 'Yaprak', emoji: '🌿', isFilled: false },
-    { id: 'leaf2', colorNumber: 4, name: 'Yaprak', emoji: '🍃', isFilled: false },
-    { id: 'leaf3', colorNumber: 4, name: 'Yaprak', emoji: '🌴', isFilled: false },
-
-    // Row 3 - Trunk and coconuts
-    { id: 'coconut1', colorNumber: 7, name: 'Hindistan Cevizi', emoji: '🥥', isFilled: false },
-    { id: 'trunk', colorNumber: 7, name: 'Gövde', emoji: '🪵', isFilled: false },
-    { id: 'coconut2', colorNumber: 7, name: 'Hindistan Cevizi', emoji: '🥥', isFilled: false },
-
-    // Row 4 - Island
-    { id: 'sand1', colorNumber: 5, name: 'Kum', emoji: '🏖️', isFilled: false },
-    { id: 'sand2', colorNumber: 5, name: 'Kum', emoji: '⛱️', isFilled: false },
-    { id: 'sand3', colorNumber: 5, name: 'Kum', emoji: '🐚', isFilled: false },
-
-    // Row 5 - Water
-    { id: 'water1', colorNumber: 3, name: 'Su', emoji: '🌊', isFilled: false },
-    { id: 'water2', colorNumber: 3, name: 'Su', emoji: '💧', isFilled: false },
-    { id: 'water3', colorNumber: 3, name: 'Su', emoji: '🐠', isFilled: false },
+// SVG Regions based on provided structure
+const SVG_REGIONS: ColorRegion[] = [
+    // Gökyüzü - No: 3
+    {
+        id: 'sky',
+        colorNumber: 3,
+        pathType: 'path',
+        d: 'M0 0 L400 0 L400 250 L0 250 Z',
+        labelX: 300,
+        labelY: 50,
+        isFilled: false
+    },
+    // Güneş - No: 3
+    {
+        id: 'sun',
+        colorNumber: 3,
+        pathType: 'circle',
+        cx: 80,
+        cy: 80,
+        r: 40,
+        labelX: 80,
+        labelY: 85,
+        isFilled: false
+    },
+    // Deniz - No: 10
+    {
+        id: 'sea',
+        colorNumber: 10,
+        pathType: 'path',
+        d: 'M0 250 L400 250 L400 400 L0 400 Z',
+        labelX: 200,
+        labelY: 320,
+        isFilled: false
+    },
+    // Ada/Kum - No: 7
+    {
+        id: 'island',
+        colorNumber: 7,
+        pathType: 'path',
+        d: 'M50 250 Q200 180 350 250 Z',
+        labelX: 200,
+        labelY: 230,
+        isFilled: false
+    },
+    // Ağaç Gövdesi - No: 9
+    {
+        id: 'trunk',
+        colorNumber: 9,
+        pathType: 'path',
+        d: 'M190 250 L210 250 L220 150 L200 150 Z',
+        labelX: 205,
+        labelY: 210,
+        isFilled: false
+    },
+    // Yapraklar - No: 7
+    {
+        id: 'leaves',
+        colorNumber: 7,
+        pathType: 'path',
+        d: 'M210 150 Q260 100 310 160 Q260 140 210 150 M210 150 Q160 100 110 160 Q160 140 210 150',
+        labelX: 250,
+        labelY: 130,
+        isFilled: false
+    },
 ];
 
 // ============= MAIN COMPONENT =============
 export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
-    const [regions, setRegions] = useState<ColorRegion[]>(PALM_ISLAND_REGIONS.map(r => ({ ...r })));
+    const [regions, setRegions] = useState<ColorRegion[]>(SVG_REGIONS.map(r => ({ ...r })));
     const [selectedColorNumber, setSelectedColorNumber] = useState<number | null>(null);
     const [moveHistory, setMoveHistory] = useState<MoveData[]>([]);
     const [errors, setErrors] = useState(0);
@@ -101,10 +138,11 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
     const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error'; regionId: string } | null>(null);
     const [timeLeft, setTimeLeft] = useState(180); // 3 dakika
     const [isGameComplete, setIsGameComplete] = useState(false);
+    const [cognitiveSpeed, setCognitiveSpeed] = useState(0);
 
     // Animations
     const shakeAnim = useRef(new Animated.Value(0)).current;
-    const glowAnim = useRef(new Animated.Value(0)).current;
+    const flashAnim = useRef(new Animated.Value(0)).current;
     const selectedButtonScale = useRef(new Animated.Value(1)).current;
 
     // Timer
@@ -125,6 +163,15 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
         return () => clearInterval(timer);
     }, [isGameComplete]);
 
+    // Calculate cognitive speed whenever correctAnswers changes
+    useEffect(() => {
+        const elapsedTime = (Date.now() - gameStart) / 1000; // seconds
+        if (elapsedTime > 0 && correctAnswers > 0) {
+            const speed = correctAnswers / elapsedTime;
+            setCognitiveSpeed(Math.round(speed * 100) / 100); // Round to 2 decimals
+        }
+    }, [correctAnswers, gameStart]);
+
     // Check game completion
     useEffect(() => {
         const allFilled = regions.every(r => r.isFilled);
@@ -141,35 +188,46 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
             ? moveHistory.reduce((sum, m) => sum + m.responseTime, 0) / moveHistory.length
             : 0;
 
+        // Calculate final cognitive speed
+        const finalCognitiveSpeed = duration > 0 ? correctAnswers / duration : 0;
+
         onGameEnd('sihirli-tuval', duration, totalMoves, errors, undefined, {
             zorlukSeviyesi: 1,
             kazanimOdagi: 'Görsel Motor Koordinasyon ve Sayı Tanıma',
             response_time: Math.round(avgResponseTime),
             correct_answers: correctAnswers,
+            cognitive_speed_score: Math.round(finalCognitiveSpeed * 1000) / 1000,
             round_history: moveHistory,
         });
     };
 
     const playErrorFeedback = () => {
+        // Red flash animation
+        Animated.sequence([
+            Animated.timing(flashAnim, { toValue: 1, duration: 100, useNativeDriver: false }),
+            Animated.timing(flashAnim, { toValue: 0, duration: 200, useNativeDriver: false }),
+        ]).start();
+
         // Shake animation
         Animated.sequence([
-            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 15, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -15, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 15, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -15, duration: 50, useNativeDriver: true }),
             Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
         ]).start();
 
         // Vibration on mobile
         if (Platform.OS !== 'web') {
-            Vibration.vibrate(100);
+            Vibration.vibrate(150);
         }
     };
 
     const playSuccessFeedback = () => {
-        // Glow animation
+        // Quick pulse animation
         Animated.sequence([
-            Animated.timing(glowAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-            Animated.timing(glowAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+            Animated.timing(selectedButtonScale, { toValue: 1.2, duration: 100, useNativeDriver: true }),
+            Animated.timing(selectedButtonScale, { toValue: 1, duration: 100, useNativeDriver: true }),
         ]).start();
     };
 
@@ -215,7 +273,7 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
             playSuccessFeedback();
             setShowFeedback({ type: 'success', regionId });
         } else {
-            // Wrong coloring
+            // Wrong coloring - shake and flash red
             setErrors(prev => prev + 1);
             playErrorFeedback();
             setShowFeedback({ type: 'error', regionId });
@@ -231,7 +289,14 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
             const colorData = COLOR_PALETTE.find(c => c.number === region.colorNumber);
             return colorData?.color || '#FFFFFF';
         }
-        return '#FFFFFF';
+        return '#F5F5F5'; // Light gray for unfilled
+    };
+
+    const getRegionStroke = (region: ColorRegion): string => {
+        if (showFeedback?.regionId === region.id) {
+            return showFeedback.type === 'success' ? '#4CAF50' : '#F44336';
+        }
+        return '#CCCCCC';
     };
 
     const formatTime = (seconds: number): string => {
@@ -242,13 +307,32 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
 
     const progress = regions.filter(r => r.isFilled).length / regions.length;
 
+    // Interpolate flash animation for red overlay
+    const flashOpacity = flashAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 0.3],
+    });
+
+    // Calculate SVG dimensions
+    const svgWidth = isWeb ? 400 : screenW - 60;
+    const svgHeight = isWeb ? 400 : 350;
+
     return (
         <View style={styles.container}>
             {/* Wood texture background */}
             <View style={styles.woodBackground}>
                 {/* Wood grain lines */}
-                {[...Array(20)].map((_, i) => (
-                    <View key={i} style={[styles.woodGrain, { top: i * 40 + Math.random() * 10 }]} />
+                {[...Array(25)].map((_, i) => (
+                    <View
+                        key={i}
+                        style={[
+                            styles.woodGrain,
+                            {
+                                top: i * 35,
+                                opacity: 0.15 + (i % 3) * 0.1,
+                            }
+                        ]}
+                    />
                 ))}
             </View>
 
@@ -267,10 +351,11 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                     <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
                 </View>
 
-                {/* Score */}
+                {/* Score & Cognitive Speed */}
                 <View style={styles.scoreContainer}>
                     <Text style={styles.scoreIcon}>🎓</Text>
                     <Text style={styles.scoreText}>{score}</Text>
+                    <Text style={styles.speedText}>⚡{cognitiveSpeed.toFixed(2)}</Text>
                 </View>
             </View>
 
@@ -278,18 +363,15 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
             <Text style={styles.title}>🎨 Sihirli Tuval: Sayılarla Boyama</Text>
 
             {/* Instructions */}
-            {!selectedColorNumber && (
-                <View style={styles.instructionContainer}>
-                    <Text style={styles.instructionText}>👇 Önce aşağıdan bir renk seç!</Text>
-                </View>
-            )}
-            {selectedColorNumber && (
-                <View style={styles.instructionContainer}>
+            <View style={styles.instructionContainer}>
+                {!selectedColorNumber ? (
+                    <Text style={styles.instructionText}>👇 Önce aşağıdan bir numaralı renk seç!</Text>
+                ) : (
                     <Text style={styles.instructionText}>
-                        👆 Şimdi "{selectedColorNumber}" numaralı bir bölgeye dokun!
+                        👆 Şimdi <Text style={styles.numberHighlight}>{selectedColorNumber}</Text> numaralı alana dokun!
                     </Text>
-                </View>
-            )}
+                )}
+            </View>
 
             {/* Progress bar */}
             <View style={styles.progressContainer}>
@@ -297,43 +379,78 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                 <Text style={styles.progressText}>{Math.round(progress * 100)}% Tamamlandı</Text>
             </View>
 
-            {/* Canvas area - Grid Layout */}
+            {/* SVG Canvas */}
             <Animated.View style={[
                 styles.canvasContainer,
                 { transform: [{ translateX: shakeAnim }] }
             ]}>
+                {/* Red flash overlay */}
+                <Animated.View
+                    style={[
+                        styles.flashOverlay,
+                        { opacity: flashOpacity }
+                    ]}
+                    pointerEvents="none"
+                />
+
                 <View style={styles.canvasFrame}>
-                    <Text style={styles.canvasTitle}>🏝️ Palmiye Adası</Text>
-                    <View style={styles.gridContainer}>
-                        {regions.map((region, index) => (
-                            <TouchableOpacity
-                                key={region.id}
-                                style={[
-                                    styles.gridCell,
-                                    { backgroundColor: getRegionFillColor(region) },
-                                    showFeedback?.regionId === region.id && (
-                                        showFeedback.type === 'success'
-                                            ? styles.cellSuccess
-                                            : styles.cellError
-                                    ),
-                                    region.isFilled && styles.cellFilled,
-                                ]}
-                                onPress={() => handleRegionPress(region.id)}
-                                activeOpacity={0.7}
-                                disabled={region.isFilled}
-                            >
-                                <Text style={styles.cellEmoji}>{region.emoji}</Text>
+                    <Svg
+                        width={svgWidth}
+                        height={svgHeight}
+                        viewBox="0 0 400 400"
+                        style={styles.svgCanvas}
+                    >
+                        {/* Render all regions */}
+                        {regions.map(region => (
+                            <G key={region.id}>
+                                {region.pathType === 'path' ? (
+                                    <Path
+                                        d={region.d}
+                                        fill={getRegionFillColor(region)}
+                                        stroke={getRegionStroke(region)}
+                                        strokeWidth={showFeedback?.regionId === region.id ? 4 : 2}
+                                        onPress={() => handleRegionPress(region.id)}
+                                    />
+                                ) : (
+                                    <Circle
+                                        cx={region.cx}
+                                        cy={region.cy}
+                                        r={region.r}
+                                        fill={getRegionFillColor(region)}
+                                        stroke={getRegionStroke(region)}
+                                        strokeWidth={showFeedback?.regionId === region.id ? 4 : 2}
+                                        onPress={() => handleRegionPress(region.id)}
+                                    />
+                                )}
+                                {/* Number label - only show if not filled */}
                                 {!region.isFilled && (
-                                    <View style={styles.cellNumberBadge}>
-                                        <Text style={styles.cellNumber}>{region.colorNumber}</Text>
-                                    </View>
+                                    <SvgText
+                                        x={region.labelX}
+                                        y={region.labelY}
+                                        fontSize={20}
+                                        fontWeight="bold"
+                                        fill="#666"
+                                        textAnchor="middle"
+                                        onPress={() => handleRegionPress(region.id)}
+                                    >
+                                        {region.colorNumber}
+                                    </SvgText>
                                 )}
+                                {/* Checkmark for filled regions */}
                                 {region.isFilled && (
-                                    <Text style={styles.checkMark}>✓</Text>
+                                    <SvgText
+                                        x={region.labelX}
+                                        y={region.labelY}
+                                        fontSize={24}
+                                        fill="#FFFFFF"
+                                        textAnchor="middle"
+                                    >
+                                        ✓
+                                    </SvgText>
                                 )}
-                            </TouchableOpacity>
+                            </G>
                         ))}
-                    </View>
+                    </Svg>
                 </View>
 
                 {/* Selected color indicator */}
@@ -345,18 +462,17 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                         <View style={[
                             styles.selectedColorPreview,
                             { backgroundColor: COLOR_PALETTE.find(c => c.number === selectedColorNumber)?.color }
-                        ]} />
+                        ]}>
+                            <Text style={styles.selectedNumber}>{selectedColorNumber}</Text>
+                        </View>
                     </View>
                 )}
             </Animated.View>
 
             {/* Color Palette - Claymorphism style */}
             <View style={styles.paletteContainer}>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.paletteScroll}
-                >
+                <Text style={styles.paletteTitle}>Renk Paleti</Text>
+                <View style={styles.palette}>
                     {COLOR_PALETTE.map(colorItem => (
                         <Animated.View
                             key={colorItem.number}
@@ -377,22 +493,26 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                             >
                                 <Text style={styles.colorNumber}>{colorItem.number}</Text>
                             </TouchableOpacity>
+                            <Text style={styles.colorName}>{colorItem.name}</Text>
                         </Animated.View>
                     ))}
-                </ScrollView>
+                </View>
             </View>
 
-            {/* Feedback overlay */}
+            {/* Feedback emoji overlay */}
             {showFeedback && (
-                <View style={[
-                    styles.feedbackOverlay,
-                    showFeedback.type === 'success' ? styles.successOverlay : styles.errorOverlay
-                ]}>
+                <View style={styles.feedbackOverlay}>
                     <Text style={styles.feedbackEmoji}>
                         {showFeedback.type === 'success' ? '✨' : '❌'}
                     </Text>
                 </View>
             )}
+
+            {/* Stats overlay */}
+            <View style={styles.statsOverlay}>
+                <Text style={styles.statText}>✅ {correctAnswers}</Text>
+                <Text style={styles.statText}>❌ {errors}</Text>
+            </View>
 
             {/* Game complete overlay */}
             {isGameComplete && (
@@ -401,7 +521,23 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
                         <Text style={styles.completeEmoji}>🎉</Text>
                         <Text style={styles.completeTitle}>Harika!</Text>
                         <Text style={styles.completeText}>Resmi tamamladın!</Text>
-                        <Text style={styles.completeScore}>Puan: {score}</Text>
+                        <View style={styles.statsRow}>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Puan</Text>
+                                <Text style={styles.statValue}>{score}</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Doğru</Text>
+                                <Text style={[styles.statValue, { color: '#4CAF50' }]}>{correctAnswers}</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Hata</Text>
+                                <Text style={[styles.statValue, { color: '#F44336' }]}>{errors}</Text>
+                            </View>
+                        </View>
+                        <Text style={styles.cognitiveLabel}>
+                            ⚡ Bilişsel Hız: {cognitiveSpeed.toFixed(3)}
+                        </Text>
                     </View>
                 </View>
             )}
@@ -424,8 +560,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         left: 0,
         right: 0,
-        height: 2,
-        backgroundColor: 'rgba(139, 69, 19, 0.3)',
+        height: 3,
+        backgroundColor: '#5D2E0C',
     },
 
     // Header
@@ -440,23 +576,28 @@ const styles = StyleSheet.create({
     },
     exitBtn: {
         padding: 10,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: 'rgba(0,0,0,0.4)',
         borderRadius: 20,
     },
     timerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        backgroundColor: 'rgba(255,255,255,0.95)',
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 20,
         gap: 8,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
     timerIcon: {
-        fontSize: 20,
+        fontSize: 18,
     },
     timerBar: {
-        width: 80,
+        width: 60,
         height: 8,
         backgroundColor: '#E0E0E0',
         borderRadius: 4,
@@ -475,55 +616,72 @@ const styles = StyleSheet.create({
     scoreContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        backgroundColor: 'rgba(255,255,255,0.95)',
         paddingHorizontal: 12,
         paddingVertical: 8,
         borderRadius: 20,
         gap: 6,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
     scoreIcon: {
-        fontSize: 20,
+        fontSize: 18,
     },
     scoreText: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#333',
     },
+    speedText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#FF9800',
+        marginLeft: 5,
+    },
 
     // Title
     title: {
-        fontSize: isWeb ? 24 : 20,
+        fontSize: isWeb ? 24 : 18,
         fontWeight: 'bold',
         color: '#FFF',
         textAlign: 'center',
         marginVertical: 5,
-        textShadowColor: 'rgba(0,0,0,0.5)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3,
+        textShadowColor: 'rgba(0,0,0,0.6)',
+        textShadowOffset: { width: 2, height: 2 },
+        textShadowRadius: 4,
     },
 
     // Instructions
     instructionContainer: {
-        backgroundColor: 'rgba(255,255,255,0.9)',
+        backgroundColor: 'rgba(255,255,255,0.95)',
         marginHorizontal: 20,
-        paddingVertical: 8,
+        paddingVertical: 10,
         paddingHorizontal: 15,
         borderRadius: 15,
-        marginBottom: 5,
+        marginBottom: 8,
+        elevation: 3,
     },
     instructionText: {
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: '600',
         color: '#333',
         textAlign: 'center',
     },
+    numberHighlight: {
+        color: '#E91E63',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
 
     // Progress
     progressContainer: {
-        height: 20,
+        height: 22,
         backgroundColor: 'rgba(255,255,255,0.3)',
         marginHorizontal: 20,
-        borderRadius: 10,
+        borderRadius: 11,
         marginBottom: 10,
         overflow: 'hidden',
         justifyContent: 'center',
@@ -534,13 +692,16 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         backgroundColor: '#4CAF50',
-        borderRadius: 10,
+        borderRadius: 11,
     },
     progressText: {
         fontSize: 12,
         fontWeight: 'bold',
         color: '#FFF',
         textAlign: 'center',
+        textShadowColor: 'rgba(0,0,0,0.3)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
     },
 
     // Canvas
@@ -549,137 +710,57 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 15,
-    },
-    canvasFrame: {
-        backgroundColor: '#FFFAF0',
-        borderRadius: 15,
-        padding: 15,
-        elevation: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        borderWidth: 8,
-        borderColor: '#DEB887',
-        width: isWeb ? 400 : screenW - 40,
-    },
-    canvasTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    gridContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 8,
-    },
-    gridCell: {
-        width: isWeb ? 100 : (screenW - 100) / 3,
-        height: isWeb ? 80 : 70,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#DDD',
-        justifyContent: 'center',
-        alignItems: 'center',
         position: 'relative',
     },
-    cellFilled: {
-        borderColor: '#4CAF50',
-        borderWidth: 3,
+    flashOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: '#FF0000',
+        borderRadius: 15,
+        zIndex: 10,
     },
-    cellSuccess: {
-        borderColor: '#4CAF50',
-        borderWidth: 4,
+    canvasFrame: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
+        padding: 10,
+        elevation: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        borderWidth: 6,
+        borderColor: '#DEB887',
     },
-    cellError: {
-        borderColor: '#F44336',
-        borderWidth: 4,
-    },
-    cellEmoji: {
-        fontSize: 28,
-    },
-    cellNumberBadge: {
-        position: 'absolute',
-        top: 5,
-        right: 5,
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        width: 22,
-        height: 22,
-        borderRadius: 11,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    cellNumber: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#FFF',
-    },
-    checkMark: {
-        position: 'absolute',
-        top: 5,
-        right: 5,
-        fontSize: 16,
-        color: '#4CAF50',
-        fontWeight: 'bold',
+    svgCanvas: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
     },
     selectedIndicator: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 10,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        paddingHorizontal: 15,
-        paddingVertical: 8,
-        borderRadius: 20,
-        gap: 10,
+        marginTop: 12,
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        paddingHorizontal: 18,
+        paddingVertical: 10,
+        borderRadius: 25,
+        gap: 12,
+        elevation: 5,
     },
     selectedText: {
-        fontSize: 14,
+        fontSize: 15,
         fontWeight: '600',
         color: '#333',
     },
     selectedColorPreview: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#333',
-    },
-
-    // Palette - Claymorphism
-    paletteContainer: {
-        paddingVertical: 15,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-    },
-    paletteScroll: {
-        paddingHorizontal: 15,
-        gap: 10,
-    },
-    colorButton: {
-        width: isWeb ? 60 : 55,
-        height: isWeb ? 60 : 55,
+        width: 36,
+        height: 36,
         borderRadius: 18,
+        borderWidth: 3,
+        borderColor: '#333',
         justifyContent: 'center',
         alignItems: 'center',
-        // Claymorphism effect
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 8,
-        borderWidth: 3,
-        borderColor: 'rgba(255,255,255,0.5)',
-        marginHorizontal: 5,
     },
-    colorButtonSelected: {
-        borderColor: '#333',
-        borderWidth: 4,
-        transform: [{ scale: 1.1 }],
-    },
-    colorNumber: {
-        fontSize: 20,
+    selectedNumber: {
+        fontSize: 16,
         fontWeight: 'bold',
         color: '#FFF',
         textShadowColor: 'rgba(0,0,0,0.5)',
@@ -687,55 +768,156 @@ const styles = StyleSheet.create({
         textShadowRadius: 2,
     },
 
+    // Palette - Claymorphism
+    paletteContainer: {
+        paddingVertical: 15,
+        paddingHorizontal: 10,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+    },
+    paletteTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#FFF',
+        textAlign: 'center',
+        marginBottom: 10,
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 1, height: 1 },
+        textShadowRadius: 2,
+    },
+    palette: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 15,
+    },
+    colorButton: {
+        width: isWeb ? 70 : 65,
+        height: isWeb ? 70 : 65,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        // Claymorphism effect
+        shadowColor: '#000',
+        shadowOffset: { width: 6, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
+        elevation: 10,
+        borderWidth: 4,
+        borderTopColor: 'rgba(255,255,255,0.6)',
+        borderLeftColor: 'rgba(255,255,255,0.6)',
+        borderRightColor: 'rgba(0,0,0,0.15)',
+        borderBottomColor: 'rgba(0,0,0,0.2)',
+    },
+    colorButtonSelected: {
+        borderColor: '#333',
+        borderWidth: 5,
+        transform: [{ scale: 1.15 }],
+    },
+    colorNumber: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#FFF',
+        textShadowColor: 'rgba(0,0,0,0.5)',
+        textShadowOffset: { width: 2, height: 2 },
+        textShadowRadius: 3,
+    },
+    colorName: {
+        fontSize: 10,
+        color: '#FFF',
+        textAlign: 'center',
+        marginTop: 5,
+        fontWeight: '500',
+    },
+
+    // Stats overlay
+    statsOverlay: {
+        position: 'absolute',
+        top: Platform.OS === 'web' ? 60 : 95,
+        right: 15,
+        flexDirection: 'row',
+        gap: 10,
+        zIndex: 30,
+    },
+    statText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: '#FFF',
+        backgroundColor: 'rgba(0,0,0,0.4)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 10,
+    },
+
     // Feedback
     feedbackOverlay: {
         position: 'absolute',
-        top: '40%',
-        left: '40%',
-        right: '40%',
+        top: '45%',
+        left: 0,
+        right: 0,
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 100,
     },
-    successOverlay: {},
-    errorOverlay: {},
     feedbackEmoji: {
-        fontSize: 60,
+        fontSize: 80,
     },
 
     // Complete
     completeOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.7)',
+        backgroundColor: 'rgba(0,0,0,0.75)',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 200,
     },
     completeCard: {
         backgroundColor: '#FFF',
-        borderRadius: 25,
-        padding: 30,
+        borderRadius: 30,
+        padding: 35,
         alignItems: 'center',
-        elevation: 20,
+        elevation: 25,
+        width: isWeb ? 350 : screenW - 60,
     },
     completeEmoji: {
-        fontSize: 60,
-        marginBottom: 10,
+        fontSize: 70,
+        marginBottom: 15,
     },
     completeTitle: {
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: 'bold',
         color: '#4CAF50',
-        marginBottom: 5,
+        marginBottom: 8,
     },
     completeText: {
         fontSize: 18,
         color: '#666',
-        marginBottom: 10,
+        marginBottom: 20,
     },
-    completeScore: {
-        fontSize: 20,
+    statsRow: {
+        flexDirection: 'row',
+        gap: 20,
+        marginBottom: 15,
+    },
+    statBox: {
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        borderRadius: 15,
+    },
+    statLabel: {
+        fontSize: 12,
+        color: '#888',
+        marginBottom: 4,
+    },
+    statValue: {
+        fontSize: 24,
         fontWeight: 'bold',
         color: '#333',
+    },
+    cognitiveLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#FF9800',
+        marginTop: 10,
     },
 });
