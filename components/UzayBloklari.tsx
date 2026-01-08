@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Animated,
     Dimensions,
     Platform,
@@ -11,6 +12,7 @@ import {
     View
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { speak } from '../services/speechService';
 
 // ============= TYPES =============
 interface UzayBloklariProps {
@@ -103,18 +105,24 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const rocketAnim = useRef(new Animated.Value(0)).current;
     const starAnim = useRef(new Animated.Value(0)).current;
 
-    // TTS greeting
+    // TTS Loading State
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    // TTS greeting with OpenAI
     useEffect(() => {
         const greet = async () => {
             if (Platform.OS === 'web') {
+                setIsSpeaking(true);
                 try {
-                    const utterance = new SpeechSynthesisUtterance(
-                        `Merhaba ${childName}, bugün blokları yerleştirmemize yardım eder misin?`
+                    await speak(
+                        `Merhaba ${childName}, Uzay Blokları oyununa hoş geldin! Blokları yerleştirmeme yardım eder misin?`,
+                        { voice: 'nova' }
                     );
-                    utterance.lang = 'tr-TR';
-                    utterance.rate = 0.9;
-                    window.speechSynthesis.speak(utterance);
-                } catch (e) { console.log('TTS error:', e); }
+                } catch (e) {
+                    console.log('TTS error:', e);
+                } finally {
+                    setIsSpeaking(false);
+                }
             }
         };
         greet();
@@ -513,6 +521,16 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 )
             }
 
+            {/* Speaking Indicator */}
+            {isSpeaking && (
+                <View style={styles.speakingOverlay}>
+                    <View style={styles.speakingCard}>
+                        <ActivityIndicator size="large" color="#BF40BF" />
+                        <Text style={styles.speakingText}>🔊 Dinle...</Text>
+                    </View>
+                </View>
+            )}
+
             {/* Game Complete Overlay */}
             {
                 isGameComplete && !rocketLaunch && (
@@ -859,5 +877,32 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#FFF',
+    },
+
+    // Speaking Overlay
+    speakingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    speakingCard: {
+        backgroundColor: '#1a1a2e',
+        padding: 30,
+        borderRadius: 20,
+        alignItems: 'center',
+        gap: 15,
+        borderWidth: 2,
+        borderColor: '#BF40BF',
+    },
+    speakingText: {
+        color: '#FFF',
+        fontSize: 18,
+        fontWeight: 'bold',
     },
 });
