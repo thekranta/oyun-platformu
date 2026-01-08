@@ -1,14 +1,10 @@
 /**
- * OpenAI TTS Service
- * Text-to-Speech using OpenAI's audio/speech API
- * Uses tts-1 model with 'nova' voice (maple fallback if available)
+ * OpenAI TTS Service (Secure Version)
+ * Uses server-side /api/tts endpoint to protect API key
  */
 
 // Cache for audio blobs to avoid repeated API calls
 const audioCache = new Map<string, string>();
-
-// Environment variable for API key
-const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
 export interface SpeechOptions {
     voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
@@ -23,7 +19,7 @@ export interface SpeechResult {
 }
 
 /**
- * Generate speech from text using OpenAI TTS API
+ * Generate speech from text using secure server-side API
  * Returns a blob URL that can be played with Audio element
  */
 export async function generateSpeech(
@@ -45,42 +41,41 @@ export async function generateSpeech(
         };
     }
 
-    // Check API key
-    if (!OPENAI_API_KEY) {
-        console.warn('OpenAI API key not found, falling back to browser TTS');
-        return {
-            success: false,
-            error: 'API key not configured'
-        };
-    }
-
     try {
-        const response = await fetch('https://api.openai.com/v1/audio/speech', {
+        // Call secure server-side API route
+        const response = await fetch('/api/tts', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${OPENAI_API_KEY}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model,
-                input: text,
+                text,
                 voice,
-                speed,
-                response_format: 'mp3'
+                model,
+                speed
             }),
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('OpenAI TTS Error:', response.status, errorText);
+            const errorData = await response.json().catch(() => ({}));
+            console.error('TTS API Error:', response.status, errorData);
             return {
                 success: false,
-                error: `API Error: ${response.status}`
+                error: errorData.error || `API Error: ${response.status}`
             };
         }
 
-        // Get audio blob
-        const audioBlob = await response.blob();
+        const data = await response.json();
+
+        if (!data.audio) {
+            return {
+                success: false,
+                error: 'No audio data received'
+            };
+        }
+
+        // Convert base64 to blob URL
+        const audioBlob = base64ToBlob(data.audio, 'audio/mp3');
         const audioUrl = URL.createObjectURL(audioBlob);
 
         // Cache the result
@@ -100,8 +95,21 @@ export async function generateSpeech(
 }
 
 /**
+ * Convert base64 string to Blob
+ */
+function base64ToBlob(base64: string, mimeType: string): Blob {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+}
+
+/**
  * Play speech audio from text
- * Falls back to browser TTS if OpenAI fails
+ * Falls back to browser TTS if API fails
  */
 export async function speak(
     text: string,
