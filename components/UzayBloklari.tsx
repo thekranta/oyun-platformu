@@ -4,6 +4,7 @@ import {
     ActivityIndicator,
     Animated,
     Dimensions,
+    PanResponder,
     Platform,
     StyleSheet,
     Text,
@@ -30,9 +31,10 @@ interface UzayBloklariProps {
 
 interface Block {
     id: string;
-    shape: number[][]; // 2D array representing shape
+    shape: number[][];
     color: string;
     placed: boolean;
+    position?: { row: number; col: number };
 }
 
 interface GridCell {
@@ -52,10 +54,10 @@ interface MoveData {
 // ============= CONFIG =============
 const { width: screenW, height: screenH } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
-const GRID_SIZE = 4; // 4x4 grid
+const GRID_SIZE = 4;
 const CELL_SIZE = isWeb ? 60 : Math.floor((screenW - 80) / GRID_SIZE);
+const BLOCK_CELL_SIZE = isWeb ? 25 : 20;
 
-// Neon colors
 const COLORS = {
     neonGreen: '#39FF14',
     neonPurple: '#BF40BF',
@@ -64,17 +66,11 @@ const COLORS = {
     neonPink: '#FF69B4',
 };
 
-// Block shapes (Tetris-like)
 const BLOCK_SHAPES: { shape: number[][]; color: string }[] = [
-    // Square 2x2
     { shape: [[1, 1], [1, 1]], color: COLORS.neonYellow },
-    // L shape
     { shape: [[1, 0], [1, 0], [1, 1]], color: COLORS.neonPurple },
-    // Line 3x1
     { shape: [[1, 1, 1]], color: COLORS.neonGreen },
-    // T shape
     { shape: [[1, 1, 1], [0, 1, 0]], color: COLORS.neonCyan },
-    // S shape
     { shape: [[0, 1, 1], [1, 1, 0]], color: COLORS.neonPink },
 ];
 
@@ -86,27 +82,31 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         )
     );
     const [blocks, setBlocks] = useState<Block[]>([]);
-    const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
-    const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
+    const [gridRotation, setGridRotation] = useState(0); // 0, 90, 180, 270
     const [moveHistory, setMoveHistory] = useState<MoveData[]>([]);
     const [errors, setErrors] = useState(0);
     const [score, setScore] = useState(0);
     const [gameStart] = useState(Date.now());
     const [lastActionTime, setLastActionTime] = useState<number>(Date.now());
-    const [timeLeft, setTimeLeft] = useState(180); // 3 dakika
+    const [timeLeft, setTimeLeft] = useState(180);
     const [isGameComplete, setIsGameComplete] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [rocketLaunch, setRocketLaunch] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    // Dragging state
+    const [draggingBlock, setDraggingBlock] = useState<Block | null>(null);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const dragAnim = useRef(new Animated.ValueXY()).current;
+    const gridRef = useRef<View>(null);
+    const [gridLayout, setGridLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
     // Animations
     const glowAnim = useRef(new Animated.Value(0)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const rocketAnim = useRef(new Animated.Value(0)).current;
     const starAnim = useRef(new Animated.Value(0)).current;
-
-    // TTS Loading State
-    const [isSpeaking, setIsSpeaking] = useState(false);
+    const rotationAnim = useRef(new Animated.Value(0)).current;
 
     // TTS greeting with OpenAI
     useEffect(() => {
@@ -142,7 +142,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     // Timer
     useEffect(() => {
         if (isGameComplete) return;
-
         const timer = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
@@ -153,7 +152,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 return prev - 1;
             });
         }, 1000);
-
         return () => clearInterval(timer);
     }, [isGameComplete]);
 
@@ -166,7 +164,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     }, [grid, blocks]);
 
     const initializeBlocks = () => {
-        // Create random blocks that can fill the grid
         const newBlocks: Block[] = BLOCK_SHAPES.slice(0, 4).map((b, idx) => ({
             id: `block-${idx}`,
             shape: b.shape,
@@ -180,8 +177,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const handleGameComplete = () => {
         setIsGameComplete(true);
         setRocketLaunch(true);
-
-        // Rocket launch animation
         Animated.timing(rocketAnim, {
             toValue: -screenH,
             duration: 2000,
@@ -190,7 +185,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             setShowConfetti(true);
             setTimeout(finishGame, 2000);
         });
-
         if (Platform.OS !== 'web') {
             Vibration.vibrate([0, 100, 100, 200, 100, 300]);
         }
@@ -203,48 +197,24 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         const avgResponseTime = moveHistory.length > 0
             ? moveHistory.reduce((sum, m) => sum + m.responseTime, 0) / moveHistory.length
             : 0;
-
-        // Görsel Dikkat Skoru: (Doğru Hamle / Toplam Süre) * 100
         const visualAttentionScore = duration > 0
-            ? Math.min(100, Math.round((correctMoves / duration) * 100))
+            ? Math.min(100, Math.round((correctMoves / Math.max(duration, 1)) * 100))
             : 0;
 
-        onGameEnd('uzay-bloklari', duration, totalMoves, errors, undefined, {
-            zorlukSeviyesi: 1,
-            kazanimOdagi: 'Problem Çözme ve Uzamsal Algı',
+        onGameEnd('uzay-bloklari', duration, totalMoves, errors, null, {
             response_time: Math.round(avgResponseTime),
-            correct_answers: correctMoves,
-            cognitive_speed_score: duration > 0 ? Math.round((correctMoves / duration) * 1000) / 1000 : 0,
+            error_count: errors,
             visual_attention_score: visualAttentionScore,
-            round_history: moveHistory,
+            moveHistory,
+            gridRotation,
         });
     };
 
-    const playSuccessFeedback = () => {
-        Animated.sequence([
-            Animated.timing(glowAnim, { toValue: 1, duration: 200, useNativeDriver: false }),
-            Animated.timing(glowAnim, { toValue: 0, duration: 300, useNativeDriver: false }),
-        ]).start();
-    };
-
-    const playErrorFeedback = () => {
-        Animated.sequence([
-            Animated.timing(shakeAnim, { toValue: 15, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -15, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
-        ]).start();
-
-        if (Platform.OS !== 'web') {
-            Vibration.vibrate(100);
-        }
-    };
-
     const canPlaceBlock = (block: Block, startRow: number, startCol: number): boolean => {
-        for (let r = 0; r < block.shape.length; r++) {
-            for (let c = 0; c < block.shape[r].length; c++) {
-                if (block.shape[r][c] === 1) {
+        const shape = block.shape;
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[r].length; c++) {
+                if (shape[r][c] === 1) {
                     const gridRow = startRow + r;
                     const gridCol = startCol + c;
                     if (gridRow >= GRID_SIZE || gridCol >= GRID_SIZE || gridRow < 0 || gridCol < 0) {
@@ -260,13 +230,12 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     };
 
     const placeBlock = (block: Block, startRow: number, startCol: number) => {
-        const newGrid = [...grid.map(row => [...row])];
-        for (let r = 0; r < block.shape.length; r++) {
-            for (let c = 0; c < block.shape[r].length; c++) {
-                if (block.shape[r][c] === 1) {
-                    const gridRow = startRow + r;
-                    const gridCol = startCol + c;
-                    newGrid[gridRow][gridCol] = {
+        const newGrid = grid.map(row => row.map(cell => ({ ...cell })));
+        const shape = block.shape;
+        for (let r = 0; r < shape.length; r++) {
+            for (let c = 0; c < shape[r].length; c++) {
+                if (shape[r][c] === 1) {
+                    newGrid[startRow + r][startCol + c] = {
                         filled: true,
                         color: block.color,
                         blockId: block.id,
@@ -275,13 +244,9 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             }
         }
         setGrid(newGrid);
-
-        // Mark block as placed
         setBlocks(prev => prev.map(b =>
-            b.id === block.id ? { ...b, placed: true } : b
+            b.id === block.id ? { ...b, placed: true, position: { row: startRow, col: startCol } } : b
         ));
-
-        // Record move
         const responseTime = Date.now() - lastActionTime;
         setMoveHistory(prev => [...prev, {
             blockId: block.id,
@@ -291,65 +256,114 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             timestamp: Date.now(),
         }]);
         setLastActionTime(Date.now());
-
         setScore(prev => prev + 25);
         playSuccessFeedback();
     };
 
-    const handleBlockSelect = (block: Block) => {
-        if (block.placed) return;
-        setSelectedBlock(block);
-    };
+    // UNDO - Remove last placed block
+    const handleUndo = () => {
+        const lastPlacedBlock = [...blocks].reverse().find(b => b.placed);
+        if (!lastPlacedBlock) return;
 
-    // Rotate block shape 90 degrees clockwise
-    const handleRotateBlock = () => {
-        if (!selectedBlock) return;
+        // Remove block from grid
+        const newGrid = grid.map(row => row.map(cell =>
+            cell.blockId === lastPlacedBlock.id
+                ? { filled: false, color: null, blockId: null }
+                : cell
+        ));
+        setGrid(newGrid);
 
-        const rotateShape = (shape: number[][]): number[][] => {
-            const rows = shape.length;
-            const cols = shape[0].length;
-            const rotated: number[][] = [];
-            for (let c = 0; c < cols; c++) {
-                const newRow: number[] = [];
-                for (let r = rows - 1; r >= 0; r--) {
-                    newRow.push(shape[r][c]);
-                }
-                rotated.push(newRow);
-            }
-            return rotated;
-        };
-
-        const newShape = rotateShape(selectedBlock.shape);
-
-        // Update blocks array with rotated shape
+        // Mark block as not placed
         setBlocks(prev => prev.map(b =>
-            b.id === selectedBlock.id ? { ...b, shape: newShape } : b
+            b.id === lastPlacedBlock.id ? { ...b, placed: false, position: undefined } : b
         ));
 
-        // Update selected block reference
-        setSelectedBlock(prev => prev ? { ...prev, shape: newShape } : null);
+        // Optional: Reduce score
+        setScore(prev => Math.max(0, prev - 25));
     };
 
-    const handleGridCellPress = (row: number, col: number) => {
-        if (!selectedBlock || grid[row][col].filled) return;
+    // ROTATE GRID (not blocks)
+    const handleRotateGrid = () => {
+        const newRotation = (gridRotation + 90) % 360;
+        setGridRotation(newRotation);
 
-        if (canPlaceBlock(selectedBlock, row, col)) {
-            placeBlock(selectedBlock, row, col);
-            setSelectedBlock(null);
-        } else {
-            // Wrong placement
-            setErrors(prev => prev + 1);
-            playErrorFeedback();
+        Animated.timing(rotationAnim, {
+            toValue: newRotation,
+            duration: 300,
+            useNativeDriver: true,
+        }).start();
+    };
 
-            setMoveHistory(prev => [...prev, {
-                blockId: selectedBlock.id,
-                targetCell: { row, col },
-                isCorrect: false,
-                responseTime: Date.now() - lastActionTime,
-                timestamp: Date.now(),
-            }]);
-            setLastActionTime(Date.now());
+    const playSuccessFeedback = () => {
+        Animated.sequence([
+            Animated.timing(glowAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
+            Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+        ]).start();
+        if (Platform.OS !== 'web') {
+            Vibration.vibrate(50);
         }
+    };
+
+    const playErrorFeedback = () => {
+        Animated.sequence([
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
+        ]).start();
+        if (Platform.OS !== 'web') {
+            Vibration.vibrate([0, 100, 50, 100]);
+        }
+    };
+
+    // Handle drop on grid
+    const handleDrop = (block: Block, dropX: number, dropY: number) => {
+        // Calculate grid cell from drop position
+        const col = Math.floor((dropX - gridLayout.x) / CELL_SIZE);
+        const row = Math.floor((dropY - gridLayout.y) / CELL_SIZE);
+
+        if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
+            if (canPlaceBlock(block, row, col)) {
+                placeBlock(block, row, col);
+            } else {
+                setErrors(prev => prev + 1);
+                playErrorFeedback();
+                setMoveHistory(prev => [...prev, {
+                    blockId: block.id,
+                    targetCell: { row, col },
+                    isCorrect: false,
+                    responseTime: Date.now() - lastActionTime,
+                    timestamp: Date.now(),
+                }]);
+                setLastActionTime(Date.now());
+            }
+        }
+        setDraggingBlock(null);
+        dragAnim.setValue({ x: 0, y: 0 });
+    };
+
+    // PanResponder for dragging blocks
+    const createPanResponder = (block: Block) => {
+        return PanResponder.create({
+            onStartShouldSetPanResponder: () => !block.placed,
+            onMoveShouldSetPanResponder: () => !block.placed,
+            onPanResponderGrant: (evt) => {
+                setDraggingBlock(block);
+                const { pageX, pageY } = evt.nativeEvent;
+                setDragOffset({ x: pageX, y: pageY });
+            },
+            onPanResponderMove: (evt, gestureState) => {
+                dragAnim.setValue({ x: gestureState.dx, y: gestureState.dy });
+            },
+            onPanResponderRelease: (evt) => {
+                const { pageX, pageY } = evt.nativeEvent;
+                handleDrop(block, pageX, pageY);
+            },
+            onPanResponderTerminate: () => {
+                setDraggingBlock(null);
+                dragAnim.setValue({ x: 0, y: 0 });
+            },
+        });
     };
 
     const formatTime = (seconds: number): string => {
@@ -358,7 +372,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
-    // Calculate progress
     const filledCells = grid.flat().filter(c => c.filled).length;
     const totalCells = GRID_SIZE * GRID_SIZE;
     const progress = filledCells / totalCells;
@@ -366,6 +379,11 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const glowOpacity = glowAnim.interpolate({
         inputRange: [0, 1],
         outputRange: [0, 0.6],
+    });
+
+    const gridRotationInterpolate = rotationAnim.interpolate({
+        inputRange: [0, 90, 180, 270, 360],
+        outputRange: ['0deg', '90deg', '180deg', '270deg', '360deg'],
     });
 
     return (
@@ -384,12 +402,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                                     inputRange: [0, 1],
                                     outputRange: [0.3 + (i % 5) * 0.15, 0.8 + (i % 3) * 0.1],
                                 }),
-                                transform: [{
-                                    scale: starAnim.interpolate({
-                                        inputRange: [0, 1],
-                                        outputRange: [0.8, 1.2],
-                                    })
-                                }],
                             }
                         ]}
                     />
@@ -409,88 +421,106 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     </View>
                 </View>
 
-                {/* Progress - moved to header */}
                 <View style={styles.progressContainerHeader}>
                     <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
                     <Text style={styles.progressText}>{Math.round(progress * 100)}%</Text>
                 </View>
             </View>
 
-            {/* Grid Area */}
+            {/* Grid Area with Rotation */}
             <View style={styles.gridContainer}>
                 <Animated.View
-                    style={[
-                        styles.gridGlow,
-                        { opacity: glowOpacity }
-                    ]}
-                />
-                <Animated.View
+                    ref={gridRef}
+                    onLayout={(e) => {
+                        const { x, y, width, height } = e.nativeEvent.layout;
+                        gridRef.current?.measureInWindow((wx, wy) => {
+                            setGridLayout({ x: wx, y: wy, width, height });
+                        });
+                    }}
                     style={[
                         styles.grid,
-                        { transform: [{ translateX: shakeAnim }] }
+                        { transform: [{ rotate: gridRotationInterpolate }, { translateX: shakeAnim }] }
                     ]}
                 >
+                    <Animated.View style={[styles.gridGlow, { opacity: glowOpacity }]} />
                     {grid.map((row, rowIndex) => (
                         <View key={rowIndex} style={styles.gridRow}>
                             {row.map((cell, colIndex) => (
-                                <TouchableOpacity
+                                <View
                                     key={`${rowIndex}-${colIndex}`}
                                     style={[
                                         styles.gridCell,
                                         cell.filled && { backgroundColor: cell.color || 'transparent' },
-                                        selectedBlock && !cell.filled && styles.gridCellHighlight,
                                     ]}
-                                    onPress={() => handleGridCellPress(rowIndex, colIndex)}
-                                    activeOpacity={0.7}
                                 >
                                     {cell.filled && (
                                         <Text style={styles.cellStar}>✨</Text>
                                     )}
-                                </TouchableOpacity>
+                                </View>
                             ))}
                         </View>
                     ))}
                 </Animated.View>
             </View>
 
-            {/* Rotate Button - showed when block is selected */}
-            {selectedBlock && (
-                <TouchableOpacity style={styles.rotateButton} onPress={handleRotateBlock}>
+            {/* Control Buttons - Rotate Grid & Undo */}
+            <View style={styles.controlsRow}>
+                <TouchableOpacity style={styles.controlButton} onPress={handleRotateGrid}>
                     <Ionicons name="refresh" size={24} color="#FFF" />
-                    <Text style={styles.rotateButtonText}>Döndür</Text>
+                    <Text style={styles.controlButtonText}>Alanı Döndür</Text>
                 </TouchableOpacity>
-            )}
 
-            {/* Blocks Palette */}
+                <TouchableOpacity
+                    style={[styles.controlButton, styles.undoButton]}
+                    onPress={handleUndo}
+                    disabled={!blocks.some(b => b.placed)}
+                >
+                    <Ionicons name="arrow-undo" size={24} color="#FFF" />
+                    <Text style={styles.controlButtonText}>Geri Al</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Blocks Palette - Draggable */}
             <View style={styles.blocksContainer}>
-                {blocks.filter(b => !b.placed).map(block => (
-                    <TouchableOpacity
-                        key={block.id}
-                        style={[
-                            styles.blockWrapper,
-                            selectedBlock?.id === block.id && styles.blockSelected,
-                        ]}
-                        onPress={() => handleBlockSelect(block)}
-                        activeOpacity={0.8}
-                    >
-                        <View style={styles.blockShape}>
-                            {block.shape.map((row, ri) => (
-                                <View key={ri} style={styles.blockRow}>
-                                    {row.map((cell, ci) => (
-                                        <View
-                                            key={ci}
-                                            style={[
-                                                styles.blockCell,
-                                                cell === 1 && { backgroundColor: block.color },
-                                                cell === 0 && styles.blockCellEmpty,
-                                            ]}
-                                        />
+                <Text style={styles.blocksTitle}>Blokları sürükle ve bırak:</Text>
+                <View style={styles.blocksPalette}>
+                    {blocks.filter(b => !b.placed).map(block => {
+                        const panResponder = createPanResponder(block);
+                        const isBeingDragged = draggingBlock?.id === block.id;
+
+                        return (
+                            <Animated.View
+                                key={block.id}
+                                {...panResponder.panHandlers}
+                                style={[
+                                    styles.blockWrapper,
+                                    isBeingDragged && {
+                                        transform: dragAnim.getTranslateTransform(),
+                                        zIndex: 1000,
+                                        opacity: 0.8,
+                                    },
+                                ]}
+                            >
+                                <View style={styles.blockShape}>
+                                    {block.shape.map((row, ri) => (
+                                        <View key={ri} style={styles.blockRow}>
+                                            {row.map((cell, ci) => (
+                                                <View
+                                                    key={ci}
+                                                    style={[
+                                                        styles.blockCell,
+                                                        cell === 1 && { backgroundColor: block.color },
+                                                        cell === 0 && styles.blockCellEmpty,
+                                                    ]}
+                                                />
+                                            ))}
+                                        </View>
                                     ))}
                                 </View>
-                            ))}
-                        </View>
-                    </TouchableOpacity>
-                ))}
+                            </Animated.View>
+                        );
+                    })}
+                </View>
             </View>
 
             {/* Rocket Launch Animation */}
@@ -506,20 +536,17 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                         <Text style={styles.flameEmoji}>🔥</Text>
                     </View>
                 </Animated.View>
-            )
-            }
+            )}
 
             {/* Confetti */}
-            {
-                showConfetti && (
-                    <ConfettiCannon
-                        count={200}
-                        origin={{ x: screenW / 2, y: 0 }}
-                        fallSpeed={3000}
-                        fadeOut
-                    />
-                )
-            }
+            {showConfetti && (
+                <ConfettiCannon
+                    count={200}
+                    origin={{ x: screenW / 2, y: 0 }}
+                    fallSpeed={3000}
+                    fadeOut
+                />
+            )}
 
             {/* Speaking Indicator */}
             {isSpeaking && (
@@ -532,28 +559,26 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             )}
 
             {/* Game Complete Overlay */}
-            {
-                isGameComplete && !rocketLaunch && (
-                    <View style={styles.completeOverlay}>
-                        <View style={styles.completeCard}>
-                            <Text style={styles.completeEmoji}>🌌🎉</Text>
-                            <Text style={styles.completeTitle}>Blokları Yerleştirdin!</Text>
-                            <Text style={styles.completeText}>Harika bir mimar oldun!</Text>
-                            <View style={styles.statsRow}>
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statLabel}>Puan</Text>
-                                    <Text style={styles.statValue}>{score}</Text>
-                                </View>
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statLabel}>Hata</Text>
-                                    <Text style={[styles.statValue, { color: '#F44336' }]}>{errors}</Text>
-                                </View>
+            {isGameComplete && !rocketLaunch && (
+                <View style={styles.completeOverlay}>
+                    <View style={styles.completeCard}>
+                        <Text style={styles.completeEmoji}>🌌🎉</Text>
+                        <Text style={styles.completeTitle}>Blokları Yerleştirdin!</Text>
+                        <Text style={styles.completeText}>Harika bir mimar oldun!</Text>
+                        <View style={styles.statsRow}>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Puan</Text>
+                                <Text style={styles.statValue}>{score}</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <Text style={styles.statLabel}>Hata</Text>
+                                <Text style={[styles.statValue, { color: '#F44336' }]}>{errors}</Text>
                             </View>
                         </View>
                     </View>
-                )
-            }
-        </View >
+                </View>
+            )}
+        </View>
     );
 }
 
@@ -561,53 +586,51 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0a0a2e',
+        backgroundColor: '#0a0a1a',
     },
     starsContainer: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         overflow: 'hidden',
     },
     star: {
         position: 'absolute',
-        width: 4,
-        height: 4,
-        borderRadius: 2,
+        width: 3,
+        height: 3,
+        borderRadius: 1.5,
         backgroundColor: '#FFF',
     },
-
-    // Header
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingTop: Platform.OS === 'web' ? 15 : 50,
         paddingHorizontal: 15,
+        paddingTop: Platform.OS === 'web' ? 20 : 50,
         paddingBottom: 10,
-        zIndex: 20,
     },
     exitBtn: {
-        padding: 12,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         backgroundColor: 'rgba(255,255,255,0.15)',
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     timerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'linear-gradient(135deg, #667eea, #764ba2)',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
-        gap: 8,
-        borderWidth: 2,
-        borderColor: 'rgba(191, 64, 191, 0.5)',
+        flex: 1,
+        marginHorizontal: 15,
     },
     timerIcon: {
-        fontSize: 18,
+        fontSize: 20,
+        marginRight: 8,
     },
     timerBar: {
-        width: 60,
+        flex: 1,
         height: 8,
         backgroundColor: 'rgba(255,255,255,0.2)',
         borderRadius: 4,
@@ -615,101 +638,8 @@ const styles = StyleSheet.create({
     },
     timerFill: {
         height: '100%',
-        backgroundColor: '#BF40BF',
-        borderRadius: 4,
-    },
-    timerText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#FFF',
-    },
-    scoreContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,215,0,0.2)',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
-        gap: 6,
-        borderWidth: 2,
-        borderColor: 'rgba(255,215,0,0.4)',
-    },
-    scoreIcon: {
-        fontSize: 18,
-    },
-    scoreText: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#FFD700',
-    },
-
-    // Grid
-    gridContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        position: 'relative',
-    },
-    gridGlow: {
-        position: 'absolute',
-        width: CELL_SIZE * GRID_SIZE + 40,
-        height: CELL_SIZE * GRID_SIZE + 40,
-        borderRadius: 25,
         backgroundColor: '#39FF14',
-        shadowColor: '#39FF14',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 1,
-        shadowRadius: 30,
-    },
-    grid: {
-        padding: 10,
-        backgroundColor: 'rgba(20, 20, 60, 0.9)',
-        borderRadius: 20,
-        // Claymorphism
-        shadowColor: '#000',
-        shadowOffset: { width: 8, height: 8 },
-        shadowOpacity: 0.5,
-        shadowRadius: 10,
-        elevation: 15,
-        borderWidth: 3,
-        borderColor: 'rgba(100, 100, 180, 0.4)',
-    },
-    gridRow: {
-        flexDirection: 'row',
-    },
-    gridCell: {
-        width: CELL_SIZE,
-        height: CELL_SIZE,
-        backgroundColor: 'rgba(30, 30, 80, 0.8)',
-        borderWidth: 1,
-        borderColor: 'rgba(100, 100, 180, 0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        margin: 2,
-        borderRadius: 8,
-        // Inner shadow effect
-        shadowColor: '#000',
-        shadowOffset: { width: 2, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3,
-    },
-    gridCellHighlight: {
-        borderColor: '#39FF14',
-        borderWidth: 2,
-    },
-    cellStar: {
-        fontSize: isWeb ? 20 : 16,
-    },
-
-    // Progress
-    progressContainer: {
-        height: 20,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        marginHorizontal: 30,
-        marginVertical: 15,
-        borderRadius: 10,
-        overflow: 'hidden',
-        justifyContent: 'center',
+        borderRadius: 4,
     },
     progressContainerHeader: {
         height: 16,
@@ -725,69 +655,99 @@ const styles = StyleSheet.create({
         top: 0,
         bottom: 0,
         backgroundColor: '#BF40BF',
-        borderRadius: 10,
+        borderRadius: 8,
     },
     progressText: {
-        fontSize: 12,
+        fontSize: 10,
         fontWeight: 'bold',
         color: '#FFF',
         textAlign: 'center',
     },
-
-    // Rotate Button
-    rotateButton: {
-        flexDirection: 'row',
+    gridContainer: {
         alignItems: 'center',
         justifyContent: 'center',
+        padding: 20,
+    },
+    grid: {
+        flexDirection: 'column',
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 16,
+        padding: 8,
+        borderWidth: 2,
+        borderColor: 'rgba(191, 64, 191, 0.5)',
+    },
+    gridGlow: {
+        position: 'absolute',
+        top: -10,
+        left: -10,
+        right: -10,
+        bottom: -10,
+        borderRadius: 20,
+        backgroundColor: '#39FF14',
+    },
+    gridRow: {
+        flexDirection: 'row',
+    },
+    gridCell: {
+        width: CELL_SIZE,
+        height: CELL_SIZE,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 4,
+        margin: 2,
+    },
+    cellStar: {
+        fontSize: isWeb ? 20 : 16,
+    },
+    controlsRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 20,
+        paddingVertical: 10,
+    },
+    controlButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#BF40BF',
         paddingHorizontal: 20,
-        paddingVertical: 10,
+        paddingVertical: 12,
         borderRadius: 25,
-        marginVertical: 10,
-        alignSelf: 'center',
         gap: 8,
-        shadowColor: '#BF40BF',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 5,
     },
-    rotateButtonText: {
+    undoButton: {
+        backgroundColor: '#FF6B6B',
+    },
+    controlButtonText: {
         color: '#FFF',
         fontSize: 14,
         fontWeight: 'bold',
     },
-
-    // Blocks
     blocksContainer: {
+        flex: 1,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+    },
+    blocksTitle: {
+        color: '#AAA',
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 10,
+    },
+    blocksPalette: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 15,
-        paddingBottom: Platform.OS === 'web' ? 20 : 40,
-        backgroundColor: 'rgba(0,0,0,0.4)',
         gap: 15,
     },
     blockWrapper: {
-        padding: 8,
-        backgroundColor: 'rgba(50, 50, 100, 0.8)',
+        padding: 10,
+        backgroundColor: 'rgba(255,255,255,0.1)',
         borderRadius: 12,
         borderWidth: 2,
-        borderColor: 'rgba(100, 100, 180, 0.5)',
-        // Claymorphism
-        shadowColor: '#000',
-        shadowOffset: { width: 4, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 5,
-        elevation: 8,
-    },
-    blockSelected: {
-        borderColor: '#39FF14',
-        borderWidth: 3,
-        transform: [{ scale: 1.1 }],
-        shadowColor: '#39FF14',
-        shadowOpacity: 0.6,
+        borderColor: 'rgba(255,255,255,0.2)',
     },
     blockShape: {
         flexDirection: 'column',
@@ -796,22 +756,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
     },
     blockCell: {
-        width: isWeb ? 20 : 16,
-        height: isWeb ? 20 : 16,
-        margin: 1,
+        width: BLOCK_CELL_SIZE,
+        height: BLOCK_CELL_SIZE,
         borderRadius: 4,
+        margin: 1,
     },
     blockCellEmpty: {
         backgroundColor: 'transparent',
     },
-
-    // Rocket
     rocketContainer: {
         position: 'absolute',
-        bottom: screenH / 2 - 50,
-        left: screenW / 2 - 30,
+        bottom: 50,
+        alignSelf: 'center',
         alignItems: 'center',
-        zIndex: 100,
     },
     rocketEmoji: {
         fontSize: 60,
@@ -822,39 +779,37 @@ const styles = StyleSheet.create({
     flameEmoji: {
         fontSize: 40,
     },
-
-    // Complete
     completeOverlay: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(10, 10, 46, 0.95)',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.85)',
         justifyContent: 'center',
         alignItems: 'center',
-        zIndex: 200,
     },
     completeCard: {
-        backgroundColor: 'rgba(30, 30, 80, 0.95)',
-        borderRadius: 25,
-        padding: 30,
+        backgroundColor: '#1a1a2e',
+        padding: 40,
+        borderRadius: 24,
         alignItems: 'center',
-        elevation: 25,
-        width: isWeb ? 350 : screenW - 60,
         borderWidth: 3,
         borderColor: '#BF40BF',
     },
     completeEmoji: {
         fontSize: 60,
-        marginBottom: 10,
+        marginBottom: 15,
     },
     completeTitle: {
-        fontSize: 26,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: '#FFD700',
+        color: '#FFF',
         marginBottom: 8,
-        textAlign: 'center',
     },
     completeText: {
         fontSize: 16,
-        color: '#CCC',
+        color: '#AAA',
         marginBottom: 20,
     },
     statsRow: {
@@ -878,8 +833,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#FFF',
     },
-
-    // Speaking Overlay
     speakingOverlay: {
         position: 'absolute',
         top: 0,
