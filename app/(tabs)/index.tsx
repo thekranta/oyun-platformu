@@ -69,6 +69,16 @@ export default function App() {
   const [regYasAy, setRegYasAy] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
 
+  // Child selection state (for duplicate name+age)
+  interface ChildProfile {
+    id: string;
+    child_name: string;
+    child_age_months: number;
+    email: string;
+  }
+  const [matchingChildren, setMatchingChildren] = useState<ChildProfile[]>([]);
+  const [showChildSelection, setShowChildSelection] = useState(false);
+
   // Turnstile CAPTCHA token state
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [regTurnstileToken, setRegTurnstileToken] = useState<string | null>(null);
@@ -85,10 +95,6 @@ export default function App() {
       showToast('Lütfen isim ve yaş giriniz.', 'error');
       return;
     }
-    if (email.trim() === '') {
-      showToast('Lütfen e-posta giriniz.', 'error');
-      return;
-    }
     if (!/^\d+$/.test(yas)) {
       showToast('Lütfen yaş alanına sadece rakam giriniz.', 'error');
       return;
@@ -99,17 +105,14 @@ export default function App() {
       return;
     }
 
-    // Turnstile CAPTCHA doğrulama (geçici olarak devre dışı)
-    // if (Platform.OS === 'web' && !turnstileToken) {
-    //   showToast('Lütfen güvenlik doğrulamasını tamamlayın.', 'error');
-    //   return;
-    // }
-
     setIsLoggingIn(true);
     try {
-      // Veritabanında kullanıcı kontrolü
+      // İsim ve yaş ile veritabanında ara (±2 ay tolerans)
+      const minAge = yasNum - 2;
+      const maxAge = yasNum + 2;
+
       const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email.trim())}&select=child_name,child_age_months,email`,
+        `${SUPABASE_URL}/rest/v1/profiles?child_name=ilike.${encodeURIComponent(ad.trim())}&child_age_months=gte.${minAge}&child_age_months=lte.${maxAge}&select=id,child_name,child_age_months,email`,
         {
           headers: {
             'apikey': SUPABASE_KEY || '',
@@ -121,38 +124,39 @@ export default function App() {
       const users = await response.json();
 
       if (!users || users.length === 0) {
-        showToast('Bu e-posta ile kayıtlı bir kullanıcı bulunamadı. Lütfen önce kayıt olun.', 'error');
+        showToast('Kayıtlı kullanıcı bulunamadı. Lütfen önce kayıt olun.', 'error');
         setIsLoggingIn(false);
         return;
       }
 
-      const user = users[0];
-
-      // Girilen bilgilerle veritabanı bilgilerini karşılaştır
-      if (user.child_name?.toLowerCase() !== ad.trim().toLowerCase()) {
-        showToast('Çocuk adı eşleşmiyor. Lütfen bilgilerinizi kontrol edin.', 'error');
-        setIsLoggingIn(false);
-        return;
+      if (users.length === 1) {
+        // Tek eşleşme - direkt giriş yap
+        const user = users[0];
+        setEmail(user.email);
+        setYas(user.child_age_months.toString());
+        await resumeAfterInteraction();
+        setAsama('menu');
+      } else {
+        // Birden fazla eşleşme - seçim listesi göster
+        setMatchingChildren(users);
+        setShowChildSelection(true);
       }
-
-      // Yaş toleransı: ±2 ay
-      const dbAge = user.child_age_months;
-      const inputAge = parseInt(yas);
-      if (Math.abs(dbAge - inputAge) > 2) {
-        showToast('Yaş bilgisi eşleşmiyor. Lütfen bilgilerinizi kontrol edin.', 'error');
-        setIsLoggingIn(false);
-        return;
-      }
-
-      // Kullanıcı doğrulandı - giriş yap
-      await resumeAfterInteraction();
-      setAsama('menu');
     } catch (error) {
       console.error('Giriş hatası:', error);
       showToast('Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'error');
     } finally {
       setIsLoggingIn(false);
     }
+  };
+
+  // Çocuk seçildiğinde giriş yap
+  const selectChild = async (child: ChildProfile) => {
+    setEmail(child.email);
+    setAd(child.child_name);
+    setYas(child.child_age_months.toString());
+    setShowChildSelection(false);
+    await resumeAfterInteraction();
+    setAsama('menu');
   };
 
 
@@ -574,25 +578,6 @@ export default function App() {
               />
             </View>
 
-            {/* Email Input with Icon - REQUIRED */}
-            <View style={[
-              styles.inputContainer,
-              focusedInput === 'email' && styles.inputContainerFocused
-            ]}>
-              <Text style={styles.inputIcon}>✉️</Text>
-              <TextInput
-                style={styles.inputModern}
-                placeholder="Ebeveyn E-posta (Zorunlu)"
-                placeholderTextColor="#9E9E9E"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                onFocus={() => setFocusedInput('email')}
-                onBlur={() => setFocusedInput(null)}
-              />
-            </View>
-
             {/* Gradient Login Button with Spinner */}
             <TouchableOpacity
               style={[
@@ -649,6 +634,53 @@ export default function App() {
           type={toast.type}
           onHide={() => setToast({ ...toast, visible: false })}
         />
+
+        {/* Child Selection Modal - for duplicate name+age */}
+        <Modal
+          visible={showChildSelection}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowChildSelection(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { width: isMobile ? '95%' : 400 }]}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>👶 Çocuk Seçin</Text>
+                <TouchableOpacity onPress={() => setShowChildSelection(false)} style={styles.modalCloseBtn}>
+                  <Text style={styles.modalCloseText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={{ textAlign: 'center', marginBottom: 15, color: '#666', fontSize: 14 }}>
+                Aynı isim ve yaşta birden fazla çocuk bulundu. Lütfen seçin:
+              </Text>
+
+              <ScrollView style={{ maxHeight: 300 }}>
+                {matchingChildren.map((child, index) => (
+                  <TouchableOpacity
+                    key={child.id || index}
+                    style={{
+                      backgroundColor: '#f5f5f5',
+                      padding: 15,
+                      borderRadius: 12,
+                      marginBottom: 10,
+                      borderWidth: 1,
+                      borderColor: '#e0e0e0',
+                    }}
+                    onPress={() => selectChild(child)}
+                  >
+                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>
+                      {child.child_name} ({child.child_age_months} ay)
+                    </Text>
+                    <Text style={{ fontSize: 13, color: '#666', marginTop: 4 }}>
+                      📧 {child.email}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
 
         {/* Registration Modal */}
         <Modal
