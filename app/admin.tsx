@@ -28,6 +28,9 @@ interface Score {
     onaylayan_uzman?: string;
     toplam_tur_sayisi?: number;
     mevcut_tur?: number;
+    // Multi-expert voting system
+    uzman_oylamalari?: Record<string, 'onay' | 'revize' | 'reddet'>;
+    onay_durumu?: 'beklemede' | 'onaylandi' | 'reddedildi';
 }
 
 interface StudentGroup {
@@ -238,10 +241,38 @@ export default function AdminPanel() {
         setStudentGroups(groupArray);
     };
 
-    // === 4. UZMAN ONAY SİSTEMİ ===
-    const approveReport = async (score: Score) => {
+    // === 4. ÇOKLU UZMAN OY SİSTEMİ ===
+    const submitVote = async (score: Score, voteType: 'onay' | 'revize' | 'reddet') => {
         setProcessingId(score.id);
         try {
+            // Mevcut oyları al veya boş obje oluştur
+            const currentVotes = score.uzman_oylamalari || {};
+
+            // Giriş yapan uzmanın oyunu ekle
+            const updatedVotes = {
+                ...currentVotes,
+                [loggedInUser]: voteType
+            };
+
+            // Onay sayısını hesapla
+            const voteValues = Object.values(updatedVotes);
+            const onayCount = voteValues.filter(v => v === 'onay').length;
+            const reddetCount = voteValues.filter(v => v === 'reddet').length;
+
+            // Onay durumunu belirle
+            let newOnayDurumu: 'beklemede' | 'onaylandi' | 'reddedildi' = 'beklemede';
+            if (onayCount >= 2) {
+                newOnayDurumu = 'onaylandi';
+            } else if (reddetCount >= 2) {
+                newOnayDurumu = 'reddedildi';
+            }
+
+            // Onaylayan uzmanları listele (geriye uyumluluk için)
+            const approvedExperts = Object.entries(updatedVotes)
+                .filter(([_, v]) => v === 'onay')
+                .map(([name, _]) => name)
+                .join(', ');
+
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/oyun_skorlari?id=eq.${score.id}`,
                 {
@@ -253,8 +284,10 @@ export default function AdminPanel() {
                         'Prefer': 'return=minimal',
                     },
                     body: JSON.stringify({
-                        uzman_onayi: true,
-                        onaylayan_uzman: loggedInUser || 'Admin'
+                        uzman_oylamalari: updatedVotes,
+                        onay_durumu: newOnayDurumu,
+                        uzman_onayi: newOnayDurumu === 'onaylandi',
+                        onaylayan_uzman: approvedExperts || null
                     }),
                 }
             );
@@ -264,15 +297,32 @@ export default function AdminPanel() {
                 setStudentGroups(prev => prev.map(group => ({
                     ...group,
                     scores: group.scores.map(s =>
-                        s.id === score.id ? { ...s, uzman_onayi: true, onaylayan_uzman: loggedInUser || 'Admin' } : s
+                        s.id === score.id ? {
+                            ...s,
+                            uzman_oylamalari: updatedVotes,
+                            onay_durumu: newOnayDurumu,
+                            uzman_onayi: newOnayDurumu === 'onaylandi',
+                            onaylayan_uzman: approvedExperts || undefined
+                        } : s
                     )
                 })));
-                alert('✅ Rapor uzman tarafından onaylandı!');
+
+                // Duruma göre mesaj göster
+                if (newOnayDurumu === 'onaylandi') {
+                    alert('✅ 2/3 çoğunluk sağlandı! Rapor onaylandı ve veliye görünür.');
+                } else if (newOnayDurumu === 'reddedildi') {
+                    alert('🔄 2/3 ret oyu verildi. AI analizi yeniden yapılacak...');
+                    // AI yeniden analiz yap
+                    setTimeout(() => analyzeGame(score), 500);
+                } else {
+                    const voteEmoji = voteType === 'onay' ? '✅' : voteType === 'revize' ? '📝' : '❌';
+                    alert(`${voteEmoji} ${loggedInUser} oyunu kaydedildi. (${onayCount}/3 onay)`);
+                }
             } else {
-                alert('❌ Onay kaydedilemedi.');
+                alert('❌ Oy kaydedilemedi.');
             }
         } catch (error) {
-            console.error('Onay hatası:', error);
+            console.error('Oylama hatası:', error);
             alert('Bir hata oluştu.');
         } finally {
             setProcessingId(null);
@@ -1151,30 +1201,96 @@ ChildhoodTech Ekibi
                             </View>
                         )}
 
-                        {/* Uzman Onay Sertifikası */}
+                        {/* Çoklu Uzman Oylama Sistemi */}
                         <View style={styles.certContainer}>
-                            {score.uzman_onayi ? (
+                            {/* Mevcut Oyları Göster */}
+                            {score.uzman_oylamalari && Object.keys(score.uzman_oylamalari).length > 0 && (
+                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12, justifyContent: 'center', gap: 8 }}>
+                                    {Object.entries(score.uzman_oylamalari).map(([expert, vote]) => (
+                                        <View
+                                            key={expert}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                backgroundColor: vote === 'onay' ? '#e8f5e9' : vote === 'revize' ? '#fff3e0' : '#ffebee',
+                                                paddingHorizontal: 10,
+                                                paddingVertical: 5,
+                                                borderRadius: 16,
+                                                borderWidth: 1,
+                                                borderColor: vote === 'onay' ? '#4caf50' : vote === 'revize' ? '#ff9800' : '#f44336'
+                                            }}
+                                        >
+                                            <Text style={{ fontWeight: 'bold', marginRight: 4 }}>{expert}:</Text>
+                                            <Text>{vote === 'onay' ? '✅' : vote === 'revize' ? '📝' : '❌'}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            )}
+
+                            {/* Onay Durumu Göstergesi */}
+                            {score.onay_durumu === 'onaylandi' ? (
                                 <View style={styles.certApproved}>
                                     <View style={styles.certSeal}>
                                         <Ionicons name="shield-checkmark" size={28} color="#2e7d32" />
                                     </View>
                                     <View style={styles.certContent}>
                                         <Text style={styles.certTitle}>Pedagojik Olarak Doğrulanmıştır</Text>
-                                        <Text style={styles.certSubtitle}>Bu rapor AI tarafından oluşturulmuş ve alan uzmanı onayından geçmiştir.</Text>
-                                        <Text style={styles.certSigner}>✍️ {score.onaylayan_uzman || 'Admin'}</Text>
+                                        <Text style={styles.certSubtitle}>Bu rapor AI tarafından oluşturulmuş ve 2/3 uzman onayından geçmiştir.</Text>
+                                        <Text style={styles.certSigner}>✍️ {score.onaylayan_uzman || 'Uzmanlar'}</Text>
                                     </View>
                                 </View>
                             ) : (
-                                <TouchableOpacity style={styles.certPending} onPress={() => approveReport(score)} disabled={processingId === score.id}>
-                                    {processingId === score.id ? (
-                                        <ActivityIndicator size="small" color="#ff9800" />
-                                    ) : (
-                                        <>
-                                            <Ionicons name="shield-outline" size={24} color="#ff9800" />
-                                            <Text style={styles.certPendingText}>Uzman Onayı Ver</Text>
-                                        </>
+                                <View>
+                                    {/* Oy Sayısı */}
+                                    <View style={{ alignItems: 'center', marginBottom: 12 }}>
+                                        <Text style={{ fontSize: 13, color: '#666' }}>
+                                            {(() => {
+                                                const votes = score.uzman_oylamalari || {};
+                                                const onayCount = Object.values(votes).filter(v => v === 'onay').length;
+                                                return `${onayCount}/3 Onay (2 gerekli)`;
+                                            })()}
+                                        </Text>
+                                    </View>
+
+                                    {/* Oylama Butonları */}
+                                    <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                        <TouchableOpacity
+                                            style={[styles.voteButton, { backgroundColor: '#4CAF50' }]}
+                                            onPress={() => submitVote(score, 'onay')}
+                                            disabled={processingId === score.id}
+                                        >
+                                            {processingId === score.id ? (
+                                                <ActivityIndicator size="small" color="#fff" />
+                                            ) : (
+                                                <Text style={styles.voteButtonText}>✅ Onay</Text>
+                                            )}
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={[styles.voteButton, { backgroundColor: '#FF9800' }]}
+                                            onPress={() => submitVote(score, 'revize')}
+                                            disabled={processingId === score.id}
+                                        >
+                                            <Text style={styles.voteButtonText}>📝 Revize</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={[styles.voteButton, { backgroundColor: '#f44336' }]}
+                                            onPress={() => submitVote(score, 'reddet')}
+                                            disabled={processingId === score.id}
+                                        >
+                                            <Text style={styles.voteButtonText}>❌ Reddet</Text>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {/* Giriş yapan uzmanın mevcut oyu */}
+                                    {score.uzman_oylamalari?.[loggedInUser] && (
+                                        <Text style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: '#888' }}>
+                                            Sizin oyunuz: {score.uzman_oylamalari[loggedInUser] === 'onay' ? '✅ Onay' :
+                                                score.uzman_oylamalari[loggedInUser] === 'revize' ? '📝 Revize' : '❌ Reddet'}
+                                        </Text>
                                     )}
-                                </TouchableOpacity>
+                                </View>
                             )}
                         </View>
                     </View>
@@ -1458,6 +1574,25 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600',
         color: '#2196F3'
+    },
+    // Multi-expert voting button styles
+    voteButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        minWidth: 90,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 3,
+    },
+    voteButtonText: {
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: 'bold',
     },
 });
 

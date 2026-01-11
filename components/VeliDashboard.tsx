@@ -95,6 +95,7 @@ interface GameScore {
     hata_sayisi: number;
     sure: number;
     visual_attention_score: number | null;  // Sihirli Tuval specific - Görsel Dikkat Skoru
+    onay_durumu?: 'beklemede' | 'onaylandi' | 'reddedildi';  // Multi-expert approval status
 }
 
 // Pastel color palette - soft and child-friendly
@@ -400,18 +401,28 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         ? Math.round(visualAttentionGameScores.reduce((a, b) => a + (b.visual_attention_score || 0), 0) / visualAttentionGameScores.length)
         : 0;
 
-    // Get all AI comments
-    const allAIComments = scores.filter(s => s.yapay_zeka_yorumu).map(s => ({
-        oyun: s.oyun_turu,
-        tarih: s.created_at,
-        yorum: s.yapay_zeka_yorumu
-    }));
-    const latestAIComment = scores.find(s => s.yapay_zeka_yorumu)?.yapay_zeka_yorumu || null;
+    // Get all AI comments - ONLY show approved ones (2/3 majority)
+    const allAIComments = scores
+        .filter(s => s.yapay_zeka_yorumu && s.onay_durumu === 'onaylandi')
+        .map(s => ({
+            oyun: s.oyun_turu,
+            tarih: s.created_at,
+            yorum: s.yapay_zeka_yorumu
+        }));
+
+    // Latest APPROVED AI comment only
+    const latestAIComment = scores.find(s => s.yapay_zeka_yorumu && s.onay_durumu === 'onaylandi')?.yapay_zeka_yorumu || null;
+
+    // For unapproved AI comments, show pending message
+    const hasPendingReports = scores.some(s => s.yapay_zeka_yorumu && s.onay_durumu !== 'onaylandi');
+
     const isPremium = subscriptionTier === 'premium';
     const successRate = avgCorrectAnswers * 10;
 
-    // Selected game's AI comment for timeline
-    const selectedGameAIComment = selectedGameIndex !== null && scores[selectedGameIndex]?.yapay_zeka_yorumu
+    // Selected game's AI comment for timeline - only if approved
+    const selectedGameAIComment = selectedGameIndex !== null &&
+        scores[selectedGameIndex]?.yapay_zeka_yorumu &&
+        scores[selectedGameIndex]?.onay_durumu === 'onaylandi'
         ? scores[selectedGameIndex].yapay_zeka_yorumu
         : latestAIComment;
 
