@@ -107,22 +107,55 @@ export default function App() {
 
     setIsLoggingIn(true);
     try {
-      // Start background music after first user interaction
+      // Veritabanında kullanıcı kontrolü
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email.trim())}&select=child_name,child_age_months,email`,
+        {
+          headers: {
+            'apikey': SUPABASE_KEY || '',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          },
+        }
+      );
+
+      const users = await response.json();
+
+      if (!users || users.length === 0) {
+        showToast('Bu e-posta ile kayıtlı bir kullanıcı bulunamadı. Lütfen önce kayıt olun.', 'error');
+        setIsLoggingIn(false);
+        return;
+      }
+
+      const user = users[0];
+
+      // Girilen bilgilerle veritabanı bilgilerini karşılaştır
+      if (user.child_name?.toLowerCase() !== ad.trim().toLowerCase()) {
+        showToast('Çocuk adı eşleşmiyor. Lütfen bilgilerinizi kontrol edin.', 'error');
+        setIsLoggingIn(false);
+        return;
+      }
+
+      // Yaş toleransı: ±2 ay
+      const dbAge = user.child_age_months;
+      const inputAge = parseInt(yas);
+      if (Math.abs(dbAge - inputAge) > 2) {
+        showToast('Yaş bilgisi eşleşmiyor. Lütfen bilgilerinizi kontrol edin.', 'error');
+        setIsLoggingIn(false);
+        return;
+      }
+
+      // Kullanıcı doğrulandı - giriş yap
       await resumeAfterInteraction();
       setAsama('menu');
+    } catch (error) {
+      console.error('Giriş hatası:', error);
+      showToast('Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'error');
     } finally {
       setIsLoggingIn(false);
     }
   };
 
-  // Hızlı Test Girişi - Doğrudan oyunlara git
-  const hizliTestGiris = async () => {
-    setAd('Test');
-    setYas('60');
-    setEmail('test@test.com');
-    await resumeAfterInteraction();
-    setAsama('menu');
-  };
+
 
   // Calculate age in months from birth date
   const calculateAgeInMonths = (dateString: string): number | null => {
@@ -201,22 +234,62 @@ export default function App() {
 
     setIsRegistering(true);
     try {
-      // Save to Supabase
-      const kayitVerisi = {
-        ogrenci_adi: regAd.trim(),
+      // Önce e-posta ile kayıtlı kullanıcı var mı kontrol et
+      const checkResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(regEmail.trim())}&select=id`,
+        {
+          headers: {
+            'apikey': SUPABASE_KEY || '',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+          },
+        }
+      );
+
+      const existingUsers = await checkResponse.json();
+
+      if (existingUsers && existingUsers.length > 0) {
+        showToast('Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.', 'error');
+        setIsRegistering(false);
+        return;
+      }
+
+      // Supabase profiles tablosuna kaydet
+      const profileData = {
+        child_name: regAd.trim(),
         email: regEmail.trim(),
-        ogrenci_yasi: finalYasAy,
-        cinsiyet: regCinsiyet,
-        kayit_tarihi: new Date().toISOString(),
+        child_age_months: finalYasAy,
+        gender: regCinsiyet,
+        created_at: new Date().toISOString(),
+        subscription_tier: 'free'
       };
 
-      // For now, we'll use this data directly for login
-      // In a real app, this would be saved to a users table
+      const saveResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/profiles`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY || '',
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal',
+          },
+          body: JSON.stringify(profileData),
+        }
+      );
+
+      if (!saveResponse.ok) {
+        const errorText = await saveResponse.text();
+        console.error('Kayıt hatası:', errorText);
+        showToast('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+        return;
+      }
+
+      // Kayıt başarılı - giriş formunu doldur
       setAd(regAd.trim());
       setYas(finalYasAy.toString());
       setEmail(regEmail.trim());
 
-      showToast('Kayıt başarılı! Giriş yapabilirsiniz.', 'success');
+      showToast('Kayıt başarılı! Artık giriş yapabilirsiniz.', 'success');
       setShowRegistration(false);
 
       // Reset registration form
@@ -226,6 +299,7 @@ export default function App() {
       setDogumTarihi('');
       setRegYasAy('');
     } catch (error) {
+      console.error('Kayıt hatası:', error);
       showToast('Kayıt sırasında bir hata oluştu.', 'error');
     } finally {
       setIsRegistering(false);
@@ -548,11 +622,7 @@ export default function App() {
               <TouchableOpacity onPress={() => router.push('/signup' as any)}>
                 <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
               </TouchableOpacity>
-              <View style={styles.linkDivider} />
-              {/* Hızlı Test Girişi */}
-              <TouchableOpacity onPress={hizliTestGiris}>
-                <Text style={[styles.linkText, { color: '#4CAF50', fontWeight: 'bold' }]}>⚡ Hızlı Test</Text>
-              </TouchableOpacity>
+
             </View>
           </View>
 
