@@ -130,6 +130,7 @@ export default function AdminPanel() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [loggedInUser, setLoggedInUser] = useState('');
 
     // Toggle detail visibility
     const toggleDetailVisibility = (scoreId: number) => {
@@ -148,7 +149,16 @@ export default function AdminPanel() {
     }, [isAuthenticated]);
 
     const handleLogin = () => {
-        if (username === 'admin' && password === '12') {
+        // Valid users: admin/12, fatih/123, türker/123
+        const validUsers: Record<string, { password: string; displayName: string }> = {
+            'admin': { password: '12', displayName: 'Admin' },
+            'fatih': { password: '123', displayName: 'Fatih' },
+            'türker': { password: '123', displayName: 'Türker' },
+        };
+
+        const user = validUsers[username.toLowerCase()];
+        if (user && user.password === password) {
+            setLoggedInUser(user.displayName);
             setIsAuthenticated(true);
         } else {
             alert('Hatalı kullanıcı adı veya şifre!');
@@ -244,7 +254,7 @@ export default function AdminPanel() {
                     },
                     body: JSON.stringify({
                         uzman_onayi: true,
-                        onaylayan_uzman: 'Admin'
+                        onaylayan_uzman: loggedInUser || 'Admin'
                     }),
                 }
             );
@@ -254,7 +264,7 @@ export default function AdminPanel() {
                 setStudentGroups(prev => prev.map(group => ({
                     ...group,
                     scores: group.scores.map(s =>
-                        s.id === score.id ? { ...s, uzman_onayi: true, onaylayan_uzman: 'Admin' } : s
+                        s.id === score.id ? { ...s, uzman_onayi: true, onaylayan_uzman: loggedInUser || 'Admin' } : s
                     )
                 })));
                 alert('✅ Rapor uzman tarafından onaylandı!');

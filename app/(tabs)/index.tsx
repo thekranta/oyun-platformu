@@ -934,11 +934,7 @@ export default function App() {
                   <Text style={styles.oyunAciklama}>Boş sayfada çizim yap</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8B4513' }]} onPress={() => oyunuBaslat('sihirli-tuval')}>
-                  <Ionicons name="color-palette" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Sihirli Tuval</Text>
-                  <Text style={styles.oyunAciklama}>Sayılarla Boyama</Text>
-                </TouchableOpacity>
+
               </>
             )}
 
