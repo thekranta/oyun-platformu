@@ -18,8 +18,8 @@ const storyData: Record<string, StoryNode> = {
     intro: {
         id: 'intro',
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_giris_bg_karpuz.png'),
-        audio: null, // TODO: s02_giris_narr.mp3
-        questionAudio: null, // TODO: s02_giris_q.mp3
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_q.mp3'),
         options: [
             {
                 id: 'A',
@@ -364,7 +364,7 @@ export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: A
                     <Animated.Image
                         source={currentNode.bgImage}
                         style={[styles.backgroundImage, { opacity: fadeAnim }]}
-                        resizeMode="cover"
+                        resizeMode={isPortrait ? "cover" : "contain"}
                         blurRadius={phase === 'choice' ? 3 : 0}
                     />
 
@@ -408,6 +408,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 0,
         left: 0,
+        resizeMode: 'contain', // Ensures full image visibility on mobile landscape
     },
 
     overlayContainer: {
