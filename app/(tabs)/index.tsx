@@ -1,3 +1,4 @@
+import AdaletHikayesi from '@/components/AdaletHikayesi';
 import AileSepetiMacerasi from '@/components/AileSepetiMacerasi';
 import BunuSoyle from '@/components/BunuSoyle';
 import CevizMacera from '@/components/CevizMacera';
@@ -1025,6 +1026,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Aile Sepeti</Text>
                   <Text style={styles.oyunAciklama}>Piknik Macerası</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#9C27B0' }]} onPress={() => oyunuBaslat('adalet-hikayesi')}>
+                  <Ionicons name="scale-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Adalet Hikayesi</Text>
+                  <Text style={styles.oyunAciklama}>Doğru Olan Nedir?</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -1209,6 +1216,10 @@ export default function App() {
 
   if (asama === 'aile-sepeti-macerasi') {
     return <AileSepetiMacerasi onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
+  }
+
+  if (asama === 'adalet-hikayesi') {
+    return <AdaletHikayesi onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
   }
 
   if (asama === 'yaratici-cizim') {
