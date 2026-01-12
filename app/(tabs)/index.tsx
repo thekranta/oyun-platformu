@@ -13,6 +13,7 @@ import MuzikCalar, { SONGS } from '@/components/MuzikCalar';
 import OnlukCerceve from '@/components/OnlukCerceve';
 import QuantityComparison from '@/components/QuantityComparison';
 import RakamYazma from '@/components/RakamYazma';
+import RenkliBaglantalar from '@/components/RenkliBaglantalar';
 import SayiKomsulari from '@/components/SayiKomsulari';
 import SayilariBirlestir from '@/components/SayilariBirlestir';
 import ShadowDetective from '@/components/ShadowDetective';
@@ -1010,6 +1011,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Uzay Blokları</Text>
                   <Text style={styles.oyunAciklama}>Yıldız Mimarı</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#6366F1' }]} onPress={() => oyunuBaslat('renkli-baglantalar')}>
+                  <Ionicons name="git-merge-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Renkli Bağlantılar</Text>
+                  <Text style={styles.oyunAciklama}>Dot Connect</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -1248,6 +1255,10 @@ export default function App() {
 
   if (asama === 'uzay-bloklari') {
     return <UzayBloklari onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
+  }
+
+  if (asama === 'renkli-baglantalar') {
+    return <RenkliBaglantalar onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
   }
 
   if (asama === 'sonuc') {

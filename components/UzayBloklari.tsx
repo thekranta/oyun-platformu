@@ -164,7 +164,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     }, [grid, blocks]);
 
     const initializeBlocks = () => {
-        const newBlocks: Block[] = BLOCK_SHAPES.slice(0, 4).map((b, idx) => ({
+        // Only use 3 blocks for easier gameplay
+        const newBlocks: Block[] = BLOCK_SHAPES.slice(0, 3).map((b, idx) => ({
             id: `block-${idx}`,
             shape: b.shape,
             color: b.color,
@@ -344,6 +345,9 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
 
     // PanResponder for dragging blocks - improved for web platform
     const createPanResponder = (block: Block) => {
+        let startX = 0;
+        let startY = 0;
+
         return PanResponder.create({
             // Claim responder immediately on start
             onStartShouldSetPanResponder: () => !block.placed,
@@ -353,7 +357,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             // Prevent other responders from taking over
             onPanResponderTerminationRequest: () => false,
             onShouldBlockNativeResponder: () => true,
-            onPanResponderGrant: (evt) => {
+            onPanResponderGrant: (evt, gestureState) => {
                 // Prevent text selection on web
                 if (isWeb) {
                     evt.preventDefault?.();
@@ -361,8 +365,11 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     document.body.style.webkitUserSelect = 'none';
                 }
                 setDraggingBlock(block);
-                const { pageX, pageY } = evt.nativeEvent;
-                setDragOffset({ x: pageX, y: pageY });
+                // Store initial position
+                startX = gestureState.x0;
+                startY = gestureState.y0;
+                setDragOffset({ x: startX, y: startY });
+                // Reset animation to 0 - block stays in place initially
                 dragAnim.setValue({ x: 0, y: 0 });
             },
             onPanResponderMove: (evt, gestureState) => {
@@ -370,6 +377,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 if (isWeb) {
                     evt.preventDefault?.();
                 }
+                // Use accumulated distance from start, not delta
                 dragAnim.setValue({ x: gestureState.dx, y: gestureState.dy });
             },
             onPanResponderRelease: (evt, gestureState) => {
@@ -378,8 +386,10 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     document.body.style.userSelect = '';
                     document.body.style.webkitUserSelect = '';
                 }
-                const { pageX, pageY } = evt.nativeEvent;
-                handleDrop(block, pageX, pageY);
+                // Calculate final drop position
+                const dropX = startX + gestureState.dx;
+                const dropY = startY + gestureState.dy;
+                handleDrop(block, dropX, dropY);
             },
             onPanResponderTerminate: () => {
                 // Re-enable text selection on web
