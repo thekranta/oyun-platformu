@@ -786,8 +786,6 @@ const styles = StyleSheet.create({
         padding: 10,
         backgroundColor: 'rgba(255,255,255,0.1)',
         borderRadius: 12,
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.2)',
         // Prevent text selection and improve drag on web
         ...(isWeb && {
             cursor: 'grab',
