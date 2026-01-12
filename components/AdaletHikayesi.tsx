@@ -14,11 +14,19 @@ import DynamicBackground from './DynamicBackground';
 
 // STORY DATA - Ormandaki Lezzetli Paylaşım
 const storyData: Record<string, StoryNode> = {
-    // BÖLÜM 1: GİRİŞ (Sorun)
+    // BÖLÜM 1: GİRİŞ - PART 1 (Karpuz bulunur)
     intro: {
         id: 'intro',
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_giris_bg_karpuz.png'),
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_narr.mp3'),
+        next: 'intro2', // Otomatik olarak intro2'ye geç
+    },
+
+    // BÖLÜM 1: GİRİŞ - PART 2 (Tartışma başlar, seçim yapılır)
+    intro2: {
+        id: 'intro2',
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_giris_bg_tartisma.png'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_narr_2.mp3'),
         questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_q.mp3'),
         options: [
             {
@@ -279,23 +287,22 @@ export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: A
             return 'Bilinmeyen';
         };
 
-        const logData = {
+        const logData: Record<string, any> = {
             ogrenci_adi: userId || 'Misafir',
             ogrenci_yasi: userAge || 0,
             oyun_turu: 'adalet-hikayesi',
             hamle_sayisi: path.length,
             hata_sayisi: 0,
             sure: durationSeconds,
-            yapay_zeka_yorumu: null,
-            email: userEmail,
-            zorluk_seviyesi: null,
             kazanim_odagi: 'Sosyal-Duygusal Gelişim - Adalet ve Paylaşım',
-            deneme_no: null,
             ekstra_veri: JSON.stringify({
                 secilen_yol: pathString,
                 yaklasim: getAnalysisSummary()
             }),
         };
+
+        // Sadece mevcut değerleri ekle
+        if (userEmail) logData.email = userEmail;
 
         try {
             await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
