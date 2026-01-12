@@ -3,15 +3,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
+    PanResponder,
     Platform,
     StyleSheet,
     Text,
-    TouchableOpacity,
-    Vibration,
     View
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import Svg, { Defs, Line, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Line } from 'react-native-svg';
 import { speak } from '../services/speechService';
 
 // ============= TYPES =============
@@ -28,93 +27,53 @@ interface RenkliBaglantalarProps {
     childName?: string;
 }
 
-interface Dot {
+interface Ball {
     id: string;
     row: number;
     col: number;
     color: string;
-    connected: boolean;
-    pairId: string;
+    isPopping: boolean;
 }
-
-interface Connection {
-    from: Dot;
-    to: Dot;
-    color: string;
-}
-
-interface LevelConfig {
-    level_id: number;
-    grid_size: [number, number];
-    colors: string[];
-    target_connections: number;
-    academic_metrics: string[];
-}
-
-// ============= LEVELS =============
-const LEVELS: LevelConfig[] = [
-    {
-        level_id: 1,
-        grid_size: [3, 3],
-        colors: ['#FF5E5E', '#FFD93D', '#6BCB77'],
-        target_connections: 3,
-        academic_metrics: ['visual_tracking', 'color_matching']
-    },
-    {
-        level_id: 2,
-        grid_size: [4, 4],
-        colors: ['#FF5E5E', '#FFD93D', '#6BCB77', '#4ECDC4'],
-        target_connections: 4,
-        academic_metrics: ['visual_tracking', 'color_matching', 'spatial_reasoning']
-    },
-    {
-        level_id: 3,
-        grid_size: [4, 4],
-        colors: ['#FF5E5E', '#FFD93D', '#6BCB77', '#4ECDC4', '#A855F7'],
-        target_connections: 5,
-        academic_metrics: ['visual_tracking', 'color_matching', 'spatial_reasoning', 'working_memory']
-    },
-];
 
 // ============= CONFIG =============
 const { width: screenW, height: screenH } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
+const GRID_SIZE = 3;
+const BALL_SIZE = isWeb ? 80 : Math.min(80, (screenW - 100) / GRID_SIZE);
+const CELL_SIZE = BALL_SIZE + 20;
+const MAX_POPS = 6;
+
+// Modern, vibrant colors
+const BALL_COLORS = ['#FF6B9D', '#4ECDC4']; // Pink & Teal
 
 // ============= MAIN COMPONENT =============
 export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna' }: RenkliBaglantalarProps) {
-    const [currentLevel, setCurrentLevel] = useState(0);
-    const [dots, setDots] = useState<Dot[]>([]);
-    const [connections, setConnections] = useState<Connection[]>([]);
-    const [selectedDot, setSelectedDot] = useState<Dot | null>(null);
-    const [drawingLine, setDrawingLine] = useState<{ startDot: Dot; currentX: number; currentY: number } | null>(null);
-    const [errors, setErrors] = useState(0);
+    const [balls, setBalls] = useState<Ball[]>([]);
+    const [selectedBalls, setSelectedBalls] = useState<Ball[]>([]);
+    const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([]);
+    const [popCount, setPopCount] = useState(0);
     const [score, setScore] = useState(0);
+    const [errors, setErrors] = useState(0);
     const [gameStart] = useState(Date.now());
     const [isGameComplete, setIsGameComplete] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
-    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const [moveHistory, setMoveHistory] = useState<any[]>([]);
 
-    // Grid layout ref for coordinate calculations
+    // Grid layout ref
     const gridRef = useRef<View>(null);
     const [gridLayout, setGridLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
     // Animations
-    const pulseAnims = useRef<{ [key: string]: Animated.Value }>({});
-    const glowAnim = useRef(new Animated.Value(0)).current;
     const floatingAnim = useRef(new Animated.Value(0)).current;
+    const ballAnims = useRef<{ [key: string]: Animated.Value }>({});
 
-    // Current level config
-    const levelConfig = LEVELS[currentLevel];
-    const DOT_SIZE = isWeb ? 60 : Math.min(60, (screenW - 80) / levelConfig.grid_size[1]);
-    const CELL_SIZE = DOT_SIZE * 1.8;
-
-    // Initialize level
+    // Initialize game
     useEffect(() => {
-        initializeLevel();
-        playGreeting();
+        initializeGame();
         startFloatingAnimation();
-    }, [currentLevel]);
+        playGreeting();
+    }, []);
 
     const startFloatingAnimation = () => {
         Animated.loop(
@@ -127,205 +86,264 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
 
     const playGreeting = async () => {
         if (Platform.OS === 'web') {
-            setIsSpeaking(true);
             try {
                 await speak(
-                    `Merhaba ${childName}! Haydi, aynı renkleri el ele tutuştur!`,
+                    `Merhaba ${childName}! Aynı renk topları birbirine bağla ve patlat!`,
                     { voice: 'nova' }
                 );
             } catch (e) {
                 console.log('TTS error:', e);
-            } finally {
-                setIsSpeaking(false);
             }
         }
     };
 
-    const initializeLevel = () => {
-        const config = LEVELS[currentLevel];
-        const [rows, cols] = config.grid_size;
-        const newDots: Dot[] = [];
-
-        // Create pairs of dots for each color
-        config.colors.slice(0, config.target_connections).forEach((color, colorIdx) => {
-            // Generate two random positions for each color pair
-            const positions: { row: number; col: number }[] = [];
-            while (positions.length < 2) {
-                const row = Math.floor(Math.random() * rows);
-                const col = Math.floor(Math.random() * cols);
-                const posKey = `${row}-${col}`;
-
-                // Check if position is already taken
-                const isTaken = newDots.some(d => d.row === row && d.col === col) ||
-                    positions.some(p => p.row === row && p.col === col);
-
-                if (!isTaken) {
-                    positions.push({ row, col });
-                }
-            }
-
-            // Create two dots with same color
-            const pairId = `pair-${colorIdx}`;
-            positions.forEach((pos, idx) => {
-                const dotId = `dot-${colorIdx}-${idx}`;
-                newDots.push({
-                    id: dotId,
-                    row: pos.row,
-                    col: pos.col,
-                    color,
-                    connected: false,
-                    pairId,
+    const initializeGame = () => {
+        const newBalls: Ball[] = [];
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                const ballId = `ball-${row}-${col}`;
+                newBalls.push({
+                    id: ballId,
+                    row,
+                    col,
+                    color: BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)],
+                    isPopping: false,
                 });
-                // Initialize pulse animation for each dot
-                pulseAnims.current[dotId] = new Animated.Value(1);
-            });
-        });
-
-        setDots(newDots);
-        setConnections([]);
-        setSelectedDot(null);
+                ballAnims.current[ballId] = new Animated.Value(1);
+            }
+        }
+        setBalls(newBalls);
+        setSelectedBalls([]);
+        setCurrentPath([]);
     };
 
-    const getDotPosition = (dot: Dot) => {
-        const [rows, cols] = levelConfig.grid_size;
-        const gridWidth = cols * CELL_SIZE;
-        const gridHeight = rows * CELL_SIZE;
-
+    const getBallPosition = (ball: Ball) => {
         return {
-            x: (dot.col + 0.5) * CELL_SIZE,
-            y: (dot.row + 0.5) * CELL_SIZE,
+            x: ball.col * CELL_SIZE + CELL_SIZE / 2,
+            y: ball.row * CELL_SIZE + CELL_SIZE / 2,
         };
     };
 
-    const handleDotPress = (dot: Dot) => {
-        if (dot.connected) return;
-
-        // Pulse animation
-        Animated.sequence([
-            Animated.timing(pulseAnims.current[dot.id], { toValue: 1.3, duration: 150, useNativeDriver: true }),
-            Animated.timing(pulseAnims.current[dot.id], { toValue: 1, duration: 150, useNativeDriver: true }),
-        ]).start();
-
-        if (!selectedDot) {
-            // First dot selected
-            setSelectedDot(dot);
-            if (Platform.OS !== 'web') Vibration.vibrate(30);
-        } else {
-            // Second dot selected
-            if (selectedDot.id === dot.id) {
-                // Same dot - deselect
-                setSelectedDot(null);
-            } else if (selectedDot.color === dot.color && selectedDot.pairId === dot.pairId) {
-                // Correct match!
-                const newConnection: Connection = {
-                    from: selectedDot,
-                    to: dot,
-                    color: dot.color,
-                };
-                setConnections(prev => [...prev, newConnection]);
-
-                // Mark dots as connected
-                setDots(prev => prev.map(d =>
-                    d.id === selectedDot.id || d.id === dot.id
-                        ? { ...d, connected: true }
-                        : d
-                ));
-
-                setScore(prev => prev + 100);
-                setMoveHistory(prev => [...prev, { type: 'correct', from: selectedDot.id, to: dot.id }]);
-                playSuccessFeedback();
-                setSelectedDot(null);
-
-                // Check if level complete
-                const remainingPairs = dots.filter(d => !d.connected && d.id !== selectedDot.id && d.id !== dot.id).length / 2;
-                if (remainingPairs === 0) {
-                    handleLevelComplete();
-                }
-            } else {
-                // Wrong match
-                setErrors(prev => prev + 1);
-                setMoveHistory(prev => [...prev, { type: 'error', from: selectedDot.id, to: dot.id }]);
-                playErrorFeedback();
-                setSelectedDot(null);
+    const findBallAtPosition = (x: number, y: number): Ball | null => {
+        for (const ball of balls) {
+            if (ball.isPopping) continue;
+            const pos = getBallPosition(ball);
+            const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+            if (distance < BALL_SIZE / 2 + 10) {
+                return ball;
             }
         }
+        return null;
     };
 
-    const playSuccessFeedback = () => {
-        Animated.sequence([
-            Animated.timing(glowAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-            Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-        ]).start();
-        if (Platform.OS !== 'web') {
-            Vibration.vibrate([0, 50, 30, 50]);
-        }
-        // Play pop sound effect could be added here
+    const isAdjacent = (ball1: Ball, ball2: Ball): boolean => {
+        const rowDiff = Math.abs(ball1.row - ball2.row);
+        const colDiff = Math.abs(ball1.col - ball2.col);
+        // Adjacent: horizontally, vertically, or diagonally
+        return (rowDiff <= 1 && colDiff <= 1) && !(rowDiff === 0 && colDiff === 0);
     };
 
-    const playErrorFeedback = () => {
-        if (Platform.OS !== 'web') {
-            Vibration.vibrate([0, 100, 50, 100]);
+    const handlePop = (poppedBalls: Ball[]) => {
+        if (poppedBalls.length < 3) {
+            setErrors(prev => prev + 1);
+            setMoveHistory(prev => [...prev, { type: 'error', count: poppedBalls.length }]);
+            return;
         }
+
+        // Animate pop
+        poppedBalls.forEach(ball => {
+            Animated.sequence([
+                Animated.timing(ballAnims.current[ball.id], {
+                    toValue: 1.4,
+                    duration: 150,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(ballAnims.current[ball.id], {
+                    toValue: 0,
+                    duration: 200,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+        });
+
+        // Mark balls as popping
+        setBalls(prev => prev.map(b =>
+            poppedBalls.some(pb => pb.id === b.id) ? { ...b, isPopping: true } : b
+        ));
+
+        // After animation, drop new balls
+        setTimeout(() => {
+            dropNewBalls(poppedBalls);
+
+            const newPopCount = popCount + 1;
+            setPopCount(newPopCount);
+            setScore(prev => prev + poppedBalls.length * 50);
+            setMoveHistory(prev => [...prev, { type: 'pop', count: poppedBalls.length }]);
+
+            // Check game end
+            if (newPopCount >= MAX_POPS) {
+                setIsGameComplete(true);
+                setShowConfetti(true);
+                setTimeout(finishGame, 2500);
+            }
+        }, 400);
     };
 
-    const handleLevelComplete = () => {
-        if (currentLevel < LEVELS.length - 1) {
-            // Next level
-            setTimeout(() => {
-                setCurrentLevel(prev => prev + 1);
-            }, 1500);
-        } else {
-            // Game complete
-            setIsGameComplete(true);
-            setShowConfetti(true);
-            setTimeout(finishGame, 3000);
-        }
+    const dropNewBalls = (poppedBalls: Ball[]) => {
+        // Group popped balls by column
+        const poppedByCol: { [col: number]: number[] } = {};
+        poppedBalls.forEach(b => {
+            if (!poppedByCol[b.col]) poppedByCol[b.col] = [];
+            poppedByCol[b.col].push(b.row);
+        });
+
+        setBalls(prev => {
+            const newBalls = [...prev];
+
+            // For each column, shift balls down and add new ones
+            Object.keys(poppedByCol).forEach(colStr => {
+                const col = parseInt(colStr);
+                const poppedRows = poppedByCol[col].sort((a, b) => b - a); // Sort descending
+
+                // Get non-popped balls in this column, sorted by row (bottom to top)
+                const colBalls = newBalls
+                    .filter(b => b.col === col && !b.isPopping)
+                    .sort((a, b) => b.row - a.row);
+
+                // Assign new rows (bottom up)
+                let nextRow = GRID_SIZE - 1;
+                colBalls.forEach(b => {
+                    b.row = nextRow;
+                    nextRow--;
+                });
+
+                // Add new balls at top
+                const newBallsCount = poppedRows.length;
+                for (let i = 0; i < newBallsCount; i++) {
+                    const newBallId = `ball-${Date.now()}-${col}-${i}`;
+                    const newBall: Ball = {
+                        id: newBallId,
+                        row: i,
+                        col,
+                        color: BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)],
+                        isPopping: false,
+                    };
+                    ballAnims.current[newBallId] = new Animated.Value(1);
+                    newBalls.push(newBall);
+                }
+            });
+
+            // Remove popped balls
+            return newBalls.filter(b => !b.isPopping);
+        });
     };
 
     const finishGame = () => {
         const duration = Math.floor((Date.now() - gameStart) / 1000);
-        onGameEnd('renkli-baglantalar', duration, connections.length * 2, errors, null, {
-            visual_tracking_score: Math.max(0, 100 - errors * 10),
-            color_matching_accuracy: connections.length > 0 ? (connections.length / (connections.length + errors)) * 100 : 0,
-            levels_completed: currentLevel + 1,
+        onGameEnd('renkli-baglantalar', duration, popCount, errors, null, {
+            pop_count: popCount,
+            total_score: score,
+            error_count: errors,
             moveHistory,
         });
     };
 
-    // Calculate progress
-    const totalPairs = levelConfig.target_connections;
-    const connectedPairs = connections.length;
-    const progress = connectedPairs / totalPairs;
+    // Pan responder for drag-connect
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: () => true,
+            onPanResponderGrant: (evt) => {
+                const touch = evt.nativeEvent;
+                // Use page coordinates and subtract grid offset for reliability
+                const x = touch.pageX - gridLayout.x;
+                const y = touch.pageY - gridLayout.y;
 
-    // Floating background objects animation
+                const ball = findBallAtPosition(x, y);
+                if (ball) {
+                    setIsDragging(true);
+                    setSelectedBalls([ball]);
+                    const pos = getBallPosition(ball);
+                    setCurrentPath([{ x: pos.x, y: pos.y }]);
+                }
+            },
+            onPanResponderMove: (evt) => {
+                if (!isDragging) return;
+
+                const touch = evt.nativeEvent;
+                const x = touch.pageX - gridLayout.x;
+                const y = touch.pageY - gridLayout.y;
+
+                // Update current path endpoint
+                setCurrentPath(prev => {
+                    if (prev.length === 0) return prev;
+                    const newPath = [...prev];
+                    // Keep start points, update end point
+                    if (newPath.length > selectedBalls.length) {
+                        newPath.pop();
+                    }
+                    newPath.push({ x, y });
+                    return newPath;
+                });
+
+                const ball = findBallAtPosition(x, y);
+                if (ball && !selectedBalls.some(sb => sb.id === ball.id)) {
+                    const lastBall = selectedBalls[selectedBalls.length - 1];
+                    if (lastBall && isAdjacent(lastBall, ball) && ball.color === lastBall.color) {
+                        setSelectedBalls(prev => [...prev, ball]);
+                        const pos = getBallPosition(ball);
+                        setCurrentPath(prev => {
+                            const newPath = prev.slice(0, -1); // Remove trailing point
+                            newPath.push({ x: pos.x, y: pos.y });
+                            newPath.push({ x, y }); // Add new trailing point
+                            return newPath;
+                        });
+                    }
+                }
+            },
+            onPanResponderRelease: () => {
+                if (selectedBalls.length >= 3) {
+                    handlePop(selectedBalls);
+                } else if (selectedBalls.length > 0) {
+                    setErrors(prev => prev + 1);
+                }
+                setIsDragging(false);
+                setSelectedBalls([]);
+                setCurrentPath([]);
+            },
+        })
+    ).current;
+
+    // Floating animation
     const floatingTranslate = floatingAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: [0, 15],
+        outputRange: [0, 10],
     });
+
+    const progress = popCount / MAX_POPS;
 
     return (
         <View style={styles.container}>
-            {/* Gradient Background with floating objects */}
-            <View style={styles.backgroundGradient}>
-                {/* Floating decorative elements */}
-                {[...Array(8)].map((_, i) => (
+            {/* Background with floating elements */}
+            <View style={styles.background}>
+                {[...Array(6)].map((_, i) => (
                     <Animated.View
                         key={i}
                         style={[
-                            styles.floatingObject,
+                            styles.floatingBubble,
                             {
-                                top: `${10 + (i * 12) % 80}%`,
-                                left: `${5 + (i * 15) % 90}%`,
+                                top: `${15 + (i * 15) % 70}%`,
+                                left: `${5 + (i * 18) % 85}%`,
                                 opacity: 0.15,
                                 transform: [
                                     { translateY: floatingTranslate },
-                                    { scale: 0.5 + (i % 3) * 0.3 },
+                                    { scale: 0.4 + (i % 3) * 0.3 },
                                 ],
                             },
                         ]}
                     >
-                        <Text style={{ fontSize: 30 }}>
-                            {['⭐', '🌙', '💫', '✨', '🎈', '🦋', '🌸', '🍀'][i]}
+                        <Text style={{ fontSize: 35 }}>
+                            {['🫧', '✨', '💫', '🌟', '🎈', '🦋'][i]}
                         </Text>
                     </Animated.View>
                 ))}
@@ -333,162 +351,103 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
+                <View style={styles.exitBtn} onTouchEnd={onExit}>
                     <Ionicons name="home" size={22} color="#FFF" />
-                </TouchableOpacity>
-
-                <View style={styles.levelBadge}>
-                    <Text style={styles.levelText}>Seviye {currentLevel + 1}</Text>
                 </View>
 
-                <View style={styles.progressContainer}>
+                <View style={styles.popCounter}>
+                    <Text style={styles.popEmoji}>💥</Text>
+                    <Text style={styles.popText}>{popCount}/{MAX_POPS}</Text>
+                </View>
+
+                <View style={styles.progressBar}>
                     <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-                    <Text style={styles.progressText}>{connectedPairs}/{totalPairs}</Text>
                 </View>
             </View>
 
-            {/* Main Game Area */}
-            <View style={styles.gameArea}>
-                {/* Left side - Character instruction (web only) */}
-                {isWeb && (
-                    <View style={styles.characterPanel}>
-                        <View style={styles.characterBubble}>
-                            <Text style={styles.characterEmoji}>🐦</Text>
-                            <Text style={styles.characterName}>Maviş</Text>
-                        </View>
-                        <View style={styles.speechBubble}>
-                            <Text style={styles.speechText}>
-                                Aynı renkteki noktaları birleştir! 🎨
-                            </Text>
-                        </View>
-                    </View>
-                )}
+            {/* Instruction */}
+            <View style={styles.instructionContainer}>
+                <Text style={styles.instructionText}>
+                    3+ aynı renk topu sürükle ve bağla! 🎯
+                </Text>
+            </View>
 
-                {/* Center - Game Grid */}
+            {/* Game Grid */}
+            <View style={styles.gameArea}>
                 <View
                     ref={gridRef}
-                    style={styles.gridContainer}
+                    style={[
+                        styles.gridContainer,
+                        {
+                            width: GRID_SIZE * CELL_SIZE,
+                            height: GRID_SIZE * CELL_SIZE,
+                        }
+                    ]}
                     onLayout={(e) => {
                         gridRef.current?.measureInWindow((x, y, width, height) => {
                             setGridLayout({ x, y, width, height });
                         });
                     }}
+                    {...panResponder.panHandlers}
                 >
-                    {/* SVG for connections */}
-                    <Svg
-                        style={StyleSheet.absoluteFill}
-                        width={levelConfig.grid_size[1] * CELL_SIZE}
-                        height={levelConfig.grid_size[0] * CELL_SIZE}
-                    >
-                        <Defs>
-                            {connections.map((conn, idx) => (
-                                <LinearGradient key={`grad-${idx}`} id={`gradient-${idx}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                                    <Stop offset="0%" stopColor={conn.color} stopOpacity="1" />
-                                    <Stop offset="50%" stopColor="#FFFFFF" stopOpacity="0.8" />
-                                    <Stop offset="100%" stopColor={conn.color} stopOpacity="1" />
-                                </LinearGradient>
-                            ))}
-                        </Defs>
-
-                        {/* Draw connections */}
-                        {connections.map((conn, idx) => {
-                            const fromPos = getDotPosition(conn.from);
-                            const toPos = getDotPosition(conn.to);
-                            return (
-                                <React.Fragment key={idx}>
-                                    {/* Glow effect */}
-                                    <Line
-                                        x1={fromPos.x}
-                                        y1={fromPos.y}
-                                        x2={toPos.x}
-                                        y2={toPos.y}
-                                        stroke={conn.color}
-                                        strokeWidth={12}
-                                        strokeLinecap="round"
-                                        opacity={0.3}
-                                    />
-                                    {/* Main line */}
-                                    <Line
-                                        x1={fromPos.x}
-                                        y1={fromPos.y}
-                                        x2={toPos.x}
-                                        y2={toPos.y}
-                                        stroke={`url(#gradient-${idx})`}
-                                        strokeWidth={6}
-                                        strokeLinecap="round"
-                                    />
-                                </React.Fragment>
-                            );
-                        })}
+                    {/* Connection Lines */}
+                    <Svg style={StyleSheet.absoluteFill}>
+                        {currentPath.length > 1 && currentPath.slice(0, -1).map((point, idx) => (
+                            <Line
+                                key={idx}
+                                x1={point.x}
+                                y1={point.y}
+                                x2={currentPath[idx + 1].x}
+                                y2={currentPath[idx + 1].y}
+                                stroke={selectedBalls[0]?.color || '#FFF'}
+                                strokeWidth={8}
+                                strokeLinecap="round"
+                                opacity={0.7}
+                            />
+                        ))}
                     </Svg>
 
-                    {/* Dots */}
-                    {dots.map(dot => {
-                        const pos = getDotPosition(dot);
-                        const isSelected = selectedDot?.id === dot.id;
-                        const pulseAnim = pulseAnims.current[dot.id] || new Animated.Value(1);
+                    {/* Balls */}
+                    {balls.filter(b => !b.isPopping).map(ball => {
+                        const pos = getBallPosition(ball);
+                        const isSelected = selectedBalls.some(sb => sb.id === ball.id);
+                        const scaleAnim = ballAnims.current[ball.id] || new Animated.Value(1);
 
                         return (
                             <Animated.View
-                                key={dot.id}
+                                key={ball.id}
                                 style={[
-                                    styles.dotContainer,
+                                    styles.ballContainer,
                                     {
-                                        left: pos.x - DOT_SIZE / 2,
-                                        top: pos.y - DOT_SIZE / 2,
-                                        width: DOT_SIZE,
-                                        height: DOT_SIZE,
-                                        transform: [{ scale: pulseAnim }],
+                                        left: pos.x - BALL_SIZE / 2,
+                                        top: pos.y - BALL_SIZE / 2,
+                                        width: BALL_SIZE,
+                                        height: BALL_SIZE,
+                                        transform: [{ scale: scaleAnim }],
                                     },
                                 ]}
                             >
-                                <TouchableOpacity
-                                    onPress={() => handleDotPress(dot)}
-                                    disabled={dot.connected}
+                                <View
                                     style={[
-                                        styles.dot,
+                                        styles.ball,
                                         {
-                                            backgroundColor: dot.color,
-                                            width: DOT_SIZE,
-                                            height: DOT_SIZE,
-                                            borderRadius: DOT_SIZE / 2,
-                                            opacity: dot.connected ? 0.5 : 1,
+                                            backgroundColor: ball.color,
+                                            width: BALL_SIZE,
+                                            height: BALL_SIZE,
+                                            borderRadius: BALL_SIZE / 2,
                                         },
-                                        isSelected && styles.dotSelected,
+                                        isSelected && styles.ballSelected,
                                     ]}
-                                    activeOpacity={0.7}
                                 >
                                     {/* Inner glow */}
-                                    <View style={[styles.dotInnerGlow, { backgroundColor: dot.color }]} />
+                                    <View style={styles.ballInnerGlow} />
                                     {/* Highlight */}
-                                    <View style={styles.dotHighlight} />
-                                </TouchableOpacity>
+                                    <View style={styles.ballHighlight} />
+                                </View>
                             </Animated.View>
                         );
                     })}
                 </View>
-
-                {/* Right side - Badge Album (web only) */}
-                {isWeb && (
-                    <View style={styles.badgePanel}>
-                        <Text style={styles.badgeTitle}>🏆 Rozetler</Text>
-                        <View style={styles.badgeGrid}>
-                            {[...Array(6)].map((_, i) => (
-                                <View
-                                    key={i}
-                                    style={[
-                                        styles.badgeSlot,
-                                        i < currentLevel + 1 && styles.badgeEarned,
-                                    ]}
-                                >
-                                    <Text style={styles.badgeEmoji}>
-                                        {i < currentLevel + 1 ? ['⭐', '🌟', '💎'][i] || '🎖️' : '🔒'}
-                                    </Text>
-                                </View>
-                            ))}
-                        </View>
-                    </View>
-                )}
             </View>
 
             {/* Score Display */}
@@ -517,17 +476,17 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
             {isGameComplete && (
                 <View style={styles.completeOverlay}>
                     <View style={styles.completeCard}>
-                        <Text style={styles.completeEmoji}>🎉🌈</Text>
-                        <Text style={styles.completeTitle}>Tebrikler!</Text>
-                        <Text style={styles.completeText}>Tüm renkleri birleştirdin!</Text>
+                        <Text style={styles.completeEmoji}>🎉🫧</Text>
+                        <Text style={styles.completeTitle}>Harika!</Text>
+                        <Text style={styles.completeText}>Tüm topları patlattın!</Text>
                         <View style={styles.statsRow}>
                             <View style={styles.statBox}>
                                 <Text style={styles.statLabel}>Puan</Text>
                                 <Text style={styles.statValue}>{score}</Text>
                             </View>
                             <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Seviye</Text>
-                                <Text style={styles.statValue}>{currentLevel + 1}</Text>
+                                <Text style={styles.statLabel}>Patlatma</Text>
+                                <Text style={styles.statValue}>{popCount}</Text>
                             </View>
                         </View>
                     </View>
@@ -543,16 +502,15 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#1a1a2e',
     },
-    backgroundGradient: {
+    background: {
         position: 'absolute',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: '#1a1a2e',
-        // Gradient effect via linear-gradient would need expo-linear-gradient
+        backgroundColor: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 100%)' as any,
     },
-    floatingObject: {
+    floatingBubble: {
         position: 'absolute',
     },
     header: {
@@ -571,173 +529,111 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    levelBadge: {
-        backgroundColor: 'rgba(168, 85, 247, 0.3)',
-        paddingHorizontal: 20,
+    popCounter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,107,157,0.2)',
+        paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
         borderWidth: 2,
-        borderColor: 'rgba(168, 85, 247, 0.5)',
+        borderColor: 'rgba(255,107,157,0.4)',
     },
-    levelText: {
+    popEmoji: {
+        fontSize: 18,
+        marginRight: 6,
+    },
+    popText: {
         color: '#FFF',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
     },
-    progressContainer: {
-        height: 24,
+    progressBar: {
+        height: 12,
         width: 100,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        borderRadius: 12,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 6,
         overflow: 'hidden',
-        justifyContent: 'center',
     },
     progressFill: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        backgroundColor: '#6BCB77',
-        borderRadius: 12,
+        height: '100%',
+        backgroundColor: '#4ECDC4',
+        borderRadius: 6,
     },
-    progressText: {
-        fontSize: 12,
-        fontWeight: 'bold',
+    instructionContainer: {
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    instructionText: {
         color: '#FFF',
-        textAlign: 'center',
+        fontSize: isWeb ? 18 : 16,
+        fontWeight: '600',
+        opacity: 0.9,
     },
     gameArea: {
         flex: 1,
-        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 20,
-    },
-    characterPanel: {
-        width: 150,
-        alignItems: 'center',
-        marginRight: 30,
-    },
-    characterBubble: {
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    characterEmoji: {
-        fontSize: 50,
-    },
-    characterName: {
-        color: '#4ECDC4',
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginTop: 5,
-    },
-    speechBubble: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        padding: 15,
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.2)',
-    },
-    speechText: {
-        color: '#FFF',
-        fontSize: 14,
-        textAlign: 'center',
     },
     gridContainer: {
         backgroundColor: 'rgba(255,255,255,0.05)',
         borderRadius: 24,
-        padding: 20,
+        position: 'relative',
         borderWidth: 2,
         borderColor: 'rgba(255,255,255,0.1)',
-        position: 'relative',
     },
-    badgePanel: {
-        width: 150,
-        marginLeft: 30,
-        alignItems: 'center',
-    },
-    badgeTitle: {
-        color: '#FFD93D',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 15,
-    },
-    badgeGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 10,
-    },
-    badgeSlot: {
-        width: 50,
-        height: 50,
-        borderRadius: 12,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.2)',
-    },
-    badgeEarned: {
-        backgroundColor: 'rgba(255, 215, 0, 0.2)',
-        borderColor: '#FFD700',
-    },
-    badgeEmoji: {
-        fontSize: 24,
-    },
-    dotContainer: {
+    ballContainer: {
         position: 'absolute',
     },
-    dot: {
+    ball: {
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 8,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        elevation: 10,
     },
-    dotSelected: {
+    ballSelected: {
         borderWidth: 4,
         borderColor: '#FFF',
-        transform: [{ scale: 1.1 }],
     },
-    dotInnerGlow: {
+    ballInnerGlow: {
         position: 'absolute',
-        width: '70%',
-        height: '70%',
+        width: '60%',
+        height: '60%',
         borderRadius: 100,
-        opacity: 0.5,
+        backgroundColor: 'rgba(255,255,255,0.25)',
     },
-    dotHighlight: {
+    ballHighlight: {
         position: 'absolute',
-        top: '15%',
-        left: '20%',
-        width: '30%',
-        height: '30%',
+        top: '12%',
+        left: '18%',
+        width: '28%',
+        height: '28%',
         borderRadius: 100,
-        backgroundColor: 'rgba(255,255,255,0.4)',
+        backgroundColor: 'rgba(255,255,255,0.5)',
     },
     scoreContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 30,
+        gap: 25,
         paddingVertical: 20,
     },
     scoreBox: {
         alignItems: 'center',
         backgroundColor: 'rgba(255,255,255,0.1)',
-        paddingHorizontal: 25,
-        paddingVertical: 12,
-        borderRadius: 16,
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+        borderRadius: 18,
     },
     scoreLabel: {
-        fontSize: 12,
+        fontSize: 13,
         color: '#AAA',
         marginBottom: 4,
     },
     scoreValue: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: 'bold',
         color: '#FFF',
     },
@@ -754,25 +650,25 @@ const styles = StyleSheet.create({
     completeCard: {
         backgroundColor: '#1a1a2e',
         padding: 40,
-        borderRadius: 24,
+        borderRadius: 28,
         alignItems: 'center',
         borderWidth: 3,
-        borderColor: '#6BCB77',
+        borderColor: '#4ECDC4',
     },
     completeEmoji: {
         fontSize: 60,
         marginBottom: 15,
     },
     completeTitle: {
-        fontSize: 28,
+        fontSize: 32,
         fontWeight: 'bold',
         color: '#FFF',
         marginBottom: 8,
     },
     completeText: {
-        fontSize: 16,
+        fontSize: 17,
         color: '#AAA',
-        marginBottom: 20,
+        marginBottom: 24,
     },
     statsRow: {
         flexDirection: 'row',
@@ -781,17 +677,17 @@ const styles = StyleSheet.create({
     statBox: {
         alignItems: 'center',
         backgroundColor: 'rgba(255,255,255,0.1)',
-        paddingHorizontal: 25,
-        paddingVertical: 12,
-        borderRadius: 12,
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+        borderRadius: 14,
     },
     statLabel: {
-        fontSize: 12,
+        fontSize: 13,
         color: '#AAA',
         marginBottom: 4,
     },
     statValue: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: 'bold',
         color: '#FFF',
     },

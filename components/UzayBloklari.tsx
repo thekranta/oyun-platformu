@@ -54,9 +54,9 @@ interface MoveData {
 // ============= CONFIG =============
 const { width: screenW, height: screenH } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
-const GRID_SIZE = 4;
-const CELL_SIZE = isWeb ? 60 : Math.floor((screenW - 80) / GRID_SIZE);
-const BLOCK_CELL_SIZE = isWeb ? 25 : 20;
+const GRID_SIZE = 3;
+const CELL_SIZE = isWeb ? 90 : Math.floor((screenW - 60) / GRID_SIZE);
+const BLOCK_CELL_SIZE = isWeb ? 45 : 35;
 
 const COLORS = {
     neonGreen: '#39FF14',
@@ -318,10 +318,17 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     };
 
     // Handle drop on grid
-    const handleDrop = (block: Block, dropX: number, dropY: number) => {
-        // Calculate grid cell from drop position
-        const col = Math.floor((dropX - gridLayout.x) / CELL_SIZE);
-        const row = Math.floor((dropY - gridLayout.y) / CELL_SIZE);
+    const handleDrop = (block: Block, blockScreenX: number, blockScreenY: number) => {
+        // blockScreenX/Y is the absolute screen coordinate of the block's top-left corner
+
+        // Calculate the relative position of the block within the grid
+        const relativeX = blockScreenX - gridLayout.x;
+        const relativeY = blockScreenY - gridLayout.y;
+
+        // Find the nearest cell (row/col) based on this top-left position
+        // We use Math.round to snap to the closest cell boundary
+        const col = Math.round(relativeX / CELL_SIZE);
+        const row = Math.round(relativeY / CELL_SIZE);
 
         if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
             if (canPlaceBlock(block, row, col)) {
@@ -345,8 +352,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
 
     // PanResponder for dragging blocks - improved for web platform
     const createPanResponder = (block: Block) => {
-        let startX = 0;
-        let startY = 0;
+        let touchOffsetX = 0;
+        let touchOffsetY = 0;
 
         return PanResponder.create({
             // Claim responder immediately on start
@@ -365,34 +372,40 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     document.body.style.webkitUserSelect = 'none';
                 }
                 setDraggingBlock(block);
-                // Store initial position
-                startX = gestureState.x0;
-                startY = gestureState.y0;
-                setDragOffset({ x: startX, y: startY });
-                // Reset animation to 0 - block stays in place initially
+
+                // Store initial touch offset relative to the block
+                // locationX/Y is relative to the element (blockWrapper)
+                touchOffsetX = evt.nativeEvent.locationX;
+                touchOffsetY = evt.nativeEvent.locationY;
+
+                setDragOffset({ x: gestureState.x0, y: gestureState.y0 });
+                // Reset animation
                 dragAnim.setValue({ x: 0, y: 0 });
             },
             onPanResponderMove: (evt, gestureState) => {
-                // Prevent default to avoid scrolling and text selection
                 if (isWeb) {
                     evt.preventDefault?.();
                 }
-                // Use accumulated distance from start, not delta
                 dragAnim.setValue({ x: gestureState.dx, y: gestureState.dy });
             },
             onPanResponderRelease: (evt, gestureState) => {
-                // Re-enable text selection on web
                 if (isWeb) {
                     document.body.style.userSelect = '';
                     document.body.style.webkitUserSelect = '';
                 }
-                // Calculate final drop position
-                const dropX = startX + gestureState.dx;
-                const dropY = startY + gestureState.dy;
-                handleDrop(block, dropX, dropY);
+
+                // Calculate final screen coordinates of the block's top-left corner
+                // moveX/moveY is the final touch position on screen
+                // We subtract the touchOffset to get the block's top-left
+                const finalTouchX = gestureState.moveX || (gestureState.x0 + gestureState.dx);
+                const finalTouchY = gestureState.moveY || (gestureState.y0 + gestureState.dy);
+
+                const blockScreenX = finalTouchX - touchOffsetX;
+                const blockScreenY = finalTouchY - touchOffsetY;
+
+                handleDrop(block, blockScreenX, blockScreenY);
             },
             onPanResponderTerminate: () => {
-                // Re-enable text selection on web
                 if (isWeb) {
                     document.body.style.userSelect = '';
                     document.body.style.webkitUserSelect = '';
