@@ -342,24 +342,51 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         dragAnim.setValue({ x: 0, y: 0 });
     };
 
-    // PanResponder for dragging blocks
+    // PanResponder for dragging blocks - improved for web platform
     const createPanResponder = (block: Block) => {
         return PanResponder.create({
+            // Claim responder immediately on start
             onStartShouldSetPanResponder: () => !block.placed,
+            onStartShouldSetPanResponderCapture: () => !block.placed,
             onMoveShouldSetPanResponder: () => !block.placed,
+            onMoveShouldSetPanResponderCapture: () => !block.placed,
+            // Prevent other responders from taking over
+            onPanResponderTerminationRequest: () => false,
+            onShouldBlockNativeResponder: () => true,
             onPanResponderGrant: (evt) => {
+                // Prevent text selection on web
+                if (isWeb) {
+                    evt.preventDefault?.();
+                    document.body.style.userSelect = 'none';
+                    document.body.style.webkitUserSelect = 'none';
+                }
                 setDraggingBlock(block);
                 const { pageX, pageY } = evt.nativeEvent;
                 setDragOffset({ x: pageX, y: pageY });
+                dragAnim.setValue({ x: 0, y: 0 });
             },
             onPanResponderMove: (evt, gestureState) => {
+                // Prevent default to avoid scrolling and text selection
+                if (isWeb) {
+                    evt.preventDefault?.();
+                }
                 dragAnim.setValue({ x: gestureState.dx, y: gestureState.dy });
             },
-            onPanResponderRelease: (evt) => {
+            onPanResponderRelease: (evt, gestureState) => {
+                // Re-enable text selection on web
+                if (isWeb) {
+                    document.body.style.userSelect = '';
+                    document.body.style.webkitUserSelect = '';
+                }
                 const { pageX, pageY } = evt.nativeEvent;
                 handleDrop(block, pageX, pageY);
             },
             onPanResponderTerminate: () => {
+                // Re-enable text selection on web
+                if (isWeb) {
+                    document.body.style.userSelect = '';
+                    document.body.style.webkitUserSelect = '';
+                }
                 setDraggingBlock(null);
                 dragAnim.setValue({ x: 0, y: 0 });
             },
@@ -494,12 +521,20 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                                 {...panResponder.panHandlers}
                                 style={[
                                     styles.blockWrapper,
-                                    isBeingDragged && {
-                                        transform: dragAnim.getTranslateTransform(),
-                                        zIndex: 1000,
-                                        opacity: 0.8,
-                                    },
-                                ]}
+                                    isBeingDragged && [
+                                        {
+                                            transform: dragAnim.getTranslateTransform(),
+                                            zIndex: 1000,
+                                            opacity: 0.9,
+                                            elevation: 10,
+                                            shadowColor: '#BF40BF',
+                                            shadowOffset: { width: 0, height: 4 },
+                                            shadowOpacity: 0.5,
+                                            shadowRadius: 8,
+                                        },
+                                        isWeb && { cursor: 'grabbing' },
+                                    ],
+                                ] as any}
                             >
                                 <View style={styles.blockShape}>
                                     {block.shape.map((row, ri) => (
@@ -741,14 +776,26 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         justifyContent: 'center',
         gap: 15,
-    },
+        // Prevent text selection on web
+        ...(isWeb && {
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+        }),
+    } as any,
     blockWrapper: {
         padding: 10,
         backgroundColor: 'rgba(255,255,255,0.1)',
         borderRadius: 12,
         borderWidth: 2,
         borderColor: 'rgba(255,255,255,0.2)',
-    },
+        // Prevent text selection and improve drag on web
+        ...(isWeb && {
+            cursor: 'grab',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            touchAction: 'none',
+        }),
+    } as any,
     blockShape: {
         flexDirection: 'column',
     },
