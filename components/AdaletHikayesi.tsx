@@ -7,38 +7,124 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 
 // =======================================
-// 📖 ADALET HİKAYESİ - İnteraktif Hikaye
-// Değer: Adalet (Sosyal-Duygusal Gelişim)
+// 📖 ADALET HİKAYESİ (s02) - İnteraktif Hikaye
+// Tema: Adalet, Eşitlik ve Paylaşma
+// Karakterler: Pofuduk Tavşan, Tombul Ayı, Neşeli Sincap
 // =======================================
 
-// STORY DATA - Hikaye ve görseller buraya eklenecek
-// TODO: Kullanıcı görseller ve sesleri sağlayacak
+// STORY DATA - Ormandaki Lezzetli Paylaşım
 const storyData: Record<string, StoryNode> = {
-    // Placeholder intro sahnesi - gerçek verilerle değiştirilecek
+    // BÖLÜM 1: GİRİŞ (Sorun)
     intro: {
         id: 'intro',
-        // bgImage: require('../assets/images/stories/adalet_hikayesi/intro_bg.jpg'),
-        // audio: require('../assets/sounds/stories/adalet_hikayesi/intro_narr.mp3'),
-        // questionAudio: require('../assets/sounds/stories/adalet_hikayesi/intro_q.mp3'),
-        bgImage: null, // Placeholder - kullanıcı sağlayacak
-        audio: null,
-        questionAudio: null,
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_giris_bg_karpuz.jpg'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_q.mp3'),
         options: [
-            // {
-            //     id: 'A',
-            //     type: 'image_button',
-            //     image: require('../assets/images/stories/adalet_hikayesi/option_a_icon.png'),
-            //     next: 'scene_a',
-            // },
-            // {
-            //     id: 'B',
-            //     type: 'image_button',
-            //     image: require('../assets/images/stories/adalet_hikayesi/option_b_icon.png'),
-            //     next: 'scene_b',
-            // },
+            {
+                id: 'A',
+                type: 'image_button',
+                image: require('../assets/images/stories/adalet_hikayesi/s02_secim1_icon_dilim.png'),
+                next: 'scene_a',
+            },
+            {
+                id: 'B',
+                type: 'image_button',
+                image: require('../assets/images/stories/adalet_hikayesi/s02_secim1_icon_baykus.png'),
+                next: 'scene_b',
+            },
         ],
     },
-    // TODO: Daha fazla sahne eklenecek (scene_a, scene_b, end_a1, end_a2, end_b1, end_b2, final)
+
+    // BÖLÜM 2: GELİŞME - YOL A (Tavşan'ın Çözümü)
+    scene_a: {
+        id: 'scene_a',
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_yola_bg_olcum.jpg'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_yola_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_yola_q.mp3'),
+        options: [
+            {
+                id: 'A1',
+                type: 'image_button',
+                image: require('../assets/images/stories/adalet_hikayesi/s02_secim2a_icon_esit.png'),
+                next: 'end_a1',
+            },
+            {
+                id: 'A2',
+                type: 'image_button',
+                image: require('../assets/images/stories/adalet_hikayesi/s02_secim2a_icon_buyuk.png'),
+                next: 'end_a2',
+            },
+        ],
+    },
+
+    // BÖLÜM 2: GELİŞME - YOL B (Bilge Baykuş'un Öğüdü)
+    scene_b: {
+        id: 'scene_b',
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_yolb_bg_danisma.jpg'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_yolb_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_yolb_q.mp3'),
+        options: [
+            {
+                id: 'B1',
+                type: 'image_button',
+                image: require('../assets/images/stories/adalet_hikayesi/s02_secim2b_icon_sira.png'),
+                next: 'end_b1',
+            },
+            {
+                id: 'B2',
+                type: 'image_button',
+                image: require('../assets/images/stories/adalet_hikayesi/s02_secim2b_icon_secim.png'),
+                next: 'end_b2',
+            },
+        ],
+    },
+
+    // BÖLÜM 3: SONUÇLAR
+    // SONUÇ A1 (Tam Eşitlik)
+    end_a1: {
+        id: 'end_a1',
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonuca1_bg_mutlu.jpg'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonuca1_narr.mp3'),
+        next: 'final',
+        analysisTag: 'Adalet-Esitlik-KardesPayi',
+    },
+
+    // SONUÇ A2 (İhtiyaca Göre Paylaşım)
+    end_a2: {
+        id: 'end_a2',
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonuca2_bg_doygun.jpg'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonuca2_narr.mp3'),
+        next: 'final',
+        analysisTag: 'Adalet-IhtiyacaGore-Empati',
+    },
+
+    // SONUÇ B1 (Sırayla Yeme)
+    end_b1: {
+        id: 'end_b1',
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonucb1_bg_isirik.jpg'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonucb1_narr.mp3'),
+        next: 'final',
+        analysisTag: 'Adalet-SiraBekleme-Sabir',
+    },
+
+    // SONUÇ B2 (Kesen Değil Seçen)
+    end_b2: {
+        id: 'end_b2',
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonucb2_bg_guven.jpg'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonucb2_narr.mp3'),
+        next: 'final',
+        analysisTag: 'Adalet-Guven-Fedakarlik',
+    },
+
+    // ORTAK FİNAL
+    final: {
+        id: 'final',
+        isFinal: true,
+        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_final_ortak_bg_dostluk.jpg'),
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_final_narr.mp3'),
+        analysisTag: 'Final',
+    }
 };
 
 type StoryOption = {
@@ -128,6 +214,8 @@ export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: A
     const playAudio = async (audioSource: any, type: 'narrative' | 'question') => {
         await stopAudio();
         if (!audioSource) {
+            // Ses dosyası yoksa otomatik ilerleme
+            setTimeout(() => onAudioFinish(type), 1000);
             return;
         }
 
@@ -143,6 +231,8 @@ export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: A
             });
         } catch (e) {
             console.log('Audio playback error:', e);
+            // Ses yüklenemezse otomatik ilerleme
+            setTimeout(() => onAudioFinish(type), 1000);
         }
     };
 
@@ -180,6 +270,15 @@ export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: A
 
         const pathString = path.join(' -> ');
 
+        // Seçilen yoldan anlam çıkar
+        const getAnalysisSummary = () => {
+            if (path.includes('end_a1')) return 'Tam Eşitlik yaklaşımı';
+            if (path.includes('end_a2')) return 'İhtiyaca Göre Adalet yaklaşımı';
+            if (path.includes('end_b1')) return 'Sıra Bekleme yaklaşımı';
+            if (path.includes('end_b2')) return 'Güven ve Fedakarlık yaklaşımı';
+            return 'Bilinmeyen';
+        };
+
         const logData = {
             ogrenci_adi: userId || 'Misafir',
             ogrenci_yasi: userAge || 0,
@@ -190,9 +289,12 @@ export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: A
             yapay_zeka_yorumu: null,
             email: userEmail,
             zorluk_seviyesi: null,
-            kazanim_odagi: 'Sosyal-Duygusal Gelişim - Adalet',
+            kazanim_odagi: 'Sosyal-Duygusal Gelişim - Adalet ve Paylaşım',
             deneme_no: null,
-            ekstra_veri: JSON.stringify({ secilen_yol: pathString }),
+            ekstra_veri: JSON.stringify({
+                secilen_yol: pathString,
+                yaklasim: getAnalysisSummary()
+            }),
         };
 
         try {
@@ -234,26 +336,6 @@ export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: A
             </View>
         </View>
     );
-
-    // Placeholder görüntüsü - assetler eklenince kaldırılacak
-    if (!currentNode?.bgImage) {
-        return (
-            <DynamicBackground onExit={onExit}>
-                <View style={styles.placeholderContainer}>
-                    <Text style={styles.placeholderEmoji}>⚖️</Text>
-                    <Text style={styles.placeholderTitle}>Adalet Hikayesi</Text>
-                    <Text style={styles.placeholderSubtitle}>Hazırlanıyor...</Text>
-                    <Text style={styles.placeholderInfo}>
-                        Bu interaktif hikaye için görsel ve ses dosyaları bekleniyor.
-                    </Text>
-                    <TouchableOpacity style={styles.exitButton} onPress={onExit}>
-                        <Ionicons name="arrow-back" size={24} color="white" />
-                        <Text style={styles.exitButtonText}>Menüye Dön</Text>
-                    </TouchableOpacity>
-                </View>
-            </DynamicBackground>
-        );
-    }
 
     return (
         <DynamicBackground onExit={onExit}>
@@ -316,7 +398,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         marginBottom: 20,
         borderWidth: 5,
-        borderColor: '#5D4037',
+        borderColor: '#9C27B0', // Mor - Adalet teması
         position: 'relative'
     },
 
@@ -368,52 +450,5 @@ const styles = StyleSheet.create({
     confettiContainer: {
         ...StyleSheet.absoluteFillObject,
         zIndex: 999
-    },
-
-    // Placeholder styles
-    placeholderContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 40,
-    },
-    placeholderEmoji: {
-        fontSize: 80,
-        marginBottom: 20,
-    },
-    placeholderTitle: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 10,
-        textShadowColor: 'rgba(0,0,0,0.5)',
-        textShadowOffset: { width: 2, height: 2 },
-        textShadowRadius: 5,
-    },
-    placeholderSubtitle: {
-        fontSize: 18,
-        color: '#FFD54F',
-        marginBottom: 20,
-    },
-    placeholderInfo: {
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.8)',
-        textAlign: 'center',
-        maxWidth: 400,
-        marginBottom: 30,
-    },
-    exitButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(156, 39, 176, 0.8)',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 25,
-        gap: 10,
-    },
-    exitButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
     },
 });
