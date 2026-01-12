@@ -40,8 +40,8 @@ const storyData: Record<string, StoryNode> = {
     scene_a: {
         id: 'scene_a',
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_yola_bg_olcum.png'),
-        audio: null, // TODO: s02_yola_narr.mp3
-        questionAudio: null, // TODO: s02_yola_q.mp3
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_yola_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_yola_q.mp3'),
         options: [
             {
                 id: 'A1',
@@ -62,8 +62,8 @@ const storyData: Record<string, StoryNode> = {
     scene_b: {
         id: 'scene_b',
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_yolb_bg_danisma.png'),
-        audio: null, // TODO: s02_yolb_narr.mp3
-        questionAudio: null, // TODO: s02_yolb_q.mp3
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_yolb_narr.mp3'),
+        questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_yolb_q.mp3'),
         options: [
             {
                 id: 'B1',
@@ -85,7 +85,7 @@ const storyData: Record<string, StoryNode> = {
     end_a1: {
         id: 'end_a1',
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonuca1_bg_mutlu.png'),
-        audio: null, // TODO: s02_sonuca1_narr.mp3
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonuca1_narr.mp3'),
         next: 'final',
         analysisTag: 'Adalet-Esitlik-KardesPayi',
     },
@@ -94,7 +94,7 @@ const storyData: Record<string, StoryNode> = {
     end_a2: {
         id: 'end_a2',
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonuca2_bg_doygun.png'),
-        audio: null, // TODO: s02_sonuca2_narr.mp3
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonuca2_narr.mp3'),
         next: 'final',
         analysisTag: 'Adalet-IhtiyacaGore-Empati',
     },
@@ -103,7 +103,7 @@ const storyData: Record<string, StoryNode> = {
     end_b1: {
         id: 'end_b1',
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonucb1_bg_isirik.png'),
-        audio: null, // TODO: s02_sonucb1_narr.mp3
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonucb1_narr.mp3'),
         next: 'final',
         analysisTag: 'Adalet-SiraBekleme-Sabir',
     },
@@ -112,7 +112,7 @@ const storyData: Record<string, StoryNode> = {
     end_b2: {
         id: 'end_b2',
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonucb2_bg_guven.png'),
-        audio: null, // TODO: s02_sonucb2_narr.mp3
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonucb2_narr.mp3'),
         next: 'final',
         analysisTag: 'Adalet-Guven-Fedakarlik',
     },
@@ -122,7 +122,7 @@ const storyData: Record<string, StoryNode> = {
         id: 'final',
         isFinal: true,
         bgImage: require('../assets/images/stories/adalet_hikayesi/s02_final_ortak_bg_dostluk.png'),
-        audio: null, // TODO: s02_final_narr.mp3
+        audio: require('../assets/sounds/stories/adalet_hikayesi/s02_final_narr.mp3'),
         analysisTag: 'Final',
     }
 };
