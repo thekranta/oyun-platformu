@@ -286,6 +286,14 @@ export const SONGS: Song[] = [
         coverColor: '#8BC34A', // Yeşil
         icon: 'body',
     },
+    {
+        id: '34',
+        title: 'Geri Dönüşüm',
+        artist: 'Fen - Çevre',
+        source: require('@/assets/sounds/songs/Geri Dönüşüm Kahramanları.mp3'),
+        coverColor: '#4CAF50', // Koyu Yeşil
+        icon: 'leaf',
+    },
 ];
 
 interface MuzikCalarProps {

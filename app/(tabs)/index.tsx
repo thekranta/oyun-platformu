@@ -36,8 +36,21 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const DRAWING_BUCKET = 'cizimler';
 
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Ensure this is installed
+import { createClient } from '@supabase/supabase-js';
+import 'react-native-url-polyfill/auto';
+
 // Cloudflare Turnstile Sitekey
 const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
+
+const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
 
 const slugifyName = (name: string) => {
   const normalized = name
@@ -56,6 +69,7 @@ export default function App() {
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [yukleniyor, setYukleniyor] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
@@ -65,6 +79,7 @@ export default function App() {
   const [showRegistration, setShowRegistration] = useState(false);
   const [regAd, setRegAd] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
   const [regCinsiyet, setRegCinsiyet] = useState<'erkek' | 'kiz' | null>(null);
   const [yasInputMode, setYasInputMode] = useState<'ay' | 'tarih'>('ay');
   const [dogumTarihi, setDogumTarihi] = useState('');
@@ -90,64 +105,65 @@ export default function App() {
   };
 
   const girisYap = async () => {
-    // Throttle: prevent double-clicks
-    if (isLoggingIn) return;
-
-    if (ad.trim() === '' || yas.trim() === '') {
-      showToast('Lütfen isim ve yaş giriniz.', 'error');
-      return;
-    }
-    if (!/^\d+$/.test(yas)) {
-      showToast('Lütfen yaş alanına sadece rakam giriniz.', 'error');
-      return;
-    }
-    const yasNum = parseInt(yas);
-    if (yasNum < 24 || yasNum > 75) {
-      showToast('Yaş 24 ile 75 ay arasında olmalıdır.', 'error');
+    if (email.trim() === '' || password.trim() === '') {
+      showToast('Lütfen e-posta ve şifrenizi giriniz.', 'error');
       return;
     }
 
     setIsLoggingIn(true);
     try {
-      // İsim ve yaş ile veritabanında ara (±2 ay tolerans)
-      const minAge = yasNum - 2;
-      const maxAge = yasNum + 2;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password
+      });
 
-      const response = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?child_name=ilike.${encodeURIComponent(ad.trim())}&child_age_months=gte.${minAge}&child_age_months=lte.${maxAge}&select=id,child_name,child_age_months,email`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY || '',
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-          },
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          showToast('Hatalı e-posta veya şifre.', 'error');
+        } else {
+          showToast('Giriş başarısız: ' + error.message, 'error');
         }
-      );
-
-      const users = await response.json();
-
-      if (!users || users.length === 0) {
-        showToast('Kayıtlı kullanıcı bulunamadı. Lütfen önce kayıt olun.', 'error');
-        setIsLoggingIn(false);
         return;
       }
 
-      if (users.length === 1) {
-        // Tek eşleşme - direkt giriş yap
-        const user = users[0];
-        setEmail(user.email);
-        setYas(user.child_age_months.toString());
+      if (data.user) {
+        // Profil bilgisini çek
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('child_name, child_age_months')
+          .eq('email', email.trim())
+          .single();
+
+        if (profiles) {
+          setAd(profiles.child_name);
+          setYas(profiles.child_age_months.toString());
+        }
+
         await resumeAfterInteraction();
         setAsama('menu');
-      } else {
-        // Birden fazla eşleşme - seçim listesi göster
-        setMatchingChildren(users);
-        setShowChildSelection(true);
       }
     } catch (error) {
       console.error('Giriş hatası:', error);
-      showToast('Giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+      showToast('Beklenmedik bir hata oluştu.', 'error');
     } finally {
       setIsLoggingIn(false);
+    }
+  };
+
+  const sifremiUnuttum = async () => {
+    if (email.trim() === '') {
+      showToast('Lütfen şifre sıfırlama bağlantısı için e-postanızı giriniz.', 'error');
+      return;
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+      });
+      if (error) throw error;
+      showToast('Şifre sıfırlama bağlantısı e-postanıza gönderildi.', 'success');
+    } catch (error: any) {
+      showToast('Hata: ' + error.message, 'error');
     }
   };
 
@@ -217,6 +233,10 @@ export default function App() {
       showToast('Lütfen e-posta adresini giriniz.', 'error');
       return;
     }
+    if (regPassword.trim().length < 6) {
+      showToast('Şifre en az 6 karakter olmalıdır.', 'error');
+      return;
+    }
     if (!regCinsiyet) {
       showToast('Lütfen cinsiyet seçiniz.', 'error');
       return;
@@ -240,70 +260,46 @@ export default function App() {
 
     setIsRegistering(true);
     try {
-      // Önce e-posta ile kayıtlı kullanıcı var mı kontrol et
-      const checkResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(regEmail.trim())}&select=id`,
-        {
-          headers: {
-            'apikey': SUPABASE_KEY || '',
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-          },
-        }
-      );
+      // 1. Supabase Auth Sign Up
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: regEmail.trim(),
+        password: regPassword,
+      });
 
-      const existingUsers = await checkResponse.json();
-
-      if (existingUsers && existingUsers.length > 0) {
-        showToast('Bu e-posta adresi zaten kayıtlı. Giriş yapmayı deneyin.', 'error');
+      if (authError) {
+        showToast('Kayıt hatası: ' + authError.message, 'error');
         setIsRegistering(false);
         return;
       }
 
-      // Supabase profiles tablosuna kaydet
-      const profileData = {
-        child_name: regAd.trim(),
-        email: regEmail.trim(),
-        child_age_months: finalYasAy,
-        gender: regCinsiyet,
-        created_at: new Date().toISOString(),
-        subscription_tier: 'free'
-      };
+      if (authData.user) {
+        // 2. Profiles tablosuna kaydet
+        const profileData = {
+          child_name: regAd.trim(),
+          email: regEmail.trim(),
+          child_age_months: finalYasAy,
+          gender: regCinsiyet,
+          created_at: new Date().toISOString(),
+          subscription_tier: 'free'
+        };
 
-      const saveResponse = await fetch(
-        `${SUPABASE_URL}/rest/v1/profiles`,
-        {
-          method: 'POST',
-          headers: {
-            'apikey': SUPABASE_KEY || '',
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal',
-          },
-          body: JSON.stringify(profileData),
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([profileData]);
+
+        if (profileError) {
+          console.error('Profil oluşturma hatası:', profileError);
+          showToast('Hesap oluşturuldu ancak profil kaydedilemedi.', 'error');
+        } else {
+          showToast('Kayıt başarılı! Giriş yapabilirsiniz.', 'success');
+          setRegAd('');
+          setRegEmail('');
+          setRegPassword('');
+          setRegYasAy('');
+          setDogumTarihi('');
+          setShowRegistration(false);
         }
-      );
-
-      if (!saveResponse.ok) {
-        const errorText = await saveResponse.text();
-        console.error('Kayıt hatası:', errorText);
-        showToast('Kayıt sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-        return;
       }
-
-      // Kayıt başarılı - giriş formunu doldur
-      setAd(regAd.trim());
-      setYas(finalYasAy.toString());
-      setEmail(regEmail.trim());
-
-      showToast('Kayıt başarılı! Artık giriş yapabilirsiniz.', 'success');
-      setShowRegistration(false);
-
-      // Reset registration form
-      setRegAd('');
-      setRegEmail('');
-      setRegCinsiyet(null);
-      setDogumTarihi('');
-      setRegYasAy('');
     } catch (error) {
       console.error('Kayıt hatası:', error);
       showToast('Kayıt sırasında bir hata oluştu.', 'error');
@@ -311,6 +307,8 @@ export default function App() {
       setIsRegistering(false);
     }
   };
+
+
 
   const oyunuBaslat = (oyunTipi: string) => {
     setYukleniyor(false);
@@ -545,37 +543,39 @@ export default function App() {
             </View>
             <Text style={styles.welcomeSubtitle}>Hoş geldin, küçük kaşif! 🌟</Text>
 
-            {/* Name Input with Icon */}
+            {/* Email Input with Icon */}
             <View style={[
               styles.inputContainer,
-              focusedInput === 'ad' && styles.inputContainerFocused
+              focusedInput === 'email' && styles.inputContainerFocused
             ]}>
-              <Text style={styles.inputIcon}>👤</Text>
+              <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
                 style={styles.inputModern}
-                placeholder="İsim (Örn: Ali)"
+                placeholder="E-posta Adresi"
                 placeholderTextColor="#9E9E9E"
-                value={ad}
-                onChangeText={setAd}
-                onFocus={() => setFocusedInput('ad')}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onFocus={() => setFocusedInput('email')}
                 onBlur={() => setFocusedInput(null)}
               />
             </View>
 
-            {/* Age Input with Icon */}
+            {/* Password Input with Icon */}
             <View style={[
               styles.inputContainer,
-              focusedInput === 'yas' && styles.inputContainerFocused
+              focusedInput === 'password' && styles.inputContainerFocused
             ]}>
-              <Text style={styles.inputIcon}>📅</Text>
+              <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.inputModern}
-                placeholder="Yaş (Ay cinsinden)"
+                placeholder="Şifre"
                 placeholderTextColor="#9E9E9E"
-                value={yas}
-                onChangeText={setYas}
-                keyboardType="numeric"
-                onFocus={() => setFocusedInput('yas')}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput(null)}
               />
             </View>
@@ -602,7 +602,7 @@ export default function App() {
 
             {/* Helper Links */}
             <View style={styles.linksContainer}>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={sifremiUnuttum}>
                 <Text style={styles.linkText}>Şifremi Unuttum</Text>
               </TouchableOpacity>
               <View style={styles.linkDivider} />
@@ -1083,10 +1083,10 @@ export default function App() {
                   ))}
                 </View>
 
-                {/* 2. Değerler Eğitimi */}
-                <Text style={styles.sectionTitle}>🌟 Değerler Eğitimi</Text>
+                {/* 2. Fen Eğitimi Şarkıları */}
+                <Text style={styles.sectionTitle}>🔬 Fen Eğitimi Şarkıları</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
-                  {SONGS.filter(s => !s.artist.includes('Matematik') && !s.title.includes('ChildhoodTech')).map((song) => (
+                  {SONGS.filter(s => s.artist.includes('Fen')).map((song) => (
                     <TouchableOpacity
                       key={song.id}
                       style={[styles.oyunKarti, {
@@ -1110,7 +1110,34 @@ export default function App() {
                   ))}
                 </View>
 
-                {/* 3. Özel Koleksiyon */}
+                {/* 3. Değerler Eğitimi */}
+                <Text style={styles.sectionTitle}>🌟 Değerler Eğitimi</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
+                  {SONGS.filter(s => !s.artist.includes('Matematik') && !s.artist.includes('Fen') && !s.title.includes('ChildhoodTech')).map((song) => (
+                    <TouchableOpacity
+                      key={song.id}
+                      style={[styles.oyunKarti, {
+                        backgroundColor: song.coverColor,
+                        margin: 6,
+                        width: 105,
+                        height: 115,
+                        paddingHorizontal: 8,
+                        paddingVertical: 10,
+                      }]}
+                      onPress={() => {
+                        const realIndex = SONGS.findIndex(s => s.id === song.id);
+                        setSelectedSongIndex(realIndex);
+                        oyunuBaslat('muzik-calar');
+                      }}
+                    >
+                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
+                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
+                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* 4. Özel Koleksiyon */}
                 <Text style={styles.sectionTitle}>🎵 Özel Koleksiyon (ChildhoodTech)</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
                   {SONGS.filter(s => s.title.includes('ChildhoodTech')).map((song) => (
