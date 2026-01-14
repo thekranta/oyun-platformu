@@ -58,6 +58,9 @@ const isWeb = Platform.OS === 'web';
 const GRID_SIZE = 3;
 const CELL_SIZE = isWeb ? 90 : Math.floor((screenW - 60) / GRID_SIZE);
 const BLOCK_CELL_SIZE = isWeb ? 45 : 35;
+const GRID_PADDING = 8; // padding inside grid container
+const CELL_MARGIN = 2;  // margin around each cell
+const EFFECTIVE_CELL_SIZE = CELL_SIZE + (CELL_MARGIN * 2); // total space per cell including margins
 
 const COLORS = {
     neonGreen: '#39FF14',
@@ -98,6 +101,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     // Dragging state
     const [draggingBlock, setDraggingBlock] = useState<Block | null>(null);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const [dragAbsolutePos, setDragAbsolutePos] = useState({ x: 0, y: 0 }); // Absolute screen position of block origin
     const dragAnim = useRef(new Animated.ValueXY()).current;
     const gridRef = useRef<View>(null);
     const [gridLayout, setGridLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -333,33 +337,33 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const handleDrop = (block: Block, blockScreenX: number, blockScreenY: number) => {
         // blockScreenX/Y is the absolute screen coordinate of the block's top-left corner
 
-        // Calculate the relative position of the block within the grid
-        const relativeX = blockScreenX - gridLayout.x;
-        const relativeY = blockScreenY - gridLayout.y;
+        // Calculate the relative position within the grid's content area
+        // Account for grid padding and cell margins
+        const relativeX = blockScreenX - gridLayout.x - GRID_PADDING;
+        const relativeY = blockScreenY - gridLayout.y - GRID_PADDING;
 
-        // Find the nearest cell (row/col) based on this top-left position
-        const baseCol = Math.round(relativeX / CELL_SIZE);
-        const baseRow = Math.round(relativeY / CELL_SIZE);
+        // Use EFFECTIVE_CELL_SIZE (cell + margins) for proper snapping
+        // Use Math.floor for predictable "drop in this cell" behavior
+        const baseCol = Math.floor((relativeX + EFFECTIVE_CELL_SIZE / 2) / EFFECTIVE_CELL_SIZE);
+        const baseRow = Math.floor((relativeY + EFFECTIVE_CELL_SIZE / 2) / EFFECTIVE_CELL_SIZE);
 
-        // Fuzzy Snapping: Check the ideal position first, then immediate neighbors
-        // This helps if the user is slightly off
+        // Clamp to valid range first for primary target
+        const clampedRow = Math.max(0, Math.min(GRID_SIZE - 1, baseRow));
+        const clampedCol = Math.max(0, Math.min(GRID_SIZE - 1, baseCol));
+
+        // Try exact position first, then neighbors
         const candidates = [
-            { r: baseRow, c: baseCol },
-            { r: baseRow + 1, c: baseCol },
-            { r: baseRow - 1, c: baseCol },
-            { r: baseRow, c: baseCol + 1 },
-            { r: baseRow, c: baseCol - 1 },
+            { r: clampedRow, c: clampedCol },
+            { r: clampedRow, c: clampedCol + 1 },
+            { r: clampedRow, c: clampedCol - 1 },
+            { r: clampedRow + 1, c: clampedCol },
+            { r: clampedRow - 1, c: clampedCol },
         ];
 
         let placed = false;
 
         for (const { r, c } of candidates) {
-            // Check if this candidate is valid bounds first
             if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
-                // Calculate distance to this cell's center to prioritize closest valid match
-                // Actually, since we sorted candidates by likelihood (center first), the first valid one is good "enough"
-                // But pure snapping to closest valid is better.
-                // For now, let's just take the first valid one to be forgiving.
                 if (canPlaceBlock(block, r, c)) {
                     placeBlock(block, r, c);
                     placed = true;
@@ -369,15 +373,16 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         }
 
         if (!placed) {
-            // Only count error if it was "droppable" but invalid, 
-            // or if user clearly tried to drop on grid (within bounds)
-            // simplified: if nearest was on grid but failed
-            if (baseRow >= -1 && baseRow <= GRID_SIZE && baseCol >= -1 && baseCol <= GRID_SIZE) {
+            // Check if drop was reasonably within grid area
+            const withinGridX = relativeX >= -EFFECTIVE_CELL_SIZE && relativeX <= (GRID_SIZE * EFFECTIVE_CELL_SIZE) + EFFECTIVE_CELL_SIZE;
+            const withinGridY = relativeY >= -EFFECTIVE_CELL_SIZE && relativeY <= (GRID_SIZE * EFFECTIVE_CELL_SIZE) + EFFECTIVE_CELL_SIZE;
+
+            if (withinGridX && withinGridY) {
                 setErrors(prev => prev + 1);
                 playErrorFeedback();
                 setMoveHistory(prev => [...prev, {
                     blockId: block.id,
-                    targetCell: { row: baseRow, col: baseCol },
+                    targetCell: { row: clampedRow, col: clampedCol },
                     isCorrect: false,
                     responseTime: Date.now() - lastActionTime,
                     timestamp: Date.now(),
@@ -387,6 +392,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         }
 
         setDraggingBlock(null);
+        setDragAbsolutePos({ x: 0, y: 0 });
         dragAnim.setValue({ x: 0, y: 0 });
     };
 
@@ -414,12 +420,15 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 setDraggingBlock(block);
 
                 // Store initial touch offset relative to the block
-                // locationX/Y is relative to the element (blockWrapper)
-                touchOffsetX = evt.nativeEvent.locationX;
-                touchOffsetY = evt.nativeEvent.locationY;
+                touchOffsetX = evt.nativeEvent.locationX || 0;
+                touchOffsetY = evt.nativeEvent.locationY || 0;
 
+                // Store initial absolute position (touch point - offset = block origin)
+                const initialBlockX = gestureState.x0 - touchOffsetX;
+                const initialBlockY = gestureState.y0 - touchOffsetY;
                 setDragOffset({ x: gestureState.x0, y: gestureState.y0 });
-                // Reset animation
+                setDragAbsolutePos({ x: initialBlockX, y: initialBlockY });
+
                 dragAnim.setValue({ x: 0, y: 0 });
             },
             onPanResponderMove: (evt, gestureState) => {
@@ -427,6 +436,11 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     evt.preventDefault?.();
                 }
                 dragAnim.setValue({ x: gestureState.dx, y: gestureState.dy });
+
+                // Track current absolute position for reliable drop
+                const currentBlockX = (gestureState.x0 - touchOffsetX) + gestureState.dx;
+                const currentBlockY = (gestureState.y0 - touchOffsetY) + gestureState.dy;
+                setDragAbsolutePos({ x: currentBlockX, y: currentBlockY });
             },
             onPanResponderRelease: (evt, gestureState) => {
                 if (isWeb) {
@@ -434,16 +448,12 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     document.body.style.webkitUserSelect = '';
                 }
 
-                // Calculate final screen coordinates of the block's top-left corner
-                // moveX/moveY is the final touch position on screen
-                // We subtract the touchOffset to get the block's top-left
-                const finalTouchX = gestureState.moveX || (gestureState.x0 + gestureState.dx);
-                const finalTouchY = gestureState.moveY || (gestureState.y0 + gestureState.dy);
+                // Use tracked absolute position for reliable drop
+                // Fallback to calculated position if state hasn't updated
+                const finalBlockX = dragAbsolutePos.x !== 0 ? dragAbsolutePos.x : (gestureState.x0 - touchOffsetX) + gestureState.dx;
+                const finalBlockY = dragAbsolutePos.y !== 0 ? dragAbsolutePos.y : (gestureState.y0 - touchOffsetY) + gestureState.dy;
 
-                const blockScreenX = finalTouchX - touchOffsetX;
-                const blockScreenY = finalTouchY - touchOffsetY;
-
-                handleDrop(block, blockScreenX, blockScreenY);
+                handleDrop(block, finalBlockX, finalBlockY);
             },
             onPanResponderTerminate: () => {
                 if (isWeb) {
@@ -451,6 +461,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     document.body.style.webkitUserSelect = '';
                 }
                 setDraggingBlock(null);
+                setDragAbsolutePos({ x: 0, y: 0 });
                 dragAnim.setValue({ x: 0, y: 0 });
             },
         });
@@ -517,7 +528,18 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            {/* Portrait mode hint for mobile */}
+            {!isWeb && (
+                <View style={styles.portraitHint}>
+                    <Text style={styles.portraitHintText}>📱 Dikey modda oyna</Text>
+                </View>
+            )}
+
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={!draggingBlock} // Disable scroll while dragging
+            >
                 {/* Grid Area with Rotation */}
                 <View style={styles.gridContainer}>
                     <Animated.View
@@ -971,5 +993,18 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         paddingBottom: 20,
+    },
+    portraitHint: {
+        alignItems: 'center',
+        paddingVertical: 6,
+        backgroundColor: 'rgba(191, 64, 191, 0.15)',
+        borderRadius: 8,
+        marginHorizontal: 60,
+        marginBottom: 5,
+    },
+    portraitHintText: {
+        color: '#BF40BF',
+        fontSize: 12,
+        fontWeight: '600',
     },
 });
