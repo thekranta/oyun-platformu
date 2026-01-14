@@ -63,13 +63,14 @@ const ALAN_COLORS: Record<string, string> = {
     'Genel Gelişim': '#607D8B',
 };
 
-// Kod prefiksi ile renk eşleştirme
+// Kod prefiksi ile renk eşleştirme (raw_curriculum.txt'deki kodlara göre)
 const getCodeColor = (code: string) => {
-    if (code.startsWith('MAB')) return '#1976D2';  // Mavi
-    if (code.startsWith('FAB')) return '#388E3C';  // Yeşil
-    if (code.startsWith('TAKB') || code.startsWith('TAEOB')) return '#D32F2F'; // Kırmızı
-    if (code.startsWith('SDB')) return '#8E24AA';  // Mor
-    if (code.startsWith('SNAB')) return '#7B1FA2'; // Mor
+    if (code.startsWith('MAB')) return '#1976D2';  // Mavi - Matematik
+    if (code.startsWith('FAB')) return '#388E3C';  // Yeşil - Fen
+    if (code.startsWith('TAKB') || code.startsWith('TAEOB') || code.startsWith('TADB') || code.startsWith('TAOB')) return '#D32F2F'; // Kırmızı - Türkçe
+    if (code.startsWith('HSAB')) return '#FF7043';  // Turuncu - Hareket ve Sağlık
+    if (code.startsWith('SAB')) return '#8E24AA';  // Mor - Sosyal Bilgiler
+    if (code.startsWith('MDB') || code.startsWith('MSB') || code.startsWith('MÇB') || code.startsWith('MHB') || code.startsWith('MYB')) return '#00897B'; // Teal - Müzik
     return '#607D8B'; // Gri
 };
 
@@ -344,7 +345,7 @@ export default function AdminPanel() {
         setProcessingId(score.id);
         console.log('Gemini isteği gönderildi', { scoreId: score.id, oyunTuru: score.oyun_turu });
         try {
-            // Maarif Modeli Referans Matrisi - Oyun Eşleştirmeleri (raw_curriculum.txt'ye göre)
+            // Maarif Modeli Referans Matrisi - Oyun Eşleştirmeleri (raw_curriculum.txt'ye göre - SADECE belgede var olan kodlar kullanılmalı!)
             const maarifMatrisi: Record<string, { alan: string; surec: string; cikti: string; ciktiAciklama: string; deger?: string }> = {
                 // Matematik Alanı
                 'hafiza': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme' },
@@ -360,37 +361,37 @@ export default function AdminPanel() {
                 // Türkçe Alanı
                 'bunu-soyle': { alan: 'Türkçe', surec: 'Konuşma / İçerik Oluşturma', cikti: 'TAKB.2', ciktiAciklama: 'Konuşma sürecinin içeriğini oluşturabilme' },
                 'rakam-yazma': { alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)' },
-                // Sanat Alanı
-                'yaratici-cizim': { alan: 'Sanat', surec: 'Sanatsal Uygulama Yapma', cikti: 'SNAB4', ciktiAciklama: 'Sanat etkinliklerinde yaratıcı ürünler oluşturur' },
-                // Sosyal-Duygusal Gelişim (Kullanıcının belirlediği kodlar)
-                'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim', surec: 'Değer Kazanımı', cikti: 'SDB.3', ciktiAciklama: 'Duyarlılık ve yardımseverlik', deger: 'Yardımseverlik' },
-                'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', surec: 'Değer Kazanımı', cikti: 'SDB.2.1', ciktiAciklama: 'Aile bütünlüğü ve aidiyet duygusu', deger: 'Aile Bütünlüğü' },
+                // Sanat Alanı - NOT: SNAB kodları raw_curriculum.txt'de yok, bu nedenle kullanılmamalı
+                'yaratici-cizim': { alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)' },
+                // Hikaye Tabanlı Oyunlar - Türkçe Alanı Dinleme/İzleme (raw_curriculum.txt'ye göre)
+                'ceviz_macera': { alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Dinledikleri/izledikleri materyaller ile ilgili yeni anlamlar oluşturabilme', deger: 'Yardımseverlik' },
+                'aile-sepeti': { alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Dinledikleri/izledikleri iletilerde yer alan bilgiler ile günlük yaşamı arasında ilişki kurar', deger: 'Aile Bütünlüğü' },
                 // Yeni Oyunlar
                 'golge-dedektifi': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme' },
                 // Yeni Bilişsel Oyunlar (Ocak 2026)
-                'onluk-cerceve': { alan: 'Matematik', surec: 'Sayısal Temsil', cikti: 'MAB.1', ciktiAciklama: 'Sayıları modellerle ifade etme ve çözümleme (1-10)' },
-                'sayi-komsulari': { alan: 'Matematik', surec: 'Sıralama', cikti: 'MAB.4', ciktiAciklama: 'Sayılar arasındaki ardışıklık ve konum ilişkisini belirleme' },
-                'tarti-dengesi': { alan: 'Matematik', surec: 'Eşitlik ve Denge', cikti: 'MAB.5', ciktiAciklama: 'Matematiksel eşitlik durumlarını kavrama ve dengeyi sağlama' },
-                // Sihirli Tuval - Görsel-Uzamsal Analiz
+                'onluk-cerceve': { alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme (1-20 arası nesne/varlık sayısını söyler)' },
+                'sayi-komsulari': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.4', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelere ilişkin çıkarım yapabilme' },
+                'tarti-dengesi': { alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.5', ciktiAciklama: 'Matematiksel problemlerin parçaları arasındaki ilişkileri açıklar' },
+                // Sihirli Tuval - Matematik Alanı Görsel Temsil
                 'sihirli-tuval': {
                     alan: 'Matematik',
-                    surec: 'Görsel-Uzamsal Analiz',
-                    cikti: 'MAB.2.1',
-                    ciktiAciklama: 'Nesneleri özelliklerine göre eşleştirme ve görsel dikkat - Görsel tarama yoluyla nesne-sembol ilişkisi kurma'
+                    surec: 'Matematiksel Temsil',
+                    cikti: 'MAB.9',
+                    ciktiAciklama: 'Farklı matematiksel temsillerden yararlanabilme - Çeşitli semboller arasından belirtilen matematiksel temsilleri gösterir'
                 },
-                // Uzay Blokları: Yıldız Mimarı - Problem Çözme ve Uzamsal Algı
+                // Uzay Blokları: Yıldız Mimarı - Matematik Alanı Parça-Bütün İlişkisi
                 'uzay-bloklari': {
-                    alan: 'Bilişsel Gelişim',
-                    surec: 'Problem Çözme ve Uzamsal Algı',
-                    cikti: 'KB.2.4',
-                    ciktiAciklama: 'Görsel-Uzamsal becerileri kullanır (Şekil döndürme, bütünleştirme, yerleştirme)'
+                    alan: 'Matematik',
+                    surec: 'Matematiksel Muhakeme',
+                    cikti: 'MAB.2',
+                    ciktiAciklama: 'Bir bütünü oluşturan parçaları gösterir, parçalar arasındaki ilişki/ilişkisizlik durumlarını açıklar'
                 },
-                // Adalet Hikayesi - Sosyal-Duygusal Gelişim
+                // Adalet Hikayesi - Türkçe Alanı Dinleme/İzleme (raw_curriculum.txt'ye göre)
                 'adalet-hikayesi': {
-                    alan: 'Sosyal-Duygusal Gelişim',
-                    surec: 'Değer Kazanımı',
-                    cikti: 'SDB.1',
-                    ciktiAciklama: 'Adalet, Eşitlik ve Paylaşım değerlerini anlar',
+                    alan: 'Türkçe',
+                    surec: 'Dinleme/İzleme',
+                    cikti: 'TADB.2',
+                    ciktiAciklama: 'Dinledikleri/izledikleri materyaller ile ilgili yeni anlamlar oluşturabilme - Materyallerdeki olayları belirler',
                     deger: 'Adalet'
                 },
             };
@@ -583,7 +584,7 @@ Saygılarımızla,
 ChildhoodTech Ekibi
                 `;
             } else if (score.oyun_turu === 'sihirli-tuval') {
-                // === SİHİRLİ TUVAL - GÖRSEL-UZAMSAL ANALİZ ===
+                // === SİHİRLİ TUVAL - MATEMATİKSEL TEMSİL ===
                 prompt = `
 Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
 Bu oyun bir "Görsel Dikkat ve Sembolik Eşleme" görevidir, sadece boyama değil!
@@ -594,9 +595,9 @@ Bu oyun bir "Görsel Dikkat ve Sembolik Eşleme" görevidir, sadece boyama deği
 - Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
 ${gelisimBolumu}
-## MAARİF MODELİ REFERANSI:
-- Alan: Matematik | Süreç: Görsel-Uzamsal Analiz
-- Öğrenme Çıktısı: MAB.2.1 - Nesneleri özelliklerine göre eşleştirme ve görsel dikkat
+## MAARİF MODELİ REFERANSI (raw_curriculum.txt'ye göre):
+- Alan: Matematik | Süreç: Matematiksel Temsil
+- Öğrenme Çıktısı: MAB.9 - Farklı matematiksel temsillerden yararlanabilme (Çeşitli semboller arasından belirtilen matematiksel temsilleri gösterir)
 
 ## ANALİZ KRİTERLERİ (ÖNEMLİ):
 1. **Görsel Tarama Hızı:** Çocuğun alttaki rakamı seçtikten sonra tuval üzerindeki doğru rakamı bulma süresini "Görsel Tarama Hızı" olarak yorumla.
@@ -606,8 +607,8 @@ ${gelisimBolumu}
 3. **Beceri Odağı:** Bu oyun sayı sayma değil, "sembol-mekan eşlemesi" becerisi geliştirir.
 
 ## VELİ PANELİ İÇİN BAŞLIKLAR:
-- Akademik Karşılık: MAB.2.1 - Matematiksel Nesne Çözümleme
-- Beceri Karşılığı: Görsel Odaklanma ve Sayı Eşleştirme
+- Akademik Karşılık: MAB.9 - Matematiksel Temsil
+- Beceri Karşılığı: Görsel Odaklanma ve Sembol Eşleştirme
 
 ## ÇIKTI KURALLARI:
 1. ASLA giriş cümlesi kullanma.
@@ -618,10 +619,10 @@ ${gelisimBolumu}
 
 **MAARİF MODELİ PEDAGOJİK ANALİZ**
 
-**Akademik Karşılık:** MAB.2.1 - Matematiksel Nesne Çözümleme
-**Beceri Karşılığı:** Görsel Odaklanma ve Sayı Eşleştirme
+**Akademik Karşılık:** MAB.9 - Matematiksel Temsil
+**Beceri Karşılığı:** Görsel Odaklanma ve Sembol Eşleştirme
 
-**Görsel Tarama Analizi:** [Çocuğun görsel tarama yoluyla nesne-sembol ilişkisi kurma becerisini değerlendir]
+**Görsel Tarama Analizi:** [Çocuğun görsel tarama yoluyla sembol-temsil ilişkisi kurma becerisini değerlendir]
 
 **Performans Değerlendirmesi:** [${hata} hata için "Görsel Ayırt Etme" veya "Dürtüsellik" bağlamında analiz yap. ASLA "sayı bilmiyor" deme!]
 
@@ -640,7 +641,7 @@ Saygılarımızla,
 ChildhoodTech Ekibi
                 `;
             } else if (score.oyun_turu === 'uzay-bloklari') {
-                // === UZAY BLOKLARI - PROBLEM ÇÖZME VE UZAMSAL ALGI ===
+                // === UZAY BLOKLARI - MATEMATİKSEL MUHAKEME VE PARÇA-BÜTÜN İLİŞKİSİ ===
                 prompt = `
 Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
 
@@ -650,18 +651,18 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 - Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
 ${gelisimBolumu}
-## MAARİF MODELİ REFERANSI:
-- Alan: Bilişsel Gelişim | Süreç: Problem Çözme ve Uzamsal Algı
-- Öğrenme Çıktısı: KB.2.4 - Görsel-Uzamsal becerileri kullanır (Şekil döndürme, yerleştirme)
+## MAARİF MODELİ REFERANSI (raw_curriculum.txt'ye göre):
+- Alan: Matematik | Süreç: Matematiksel Muhakeme
+- Öğrenme Çıktısı: MAB.2 - Bir bütünü oluşturan parçaları gösterir, parçalar arasındaki ilişki/ilişkisizlik durumlarını açıklar
 
 ## ANALİZ KRİTERLERİ (ÖNEMLİ):
-1. **Uzamsal Planlama:** Çocuğun blokları yerleştirmeden önce zihninde döndürüp döndüremediğini (deneme-yanılma sayısı ile) analiz et.
+1. **Parça-Bütün İlişkisi:** Çocuğun blok parçalarını bütün içinde doğru pozisyona yerleştirme becerisini değerlendir.
 2. **Problem Çözme:** Hatadan sonra strateji değiştirip değiştirmediğini değerlendir.
-3. **Parça-Bütün İlişkisi:** Karmaşık şekilleri boşluğa sığdırma becerisini yorumla.
+3. **Uzamsal Farkındalık:** Karmaşık şekilleri boşluğa sığdırma ve döndürme becerisini yorumla.
 
 ## VELİ PANELİ İÇİN BAŞLIKLAR:
-- Akademik Karşılık: KB.2.4 - Uzamsal Düşünme ve Şekil Algısı
-- Beceri Karşılığı: Problem Çözme ve Parça-Bütün İlişkisi
+- Akademik Karşılık: MAB.2 - Matematiksel Muhakeme (Parça-Bütün İlişkisi)
+- Beceri Karşılığı: Parçaları gösterme ve ilişkileri açıklama
 
 ## ÇIKTI KURALLARI:
 1. ASLA giriş cümlesi kullanma.
@@ -672,10 +673,10 @@ ${gelisimBolumu}
 
 **MAARİF MODELİ PEDAGOJİK ANALİZ**
 
-**Akademik Karşılık:** KB.2.4 - Uzamsal Düşünme ve Şekil Algısı
-**Beceri Karşılığı:** Problem Çözme ve Parça-Bütün İlişkisi
+**Akademik Karşılık:** MAB.2 - Matematiksel Muhakeme (Parça-Bütün İlişkisi)
+**Beceri Karşılığı:** Parçaları gösterme ve ilişkileri açıklama
 
-**Uzamsal Planlama Analizi:** [Çocuğun blokları yerleştirme süresi (${sure} sn) ve hata sayısı (${hata}) üzerinden zihinsel rotasyon becerisini değerlendir]
+**Parça-Bütün Analizi:** [Çocuğun blokları yerleştirme süresi (${sure} sn) ve hata sayısı (${hata}) üzerinden parça-bütün ilişkisi kurma becerisini değerlendir]
 
 **Problem Çözme Stratejisi:** [Hata yaptıktan sonraki düzeltme hızı ve yaklaşımını analiz et]
 
@@ -688,7 +689,7 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır]' :
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin problem çözme ve uzamsal algı becerisini samimi bir dille açıkla. Evde yapılabilecek "lego/blok" veya "kutu yerleştirme" etkinliği öner.]
+[${score.ogrenci_adi}'nin parça-bütün ilişkisi kurma ve uzamsal düşünme becerisini samimi bir dille açıkla. Evde yapılabilecek "lego/blok" veya "kutu yerleştirme" etkinliği öner.]
 
 Saygılarımızla,
 ChildhoodTech Ekibi
