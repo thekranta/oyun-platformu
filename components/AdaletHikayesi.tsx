@@ -155,12 +155,20 @@ type StoryNode = {
 
 interface AdaletHikayesiProps {
     onExit: () => void;
+    onGameEnd?: (
+        oyunAdi: string,
+        sure: number,
+        hamle: number,
+        hata: number,
+        cizimVerisi?: any,
+        ekstraVeri?: any
+    ) => void;
     userId?: string;
     userEmail?: string;
     userAge?: number;
 }
 
-export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: AdaletHikayesiProps) {
+export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, userAge }: AdaletHikayesiProps) {
     const { width, height } = useWindowDimensions();
     const isPortrait = height > width;
     const isMobile = width < 768;
@@ -316,6 +324,15 @@ export default function AdaletHikayesi({ onExit, userId, userEmail, userAge }: A
                 body: JSON.stringify(logData),
             });
             console.log('✅ Adalet Hikayesi sonucu kaydedildi.');
+
+            // Call onGameEnd for admin panel integration
+            if (onGameEnd) {
+                onGameEnd('adalet-hikayesi', durationSeconds, path.length, 0, null, {
+                    secilen_yol: pathString,
+                    yaklasim: getAnalysisSummary(),
+                    maarif_kazanim: 'Sosyal-Duygusal Gelişim: Adalet, Eşitlik ve Paylaşım değerlerini anlar ve uygular',
+                });
+            }
         } catch (e) {
             console.error('Log hatası:', e);
         }

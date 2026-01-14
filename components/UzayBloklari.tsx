@@ -4,7 +4,6 @@ import {
     ActivityIndicator,
     Animated,
     Dimensions,
-    PanResponder,
     Platform,
     ScrollView,
     StyleSheet,
@@ -98,13 +97,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const [rocketLaunch, setRocketLaunch] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
 
-    // Dragging state
-    const [draggingBlock, setDraggingBlock] = useState<Block | null>(null);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const dragAbsolutePos = useRef({ x: 0, y: 0 }); // Use ref for synchronous access during release
-    const dragAnim = useRef(new Animated.ValueXY()).current;
-    const gridRef = useRef<View>(null);
-    const [gridLayout, setGridLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
+    // Selection state (tap-to-select, tap-to-place)
+    const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
 
     // Animations
     const glowAnim = useRef(new Animated.Value(0)).current;
@@ -333,137 +327,37 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         }
     };
 
-    // Handle drop on grid
-    const handleDrop = (block: Block, blockScreenX: number, blockScreenY: number) => {
-        // blockScreenX/Y is the absolute screen coordinate of the block's top-left corner
+    // Handle selecting a block from palette
+    const handleBlockSelect = (block: Block) => {
+        if (block.placed) return;
 
-        // Calculate the relative position within the grid's content area
-        // Account for grid padding and cell margins
-        const relativeX = blockScreenX - gridLayout.x - GRID_PADDING;
-        const relativeY = blockScreenY - gridLayout.y - GRID_PADDING;
-
-        // Use EFFECTIVE_CELL_SIZE (cell + margins) for proper snapping
-        // Use Math.floor for predictable "drop in this cell" behavior
-        const baseCol = Math.floor((relativeX + EFFECTIVE_CELL_SIZE / 2) / EFFECTIVE_CELL_SIZE);
-        const baseRow = Math.floor((relativeY + EFFECTIVE_CELL_SIZE / 2) / EFFECTIVE_CELL_SIZE);
-
-        // Clamp to valid range first for primary target
-        const clampedRow = Math.max(0, Math.min(GRID_SIZE - 1, baseRow));
-        const clampedCol = Math.max(0, Math.min(GRID_SIZE - 1, baseCol));
-
-        // Try exact position first, then neighbors
-        const candidates = [
-            { r: clampedRow, c: clampedCol },
-            { r: clampedRow, c: clampedCol + 1 },
-            { r: clampedRow, c: clampedCol - 1 },
-            { r: clampedRow + 1, c: clampedCol },
-            { r: clampedRow - 1, c: clampedCol },
-        ];
-
-        let placed = false;
-
-        for (const { r, c } of candidates) {
-            if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
-                if (canPlaceBlock(block, r, c)) {
-                    placeBlock(block, r, c);
-                    placed = true;
-                    break;
-                }
-            }
+        if (selectedBlock?.id === block.id) {
+            // Deselect if same block tapped again
+            setSelectedBlock(null);
+        } else {
+            setSelectedBlock(block);
         }
-
-        if (!placed) {
-            // Check if drop was reasonably within grid area
-            const withinGridX = relativeX >= -EFFECTIVE_CELL_SIZE && relativeX <= (GRID_SIZE * EFFECTIVE_CELL_SIZE) + EFFECTIVE_CELL_SIZE;
-            const withinGridY = relativeY >= -EFFECTIVE_CELL_SIZE && relativeY <= (GRID_SIZE * EFFECTIVE_CELL_SIZE) + EFFECTIVE_CELL_SIZE;
-
-            if (withinGridX && withinGridY) {
-                setErrors(prev => prev + 1);
-                playErrorFeedback();
-                setMoveHistory(prev => [...prev, {
-                    blockId: block.id,
-                    targetCell: { row: clampedRow, col: clampedCol },
-                    isCorrect: false,
-                    responseTime: Date.now() - lastActionTime,
-                    timestamp: Date.now(),
-                }]);
-                setLastActionTime(Date.now());
-            }
-        }
-
-        setDraggingBlock(null);
-        dragAbsolutePos.current = { x: 0, y: 0 };
-        dragAnim.setValue({ x: 0, y: 0 });
     };
 
-    // PanResponder for dragging blocks - improved for web platform
-    const createPanResponder = (block: Block) => {
-        let touchOffsetX = 0;
-        let touchOffsetY = 0;
+    // Handle tapping a grid cell to place selected block
+    const handleCellTap = (row: number, col: number) => {
+        if (!selectedBlock) return;
 
-        return PanResponder.create({
-            // Claim responder immediately on start
-            onStartShouldSetPanResponder: () => !block.placed,
-            onStartShouldSetPanResponderCapture: () => !block.placed,
-            onMoveShouldSetPanResponder: () => !block.placed,
-            onMoveShouldSetPanResponderCapture: () => !block.placed,
-            // Prevent other responders from taking over
-            onPanResponderTerminationRequest: () => false,
-            onShouldBlockNativeResponder: () => true,
-            onPanResponderGrant: (evt, gestureState) => {
-                // Prevent text selection on web
-                if (isWeb) {
-                    evt.preventDefault?.();
-                    document.body.style.userSelect = 'none';
-                    document.body.style.webkitUserSelect = 'none';
-                }
-                setDraggingBlock(block);
-
-                // Store initial touch offset relative to the block
-                touchOffsetX = evt.nativeEvent.locationX || 0;
-                touchOffsetY = evt.nativeEvent.locationY || 0;
-
-                // Store initial absolute position (touch point - offset = block origin)
-                const initialBlockX = gestureState.x0 - touchOffsetX;
-                const initialBlockY = gestureState.y0 - touchOffsetY;
-                setDragOffset({ x: gestureState.x0, y: gestureState.y0 });
-                dragAbsolutePos.current = { x: initialBlockX, y: initialBlockY };
-
-                dragAnim.setValue({ x: 0, y: 0 });
-            },
-            onPanResponderMove: (evt, gestureState) => {
-                if (isWeb) {
-                    evt.preventDefault?.();
-                }
-                dragAnim.setValue({ x: gestureState.dx, y: gestureState.dy });
-
-                // Track current absolute position using ref for synchronous access
-                const currentBlockX = (gestureState.x0 - touchOffsetX) + gestureState.dx;
-                const currentBlockY = (gestureState.y0 - touchOffsetY) + gestureState.dy;
-                dragAbsolutePos.current = { x: currentBlockX, y: currentBlockY };
-            },
-            onPanResponderRelease: (evt, gestureState) => {
-                if (isWeb) {
-                    document.body.style.userSelect = '';
-                    document.body.style.webkitUserSelect = '';
-                }
-
-                // Use tracked absolute position from ref (synchronous, always current)
-                const finalBlockX = dragAbsolutePos.current.x;
-                const finalBlockY = dragAbsolutePos.current.y;
-
-                handleDrop(block, finalBlockX, finalBlockY);
-            },
-            onPanResponderTerminate: () => {
-                if (isWeb) {
-                    document.body.style.userSelect = '';
-                    document.body.style.webkitUserSelect = '';
-                }
-                setDraggingBlock(null);
-                dragAbsolutePos.current = { x: 0, y: 0 };
-                dragAnim.setValue({ x: 0, y: 0 });
-            },
-        });
+        if (canPlaceBlock(selectedBlock, row, col)) {
+            placeBlock(selectedBlock, row, col);
+            setSelectedBlock(null);
+        } else {
+            setErrors(prev => prev + 1);
+            playErrorFeedback();
+            setMoveHistory(prev => [...prev, {
+                blockId: selectedBlock.id,
+                targetCell: { row, col },
+                isCorrect: false,
+                responseTime: Date.now() - lastActionTime,
+                timestamp: Date.now(),
+            }]);
+            setLastActionTime(Date.now());
+        }
     };
 
     const formatTime = (seconds: number): string => {
@@ -537,18 +431,17 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
-                scrollEnabled={!draggingBlock} // Disable scroll while dragging
             >
+                {/* Instruction for tap-to-place */}
+                {selectedBlock && (
+                    <View style={styles.instructionBanner}>
+                        <Text style={styles.instructionText}>👆 Yerleştirmek için ızgaraya dokun</Text>
+                    </View>
+                )}
+
                 {/* Grid Area with Rotation */}
                 <View style={styles.gridContainer}>
                     <Animated.View
-                        ref={gridRef}
-                        onLayout={(e) => {
-                            const { x, y, width, height } = e.nativeEvent.layout;
-                            gridRef.current?.measureInWindow((wx, wy) => {
-                                setGridLayout({ x: wx, y: wy, width, height });
-                            });
-                        }}
                         style={[
                             styles.grid,
                             { transform: [{ rotate: gridRotationInterpolate }, { translateX: shakeAnim }] }
@@ -558,17 +451,20 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                         {grid.map((row, rowIndex) => (
                             <View key={rowIndex} style={styles.gridRow}>
                                 {row.map((cell, colIndex) => (
-                                    <View
+                                    <TouchableOpacity
                                         key={`${rowIndex}-${colIndex}`}
+                                        onPress={() => handleCellTap(rowIndex, colIndex)}
+                                        activeOpacity={0.7}
                                         style={[
                                             styles.gridCell,
                                             cell.filled && { backgroundColor: cell.color || 'transparent' },
+                                            selectedBlock && !cell.filled && styles.gridCellHighlight,
                                         ]}
                                     >
                                         {cell.filled && (
                                             <Text style={styles.cellStar}>✨</Text>
                                         )}
-                                    </View>
+                                    </TouchableOpacity>
                                 ))}
                             </View>
                         ))}
@@ -592,34 +488,24 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     </TouchableOpacity>
                 </View>
 
-                {/* Blocks Palette - Draggable */}
+                {/* Blocks Palette - Tap to Select */}
                 <View style={styles.blocksContainer}>
-                    <Text style={styles.blocksTitle}>Blokları sürükle ve bırak:</Text>
+                    <Text style={styles.blocksTitle}>
+                        {selectedBlock ? '✅ Blok seçildi! Izgaraya dokun.' : '👆 Bir blok seç:'}
+                    </Text>
                     <View style={styles.blocksPalette}>
                         {blocks.filter(b => !b.placed).map(block => {
-                            const panResponder = createPanResponder(block);
-                            const isBeingDragged = draggingBlock?.id === block.id;
+                            const isSelected = selectedBlock?.id === block.id;
 
                             return (
-                                <Animated.View
+                                <TouchableOpacity
                                     key={block.id}
-                                    {...panResponder.panHandlers}
+                                    onPress={() => handleBlockSelect(block)}
+                                    activeOpacity={0.7}
                                     style={[
                                         styles.blockWrapper,
-                                        isBeingDragged && [
-                                            {
-                                                transform: dragAnim.getTranslateTransform(),
-                                                zIndex: 1000,
-                                                opacity: 0.9,
-                                                elevation: 10,
-                                                shadowColor: '#BF40BF',
-                                                shadowOffset: { width: 0, height: 4 },
-                                                shadowOpacity: 0.5,
-                                                shadowRadius: 8,
-                                            },
-                                            isWeb && { cursor: 'grabbing' },
-                                        ],
-                                    ] as any}
+                                        isSelected && styles.blockWrapperSelected,
+                                    ]}
                                 >
                                     <View style={styles.blockShape}>
                                         {block.shape.map((row, ri) => (
@@ -637,7 +523,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                                             </View>
                                         ))}
                                     </View>
-                                </Animated.View>
+                                </TouchableOpacity>
                             );
                         })}
                     </View>
@@ -1005,5 +891,30 @@ const styles = StyleSheet.create({
         color: '#BF40BF',
         fontSize: 12,
         fontWeight: '600',
+    },
+    instructionBanner: {
+        backgroundColor: 'rgba(57, 255, 20, 0.2)',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 12,
+        marginHorizontal: 20,
+        marginBottom: 10,
+        alignItems: 'center',
+    },
+    instructionText: {
+        color: '#39FF14',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    gridCellHighlight: {
+        borderColor: '#39FF14',
+        borderWidth: 2,
+        backgroundColor: 'rgba(57, 255, 20, 0.15)',
+    },
+    blockWrapperSelected: {
+        borderWidth: 3,
+        borderColor: '#39FF14',
+        backgroundColor: 'rgba(57, 255, 20, 0.3)',
+        transform: [{ scale: 1.1 }],
     },
 });
