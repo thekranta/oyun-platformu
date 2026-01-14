@@ -6,6 +6,7 @@ import {
     Dimensions,
     PanResponder,
     Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -164,8 +165,19 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     }, [grid, blocks]);
 
     const initializeBlocks = () => {
-        // Only use 3 blocks for easier gameplay
-        const newBlocks: Block[] = BLOCK_SHAPES.slice(0, 3).map((b, idx) => ({
+        // Define a solvable set of 3 blocks that perfectly fills 3x3 (9 cells)
+        // 1. Square 2x2 (4 cells)
+        // 2. Vertical Bar 1x3 (3 cells)
+        // 3. Horizontal Bar 2x1 (2 cells)
+        // This combination (4+3+2=9) can fill the grid (e.g. Square top-left, V-Bar right col, H-Bar bottom-left)
+
+        const solvableShapes = [
+            { shape: [[1, 1], [1, 1]], color: COLORS.neonYellow }, // 2x2 Square
+            { shape: [[1], [1], [1]], color: COLORS.neonGreen },   // 1x3 Vertical
+            { shape: [[1, 1]], color: COLORS.neonPurple },         // 2x1 Horizontal
+        ];
+
+        const newBlocks: Block[] = solvableShapes.map((b, idx) => ({
             id: `block-${idx}`,
             shape: b.shape,
             color: b.color,
@@ -326,19 +338,46 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         const relativeY = blockScreenY - gridLayout.y;
 
         // Find the nearest cell (row/col) based on this top-left position
-        // We use Math.round to snap to the closest cell boundary
-        const col = Math.round(relativeX / CELL_SIZE);
-        const row = Math.round(relativeY / CELL_SIZE);
+        const baseCol = Math.round(relativeX / CELL_SIZE);
+        const baseRow = Math.round(relativeY / CELL_SIZE);
 
-        if (row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE) {
-            if (canPlaceBlock(block, row, col)) {
-                placeBlock(block, row, col);
-            } else {
+        // Fuzzy Snapping: Check the ideal position first, then immediate neighbors
+        // This helps if the user is slightly off
+        const candidates = [
+            { r: baseRow, c: baseCol },
+            { r: baseRow + 1, c: baseCol },
+            { r: baseRow - 1, c: baseCol },
+            { r: baseRow, c: baseCol + 1 },
+            { r: baseRow, c: baseCol - 1 },
+        ];
+
+        let placed = false;
+
+        for (const { r, c } of candidates) {
+            // Check if this candidate is valid bounds first
+            if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
+                // Calculate distance to this cell's center to prioritize closest valid match
+                // Actually, since we sorted candidates by likelihood (center first), the first valid one is good "enough"
+                // But pure snapping to closest valid is better.
+                // For now, let's just take the first valid one to be forgiving.
+                if (canPlaceBlock(block, r, c)) {
+                    placeBlock(block, r, c);
+                    placed = true;
+                    break;
+                }
+            }
+        }
+
+        if (!placed) {
+            // Only count error if it was "droppable" but invalid, 
+            // or if user clearly tried to drop on grid (within bounds)
+            // simplified: if nearest was on grid but failed
+            if (baseRow >= -1 && baseRow <= GRID_SIZE && baseCol >= -1 && baseCol <= GRID_SIZE) {
                 setErrors(prev => prev + 1);
                 playErrorFeedback();
                 setMoveHistory(prev => [...prev, {
                     blockId: block.id,
-                    targetCell: { row, col },
+                    targetCell: { row: baseRow, col: baseCol },
                     isCorrect: false,
                     responseTime: Date.now() - lastActionTime,
                     timestamp: Date.now(),
@@ -346,6 +385,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 setLastActionTime(Date.now());
             }
         }
+
         setDraggingBlock(null);
         dragAnim.setValue({ x: 0, y: 0 });
     };
@@ -477,109 +517,111 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 </View>
             </View>
 
-            {/* Grid Area with Rotation */}
-            <View style={styles.gridContainer}>
-                <Animated.View
-                    ref={gridRef}
-                    onLayout={(e) => {
-                        const { x, y, width, height } = e.nativeEvent.layout;
-                        gridRef.current?.measureInWindow((wx, wy) => {
-                            setGridLayout({ x: wx, y: wy, width, height });
-                        });
-                    }}
-                    style={[
-                        styles.grid,
-                        { transform: [{ rotate: gridRotationInterpolate }, { translateX: shakeAnim }] }
-                    ]}
-                >
-                    <Animated.View style={[styles.gridGlow, { opacity: glowOpacity }]} />
-                    {grid.map((row, rowIndex) => (
-                        <View key={rowIndex} style={styles.gridRow}>
-                            {row.map((cell, colIndex) => (
-                                <View
-                                    key={`${rowIndex}-${colIndex}`}
-                                    style={[
-                                        styles.gridCell,
-                                        cell.filled && { backgroundColor: cell.color || 'transparent' },
-                                    ]}
-                                >
-                                    {cell.filled && (
-                                        <Text style={styles.cellStar}>✨</Text>
-                                    )}
-                                </View>
-                            ))}
-                        </View>
-                    ))}
-                </Animated.View>
-            </View>
-
-            {/* Control Buttons - Rotate Grid & Undo */}
-            <View style={styles.controlsRow}>
-                <TouchableOpacity style={styles.controlButton} onPress={handleRotateGrid}>
-                    <Ionicons name="refresh" size={24} color="#FFF" />
-                    <Text style={styles.controlButtonText}>Alanı Döndür</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.controlButton, styles.undoButton]}
-                    onPress={handleUndo}
-                    disabled={!blocks.some(b => b.placed)}
-                >
-                    <Ionicons name="arrow-undo" size={24} color="#FFF" />
-                    <Text style={styles.controlButtonText}>Geri Al</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Blocks Palette - Draggable */}
-            <View style={styles.blocksContainer}>
-                <Text style={styles.blocksTitle}>Blokları sürükle ve bırak:</Text>
-                <View style={styles.blocksPalette}>
-                    {blocks.filter(b => !b.placed).map(block => {
-                        const panResponder = createPanResponder(block);
-                        const isBeingDragged = draggingBlock?.id === block.id;
-
-                        return (
-                            <Animated.View
-                                key={block.id}
-                                {...panResponder.panHandlers}
-                                style={[
-                                    styles.blockWrapper,
-                                    isBeingDragged && [
-                                        {
-                                            transform: dragAnim.getTranslateTransform(),
-                                            zIndex: 1000,
-                                            opacity: 0.9,
-                                            elevation: 10,
-                                            shadowColor: '#BF40BF',
-                                            shadowOffset: { width: 0, height: 4 },
-                                            shadowOpacity: 0.5,
-                                            shadowRadius: 8,
-                                        },
-                                        isWeb && { cursor: 'grabbing' },
-                                    ],
-                                ] as any}
-                            >
-                                <View style={styles.blockShape}>
-                                    {block.shape.map((row, ri) => (
-                                        <View key={ri} style={styles.blockRow}>
-                                            {row.map((cell, ci) => (
-                                                <View
-                                                    key={ci}
-                                                    style={[
-                                                        styles.blockCell,
-                                                        cell === 1 && { backgroundColor: block.color },
-                                                        cell === 0 && styles.blockCellEmpty,
-                                                    ]}
-                                                />
-                                            ))}
-                                        </View>
-                                    ))}
-                                </View>
-                            </Animated.View>
-                        );
-                    })}
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                {/* Grid Area with Rotation */}
+                <View style={styles.gridContainer}>
+                    <Animated.View
+                        ref={gridRef}
+                        onLayout={(e) => {
+                            const { x, y, width, height } = e.nativeEvent.layout;
+                            gridRef.current?.measureInWindow((wx, wy) => {
+                                setGridLayout({ x: wx, y: wy, width, height });
+                            });
+                        }}
+                        style={[
+                            styles.grid,
+                            { transform: [{ rotate: gridRotationInterpolate }, { translateX: shakeAnim }] }
+                        ]}
+                    >
+                        <Animated.View style={[styles.gridGlow, { opacity: glowOpacity }]} />
+                        {grid.map((row, rowIndex) => (
+                            <View key={rowIndex} style={styles.gridRow}>
+                                {row.map((cell, colIndex) => (
+                                    <View
+                                        key={`${rowIndex}-${colIndex}`}
+                                        style={[
+                                            styles.gridCell,
+                                            cell.filled && { backgroundColor: cell.color || 'transparent' },
+                                        ]}
+                                    >
+                                        {cell.filled && (
+                                            <Text style={styles.cellStar}>✨</Text>
+                                        )}
+                                    </View>
+                                ))}
+                            </View>
+                        ))}
+                    </Animated.View>
                 </View>
-            </View>
+
+                {/* Control Buttons - Rotate Grid & Undo */}
+                <View style={styles.controlsRow}>
+                    <TouchableOpacity style={styles.controlButton} onPress={handleRotateGrid}>
+                        <Ionicons name="refresh" size={24} color="#FFF" />
+                        <Text style={styles.controlButtonText}>Alanı Döndür</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.controlButton, styles.undoButton]}
+                        onPress={handleUndo}
+                        disabled={!blocks.some(b => b.placed)}
+                    >
+                        <Ionicons name="arrow-undo" size={24} color="#FFF" />
+                        <Text style={styles.controlButtonText}>Geri Al</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Blocks Palette - Draggable */}
+                <View style={styles.blocksContainer}>
+                    <Text style={styles.blocksTitle}>Blokları sürükle ve bırak:</Text>
+                    <View style={styles.blocksPalette}>
+                        {blocks.filter(b => !b.placed).map(block => {
+                            const panResponder = createPanResponder(block);
+                            const isBeingDragged = draggingBlock?.id === block.id;
+
+                            return (
+                                <Animated.View
+                                    key={block.id}
+                                    {...panResponder.panHandlers}
+                                    style={[
+                                        styles.blockWrapper,
+                                        isBeingDragged && [
+                                            {
+                                                transform: dragAnim.getTranslateTransform(),
+                                                zIndex: 1000,
+                                                opacity: 0.9,
+                                                elevation: 10,
+                                                shadowColor: '#BF40BF',
+                                                shadowOffset: { width: 0, height: 4 },
+                                                shadowOpacity: 0.5,
+                                                shadowRadius: 8,
+                                            },
+                                            isWeb && { cursor: 'grabbing' },
+                                        ],
+                                    ] as any}
+                                >
+                                    <View style={styles.blockShape}>
+                                        {block.shape.map((row, ri) => (
+                                            <View key={ri} style={styles.blockRow}>
+                                                {row.map((cell, ci) => (
+                                                    <View
+                                                        key={ci}
+                                                        style={[
+                                                            styles.blockCell,
+                                                            cell === 1 && { backgroundColor: block.color },
+                                                            cell === 0 && styles.blockCellEmpty,
+                                                        ]}
+                                                    />
+                                                ))}
+                                            </View>
+                                        ))}
+                                    </View>
+                                </Animated.View>
+                            );
+                        })}
+                    </View>
+                </View>
+            </ScrollView>
 
             {/* Rocket Launch Animation */}
             {rocketLaunch && (
@@ -925,5 +967,9 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 18,
         fontWeight: 'bold',
+    },
+    scrollContent: {
+        flexGrow: 1,
+        paddingBottom: 20,
     },
 });
