@@ -269,6 +269,23 @@ export const SONGS: Song[] = [
         coverColor: '#00BCD4', // Cyan
         icon: 'shapes',
     },
+    {
+        id: '32',
+        title: 'Örüntü Treni',
+        artist: 'Matematik - Örüntü',
+        source: require('@/assets/sounds/songs/Örüntü Treni.mp3'),
+        coverColor: '#FF5722', // Turuncu
+        icon: 'train',
+    },
+    // === FEN EĞİTİMİ ŞARKILARI ===
+    {
+        id: '33',
+        title: 'Beş Duyum',
+        artist: 'Fen - Duyu Organları',
+        source: require('@/assets/sounds/songs/Beş Duyum.mp3'),
+        coverColor: '#8BC34A', // Yeşil
+        icon: 'body',
+    },
 ];
 
 interface MuzikCalarProps {
