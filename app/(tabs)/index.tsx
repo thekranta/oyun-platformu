@@ -36,21 +36,32 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const DRAWING_BUCKET = 'cizimler';
 
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Ensure this is installed
-import { createClient } from '@supabase/supabase-js';
-import 'react-native-url-polyfill/auto';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Cloudflare Turnstile Sitekey
 const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
 
-const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-  },
-});
+// SSR-safe Supabase client initialization
+let supabase: SupabaseClient;
+if (typeof window !== 'undefined') {
+  // Client-side only: use AsyncStorage for session persistence
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  });
+} else {
+  // Server-side: basic client without storage
+  supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
+    auth: {
+      persistSession: false,
+    },
+  });
+}
 
 const slugifyName = (name: string) => {
   const normalized = name
