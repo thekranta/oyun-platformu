@@ -101,7 +101,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     // Dragging state
     const [draggingBlock, setDraggingBlock] = useState<Block | null>(null);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-    const [dragAbsolutePos, setDragAbsolutePos] = useState({ x: 0, y: 0 }); // Absolute screen position of block origin
+    const dragAbsolutePos = useRef({ x: 0, y: 0 }); // Use ref for synchronous access during release
     const dragAnim = useRef(new Animated.ValueXY()).current;
     const gridRef = useRef<View>(null);
     const [gridLayout, setGridLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
@@ -121,7 +121,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 try {
                     await speak(
                         `Merhaba ${childName}, Uzay Blokları oyununa hoş geldin! Blokları yerleştirmeme yardım eder misin?`,
-                        { voice: 'nova' }
+                        { voice: 'fable', speed: 1.1 } // fable = expressive storyteller voice, slightly faster for energy
                     );
                 } catch (e) {
                     console.log('TTS error:', e);
@@ -392,7 +392,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         }
 
         setDraggingBlock(null);
-        setDragAbsolutePos({ x: 0, y: 0 });
+        dragAbsolutePos.current = { x: 0, y: 0 };
         dragAnim.setValue({ x: 0, y: 0 });
     };
 
@@ -427,7 +427,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 const initialBlockX = gestureState.x0 - touchOffsetX;
                 const initialBlockY = gestureState.y0 - touchOffsetY;
                 setDragOffset({ x: gestureState.x0, y: gestureState.y0 });
-                setDragAbsolutePos({ x: initialBlockX, y: initialBlockY });
+                dragAbsolutePos.current = { x: initialBlockX, y: initialBlockY };
 
                 dragAnim.setValue({ x: 0, y: 0 });
             },
@@ -437,10 +437,10 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 }
                 dragAnim.setValue({ x: gestureState.dx, y: gestureState.dy });
 
-                // Track current absolute position for reliable drop
+                // Track current absolute position using ref for synchronous access
                 const currentBlockX = (gestureState.x0 - touchOffsetX) + gestureState.dx;
                 const currentBlockY = (gestureState.y0 - touchOffsetY) + gestureState.dy;
-                setDragAbsolutePos({ x: currentBlockX, y: currentBlockY });
+                dragAbsolutePos.current = { x: currentBlockX, y: currentBlockY };
             },
             onPanResponderRelease: (evt, gestureState) => {
                 if (isWeb) {
@@ -448,10 +448,9 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     document.body.style.webkitUserSelect = '';
                 }
 
-                // Use tracked absolute position for reliable drop
-                // Fallback to calculated position if state hasn't updated
-                const finalBlockX = dragAbsolutePos.x !== 0 ? dragAbsolutePos.x : (gestureState.x0 - touchOffsetX) + gestureState.dx;
-                const finalBlockY = dragAbsolutePos.y !== 0 ? dragAbsolutePos.y : (gestureState.y0 - touchOffsetY) + gestureState.dy;
+                // Use tracked absolute position from ref (synchronous, always current)
+                const finalBlockX = dragAbsolutePos.current.x;
+                const finalBlockY = dragAbsolutePos.current.y;
 
                 handleDrop(block, finalBlockX, finalBlockY);
             },
@@ -461,7 +460,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     document.body.style.webkitUserSelect = '';
                 }
                 setDraggingBlock(null);
-                setDragAbsolutePos({ x: 0, y: 0 });
+                dragAbsolutePos.current = { x: 0, y: 0 };
                 dragAnim.setValue({ x: 0, y: 0 });
             },
         });
