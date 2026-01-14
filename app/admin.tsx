@@ -538,7 +538,7 @@ ${gelisimGecmisi}
 Gemini olarak bu verileri kıyasla ve "Gelişim Seyri" analizi yap.
 ` : '';
 
-            if (score.oyun_turu === 'ceviz_macera' || score.oyun_turu === 'aile-sepeti') {
+            if (score.oyun_turu === 'ceviz_macera' || score.oyun_turu === 'aile-sepeti' || score.oyun_turu === 'adalet-hikayesi') {
                 // Sosyal-Duygusal oyunlar için özel prompt
                 const secilenYol = score.yapay_zeka_yorumu || 'Bilinmiyor';
                 prompt = `

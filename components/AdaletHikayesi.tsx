@@ -313,7 +313,7 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
         if (userEmail) logData.email = userEmail;
 
         try {
-            await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
                 method: 'POST',
                 headers: {
                     apikey: SUPABASE_KEY,
@@ -323,7 +323,13 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
                 },
                 body: JSON.stringify(logData),
             });
-            console.log('✅ Adalet Hikayesi sonucu kaydedildi.');
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ Supabase POST hatası:', response.status, errorText);
+            } else {
+                console.log('✅ Adalet Hikayesi sonucu kaydedildi.');
+            }
 
             // Call onGameEnd for admin panel integration
             if (onGameEnd) {
