@@ -20,6 +20,7 @@ const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 // Cumulative AI Analysis Function - Sends last 12 games to Gemini for trend analysis
+// Generates DUAL structure: 1) Teacher/Academic section with Maarif codes, 2) Parent section with scaffolding
 const analyzeWithGemini = async (childName: string, childAge: number, games: GameScore[]): Promise<string | null> => {
     if (!GEMINI_API_KEY || games.length === 0) return null;
 
@@ -34,19 +35,63 @@ const analyzeWithGemini = async (childName: string, childAge: number, games: Gam
         bilisselHiz: g.cognitive_speed_score || 0,
     }));
 
-    const prompt = `Sen bir okul öncesi eğitim uzmanısın. ${childName} (${childAge} aylık) isimli çocuğun son ${last12Games.length} oyunluk performans verilerini analiz et.
+    // Gelişimsel dönem belirleme
+    let gelisimselDonem = '';
+    if (childAge < 36) gelisimselDonem = 'Erken Çocukluk (24-36 ay)';
+    else if (childAge < 48) gelisimselDonem = 'Okul Öncesi Erken Dönem (36-48 ay)';
+    else if (childAge < 60) gelisimselDonem = 'Okul Öncesi Geç Dönem (48-60 ay)';
+    else gelisimselDonem = 'Okula Hazırlık Dönemi (60-72 ay)';
+
+    const prompt = `Sen bir okul öncesi eğitim uzmanısın ve Türkiye Yüzyılı Maarif Modeli'ne hakimsin.
+${childName} (${childAge} aylık - ${gelisimselDonem}) isimli çocuğun son ${last12Games.length} oyunluk performans verilerini analiz et.
 
 VERİLER (JSON):
 ${JSON.stringify(gamesData, null, 2)}
 
-GÖREV:
-1. Sadece son oyunu değil, İLK oyundan SON oyuna kadar TREND ANALİZİ yap
-2. Gelişim gösterilen alanları vurgula (Örn: "Son 3 oyunda tepki hızı %20 arttı")
-3. Düşüş varsa nazikçe belirt ve öneri sun
-4. Çocuğun yaşına uygun pedagojik öneriler ver
-5. Raporu 3-4 paragraf halinde, sıcak ve veliye hitap eden bir dille yaz
+GÖREV: Aşağıdaki iki bölümlü yapıda rapor oluştur.
 
-ÖNEMLİ: Raporu Türkçe yaz, teknik terimlerden kaçın, veli anlayacak şekilde samimi bir dil kullan.`;
+## BÖLÜM 1: MAARİF MODELİ PEDAGOJİK ANALİZ (Öğretmen/Akademisyen İçin)
+
+ÖNEMLİ - SADECE AŞAĞIDAKİ MAARİF PROGRAM KODLARINI KULLAN:
+- FAB: Fen Alanı Becerileri (FAB.1, FAB.2, FAB.3 vb.)
+- MAB: Matematik Alanı Becerileri (MAB.1, MAB.2, MAB.3 vb.)
+- HSAB: Hareket ve Sağlık Alanı Becerileri
+- SAB: Sosyal Alan Becerileri
+- TADB: Türkçe Dinleme/İzleme Becerileri
+- TAKB: Türkçe Konuşma Becerileri
+- TAEOB: Türkçe Erken Okuryazarlık Becerileri
+- TAOB: Türkçe Okuma Becerileri
+- MDB/MSB/MÇB/MHB/MYB: Müzik Alanı Becerileri
+- SNAB: Sanat Alanı Becerileri
+
+BU KODLAR DIŞINDA KOD KULLANMA! Olmayan kod uydurma!
+
+Bu bölümde şunları yap:
+1. İLK oyundan SON oyuna kadar TREND ANALİZİ yap
+2. Her oyun türünü ilgili Maarif öğrenme çıktısıyla eşleştir
+3. Gelişim alanlarını akademik terminolojiyle değerlendir
+4. Performans yüzdelikleri ve karşılaştırmalar sun
+
+---
+
+## BÖLÜM 2: VELİ BİLGİLENDİRME NOTU
+
+Değerli Velimiz,
+
+Bu bölümde:
+1. Samimi ve anlaşılır bir dille çocuğun gelişimini açıkla
+2. Güçlü yönlerini vurgula
+3. EVDE YAPILABİLECEK AKTİVİTELER öner (iskele kurma/scaffolding)
+   - Somut, yaşa uygun etkinlikler
+   - Günlük rutine entegre edilebilir öneriler
+4. Olumlu ve teşvik edici bir ton kullan
+
+Raporun MUTLAKA şu imzayla bitmeli:
+
+Saygılarımızla,
+ChildhoodTech Ekibi
+
+ÖNEMLİ: Raporu Türkçe yaz. Giriş cümlesi kullanma, doğrudan içerikle başla.`;
 
     try {
         const response = await fetch(
@@ -56,7 +101,7 @@ GÖREV:
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
+                    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
                 }),
             }
         );
@@ -1321,55 +1366,85 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     })()}
                                 </View>
                             )}
-                            {/* CUMULATIVE AI ANALYSIS - Main Feature */}
-                            <View style={[styles.chartCard, { marginBottom: 20, borderWidth: 2, borderColor: COLORS.premium }]}>
+                            {/* CUMULATIVE AI ANALYSIS - Main Feature (Premium/Standard only) */}
+                            <View style={[styles.chartCard, { marginBottom: 20, borderWidth: 2, borderColor: subscriptionTier === 'free' ? '#E0E0E0' : COLORS.premium }]}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                                     <Text style={{ fontSize: 24, marginRight: 10 }}>🧠</Text>
                                     <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Kümülatif AI Analizi</Text>
+                                    {subscriptionTier === 'free' && (
+                                        <View style={{ marginLeft: 8, backgroundColor: '#FFE082', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
+                                            <Text style={{ fontSize: 10, color: '#F57C00', fontWeight: 'bold' }}>PREMIUM</Text>
+                                        </View>
+                                    )}
                                 </View>
-                                <Text style={{ color: COLORS.textLight, fontSize: 13, marginBottom: 12 }}>
-                                    Tüm oyun verileri Gemini AI tarafından analiz edilir.
-                                </Text>
 
-                                {cumulativeReport ? (
-                                    <View>
-                                        <Text style={{ color: COLORS.text, fontSize: 14, lineHeight: 22 }}>
-                                            {cumulativeReport}
+                                {subscriptionTier === 'free' ? (
+                                    /* FREE TIER - Show locked message */
+                                    <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                                        <Text style={{ fontSize: 40, marginBottom: 12 }}>🔒</Text>
+                                        <Text style={{ color: COLORS.text, fontSize: 15, fontWeight: '600', marginBottom: 8, textAlign: 'center' }}>
+                                            AI Gelişim Analizi Premium Özelliğidir
                                         </Text>
-                                        <Text style={{ color: COLORS.textLight, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
-                                            ℹ️ Yeni oyun oynanırsa analiz otomatik güncellenir.
+                                        <Text style={{ color: COLORS.textLight, fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 16 }}>
+                                            Gemini AI ile çocuğunuzun tüm oyun verilerinin kümülatif analizini alın,
+                                            gelişim trendlerini görün ve kişiselleştirilmiş öneriler alın.
                                         </Text>
-                                        {Platform.OS === 'web' && (
-                                            <TouchableOpacity
-                                                style={[styles.analyzeButton, { backgroundColor: COLORS.primary, marginTop: 10 }]}
-                                                onPress={handleDownloadPDF}
-                                            >
-                                                <Ionicons name="document-text" size={16} color="#fff" />
-                                                <Text style={styles.analyzeButtonText}>PDF İndir</Text>
-                                            </TouchableOpacity>
-                                        )}
+                                        <TouchableOpacity
+                                            style={[styles.analyzeButton, { backgroundColor: COLORS.premium }]}
+                                            onPress={() => Alert.alert('🚀 Premium\'a Yükselt', 'Premium üyelik ile AI analizi ve PDF rapor özelliklerine erişin!')}
+                                        >
+                                            <Ionicons name="diamond" size={18} color="#fff" />
+                                            <Text style={styles.analyzeButtonText}>Premium'a Yükselt</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 ) : (
-                                    <TouchableOpacity
-                                        style={[styles.analyzeButton, { backgroundColor: COLORS.premium }]}
-                                        onPress={handleGenerateCumulativeReport}
-                                        disabled={isAnalyzing || scores.length === 0}
-                                    >
-                                        {isAnalyzing ? (
-                                            <ActivityIndicator size="small" color="#fff" />
-                                        ) : (
-                                            <>
-                                                <Ionicons name="sparkles" size={18} color="#fff" />
-                                                <Text style={styles.analyzeButtonText}>
-                                                    {scores.length === 0 ? 'Veri Bekleniyor...' : 'AI Analiz Yap'}
+                                    /* PREMIUM/STANDARD TIER - Show AI analysis */
+                                    <>
+                                        <Text style={{ color: COLORS.textLight, fontSize: 13, marginBottom: 12 }}>
+                                            Tüm oyun verileri Gemini AI tarafından analiz edilir.
+                                        </Text>
+
+                                        {cumulativeReport ? (
+                                            <View>
+                                                <Text style={{ color: COLORS.text, fontSize: 14, lineHeight: 22 }}>
+                                                    {cumulativeReport}
                                                 </Text>
-                                            </>
+                                                <Text style={{ color: COLORS.textLight, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
+                                                    ℹ️ Yeni oyun oynanırsa analiz otomatik güncellenir.
+                                                </Text>
+                                                {Platform.OS === 'web' && (
+                                                    <TouchableOpacity
+                                                        style={[styles.analyzeButton, { backgroundColor: COLORS.primary, marginTop: 10 }]}
+                                                        onPress={handleDownloadPDF}
+                                                    >
+                                                        <Ionicons name="document-text" size={16} color="#fff" />
+                                                        <Text style={styles.analyzeButtonText}>PDF İndir</Text>
+                                                    </TouchableOpacity>
+                                                )}
+                                            </View>
+                                        ) : (
+                                            <TouchableOpacity
+                                                style={[styles.analyzeButton, { backgroundColor: COLORS.premium }]}
+                                                onPress={handleGenerateCumulativeReport}
+                                                disabled={isAnalyzing || scores.length === 0}
+                                            >
+                                                {isAnalyzing ? (
+                                                    <ActivityIndicator size="small" color="#fff" />
+                                                ) : (
+                                                    <>
+                                                        <Ionicons name="sparkles" size={18} color="#fff" />
+                                                        <Text style={styles.analyzeButtonText}>
+                                                            {scores.length === 0 ? 'Veri Bekleniyor...' : 'AI Analiz Yap'}
+                                                        </Text>
+                                                    </>
+                                                )}
+                                            </TouchableOpacity>
                                         )}
-                                    </TouchableOpacity>
+                                        <Text style={{ color: '#888', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
+                                            Gemini 2.0 Flash
+                                        </Text>
+                                    </>
                                 )}
-                                <Text style={{ color: '#888', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
-                                    Gemini 2.0 Flash
-                                </Text>
                             </View>
 
                             {/* FREE TIER BANNER */}

@@ -556,6 +556,12 @@ ${gelisimBolumu}
 - Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
 - Değer: ${oyunBilgisi.deger || 'Belirtilmemiş'}
 
+## KRİTİK - GEÇERLİ MAARİF KODLARI (SADECE BUNLARI KULLAN):
+FAB (Fen), MAB (Matematik), HSAB (Hareket/Sağlık), SAB (Sosyal), 
+TADB (Dinleme/İzleme), TAKB (Konuşma), TAEOB (Erken Okuryazarlık), TAOB (Okuma),
+MDB/MSB/MÇB/MHB/MYB (Müzik), SNAB (Sanat)
+⚠️ BU KODLAR DIŞINDA KOD KULLANMA! SDB veya başka kod UYDURMA!
+
 ## ÇIKTI KURALLARI:
 1. ASLA giriş cümlesi kullanma (ör: "Harika bir senaryo", "İşte rapor").
 2. Doğrudan rapor içeriğiyle başla.
@@ -578,7 +584,12 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır, il
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin oyundaki seçimlerini samimi ama profesyonel bir dille açıkla. Evde yapılabilecek bir etkinlik öner.]
+[${score.ogrenci_adi}'nin oyundaki seçimlerini samimi ama profesyonel bir dille açıkla.]
+
+**Evde İskele Kurma Önerileri:**
+- Hikaye okuma sırasında "Sen olsaydın ne yapardın?" soruları
+- Günlük durumlarla değer bağlantısı kurma
+- Rol yapma oyunlarıyla empati geliştirme
 
 Saygılarımızla,
 ChildhoodTech Ekibi
@@ -598,6 +609,12 @@ ${gelisimBolumu}
 ## MAARİF MODELİ REFERANSI (raw_curriculum.txt'ye göre):
 - Alan: Matematik | Süreç: Matematiksel Temsil
 - Öğrenme Çıktısı: MAB.9 - Farklı matematiksel temsillerden yararlanabilme (Çeşitli semboller arasından belirtilen matematiksel temsilleri gösterir)
+
+## KRİTİK - GEÇERLİ MAARİF KODLARI (SADECE BUNLARI KULLAN):
+FAB (Fen), MAB (Matematik), HSAB (Hareket/Sağlık), SAB (Sosyal), 
+TADB (Dinleme/İzleme), TAKB (Konuşma), TAEOB (Erken Okuryazarlık), TAOB (Okuma),
+MDB/MSB/MÇB/MHB/MYB (Müzik), SNAB (Sanat)
+⚠️ BU KODLAR DIŞINDA KOD KULLANMA! Olmayan kod UYDURMA!
 
 ## ANALİZ KRİTERLERİ (ÖNEMLİ):
 1. **Görsel Tarama Hızı:** Çocuğun alttaki rakamı seçtikten sonra tuval üzerindeki doğru rakamı bulma süresini "Görsel Tarama Hızı" olarak yorumla.
@@ -635,7 +652,12 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır]' :
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin görsel tarama ve sembol eşleme becerisini samimi bir dille açıkla. Evde yapılabilecek "renk-sayı eşleme" etkinliği öner.]
+[${score.ogrenci_adi}'nin görsel tarama ve sembol eşleme becerisini samimi bir dille açıkla.]
+
+**Evde İskele Kurma Önerileri:**
+- Dergilerden sayı bulma ve boyama oyunları
+- Renk-sayı eşleme kartlarıyla pratik
+- "Bu sayıyı evde kaç yerde görüyorsun?" oyunu
 
 Saygılarımızla,
 ChildhoodTech Ekibi
@@ -654,6 +676,12 @@ ${gelisimBolumu}
 ## MAARİF MODELİ REFERANSI (raw_curriculum.txt'ye göre):
 - Alan: Matematik | Süreç: Matematiksel Muhakeme
 - Öğrenme Çıktısı: MAB.2 - Bir bütünü oluşturan parçaları gösterir, parçalar arasındaki ilişki/ilişkisizlik durumlarını açıklar
+
+## KRİTİK - GEÇERLİ MAARİF KODLARI (SADECE BUNLARI KULLAN):
+FAB (Fen), MAB (Matematik), HSAB (Hareket/Sağlık), SAB (Sosyal), 
+TADB (Dinleme/İzleme), TAKB (Konuşma), TAEOB (Erken Okuryazarlık), TAOB (Okuma),
+MDB/MSB/MÇB/MHB/MYB (Müzik), SNAB (Sanat)
+⚠️ BU KODLAR DIŞINDA KOD KULLANMA! Olmayan kod UYDURMA!
 
 ## ANALİZ KRİTERLERİ (ÖNEMLİ):
 1. **Parça-Bütün İlişkisi:** Çocuğun blok parçalarını bütün içinde doğru pozisyona yerleştirme becerisini değerlendir.
@@ -689,7 +717,12 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır]' :
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin parça-bütün ilişkisi kurma ve uzamsal düşünme becerisini samimi bir dille açıkla. Evde yapılabilecek "lego/blok" veya "kutu yerleştirme" etkinliği öner.]
+[${score.ogrenci_adi}'nin parça-bütün ilişkisi kurma ve uzamsal düşünme becerisini samimi bir dille açıkla.]
+
+**Evde İskele Kurma Önerileri:**
+- Lego veya blok oyunlarıyla şekil oluşturma
+- Basit yapbozu birlikte tamamlama
+- "Bu kutu bu boşluğa sığar mı?" tahmin oyunları
 
 Saygılarımızla,
 ChildhoodTech Ekibi
@@ -709,6 +742,12 @@ ${gelisimBolumu}${scaffoldingNotu}${teknikHataNotu}${turAnaliziNotu}
 ## MAARİF MODELİ REFERANSI:
 - Alan: ${oyunBilgisi.alan} | Süreç: ${oyunBilgisi.surec}
 - Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
+
+## KRİTİK - GEÇERLİ MAARİF KODLARI (SADECE BUNLARI KULLAN):
+FAB (Fen), MAB (Matematik), HSAB (Hareket/Sağlık), SAB (Sosyal), 
+TADB (Dinleme/İzleme), TAKB (Konuşma), TAEOB (Erken Okuryazarlık), TAOB (Okuma),
+MDB/MSB/MÇB/MHB/MYB (Müzik), SNAB (Sanat)
+⚠️ BU KODLAR DIŞINDA KOD KULLANMA! SDB veya başka kod UYDURMA!
 
 ## DEĞERLENDİRME KURALLARI:
 - Sayı oyunları 1-5 aralığındadır (MAB.1 Sayı Duyusu).
@@ -737,7 +776,12 @@ ${zorluk >= 4 ? '\n**İskele Kurma Önerisi:** [Yüksek zorluk için somutlaşt�
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin performansını samimi ama profesyonel bir dille açıkla. Evde yapılabilecek Maarif Modeli'ne uygun bir etkinlik öner.]
+[${score.ogrenci_adi}'nin performansını samimi ama profesyonel bir dille açıkla.]
+
+**Evde İskele Kurma Önerileri:**
+- Oyundaki beceriyi destekleyen günlük aktiviteler öner
+- Somut materyallerle pratik yapma fırsatları
+- Teşvik edici ve eğlenceli yaklaşımlar
 
 Saygılarımızla,
 ChildhoodTech Ekibi
