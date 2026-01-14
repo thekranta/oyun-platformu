@@ -385,6 +385,14 @@ export default function AdminPanel() {
                     cikti: 'KB.2.4',
                     ciktiAciklama: 'Görsel-Uzamsal becerileri kullanır (Şekil döndürme, bütünleştirme, yerleştirme)'
                 },
+                // Adalet Hikayesi - Sosyal-Duygusal Gelişim
+                'adalet-hikayesi': {
+                    alan: 'Sosyal-Duygusal Gelişim',
+                    surec: 'Değer Kazanımı',
+                    cikti: 'SDB.1',
+                    ciktiAciklama: 'Adalet, Eşitlik ve Paylaşım değerlerini anlar',
+                    deger: 'Adalet'
+                },
             };
 
             const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
@@ -417,6 +425,7 @@ export default function AdminPanel() {
                 'miktar-avcisi': 'Miktar Avcısı',
                 'sihirli-tuval': 'Sihirli Tuval: Sayılarla Boyama',
                 'uzay-bloklari': 'Uzay Blokları: Yıldız Mimarı',
+                'adalet-hikayesi': 'Adalet Hikayesi',
             };
             const oyunAdiTR = oyunAdiMap[score.oyun_turu] || score.oyun_turu;
 
@@ -1027,6 +1036,8 @@ ChildhoodTech Ekibi
             'miktar-avcisi': { alan: 'Matematik', cikti: 'MAB.1' },
             'sihirli-tuval': { alan: 'Matematik', cikti: 'MAB.2.1' },
             'sihirli-siseler': { alan: 'Matematik', cikti: 'MAB.2' },
+            'uzay-bloklari': { alan: 'Bilişsel Gelişim', cikti: 'KB.2.4' },
+            'adalet-hikayesi': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.1' },
         };
         // Bilinmeyen oyunlar için varsayılan: MAB.2 (Matematik - Muhakeme)
         // ASLA GB.1 veya 'Genel Gelişim' kullanma!
