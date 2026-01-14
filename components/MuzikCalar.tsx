@@ -245,6 +245,30 @@ export const SONGS: Song[] = [
         coverColor: '#42A5F5', // Mavi
         icon: 'scale',
     },
+    {
+        id: '29',
+        title: 'Nerede Bu Elma?',
+        artist: 'Matematik - Arama',
+        source: require('@/assets/sounds/songs/Nerede Bu Elma_.mp3'),
+        coverColor: '#E53935', // Kırmızı
+        icon: 'search',
+    },
+    {
+        id: '30',
+        title: 'Bir, İki, Üç, Dört Derken',
+        artist: 'Matematik - Sayma',
+        source: require('@/assets/sounds/songs/Bir, iki, üç, dört derken.mp3'),
+        coverColor: '#9C27B0', // Mor
+        icon: 'footsteps',
+    },
+    {
+        id: '31',
+        title: 'Kare Derler Adıma',
+        artist: 'Matematik - Şekiller',
+        source: require('@/assets/sounds/songs/Kare derler adıma Güç katarım dünyama Dö.mp3'),
+        coverColor: '#00BCD4', // Cyan
+        icon: 'shapes',
+    },
 ];
 
 interface MuzikCalarProps {
@@ -362,6 +386,22 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
         return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     };
 
+    // Skip forward 10 seconds
+    const skipForward = async () => {
+        if (sound) {
+            const newPosition = Math.min(position + 10000, duration);
+            await sound.setPositionAsync(newPosition);
+        }
+    };
+
+    // Skip backward 10 seconds
+    const skipBackward = async () => {
+        if (sound) {
+            const newPosition = Math.max(position - 10000, 0);
+            await sound.setPositionAsync(newPosition);
+        }
+    };
+
     const progress = position / duration;
 
     return (
@@ -421,8 +461,18 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
                         <Ionicons name="play-skip-back" size={24} color="#546E7A" />
                     </TouchableOpacity>
 
+                    <TouchableOpacity onPress={skipBackward} style={styles.controlButtonSmall}>
+                        <Ionicons name="play-back" size={20} color="#546E7A" />
+                        <Text style={styles.skipLabel}>10</Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity onPress={togglePlayback} style={[styles.playButton, { backgroundColor: currentSong.coverColor }]}>
                         <Ionicons name={isPlaying ? "pause" : "play"} size={40} color="#fff" style={{ marginLeft: isPlaying ? 0 : 4 }} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={skipForward} style={styles.controlButtonSmall}>
+                        <Ionicons name="play-forward" size={20} color="#546E7A" />
+                        <Text style={styles.skipLabel}>10</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={playNext} style={styles.controlButtonSmall}>
@@ -668,5 +718,13 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         lineHeight: 14,
         overflow: 'hidden',
+    },
+    skipLabel: {
+        position: 'absolute',
+        bottom: 2,
+        right: 5,
+        fontSize: 8,
+        fontWeight: 'bold',
+        color: '#546E7A',
     },
 });
