@@ -302,7 +302,7 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
             hamle_sayisi: path.length,
             hata_sayisi: 0,
             sure: durationSeconds,
-            kazanim_odagi: 'Sosyal-Duygusal Gelişim - Adalet ve Paylaşım',
+            kazanim_odagi: 'İnteraktif Hikaye - Değerler Eğitimi (Adalet ve Paylaşım)',
             ekstra_veri: JSON.stringify({
                 secilen_yol: pathString,
                 yaklasim: getAnalysisSummary()
@@ -315,7 +315,9 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
             const analysisData = JSON.stringify({
                 secilen_yol: pathString,
                 yaklasim: getAnalysisSummary(),
-                maarif_kazanim: 'Sosyal-Duygusal Gelişim: Adalet, Eşitlik ve Paylaşım değerlerini anlar ve uygular',
+                // NOT: Sosyal-Duygusal hikayeler için hata/süre analizi yapılmaz.
+                // Değerlendirme çocuğun yaptığı seçimlere dayanır.
+                oyun_turu_aciklama: 'İnteraktif Hikaye - Adalet ve Paylaşım Temalı',
             });
 
             onGameEnd(
