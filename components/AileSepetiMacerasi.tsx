@@ -125,12 +125,20 @@ type StoryNode = {
 
 interface AileSepetiMacerasiProps {
     onExit: () => void;
+    onGameEnd?: (
+        oyunAdi: string,
+        sure: number,
+        hamle: number,
+        hata: number,
+        cizimVerisi?: any,
+        ekstraVeri?: any
+    ) => void;
     userId?: string;
     userEmail?: string;
     userAge?: number;
 }
 
-export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge }: AileSepetiMacerasiProps) {
+export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmail, userAge }: AileSepetiMacerasiProps) {
     const { width, height } = useWindowDimensions();
     const isPortrait = height > width;
     const isMobile = width < 768;
@@ -280,6 +288,14 @@ export default function AileSepetiMacerasi({ onExit, userId, userEmail, userAge 
                 body: JSON.stringify(logData),
             });
             console.log('✅ Oyun sonucu kaydedildi. Analiz admin panelinden yapılabilir.');
+
+            // Call onGameEnd for admin panel integration
+            if (onGameEnd) {
+                onGameEnd('aile-sepeti', durationSeconds, path.length, 0, null, {
+                    secilen_yol: pathString,
+                    maarif_kazanim: 'Sosyal-Duygusal Gelişim: Aile bağları, işbirliği ve problem çözme becerilerini geliştirir',
+                });
+            }
         } catch (e) {
             console.error('Log hatası:', e);
         }
