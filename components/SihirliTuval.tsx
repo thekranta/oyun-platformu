@@ -11,6 +11,7 @@ import {
     View
 } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from 'react-native-svg';
+import { speak } from '../services/speechService';
 
 // ============= TYPES =============
 interface SihirliTuvalProps {
@@ -23,6 +24,7 @@ interface SihirliTuvalProps {
         ekstraVeri?: any
     ) => void;
     onExit: () => void;
+    childName?: string;
 }
 
 interface ColorRegion {
@@ -192,7 +194,7 @@ const SPACE_ADVENTURE_REGIONS: ColorRegion[] = [
 ];
 
 // ============= MAIN COMPONENT =============
-export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
+export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük Ressam' }: SihirliTuvalProps) {
     const [regions, setRegions] = useState<ColorRegion[]>(SPACE_ADVENTURE_REGIONS.map(r => ({ ...r })));
     const [selectedColorNumber, setSelectedColorNumber] = useState<number | null>(null);
     const [moveHistory, setMoveHistory] = useState<MoveData[]>([]);
@@ -205,12 +207,33 @@ export default function SihirliTuval({ onGameEnd, onExit }: SihirliTuvalProps) {
     const [timeLeft, setTimeLeft] = useState(300); // 5 dakika
     const [isGameComplete, setIsGameComplete] = useState(false);
     const [cognitiveSpeed, setCognitiveSpeed] = useState(0);
+    const [isSpeaking, setIsSpeaking] = useState(false);
 
     // Animations
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const flashAnim = useRef(new Animated.Value(0)).current;
     const selectedButtonScale = useRef(new Animated.Value(1)).current;
     const pulseAnim = useRef(new Animated.Value(1)).current;
+
+    // Voice greeting on mount
+    useEffect(() => {
+        const greet = async () => {
+            if (Platform.OS === 'web') {
+                setIsSpeaking(true);
+                try {
+                    await speak(
+                        `Merhaba ${childName}, Sihirli Tuval oyununa hoş geldin! Renkleri numaralarına göre boyama yapalım.`,
+                        { voice: 'fable', speed: 1.1 }
+                    );
+                } catch (e) {
+                    console.log('TTS error:', e);
+                } finally {
+                    setIsSpeaking(false);
+                }
+            }
+        };
+        greet();
+    }, [childName]);
 
     // Pulse animation for selected button
     useEffect(() => {

@@ -1392,11 +1392,11 @@ ChildhoodTech Ekibi
             <View style={[styles.container, isLandscape && styles.containerLandscape]}>
                 <View style={[styles.header, isLandscape && styles.headerLandscape]}>
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color="white" />
+                        <Ionicons name="arrow-back" size={24} color="#333" />
                     </TouchableOpacity>
                     <Text style={[styles.title, isLandscape && styles.titleLandscape]}>Öğrenci Gelişim Takibi 📊</Text>
                     <TouchableOpacity onPress={fetchScores} style={styles.refreshButton}>
-                        <Ionicons name="refresh" size={24} color="white" />
+                        <Ionicons name="refresh" size={24} color="#333" />
                     </TouchableOpacity>
                 </View>
 
@@ -1425,11 +1425,11 @@ const styles = StyleSheet.create({
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 10 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, marginBottom: 10 },
     headerLandscape: { maxWidth: 1400, alignSelf: 'center', width: '100%' },
-    backButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginRight: 15 },
-    refreshButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20 },
+    backButton: { backgroundColor: 'rgba(255,255,255,0.9)', padding: 10, borderRadius: 20, marginRight: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 },
+    refreshButton: { backgroundColor: 'rgba(255,255,255,0.9)', padding: 10, borderRadius: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 },
     title: { flex: 1, fontSize: 22, fontWeight: 'bold', color: '#333' },
     titleLandscape: { fontSize: 24 },
-    soundButton: { backgroundColor: 'rgba(255,255,255,0.5)', padding: 8, borderRadius: 20, marginLeft: 15 },
+    soundButton: { backgroundColor: 'rgba(255,255,255,0.9)', padding: 10, borderRadius: 20, marginLeft: 15, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4, elevation: 3 },
     listContent: { padding: 15, paddingBottom: 50 },
     listContentLandscape: { maxWidth: 1400, alignSelf: 'center', width: '100%' },
     emptyText: { textAlign: 'center', fontSize: 16, color: '#777', marginTop: 50 },

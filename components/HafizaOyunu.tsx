@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { speak } from '../services/speechService';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
@@ -40,6 +41,7 @@ const AŞAMA_AYARLARI = [
 interface HafizaOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
     onExit?: () => void;
+    childName?: string;
 }
 
 interface Card {
@@ -53,7 +55,7 @@ interface Card {
     shakeValue: Animated.Value;
 }
 
-export default function HafizaOyunu({ onGameEnd, onExit }: HafizaOyunuProps) {
+export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: HafizaOyunuProps) {
     const [currentStageIndex, setCurrentStageIndex] = useState(0);
     const [cards, setCards] = useState<Card[]>([]);
     const [selectedCards, setSelectedCards] = useState<Card[]>([]);
@@ -68,9 +70,30 @@ export default function HafizaOyunu({ onGameEnd, onExit }: HafizaOyunuProps) {
 
     // Smart Scoring: Track seen card IDs
     const [seenCardIds, setSeenCardIds] = useState<Set<number>>(new Set());
+    const [isSpeaking, setIsSpeaking] = useState(false);
 
     // Confetti Ref
     const confettiRef = useRef<ConfettiCannon>(null);
+
+    // Voice greeting on mount
+    useEffect(() => {
+        const greet = async () => {
+            if (Platform.OS === 'web') {
+                setIsSpeaking(true);
+                try {
+                    await speak(
+                        `Merhaba ${childName}, Hafıza Oyununa hoş geldin! Kartların çiftlerini bulmaya çalış!`,
+                        { voice: 'fable', speed: 1.1 }
+                    );
+                } catch (e) {
+                    console.log('TTS error:', e);
+                } finally {
+                    setIsSpeaking(false);
+                }
+            }
+        };
+        greet();
+    }, [childName]);
 
     useEffect(() => {
         startStage(0);
