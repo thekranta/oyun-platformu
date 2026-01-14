@@ -276,28 +276,20 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
             ekstra_veri: JSON.stringify({ secilen_yol: pathString }),
         };
 
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
-                method: 'POST',
-                headers: {
-                    apikey: SUPABASE_KEY,
-                    Authorization: `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    Prefer: 'return=minimal',
-                },
-                body: JSON.stringify(logData),
+        if (onGameEnd) {
+            const analysisData = JSON.stringify({
+                secilen_yol: pathString,
+                maarif_kazanim: 'Sosyal-Duygusal Gelişim: Aile bağları, işbirliği ve problem çözme becerilerini geliştirir',
             });
-            console.log('✅ Oyun sonucu kaydedildi. Analiz admin panelinden yapılabilir.');
 
-            // Call onGameEnd for admin panel integration
-            if (onGameEnd) {
-                onGameEnd('aile-sepeti', durationSeconds, path.length, 0, null, {
-                    secilen_yol: pathString,
-                    maarif_kazanim: 'Sosyal-Duygusal Gelişim: Aile bağları, işbirliği ve problem çözme becerilerini geliştirir',
-                });
-            }
-        } catch (e) {
-            console.error('Log hatası:', e);
+            onGameEnd(
+                'aile-sepeti',
+                durationSeconds,
+                path.length,
+                0,
+                undefined,
+                { cizimVerisi: analysisData }
+            );
         }
     };
 

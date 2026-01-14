@@ -309,38 +309,25 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
             }),
         };
 
-        // Sadece mevcut değerleri ekle
-        if (userEmail) logData.email = userEmail;
-
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
-                method: 'POST',
-                headers: {
-                    apikey: SUPABASE_KEY,
-                    Authorization: `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    Prefer: 'return=minimal',
-                },
-                body: JSON.stringify(logData),
+        // onGameEnd varsa merkezi kaydetme fonksiyonunu çağır
+        // Veriyi 'cizimVerisi' alanına JSON olarak gömüyoruz, böylece admin paneli 'cizim_verisi'nden okuyabilir.
+        if (onGameEnd) {
+            const analysisData = JSON.stringify({
+                secilen_yol: pathString,
+                yaklasim: getAnalysisSummary(),
+                maarif_kazanim: 'Sosyal-Duygusal Gelişim: Adalet, Eşitlik ve Paylaşım değerlerini anlar ve uygular',
             });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('❌ Supabase POST hatası:', response.status, errorText);
-            } else {
-                console.log('✅ Adalet Hikayesi sonucu kaydedildi.');
-            }
-
-            // Call onGameEnd for admin panel integration
-            if (onGameEnd) {
-                onGameEnd('adalet-hikayesi', durationSeconds, path.length, 0, null, {
-                    secilen_yol: pathString,
-                    yaklasim: getAnalysisSummary(),
-                    maarif_kazanim: 'Sosyal-Duygusal Gelişim: Adalet, Eşitlik ve Paylaşım değerlerini anlar ve uygular',
-                });
-            }
-        } catch (e) {
-            console.error('Log hatası:', e);
+            onGameEnd(
+                'adalet-hikayesi',
+                durationSeconds,
+                path.length,
+                0,
+                undefined,
+                { cizimVerisi: analysisData }
+            );
+        } else {
+            console.warn('onGameEnd prop missing in AdaletHikayesi');
         }
     };
 

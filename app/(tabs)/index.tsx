@@ -1222,11 +1222,11 @@ export default function App() {
   }
 
   if (asama === 'aile-sepeti-macerasi') {
-    return <AileSepetiMacerasi onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
+    return <AileSepetiMacerasi onExit={() => setAsama('menu')} onGameEnd={oyunuBitir} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
   }
 
   if (asama === 'adalet-hikayesi') {
-    return <AdaletHikayesi onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
+    return <AdaletHikayesi onExit={() => setAsama('menu')} onGameEnd={oyunuBitir} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
   }
 
   if (asama === 'yaratici-cizim') {
