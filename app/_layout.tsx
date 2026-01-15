@@ -21,7 +21,8 @@ export default function RootLayout() {
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
           <Stack.Screen name="signup" options={{ headerShown: false }} />
           <Stack.Screen name="admin" options={{ headerShown: false }} />
-          <Stack.Screen name="veli" options={{ headerShown: false }} />
+          <Stack.Screen name="veli-dashboard" options={{ headerShown: false }} />
+          <Stack.Screen name="teacher-dashboard" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </SoundProvider>

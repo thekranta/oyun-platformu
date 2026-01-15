@@ -625,7 +625,7 @@ export default function App() {
           </View>
 
           {/* Bottom Buttons Container */}
-          <View style={{ position: 'absolute', bottom: 30, flexDirection: 'row', gap: 12 }}>
+          <View style={{ position: 'absolute', bottom: 30, flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
             <TouchableOpacity
               style={styles.adminButtonBottom}
               onPress={() => router.push('/admin' as any)}
@@ -638,6 +638,13 @@ export default function App() {
               onPress={() => router.push('/veli-dashboard' as any)}
             >
               <Text style={[styles.adminButtonText, { color: '#7B1FA2' }]}>👨‍👩‍👧 Veli Paneli</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.adminButtonBottom, { backgroundColor: 'rgba(255, 152, 0, 0.25)', borderColor: 'rgba(255, 152, 0, 0.4)' }]}
+              onPress={() => router.push('/teacher-dashboard' as any)}
+            >
+              <Text style={[styles.adminButtonText, { color: '#E65100' }]}>👩‍🏫 Öğretmen</Text>
             </TouchableOpacity>
           </View>
         </View>
