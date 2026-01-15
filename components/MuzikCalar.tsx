@@ -17,6 +17,7 @@ export interface Song {
     source: any;
     coverColor: string;
     icon: keyof typeof Ionicons.glyphMap;
+    category?: 'genel' | 'degerler' | 'matematik' | 'fen' | 'sosyal-duygusal';
 }
 
 export const SONGS: Song[] = [
@@ -301,6 +302,62 @@ export const SONGS: Song[] = [
         source: require('@/assets/sounds/songs/Canlıların Evi.mp3'),
         coverColor: '#009688', // Teal
         icon: 'earth',
+        category: 'fen',
+    },
+    // === SOSYAL-DUYGUSAL GELİŞİM ŞARKILARI ===
+    {
+        id: '36',
+        title: 'Ben Biriciğim',
+        artist: 'Sosyal-Duygusal - Özgüven',
+        source: require('@/assets/sounds/songs/Ben Biriciğim.mp3'),
+        coverColor: '#E91E63', // Pembe
+        icon: 'star',
+        category: 'sosyal-duygusal',
+    },
+    {
+        id: '37',
+        title: 'Duygu Ormanı',
+        artist: 'Sosyal-Duygusal - Duygular',
+        source: require('@/assets/sounds/songs/Duygu Ormanı.mp3'),
+        coverColor: '#4CAF50', // Yeşil
+        icon: 'leaf',
+        category: 'sosyal-duygusal',
+    },
+    {
+        id: '38',
+        title: 'Nefes Al ve Dur',
+        artist: 'Sosyal-Duygusal - Öz Düzenleme',
+        source: require('@/assets/sounds/songs/Nefes Al ve Dur.mp3'),
+        coverColor: '#00BCD4', // Cyan
+        icon: 'cloudy',
+        category: 'sosyal-duygusal',
+    },
+    {
+        id: '39',
+        title: 'Lütfen ve Teşekkürler',
+        artist: 'Sosyal-Duygusal - Nezaket',
+        source: require('@/assets/sounds/songs/Lütfen ve Teşekkürler.mp3'),
+        coverColor: '#FFC107', // Sarı
+        icon: 'happy',
+        category: 'sosyal-duygusal',
+    },
+    {
+        id: '40',
+        title: 'Senin Gözünle',
+        artist: 'Sosyal-Duygusal - Empati',
+        source: require('@/assets/sounds/songs/Senin Gözünle.mp3'),
+        coverColor: '#9C27B0', // Mor
+        icon: 'eye',
+        category: 'sosyal-duygusal',
+    },
+    {
+        id: '41',
+        title: 'Çözüm Bulalım',
+        artist: 'Sosyal-Duygusal - Problem Çözme',
+        source: require('@/assets/sounds/songs/Çözüm Bulalım.mp3'),
+        coverColor: '#FF5722', // Turuncu
+        icon: 'bulb',
+        category: 'sosyal-duygusal',
     },
 ];
 
@@ -316,8 +373,20 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(1);
     const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
+    const [selectedCategory, setSelectedCategory] = useState<'tumu' | 'degerler' | 'matematik' | 'fen' | 'sosyal-duygusal'>('tumu');
 
     const currentSong = SONGS[currentSongIndex];
+
+    // Kategori filtreleme
+    const filteredSongs = selectedCategory === 'tumu'
+        ? SONGS
+        : SONGS.filter(song => {
+            if (selectedCategory === 'sosyal-duygusal') return song.category === 'sosyal-duygusal';
+            if (selectedCategory === 'matematik') return song.artist.toLowerCase().includes('matematik');
+            if (selectedCategory === 'fen') return song.artist.toLowerCase().includes('fen');
+            if (selectedCategory === 'degerler') return !song.category && !song.artist.toLowerCase().includes('matematik') && !song.artist.toLowerCase().includes('fen') && song.id !== '1' && song.id !== '2';
+            return true;
+        });
 
     useEffect(() => {
         // Load the initial song when component mounts
@@ -521,32 +590,70 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
                     </TouchableOpacity>
                 </View>
 
-                {/* Şarkı Listesi */}
-                <Text style={styles.listTitle}>Diğer Şarkılar</Text>
+                {/* Şarkı Listesi - Kategorili */}
+                <Text style={styles.listTitle}>Şarkılar</Text>
+
+                {/* Kategori Sekmeleri */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryTabsContainer}>
+                    <TouchableOpacity
+                        style={[styles.categoryTab, selectedCategory === 'tumu' && styles.categoryTabActive]}
+                        onPress={() => setSelectedCategory('tumu')}
+                    >
+                        <Text style={[styles.categoryTabText, selectedCategory === 'tumu' && styles.categoryTabTextActive]}>🎵 Tümü</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.categoryTab, selectedCategory === 'sosyal-duygusal' && { backgroundColor: '#E91E63' }]}
+                        onPress={() => setSelectedCategory('sosyal-duygusal')}
+                    >
+                        <Text style={[styles.categoryTabText, selectedCategory === 'sosyal-duygusal' && styles.categoryTabTextActive]}>💜 Sosyal-Duygusal</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.categoryTab, selectedCategory === 'matematik' && { backgroundColor: '#7E57C2' }]}
+                        onPress={() => setSelectedCategory('matematik')}
+                    >
+                        <Text style={[styles.categoryTabText, selectedCategory === 'matematik' && styles.categoryTabTextActive]}>🔢 Matematik</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.categoryTab, selectedCategory === 'fen' && { backgroundColor: '#4CAF50' }]}
+                        onPress={() => setSelectedCategory('fen')}
+                    >
+                        <Text style={[styles.categoryTabText, selectedCategory === 'fen' && styles.categoryTabTextActive]}>🔬 Fen</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.categoryTab, selectedCategory === 'degerler' && { backgroundColor: '#FF7043' }]}
+                        onPress={() => setSelectedCategory('degerler')}
+                    >
+                        <Text style={[styles.categoryTabText, selectedCategory === 'degerler' && styles.categoryTabTextActive]}>❤️ Değerler</Text>
+                    </TouchableOpacity>
+                </ScrollView>
+
                 <ScrollView style={styles.listContainer} contentContainerStyle={{ paddingBottom: 20 }}>
-                    {SONGS.map((song, index) => (
-                        <TouchableOpacity
-                            key={song.id}
-                            style={[
-                                styles.songItem,
-                                index === currentSongIndex && { backgroundColor: '#F0F4C3', borderColor: song.coverColor, borderWidth: 1 }
-                            ]}
-                            onPress={() => loadSound(index)}
-                        >
-                            <View style={[styles.songIconSmall, { backgroundColor: song.coverColor }]}>
-                                <Ionicons name={song.icon} size={20} color="#fff" />
-                            </View>
-                            <View style={styles.songItemInfo}>
-                                <Text style={[styles.songItemTitle, index === currentSongIndex && { color: '#333', fontWeight: 'bold' }]}>
-                                    {song.title}
-                                </Text>
-                                <Text style={styles.songItemArtist}>{song.artist}</Text>
-                            </View>
-                            {index === currentSongIndex && isPlaying && (
-                                <Ionicons name="stats-chart" size={20} color={song.coverColor} />
-                            )}
-                        </TouchableOpacity>
-                    ))}
+                    {filteredSongs.map((song) => {
+                        const songIndex = SONGS.findIndex(s => s.id === song.id);
+                        return (
+                            <TouchableOpacity
+                                key={song.id}
+                                style={[
+                                    styles.songItem,
+                                    songIndex === currentSongIndex && { backgroundColor: '#F0F4C3', borderColor: song.coverColor, borderWidth: 1 }
+                                ]}
+                                onPress={() => loadSound(songIndex)}
+                            >
+                                <View style={[styles.songIconSmall, { backgroundColor: song.coverColor }]}>
+                                    <Ionicons name={song.icon} size={20} color="#fff" />
+                                </View>
+                                <View style={styles.songItemInfo}>
+                                    <Text style={[styles.songItemTitle, songIndex === currentSongIndex && { color: '#333', fontWeight: 'bold' }]}>
+                                        {song.title}
+                                    </Text>
+                                    <Text style={styles.songItemArtist}>{song.artist}</Text>
+                                </View>
+                                {songIndex === currentSongIndex && isPlaying && (
+                                    <Ionicons name="stats-chart" size={20} color={song.coverColor} />
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
                 </ScrollView>
             </View>
         </View>
@@ -759,5 +866,27 @@ const styles = StyleSheet.create({
         fontSize: 8,
         fontWeight: 'bold',
         color: '#546E7A',
+    },
+    categoryTabsContainer: {
+        marginBottom: 12,
+        maxHeight: 45,
+    },
+    categoryTab: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#E0E0E0',
+        borderRadius: 20,
+        marginRight: 8,
+    },
+    categoryTabActive: {
+        backgroundColor: '#546E7A',
+    },
+    categoryTabText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#546E7A',
+    },
+    categoryTabTextActive: {
+        color: '#fff',
     },
 });
