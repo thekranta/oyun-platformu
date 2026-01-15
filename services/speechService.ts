@@ -27,9 +27,9 @@ export async function generateSpeech(
     options: SpeechOptions = {}
 ): Promise<SpeechResult> {
     const {
-        voice = 'nova', // Default to nova (energetic female voice)
+        voice = 'shimmer', // Default to shimmer (warm female voice, better for children)
         model = 'tts-1',
-        speed = 1.0
+        speed = 0.85 // Slower for better comprehension by children
     } = options;
 
     // Check cache first

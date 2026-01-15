@@ -11,7 +11,7 @@ import {
     View
 } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from 'react-native-svg';
-import { speak } from '../services/speechService';
+import CountdownOverlay from './CountdownOverlay';
 
 // ============= TYPES =============
 interface SihirliTuvalProps {
@@ -207,33 +207,13 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     const [timeLeft, setTimeLeft] = useState(300); // 5 dakika
     const [isGameComplete, setIsGameComplete] = useState(false);
     const [cognitiveSpeed, setCognitiveSpeed] = useState(0);
-    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [gameReady, setGameReady] = useState(false);
 
     // Animations
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const flashAnim = useRef(new Animated.Value(0)).current;
     const selectedButtonScale = useRef(new Animated.Value(1)).current;
     const pulseAnim = useRef(new Animated.Value(1)).current;
-
-    // Voice greeting on mount
-    useEffect(() => {
-        const greet = async () => {
-            if (Platform.OS === 'web') {
-                setIsSpeaking(true);
-                try {
-                    await speak(
-                        `Merhaba ${childName}, Sihirli Tuval oyununa hoş geldin! Renkleri numaralarına göre boyama yapalım.`,
-                        { voice: 'fable', speed: 1.1 }
-                    );
-                } catch (e) {
-                    console.log('TTS error:', e);
-                } finally {
-                    setIsSpeaking(false);
-                }
-            }
-        };
-        greet();
-    }, [childName]);
 
     // Pulse animation for selected button
     useEffect(() => {
@@ -249,9 +229,9 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
         }
     }, [selectedColorNumber]);
 
-    // Timer
+    // Timer - only starts when game is ready
     useEffect(() => {
-        if (isGameComplete) return;
+        if (isGameComplete || !gameReady) return;
 
         const timer = setInterval(() => {
             setTimeLeft(prev => {
@@ -265,7 +245,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
         }, 1000);
 
         return () => clearInterval(timer);
-    }, [isGameComplete]);
+    }, [isGameComplete, gameReady]);
 
     // Calculate cognitive speed whenever correctAnswers changes
     useEffect(() => {
@@ -426,6 +406,15 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
 
     return (
         <View style={styles.container}>
+            {/* Countdown Overlay */}
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Sihirli Tuval oyununa hoş geldin! Renkleri numaralarına göre boyama yapalım."
+                    childName={childName}
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             {/* Dark Wood texture background */}
             <View style={styles.woodBackground}>
                 {[...Array(30)].map((_, i) => (

@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
     Animated,
     Dimensions,
     Platform,
@@ -13,7 +12,7 @@ import {
     View
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { speak } from '../services/speechService';
+import CountdownOverlay from './CountdownOverlay';
 
 // ============= TYPES =============
 interface UzayBloklariProps {
@@ -95,7 +94,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const [isGameComplete, setIsGameComplete] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [rocketLaunch, setRocketLaunch] = useState(false);
-    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [gameReady, setGameReady] = useState(false);
 
     // Selection state (tap-to-select, tap-to-place)
     const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
@@ -107,24 +106,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const starAnim = useRef(new Animated.Value(0)).current;
     const rotationAnim = useRef(new Animated.Value(0)).current;
 
-    // TTS greeting with OpenAI
+    // Initialize blocks on mount
     useEffect(() => {
-        const greet = async () => {
-            if (Platform.OS === 'web') {
-                setIsSpeaking(true);
-                try {
-                    await speak(
-                        `Merhaba ${childName}, Uzay Blokları oyununa hoş geldin! Blokları yerleştirmeme yardım eder misin?`,
-                        { voice: 'fable', speed: 1.1 } // fable = expressive storyteller voice, slightly faster for energy
-                    );
-                } catch (e) {
-                    console.log('TTS error:', e);
-                } finally {
-                    setIsSpeaking(false);
-                }
-            }
-        };
-        greet();
         initializeBlocks();
     }, []);
 
@@ -139,8 +122,9 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     }, []);
 
     // Timer
+    // Timer - only starts when game is ready
     useEffect(() => {
-        if (isGameComplete) return;
+        if (isGameComplete || !gameReady) return;
         const timer = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
@@ -152,7 +136,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [isGameComplete]);
+    }, [isGameComplete, gameReady]);
 
     // Check game completion
     useEffect(() => {
@@ -382,6 +366,15 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
 
     return (
         <View style={styles.container}>
+            {/* Countdown Overlay - shows greeting and countdown before game starts */}
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Uzay Blokları oyununa hoş geldin! Blokları yerleştirmeme yardım eder misin?"
+                    childName={childName}
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             {/* Starry background */}
             <View style={styles.starsContainer}>
                 {[...Array(50)].map((_, i) => (
@@ -555,15 +548,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 />
             )}
 
-            {/* Speaking Indicator */}
-            {isSpeaking && (
-                <View style={styles.speakingOverlay}>
-                    <View style={styles.speakingCard}>
-                        <ActivityIndicator size="large" color="#BF40BF" />
-                        <Text style={styles.speakingText}>🔊 Dinle...</Text>
-                    </View>
-                </View>
-            )}
+
 
             {/* Game Complete Overlay */}
             {isGameComplete && !rocketLaunch && (

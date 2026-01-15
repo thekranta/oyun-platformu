@@ -13,6 +13,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import CountdownOverlay from './CountdownOverlay';
 
 // ============= CONFIG =============
 export interface ShadowDetectiveConfig {
@@ -30,6 +31,7 @@ interface ShadowDetectiveProps {
         ekstraVeri?: any
     ) => void;
     onExit: () => void;
+    childName?: string;
 }
 
 // ============= ASSETS =============
@@ -126,7 +128,7 @@ function DraggableAnimal({ animal, size, isMatched, onDrop }: {
 }
 
 // ============= MAIN =============
-export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDetectiveProps) {
+export default function ShadowDetective({ config, onGameEnd, onExit, childName = 'Dedektif' }: ShadowDetectiveProps) {
     const TOTAL = 10;
     const [round, setRound] = useState(1);
     const [animals, setAnimals] = useState<AnimalAsset[]>([]);
@@ -140,6 +142,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     const [gameStart] = useState(Date.now());
     const [roundStart, setRoundStart] = useState(Date.now());
     const [roundData, setRoundData] = useState<any[]>([]);
+    const [gameReady, setGameReady] = useState(false);
 
     const successScale = useRef(new Animated.Value(0)).current;
     const shadowRefs = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
@@ -164,7 +167,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
     const itemSize = getItemSize();
     const shadowSize = itemSize * 0.95;
 
-    useEffect(() => { initRound(); }, [round]);
+    useEffect(() => { if (gameReady) initRound(); }, [round, gameReady]);
 
     const initRound = () => {
         const shuffled = [...ANIMALS].sort(() => Math.random() - 0.5);
@@ -246,6 +249,15 @@ export default function ShadowDetective({ config, onGameEnd, onExit }: ShadowDet
             style={styles.container}
             imageStyle={styles.bgImage}
         >
+            {/* Countdown Overlay */}
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Gölge Dedektifi oyununa hoş geldin! Hayvanları gölgeleriyle eşleştir!"
+                    childName={childName}
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             {/* Blur overlay */}
             <View style={styles.blurOverlay} />
 

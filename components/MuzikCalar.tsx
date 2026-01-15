@@ -294,6 +294,14 @@ export const SONGS: Song[] = [
         coverColor: '#4CAF50', // Koyu Yeşil
         icon: 'leaf',
     },
+    {
+        id: '35',
+        title: 'Canlıların Evi',
+        artist: 'Fen - Yaşam Alanları',
+        source: require('@/assets/sounds/songs/Canlıların Evi.mp3'),
+        coverColor: '#009688', // Teal
+        icon: 'earth',
+    },
 ];
 
 interface MuzikCalarProps {

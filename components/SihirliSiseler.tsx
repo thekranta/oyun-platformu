@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import CountdownOverlay from './CountdownOverlay';
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -71,6 +72,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
     const [showCelebration, setShowCelebration] = useState(false);
     const [confettiPieces, setConfettiPieces] = useState<any[]>([]);
     const [completedBottles, setCompletedBottles] = useState(0); // Track for interactive elements
+    const [gameReady, setGameReady] = useState(false);
 
     // Animations
     const pourAnim = useRef(new Animated.Value(0)).current;
@@ -484,6 +486,15 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
 
     return (
         <View style={styles.container}>
+            {/* Countdown Overlay */}
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Sihirli Şişeler oyununa hoş geldin! Aynı renk sıvıları birleştir!"
+                    childName={childName}
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             {/* Lab-themed Background */}
             <View style={styles.background}>
                 {/* Gradient-like Lab Atmosphere */}

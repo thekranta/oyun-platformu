@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { speak } from '../services/speechService';
+import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
@@ -70,31 +70,12 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
 
     // Smart Scoring: Track seen card IDs
     const [seenCardIds, setSeenCardIds] = useState<Set<number>>(new Set());
-    const [isSpeaking, setIsSpeaking] = useState(false);
+    const [gameReady, setGameReady] = useState(false);
 
     // Confetti Ref
     const confettiRef = useRef<ConfettiCannon>(null);
 
-    // Voice greeting on mount
-    useEffect(() => {
-        const greet = async () => {
-            if (Platform.OS === 'web') {
-                setIsSpeaking(true);
-                try {
-                    await speak(
-                        `Merhaba ${childName}, Hafıza Oyununa hoş geldin! Kartların çiftlerini bulmaya çalış!`,
-                        { voice: 'fable', speed: 1.1 }
-                    );
-                } catch (e) {
-                    console.log('TTS error:', e);
-                } finally {
-                    setIsSpeaking(false);
-                }
-            }
-        };
-        greet();
-    }, [childName]);
-
+    // Start stage on mount
     useEffect(() => {
         startStage(0);
     }, []);
@@ -320,6 +301,15 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
 
     return (
         <DynamicBackground onExit={onExit}>
+            {/* Countdown Overlay */}
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Hafıza Oyununa hoş geldin! Kartların çiftlerini bulmaya çalış!"
+                    childName={childName}
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             <View style={styles.topBar}>
                 <ProgressBar current={currentStageIndex + 1} total={AŞAMA_AYARLARI.length} />
             </View>

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import Svg, { Line } from 'react-native-svg';
-import { speak } from '../services/speechService';
+import CountdownOverlay from './CountdownOverlay';
 
 // ============= TYPES =============
 interface RenkliBaglantalarProps {
@@ -59,6 +59,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
     const [showConfetti, setShowConfetti] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [moveHistory, setMoveHistory] = useState<any[]>([]);
+    const [gameReady, setGameReady] = useState(false);
 
     // Grid layout ref
     const gridRef = useRef<View>(null);
@@ -72,7 +73,6 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
     useEffect(() => {
         initializeGame();
         startFloatingAnimation();
-        playGreeting();
     }, []);
 
     const startFloatingAnimation = () => {
@@ -84,18 +84,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
         ).start();
     };
 
-    const playGreeting = async () => {
-        if (Platform.OS === 'web') {
-            try {
-                await speak(
-                    `Merhaba ${childName}! Aynı renk topları birbirine bağla ve patlat!`,
-                    { voice: 'nova' }
-                );
-            } catch (e) {
-                console.log('TTS error:', e);
-            }
-        }
-    };
+
 
     const initializeGame = () => {
         const newBalls: Ball[] = [];
@@ -324,6 +313,15 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
 
     return (
         <View style={styles.container}>
+            {/* Countdown Overlay */}
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Aynı renk topları birbirine bağla ve patlat!"
+                    childName={childName}
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             {/* Background with floating elements */}
             <View style={styles.background}>
                 {[...Array(6)].map((_, i) => (

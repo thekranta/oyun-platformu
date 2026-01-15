@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 
 const { width, height } = Dimensions.get('window');
@@ -220,9 +221,11 @@ const setBgMusicVolume = (on: boolean) => {
 interface Props {
   onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
   onExit?: () => void;
+  childName?: string;
 }
 
-export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
+export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamacı' }: Props) {
+  const [gameReady, setGameReady] = useState(false);
   const [mode, setMode] = useState<GameMode>(GameMode.PLAY);
   const [levelIdx, setLevelIdx] = useState(0);
   const [level, setLevel] = useState<LevelConfig>(LEVELS[0]);
@@ -464,6 +467,15 @@ export default function KodlamaOyunu({ onGameEnd, onExit }: Props) {
 
   return (
     <DynamicBackground>
+      {/* Countdown Overlay */}
+      {!gameReady && (
+        <CountdownOverlay
+          message="Kodlama Oyununa hoş geldin! Robotu hedefe götür!"
+          childName={childName}
+          countdownSeconds={5}
+          onComplete={() => setGameReady(true)}
+        />
+      )}
       <View style={st.container}>
         {/* Top */}
         <View style={st.top}>

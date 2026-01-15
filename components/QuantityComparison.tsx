@@ -10,11 +10,13 @@ import {
     View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 
 interface QuantityComparisonProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
     onExit: () => void;
+    childName?: string;
 }
 
 type QuestionType = 'MORE' | 'LESS';
@@ -34,8 +36,9 @@ interface RoundData {
 // Flat 2D fruit emojis (Apple and Orange for variety)
 const FRUITS = { left: '🍎', right: '🍊' };
 
-export default function QuantityComparison({ onGameEnd, onExit }: QuantityComparisonProps) {
+export default function QuantityComparison({ onGameEnd, onExit, childName = 'Çocuk' }: QuantityComparisonProps) {
     const { isMuted, toggleMute } = useSound();
+    const [gameReady, setGameReady] = useState(false);
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
     useEffect(() => {
@@ -84,8 +87,8 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
     const questionPulse = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        generateRound();
-    }, [round]);
+        if (gameReady) generateRound();
+    }, [round, gameReady]);
 
     const generateRound = () => {
         setFeedback(null);
@@ -239,6 +242,15 @@ export default function QuantityComparison({ onGameEnd, onExit }: QuantityCompar
 
     return (
         <View style={styles.outerContainer}>
+            {/* Countdown Overlay */}
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Miktar Avcısı oyununa hoş geldin! Hangisi daha çok veya az, bul!"
+                    childName={childName}
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             {/* Floating Background Elements */}
             <Animated.Text style={[styles.floatingCloud, { top: '10%', left: '5%', transform: [{ translateY: float1 }] }]}>☁️</Animated.Text>
             <Animated.Text style={[styles.floatingCloud, { top: '20%', right: '8%', opacity: 0.35, transform: [{ translateY: float2 }] }]}>☁️</Animated.Text>

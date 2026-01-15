@@ -11,11 +11,13 @@ import {
     View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 
 interface TartiDengesiProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
     onExit: () => void;
+    childName?: string;
 }
 
 // Draggable Option Component with its own PanResponder
@@ -64,8 +66,9 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
     );
 }
 
-export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
+export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }: TartiDengesiProps) {
     const { isMuted, toggleMute } = useSound();
+    const [gameReady, setGameReady] = useState(false);
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
     useEffect(() => {
@@ -175,6 +178,15 @@ export default function TartiDengesi({ onGameEnd, onExit }: TartiDengesiProps) {
 
     return (
         <View style={styles.outerContainer}>
+            {/* Countdown Overlay */}
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Tartı Dengesi oyununa hoş geldin! Teraziyi dengele!"
+                    childName={childName}
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             <Animated.Text style={[styles.floatingCloud, { top: '15%', left: '8%', transform: [{ translateY: float1 }] }]}>☁️</Animated.Text>
             <Animated.Text style={[styles.floatingCloud, { top: '30%', right: '6%', opacity: 0.4, transform: [{ translateY: float2 }] }]}>☁️</Animated.Text>
             <Animated.Text style={[styles.floatingStar, { bottom: '22%', right: '12%', transform: [{ translateY: float1 }] }]}>💜</Animated.Text>
