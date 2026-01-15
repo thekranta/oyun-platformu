@@ -369,4 +369,197 @@ export default function TeacherDashboardPage() {
     );
 }
 
-
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    content: {
+        flexGrow: 1,
+        padding: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    contentLandscape: {
+        flexDirection: 'column',
+        justifyContent: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 40,
+    },
+    contentCompact: {
+        paddingVertical: 12,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 50,
+        left: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        zIndex: 10,
+    },
+    backButtonLandscape: {
+        top: 12,
+        left: 12,
+        width: 38,
+        height: 38,
+    },
+    header: {
+        alignItems: 'center',
+        marginBottom: 24,
+        width: '100%',
+    },
+    headerLandscape: {
+        marginBottom: 12,
+        marginTop: 20,
+    },
+    emoji: {
+        fontSize: 64,
+        marginBottom: 12,
+    },
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#263238',
+        marginBottom: 6,
+    },
+    subtitle: {
+        fontSize: 16,
+        color: '#607D8B',
+        textAlign: 'center',
+    },
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 12,
+        elevation: 5,
+        width: '100%',
+        maxWidth: 420,
+    },
+    cardLandscape: {
+        padding: 20,
+    },
+    cardTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#263238',
+        marginBottom: 4,
+    },
+    cardSubtitle: {
+        fontSize: 14,
+        color: '#607D8B',
+        marginBottom: 24,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        marginBottom: 20,
+    },
+    inputIcon: {
+        marginRight: 12,
+    },
+    input: {
+        flex: 1,
+        height: 56,
+        fontSize: 16,
+        color: '#263238',
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    loginButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FF9800',
+        borderRadius: 16,
+        height: 52,
+        gap: 8,
+    },
+    loginButtonFlex: {
+        flex: 1,
+    },
+    loginButtonDisabled: {
+        opacity: 0.7,
+    },
+    loginButtonText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#fff',
+    },
+    demoButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFF3E0',
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        height: 52,
+        gap: 6,
+        borderWidth: 2,
+        borderColor: '#FF9800',
+    },
+    demoButtonText: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#FF9800',
+    },
+    info: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 20,
+        marginBottom: 20,
+        gap: 6,
+    },
+    infoText: {
+        fontSize: 13,
+        color: '#607D8B',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '90%',
+        maxWidth: 420,
+        backgroundColor: '#fff',
+        borderRadius: 24,
+        padding: 24,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#263238',
+    },
+    registerNote: {
+        marginTop: 16,
+        fontSize: 12,
+        color: '#9E9E9E',
+        textAlign: 'center',
+        lineHeight: 18,
+    },
+});
