@@ -299,7 +299,7 @@ export const SONGS: Song[] = [
         id: '35',
         title: 'Canlıların Evi',
         artist: 'Fen - Yaşam Alanları',
-        source: require('@/assets/sounds/songs/Canlıların Evi.mp3'),
+        source: require('@/assets/sounds/songs/Canlilarin Evi.mp3'),
         coverColor: '#009688', // Teal
         icon: 'earth',
         category: 'fen',
