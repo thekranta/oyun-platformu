@@ -1,15 +1,14 @@
 /**
- * Unified Speech Service - Warm Turkish Female Voice
- * Uses server-side /api/tts endpoint with Google Cloud TTS
- * Optimized for children with warm, friendly voice
+ * Unified Speech Service - OpenAI TTS
+ * Warm female voice optimized for children
  */
 
 // Cache for audio blobs to avoid repeated API calls
 const audioCache = new Map<string, string>();
 
 export interface SpeechOptions {
-    speed?: number; // 0.25 to 4.0 (default: 0.85 for children)
-    pitch?: number; // -20 to 20 (default: 2.0 for warmer tone)
+    voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+    speed?: number; // 0.25 to 4.0 (default: 0.9 for children)
 }
 
 export interface SpeechResult {
@@ -19,7 +18,7 @@ export interface SpeechResult {
 }
 
 /**
- * Generate speech from text using Google Cloud TTS
+ * Generate speech from text using OpenAI TTS
  * Returns a blob URL that can be played with Audio element
  */
 export async function generateSpeech(
@@ -27,12 +26,12 @@ export async function generateSpeech(
     options: SpeechOptions = {}
 ): Promise<SpeechResult> {
     const {
-        speed = 0.85,  // Slightly slower for children
-        pitch = 2.0     // Higher pitch = warmer, friendlier tone
+        voice = 'nova',  // Warm female voice - best for children
+        speed = 0.9      // Slightly slower for comprehension
     } = options;
 
     // Check cache first
-    const cacheKey = `${text}-${speed}-${pitch}`;
+    const cacheKey = `${text}-${voice}-${speed}`;
     if (audioCache.has(cacheKey)) {
         return {
             success: true,
@@ -41,7 +40,7 @@ export async function generateSpeech(
     }
 
     try {
-        // Call secure server-side API route (Google Cloud TTS)
+        // Call secure server-side API route (OpenAI TTS)
         const response = await fetch('/api/tts', {
             method: 'POST',
             headers: {
@@ -49,9 +48,8 @@ export async function generateSpeech(
             },
             body: JSON.stringify({
                 text,
-                voice: 'tr-TR-Wavenet-D', // Warm Turkish female voice
-                speakingRate: speed,
-                pitch: pitch
+                voice,
+                speed
             }),
         });
 
@@ -122,7 +120,6 @@ export async function speak(
             audio.onended = () => resolve();
             audio.onerror = () => {
                 console.error('Audio playback error, using fallback');
-                // Fallback to browser TTS
                 fallbackTTS(text);
                 resolve();
             };
@@ -140,15 +137,14 @@ export async function speak(
 
 /**
  * Browser fallback TTS using Web Speech API
- * Configured for warmer voice
  */
 function fallbackTTS(text: string): void {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'tr-TR';
-        utterance.rate = 0.85;  // Slower for children
-        utterance.pitch = 1.3;  // Higher pitch = warmer
+        utterance.rate = 0.9;
+        utterance.pitch = 1.2;
 
         // Try to find a Turkish female voice
         const voices = window.speechSynthesis.getVoices();
@@ -178,10 +174,8 @@ export function stopSpeech(): void {
 
 /**
  * Clear the audio cache
- * Call this to free memory if needed
  */
 export function clearSpeechCache(): void {
-    // Revoke all blob URLs
     audioCache.forEach((url) => {
         URL.revokeObjectURL(url);
     });
@@ -190,18 +184,16 @@ export function clearSpeechCache(): void {
 
 /**
  * Pre-generate speech for common phrases
- * Call this during app initialization to reduce latency
  */
 export async function preloadCommonPhrases(childName: string): Promise<void> {
     const phrases = [
         `Merhaba ${childName}! Oyuna hoş geldin!`,
         `Harika iş çıkardın ${childName}!`,
-        `Tebrikler, görevi tamamladın!`,
+        `Tebrikler!`,
         `Aferin sana!`,
-        `Tekrar dene, yapabilirsin!`,
+        `Tekrar dene!`,
     ];
 
-    // Generate all phrases in parallel but don't wait for all
     phrases.forEach(phrase => {
         generateSpeech(phrase).catch(console.error);
     });

@@ -1,13 +1,13 @@
 /**
- * Unified TTS API Route - Google Cloud Text-to-Speech
- * Warm Turkish female voice optimized for children
+ * Unified TTS API Route - OpenAI Text-to-Speech
+ * Warm female voice optimized for children
  * POST /api/tts
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Google Cloud TTS API key (server-side only)
-const GOOGLE_CLOUD_TTS_API_KEY = process.env.GOOGLE_CLOUD_TTS_API_KEY;
+// OpenAI API key (server-side only)
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS headers
@@ -25,9 +25,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const {
         text,
-        voice = 'tr-TR-Wavenet-D',  // Warm Turkish female voice (best for children)
-        speakingRate = 0.85,         // Slower for better comprehension
-        pitch = 2.0                  // Higher pitch = warmer, friendlier
+        voice = 'nova',  // OpenAI voices: alloy, echo, fable, onyx, nova (warm female), shimmer
+        speed = 0.9      // 0.25 to 4.0
     } = req.body;
 
     if (!text || typeof text !== 'string') {
@@ -39,60 +38,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Text too long (max 1000 chars)' });
     }
 
-    if (!GOOGLE_CLOUD_TTS_API_KEY) {
-        console.error('GOOGLE_CLOUD_TTS_API_KEY not configured');
+    if (!OPENAI_API_KEY) {
+        console.error('OPENAI_API_KEY not configured');
         return res.status(500).json({ error: 'TTS service not configured' });
     }
 
     try {
-        const response = await fetch(
-            `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_CLOUD_TTS_API_KEY}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    input: { text },
-                    voice: {
-                        languageCode: 'tr-TR',
-                        name: voice,
-                        // Available voices:
-                        // tr-TR-Wavenet-A: Female (clear)
-                        // tr-TR-Wavenet-B: Male
-                        // tr-TR-Wavenet-C: Female 
-                        // tr-TR-Wavenet-D: Female (warmest - RECOMMENDED)
-                        // tr-TR-Wavenet-E: Male
-                    },
-                    audioConfig: {
-                        audioEncoding: 'MP3',
-                        speakingRate: Math.max(0.25, Math.min(4.0, speakingRate)),
-                        pitch: Math.max(-20, Math.min(20, pitch)),
-                        volumeGainDb: 0.0,
-                        // Mobile device optimized audio profile
-                        effectsProfileId: ['small-bluetooth-speaker-class-device'],
-                    },
-                }),
-            }
-        );
+        // Call OpenAI TTS API
+        const response = await fetch('https://api.openai.com/v1/audio/speech', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'tts-1',
+                input: text,
+                voice: voice,  // nova = warm female, shimmer = soft female
+                speed: Math.max(0.25, Math.min(4.0, speed)),
+                response_format: 'mp3'
+            }),
+        });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Google TTS Error:', response.status, errorData);
-            return res.status(500).json({
-                error: 'TTS request failed',
-                details: errorData.error?.message || 'Unknown error'
+            const errorText = await response.text();
+            console.error('OpenAI TTS Error:', response.status, errorText);
+            return res.status(response.status).json({
+                error: 'TTS generation failed',
+                details: response.status === 401 ? 'Invalid API key' : 'API error'
             });
         }
 
-        const data = await response.json();
+        // Get audio as buffer and send as base64
+        const audioBuffer = await response.arrayBuffer();
+        const base64Audio = Buffer.from(audioBuffer).toString('base64');
 
         // Cache this response
         res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
 
         // Return audioContent (base64 encoded MP3)
         return res.status(200).json({
-            audioContent: data.audioContent,
+            audioContent: base64Audio,
             format: 'mp3'
         });
 

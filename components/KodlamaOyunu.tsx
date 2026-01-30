@@ -89,7 +89,7 @@ import { speak, stopSpeech as stopSpeechService } from '../services/speechServic
 const speakTeacher = async (text: string) => {
   if (Platform.OS !== 'web') return;
   try {
-    await speak(text, { speed: 0.85, pitch: 2.0 });
+    await speak(text, { voice: 'nova', speed: 0.9 });
   } catch (e) {
     console.log('TTS error:', e);
   }
