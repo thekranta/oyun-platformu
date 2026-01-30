@@ -388,10 +388,25 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
     const filteredSongs = selectedCategory === 'tumu'
         ? SONGS
         : SONGS.filter(song => {
-            if (selectedCategory === 'sosyal-duygusal') return song.category === 'sosyal-duygusal';
-            if (selectedCategory === 'matematik') return song.artist.toLowerCase().includes('matematik');
-            if (selectedCategory === 'fen') return song.artist.toLowerCase().includes('fen');
-            if (selectedCategory === 'degerler') return !song.category && !song.artist.toLowerCase().includes('matematik') && !song.artist.toLowerCase().includes('fen') && song.id !== '1' && song.id !== '2';
+            if (selectedCategory === 'sosyal-duygusal') {
+                return song.category === 'sosyal-duygusal';
+            }
+            if (selectedCategory === 'matematik') {
+                return song.category === 'matematik' || song.artist.toLowerCase().includes('matematik');
+            }
+            if (selectedCategory === 'fen') {
+                return song.category === 'fen' || song.artist.toLowerCase().includes('fen');
+            }
+            if (selectedCategory === 'degerler') {
+                // Değerler: kategori atanmamış şarkılar (ChildhoodTech hariç) ve category='degerler' olanlar
+                // Sosyal-duygusal, matematik, fen hariç
+                const isSosyalDuygusal = song.category === 'sosyal-duygusal';
+                const isMatematik = song.category === 'matematik' || song.artist.toLowerCase().includes('matematik');
+                const isFen = song.category === 'fen' || song.artist.toLowerCase().includes('fen');
+                const isChildhoodTech = song.id === '1' || song.id === '2';
+
+                return !isSosyalDuygusal && !isMatematik && !isFen && !isChildhoodTech;
+            }
             return true;
         });
 
