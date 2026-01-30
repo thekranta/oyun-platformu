@@ -177,7 +177,7 @@ export const SONGS: Song[] = [
         id: '20',
         title: 'Sağlıklı Yaşam',
         artist: 'Sağlık',
-        source: require('@/assets/sounds/songs/SAĞLIKLI YAŞAM.mp3'),
+        source: require('@/assets/sounds/songs/SAGLIKLI_YASAM.mp3'),
         coverColor: '#4CAF50', // Yeşil
         icon: 'fitness',
     },
