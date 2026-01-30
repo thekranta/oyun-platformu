@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const {
         text,
-        voice = 'nova',  // OpenAI voices: alloy, echo, fable, onyx, nova (warm female), shimmer
+        voice = 'shimmer',  // OpenAI voices: alloy, echo, fable, onyx, nova, shimmer (soft warm voice)
         speed = 0.9      // 0.25 to 4.0
     } = req.body;
 

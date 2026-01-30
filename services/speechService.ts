@@ -26,7 +26,7 @@ export async function generateSpeech(
     options: SpeechOptions = {}
 ): Promise<SpeechResult> {
     const {
-        voice = 'nova',  // Warm female voice - best for children
+        voice = 'shimmer',  // Soft, warm voice - best for children
         speed = 0.9      // Slightly slower for comprehension
     } = options;
 
