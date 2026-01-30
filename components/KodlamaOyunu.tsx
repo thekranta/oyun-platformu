@@ -83,88 +83,20 @@ const LEVELS: LevelConfig[] = [
   },
 ];
 
-// ============== AUDIO - Gemini TTS + Web Speech Fallback ==============
-const audioCache = new Map<string, string>();
-let currentAudio: HTMLAudioElement | null = null;
-let isSpeaking = false;
+// ============== AUDIO - Use unified speechService ==============
+import { speak, stopSpeech as stopSpeechService } from '../services/speechService';
 
 const speakTeacher = async (text: string) => {
   if (Platform.OS !== 'web') return;
-  if (isSpeaking) return;
-
-  isSpeaking = true;
-
-  // Mevcut sesi durdur
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
+  try {
+    await speak(text, { speed: 0.85, pitch: 2.0 });
+  } catch (e) {
+    console.log('TTS error:', e);
   }
-
-  // Önbellekte var mı?
-  let audioUrl = audioCache.get(text);
-
-  if (!audioUrl) {
-    try {
-      // Gemini TTS dene
-      const res = await fetch('/api/gemini-tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voiceName: 'Kore' }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.audioContent) {
-          audioUrl = `data:${data.mimeType || 'audio/wav'};base64,${data.audioContent}`;
-          audioCache.set(text, audioUrl);
-        }
-      }
-    } catch (e) {
-      console.log('Gemini TTS error, using fallback');
-    }
-  }
-
-  if (audioUrl) {
-    // Gemini ses çal
-    try {
-      currentAudio = new Audio(audioUrl);
-      currentAudio.onended = () => { isSpeaking = false; };
-      currentAudio.onerror = () => { isSpeaking = false; fallbackSpeak(text); };
-      await currentAudio.play();
-      return;
-    } catch (e) {
-      console.log('Audio play error');
-    }
-  }
-
-  // Fallback: Web Speech
-  fallbackSpeak(text);
-};
-
-const fallbackSpeak = (text: string) => {
-  if (!('speechSynthesis' in window)) { isSpeaking = false; return; }
-
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'tr-TR';
-  u.pitch = 1.4;
-  u.rate = 0.85;
-  u.onend = () => { isSpeaking = false; };
-  u.onerror = () => { isSpeaking = false; };
-
-  const voices = window.speechSynthesis.getVoices();
-  const trVoice = voices.find(v => v.lang.includes('tr'));
-  if (trVoice) u.voice = trVoice;
-
-  window.speechSynthesis.speak(u);
 };
 
 const stopSpeech = () => {
-  isSpeaking = false;
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
-  if (Platform.OS === 'web' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-  }
+  stopSpeechService();
 };
 
 // ============== THEME ==============

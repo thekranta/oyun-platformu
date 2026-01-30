@@ -1,15 +1,15 @@
 /**
- * OpenAI TTS Service (Secure Version)
- * Uses server-side /api/tts endpoint to protect API key
+ * Unified Speech Service - Warm Turkish Female Voice
+ * Uses server-side /api/tts endpoint with Google Cloud TTS
+ * Optimized for children with warm, friendly voice
  */
 
 // Cache for audio blobs to avoid repeated API calls
 const audioCache = new Map<string, string>();
 
 export interface SpeechOptions {
-    voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
-    model?: 'tts-1' | 'tts-1-hd';
-    speed?: number; // 0.25 to 4.0
+    speed?: number; // 0.25 to 4.0 (default: 0.85 for children)
+    pitch?: number; // -20 to 20 (default: 2.0 for warmer tone)
 }
 
 export interface SpeechResult {
@@ -19,7 +19,7 @@ export interface SpeechResult {
 }
 
 /**
- * Generate speech from text using secure server-side API
+ * Generate speech from text using Google Cloud TTS
  * Returns a blob URL that can be played with Audio element
  */
 export async function generateSpeech(
@@ -27,13 +27,12 @@ export async function generateSpeech(
     options: SpeechOptions = {}
 ): Promise<SpeechResult> {
     const {
-        voice = 'shimmer', // Default to shimmer (warm female voice, better for children)
-        model = 'tts-1',
-        speed = 0.85 // Slower for better comprehension by children
+        speed = 0.85,  // Slightly slower for children
+        pitch = 2.0     // Higher pitch = warmer, friendlier tone
     } = options;
 
     // Check cache first
-    const cacheKey = `${text}-${voice}-${model}-${speed}`;
+    const cacheKey = `${text}-${speed}-${pitch}`;
     if (audioCache.has(cacheKey)) {
         return {
             success: true,
@@ -42,7 +41,7 @@ export async function generateSpeech(
     }
 
     try {
-        // Call secure server-side API route
+        // Call secure server-side API route (Google Cloud TTS)
         const response = await fetch('/api/tts', {
             method: 'POST',
             headers: {
@@ -50,9 +49,9 @@ export async function generateSpeech(
             },
             body: JSON.stringify({
                 text,
-                voice,
-                model,
-                speed
+                voice: 'tr-TR-Wavenet-D', // Warm Turkish female voice
+                speakingRate: speed,
+                pitch: pitch
             }),
         });
 
@@ -67,7 +66,7 @@ export async function generateSpeech(
 
         const data = await response.json();
 
-        if (!data.audio) {
+        if (!data.audioContent) {
             return {
                 success: false,
                 error: 'No audio data received'
@@ -75,7 +74,7 @@ export async function generateSpeech(
         }
 
         // Convert base64 to blob URL
-        const audioBlob = base64ToBlob(data.audio, 'audio/mp3');
+        const audioBlob = base64ToBlob(data.audioContent, 'audio/mp3');
         const audioUrl = URL.createObjectURL(audioBlob);
 
         // Cache the result
@@ -118,17 +117,17 @@ export async function speak(
     const result = await generateSpeech(text, options);
 
     if (result.success && result.audioUrl) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const audio = new Audio(result.audioUrl);
             audio.onended = () => resolve();
-            audio.onerror = (e) => {
-                console.error('Audio playback error:', e);
+            audio.onerror = () => {
+                console.error('Audio playback error, using fallback');
                 // Fallback to browser TTS
                 fallbackTTS(text);
                 resolve();
             };
-            audio.play().catch((e) => {
-                console.error('Audio play failed:', e);
+            audio.play().catch(() => {
+                console.error('Audio play failed, using fallback');
                 fallbackTTS(text);
                 resolve();
             });
@@ -141,13 +140,39 @@ export async function speak(
 
 /**
  * Browser fallback TTS using Web Speech API
+ * Configured for warmer voice
  */
 function fallbackTTS(text: string): void {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'tr-TR';
-        utterance.rate = 0.9;
+        utterance.rate = 0.85;  // Slower for children
+        utterance.pitch = 1.3;  // Higher pitch = warmer
+
+        // Try to find a Turkish female voice
+        const voices = window.speechSynthesis.getVoices();
+        const turkishFemale = voices.find(v =>
+            v.lang.includes('tr') && v.name.toLowerCase().includes('female')
+        );
+        const anyTurkish = voices.find(v => v.lang.includes('tr'));
+
+        if (turkishFemale) {
+            utterance.voice = turkishFemale;
+        } else if (anyTurkish) {
+            utterance.voice = anyTurkish;
+        }
+
         window.speechSynthesis.speak(utterance);
+    }
+}
+
+/**
+ * Stop any currently playing speech
+ */
+export function stopSpeech(): void {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
     }
 }
 
@@ -169,9 +194,11 @@ export function clearSpeechCache(): void {
  */
 export async function preloadCommonPhrases(childName: string): Promise<void> {
     const phrases = [
-        `Merhaba ${childName}, Uzay Blokları oyununa hoş geldin! Blokları yerleştirmeme yardım eder misin?`,
+        `Merhaba ${childName}! Oyuna hoş geldin!`,
         `Harika iş çıkardın ${childName}!`,
         `Tebrikler, görevi tamamladın!`,
+        `Aferin sana!`,
+        `Tekrar dene, yapabilirsin!`,
     ];
 
     // Generate all phrases in parallel but don't wait for all
@@ -183,6 +210,7 @@ export async function preloadCommonPhrases(childName: string): Promise<void> {
 export default {
     speak,
     generateSpeech,
+    stopSpeech,
     clearSpeechCache,
     preloadCommonPhrases
 };
