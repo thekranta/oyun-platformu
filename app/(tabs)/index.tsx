@@ -9,6 +9,7 @@ import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
 import KutuyuBul from '@/components/KutuyuBul';
+import MutfakDedektifi from '@/components/MutfakDedektifi';
 import MuzikCalar, { SONGS } from '@/components/MuzikCalar';
 import OnlukCerceve from '@/components/OnlukCerceve';
 import QuantityComparison from '@/components/QuantityComparison';
@@ -1035,6 +1036,12 @@ export default function App() {
                   <Text style={styles.oyunBaslik}>Renkli Bağlantılar</Text>
                   <Text style={styles.oyunAciklama}>Dot Connect</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FF6B6B' }]} onPress={() => oyunuBaslat('mutfak-dedektifi')}>
+                  <Ionicons name="restaurant-outline" size={40} color="white" style={{ marginBottom: 10 }} />
+                  <Text style={styles.oyunBaslik}>Mutfak Dedektifi</Text>
+                  <Text style={styles.oyunAciklama}>Sınıflandırma</Text>
+                </TouchableOpacity>
               </>
             )}
 
@@ -1304,6 +1311,10 @@ export default function App() {
 
   if (asama === 'renkli-baglantalar') {
     return <RenkliBaglantalar onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
+  }
+
+  if (asama === 'mutfak-dedektifi') {
+    return <MutfakDedektifi onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
   }
 
   if (asama === 'sonuc') {

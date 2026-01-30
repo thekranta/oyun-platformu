@@ -112,6 +112,7 @@ interface Props {
 export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim', userId }: Props) {
     const [gameReady, setGameReady] = useState(false);
     const [level, setLevel] = useState(1);
+    const [initialLevel, setInitialLevel] = useState(1); // For session persistence
     const [foods, setFoods] = useState<FoodItem[]>([]);
     const [placedItems, setPlacedItems] = useState<Set<string>>(new Set());
     const [errors, setErrors] = useState(0);
@@ -125,6 +126,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [levelStartTime, setLevelStartTime] = useState(Date.now());
     const [dragLogs, setDragLogs] = useState<DragLog[]>([]);
     const [mavisMessage, setMavisMessage] = useState('Merhaba! Yiyecekleri doğru yere koy! 🍎🥕');
+    const [levelTimes, setLevelTimes] = useState<number[]>([]); // Track time for each level
 
     // Floating animations for decorations
     const floatAnim1 = useRef(new Animated.Value(0)).current;
@@ -193,13 +195,42 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         return selectedFoods.sort(() => Math.random() - 0.5);
     }, []);
 
+    // Check previous session for initial level (DDA persistence)
+    useEffect(() => {
+        const checkPreviousSession = async () => {
+            if (!userId) return;
+            try {
+                const { data } = await supabase
+                    .from('oyun_skorlari')
+                    .select('piramit_verisi')
+                    .eq('user_id', userId)
+                    .eq('oyun_adi', 'Mutfak Dedektifi')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (data && data.length > 0 && data[0].piramit_verisi) {
+                    const prevData = JSON.parse(data[0].piramit_verisi);
+                    // If child completed Level 1 under 20 seconds, start at Level 2
+                    if (prevData.level1Time && prevData.level1Time < 20 && prevData.finalLevel >= 1) {
+                        setLevel(2);
+                        setInitialLevel(2);
+                        setMavisMessage('Süpersin! Bugün Seviye 2\'den başlıyoruz! 🚀');
+                    }
+                }
+            } catch (e) {
+                console.error('Previous session check error:', e);
+            }
+        };
+        checkPreviousSession();
+    }, [userId]);
+
     // Initialize first level
     useEffect(() => {
         if (gameReady) {
-            setFoods(generateLevel(1));
+            setFoods(generateLevel(level));
             setLevelStartTime(Date.now());
         }
-    }, [gameReady, generateLevel]);
+    }, [gameReady, generateLevel, level]);
 
     // ============== DRAG HANDLING ==============
     const checkDropTarget = (x: number, y: number): TargetArea | null => {
@@ -260,8 +291,15 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 setMoves(m => m + 1);
                 setMavisMessage(`Hmm... ${item.name} oraya ait değil. Tekrar dene! 💪`);
 
-                // Enable scaffolding after 2 errors
-                if (errors + 1 >= 2) {
+                // DDA: Level 2+ and 3+ errors → Automatic scaffolding with target highlight
+                if (level >= 2 && errors + 1 >= 3) {
+                    setShowScaffolding(true);
+                    // Highlight the correct target for this item
+                    setHighlightTarget(item.category);
+                    setMavisMessage(`İpucu: ${item.name} ${item.category === 'meyve' ? 'meyve sepetine' : 'sebze kasasına'} git! 💡`);
+                    setTimeout(() => setHighlightTarget(null), 2000);
+                } else if (errors + 1 >= 2) {
+                    // Enable scaffolding after 2 errors (general)
                     setShowScaffolding(true);
                     setMavisMessage('Renkli ipuçlarına bak! Yardımcı olsunlar! 💡');
                 }
@@ -273,18 +311,21 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const handleLevelComplete = async () => {
         const levelTime = (Date.now() - levelStartTime) / 1000;
 
+        // Track level times for DDA score calculation
+        setLevelTimes(prev => [...prev, levelTime]);
+
         setShowWin(true);
         confettiRef.current?.start();
         setMavisMessage('Muhteşem! Tüm yiyecekleri buldun! 🏆');
 
-        // DDA Logic
-        const shouldLevelUp = errors === 0 && levelTime < 15;
+        // DDA Logic - Level 1: Under 20 seconds → Level up for next session
+        const shouldLevelUp = errors === 0 && levelTime < 20;
 
         setTimeout(() => {
             setShowWin(false);
 
             if (level >= 5 || (!shouldLevelUp && level > 1)) {
-                endGame();
+                endGame(levelTime);
             } else if (shouldLevelUp) {
                 const newLevel = level + 1;
                 setLevel(newLevel);
@@ -305,11 +346,41 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         }, 2000);
     };
 
-    const endGame = async () => {
+    // ============== DYNAMIC DIFFICULTY SCORE CALCULATION ==============
+    const calculateDynamicDifficultyScore = (finalLevel: number, totalErr: number, avgTime: number, level1Time: number): number => {
+        // Score 0-100 based on performance
+        // Level contribution: 20 points per level (max 100 at level 5)
+        const levelScore = Math.min(finalLevel * 20, 100);
+
+        // Error penalty: -5 points per error (max -50)
+        const errorPenalty = Math.min(totalErr * 5, 50);
+
+        // Speed bonus: +10 if average time per level < 15s, +20 if < 10s
+        let speedBonus = 0;
+        if (avgTime < 10) speedBonus = 20;
+        else if (avgTime < 15) speedBonus = 10;
+
+        // Level 1 time bonus: +10 if under 20 seconds
+        const level1Bonus = level1Time < 20 ? 10 : 0;
+
+        return Math.max(0, Math.min(100, levelScore - errorPenalty + speedBonus + level1Bonus));
+    };
+
+    const endGame = async (lastLevelTime?: number) => {
         setGameComplete(true);
         const totalTime = Math.round((Date.now() - startTime) / 1000);
 
-        // Save to Supabase
+        // Calculate average level time
+        const allLevelTimes = lastLevelTime ? [...levelTimes, lastLevelTime] : levelTimes;
+        const avgLevelTime = allLevelTimes.length > 0
+            ? allLevelTimes.reduce((a, b) => a + b, 0) / allLevelTimes.length
+            : 0;
+        const level1Time = allLevelTimes[0] || 999;
+
+        // Calculate Dynamic Difficulty Score (0-100)
+        const dynamicDifficultyScore = calculateDynamicDifficultyScore(level, totalErrors, avgLevelTime, level1Time);
+
+        // Save to Supabase with dynamic_difficulty_score
         if (userId) {
             try {
                 await supabase.from('oyun_skorlari').insert({
@@ -319,12 +390,19 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                     hamle_sayisi: moves,
                     hata_sayisi: totalErrors,
                     piramit_tamamlandi: true,
+                    cognitive_speed_score: dynamicDifficultyScore, // Using existing column
                     piramit_verisi: JSON.stringify({
                         finalLevel: level,
+                        initialLevel: initialLevel,
+                        dynamic_difficulty_score: dynamicDifficultyScore,
+                        level1Time: level1Time,
+                        averageLevelTime: Math.round(avgLevelTime * 10) / 10,
+                        levelTimes: allLevelTimes.map(t => Math.round(t * 10) / 10),
                         dragLogs: dragLogs,
                         averageDragTime: dragLogs.length > 0
                             ? Math.round(dragLogs.reduce((a, b) => a + b.dragDuration, 0) / dragLogs.length)
                             : 0,
+                        scaffoldingUsed: showScaffolding,
                     }),
                 });
             } catch (e) {
