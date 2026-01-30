@@ -49,7 +49,7 @@ export const SONGS: Song[] = [
         id: '4',
         title: 'Paylaşınca Güzel',
         artist: 'Sosyal-Duygusal - Paylaşma',
-        source: require('@/assets/sounds/songs/PAYLAŞINCA GÜZEL.mp3'),
+        source: require('@/assets/sounds/songs/PAYLASINCA_GUZEL.mp3'),
         coverColor: '#AB47BC', // Mor
         icon: 'people',
         category: 'sosyal-duygusal',
