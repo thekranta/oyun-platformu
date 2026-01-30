@@ -48,10 +48,11 @@ export const SONGS: Song[] = [
     {
         id: '4',
         title: 'Paylaşınca Güzel',
-        artist: 'Arkadaşlık',
+        artist: 'Sosyal-Duygusal - Paylaşma',
         source: require('@/assets/sounds/songs/PAYLAŞINCA GÜZEL.mp3'),
         coverColor: '#AB47BC', // Mor
         icon: 'people',
+        category: 'sosyal-duygusal',
     },
     {
         id: '5',
@@ -80,10 +81,11 @@ export const SONGS: Song[] = [
     {
         id: '8',
         title: 'Beklerim Sakince',
-        artist: 'Sabır',
+        artist: 'Sosyal-Duygusal - Sabır',
         source: require('@/assets/sounds/songs/BEKLERİM SAKİNCE.mp3'),
         coverColor: '#78909C', // Gri Mavi
         icon: 'hourglass',
+        category: 'sosyal-duygusal',
     },
     {
         id: '9',
@@ -96,18 +98,20 @@ export const SONGS: Song[] = [
     {
         id: '10',
         title: 'Güzeli Görürüm',
-        artist: 'Pozitif Bakış',
+        artist: 'Sosyal-Duygusal - Pozitif Bakış',
         source: require('@/assets/sounds/songs/GÜZELİ GÖRÜRÜM.mp3'),
         coverColor: '#26A69A', // Yeşil
         icon: 'eye',
+        category: 'sosyal-duygusal',
     },
     {
         id: '11',
         title: 'Kalbim Duyarlı',
-        artist: 'Duyarlılık',
+        artist: 'Sosyal-Duygusal - Duyarlılık',
         source: require('@/assets/sounds/songs/KALBİM DUYARLI.mp3'),
         coverColor: '#FF7043', // Turuncu
         icon: 'heart-circle',
+        category: 'sosyal-duygusal',
     },
     {
         id: '12',
@@ -128,18 +132,20 @@ export const SONGS: Song[] = [
     {
         id: '14',
         title: 'Yumuşacık Merhamet',
-        artist: 'Merhamet',
+        artist: 'Sosyal-Duygusal - Merhamet',
         source: require('@/assets/sounds/songs/YUMUŞACIK MERHAMET.mp3'),
         coverColor: '#F06292', // Açık Pembe
         icon: 'rose',
+        category: 'sosyal-duygusal',
     },
     {
         id: '15',
         title: 'Çıtır Çıtır Dostluk',
-        artist: 'Dostluk',
+        artist: 'Sosyal-Duygusal - Dostluk',
         source: require('@/assets/sounds/songs/ÇITIR ÇITIR DOSTLUK.mp3'),
         coverColor: '#8D6E63', // Kahverengi
         icon: 'people-circle',
+        category: 'sosyal-duygusal',
     },
     {
         id: '16',
@@ -160,10 +166,11 @@ export const SONGS: Song[] = [
     {
         id: '18',
         title: 'Kalbimde Sevgi Var',
-        artist: 'Sevgi',
+        artist: 'Sosyal-Duygusal - Sevgi',
         source: require('@/assets/sounds/songs/KALBİMDE SEVGİ VAR.mp3'),
         coverColor: '#E91E63', // Kırmızı Pembe
         icon: 'heart',
+        category: 'sosyal-duygusal',
     },
     {
         id: '19',
