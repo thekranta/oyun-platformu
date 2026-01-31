@@ -26,8 +26,8 @@ export async function generateSpeech(
     options: SpeechOptions = {}
 ): Promise<SpeechResult> {
     const {
-        voice = 'nova',  // Warm voice - best for children
-        speed = 0.75     // Slower for children comprehension
+        voice = 'shimmer',  // Soft voice - best for children
+        speed = 0.8         // Slightly slower for children comprehension
     } = options;
 
     // Check cache first
