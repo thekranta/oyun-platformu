@@ -679,6 +679,101 @@ export default function TeacherDashboard({
                     </View>
                 )}
 
+                {/* ================== ERROR DISTRIBUTION CHART ================== */}
+                {selectedStudent && studentScores.length >= 3 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>📊 Hata Dağılımı Analizi</Text>
+
+                        {(() => {
+                            // Calculate error distribution per game type
+                            const errorByGame: Record<string, { total: number; errors: number; count: number }> = {};
+
+                            studentScores.forEach(score => {
+                                const game = score.oyun_turu || 'diger';
+                                if (!errorByGame[game]) {
+                                    errorByGame[game] = { total: 0, errors: 0, count: 0 };
+                                }
+                                errorByGame[game].errors += score.hata_sayisi || 0;
+                                errorByGame[game].total += score.hamle_sayisi || 0;
+                                errorByGame[game].count += 1;
+                            });
+
+                            const gameEntries = Object.entries(errorByGame)
+                                .map(([game, data]) => ({
+                                    game,
+                                    errorRate: data.total > 0 ? Math.round((data.errors / data.total) * 100) : 0,
+                                    avgErrors: Math.round(data.errors / data.count * 10) / 10,
+                                    count: data.count,
+                                }))
+                                .sort((a, b) => b.errorRate - a.errorRate);
+
+                            const maxRate = Math.max(...gameEntries.map(e => e.errorRate), 1);
+                            const colors = ['#FF6B6B', '#F7B731', '#4ECDC4', '#A8E6CF', '#9B59B6'];
+
+                            return (
+                                <View style={styles.errorChartCard}>
+                                    {gameEntries.slice(0, 5).map((entry, idx) => {
+                                        const barWidth = (entry.errorRate / maxRate) * 100;
+                                        const gameName = getOyunAdi(entry.game);
+
+                                        return (
+                                            <View key={entry.game} style={styles.errorBarRow}>
+                                                <View style={styles.errorBarLabel}>
+                                                    <Text style={styles.errorBarGame}>{gameName}</Text>
+                                                    <Text style={styles.errorBarCount}>({entry.count} oyun)</Text>
+                                                </View>
+                                                <View style={styles.errorBarContainer}>
+                                                    <View style={[
+                                                        styles.errorBar,
+                                                        {
+                                                            width: `${barWidth}%`,
+                                                            backgroundColor: entry.errorRate > 30 ? '#FF6B6B' : entry.errorRate > 15 ? '#F7B731' : '#4ECDC4'
+                                                        }
+                                                    ]} />
+                                                </View>
+                                                <View style={styles.errorBarValue}>
+                                                    <Text style={[
+                                                        styles.errorBarPercent,
+                                                        entry.errorRate > 30 && { color: '#FF6B6B' }
+                                                    ]}>
+                                                        {entry.errorRate}%
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        );
+                                    })}
+
+                                    {/* Legend */}
+                                    <View style={styles.errorLegend}>
+                                        <View style={styles.legendItem}>
+                                            <View style={[styles.legendDot, { backgroundColor: '#4ECDC4' }]} />
+                                            <Text style={styles.legendText}>Düşük (0-15%)</Text>
+                                        </View>
+                                        <View style={styles.legendItem}>
+                                            <View style={[styles.legendDot, { backgroundColor: '#F7B731' }]} />
+                                            <Text style={styles.legendText}>Orta (15-30%)</Text>
+                                        </View>
+                                        <View style={styles.legendItem}>
+                                            <View style={[styles.legendDot, { backgroundColor: '#FF6B6B' }]} />
+                                            <Text style={styles.legendText}>Yüksek (30%+)</Text>
+                                        </View>
+                                    </View>
+
+                                    {/* Intervention Hint */}
+                                    {gameEntries.find(e => e.errorRate > 30) && (
+                                        <View style={styles.interventionHint}>
+                                            <Text style={styles.interventionEmoji}>💡</Text>
+                                            <Text style={styles.interventionText}>
+                                                Yüksek hata oranı, zorluk seviyesi ayarı veya ek destek gerektirebilir.
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
+                            );
+                        })()}
+                    </View>
+                )}
+
                 <View style={{ height: 40 }} />
             </ScrollView>
 
@@ -900,4 +995,22 @@ const styles = StyleSheet.create({
     notFoundCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFE5E5', padding: 14, borderRadius: 16, gap: 12, marginBottom: 16, width: '100%' },
     notFoundEmoji: { fontSize: 24 },
     notFoundText: { fontSize: 14, color: '#D32F2F' },
+
+    // Error Distribution Chart
+    errorChartCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20, borderWidth: 2, borderColor: '#F0F0F0' },
+    errorBarRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 10 },
+    errorBarLabel: { width: 100, flexShrink: 0 },
+    errorBarGame: { fontSize: 12, fontWeight: '600', color: '#333' },
+    errorBarCount: { fontSize: 10, color: '#999' },
+    errorBarContainer: { flex: 1, height: 20, backgroundColor: '#F0F0F0', borderRadius: 10, overflow: 'hidden' },
+    errorBar: { height: '100%', borderRadius: 10 },
+    errorBarValue: { width: 50, alignItems: 'flex-end' },
+    errorBarPercent: { fontSize: 14, fontWeight: '700', color: '#333' },
+    errorLegend: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', marginTop: 20, gap: 16 },
+    legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    legendDot: { width: 12, height: 12, borderRadius: 6 },
+    legendText: { fontSize: 12, color: '#666' },
+    interventionHint: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#FFF3CD', padding: 14, borderRadius: 14, marginTop: 16, gap: 10 },
+    interventionEmoji: { fontSize: 20 },
+    interventionText: { flex: 1, fontSize: 13, color: '#856404', lineHeight: 20 },
 });
