@@ -7,6 +7,7 @@ import DynamicBackground from '@/components/DynamicBackground';
 import EksikSayiBul from '@/components/EksikSayiBul';
 import GruplamaOyunu from '@/components/GruplamaOyunu';
 import HafizaOyunu from '@/components/HafizaOyunu';
+import IslandMap from '@/components/IslandMap';
 import KodlamaOyunu from '@/components/KodlamaOyunu';
 import KutuyuBul from '@/components/KutuyuBul';
 import MutfakDedektifi from '@/components/MutfakDedektifi';
@@ -533,6 +534,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal' | 'yaratici' | 'muzikler'>('bilissel');
   const [selectedSongIndex, setSelectedSongIndex] = useState<number>(0);
+  const [viewMode, setViewMode] = useState<'classic' | 'island'>('island'); // island default
 
   // === EKRANLAR ===
   if (asama === 'giris') {
@@ -884,12 +886,86 @@ export default function App() {
   }
 
   if (asama === 'menu') {
+    // Island Map view (yeni varsayılan)
+    if (viewMode === 'island') {
+      return (
+        <View style={{ flex: 1 }}>
+          <IslandMap
+            onSelectGame={oyunuBaslat}
+            childName={ad}
+          />
+          {/* View Mode Toggle */}
+          <TouchableOpacity
+            style={{
+              position: 'absolute',
+              bottom: 20,
+              right: 20,
+              backgroundColor: 'rgba(255,255,255,0.9)',
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 5,
+            }}
+            onPress={() => setViewMode('classic')}
+          >
+            <Ionicons name="list" size={18} color="#333" />
+            <Text style={{ fontSize: 13, fontWeight: '600', color: '#333' }}>Klasik Liste</Text>
+          </TouchableOpacity>
+          {/* Logout Button */}
+          <TouchableOpacity
+            style={{
+              position: 'absolute',
+              bottom: 20,
+              left: 20,
+              backgroundColor: 'rgba(255,107,107,0.9)',
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              borderRadius: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 8,
+            }}
+            onPress={cikisYap}
+          >
+            <Ionicons name="log-out-outline" size={18} color="#fff" />
+            <Text style={{ fontSize: 13, fontWeight: '600', color: '#fff' }}>Çıkış</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
+    // Classic tab view
     return (
       <DynamicBackground>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.headerContainer}>
             <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
             <Text style={styles.bilgi}>Bugün ne oynamak istersin?</Text>
+            {/* View Mode Toggle */}
+            <TouchableOpacity
+              style={{
+                marginTop: 10,
+                backgroundColor: 'rgba(75,192,192,0.2)',
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                borderRadius: 16,
+                flexDirection: 'row',
+                alignItems: 'center',
+                alignSelf: 'center',
+                gap: 8,
+              }}
+              onPress={() => setViewMode('island')}
+            >
+              <Ionicons name="map" size={18} color="#4ECDC4" />
+              <Text style={{ fontSize: 13, fontWeight: '600', color: '#4ECDC4' }}>🏝️ Ada Haritası</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.tabContainer}>
