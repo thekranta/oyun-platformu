@@ -1,6 +1,6 @@
 import speechService from '@/services/speechService';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
@@ -62,6 +62,11 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
     const [beklenenSayi, setBeklenenSayi] = useState(1);
     const [positions, setPositions] = useState<{ x: number; y: number }[]>([]);
 
+    // Countdown State
+    const [countdown, setCountdown] = useState<number | null>(5);
+    const [gameStarted, setGameStarted] = useState(false);
+    const countdownScale = useRef(new Animated.Value(1)).current;
+
     // Round State
     const [currentRound, setCurrentRound] = useState(1);
 
@@ -77,23 +82,56 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
     // Confetti Ref
     const confettiRef = useRef<ConfettiCannon>(null);
 
-    // Voice greeting on mount
+    // Initialize game on mount
     useEffect(() => {
-        const greet = async () => {
-            const name = childName || 'küçük kaşif';
-            await speechService.speak(`Merhaba ${name}! Sayıları küçükten büyüğe sırala. 1'den başla!`, { voice: 'shimmer', speed: 0.9 });
-        };
-
-        if (Platform.OS === 'web') {
-            setTimeout(greet, 500);
-        }
-
-        baslat(true);
+        initializeGame();
+        startCountdown();
 
         return () => {
             speechService.stopSpeech();
         };
     }, []);
+
+    const initializeGame = () => {
+        const karisik = [...SIRALAMA_SAYILARI].sort(() => Math.random() - 0.5)
+            .map((sayi, index) => ({ id: index, sayi, tiklandi: false }));
+        setKarisikSayilar(karisik);
+        setBeklenenSayi(1);
+    };
+
+    const startCountdown = async () => {
+        const name = childName || 'küçük kaşif';
+
+        // Start voice during countdown
+        if (Platform.OS === 'web') {
+            speechService.speak(`Merhaba ${name}! Sayıları küçükten büyüğe sırala.`, { voice: 'nova', speed: 0.85 });
+        }
+
+        // Countdown animation
+        for (let i = 5; i >= 1; i--) {
+            setCountdown(i);
+
+            // Pulse animation
+            Animated.sequence([
+                Animated.timing(countdownScale, {
+                    toValue: 1.3,
+                    duration: 150,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(countdownScale, {
+                    toValue: 1,
+                    duration: 150,
+                    useNativeDriver: true,
+                }),
+            ]).start();
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        setCountdown(null);
+        setGameStarted(true);
+        setStartTime(new Date());
+    };
 
     const baslat = (isFirstStart: boolean = false) => {
         const karisik = [...SIRALAMA_SAYILARI].sort(() => Math.random() - 0.5)
@@ -119,7 +157,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
     };
 
     const sayiSec = async (index: number, sayi: number) => {
-        if (karisikSayilar[index].tiklandi) return;
+        if (!gameStarted || karisikSayilar[index].tiklandi) return;
 
         setTotalHamle(h => h + 1);
 
@@ -136,15 +174,15 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
                 if (currentRound < TOTAL_ROUNDS) {
                     // Round complete voice
-                    await speechService.speak('Harika! Bir sonraki aşama!', { voice: 'shimmer', speed: 1.0 });
+                    await speechService.speak('Harika!', { voice: 'nova', speed: 1.0 });
 
                     setTimeout(() => {
                         setCurrentRound(r => r + 1);
                         baslat(false);
-                    }, 1500);
+                    }, 1200);
                 } else {
                     // Game Complete
-                    await speechService.speak('Tebrikler! Tüm sayıları doğru sıraladın!', { voice: 'shimmer', speed: 0.9 });
+                    await speechService.speak('Tebrikler! Çok iyi oynadın!', { voice: 'nova', speed: 0.9 });
 
                     setTimeout(() => {
                         const now = new Date();
@@ -164,7 +202,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
             // Error feedback
             if (Platform.OS === 'web') {
-                speechService.speak('Tekrar dene!', { voice: 'shimmer', speed: 1.0 });
+                speechService.speak('Tekrar dene!', { voice: 'nova', speed: 1.0 });
             }
 
             setTimeout(() => setShowError(null), 500);
@@ -186,6 +224,24 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
     };
 
     const currentColors = ROUND_COLORS[(currentRound - 1) % ROUND_COLORS.length];
+
+    // Countdown Overlay
+    if (countdown !== null) {
+        return (
+            <DynamicBackground onExit={onExit}>
+                <View style={styles.countdownOverlay}>
+                    <View style={styles.countdownCard}>
+                        <Text style={styles.countdownTitle}>🔢 Sayıları Sırala</Text>
+                        <Text style={styles.countdownSubtitle}>Hazır ol!</Text>
+                        <Animated.View style={[styles.countdownCircle, { transform: [{ scale: countdownScale }] }]}>
+                            <Text style={styles.countdownNumber}>{countdown}</Text>
+                        </Animated.View>
+                        <Text style={styles.countdownHint}>1'den 5'e kadar sırala</Text>
+                    </View>
+                </View>
+            </DynamicBackground>
+        );
+    }
 
     return (
         <DynamicBackground onExit={onExit}>
@@ -258,6 +314,59 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 }
 
 const styles = StyleSheet.create({
+    // Countdown Styles
+    countdownOverlay: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    countdownCard: {
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        padding: 40,
+        borderRadius: 30,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.25,
+        shadowRadius: 20,
+        elevation: 15,
+    },
+    countdownTitle: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#1565C0',
+        marginBottom: 8,
+    },
+    countdownSubtitle: {
+        fontSize: 20,
+        color: '#757575',
+        marginBottom: 30,
+    },
+    countdownCircle: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: '#FF6B6B',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#FF6B6B',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        elevation: 10,
+    },
+    countdownNumber: {
+        fontSize: 60,
+        fontWeight: 'bold',
+        color: '#FFFFFF',
+    },
+    countdownHint: {
+        fontSize: 16,
+        color: '#9E9E9E',
+        marginTop: 25,
+    },
+
+    // Game Styles
     topBar: {
         width: '100%',
         paddingTop: 40,
