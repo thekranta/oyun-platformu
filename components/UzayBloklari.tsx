@@ -12,6 +12,7 @@ import {
     View
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
 
 // ============= TYPES =============
@@ -290,25 +291,14 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     };
 
     const playSuccessFeedback = () => {
-        Animated.sequence([
-            Animated.timing(glowAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-            Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
-        ]).start();
-        if (Platform.OS !== 'web') {
-            Vibration.vibrate(50);
-        }
+        FeedbackService.playSuccess({ intensity: 'medium' });
+        FeedbackService.animateSuccess({ glow: glowAnim });
+        FeedbackService.playSuccessSound();
     };
 
     const playErrorFeedback = () => {
-        Animated.sequence([
-            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
-            Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true }),
-        ]).start();
-        if (Platform.OS !== 'web') {
-            Vibration.vibrate([0, 100, 50, 100]);
-        }
+        FeedbackService.playError({ sound: true }); // Plays u-oh sound
+        FeedbackService.animateError({ shake: shakeAnim });
     };
 
     // Handle selecting a block from palette
