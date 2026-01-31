@@ -1,7 +1,7 @@
 /**
  * Mutfak Dedektifi - Eşleştirme ve Sınıflandırma Oyunu
- * Soft-UI Sevimli 3D Stil - 3-6 Yaş Hedef Kitle
- * DDA (Dynamic Difficulty Adjustment) ile sürükle-bırak mekanikli
+ * Soft-UI Sevimli 3D Stil - 3-6 Yaş Hedef Kitle (Okul Öncesi - Okuma Yazma Bilmiyor)
+ * Dokunarak seçim mekanikli - Sesli yönlendirme ile
  */
 
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,6 @@ import {
     Easing,
     Image,
     ImageBackground,
-    PanResponder,
     Platform,
     StyleSheet,
     Text,
@@ -21,6 +20,7 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { supabase } from '../lib/supabase';
+import { speak } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 
 const { width, height } = Dimensions.get('window');
@@ -125,7 +125,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [startTime] = useState(Date.now());
     const [levelStartTime, setLevelStartTime] = useState(Date.now());
     const [dragLogs, setDragLogs] = useState<DragLog[]>([]);
-    const [mavisMessage, setMavisMessage] = useState('Merhaba! Yiyecekleri doğru yere koy! 🍎🥕');
+    const [mavisMessage, setMavisMessage] = useState('🍎🥕');
     const [levelTimes, setLevelTimes] = useState<number[]>([]); // Track time for each level
 
     // Floating animations for decorations
@@ -133,15 +133,16 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const floatAnim2 = useRef(new Animated.Value(0)).current;
     const mavisFloat = useRef(new Animated.Value(0)).current;
 
-    // Dragging state
-    const [draggingItem, setDraggingItem] = useState<FoodItem | null>(null);
-    const [dragStartTime, setDragStartTime] = useState<number>(0);
+    // Selection state (tap to select, then tap target)
+    const [selectedItem, setSelectedItem] = useState<FoodItem | null>(null);
+    const [selectionStartTime, setSelectionStartTime] = useState<number>(0);
 
     // Target area positions
     const targetRefs = useRef<{ [key: string]: View | null }>({});
     const [targetLayouts, setTargetLayouts] = useState<{ [key: string]: { x: number; y: number; width: number; height: number } }>({});
 
     const confettiRef = useRef<ConfettiCannon>(null);
+    const hasGreeted = useRef(false);
 
     // ============== FLOATING ANIMATIONS ==============
     useEffect(() => {
@@ -229,84 +230,88 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         if (gameReady) {
             setFoods(generateLevel(level));
             setLevelStartTime(Date.now());
-        }
-    }, [gameReady, generateLevel, level]);
-
-    // ============== DRAG HANDLING ==============
-    const checkDropTarget = (x: number, y: number): TargetArea | null => {
-        for (const [id, layout] of Object.entries(targetLayouts)) {
-            if (layout && x >= layout.x && x <= layout.x + layout.width && y >= layout.y && y <= layout.y + layout.height) {
-                return TARGET_AREAS.find(t => t.id === id) || null;
+            // Voice greeting when game starts
+            if (!hasGreeted.current) {
+                hasGreeted.current = true;
+                setTimeout(() => {
+                    speak(`Merhaba ${childName}! Meyveleri pembe sepete, sebzeleri yeşil kutuya koy! Bir yiyeceğe dokun, sonra nereye gideceğine dokun!`);
+                }, 500);
             }
         }
-        return null;
+    }, [gameReady, generateLevel, level, childName]);
+
+    // ============== TAP SELECTION HANDLING ==============
+    const handleItemTap = (item: FoodItem) => {
+        if (placedItems.has(item.id)) return;
+
+        if (selectedItem?.id === item.id) {
+            // Deselect if tapping same item
+            setSelectedItem(null);
+            setMavisMessage('🍎🥕');
+        } else {
+            // Select new item
+            setSelectedItem(item);
+            setSelectionStartTime(Date.now());
+            // Voice: say what the item is
+            speak(`${item.name}! Bu bir ${item.category === 'meyve' ? 'meyve' : 'sebze'}. Nereye koyalım?`);
+            setMavisMessage(`${item.emoji} 👆`);
+        }
     };
 
-    const handleDragStart = (item: FoodItem) => {
-        setDraggingItem(item);
-        setDragStartTime(Date.now());
-        setMavisMessage(`${item.name}... Nereye gidecek acaba? 🤔`);
-    };
+    const handleTargetTap = async (target: TargetArea) => {
+        if (!selectedItem) {
+            // No item selected, give guidance
+            speak(`Önce bir yiyecek seç! Aşağıdaki resimlerden birine dokun.`);
+            return;
+        }
 
-    const handleDragMove = (gestureState: { moveX: number; moveY: number }) => {
-        const target = checkDropTarget(gestureState.moveX, gestureState.moveY);
-        setHighlightTarget(target?.id || null);
-    };
+        const selectionDuration = Date.now() - selectionStartTime;
+        const isCorrect = selectedItem.category === target.category;
 
-    const handleDragEnd = async (item: FoodItem, gestureState: { moveX: number; moveY: number }) => {
-        const dragDuration = Date.now() - dragStartTime;
-        const target = checkDropTarget(gestureState.moveX, gestureState.moveY);
+        // Log the action
+        const log: DragLog = {
+            itemId: selectedItem.id,
+            targetId: target.id,
+            correct: isCorrect,
+            dragDuration: selectionDuration,
+            timestamp: Date.now(),
+        };
+        setDragLogs(prev => [...prev, log]);
 
-        setHighlightTarget(null);
-        setDraggingItem(null);
+        if (isCorrect) {
+            // Correct placement
+            setPlacedItems(prev => new Set([...prev, selectedItem.id]));
+            setMoves(m => m + 1);
+            setMavisMessage('🎉 ✨');
+            speak(`Aferin! ${selectedItem.name} doğru yere gitti!`);
 
-        if (target) {
-            const isCorrect = item.category === target.category;
-
-            // Log the drag
-            const log: DragLog = {
-                itemId: item.id,
-                targetId: target.id,
-                correct: isCorrect,
-                dragDuration,
-                timestamp: Date.now(),
-            };
-            setDragLogs(prev => [...prev, log]);
-
-            if (isCorrect) {
-                // Correct placement
-                setPlacedItems(prev => new Set([...prev, item.id]));
-                setMoves(m => m + 1);
-                setMavisMessage(`Aferin! ${item.name} doğru yere gitti! 🎉`);
-
-                // Check if level complete
-                const remainingItems = foods.filter(f => !placedItems.has(f.id) && f.id !== item.id);
-                if (remainingItems.length === 0) {
-                    handleLevelComplete();
-                }
+            // Check if level complete
+            const remainingItems = foods.filter(f => !placedItems.has(f.id) && f.id !== selectedItem.id);
+            if (remainingItems.length === 0) {
+                setSelectedItem(null);
+                handleLevelComplete();
             } else {
-                // Wrong placement
-                setErrors(e => e + 1);
-                setTotalErrors(e => e + 1);
-                setMoves(m => m + 1);
-                setMavisMessage(`Hmm... ${item.name} oraya ait değil. Tekrar dene! 💪`);
+                setSelectedItem(null);
+            }
+        } else {
+            // Wrong placement
+            setErrors(e => e + 1);
+            setTotalErrors(e => e + 1);
+            setMoves(m => m + 1);
+            setMavisMessage('🤔 💪');
+            speak(`Hmm, ${selectedItem.name} oraya ait değil. ${selectedItem.category === 'meyve' ? 'Meyve sepetine' : 'Sebze kasasına'} dene!`);
 
-                // DDA: Level 2+ and 3+ errors → Automatic scaffolding with target highlight
-                if (level >= 2 && errors + 1 >= 3) {
-                    setShowScaffolding(true);
-                    // Highlight the correct target for this item
-                    setHighlightTarget(item.category);
-                    setMavisMessage(`İpucu: ${item.name} ${item.category === 'meyve' ? 'meyve sepetine' : 'sebze kasasına'} git! 💡`);
-                    setTimeout(() => setHighlightTarget(null), 2000);
-                } else if (errors + 1 >= 2) {
-                    // Enable scaffolding after 2 errors (general)
-                    setShowScaffolding(true);
-                    setMavisMessage('Renkli ipuçlarına bak! Yardımcı olsunlar! 💡');
-                }
+            // Keep item selected so child can try again
+            // DDA: Level 2+ and 3+ errors → Automatic scaffolding with target highlight
+            if (level >= 2 && errors + 1 >= 3) {
+                setShowScaffolding(true);
+                setHighlightTarget(selectedItem.category);
+                setTimeout(() => setHighlightTarget(null), 2000);
+            } else if (errors + 1 >= 2) {
+                setShowScaffolding(true);
             }
         }
     };
-
     // ============== LEVEL COMPLETION ==============
     const handleLevelComplete = async () => {
         const levelTime = (Date.now() - levelStartTime) / 1000;
@@ -316,7 +321,8 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
 
         setShowWin(true);
         confettiRef.current?.start();
-        setMavisMessage('Muhteşem! Tüm yiyecekleri buldun! 🏆');
+        setMavisMessage('\ud83c\udf89 \ud83c\udfc6 \u2728');
+        speak(`S\u00fcpersin ${childName}! T\u00fcm yiyecekleri do\u011fru yere koydun!`);
 
         // DDA Logic - Level 1: Under 20 seconds → Level up for next session
         const shouldLevelUp = errors === 0 && levelTime < 20;
@@ -433,69 +439,53 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         }
     }, [gameReady, level]);
 
-    // ============== DRAGGABLE ITEM COMPONENT ==============
-    const DraggableItem = ({ item }: { item: FoodItem }) => {
+    // ============== SELECTABLE ITEM COMPONENT (Tap-based for preschoolers) ==============
+    const SelectableItem = ({ item }: { item: FoodItem }) => {
         const isPlaced = placedItems.has(item.id);
-        const isDragging = draggingItem?.id === item.id;
+        const isSelected = selectedItem?.id === item.id;
+        const scaleAnim = useRef(new Animated.Value(1)).current;
 
-        const pan = useRef(new Animated.ValueXY()).current;
-        const scale = useRef(new Animated.Value(1)).current;
-        const glow = useRef(new Animated.Value(0)).current;
-
-        const panResponder = useRef(
-            PanResponder.create({
-                onStartShouldSetPanResponder: () => !isPlaced,
-                onMoveShouldSetPanResponder: () => !isPlaced,
-                onPanResponderGrant: () => {
-                    handleDragStart(item);
-                    // Scale up and glow
-                    Animated.parallel([
-                        Animated.spring(scale, { toValue: 1.2, friction: 5, useNativeDriver: true }),
-                        Animated.timing(glow, { toValue: 1, duration: 200, useNativeDriver: true }),
-                    ]).start();
-                },
-                onPanResponderMove: (_, gestureState) => {
-                    pan.setValue({ x: gestureState.dx, y: gestureState.dy });
-                    handleDragMove(gestureState);
-                },
-                onPanResponderRelease: (_, gestureState) => {
-                    handleDragEnd(item, gestureState);
-                    Animated.parallel([
-                        Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: true }),
-                        Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
-                        Animated.timing(glow, { toValue: 0, duration: 200, useNativeDriver: true }),
-                    ]).start();
-                },
-            })
-        ).current;
+        // Bounce animation when selected
+        useEffect(() => {
+            if (isSelected) {
+                Animated.loop(
+                    Animated.sequence([
+                        Animated.timing(scaleAnim, { toValue: 1.15, duration: 300, useNativeDriver: true }),
+                        Animated.timing(scaleAnim, { toValue: 1.05, duration: 300, useNativeDriver: true }),
+                    ])
+                ).start();
+            } else {
+                scaleAnim.setValue(1);
+            }
+        }, [isSelected, scaleAnim]);
 
         if (isPlaced) return null;
 
         const scaffoldColor = item.category === 'meyve' ? PASTEL_COLORS.softPink : PASTEL_COLORS.softGreen;
 
         return (
-            <Animated.View
-                {...panResponder.panHandlers}
-                style={[
-                    styles.foodItem,
-                    showScaffolding && { borderColor: scaffoldColor, borderWidth: 4 },
-                    {
-                        transform: [
-                            { translateX: pan.x },
-                            { translateY: pan.y },
-                            { scale },
-                        ],
-                        zIndex: isDragging ? 100 : 1,
-                        shadowOpacity: isDragging ? 0.4 : 0.2,
-                    },
-                ]}
+            <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleItemTap(item)}
+                style={{ userSelect: 'none' } as any}
             >
-                <Text style={styles.foodEmoji}>{item.emoji}</Text>
-                <Text style={styles.foodName}>{item.name}</Text>
-                {showScaffolding && (
-                    <View style={[styles.scaffoldDot, { backgroundColor: scaffoldColor }]} />
-                )}
-            </Animated.View>
+                <Animated.View
+                    style={[
+                        styles.foodItem,
+                        showScaffolding && { borderColor: scaffoldColor, borderWidth: 4 },
+                        isSelected && styles.selectedItem,
+                        {
+                            transform: [{ scale: scaleAnim }],
+                        },
+                    ]}
+                >
+                    <Text style={[styles.foodEmoji, { userSelect: 'none' } as any]}>{item.emoji}</Text>
+                    {/* No text name - preschoolers can't read */}
+                    {showScaffolding && (
+                        <View style={[styles.scaffoldDot, { backgroundColor: scaffoldColor }]} />
+                    )}
+                </Animated.View>
+            </TouchableOpacity>
         );
     };
 
@@ -508,10 +498,13 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 style={styles.background}
                 resizeMode="cover"
             >
+                {/* Dark overlay to make game elements more visible */}
+                <View style={styles.darkOverlay} />
+
                 {/* Countdown Overlay */}
                 {!gameReady && (
                     <CountdownOverlay
-                        message="Mutfak Dedektifi oyununa hoş geldin! Yiyecekleri doğru sepetlere yerleştir!"
+                        message="Meyveleri ve sebzeleri doğru yere koyalım!"
                         childName={childName}
                         countdownSeconds={5}
                         onComplete={() => setGameReady(true)}
@@ -555,41 +548,40 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                             <Text style={styles.levelText}>Seviye {level}</Text>
                         </View>
 
-                        <View style={styles.statsRow}>
-                            <View style={styles.statBadge}>
-                                <Text style={styles.statEmoji}>✅</Text>
-                                <Text style={styles.statText}>{placedItems.size}</Text>
-                            </View>
-                            <View style={[styles.statBadge, { backgroundColor: PASTEL_COLORS.softPink }]}>
-                                <Text style={styles.statEmoji}>❌</Text>
-                                <Text style={styles.statText}>{errors}</Text>
-                            </View>
-                        </View>
+                        {/* Empty space to balance header - counters removed for preschoolers */}
+                        <View style={{ width: 44 }} />
                     </View>
 
-                    {/* Target Areas - Soft-UI Containers */}
+                    {/* Target Areas - Soft-UI Containers - Now Tappable */}
                     <View style={styles.targetsContainer}>
                         {TARGET_AREAS.map(target => (
-                            <View
+                            <TouchableOpacity
                                 key={target.id}
-                                ref={ref => { targetRefs.current[target.id] = ref; }}
-                                style={[
-                                    styles.targetArea,
-                                    { backgroundColor: target.color },
-                                    highlightTarget === target.id && styles.targetHighlight,
-                                ]}
-                                onLayout={() => measureTargets()}
+                                activeOpacity={0.85}
+                                onPress={() => handleTargetTap(target)}
+                                style={{ userSelect: 'none' } as any}
                             >
-                                <Text style={styles.targetIcon}>{target.icon}</Text>
-                                <Text style={styles.targetName}>{target.name}</Text>
+                                <View
+                                    ref={ref => { targetRefs.current[target.id] = ref; }}
+                                    style={[
+                                        styles.targetArea,
+                                        { backgroundColor: target.color },
+                                        highlightTarget === target.id && styles.targetHighlight,
+                                        selectedItem && selectedItem.category === target.category && styles.targetHint,
+                                    ]}
+                                    onLayout={() => measureTargets()}
+                                >
+                                    <Text style={[styles.targetIcon, { userSelect: 'none' } as any]}>{target.icon}</Text>
+                                    {/* Removed text label - preschoolers can't read */}
 
-                                {/* Placed items in container */}
-                                <View style={styles.placedItemsRow}>
-                                    {foods.filter(f => f.category === target.category && placedItems.has(f.id)).map(f => (
-                                        <Text key={f.id} style={styles.placedEmoji}>{f.emoji}</Text>
-                                    ))}
+                                    {/* Placed items in container */}
+                                    <View style={styles.placedItemsRow}>
+                                        {foods.filter(f => f.category === target.category && placedItems.has(f.id)).map(f => (
+                                            <Text key={f.id} style={[styles.placedEmoji, { userSelect: 'none' } as any]}>{f.emoji}</Text>
+                                        ))}
+                                    </View>
                                 </View>
-                            </View>
+                            </TouchableOpacity>
                         ))}
                     </View>
 
@@ -597,7 +589,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                     <View style={styles.foodsContainer}>
                         <View style={styles.foodsGrid}>
                             {foods.map(food => (
-                                <DraggableItem key={food.id} item={food} />
+                                <SelectableItem key={food.id} item={food} />
                             ))}
                         </View>
                     </View>
@@ -644,6 +636,10 @@ const styles = StyleSheet.create({
     },
     background: {
         flex: 1,
+    },
+    darkOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
     },
 
     // Floating Decorations
@@ -864,6 +860,19 @@ const styles = StyleSheet.create({
         borderRadius: 9,
         borderWidth: 2,
         borderColor: '#fff',
+    },
+    selectedItem: {
+        borderColor: '#FFD700',
+        borderWidth: 4,
+        shadowColor: '#FFD700',
+        shadowOpacity: 0.5,
+        shadowRadius: 12,
+        elevation: 10,
+    },
+    targetHint: {
+        borderColor: '#FFD700',
+        borderWidth: 4,
+        transform: [{ scale: 1.02 }],
     },
 
     // Overlays
