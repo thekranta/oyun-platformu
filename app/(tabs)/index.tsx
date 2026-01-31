@@ -571,6 +571,8 @@ export default function App() {
                 autoCapitalize="none"
                 onFocus={() => setFocusedInput('email')}
                 onBlur={() => setFocusedInput(null)}
+                returnKeyType="next"
+                onSubmitEditing={() => { }}
               />
             </View>
 
@@ -589,6 +591,8 @@ export default function App() {
                 secureTextEntry
                 onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput(null)}
+                returnKeyType="go"
+                onSubmitEditing={girisYap}
               />
             </View>
 
@@ -1204,7 +1208,7 @@ export default function App() {
   }
 
   if (asama === 'siralama') {
-    return <SiralamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
+    return <SiralamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
   }
 
   if (asama === 'eksik-sayi-bul') {
