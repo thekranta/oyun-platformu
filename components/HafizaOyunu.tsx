@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
@@ -151,6 +152,10 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     };
 
     const animateMatch = (card: Card) => {
+        // Use FeedbackService for haptic + sound
+        FeedbackService.playSuccess({ intensity: 'medium' });
+        FeedbackService.playSuccessSound();
+
         Animated.sequence([
             Animated.timing(card.scaleValue, {
                 toValue: 1.2,
@@ -166,6 +171,9 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     };
 
     const animateError = (card: Card) => {
+        // U-oh sound on error
+        FeedbackService.playError({ sound: true });
+
         Animated.sequence([
             Animated.timing(card.shakeValue, { toValue: 10, duration: 50, useNativeDriver: true }),
             Animated.timing(card.shakeValue, { toValue: -10, duration: 50, useNativeDriver: true }),

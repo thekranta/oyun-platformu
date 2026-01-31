@@ -12,7 +12,8 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import Svg, { Circle, Line, Polyline } from 'react-native-svg';
+import Svg, { Circle, Line, Polygon, Polyline } from 'react-native-svg';
+import { ReportEngine } from '../services/ReportEngine';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -1446,6 +1447,197 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     </>
                                 )}
                             </View>
+
+                            {/* ================== GELİŞİM RADAR CHART ================== */}
+                            {scores.length >= 3 && (
+                                <View style={styles.chartCard}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
+                                        <Text style={{ fontSize: 22, marginRight: 10 }}>🎯</Text>
+                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Gelişim Radar Grafiği</Text>
+                                    </View>
+
+                                    {(() => {
+                                        // ReportEngine'den radar verisi al
+                                        const report = ReportEngine.generateParentReport(childName, scores as any);
+                                        const radarData = report.radarChartData;
+
+                                        if (radarData.length === 0) return null;
+
+                                        const size = 180;
+                                        const center = size / 2;
+                                        const radius = 70;
+                                        const levels = 4;
+
+                                        // Her kategori için açı hesapla
+                                        const angleStep = (2 * Math.PI) / radarData.length;
+
+                                        // Veri noktalarını hesapla
+                                        const dataPoints = radarData.map((point, i) => {
+                                            const angle = i * angleStep - Math.PI / 2;
+                                            const value = (point.value / 100) * radius;
+                                            return {
+                                                x: center + value * Math.cos(angle),
+                                                y: center + value * Math.sin(angle),
+                                                label: point.label,
+                                                value: point.value,
+                                            };
+                                        });
+
+                                        // Polygon noktaları
+                                        const polygonPoints = dataPoints.map(p => `${p.x},${p.y}`).join(' ');
+
+                                        return (
+                                            <View style={{ alignItems: 'center' }}>
+                                                <Svg height={size + 40} width={size + 60}>
+                                                    {/* Arka plan çemberleri */}
+                                                    {Array.from({ length: levels }, (_, i) => (
+                                                        <Circle
+                                                            key={i}
+                                                            cx={center + 30}
+                                                            cy={center + 20}
+                                                            r={radius * ((i + 1) / levels)}
+                                                            fill="none"
+                                                            stroke="#E0E0E0"
+                                                            strokeWidth="1"
+                                                        />
+                                                    ))}
+
+                                                    {/* Eksen çizgileri */}
+                                                    {radarData.map((_, i) => {
+                                                        const angle = i * angleStep - Math.PI / 2;
+                                                        const endX = center + 30 + radius * Math.cos(angle);
+                                                        const endY = center + 20 + radius * Math.sin(angle);
+                                                        return (
+                                                            <Line
+                                                                key={i}
+                                                                x1={center + 30}
+                                                                y1={center + 20}
+                                                                x2={endX}
+                                                                y2={endY}
+                                                                stroke="#E0E0E0"
+                                                                strokeWidth="1"
+                                                            />
+                                                        );
+                                                    })}
+
+                                                    {/* Veri alanı */}
+                                                    <Polygon
+                                                        points={dataPoints.map(p => `${p.x + 30},${p.y + 20}`).join(' ')}
+                                                        fill="rgba(30, 136, 229, 0.3)"
+                                                        stroke="#1E88E5"
+                                                        strokeWidth="2"
+                                                    />
+
+                                                    {/* Veri noktaları */}
+                                                    {dataPoints.map((point, i) => (
+                                                        <Circle
+                                                            key={i}
+                                                            cx={point.x + 30}
+                                                            cy={point.y + 20}
+                                                            r="5"
+                                                            fill="#1E88E5"
+                                                            stroke="#FFF"
+                                                            strokeWidth="2"
+                                                        />
+                                                    ))}
+                                                </Svg>
+
+                                                {/* Etiketler */}
+                                                <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', marginTop: 8 }}>
+                                                    {radarData.map((point, i) => (
+                                                        <View key={i} style={{
+                                                            flexDirection: 'row',
+                                                            alignItems: 'center',
+                                                            marginHorizontal: 8,
+                                                            marginVertical: 4,
+                                                            backgroundColor: 'rgba(30, 136, 229, 0.1)',
+                                                            paddingHorizontal: 8,
+                                                            paddingVertical: 4,
+                                                            borderRadius: 12,
+                                                        }}>
+                                                            <View style={{
+                                                                width: 10,
+                                                                height: 10,
+                                                                borderRadius: 5,
+                                                                backgroundColor: '#1E88E5',
+                                                                marginRight: 6
+                                                            }} />
+                                                            <Text style={{ fontSize: 11, color: COLORS.text }}>
+                                                                {point.label}: {point.value}%
+                                                            </Text>
+                                                        </View>
+                                                    ))}
+                                                </View>
+                                            </View>
+                                        );
+                                    })()}
+                                </View>
+                            )}
+
+                            {/* ================== EVDE NE YAPMALI? ================== */}
+                            {scores.length >= 3 && (
+                                <View style={[styles.chartCard, { borderLeftWidth: 4, borderLeftColor: COLORS.accent }]}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
+                                        <Text style={{ fontSize: 22, marginRight: 10 }}>🏠</Text>
+                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Evde Ne Yapmalı?</Text>
+                                    </View>
+
+                                    {(() => {
+                                        const report = ReportEngine.generateParentReport(childName, scores as any);
+                                        const activities = report.homeActivities;
+
+                                        return (
+                                            <View>
+                                                {activities.map((activity, i) => (
+                                                    <View key={i} style={{
+                                                        flexDirection: 'row',
+                                                        alignItems: 'flex-start',
+                                                        marginBottom: 16,
+                                                        backgroundColor: 'rgba(102, 187, 106, 0.1)',
+                                                        padding: 12,
+                                                        borderRadius: 12,
+                                                    }}>
+                                                        <Text style={{ fontSize: 28, marginRight: 12 }}>{activity.emoji}</Text>
+                                                        <View style={{ flex: 1 }}>
+                                                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                                                                <Text style={{ fontSize: 15, fontWeight: '600', color: COLORS.text }}>
+                                                                    {activity.title}
+                                                                </Text>
+                                                                <View style={{
+                                                                    marginLeft: 8,
+                                                                    backgroundColor: '#E8F5E9',
+                                                                    paddingHorizontal: 6,
+                                                                    paddingVertical: 2,
+                                                                    borderRadius: 8
+                                                                }}>
+                                                                    <Text style={{ fontSize: 10, color: COLORS.accent, fontWeight: '600' }}>
+                                                                        {activity.duration}
+                                                                    </Text>
+                                                                </View>
+                                                            </View>
+                                                            <Text style={{ fontSize: 13, color: COLORS.textLight, lineHeight: 18 }}>
+                                                                {activity.description}
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                ))}
+
+                                                {/* Özendirici mesaj */}
+                                                <View style={{
+                                                    backgroundColor: 'rgba(255, 179, 0, 0.15)',
+                                                    padding: 12,
+                                                    borderRadius: 12,
+                                                    marginTop: 8,
+                                                }}>
+                                                    <Text style={{ fontSize: 14, color: COLORS.text, textAlign: 'center', lineHeight: 20 }}>
+                                                        {report.encouragingMessage}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        );
+                                    })()}
+                                </View>
+                            )}
 
                             {/* FREE TIER BANNER */}
                             {!isPremium && (
