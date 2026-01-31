@@ -8,7 +8,7 @@ const audioCache = new Map<string, string>();
 
 export interface SpeechOptions {
     voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
-    speed?: number; // 0.25 to 4.0 (default: 0.9 for children)
+    speed?: number; // 0.25 to 4.0 (default: 0.75 for children - slower)
 }
 
 export interface SpeechResult {
@@ -26,13 +26,14 @@ export async function generateSpeech(
     options: SpeechOptions = {}
 ): Promise<SpeechResult> {
     const {
-        voice = 'shimmer',  // Soft, warm voice - best for children
-        speed = 0.9      // Slightly slower for comprehension
+        voice = 'nova',  // Warm voice - best for children
+        speed = 0.75     // Slower for children comprehension
     } = options;
 
     // Check cache first
     const cacheKey = `${text}-${voice}-${speed}`;
     if (audioCache.has(cacheKey)) {
+        console.log('🔊 TTS: Using cached audio for:', text.substring(0, 30) + '...');
         return {
             success: true,
             audioUrl: audioCache.get(cacheKey)
@@ -40,6 +41,8 @@ export async function generateSpeech(
     }
 
     try {
+        console.log('🔊 TTS: Calling OpenAI API for:', text.substring(0, 30) + '...', { voice, speed });
+
         // Call secure server-side API route (OpenAI TTS)
         const response = await fetch('/api/tts', {
             method: 'POST',
@@ -55,7 +58,7 @@ export async function generateSpeech(
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            console.error('TTS API Error:', response.status, errorData);
+            console.error('🔊 TTS API Error:', response.status, errorData);
             return {
                 success: false,
                 error: errorData.error || `API Error: ${response.status}`
@@ -65,11 +68,14 @@ export async function generateSpeech(
         const data = await response.json();
 
         if (!data.audioContent) {
+            console.error('🔊 TTS: No audio content received');
             return {
                 success: false,
                 error: 'No audio data received'
             };
         }
+
+        console.log('🔊 TTS: OpenAI audio received successfully');
 
         // Convert base64 to blob URL
         const audioBlob = base64ToBlob(data.audioContent, 'audio/mp3');
@@ -83,7 +89,7 @@ export async function generateSpeech(
             audioUrl
         };
     } catch (error) {
-        console.error('Speech generation failed:', error);
+        console.error('🔊 TTS: Speech generation failed:', error);
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Unknown error'
@@ -119,32 +125,34 @@ export async function speak(
             const audio = new Audio(result.audioUrl);
             audio.onended = () => resolve();
             audio.onerror = () => {
-                console.error('Audio playback error, using fallback');
+                console.warn('🔊 TTS: Audio playback error, using fallback');
                 fallbackTTS(text);
                 resolve();
             };
             audio.play().catch(() => {
-                console.error('Audio play failed, using fallback');
+                console.warn('🔊 TTS: Audio play failed, using fallback');
                 fallbackTTS(text);
                 resolve();
             });
         });
     } else {
         // Fallback to browser TTS
+        console.warn('🔊 TTS: Using browser fallback TTS for:', text);
         fallbackTTS(text);
     }
 }
 
 /**
  * Browser fallback TTS using Web Speech API
+ * Much slower rate for child-friendly speech
  */
 function fallbackTTS(text: string): void {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'tr-TR';
-        utterance.rate = 0.9;
-        utterance.pitch = 1.2;
+        utterance.rate = 0.7;   // Very slow for children
+        utterance.pitch = 1.1;  // Slightly higher pitch
 
         // Try to find a Turkish female voice
         const voices = window.speechSynthesis.getVoices();
@@ -173,9 +181,10 @@ export function stopSpeech(): void {
 }
 
 /**
- * Clear the audio cache
+ * Clear the audio cache - call this on app start or page refresh
  */
 export function clearSpeechCache(): void {
+    console.log('🔊 TTS: Clearing audio cache');
     audioCache.forEach((url) => {
         URL.revokeObjectURL(url);
     });
