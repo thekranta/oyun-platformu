@@ -6,10 +6,7 @@ const config = getDefaultConfig(__dirname);
 // Fix for Vercel static export asset path issues
 config.resolver.assetExts = [...config.resolver.assetExts, 'mp3', 'mp4', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'];
 
-// Ensure proper asset handling for web builds
-config.transformer = {
-    ...config.transformer,
-    assetPlugins: ['expo-asset/tools/hashAssetFiles'],
-};
+// REMOVED hashAssetFiles plugin - it causes issues with Vercel builds
+// Assets will be served without hash in filename
 
 module.exports = config;
