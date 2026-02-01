@@ -4,6 +4,7 @@ import {
     Animated,
     Dimensions,
     Image,
+    ImageBackground,
     PanResponder,
     Platform,
     ScrollView,
@@ -13,6 +14,9 @@ import {
     View,
 } from 'react-native';
 import { useSound } from './SoundContext';
+
+// Arka plan görseli
+const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/yapboz_bg.png');
 
 interface YapbozOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
@@ -389,7 +393,8 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     );
 
     return (
-        <View style={styles.container}>
+        <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
+            <View style={styles.darkOverlay} />
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.btn}
@@ -408,12 +413,16 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             {selectedPuzzle === null && renderPuzzleSelection()}
             {selectedPuzzle !== null && showPreview && renderPreview()}
             {selectedPuzzle !== null && !showPreview && renderGame()}
-        </View>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#1a1a2e' },
+    container: { flex: 1 },
+    darkOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(26, 26, 46, 0.7)',
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',

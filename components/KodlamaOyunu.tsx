@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Dimensions,
+  ImageBackground,
   Platform,
   StyleSheet,
   Text,
@@ -10,7 +11,9 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import DynamicBackground from './DynamicBackground';
+
+// Arka plan gÃ¶rseli
+const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/kodlama_bg.png');
 
 const { width, height } = Dimensions.get('window');
 
@@ -398,7 +401,8 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
   };
 
   return (
-    <DynamicBackground>
+    <ImageBackground source={BACKGROUND_IMAGE} style={st.bgContainer} resizeMode="cover">
+      <View style={st.darkOverlay} />
       {/* Countdown Overlay */}
       {!gameReady && (
         <CountdownOverlay
@@ -499,12 +503,17 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
         )}
       </View>
       <ConfettiCannon ref={confetti} count={60} origin={{ x: width / 2, y: 0 }} autoStart={false} fadeOut />
-    </DynamicBackground>
+    </ImageBackground>
   );
 }
 
 // ============== STYLES ==============
 const st = StyleSheet.create({
+  bgContainer: { flex: 1 },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  },
   container: { flex: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingTop: 30, paddingBottom: 10, paddingHorizontal: 6 },
 
   // Top

@@ -1,8 +1,10 @@
 ﻿import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, ImageBackground, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
-import DynamicBackground from './DynamicBackground';
+
+// Arka plan görseli
+const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/yaratici_cizim_bg.png');
 
 type Point = { x: number; y: number };
 type BrushMode = 'pen' | 'spray' | 'marker' | 'glow';
@@ -393,7 +395,8 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   );
 
   return (
-    <DynamicBackground>
+    <ImageBackground source={BACKGROUND_IMAGE} style={styles.bgContainer} resizeMode="cover">
+      <View style={styles.darkOverlay} />
       <View style={styles.container}>
         <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
           <Ionicons name="close" size={28} color="#d84315" />
@@ -567,11 +570,16 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           </View>
         )}
       </View>
-    </DynamicBackground>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  bgContainer: { flex: 1 },
+  darkOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
   container: { flex: 1 },
   exitBtn: {
     position: 'absolute', top: 50, left: 16, width: 48, height: 48, borderRadius: 24,

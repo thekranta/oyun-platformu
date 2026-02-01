@@ -2,10 +2,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import DynamicBackground from './DynamicBackground';
+import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ProgressBar from './ProgressBar';
 import { useSound } from './SoundContext';
+
+// Arka plan görseli
+const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/bunu_soyle_bg.png');
 
 // Aşama Verileri
 const STAGES = [
@@ -452,7 +454,11 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     };
 
     return (
-        <DynamicBackground onExit={onExit}>
+        <ImageBackground source={BACKGROUND_IMAGE} style={styles.bgContainer} resizeMode="cover">
+            <View style={styles.darkOverlay} />
+            <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
+                <Ionicons name="arrow-back" size={28} color="#333" />
+            </TouchableOpacity>
             <View style={styles.topBar}>
                 <ProgressBar current={currentStage + 1} total={STAGES.length} />
             </View>
@@ -516,11 +522,28 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     </Text>
                 </View>
             </View>
-        </DynamicBackground>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
+    bgContainer: { flex: 1 },
+    darkOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    },
+    exitBtn: {
+        position: 'absolute',
+        top: 50,
+        left: 16,
+        zIndex: 100,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     topBar: {
         width: '100%',
         paddingTop: 40,

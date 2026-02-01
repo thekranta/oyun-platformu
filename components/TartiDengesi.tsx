@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
+    ImageBackground,
     PanResponder,
     Platform,
     StyleSheet,
@@ -13,6 +14,9 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
+
+// Arka plan görseli
+const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/tarti_dengesi_bg.png');
 
 interface TartiDengesiProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
@@ -177,7 +181,8 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
     });
 
     return (
-        <View style={styles.outerContainer}>
+        <ImageBackground source={BACKGROUND_IMAGE} style={styles.outerContainer} resizeMode="cover">
+            <View style={styles.darkOverlay} />
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
@@ -260,12 +265,16 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
                     ))}
                 </View>
             </View>
-        </View>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
-    outerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#CE93D8' },
+    outerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    darkOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(206, 147, 216, 0.4)',
+    },
     floatingCloud: { position: 'absolute', fontSize: 36, opacity: 0.35, zIndex: 0 },
     floatingStar: { position: 'absolute', fontSize: 24, opacity: 0.4, zIndex: 0 },
     gameContainer: {
