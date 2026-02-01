@@ -2,25 +2,27 @@
  * IslandMap - Adacık Haritası Dashboard
  * Ana giriş ekranı için "Yaşayan Dünya" temalı oyun seçim haritası
  * 
- * Bölgeler:
- * - Yaşam Kasabası (alt kısım, yeşil) - Günlük yaşam becerileri
- * - Bilişsel Tepe (üst kısım, kayalık) - Bilişsel gelişim oyunları
+ * Güzel bir ada görseli arka planı üzerinde oyun kartları
  */
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     Animated,
     Dimensions,
+    ImageBackground,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
+
+// Arka plan görseli
+const islandMapBg = require('../assets/backgrounds/island_map.png');
 
 // Bina tanımları
 interface Building {
@@ -30,48 +32,12 @@ interface Building {
     region: 'yasam' | 'bilissel';
     gameId: string;
     description: string;
-    position: { x: number; y: number };
     color: string;
-    size: 'small' | 'medium' | 'large';
+    gradientColors: string[];
 }
 
 const BUILDINGS: Building[] = [
-    // Yaşam Kasabası (alt - yeşil bölge)
-    {
-        id: 'mutfak',
-        name: 'Mutfak Dedektifi',
-        emoji: '🍳',
-        region: 'yasam',
-        gameId: 'mutfak-dedektifi',
-        description: 'Meyve ve sebzeleri keşfet!',
-        position: { x: 15, y: 65 },
-        color: '#FF6B6B',
-        size: 'large',
-    },
-    {
-        id: 'aile-sepeti',
-        name: 'Aile Sepeti',
-        emoji: '🛒',
-        region: 'yasam',
-        gameId: 'aile-sepeti-macerasi',
-        description: 'Alışveriş macerası!',
-        position: { x: 55, y: 70 },
-        color: '#4ECDC4',
-        size: 'medium',
-    },
-    {
-        id: 'adalet',
-        name: 'Adalet Hikayesi',
-        emoji: '⚖️',
-        region: 'yasam',
-        gameId: 'adalet-hikayesi',
-        description: 'Doğru kararlar ver!',
-        position: { x: 75, y: 60 },
-        color: '#9B59B6',
-        size: 'medium',
-    },
-
-    // Bilişsel Tepe (üst - kayalık bölge)
+    // Bilişsel Tepe (üst - dağlık bölge)
     {
         id: 'hafiza',
         name: 'Hafıza Kulesi',
@@ -79,9 +45,8 @@ const BUILDINGS: Building[] = [
         region: 'bilissel',
         gameId: 'hafiza',
         description: 'Çiftleri bul!',
-        position: { x: 20, y: 20 },
-        color: '#3498DB',
-        size: 'large',
+        color: '#6366F1',
+        gradientColors: ['#818CF8', '#6366F1'],
     },
     {
         id: 'uzay',
@@ -90,9 +55,8 @@ const BUILDINGS: Building[] = [
         region: 'bilissel',
         gameId: 'uzay-bloklari',
         description: 'Blokları yerleştir!',
-        position: { x: 50, y: 15 },
-        color: '#2C3E50',
-        size: 'large',
+        color: '#8B5CF6',
+        gradientColors: ['#A78BFA', '#8B5CF6'],
     },
     {
         id: 'golge',
@@ -101,9 +65,40 @@ const BUILDINGS: Building[] = [
         region: 'bilissel',
         gameId: 'golge-dedektifi',
         description: 'Gölgeleri eşleştir!',
-        position: { x: 80, y: 25 },
-        color: '#E74C3C',
-        size: 'medium',
+        color: '#EC4899',
+        gradientColors: ['#F472B6', '#EC4899'],
+    },
+
+    // Yaşam Kasabası (alt - yeşil bölge)
+    {
+        id: 'mutfak',
+        name: 'Mutfak Dedektifi',
+        emoji: '🍳',
+        region: 'yasam',
+        gameId: 'mutfak-dedektifi',
+        description: 'Meyve ve sebzeleri keşfet!',
+        color: '#10B981',
+        gradientColors: ['#34D399', '#10B981'],
+    },
+    {
+        id: 'aile-sepeti',
+        name: 'Aile Sepeti',
+        emoji: '🛒',
+        region: 'yasam',
+        gameId: 'aile-sepeti-macerasi',
+        description: 'Alışveriş macerası!',
+        color: '#F59E0B',
+        gradientColors: ['#FBBF24', '#F59E0B'],
+    },
+    {
+        id: 'adalet',
+        name: 'Adalet Hikayesi',
+        emoji: '⚖️',
+        region: 'yasam',
+        gameId: 'adalet-hikayesi',
+        description: 'Doğru kararlar ver!',
+        color: '#EF4444',
+        gradientColors: ['#F87171', '#EF4444'],
     },
 ];
 
@@ -113,100 +108,147 @@ interface IslandMapProps {
 }
 
 export default function IslandMap({ onSelectGame, childName }: IslandMapProps) {
+    const floatAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        // Sürekli yukarı-aşağı hareket animasyonu
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(floatAnim, {
+                    toValue: -8,
+                    duration: 2000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(floatAnim, {
+                    toValue: 0,
+                    duration: 2000,
+                    useNativeDriver: true,
+                }),
+            ])
+        ).start();
+    }, []);
+
     return (
         <View style={styles.container}>
-            {/* Sky gradient */}
-            <View style={styles.sky}>
-                <Text style={styles.welcomeText}>🌤️ Hoş geldin, {childName}!</Text>
-            </View>
-
-            {/* Main Map Area */}
-            <ScrollView
-                style={styles.mapScrollView}
-                contentContainerStyle={styles.mapContainer}
-                showsVerticalScrollIndicator={false}
+            <ImageBackground
+                source={islandMapBg}
+                style={styles.backgroundImage}
+                resizeMode="cover"
             >
-                {/* Bilişsel Tepe - Üst bölge (kayalık) */}
-                <View style={styles.bilisselTepe}>
-                    <View style={styles.regionHeader}>
-                        <Text style={styles.regionEmoji}>🏔️</Text>
-                        <Text style={styles.regionTitle}>Bilişsel Tepe</Text>
-                    </View>
-                    <View style={styles.buildingsContainer}>
-                        {BUILDINGS.filter(b => b.region === 'bilissel').map(building => (
-                            <BuildingCard
-                                key={building.id}
-                                building={building}
-                                onPress={() => onSelectGame(building.gameId)}
-                            />
-                        ))}
-                    </View>
+                {/* Üst overlay - hoş geldin mesajı */}
+                <View style={styles.welcomeContainer}>
+                    <Animated.View style={[
+                        styles.welcomeBubble,
+                        { transform: [{ translateY: floatAnim }] }
+                    ]}>
+                        <Text style={styles.welcomeEmoji}>🌈</Text>
+                        <Text style={styles.welcomeText}>Hoş geldin, {childName}!</Text>
+                    </Animated.View>
                 </View>
 
-                {/* Yaşam Kasabası - Alt bölge (yeşil) */}
-                <View style={styles.yasamKasabasi}>
-                    <View style={styles.regionHeader}>
-                        <Text style={styles.regionEmoji}>🌳</Text>
-                        <Text style={styles.regionTitle}>Yaşam Kasabası</Text>
+                {/* Oyun Kartları Scroll Alanı */}
+                <ScrollView
+                    style={styles.scrollView}
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Bilişsel Tepe Bölümü */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <View style={styles.sectionBadge}>
+                                <Text style={styles.sectionEmoji}>🏔️</Text>
+                                <Text style={styles.sectionTitle}>Bilişsel Tepe</Text>
+                            </View>
+                        </View>
+                        <View style={styles.cardsRow}>
+                            {BUILDINGS.filter(b => b.region === 'bilissel').map((building, index) => (
+                                <GameCard
+                                    key={building.id}
+                                    building={building}
+                                    onPress={() => onSelectGame(building.gameId)}
+                                    delay={index * 100}
+                                />
+                            ))}
+                        </View>
                     </View>
-                    <View style={styles.buildingsContainer}>
-                        {BUILDINGS.filter(b => b.region === 'yasam').map(building => (
-                            <BuildingCard
-                                key={building.id}
-                                building={building}
-                                onPress={() => onSelectGame(building.gameId)}
-                            />
-                        ))}
+
+                    {/* Yaşam Kasabası Bölümü */}
+                    <View style={styles.section}>
+                        <View style={styles.sectionHeader}>
+                            <View style={styles.sectionBadge}>
+                                <Text style={styles.sectionEmoji}>🌳</Text>
+                                <Text style={styles.sectionTitle}>Yaşam Kasabası</Text>
+                            </View>
+                        </View>
+                        <View style={styles.cardsRow}>
+                            {BUILDINGS.filter(b => b.region === 'yasam').map((building, index) => (
+                                <GameCard
+                                    key={building.id}
+                                    building={building}
+                                    onPress={() => onSelectGame(building.gameId)}
+                                    delay={index * 100 + 300}
+                                />
+                            ))}
+                        </View>
                     </View>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </ImageBackground>
         </View>
     );
 }
 
-// Animasyonlu Bina Kartı
-interface BuildingCardProps {
+// Oyun Kartı Bileşeni
+interface GameCardProps {
     building: Building;
     onPress: () => void;
+    delay: number;
 }
 
-function BuildingCard({ building, onPress }: BuildingCardProps) {
-    const scaleAnim = useRef(new Animated.Value(1)).current;
+function GameCard({ building, onPress, delay }: GameCardProps) {
+    const scaleAnim = useRef(new Animated.Value(0)).current;
     const bounceAnim = useRef(new Animated.Value(0)).current;
 
-    // Zıplama animasyonu (hover/touch)
+    useEffect(() => {
+        // Giriş animasyonu
+        Animated.spring(scaleAnim, {
+            toValue: 1,
+            friction: 6,
+            tension: 120,
+            delay: delay,
+            useNativeDriver: true,
+        }).start();
+    }, []);
+
     const handlePressIn = () => {
         Animated.parallel([
             Animated.spring(scaleAnim, {
-                toValue: 1.1,
+                toValue: 1.08,
                 friction: 3,
-                tension: 200,
+                tension: 300,
                 useNativeDriver: true,
             }),
-            Animated.sequence([
-                Animated.timing(bounceAnim, {
-                    toValue: -15,
-                    duration: 150,
-                    useNativeDriver: true,
-                }),
-                Animated.spring(bounceAnim, {
-                    toValue: 0,
-                    friction: 3,
-                    useNativeDriver: true,
-                }),
-            ]),
+            Animated.timing(bounceAnim, {
+                toValue: -10,
+                duration: 150,
+                useNativeDriver: true,
+            }),
         ]).start();
     };
 
     const handlePressOut = () => {
-        Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 5,
-            useNativeDriver: true,
-        }).start();
+        Animated.parallel([
+            Animated.spring(scaleAnim, {
+                toValue: 1,
+                friction: 4,
+                useNativeDriver: true,
+            }),
+            Animated.spring(bounceAnim, {
+                toValue: 0,
+                friction: 3,
+                useNativeDriver: true,
+            }),
+        ]).start();
     };
-
-    const cardSize = building.size === 'large' ? 120 : building.size === 'medium' ? 100 : 80;
 
     return (
         <TouchableOpacity
@@ -214,32 +256,38 @@ function BuildingCard({ building, onPress }: BuildingCardProps) {
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
             onPress={onPress}
+            style={styles.cardTouchable}
         >
-            <Animated.View style={[
-                styles.buildingCard,
-                {
-                    width: cardSize,
-                    height: cardSize + 30,
-                    backgroundColor: building.color,
-                    transform: [
-                        { scale: scaleAnim },
-                        { translateY: bounceAnim },
-                    ],
-                },
-            ]}>
-                {/* Çatı */}
-                <View style={[styles.roof, { borderBottomColor: building.color }]} />
+            <Animated.View
+                style={[
+                    styles.gameCard,
+                    {
+                        transform: [
+                            { scale: scaleAnim },
+                            { translateY: bounceAnim },
+                        ],
+                    },
+                ]}
+            >
+                {/* Kart Arka Planı - Glassmorphism */}
+                <View style={[styles.cardBackground, { backgroundColor: building.color }]}>
+                    {/* Üst parlak efekt */}
+                    <View style={styles.cardShine} />
 
-                {/* Emoji */}
-                <Text style={[styles.buildingEmoji, { fontSize: cardSize * 0.4 }]}>
-                    {building.emoji}
-                </Text>
+                    {/* Emoji */}
+                    <View style={styles.iconContainer}>
+                        <Text style={styles.gameEmoji}>{building.emoji}</Text>
+                    </View>
 
-                {/* İsim */}
-                <View style={styles.nameplate}>
-                    <Text style={styles.buildingName} numberOfLines={2}>
-                        {building.name}
-                    </Text>
+                    {/* İsim Plakası */}
+                    <View style={styles.namePlate}>
+                        <Text style={styles.gameName} numberOfLines={2}>
+                            {building.name}
+                        </Text>
+                    </View>
+
+                    {/* Alt dekoratif çizgi */}
+                    <View style={[styles.cardAccent, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
                 </View>
             </Animated.View>
         </TouchableOpacity>
@@ -249,130 +297,163 @@ function BuildingCard({ building, onPress }: BuildingCardProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#87CEEB', // Gökyüzü mavisi
+    },
+    backgroundImage: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
     },
 
-    // Gökyüzü
-    sky: {
-        height: 80,
-        justifyContent: 'flex-end',
-        alignItems: 'center',
+    // Hoş geldin
+    welcomeContainer: {
+        paddingTop: Platform.OS === 'ios' ? 50 : 30,
         paddingBottom: 10,
-        backgroundColor: 'linear-gradient(180deg, #87CEEB 0%, #B0E0E6 100%)' as any,
+        alignItems: 'center',
     },
-    welcomeText: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#fff',
-        textShadowColor: 'rgba(0,0,0,0.3)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 3,
-    },
-
-    // Harita
-    mapScrollView: {
-        flex: 1,
-    },
-    mapContainer: {
-        minHeight: height - 80,
-        paddingBottom: 40,
-    },
-
-    // Bilişsel Tepe (üst)
-    bilisselTepe: {
-        minHeight: 280,
-        backgroundColor: '#A0522D', // Kahverengi kayalık
-        borderBottomLeftRadius: 50,
-        borderBottomRightRadius: 50,
-        paddingTop: 20,
-        paddingHorizontal: 20,
-        paddingBottom: 40,
-        // Gölge
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 10,
-    },
-
-    // Yaşam Kasabası (alt)
-    yasamKasabasi: {
-        flex: 1,
-        backgroundColor: '#228B22', // Yeşil çimen
-        paddingTop: 30,
-        paddingHorizontal: 20,
-        paddingBottom: 20,
-        marginTop: -30,
-    },
-
-    // Bölge başlığı
-    regionHeader: {
+    welcomeBubble: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 30,
         gap: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 8,
     },
-    regionEmoji: {
-        fontSize: 28,
+    welcomeEmoji: {
+        fontSize: 24,
     },
-    regionTitle: {
-        fontSize: 22,
+    welcomeText: {
+        fontSize: 18,
         fontWeight: '700',
-        color: '#fff',
-        textShadowColor: 'rgba(0,0,0,0.3)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
+        color: '#1F2937',
     },
 
-    // Binalar konteyneri
-    buildingsContainer: {
+    // Scroll
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingTop: 10,
+        paddingBottom: 40,
+    },
+
+    // Bölüm
+    section: {
+        marginBottom: 25,
+    },
+    sectionHeader: {
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    sectionBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        gap: 8,
+    },
+    sectionEmoji: {
+        fontSize: 22,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#FFFFFF',
+        letterSpacing: 0.5,
+    },
+
+    // Kart satırı
+    cardsRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
-        gap: 20,
+        gap: 16,
     },
 
-    // Bina kartı
-    buildingCard: {
+    // Oyun kartı
+    cardTouchable: {
+        marginBottom: 5,
+    },
+    gameCard: {
+        width: isWeb ? 140 : width * 0.28,
+        minWidth: 110,
+        maxWidth: 150,
+    },
+    cardBackground: {
         borderRadius: 20,
+        padding: 12,
         alignItems: 'center',
-        justifyContent: 'center',
-        padding: 10,
+        overflow: 'hidden',
         // Gölge
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.35,
+        shadowRadius: 16,
         elevation: 12,
     },
-    roof: {
+    cardShine: {
         position: 'absolute',
-        top: -15,
-        width: 0,
-        height: 0,
-        borderLeftWidth: 30,
-        borderRightWidth: 30,
-        borderBottomWidth: 20,
-        borderLeftColor: 'transparent',
-        borderRightColor: 'transparent',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '40%',
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
     },
-    buildingEmoji: {
-        marginTop: 10,
+
+    // İkon
+    iconContainer: {
+        width: 70,
+        height: 70,
+        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+        borderRadius: 35,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
+        marginTop: 5,
     },
-    nameplate: {
-        position: 'absolute',
-        bottom: 5,
-        left: 5,
-        right: 5,
-        backgroundColor: 'rgba(255,255,255,0.9)',
-        borderRadius: 8,
-        paddingVertical: 4,
-        paddingHorizontal: 6,
+    gameIcon: {
+        width: 50,
+        height: 50,
     },
-    buildingName: {
-        fontSize: 10,
-        fontWeight: '600',
-        color: '#333',
+    gameEmoji: {
+        fontSize: 36,
+    },
+
+    // İsim plakası
+    namePlate: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderRadius: 12,
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        width: '100%',
+        marginBottom: 5,
+    },
+    gameName: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#1F2937',
         textAlign: 'center',
+        lineHeight: 15,
+    },
+
+    // Alt aksan
+    cardAccent: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 4,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
     },
 });
