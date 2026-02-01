@@ -6,7 +6,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const DIST_DIR = path.join(__dirname, 'dist');
+// __dirname = scripts klasörü, bir üst klasöre çıkıyoruz
+const PROJECT_ROOT = path.join(__dirname, '..');
+const DIST_DIR = path.join(PROJECT_ROOT, 'dist');
 const DIST_ASSETS = path.join(DIST_DIR, 'assets');
 
 /**
@@ -92,6 +94,32 @@ function fixNodeModulesAssets() {
 }
 
 /**
+ * Fix react-navigation specific assets by creating proper directory structure
+ */
+function fixReactNavigationAssets() {
+    // Build sırasında bu path'te bir dosya aranıyor
+    const targetPath = path.join(DIST_ASSETS, 'node_modules', '@react-navigation', 'elements', 'lib', 'module', 'assets');
+
+    // Source path from node_modules
+    const sourcePath = path.join(PROJECT_ROOT, 'node_modules', '@react-navigation', 'elements', 'lib', 'module', 'assets');
+
+    if (fs.existsSync(sourcePath)) {
+        console.log('📁 Copying react-navigation assets...');
+        fs.mkdirSync(targetPath, { recursive: true });
+
+        const entries = fs.readdirSync(sourcePath, { withFileTypes: true });
+        for (const entry of entries) {
+            if (!entry.isDirectory()) {
+                const srcFile = path.join(sourcePath, entry.name);
+                const destFile = path.join(targetPath, entry.name);
+                fs.copyFileSync(srcFile, destFile);
+            }
+        }
+        console.log('✅ React navigation assets copied');
+    }
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -103,6 +131,7 @@ function main() {
     }
 
     flattenAssets();
+    fixReactNavigationAssets();
     fixNodeModulesAssets();
 
     console.log('✅ Post-build fix complete!');

@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "vercel-build": "npx expo export --platform web && node scripts/fix-vercel-assets.js"
+    "vercel-build": "node scripts/pre-build-assets.js && npx expo export --platform web && node scripts/fix-vercel-assets.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
