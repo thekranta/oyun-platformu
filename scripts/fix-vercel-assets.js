@@ -10,6 +10,7 @@ const path = require('path');
 const PROJECT_ROOT = path.join(__dirname, '..');
 const DIST_DIR = path.join(PROJECT_ROOT, 'dist');
 const DIST_ASSETS = path.join(DIST_DIR, 'assets');
+const SOURCE_ASSETS = path.join(PROJECT_ROOT, 'assets');
 
 /**
  * Recursively copy directory
@@ -57,6 +58,46 @@ function flattenAssets() {
         fs.rmSync(nestedAssets, { recursive: true, force: true });
         console.log('✅ Nested assets flattened');
     }
+}
+
+/**
+ * Copy all source assets to dist preserving directory structure
+ * This ensures all assets are available even if Metro doesn't properly hash them
+ */
+function copySourceAssets() {
+    if (!fs.existsSync(SOURCE_ASSETS)) {
+        console.log('⚠️ Source assets directory not found');
+        return;
+    }
+
+    console.log('📁 Copying all source assets to dist...');
+
+    // Copy entire assets folder structure
+    const copyRecursive = (src, dest) => {
+        if (!fs.existsSync(src)) return;
+
+        const entries = fs.readdirSync(src, { withFileTypes: true });
+
+        for (const entry of entries) {
+            const srcPath = path.join(src, entry.name);
+            const destPath = path.join(dest, entry.name);
+
+            if (entry.isDirectory()) {
+                if (!fs.existsSync(destPath)) {
+                    fs.mkdirSync(destPath, { recursive: true });
+                }
+                copyRecursive(srcPath, destPath);
+            } else {
+                // Only copy if doesn't exist to not overwrite hashed versions
+                if (!fs.existsSync(destPath)) {
+                    fs.copyFileSync(srcPath, destPath);
+                }
+            }
+        }
+    };
+
+    copyRecursive(SOURCE_ASSETS, DIST_ASSETS);
+    console.log('✅ Source assets copied');
 }
 
 /**
@@ -120,6 +161,62 @@ function fixReactNavigationAssets() {
 }
 
 /**
+ * Find and copy missing hashed assets
+ * Metro creates hashed filenames but sometimes fails to copy the actual files
+ */
+function fixMissingHashedAssets() {
+    console.log('📁 Checking for missing hashed assets...');
+
+    // Find all files in dist/assets
+    const findFiles = (dir, files = []) => {
+        if (!fs.existsSync(dir)) return files;
+
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                findFiles(fullPath, files);
+            } else {
+                files.push(fullPath);
+            }
+        }
+        return files;
+    };
+
+    const distFiles = findFiles(DIST_ASSETS);
+    const sourceFiles = findFiles(SOURCE_ASSETS);
+
+    // Create a map of source files by basename (without hash)
+    const sourceMap = new Map();
+    for (const file of sourceFiles) {
+        const basename = path.basename(file);
+        const relativePath = path.relative(SOURCE_ASSETS, file);
+        sourceMap.set(basename, { full: file, relative: relativePath });
+    }
+
+    // For each dist file that looks hashed, ensure original exists in proper location
+    for (const distFile of distFiles) {
+        const basename = path.basename(distFile);
+        // Check if this is a hashed filename (has hash before extension)
+        const match = basename.match(/^(.+?)\.([a-f0-9]{32})\.(\w+)$/);
+        if (match) {
+            const originalName = `${match[1]}.${match[3]}`;
+            const sourceInfo = sourceMap.get(originalName);
+            if (sourceInfo) {
+                // Ensure the unhashed version also exists in dist
+                const distDir = path.dirname(distFile);
+                const unhashedPath = path.join(distDir, originalName);
+                if (!fs.existsSync(unhashedPath)) {
+                    fs.copyFileSync(sourceInfo.full, unhashedPath);
+                }
+            }
+        }
+    }
+
+    console.log('✅ Hashed assets check complete');
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -131,8 +228,10 @@ function main() {
     }
 
     flattenAssets();
+    copySourceAssets();
     fixReactNavigationAssets();
     fixNodeModulesAssets();
+    fixMissingHashedAssets();
 
     console.log('✅ Post-build fix complete!');
 }
