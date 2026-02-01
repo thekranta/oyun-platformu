@@ -78,9 +78,15 @@ const ALL_FOODS: FoodItem[] = [
 ];
 
 const TARGET_AREAS: TargetArea[] = [
-    { id: 'meyve', category: 'meyve', name: 'Meyve Sepeti', emoji: '🍎', color: '#FFB6C1', icon: '🧺' },
+    { id: 'meyve', category: 'meyve', name: 'Meyve Sepeti', emoji: '🍎', color: '#FFB6C1', icon: '🪤' },
     { id: 'sebze', category: 'sebze', name: 'Sebze Kasası', emoji: '🥕', color: '#98D8AA', icon: '📦' },
 ];
+
+// Sepet ve kasa görselleri
+const BASKET_IMAGES = {
+    meyve: require('@/assets/images/mutfak/meyve_sepeti.png'),
+    sebze: require('@/assets/images/mutfak/sebze_kasasi.png'),
+};
 
 // Pastel color palette for Soft-UI
 const PASTEL_COLORS = {
@@ -252,16 +258,15 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
             // Select new item
             setSelectedItem(item);
             setSelectionStartTime(Date.now());
-            // Voice: say what the item is
-            speak(`${item.name}! Bu bir ${item.category === 'meyve' ? 'meyve' : 'sebze'}. Nereye koyalım?`);
+            // Sadece emoji göster, ses komutu yok
             setMavisMessage(`${item.emoji} 👆`);
         }
     };
 
     const handleTargetTap = async (target: TargetArea) => {
         if (!selectedItem) {
-            // No item selected, give guidance
-            speak(`Önce bir yiyecek seç! Aşağıdaki resimlerden birine dokun.`);
+            // No item selected - sessiz, sadece görsel geri bildirim
+            setMavisMessage('👇 Önce bir yiyecek seç!');
             return;
         }
 
@@ -279,11 +284,10 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         setDragLogs(prev => [...prev, log]);
 
         if (isCorrect) {
-            // Correct placement
+            // Correct placement - sessiz, sadece görsel geri bildirim
             setPlacedItems(prev => new Set([...prev, selectedItem.id]));
             setMoves(m => m + 1);
             setMavisMessage('🎉 ✨');
-            speak(`Aferin! ${selectedItem.name} doğru yere gitti!`);
 
             // Check if level complete
             const remainingItems = foods.filter(f => !placedItems.has(f.id) && f.id !== selectedItem.id);
@@ -294,22 +298,14 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 setSelectedItem(null);
             }
         } else {
-            // Wrong placement
+            // Wrong placement - sessiz, sadece görsel geri bildirim
             setErrors(e => e + 1);
             setTotalErrors(e => e + 1);
             setMoves(m => m + 1);
-            setMavisMessage('🤔 💪');
-            speak(`Hmm, ${selectedItem.name} oraya ait değil. ${selectedItem.category === 'meyve' ? 'Meyve sepetine' : 'Sebze kasasına'} dene!`);
+            setMavisMessage('🤔 Tekrar dene!');
 
             // Keep item selected so child can try again
-            // DDA: Level 2+ and 3+ errors → Automatic scaffolding with target highlight
-            if (level >= 2 && errors + 1 >= 3) {
-                setShowScaffolding(true);
-                setHighlightTarget(selectedItem.category);
-                setTimeout(() => setHighlightTarget(null), 2000);
-            } else if (errors + 1 >= 2) {
-                setShowScaffolding(true);
-            }
+            // Scaffolding kaldırıldı - kopya vermiyoruz
         }
     };
     // ============== LEVEL COMPLETION ==============
@@ -322,7 +318,8 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         setShowWin(true);
         confettiRef.current?.start();
         setMavisMessage('\ud83c\udf89 \ud83c\udfc6 \u2728');
-        speak(`S\u00fcpersin ${childName}! T\u00fcm yiyecekleri do\u011fru yere koydun!`);
+        // Sadece seviye tamamlandığında sesli kutlama
+        speak(`S\u00fcpersin ${childName}!`);
 
         // DDA Logic - Level 1: Under 20 seconds → Level up for next session
         const shouldLevelUp = errors === 0 && levelTime < 20;
@@ -338,16 +335,14 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 setFoods(generateLevel(newLevel));
                 setPlacedItems(new Set());
                 setErrors(0);
-                setShowScaffolding(false);
                 setLevelStartTime(Date.now());
-                setMavisMessage(`Seviye ${newLevel}! Daha fazla yiyecek! 🚀`);
+                setMavisMessage(`Seviye ${newLevel}! 🚀`);
             } else {
                 setFoods(generateLevel(level));
                 setPlacedItems(new Set());
                 setErrors(0);
-                setShowScaffolding(true);
                 setLevelStartTime(Date.now());
-                setMavisMessage('Bu sefer yardımcı ipuçları var! 💡');
+                setMavisMessage('Tekrar deneyelim! 💪');
             }
         }, 2000);
     };
@@ -461,8 +456,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
 
         if (isPlaced) return null;
 
-        const scaffoldColor = item.category === 'meyve' ? PASTEL_COLORS.softPink : PASTEL_COLORS.softGreen;
-
         return (
             <TouchableOpacity
                 activeOpacity={0.8}
@@ -472,7 +465,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 <Animated.View
                     style={[
                         styles.foodItem,
-                        showScaffolding && { borderColor: scaffoldColor, borderWidth: 4 },
                         isSelected && styles.selectedItem,
                         {
                             transform: [{ scale: scaleAnim }],
@@ -480,10 +472,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                     ]}
                 >
                     <Text style={[styles.foodEmoji, { userSelect: 'none' } as any]}>{item.emoji}</Text>
-                    {/* No text name - preschoolers can't read */}
-                    {showScaffolding && (
-                        <View style={[styles.scaffoldDot, { backgroundColor: scaffoldColor }]} />
-                    )}
                 </Animated.View>
             </TouchableOpacity>
         );
@@ -552,7 +540,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                         <View style={{ width: 44 }} />
                     </View>
 
-                    {/* Target Areas - Soft-UI Containers - Now Tappable */}
+                    {/* Target Areas - Yeni sepet görselleri ile */}
                     <View style={styles.targetsContainer}>
                         {TARGET_AREAS.map(target => (
                             <TouchableOpacity
@@ -571,8 +559,12 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                                     ]}
                                     onLayout={() => measureTargets()}
                                 >
-                                    <Text style={[styles.targetIcon, { userSelect: 'none' } as any]}>{target.icon}</Text>
-                                    {/* Removed text label - preschoolers can't read */}
+                                    {/* Sepet/Kasa görseli */}
+                                    <Image
+                                        source={BASKET_IMAGES[target.category]}
+                                        style={styles.basketImage}
+                                        resizeMode="contain"
+                                    />
 
                                     {/* Placed items in container */}
                                     <View style={styles.placedItemsRow}>
@@ -814,6 +806,10 @@ const styles = StyleSheet.create({
     },
     placedEmoji: {
         fontSize: 22,
+    },
+    basketImage: {
+        width: 80,
+        height: 60,
     },
 
     // Food Items - Soft-UI Playdough Style

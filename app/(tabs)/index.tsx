@@ -535,7 +535,7 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal' | 'yaratici' | 'muzikler'>('bilissel');
   const [selectedSongIndex, setSelectedSongIndex] = useState<number>(0);
-  const [viewMode, setViewMode] = useState<'classic' | 'island' | 'path'>('path'); // path default - Sonsuz Öğrenme Yolu
+  const [viewMode, setViewMode] = useState<'classic' | 'island' | 'path'>('island'); // island default - Ada Haritası
 
   // === EKRANLAR ===
   if (asama === 'giris') {
