@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, ImageBackground, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
-import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
+
+// Arka plan görseli
+const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/hafiza_bg.png');
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window');
@@ -288,7 +290,14 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
 
     if (stageComplete) {
         return (
-            <DynamicBackground onExit={onExit}>
+            <ImageBackground source={BACKGROUND_IMAGE} style={styles.background} resizeMode="cover">
+                <View style={styles.darkOverlay} />
+                {/* Exit Button */}
+                {onExit && (
+                    <TouchableOpacity style={styles.exitButton} onPress={onExit}>
+                        <Text style={styles.exitButtonText}>🏠</Text>
+                    </TouchableOpacity>
+                )}
                 <View style={styles.centerContainer}>
                     <Text style={styles.congratsTitle}>🎉 Harika!</Text>
                     <Text style={styles.congratsText}>
@@ -303,12 +312,19 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                     ref={confettiRef}
                     fadeOut={true}
                 />
-            </DynamicBackground>
+            </ImageBackground>
         );
     }
 
     return (
-        <DynamicBackground onExit={onExit}>
+        <ImageBackground source={BACKGROUND_IMAGE} style={styles.background} resizeMode="cover">
+            <View style={styles.darkOverlay} />
+            {/* Exit Button */}
+            {onExit && (
+                <TouchableOpacity style={styles.exitButton} onPress={onExit}>
+                    <Text style={styles.exitButtonText}>🏠</Text>
+                </TouchableOpacity>
+            )}
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
@@ -382,16 +398,36 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                     })}
                 </View>
             </ScrollView>
-        </DynamicBackground>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
+    background: { flex: 1, width: '100%', height: '100%' },
+    darkOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.25)' },
+    exitButton: {
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 50 : 30,
+        left: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255, 107, 107, 0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    exitButtonText: { fontSize: 22 },
     gameContainer: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', minHeight: height - 100 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
     header: { marginBottom: 20, alignItems: 'center' },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#1565C0' },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#fff', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 800 },
     cardContainer: {
         // width & height are dynamic now
@@ -424,7 +460,7 @@ const styles = StyleSheet.create({
     },
     questionMark: { color: 'white', fontWeight: 'bold' },
     cardImage: {},
-    congratsTitle: { fontSize: 32, fontWeight: 'bold', color: '#4CAF50', marginBottom: 10 },
-    congratsText: { fontSize: 20, color: '#333', marginBottom: 10 },
-    autoText: { fontSize: 16, color: '#666', fontStyle: 'italic' },
+    congratsTitle: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 10, textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
+    congratsText: { fontSize: 20, color: '#fff', marginBottom: 10 },
+    autoText: { fontSize: 16, color: 'rgba(255,255,255,0.8)', fontStyle: 'italic' },
 });

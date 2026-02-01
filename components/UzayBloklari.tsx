@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
+    ImageBackground,
     Platform,
     ScrollView,
     StyleSheet,
@@ -14,6 +15,9 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
+
+// Arka plan görseli
+const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/uzay_bg.png');
 
 // ============= TYPES =============
 interface UzayBloklariProps {
@@ -355,7 +359,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     });
 
     return (
-        <View style={styles.container}>
+        <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
+            <View style={styles.darkOverlay} />
             {/* Countdown Overlay - shows greeting and countdown before game starts */}
             {!gameReady && (
                 <CountdownOverlay
@@ -365,9 +370,9 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     onComplete={() => setGameReady(true)}
                 />
             )}
-            {/* Starry background */}
+            {/* Starry background - şimdi daha soft animasyonlu yıldızlar */}
             <View style={styles.starsContainer}>
-                {[...Array(50)].map((_, i) => (
+                {[...Array(30)].map((_, i) => (
                     <Animated.View
                         key={i}
                         style={[
@@ -377,7 +382,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                                 left: `${Math.random() * 100}%`,
                                 opacity: starAnim.interpolate({
                                     inputRange: [0, 1],
-                                    outputRange: [0.3 + (i % 5) * 0.15, 0.8 + (i % 3) * 0.1],
+                                    outputRange: [0.2 + (i % 5) * 0.1, 0.5 + (i % 3) * 0.1],
                                 }),
                             }
                         ]}
@@ -560,7 +565,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     </View>
                 </View>
             )}
-        </View>
+        </ImageBackground>
     );
 }
 
@@ -568,7 +573,10 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0a0a1a',
+    },
+    darkOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(10, 10, 26, 0.5)',
     },
     starsContainer: {
         position: 'absolute',

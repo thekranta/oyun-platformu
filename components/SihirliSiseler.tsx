@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
+    ImageBackground,
     Platform,
     StyleSheet,
     Text,
@@ -11,6 +12,9 @@ import {
     View,
 } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
+
+// Arka plan görseli
+const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/sihirli_siseler_bg.png');
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -485,7 +489,8 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
     };
 
     return (
-        <View style={styles.container}>
+        <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
+            <View style={styles.darkOverlay} />
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
@@ -495,7 +500,6 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                     onComplete={() => setGameReady(true)}
                 />
             )}
-            {/* Lab-themed Background */}
             <View style={styles.background}>
                 {/* Gradient-like Lab Atmosphere */}
                 <View style={styles.labGradient} />
@@ -655,14 +659,17 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                     </Animated.View>
                 </View>
             )}
-        </View>
+        </ImageBackground>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#E8F5E9',
+    },
+    darkOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
     },
     background: {
         ...StyleSheet.absoluteFillObject,

@@ -245,7 +245,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
 
     return (
         <ImageBackground
-            source={require('@/assets/images/green_background.png')}
+            source={require('@/assets/backgrounds/games/golge_bg.png')}
             style={styles.container}
             imageStyle={styles.bgImage}
         >
