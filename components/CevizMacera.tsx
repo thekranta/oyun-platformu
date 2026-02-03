@@ -13,8 +13,8 @@ const storyData = {
         id: 'intro',
         bgImage: { uri: '/images/stories/ceviz_macera/intro_scene.png' },
         text: "Pıtır o gün çok şanslıydı! Kış uykusu için kocaman bir ceviz çuvalı bulmuştu ama kaldıramıyordu. Üstelik yağmur başladı! Sence kimden yardım istesin?",
-        audio: require('../assets/sounds/stories/ceviz_macera/audio_intro.mp3'),
-        questionAudio: require('../assets/sounds/stories/ceviz_macera/question_intro.mp3.mp3'),
+        audio: { uri: '/sounds/stories/ceviz_macera/audio_intro.mp3' },
+        questionAudio: { uri: '/sounds/stories/ceviz_macera/question_intro.mp3.mp3' },
         options: [
             {
                 id: 'A',
@@ -38,8 +38,8 @@ const storyData = {
         id: 'scene_a',
         bgImage: { uri: '/images/stories/ceviz_macera/scene_a_river.png' },
         text: "Filo çuvalı kaldırdı ama dere kenarındaki köprü yıkılmış! Karşıya nasıl geçsinler?",
-        audio: require('../assets/sounds/stories/ceviz_macera/audio_scene_a.mp3'),
-        questionAudio: require('../assets/sounds/stories/ceviz_macera/question_scene_a.mp3.mp3'),
+        audio: { uri: '/sounds/stories/ceviz_macera/audio_scene_a.mp3' },
+        questionAudio: { uri: '/sounds/stories/ceviz_macera/question_scene_a.mp3.mp3' },
         options: [
             {
                 id: 'A1',
@@ -63,8 +63,8 @@ const storyData = {
         id: 'scene_b',
         bgImage: { uri: '/images/stories/ceviz_macera/scene_b_thinking.png' },
         text: "Maviş çuvalı kaldıramaz ama harika bir fikri var! Sence ne yapsınlar?",
-        audio: require('../assets/sounds/stories/ceviz_macera/audio_scene_b.mp3'),
-        questionAudio: require('../assets/sounds/stories/ceviz_macera/question_scene_b.mp3.mp3'),
+        audio: { uri: '/sounds/stories/ceviz_macera/audio_scene_b.mp3' },
+        questionAudio: { uri: '/sounds/stories/ceviz_macera/question_scene_b.mp3.mp3' },
         options: [
             {
                 id: 'B1',
@@ -89,7 +89,7 @@ const storyData = {
         isFinal: true,
         bgImage: { uri: '/images/stories/ceviz_macera/end_a1_scene.png' },
         badgeImage: { uri: '/images/stories/ceviz_macera/end_a1_badge.png' },
-        audio: require('../assets/sounds/stories/ceviz_macera/audio_end_a1.mp3'),
+        audio: { uri: '/sounds/stories/ceviz_macera/audio_end_a1.mp3' },
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru',
     },
@@ -98,7 +98,7 @@ const storyData = {
         isFinal: true,
         bgImage: { uri: '/images/stories/ceviz_macera/end_a2_scene.png' },
         badgeImage: { uri: '/images/stories/ceviz_macera/end_a2_badge.png' },
-        audio: require('../assets/sounds/stories/ceviz_macera/audio_end_a2.mp3'),
+        audio: { uri: '/sounds/stories/ceviz_macera/audio_end_a2.mp3' },
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek',
     },
@@ -107,7 +107,7 @@ const storyData = {
         isFinal: true,
         bgImage: { uri: '/images/stories/ceviz_macera/end_b1_scene.png' },
         badgeImage: { uri: '/images/stories/ceviz_macera/end_b1_badge.png' },
-        audio: require('../assets/sounds/stories/ceviz_macera/audio_end_b1.mp3'),
+        audio: { uri: '/sounds/stories/ceviz_macera/audio_end_b1.mp3' },
         text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
         analysisTag: 'Sosyal-Cozum-Isbirligi',
     },
@@ -116,7 +116,7 @@ const storyData = {
         isFinal: true,
         bgImage: { uri: '/images/stories/ceviz_macera/end_b2_scene.png' },
         badgeImage: { uri: '/images/stories/ceviz_macera/end_b2_badge.png' },
-        audio: require('../assets/sounds/stories/ceviz_macera/audio_end_b2.mp3'),
+        audio: { uri: '/sounds/stories/ceviz_macera/audio_end_b2.mp3' },
         text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar!",
         analysisTag: 'Bilissel-Cozum-Yaraticilik',
     },

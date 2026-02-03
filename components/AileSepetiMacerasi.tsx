@@ -11,8 +11,8 @@ const storyData = {
     intro: {
         id: 'intro',
         bgImage: { uri: '/images/stories/aile_sepeti_macerasi/s02_giris_bg_misket_sepet.jpg' },
-        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_giris_narr.mp3'),
-        questionAudio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_giris_q.mp3'),
+        audio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_giris_narr.mp3' },
+        questionAudio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_giris_q.mp3' },
         options: [
             {
                 id: 'A',
@@ -31,8 +31,8 @@ const storyData = {
     scene_a: {
         id: 'scene_a',
         bgImage: { uri: '/images/stories/aile_sepeti_macerasi/s02_yolA_bg_togo_kaygan_tepe.jpg' },
-        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_yolA_narr.mp3'),
-        questionAudio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_yolA_q.mp3'),
+        audio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_yolA_narr.mp3' },
+        questionAudio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_yolA_q.mp3' },
         options: [
             {
                 id: 'A1',
@@ -51,8 +51,8 @@ const storyData = {
     scene_b: {
         id: 'scene_b',
         bgImage: { uri: '/images/stories/aile_sepeti_macerasi/s02_yolB_bg_bobo_yol_ayrimi.jpg' },
-        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_yolB_narr.mp3'),
-        questionAudio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_yolB_q.mp3'),
+        audio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_yolB_narr.mp3' },
+        questionAudio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_yolB_q.mp3' },
         options: [
             {
                 id: 'B1',
@@ -71,28 +71,28 @@ const storyData = {
     end_a1: {
         id: 'end_a1',
         bgImage: { uri: '/images/stories/aile_sepeti_macerasi/s02_sonucA1_bg_ele_ele_tepe.jpg' },
-        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_sonucA1_narr.mp3'),
+        audio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_sonucA1_narr.mp3' },
         next: 'final',
         analysisTag: 'Sosyal-Isbirligi-Guven',
     },
     end_a2: {
         id: 'end_a2',
         bgImage: { uri: '/images/stories/aile_sepeti_macerasi/s02_sonucA2_bg_gorev_paylasimi.jpg' },
-        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_sonucA2_narr.mp3'),
+        audio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_sonucA2_narr.mp3' },
         next: 'final',
         analysisTag: 'Sosyal-Liderlik-Planlama',
     },
     end_b1: {
         id: 'end_b1',
         bgImage: { uri: '/images/stories/aile_sepeti_macerasi/s02_sonucB1_bg_ayrilmadan_arama.jpg' },
-        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_sonucB1_narr.mp3'),
+        audio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_sonucB1_narr.mp3' },
         next: 'final',
         analysisTag: 'Guvenlik-Birliktelik',
     },
     end_b2: {
         id: 'end_b2',
         bgImage: { uri: '/images/stories/aile_sepeti_macerasi/s02_sonucB2_bg_isaretli_plan.jpg' },
-        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_sonucB2_narr.mp3'),
+        audio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_sonucB2_narr.mp3' },
         next: 'final',
         analysisTag: 'Bilissel-ProblemCozme-Harita',
     },
@@ -100,7 +100,7 @@ const storyData = {
         id: 'final',
         isFinal: true,
         bgImage: { uri: '/images/stories/aile_sepeti_macerasi/s02_final_bg_birlikte_aile.jpg' },
-        audio: require('../assets/sounds/stories/aile_sepeti_macerasi/s02_final_narr.mp3'),
+        audio: { uri: '/sounds/stories/aile_sepeti_macerasi/s02_final_narr.mp3' },
         analysisTag: 'Final',
     }
 };
