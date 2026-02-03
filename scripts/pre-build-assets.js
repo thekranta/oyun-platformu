@@ -18,6 +18,10 @@ const CRITICAL_ASSETS = [
     'images/stories/adalet_hikayesi/s02_giris_bg_tartisma.png',
     'images/stories/adalet_hikayesi/s02_yola_bg_olcum.png',
     'images/stories/adalet_hikayesi/s02_yolb_bg_danisma.png',
+    'images/stories/adalet_hikayesi/s02_secim2b_icon_sira.png',
+    'images/stories/adalet_hikayesi/s02_secim2b_icon_secim.png',
+    'images/stories/adalet_hikayesi/s02_secim1_icon_dilim.png',
+    'images/stories/adalet_hikayesi/s02_secim1_icon_baykus.png',
 ];
 
 /**
@@ -126,6 +130,78 @@ function prepareReactNavigationAssets() {
 }
 
 /**
+ * List and verify all story assets
+ */
+function listAllStoryAssets() {
+    const storiesDir = path.join(SOURCE_ASSETS, 'images', 'stories');
+    if (!fs.existsSync(storiesDir)) {
+        console.log('⚠️ Stories directory not found');
+        return;
+    }
+
+    console.log('📋 Listing all story assets...');
+    const listRecursive = (dir, prefix = '') => {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                listRecursive(fullPath, prefix + entry.name + '/');
+            } else {
+                const stats = fs.statSync(fullPath);
+                // Verify file is readable
+                try {
+                    fs.accessSync(fullPath, fs.constants.R_OK);
+                    console.log(`  ✓ ${prefix}${entry.name} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
+                } catch (err) {
+                    console.error(`  ✗ UNREADABLE: ${prefix}${entry.name}`);
+                }
+            }
+        }
+    };
+    listRecursive(storiesDir);
+}
+
+/**
+ * Ensure all assets exist and are accessible
+ */
+function verifyAllAssetsAccessible() {
+    console.log('🔐 Verifying all assets are accessible...');
+    let issues = 0;
+
+    const checkRecursive = (dir) => {
+        if (!fs.existsSync(dir)) return;
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                checkRecursive(fullPath);
+            } else {
+                try {
+                    fs.accessSync(fullPath, fs.constants.R_OK);
+                    const stats = fs.statSync(fullPath);
+                    if (stats.size === 0) {
+                        console.error(`  ⚠️ EMPTY FILE: ${fullPath}`);
+                        issues++;
+                    }
+                } catch (err) {
+                    console.error(`  ✗ ACCESS ERROR: ${fullPath} - ${err.message}`);
+                    issues++;
+                }
+            }
+        }
+    };
+
+    checkRecursive(SOURCE_ASSETS);
+
+    if (issues === 0) {
+        console.log('✅ All assets are accessible');
+    } else {
+        console.log(`⚠️ Found ${issues} asset issues`);
+    }
+    return issues === 0;
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -133,26 +209,45 @@ function main() {
     console.log('📂 PROJECT_ROOT:', PROJECT_ROOT);
     console.log('📂 SOURCE_ASSETS:', SOURCE_ASSETS);
     console.log('📂 DIST_ASSETS:', DIST_ASSETS);
+    console.log('📂 Current working directory:', process.cwd());
 
-    // First verify critical assets exist
+    // First verify all assets are accessible (not just critical ones)
+    verifyAllAssetsAccessible();
+
+    // Verify critical assets exist
     const assetsOk = verifyCriticalAssets();
     if (!assetsOk) {
         console.log('⚠️ Warning: Some critical assets missing, build may fail');
     }
 
-    prepareDistDirectory();
-    prepareReactNavigationAssets();
+    // List all story assets for debugging
+    listAllStoryAssets();
+
+    // prepareDistDirectory(); // Disabled to avoid conflict with expo export
+    // prepareReactNavigationAssets(); // Disabled to avoid conflict
 
     // Verify critical assets were copied to dist
-    console.log('🔍 Verifying copied assets...');
+    // console.log('🔍 Verifying copied assets in dist...');
+    /*
     for (const asset of CRITICAL_ASSETS) {
         const distPath = path.join(DIST_ASSETS, asset);
         if (fs.existsSync(distPath)) {
-            console.log(`  ✓ dist/${asset}`);
+            const stats = fs.statSync(distPath);
+            console.log(`  ✓ dist/${asset} (${stats.size} bytes)`);
         } else {
             console.error(`  ✗ MISSING in dist: ${asset}`);
         }
     }
+    */
+
+    // Also verify the specific file that failed before
+    const problemFile = 'images/stories/adalet_hikayesi/s02_secim2b_icon_sira.png';
+    const problemPath = path.join(SOURCE_ASSETS, problemFile);
+    // const distProblemPath = path.join(DIST_ASSETS, problemFile);
+
+    console.log('🔍 Checking previously failed asset...');
+    console.log(`  Source: ${problemPath} - exists: ${fs.existsSync(problemPath)}`);
+    // console.log(`  Dist: ${distProblemPath} - exists: ${fs.existsSync(distProblemPath)}`);
 
     console.log('✅ Pre-build preparation complete!');
 }
