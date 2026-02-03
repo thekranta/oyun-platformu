@@ -197,6 +197,39 @@ function verifyAllAssetsAccessible() {
 }
 
 /**
+ * Copy @expo/vector-icons fonts to dist/assets
+ * Metro bundler looks for these fonts with hashed filenames
+ */
+function prepareVectorIconFonts() {
+    const fontsSourcePath = path.join(PROJECT_ROOT, 'node_modules', '@expo', 'vector-icons', 'build', 'vendor', 'react-native-vector-icons', 'Fonts');
+
+    if (!fs.existsSync(fontsSourcePath)) {
+        console.log('⚠️ Vector icons fonts not found at:', fontsSourcePath);
+        return;
+    }
+
+    console.log('📁 Copying vector icon fonts to dist/assets...');
+
+    // Ensure dist/assets exists
+    fs.mkdirSync(DIST_ASSETS, { recursive: true });
+
+    const entries = fs.readdirSync(fontsSourcePath, { withFileTypes: true });
+    let copied = 0;
+
+    for (const entry of entries) {
+        if (!entry.isDirectory() && entry.name.endsWith('.ttf')) {
+            const srcFile = path.join(fontsSourcePath, entry.name);
+            const destFile = path.join(DIST_ASSETS, entry.name);
+            fs.copyFileSync(srcFile, destFile);
+            copied++;
+            console.log(`  ✓ Copied ${entry.name}`);
+        }
+    }
+
+    console.log(`✅ Copied ${copied} vector icon font files`);
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -219,32 +252,11 @@ function main() {
     listAllStoryAssets();
 
     prepareDistDirectory(); // Enabled to ensure directory structure exists
+    prepareVectorIconFonts(); // Copy vector icon fonts to dist
     // prepareReactNavigationAssets(); // Still disabled, let fix-script handle it
-
-    // Verify critical assets were copied to dist
-    // console.log('🔍 Verifying copied assets in dist...');
-    /*
-    for (const asset of CRITICAL_ASSETS) {
-        const distPath = path.join(DIST_ASSETS, asset);
-        if (fs.existsSync(distPath)) {
-            const stats = fs.statSync(distPath);
-            console.log(`  ✓ dist/${asset} (${stats.size} bytes)`);
-        } else {
-            console.error(`  ✗ MISSING in dist: ${asset}`);
-        }
-    }
-    */
-
-    // Also verify the specific file that failed before
-    const problemFile = 'images/stories/adalet_hikayesi/s02_secim2b_icon_sira.png';
-    const problemPath = path.join(SOURCE_ASSETS, problemFile);
-    // const distProblemPath = path.join(DIST_ASSETS, problemFile);
-
-    console.log('🔍 Checking previously failed asset...');
-    console.log(`  Source: ${problemPath} - exists: ${fs.existsSync(problemPath)}`);
-    // console.log(`  Dist: ${distProblemPath} - exists: ${fs.existsSync(distProblemPath)}`);
 
     console.log('✅ Pre-build preparation complete!');
 }
 
 main();
+
