@@ -74,8 +74,8 @@ function copyDirSync(src, dest, fileCount = { count: 0 }) {
 }
 
 /**
- * Create dist directory structure and pre-copy assets
- * This ensures Metro can find the directories during export
+ * Create dist directory structure ONLY (no files)
+ * This ensures Metro can find the directories during export if needed
  */
 function prepareDistDirectory() {
     console.log('📁 Creating dist directory structure...');
@@ -83,11 +83,29 @@ function prepareDistDirectory() {
     // Create main dist directories
     fs.mkdirSync(DIST_ASSETS, { recursive: true });
 
-    // Pre-copy all assets to dist to ensure they exist before Metro needs them
+    // Recursively create directory structure from source
     if (fs.existsSync(SOURCE_ASSETS)) {
-        console.log('📁 Pre-copying assets to dist...');
-        const result = copyDirSync(SOURCE_ASSETS, DIST_ASSETS);
-        console.log(`✅ Assets pre-copied to dist (${result.count} files)`);
+        console.log('📁 Mirroring directory structure to dist...');
+
+        const createDirsRecursive = (src, dest) => {
+            if (!fs.existsSync(src)) return;
+
+            // Create current directory
+            fs.mkdirSync(dest, { recursive: true });
+
+            const entries = fs.readdirSync(src, { withFileTypes: true });
+            for (const entry of entries) {
+                if (entry.isDirectory()) {
+                    createDirsRecursive(
+                        path.join(src, entry.name),
+                        path.join(dest, entry.name)
+                    );
+                }
+            }
+        };
+
+        createDirsRecursive(SOURCE_ASSETS, DIST_ASSETS);
+        console.log('✅ Directory structure mirrored to dist');
     } else {
         console.error('❌ SOURCE_ASSETS directory not found:', SOURCE_ASSETS);
     }
@@ -223,8 +241,8 @@ function main() {
     // List all story assets for debugging
     listAllStoryAssets();
 
-    // prepareDistDirectory(); // Disabled to avoid conflict with expo export
-    // prepareReactNavigationAssets(); // Disabled to avoid conflict
+    prepareDistDirectory(); // Enabled to ensure directory structure exists
+    // prepareReactNavigationAssets(); // Still disabled, let fix-script handle it
 
     // Verify critical assets were copied to dist
     // console.log('🔍 Verifying copied assets in dist...');
