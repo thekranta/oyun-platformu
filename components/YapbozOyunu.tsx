@@ -74,19 +74,19 @@ const PUZZLES = [
         id: 8,
         name: 'Orman',
         icon: '🌳',
-        source: require('@/assets/images/stories/ceviz_macera/intro_scene.png'),
+        source: { uri: '/images/stories/ceviz_macera/intro_scene.png' },
     },
     {
         id: 9,
         name: 'Nehir',
         icon: '🏞️',
-        source: require('@/assets/images/stories/ceviz_macera/scene_a_river.png'),
+        source: { uri: '/images/stories/ceviz_macera/scene_a_river.png' },
     },
     {
         id: 10,
         name: 'Aile',
         icon: '👨‍👩‍👧',
-        source: require('@/assets/images/stories/aile_sepeti_macerasi/s02_final_bg_birlikte_aile.jpg'),
+        source: { uri: '/images/stories/aile_sepeti_macerasi/s02_final_bg_birlikte_aile.jpg' },
     },
 ];
 
