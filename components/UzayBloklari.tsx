@@ -17,7 +17,7 @@ import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/uzay_bg.png');
+const BACKGROUND_IMAGE = { uri: '/backgrounds/games/uzay_bg.png' };
 
 // ============= TYPES =============
 interface UzayBloklariProps {

@@ -14,7 +14,7 @@ import {
 import CountdownOverlay from './CountdownOverlay';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/sihirli_siseler_bg.png');
+const BACKGROUND_IMAGE = { uri: '/backgrounds/games/sihirli_siseler_bg.png' };
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';

@@ -16,7 +16,7 @@ import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/tarti_dengesi_bg.png');
+const BACKGROUND_IMAGE = { uri: '/backgrounds/games/tarti_dengesi_bg.png' };
 
 interface TartiDengesiProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;

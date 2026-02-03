@@ -13,7 +13,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/kodlama_bg.png');
+const BACKGROUND_IMAGE = { uri: '/backgrounds/games/kodlama_bg.png' };
 
 const { width, height } = Dimensions.get('window');
 

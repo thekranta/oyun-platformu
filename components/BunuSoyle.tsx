@@ -7,15 +7,15 @@ import ProgressBar from './ProgressBar';
 import { useSound } from './SoundContext';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/bunu_soyle_bg.png');
+const BACKGROUND_IMAGE = { uri: '/backgrounds/games/bunu_soyle_bg.png' };
 
 // Aşama Verileri
 const STAGES = [
-    { id: 1, image: require('../assets/images/elma.png'), word: 'Elma' },
-    { id: 2, image: require('../assets/images/araba.png'), word: 'Araba' },
-    { id: 3, image: require('../assets/images/kedi.png'), word: 'Kedi' },
-    { id: 4, image: require('../assets/images/top.png'), word: 'Top' },
-    { id: 5, image: require('../assets/images/ev.png'), word: 'Ev' },
+    { id: 1, image: { uri: '/images/elma.png' }, word: 'Elma' },
+    { id: 2, image: { uri: '/images/araba.png' }, word: 'Araba' },
+    { id: 3, image: { uri: '/images/kedi.png' }, word: 'Kedi' },
+    { id: 4, image: { uri: '/images/top.png' }, word: 'Top' },
+    { id: 5, image: { uri: '/images/ev.png' }, word: 'Ev' },
 ];
 
 interface BunuSoyleProps {

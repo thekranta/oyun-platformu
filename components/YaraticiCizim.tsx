@@ -4,7 +4,7 @@ import { Animated, ImageBackground, PanResponder, StyleSheet, Text, TouchableOpa
 import { captureRef } from 'react-native-view-shot';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/yaratici_cizim_bg.png');
+const BACKGROUND_IMAGE = { uri: '/backgrounds/games/yaratici_cizim_bg.png' };
 
 type Point = { x: number; y: number };
 type BrushMode = 'pen' | 'spray' | 'marker' | 'glow';

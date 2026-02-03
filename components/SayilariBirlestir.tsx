@@ -18,9 +18,9 @@ interface Props {
 
 // Single fruit per stage
 const STAGE_FRUITS = [
-    { image: require('../assets/images/elma.png'), name: 'Elma' },
-    { image: require('../assets/images/uzum.png'), name: 'Üzüm' },
-    { image: require('../assets/images/karpuz.png'), name: 'Karpuz' },
+    { image: { uri: '/images/elma.png' }, name: 'Elma' },
+    { image: { uri: '/images/uzum.png' }, name: 'Üzüm' },
+    { image: { uri: '/images/karpuz.png' }, name: 'Karpuz' },
 ];
 
 type Point = { x: number; y: number };

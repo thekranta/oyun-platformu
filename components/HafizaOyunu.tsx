@@ -6,7 +6,7 @@ import CountdownOverlay from './CountdownOverlay';
 import ProgressBar from './ProgressBar';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/hafiza_bg.png');
+const BACKGROUND_IMAGE = { uri: '/backgrounds/games/hafiza_bg.png' };
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window');
@@ -24,11 +24,11 @@ const CARD_SIZE = (AVAILABLE_WIDTH / COLUMNS) - (CARD_MARGIN * 2);
 // Placeholder images - User needs to add these to assets
 const GORSELLER_SETI = [
     // Her obje, bir benzersiz kart çiftini temsil eder
-    { id: 1, source: require('../assets/images/cilek.png'), name: 'Çilek' },
-    { id: 2, source: require('../assets/images/elma.png'), name: 'Elma' },
-    { id: 3, source: require('../assets/images/nar.png'), name: 'Nar' },
-    { id: 4, source: require('../assets/images/kiraz.png'), name: 'Kiraz' },
-    { id: 5, source: require('../assets/images/avokado.png'), name: 'Avokado' },
+    { id: 1, source: { uri: '/images/cilek.png' }, name: 'Çilek' },
+    { id: 2, source: { uri: '/images/elma.png' }, name: 'Elma' },
+    { id: 3, source: { uri: '/images/nar.png' }, name: 'Nar' },
+    { id: 4, source: { uri: '/images/kiraz.png' }, name: 'Kiraz' },
+    { id: 5, source: { uri: '/images/avokado.png' }, name: 'Avokado' },
     //...
 ];
 

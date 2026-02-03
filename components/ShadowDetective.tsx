@@ -42,17 +42,17 @@ interface AnimalAsset {
 }
 
 const ANIMALS: AnimalAsset[] = [
-    { id: 'horse', name: 'At', source: require('@/assets/images/animal_horse.png') },
-    { id: 'elephant', name: 'Fil', source: require('@/assets/images/animal_elephant.png') },
-    { id: 'lion', name: 'Aslan', source: require('@/assets/images/animal_lion.png') },
-    { id: 'monkey', name: 'Maymun', source: require('@/assets/images/animal_monkey.png') },
-    { id: 'giraffe', name: 'Zürafa', source: require('@/assets/images/animal_giraffe.png') },
-    { id: 'snake', name: 'Yılan', source: require('@/assets/images/animal_snake.png') },
-    { id: 'bird', name: 'Kuş', source: require('@/assets/images/animal_bird.png') },
-    { id: 'octopus', name: 'Ahtapot', source: require('@/assets/images/animal_octopus.png') },
-    { id: 'crab', name: 'Yengeç', source: require('@/assets/images/animal_crab.png') },
-    { id: 'whale', name: 'Balina', source: require('@/assets/images/animal_whale.png') },
-    { id: 'turtle', name: 'Kaplumbağa', source: require('@/assets/images/animal_turtle.png') },
+    { id: 'horse', name: 'At', source: { uri: '/images/animal_horse.png' } },
+    { id: 'elephant', name: 'Fil', source: { uri: '/images/animal_elephant.png' } },
+    { id: 'lion', name: 'Aslan', source: { uri: '/images/animal_lion.png' } },
+    { id: 'monkey', name: 'Maymun', source: { uri: '/images/animal_monkey.png' } },
+    { id: 'giraffe', name: 'Zürafa', source: { uri: '/images/animal_giraffe.png' } },
+    { id: 'snake', name: 'Yılan', source: { uri: '/images/animal_snake.png' } },
+    { id: 'bird', name: 'Kuş', source: { uri: '/images/animal_bird.png' } },
+    { id: 'octopus', name: 'Ahtapot', source: { uri: '/images/animal_octopus.png' } },
+    { id: 'crab', name: 'Yengeç', source: { uri: '/images/animal_crab.png' } },
+    { id: 'whale', name: 'Balina', source: { uri: '/images/animal_whale.png' } },
+    { id: 'turtle', name: 'Kaplumbağa', source: { uri: '/images/animal_turtle.png' } },
 ];
 
 const { width: screenW, height: screenH } = Dimensions.get('window');
@@ -245,7 +245,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
 
     return (
         <ImageBackground
-            source={require('@/assets/backgrounds/games/golge_bg.png')}
+            source={{ uri: '/backgrounds/games/golge_bg.png' }}
             style={styles.container}
             imageStyle={styles.bgImage}
         >

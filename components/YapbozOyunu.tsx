@@ -16,7 +16,7 @@ import {
 import { useSound } from './SoundContext';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = require('@/assets/backgrounds/games/yapboz_bg.png');
+const BACKGROUND_IMAGE = { uri: '/backgrounds/games/yapboz_bg.png' };
 
 interface YapbozOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
@@ -32,43 +32,43 @@ const PUZZLES = [
         id: 1,
         name: 'Karpuz',
         icon: '🍉',
-        source: require('@/assets/images/karpuz.png'),
+        source: { uri: '/images/karpuz.png' },
     },
     {
         id: 2,
         name: 'Elma',
         icon: '🍎',
-        source: require('@/assets/images/elma.png'),
+        source: { uri: '/images/elma.png' },
     },
     {
         id: 3,
         name: 'Çilek',
         icon: '🍓',
-        source: require('@/assets/images/cilek.png'),
+        source: { uri: '/images/cilek.png' },
     },
     {
         id: 4,
         name: 'Kedi',
         icon: '🐱',
-        source: require('@/assets/images/kedi.png'),
+        source: { uri: '/images/kedi.png' },
     },
     {
         id: 5,
         name: 'Top',
         icon: '⚽',
-        source: require('@/assets/images/top.png'),
+        source: { uri: '/images/top.png' },
     },
     {
         id: 6,
         name: 'Ev',
         icon: '🏠',
-        source: require('@/assets/images/ev.png'),
+        source: { uri: '/images/ev.png' },
     },
     {
         id: 7,
         name: 'Araba',
         icon: '🚗',
-        source: require('@/assets/images/araba.png'),
+        source: { uri: '/images/araba.png' },
     },
     {
         id: 8,

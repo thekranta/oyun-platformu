@@ -18,10 +18,10 @@ interface Pattern {
 }
 
 const SHAPES = {
-    kare: require('../assets/images/kare.png'),
-    ucgen: require('../assets/images/ucgen.png'),
-    daire: require('../assets/images/daire.png'),
-    yildiz: require('../assets/images/yildiz.png'),
+    kare: { uri: '/images/kare.png' },
+    ucgen: { uri: '/images/ucgen.png' },
+    daire: { uri: '/images/daire.png' },
+    yildiz: { uri: '/images/yildiz.png' },
 };
 
 const PATTERNS: Pattern[] = [

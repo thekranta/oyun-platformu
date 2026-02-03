@@ -23,7 +23,7 @@ const TOTAL_STAGES = 5;
 const { width } = Dimensions.get('window');
 const CARD_SIZE = width > 600 ? 96 : 72;
 const OPTION_SIZE = width > 600 ? 90 : 68;
-const PLATFORM_LOGO = require('../assets/images/icon.png');
+const PLATFORM_LOGO = { uri: '/images/icon.png' };
 
 const shuffle = (items: number[]) => {
   const copy = [...items];
