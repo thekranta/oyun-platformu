@@ -74,38 +74,20 @@ function copyDirSync(src, dest, fileCount = { count: 0 }) {
 }
 
 /**
- * Create dist directory structure ONLY (no files)
- * This ensures Metro can find the directories during export if needed
+ * Create dist directory structure and pre-copy assets
+ * This ensures Metro can find the files during export
  */
 function prepareDistDirectory() {
-    console.log('📁 Creating dist directory structure...');
+    console.log('📁 Creating dist directory structure and copying assets...');
 
     // Create main dist directories
     fs.mkdirSync(DIST_ASSETS, { recursive: true });
 
-    // Recursively create directory structure from source
+    // Pre-copy all assets to dist to ensure they exist before Metro needs them
     if (fs.existsSync(SOURCE_ASSETS)) {
-        console.log('📁 Mirroring directory structure to dist...');
-
-        const createDirsRecursive = (src, dest) => {
-            if (!fs.existsSync(src)) return;
-
-            // Create current directory
-            fs.mkdirSync(dest, { recursive: true });
-
-            const entries = fs.readdirSync(src, { withFileTypes: true });
-            for (const entry of entries) {
-                if (entry.isDirectory()) {
-                    createDirsRecursive(
-                        path.join(src, entry.name),
-                        path.join(dest, entry.name)
-                    );
-                }
-            }
-        };
-
-        createDirsRecursive(SOURCE_ASSETS, DIST_ASSETS);
-        console.log('✅ Directory structure mirrored to dist');
+        console.log('📁 Pre-copying assets to dist...');
+        const result = copyDirSync(SOURCE_ASSETS, DIST_ASSETS);
+        console.log(`✅ Assets pre-copied to dist (${result.count} files)`);
     } else {
         console.error('❌ SOURCE_ASSETS directory not found:', SOURCE_ASSETS);
     }
