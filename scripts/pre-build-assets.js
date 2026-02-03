@@ -12,16 +12,11 @@ const DIST_DIR = path.join(PROJECT_ROOT, 'dist');
 const DIST_ASSETS = path.join(DIST_DIR, 'assets');
 
 // Critical assets that must exist for build to succeed
+// Critical assets that must exist for build to succeed
 const CRITICAL_ASSETS = [
-    'images/stories/adalet_hikayesi/s02_sonuca2_bg_doygun.png',
-    'images/stories/adalet_hikayesi/s02_giris_bg_karpuz.png',
-    'images/stories/adalet_hikayesi/s02_giris_bg_tartisma.png',
-    'images/stories/adalet_hikayesi/s02_yola_bg_olcum.png',
-    'images/stories/adalet_hikayesi/s02_yolb_bg_danisma.png',
-    'images/stories/adalet_hikayesi/s02_secim2b_icon_sira.png',
-    'images/stories/adalet_hikayesi/s02_secim2b_icon_secim.png',
-    'images/stories/adalet_hikayesi/s02_secim1_icon_dilim.png',
-    'images/stories/adalet_hikayesi/s02_secim1_icon_baykus.png',
+    // Moved to public/ folder to avoid Metro bundling issues
+    // 'images/stories/adalet_hikayesi/s02_sonuca2_bg_doygun.png',
+    // ... others moved to public/images/stories/adalet_hikayesi/
 ];
 
 /**

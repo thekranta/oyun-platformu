@@ -17,7 +17,7 @@ const storyData: Record<string, StoryNode> = {
     // BÖLÜM 1: GİRİŞ - PART 1 (Karpuz bulunur)
     intro: {
         id: 'intro',
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_giris_bg_karpuz.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_giris_bg_karpuz.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_narr.mp3'),
         next: 'intro2', // Otomatik olarak intro2'ye geç
     },
@@ -25,20 +25,20 @@ const storyData: Record<string, StoryNode> = {
     // BÖLÜM 1: GİRİŞ - PART 2 (Tartışma başlar, seçim yapılır)
     intro2: {
         id: 'intro2',
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_giris_bg_tartisma.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_giris_bg_tartisma.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_narr_2.mp3'),
         questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_giris_q.mp3'),
         options: [
             {
                 id: 'A',
                 type: 'image_button',
-                image: require('../assets/images/stories/adalet_hikayesi/s02_secim1_icon_dilim.png'),
+                image: { uri: '/images/stories/adalet_hikayesi/s02_secim1_icon_dilim.png' },
                 next: 'scene_a',
             },
             {
                 id: 'B',
                 type: 'image_button',
-                image: require('../assets/images/stories/adalet_hikayesi/s02_secim1_icon_baykus.png'),
+                image: { uri: '/images/stories/adalet_hikayesi/s02_secim1_icon_baykus.png' },
                 next: 'scene_b',
             },
         ],
@@ -47,20 +47,20 @@ const storyData: Record<string, StoryNode> = {
     // BÖLÜM 2: GELİŞME - YOL A (Tavşan'ın Çözümü)
     scene_a: {
         id: 'scene_a',
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_yola_bg_olcum.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_yola_bg_olcum.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_yola_narr.mp3'),
         questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_yola_q.mp3'),
         options: [
             {
                 id: 'A1',
                 type: 'image_button',
-                image: require('../assets/images/stories/adalet_hikayesi/s02_secim2a_icon_esit.png'),
+                image: { uri: '/images/stories/adalet_hikayesi/s02_secim2a_icon_esit.png' },
                 next: 'end_a1',
             },
             {
                 id: 'A2',
                 type: 'image_button',
-                image: require('../assets/images/stories/adalet_hikayesi/s02_secim2a_icon_buyuk.png'),
+                image: { uri: '/images/stories/adalet_hikayesi/s02_secim2a_icon_buyuk.png' },
                 next: 'end_a2',
             },
         ],
@@ -69,20 +69,20 @@ const storyData: Record<string, StoryNode> = {
     // BÖLÜM 2: GELİŞME - YOL B (Bilge Baykuş'un Öğüdü)
     scene_b: {
         id: 'scene_b',
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_yolb_bg_danisma.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_yolb_bg_danisma.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_yolb_narr.mp3'),
         questionAudio: require('../assets/sounds/stories/adalet_hikayesi/s02_yolb_q.mp3'),
         options: [
             {
                 id: 'B1',
                 type: 'image_button',
-                image: require('../assets/images/stories/adalet_hikayesi/s02_secim2b_icon_sira.png'),
+                image: { uri: '/images/stories/adalet_hikayesi/s02_secim2b_icon_sira.png' },
                 next: 'end_b1',
             },
             {
                 id: 'B2',
                 type: 'image_button',
-                image: require('../assets/images/stories/adalet_hikayesi/s02_secim2b_icon_secim.png'),
+                image: { uri: '/images/stories/adalet_hikayesi/s02_secim2b_icon_secim.png' },
                 next: 'end_b2',
             },
         ],
@@ -92,7 +92,7 @@ const storyData: Record<string, StoryNode> = {
     // SONUÇ A1 (Tam Eşitlik)
     end_a1: {
         id: 'end_a1',
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonuca1_bg_mutlu.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_sonuca1_bg_mutlu.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonuca1_narr.mp3'),
         next: 'final',
         analysisTag: 'Adalet-Esitlik-KardesPayi',
@@ -101,7 +101,7 @@ const storyData: Record<string, StoryNode> = {
     // SONUÇ A2 (İhtiyaca Göre Paylaşım)
     end_a2: {
         id: 'end_a2',
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonuca2_bg_doygun.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_sonuca2_bg_doygun.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonuca2_narr.mp3'),
         next: 'final',
         analysisTag: 'Adalet-IhtiyacaGore-Empati',
@@ -110,7 +110,7 @@ const storyData: Record<string, StoryNode> = {
     // SONUÇ B1 (Sırayla Yeme)
     end_b1: {
         id: 'end_b1',
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonucb1_bg_isirik.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_sonucb1_bg_isirik.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonucb1_narr.mp3'),
         next: 'final',
         analysisTag: 'Adalet-SiraBekleme-Sabir',
@@ -119,7 +119,7 @@ const storyData: Record<string, StoryNode> = {
     // SONUÇ B2 (Kesen Değil Seçen)
     end_b2: {
         id: 'end_b2',
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_sonucb2_bg_guven.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_sonucb2_bg_guven.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_sonucb2_narr.mp3'),
         next: 'final',
         analysisTag: 'Adalet-Guven-Fedakarlik',
@@ -129,7 +129,7 @@ const storyData: Record<string, StoryNode> = {
     final: {
         id: 'final',
         isFinal: true,
-        bgImage: require('../assets/images/stories/adalet_hikayesi/s02_final_ortak_bg_dostluk.png'),
+        bgImage: { uri: '/images/stories/adalet_hikayesi/s02_final_ortak_bg_dostluk.png' },
         audio: require('../assets/sounds/stories/adalet_hikayesi/s02_final_narr.mp3'),
         analysisTag: 'Final',
     }
