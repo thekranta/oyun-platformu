@@ -11,6 +11,7 @@ const PROJECT_ROOT = path.join(__dirname, '..');
 const DIST_DIR = path.join(PROJECT_ROOT, 'dist');
 const DIST_ASSETS = path.join(DIST_DIR, 'assets');
 const SOURCE_ASSETS = path.join(PROJECT_ROOT, 'assets');
+const PUBLIC_DIR = path.join(PROJECT_ROOT, 'public');
 
 /**
  * Recursively copy directory
@@ -217,6 +218,39 @@ function fixMissingHashedAssets() {
 }
 
 /**
+ * Copy public folder contents to dist and dist/client
+ * Needed for web.output=server where assets resolve under dist/client.
+ */
+function copyPublicAssets() {
+    if (!fs.existsSync(PUBLIC_DIR)) {
+        console.log('Public directory not found:', PUBLIC_DIR);
+        return;
+    }
+
+    const folders = ['images', 'sounds', 'backgrounds'];
+    const clientDir = path.join(DIST_DIR, 'client');
+    let totalCopied = 0;
+
+    console.log('Copying public assets to dist and dist/client...');
+
+    for (const folder of folders) {
+        const srcPath = path.join(PUBLIC_DIR, folder);
+        const distPath = path.join(DIST_DIR, folder);
+        const clientPath = path.join(clientDir, folder);
+
+        if (fs.existsSync(srcPath)) {
+            fs.mkdirSync(distPath, { recursive: true });
+            copyDirSync(srcPath, distPath);
+            fs.mkdirSync(clientPath, { recursive: true });
+            copyDirSync(srcPath, clientPath);
+            totalCopied += 1;
+        }
+    }
+
+    console.log(`Public assets copied to dist and dist/client (${totalCopied} folders)`);
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -229,6 +263,7 @@ function main() {
 
     flattenAssets();
     copySourceAssets();
+    copyPublicAssets();
     fixReactNavigationAssets();
     fixNodeModulesAssets();
     fixMissingHashedAssets();
