@@ -251,6 +251,19 @@ function copyPublicAssets() {
 }
 
 /**
+ * Ensure dist/client/index.html exists by copying dist/index.html when available
+ */
+function ensureClientIndex() {
+    const distIndex = path.join(DIST_DIR, 'index.html');
+    const clientIndex = path.join(DIST_DIR, 'client', 'index.html');
+
+    if (fs.existsSync(distIndex)) {
+        fs.mkdirSync(path.dirname(clientIndex), { recursive: true });
+        fs.copyFileSync(distIndex, clientIndex);
+    }
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -264,6 +277,7 @@ function main() {
     flattenAssets();
     copySourceAssets();
     copyPublicAssets();
+    ensureClientIndex();
     fixReactNavigationAssets();
     fixNodeModulesAssets();
     fixMissingHashedAssets();

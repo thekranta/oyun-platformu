@@ -270,6 +270,19 @@ function preparePublicAssets() {
 }
 
 /**
+ * Ensure dist/client exists with a placeholder index.html to avoid ENOENT during export
+ */
+function ensureClientIndexPlaceholder() {
+    const clientDir = path.join(DIST_DIR, 'client');
+    const clientIndex = path.join(clientDir, 'index.html');
+
+    fs.mkdirSync(clientDir, { recursive: true });
+    if (!fs.existsSync(clientIndex)) {
+        fs.writeFileSync(clientIndex, '<!doctype html><html><head></head><body></body></html>');
+    }
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -294,6 +307,7 @@ function main() {
     prepareDistDirectory(); // Enabled to ensure directory structure exists
     prepareVectorIconFonts(); // Copy vector icon fonts to dist
     preparePublicAssets(); // Copy public folder contents to dist
+    ensureClientIndexPlaceholder(); // Prevent missing client index during export
     // prepareReactNavigationAssets(); // Still disabled, let fix-script handle it
 
     console.log('✅ Pre-build preparation complete!');
