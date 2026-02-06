@@ -232,6 +232,7 @@ function prepareVectorIconFonts() {
 /**
  * Copy public folder contents to dist
  * This ensures all static assets (images, sounds, backgrounds) are available during build
+ * For web.output=server, assets must also exist under dist/client.
  */
 function preparePublicAssets() {
     const publicDir = path.join(PROJECT_ROOT, 'public');
@@ -246,16 +247,22 @@ function preparePublicAssets() {
     // Copy each top-level folder from public to dist
     const folders = ['images', 'sounds', 'backgrounds'];
     let totalCopied = 0;
+    const clientDir = path.join(DIST_DIR, 'client');
 
     for (const folder of folders) {
         const srcPath = path.join(publicDir, folder);
         const destPath = path.join(DIST_DIR, folder);
+        const clientDestPath = path.join(clientDir, folder);
 
         if (fs.existsSync(srcPath)) {
             fs.mkdirSync(destPath, { recursive: true });
             const result = copyDirSync(srcPath, destPath);
             totalCopied += result.count;
             console.log(`  ${folder}: ${result.count} files`);
+
+            // For server output, static assets are expected under dist/client.
+            fs.mkdirSync(clientDestPath, { recursive: true });
+            copyDirSync(srcPath, clientDestPath);
         }
     }
 
