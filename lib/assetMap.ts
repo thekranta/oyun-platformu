@@ -114,6 +114,7 @@ const ASSET_MAP: Record<string, AssetSource> = {
   '/sounds/songs/LUTFEN_VE_TESEKKURLER.mp3': require('../assets/sounds/songs/LUTFEN_VE_TESEKKURLER.mp3'),
   '/sounds/songs/NEFES_AL_VE_DUR.mp3': require('../assets/sounds/songs/NEFES_AL_VE_DUR.mp3'),
   '/sounds/songs/NEREDE_BU_ELMA.mp3': require('../assets/sounds/songs/NEREDE_BU_ELMA.mp3'),
+  '/sounds/songs/NEREDE_BU_ELMA_V2.mp3': require('../assets/sounds/songs/NEREDE_BU_ELMA_V2.mp3'),
   '/sounds/songs/ON_BIRDEN_YIRMIYE_TREN.mp3': require('../assets/sounds/songs/ON_BIRDEN_YIRMIYE_TREN.mp3'),
   '/sounds/songs/ORUNTU_TRENI.mp3': require('../assets/sounds/songs/ORUNTU_TRENI.mp3'),
   '/sounds/songs/PAYLASINCA_GUZEL.mp3': require('../assets/sounds/songs/PAYLASINCA_GUZEL.mp3'),

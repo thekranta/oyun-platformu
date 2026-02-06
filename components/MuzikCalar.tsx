@@ -8,6 +8,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
+    useWindowDimensions,
     View
 } from 'react-native';
 
@@ -18,7 +19,7 @@ export interface Song {
     source: any;
     coverColor: string;
     icon: keyof typeof Ionicons.glyphMap;
-    category?: 'genel' | 'degerler' | 'matematik' | 'fen' | 'sosyal-duygusal';
+    category?: 'genel' | 'degerler' | 'matematik' | 'fen' | 'sosyal-duygusal' | 'yeniler';
 }
 
 export const SONGS: Song[] = [
@@ -259,8 +260,17 @@ export const SONGS: Song[] = [
         title: 'Nerede Bu Elma?',
         artist: 'Matematik - Arama',
         source: asset('/sounds/songs/NEREDE_BU_ELMA.mp3'),
-        coverColor: '#E53935', // Kırmızı
+        coverColor: '#E53935', // K??rm??z??
         icon: 'search',
+    },
+    {
+        id: '29b',
+        title: 'Nerede Bu Elma? (V2)',
+        artist: 'Yeni - Matematik - Arama',
+        source: asset('/sounds/songs/NEREDE_BU_ELMA_V2.mp3'),
+        coverColor: '#EC407A', // Pembe
+        icon: 'sparkles',
+        category: 'yeniler',
     },
     {
         id: '30',
@@ -375,13 +385,18 @@ interface MuzikCalarProps {
 }
 
 export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarProps) {
+    const { width, height } = useWindowDimensions();
+    const isSmallScreen = height < 700;
+    const coverSize = Math.min(220, Math.max(150, Math.round(width * 0.55)));
+    const coverIconSize = isSmallScreen ? 64 : 80;
+    const playButtonSize = isSmallScreen ? 68 : 80;
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
     const [position, setPosition] = useState(0);
     const [duration, setDuration] = useState(1);
     const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
-    const [selectedCategory, setSelectedCategory] = useState<'tumu' | 'degerler' | 'matematik' | 'fen' | 'sosyal-duygusal'>('tumu');
+    const [selectedCategory, setSelectedCategory] = useState<'tumu' | 'yeniler' | 'degerler' | 'matematik' | 'fen' | 'sosyal-duygusal'>('tumu');
 
     const currentSong = SONGS[currentSongIndex];
 
@@ -389,6 +404,9 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
     const filteredSongs = selectedCategory === 'tumu'
         ? SONGS
         : SONGS.filter(song => {
+            if (selectedCategory === 'yeniler') {
+                return song.category === 'yeniler';
+            }
             if (selectedCategory === 'sosyal-duygusal') {
                 return song.category === 'sosyal-duygusal';
             }
@@ -542,9 +560,19 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
 
             <View style={styles.content}>
                 {/* Plak / Kapak Görseli */}
-                <View style={styles.coverContainer}>
-                    <View style={[styles.coverCircle, { backgroundColor: currentSong.coverColor }]}>
-                        <Ionicons name={currentSong.icon} size={80} color="#fff" />
+                <View style={[styles.coverContainer, isSmallScreen && styles.coverContainerSmall]}>
+                    <View
+                        style={[
+                            styles.coverCircle,
+                            {
+                                backgroundColor: currentSong.coverColor,
+                                width: coverSize,
+                                height: coverSize,
+                                borderRadius: coverSize / 2,
+                            },
+                        ]}
+                    >
+                        <Ionicons name={currentSong.icon} size={coverIconSize} color="#fff" />
                     </View>
                     {isPlaying && (
                         <View style={styles.noteDecor}>
@@ -591,8 +619,19 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
                         <Text style={styles.skipLabel}>10</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={togglePlayback} style={[styles.playButton, { backgroundColor: currentSong.coverColor }]}>
-                        <Ionicons name={isPlaying ? "pause" : "play"} size={40} color="#fff" style={{ marginLeft: isPlaying ? 0 : 4 }} />
+                    <TouchableOpacity
+                        onPress={togglePlayback}
+                        style={[
+                            styles.playButton,
+                            {
+                                backgroundColor: currentSong.coverColor,
+                                width: playButtonSize,
+                                height: playButtonSize,
+                                borderRadius: playButtonSize / 2,
+                            },
+                        ]}
+                    >
+                        <Ionicons name={isPlaying ? "pause" : "play"} size={isSmallScreen ? 34 : 40} color="#fff" style={{ marginLeft: isPlaying ? 0 : 4 }} />
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={skipForward} style={styles.controlButtonSmall}>
@@ -625,6 +664,12 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
                         <Text style={[styles.categoryTabText, selectedCategory === 'tumu' && styles.categoryTabTextActive]}>🎵 Tümü</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
+                        style={[styles.categoryTab, selectedCategory === 'yeniler' && { backgroundColor: '#EC407A' }]}
+                        onPress={() => setSelectedCategory('yeniler')}
+                    >
+                        <Text style={[styles.categoryTabText, selectedCategory === 'yeniler' && styles.categoryTabTextActive]}>Yeni</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
                         style={[styles.categoryTab, selectedCategory === 'sosyal-duygusal' && { backgroundColor: '#E91E63' }]}
                         onPress={() => setSelectedCategory('sosyal-duygusal')}
                     >
@@ -650,7 +695,12 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
                     </TouchableOpacity>
                 </ScrollView>
 
-                <ScrollView style={styles.listContainer} contentContainerStyle={{ paddingBottom: 20 }}>
+                <ScrollView
+                    style={styles.listContainer}
+                    contentContainerStyle={{ paddingBottom: 24 }}
+                    nestedScrollEnabled
+                    showsVerticalScrollIndicator={false}
+                >
                     {filteredSongs.map((song) => {
                         const songIndex = SONGS.findIndex(s => s.id === song.id);
                         return (
@@ -714,6 +764,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         paddingHorizontal: 20,
+        width: '100%',
     },
     coverContainer: {
         marginTop: 20,
@@ -725,6 +776,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 10,
         elevation: 10,
+    },
+    coverContainerSmall: {
+        marginTop: 12,
+        marginBottom: 20,
     },
     coverCircle: {
         width: 200,
@@ -804,6 +859,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         gap: 15,
+        flexWrap: 'wrap',
         marginBottom: 40,
     },
     controlButtonSmall: {
@@ -812,6 +868,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 20,
         elevation: 2,
+        marginBottom: 8,
     },
     playButton: {
         width: 80,
