@@ -9,7 +9,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "vercel-build": "node scripts/clean-dist.js && npx expo export --platform web --output-dir dist && node scripts/ensure-favicon.js"
+    "vercel-build": "node scripts/vercel-build.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
