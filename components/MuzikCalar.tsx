@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import React, { useEffect, useState } from 'react';
-import {
 import { asset } from '../lib/assetMap';
+import {
     Platform,
     ScrollView,
     StyleSheet,
@@ -913,4 +913,3 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
 });
-
