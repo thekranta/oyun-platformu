@@ -1088,6 +1088,32 @@ export default function App() {
 
             {activeTab === 'muzikler' && (
               <View style={{ width: '100%', paddingBottom: 40 }}>
+                {/* 0. Yeni Sarkilar */}
+                <Text style={styles.sectionTitle}>Yeni Sarkilar</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
+                  {SONGS.filter(s => s.category === 'yeniler').map((song) => (
+                    <TouchableOpacity
+                      key={song.id}
+                      style={[styles.oyunKarti, {
+                        backgroundColor: song.coverColor,
+                        margin: 6,
+                        width: 105,
+                        height: 115,
+                        paddingHorizontal: 8,
+                        paddingVertical: 10,
+                      }]}
+                      onPress={() => {
+                        const realIndex = SONGS.findIndex(s => s.id === song.id);
+                        setSelectedSongIndex(realIndex);
+                        oyunuBaslat('muzik-calar');
+                      }}
+                    >
+                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
+                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
+                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
                 {/* 1. Matematik Şarkıları */}
                 <Text style={styles.sectionTitle}>🔢 Matematik Şarkıları</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
@@ -1195,7 +1221,33 @@ export default function App() {
                     </TouchableOpacity>
                   ))}
                 </View>
-              </View>
+              
+                {/* 5. Tum Sarkilar */}
+                <Text style={styles.sectionTitle}>Tum Sarkilar</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
+                  {SONGS.map((song) => (
+                    <TouchableOpacity
+                      key={song.id}
+                      style={[styles.oyunKarti, {
+                        backgroundColor: song.coverColor,
+                        margin: 6,
+                        width: 105,
+                        height: 115,
+                        paddingHorizontal: 8,
+                        paddingVertical: 10,
+                      }]}
+                      onPress={() => {
+                        const realIndex = SONGS.findIndex(s => s.id === song.id);
+                        setSelectedSongIndex(realIndex);
+                        oyunuBaslat('muzik-calar');
+                      }}
+                    >
+                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
+                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
+                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View></View>
             )}
           </View>
           <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 30, alignSelf: 'center' }]} onPress={cikisYap}>
@@ -1699,5 +1751,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+
 
 
