@@ -14,6 +14,7 @@ import {
     View
 } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
+import { asset } from '../lib/assetMap';
 
 // ============= CONFIG =============
 export interface ShadowDetectiveConfig {
@@ -42,17 +43,17 @@ interface AnimalAsset {
 }
 
 const ANIMALS: AnimalAsset[] = [
-    { id: 'horse', name: 'At', source: { uri: '/images/animal_horse.png' } },
-    { id: 'elephant', name: 'Fil', source: { uri: '/images/animal_elephant.png' } },
-    { id: 'lion', name: 'Aslan', source: { uri: '/images/animal_lion.png' } },
-    { id: 'monkey', name: 'Maymun', source: { uri: '/images/animal_monkey.png' } },
-    { id: 'giraffe', name: 'Zürafa', source: { uri: '/images/animal_giraffe.png' } },
-    { id: 'snake', name: 'Yılan', source: { uri: '/images/animal_snake.png' } },
-    { id: 'bird', name: 'Kuş', source: { uri: '/images/animal_bird.png' } },
-    { id: 'octopus', name: 'Ahtapot', source: { uri: '/images/animal_octopus.png' } },
-    { id: 'crab', name: 'Yengeç', source: { uri: '/images/animal_crab.png' } },
-    { id: 'whale', name: 'Balina', source: { uri: '/images/animal_whale.png' } },
-    { id: 'turtle', name: 'Kaplumbağa', source: { uri: '/images/animal_turtle.png' } },
+    { id: 'horse', name: 'At', source: asset('/images/animal_horse.png') },
+    { id: 'elephant', name: 'Fil', source: asset('/images/animal_elephant.png') },
+    { id: 'lion', name: 'Aslan', source: asset('/images/animal_lion.png') },
+    { id: 'monkey', name: 'Maymun', source: asset('/images/animal_monkey.png') },
+    { id: 'giraffe', name: 'Zürafa', source: asset('/images/animal_giraffe.png') },
+    { id: 'snake', name: 'Yılan', source: asset('/images/animal_snake.png') },
+    { id: 'bird', name: 'Kuş', source: asset('/images/animal_bird.png') },
+    { id: 'octopus', name: 'Ahtapot', source: asset('/images/animal_octopus.png') },
+    { id: 'crab', name: 'Yengeç', source: asset('/images/animal_crab.png') },
+    { id: 'whale', name: 'Balina', source: asset('/images/animal_whale.png') },
+    { id: 'turtle', name: 'Kaplumbağa', source: asset('/images/animal_turtle.png') },
 ];
 
 const { width: screenW, height: screenH } = Dimensions.get('window');
@@ -245,7 +246,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
 
     return (
         <ImageBackground
-            source={{ uri: '/backgrounds/games/golge_bg.png' }}
+            source={asset('/backgrounds/games/golge_bg.png')}
             style={styles.container}
             imageStyle={styles.bgImage}
         >
@@ -440,3 +441,4 @@ const styles = StyleSheet.create({
     },
     motivationText: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginTop: 10 },
 });
+

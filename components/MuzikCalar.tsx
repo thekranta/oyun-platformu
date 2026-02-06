@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import React, { useEffect, useState } from 'react';
 import {
+import { asset } from '../lib/assetMap';
     Platform,
     ScrollView,
     StyleSheet,
@@ -25,7 +26,7 @@ export const SONGS: Song[] = [
         id: '1',
         title: 'ChildhoodTech Şarkısı V1',
         artist: 'Web Sitemiz İçin',
-        source: { uri: '/sounds/songs/CHILDHOODTECH_SARKISI_V1.mp3' },
+        source: asset('/sounds/songs/CHILDHOODTECH_SARKISI_V1.mp3'),
         coverColor: '#FFD54F', // Sarı
         icon: 'musical-notes',
     },
@@ -33,7 +34,7 @@ export const SONGS: Song[] = [
         id: '2',
         title: 'ChildhoodTech Şarkısı V2',
         artist: 'Tanıtım Müziği',
-        source: { uri: '/sounds/songs/CHILDHOODTECH_SARKISI_V2.mp3' },
+        source: asset('/sounds/songs/CHILDHOODTECH_SARKISI_V2.mp3'),
         coverColor: '#4ECDC4', // Turkuaz
         icon: 'planet',
     },
@@ -41,7 +42,7 @@ export const SONGS: Song[] = [
         id: '3',
         title: 'Adil Oyun, Güzel Oyun',
         artist: 'Değerler Eğitimi',
-        source: { uri: '/sounds/songs/ADIL_OYUN_GUZEL_OYUN.mp3' },
+        source: asset('/sounds/songs/ADIL_OYUN_GUZEL_OYUN.mp3'),
         coverColor: '#FF7043', // Turuncu
         icon: 'heart',
     },
@@ -49,7 +50,7 @@ export const SONGS: Song[] = [
         id: '4',
         title: 'Paylaşınca Güzel',
         artist: 'Sosyal-Duygusal - Paylaşma',
-        source: { uri: '/sounds/songs/PAYLASINCA_GUZEL.mp3' },
+        source: asset('/sounds/songs/PAYLASINCA_GUZEL.mp3'),
         coverColor: '#AB47BC', // Mor
         icon: 'people',
         category: 'sosyal-duygusal',
@@ -58,7 +59,7 @@ export const SONGS: Song[] = [
         id: '5',
         title: 'Çalışkan Arı Gibi',
         artist: 'Sorumluluk',
-        source: { uri: '/sounds/songs/CALISKAN_ARI_GIBI.mp3' },
+        source: asset('/sounds/songs/CALISKAN_ARI_GIBI.mp3'),
         coverColor: '#66BB6A', // Yeşil
         icon: 'leaf',
     },
@@ -66,7 +67,7 @@ export const SONGS: Song[] = [
         id: '6',
         title: 'Doğru Söylerim',
         artist: 'Dürüstlük',
-        source: { uri: '/sounds/songs/DOGRU_SOYLERIM.mp3' },
+        source: asset('/sounds/songs/DOGRU_SOYLERIM.mp3'),
         coverColor: '#42A5F5', // Mavi
         icon: 'checkmark-circle',
     },
@@ -74,7 +75,7 @@ export const SONGS: Song[] = [
         id: '7',
         title: 'Biz Bir Aileyiz',
         artist: 'Aile Sevgisi',
-        source: { uri: '/sounds/songs/BIZ_BIR_AILEYIZ.mp3' },
+        source: asset('/sounds/songs/BIZ_BIR_AILEYIZ.mp3'),
         coverColor: '#EC407A', // Pembe
         icon: 'home',
     },
@@ -82,7 +83,7 @@ export const SONGS: Song[] = [
         id: '8',
         title: 'Beklerim Sakince',
         artist: 'Sosyal-Duygusal - Sabır',
-        source: { uri: '/sounds/songs/BEKLERIM_SAKINCE.mp3' },
+        source: asset('/sounds/songs/BEKLERIM_SAKINCE.mp3'),
         coverColor: '#78909C', // Gri Mavi
         icon: 'hourglass',
         category: 'sosyal-duygusal',
@@ -91,7 +92,7 @@ export const SONGS: Song[] = [
         id: '9',
         title: 'Benim Özel Alanım',
         artist: 'Mahremiyet',
-        source: { uri: '/sounds/songs/BENIM_OZEL_ALANIM.mp3' },
+        source: asset('/sounds/songs/BENIM_OZEL_ALANIM.mp3'),
         coverColor: '#BA68C8', // Mor
         icon: 'lock-closed',
     },
@@ -99,7 +100,7 @@ export const SONGS: Song[] = [
         id: '10',
         title: 'Güzeli Görürüm',
         artist: 'Sosyal-Duygusal - Pozitif Bakış',
-        source: { uri: '/sounds/songs/GUZELI_GURURUM.mp3' },
+        source: asset('/sounds/songs/GUZELI_GURURUM.mp3'),
         coverColor: '#26A69A', // Yeşil
         icon: 'eye',
         category: 'sosyal-duygusal',
@@ -108,7 +109,7 @@ export const SONGS: Song[] = [
         id: '11',
         title: 'Kalbim Duyarlı',
         artist: 'Sosyal-Duygusal - Duyarlılık',
-        source: { uri: '/sounds/songs/KALBIM_DUYARLI.mp3' },
+        source: asset('/sounds/songs/KALBIM_DUYARLI.mp3'),
         coverColor: '#FF7043', // Turuncu
         icon: 'heart-circle',
         category: 'sosyal-duygusal',
@@ -117,7 +118,7 @@ export const SONGS: Song[] = [
         id: '12',
         title: 'Sadece Yaptım',
         artist: 'Alçakgönüllülük',
-        source: { uri: '/sounds/songs/SADECE_YAPTIM.mp3' },
+        source: asset('/sounds/songs/SADECE_YAPTIM.mp3'),
         coverColor: '#5C6BC0', // İndigo
         icon: 'star',
     },
@@ -125,7 +126,7 @@ export const SONGS: Song[] = [
         id: '13',
         title: 'Seçerim, Söylerim',
         artist: 'İfade Özgürlüğü',
-        source: { uri: '/sounds/songs/SECERIM_SOYLERIM.mp3' },
+        source: asset('/sounds/songs/SECERIM_SOYLERIM.mp3'),
         coverColor: '#FFA726', // Sarı Turuncu
         icon: 'mic',
     },
@@ -133,7 +134,7 @@ export const SONGS: Song[] = [
         id: '14',
         title: 'Yumuşacık Merhamet',
         artist: 'Sosyal-Duygusal - Merhamet',
-        source: { uri: '/sounds/songs/YUMUSACIK_MERHAMET.mp3' },
+        source: asset('/sounds/songs/YUMUSACIK_MERHAMET.mp3'),
         coverColor: '#F06292', // Açık Pembe
         icon: 'rose',
         category: 'sosyal-duygusal',
@@ -142,7 +143,7 @@ export const SONGS: Song[] = [
         id: '15',
         title: 'Çıtır Çıtır Dostluk',
         artist: 'Sosyal-Duygusal - Dostluk',
-        source: { uri: '/sounds/songs/CITIR_CITIR_DOSTLUK.mp3' },
+        source: asset('/sounds/songs/CITIR_CITIR_DOSTLUK.mp3'),
         coverColor: '#8D6E63', // Kahverengi
         icon: 'people-circle',
         category: 'sosyal-duygusal',
@@ -151,7 +152,7 @@ export const SONGS: Song[] = [
         id: '16',
         title: 'Az Az Kullanırım',
         artist: 'Teknoloji Kullanımı',
-        source: { uri: '/sounds/songs/AZ_AZ_KULLANIRIM.mp3' },
+        source: asset('/sounds/songs/AZ_AZ_KULLANIRIM.mp3'),
         coverColor: '#9575CD', // Açık Mor
         icon: 'phone-portrait',
     },
@@ -159,7 +160,7 @@ export const SONGS: Song[] = [
         id: '17',
         title: 'Benim Görevim',
         artist: 'Sorumluluk',
-        source: { uri: '/sounds/songs/BENIM_GOREVIM.mp3' },
+        source: asset('/sounds/songs/BENIM_GOREVIM.mp3'),
         coverColor: '#4DB6AC', // Turkuaz
         icon: 'clipboard',
     },
@@ -167,7 +168,7 @@ export const SONGS: Song[] = [
         id: '18',
         title: 'Kalbimde Sevgi Var',
         artist: 'Sosyal-Duygusal - Sevgi',
-        source: { uri: '/sounds/songs/KALBIMDE_SEVGI_VAR.mp3' },
+        source: asset('/sounds/songs/KALBIMDE_SEVGI_VAR.mp3'),
         coverColor: '#E91E63', // Kırmızı Pembe
         icon: 'heart',
         category: 'sosyal-duygusal',
@@ -176,7 +177,7 @@ export const SONGS: Song[] = [
         id: '19',
         title: 'Lütfen, Teşekkür',
         artist: 'Nezaket',
-        source: { uri: '/sounds/songs/LUTFEN_TESEKKUR.mp3' },
+        source: asset('/sounds/songs/LUTFEN_TESEKKUR.mp3'),
         coverColor: '#81C784', // Yeşil
         icon: 'happy',
     },
@@ -184,7 +185,7 @@ export const SONGS: Song[] = [
         id: '20',
         title: 'Sağlıklı Yaşam',
         artist: 'Sağlık',
-        source: { uri: '/sounds/songs/SAGLIKLI_YASAM.mp3' },
+        source: asset('/sounds/songs/SAGLIKLI_YASAM.mp3'),
         coverColor: '#4CAF50', // Yeşil
         icon: 'fitness',
     },
@@ -192,7 +193,7 @@ export const SONGS: Song[] = [
         id: '21',
         title: 'Yurdumu Severim',
         artist: 'Vatan Sevgisi',
-        source: { uri: '/sounds/songs/YURDUMU_SEVERIM.mp3' },
+        source: asset('/sounds/songs/YURDUMU_SEVERIM.mp3'),
         coverColor: '#E53935', // Kırmızı
         icon: 'flag',
     },
@@ -200,7 +201,7 @@ export const SONGS: Song[] = [
         id: '22',
         title: 'Şıp Şıp Tertemiz',
         artist: 'Temizlik',
-        source: { uri: '/sounds/songs/SIP_SIP_TERTEMIZ.mp3' },
+        source: asset('/sounds/songs/SIP_SIP_TERTEMIZ.mp3'),
         coverColor: '#29B6F6', // Açık Mavi
         icon: 'water',
     },
@@ -209,7 +210,7 @@ export const SONGS: Song[] = [
         id: '23',
         title: 'Bir Bakışta Kaç?',
         artist: 'Matematik - Subitizing',
-        source: { uri: '/sounds/songs/BIR_BAKISTA_KAC.mp3' },
+        source: asset('/sounds/songs/BIR_BAKISTA_KAC.mp3'),
         coverColor: '#7E57C2', // Mor
         icon: 'eye',
     },
@@ -217,7 +218,7 @@ export const SONGS: Song[] = [
         id: '24',
         title: 'Birden Ona Ritmim Var',
         artist: 'Matematik - 1\'den 10\'a',
-        source: { uri: '/sounds/songs/BIRDEN_ONA_RITMIM_VAR.mp3' },
+        source: asset('/sounds/songs/BIRDEN_ONA_RITMIM_VAR.mp3'),
         coverColor: '#26C6DA', // Cyan
         icon: 'musical-notes',
     },
@@ -225,7 +226,7 @@ export const SONGS: Song[] = [
         id: '25',
         title: 'Birer Birer Say!',
         artist: 'Matematik - Sayma',
-        source: { uri: '/sounds/songs/BIRER_BIRER_SAY.mp3' },
+        source: asset('/sounds/songs/BIRER_BIRER_SAY.mp3'),
         coverColor: '#66BB6A', // Yeşil
         icon: 'calculator',
     },
@@ -233,7 +234,7 @@ export const SONGS: Song[] = [
         id: '26',
         title: 'On Birden Yirmiye Tren',
         artist: 'Matematik - 11\'den 20\'ye',
-        source: { uri: '/sounds/songs/ON_BIRDEN_YIRMIYE_TREN.mp3' },
+        source: asset('/sounds/songs/ON_BIRDEN_YIRMIYE_TREN.mp3'),
         coverColor: '#EF5350', // Kırmızı
         icon: 'train',
     },
@@ -241,7 +242,7 @@ export const SONGS: Song[] = [
         id: '27',
         title: 'Sayıdan Başla!',
         artist: 'Matematik - İleriye Sayma',
-        source: { uri: '/sounds/songs/SAYIDAN_BASLA.mp3' },
+        source: asset('/sounds/songs/SAYIDAN_BASLA.mp3'),
         coverColor: '#FFA726', // Turuncu
         icon: 'arrow-forward',
     },
@@ -249,7 +250,7 @@ export const SONGS: Song[] = [
         id: '28',
         title: 'Çok mu, Az mı?',
         artist: 'Matematik - Karşılaştırma',
-        source: { uri: '/sounds/songs/COK_MU_AZ_MI.mp3' },
+        source: asset('/sounds/songs/COK_MU_AZ_MI.mp3'),
         coverColor: '#42A5F5', // Mavi
         icon: 'scale',
     },
@@ -257,7 +258,7 @@ export const SONGS: Song[] = [
         id: '29',
         title: 'Nerede Bu Elma?',
         artist: 'Matematik - Arama',
-        source: { uri: '/sounds/songs/NEREDE_BU_ELMA.mp3' },
+        source: asset('/sounds/songs/NEREDE_BU_ELMA.mp3'),
         coverColor: '#E53935', // Kırmızı
         icon: 'search',
     },
@@ -265,7 +266,7 @@ export const SONGS: Song[] = [
         id: '30',
         title: 'Bir, İki, Üç, Dört Derken',
         artist: 'Matematik - Sayma',
-        source: { uri: '/sounds/songs/BIR_IKI_UC_DORT_DERKEN.mp3' },
+        source: asset('/sounds/songs/BIR_IKI_UC_DORT_DERKEN.mp3'),
         coverColor: '#9C27B0', // Mor
         icon: 'footsteps',
     },
@@ -273,7 +274,7 @@ export const SONGS: Song[] = [
         id: '31',
         title: 'Kare Derler Adıma',
         artist: 'Matematik - Şekiller',
-        source: { uri: '/sounds/songs/KARE_DERLER_ADIMA.mp3' },
+        source: asset('/sounds/songs/KARE_DERLER_ADIMA.mp3'),
         coverColor: '#00BCD4', // Cyan
         icon: 'shapes',
     },
@@ -281,7 +282,7 @@ export const SONGS: Song[] = [
         id: '32',
         title: 'Örüntü Treni',
         artist: 'Matematik - Örüntü',
-        source: { uri: '/sounds/songs/ORUNTU_TRENI.mp3' },
+        source: asset('/sounds/songs/ORUNTU_TRENI.mp3'),
         coverColor: '#FF5722', // Turuncu
         icon: 'train',
     },
@@ -290,7 +291,7 @@ export const SONGS: Song[] = [
         id: '33',
         title: 'Beş Duyum',
         artist: 'Fen - Duyu Organları',
-        source: { uri: '/sounds/songs/BES_DUYUM.mp3' },
+        source: asset('/sounds/songs/BES_DUYUM.mp3'),
         coverColor: '#8BC34A', // Yeşil
         icon: 'body',
     },
@@ -298,7 +299,7 @@ export const SONGS: Song[] = [
         id: '34',
         title: 'Geri Dönüşüm',
         artist: 'Fen - Çevre',
-        source: { uri: '/sounds/songs/GERI_DONUSUM_KAHRAMANLARI.mp3' },
+        source: asset('/sounds/songs/GERI_DONUSUM_KAHRAMANLARI.mp3'),
         coverColor: '#4CAF50', // Koyu Yeşil
         icon: 'leaf',
     },
@@ -306,7 +307,7 @@ export const SONGS: Song[] = [
         id: '35',
         title: 'Canlıların Evi',
         artist: 'Fen - Yaşam Alanları',
-        source: { uri: '/sounds/songs/CANLILARIN_EVI.mp3' },
+        source: asset('/sounds/songs/CANLILARIN_EVI.mp3'),
         coverColor: '#009688', // Teal
         icon: 'earth',
         category: 'fen',
@@ -316,7 +317,7 @@ export const SONGS: Song[] = [
         id: '36',
         title: 'Ben Biriciğim',
         artist: 'Sosyal-Duygusal - Özgüven',
-        source: { uri: '/sounds/songs/BEN_BIRICIGIM.mp3' },
+        source: asset('/sounds/songs/BEN_BIRICIGIM.mp3'),
         coverColor: '#E91E63', // Pembe
         icon: 'star',
         category: 'sosyal-duygusal',
@@ -325,7 +326,7 @@ export const SONGS: Song[] = [
         id: '37',
         title: 'Duygu Ormanı',
         artist: 'Sosyal-Duygusal - Duygular',
-        source: { uri: '/sounds/songs/DUYGU_ORMANI.mp3' },
+        source: asset('/sounds/songs/DUYGU_ORMANI.mp3'),
         coverColor: '#4CAF50', // Yeşil
         icon: 'leaf',
         category: 'sosyal-duygusal',
@@ -334,7 +335,7 @@ export const SONGS: Song[] = [
         id: '38',
         title: 'Nefes Al ve Dur',
         artist: 'Sosyal-Duygusal - Öz Düzenleme',
-        source: { uri: '/sounds/songs/NEFES_AL_VE_DUR.mp3' },
+        source: asset('/sounds/songs/NEFES_AL_VE_DUR.mp3'),
         coverColor: '#00BCD4', // Cyan
         icon: 'cloudy',
         category: 'sosyal-duygusal',
@@ -343,7 +344,7 @@ export const SONGS: Song[] = [
         id: '39',
         title: 'Lütfen ve Teşekkürler',
         artist: 'Sosyal-Duygusal - Nezaket',
-        source: { uri: '/sounds/songs/LUTFEN_VE_TESEKKURLER.mp3' },
+        source: asset('/sounds/songs/LUTFEN_VE_TESEKKURLER.mp3'),
         coverColor: '#FFC107', // Sarı
         icon: 'happy',
         category: 'sosyal-duygusal',
@@ -352,7 +353,7 @@ export const SONGS: Song[] = [
         id: '40',
         title: 'Senin Gözünle',
         artist: 'Sosyal-Duygusal - Empati',
-        source: { uri: '/sounds/songs/SENIN_GOZUNLE.mp3' },
+        source: asset('/sounds/songs/SENIN_GOZUNLE.mp3'),
         coverColor: '#9C27B0', // Mor
         icon: 'eye',
         category: 'sosyal-duygusal',
@@ -361,7 +362,7 @@ export const SONGS: Song[] = [
         id: '41',
         title: 'Çözüm Bulalım',
         artist: 'Sosyal-Duygusal - Problem Çözme',
-        source: { uri: '/sounds/songs/COZUM_BULALIM.mp3' },
+        source: asset('/sounds/songs/COZUM_BULALIM.mp3'),
         coverColor: '#FF5722', // Turuncu
         icon: 'bulb',
         category: 'sosyal-duygusal',
@@ -912,3 +913,4 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
 });
+

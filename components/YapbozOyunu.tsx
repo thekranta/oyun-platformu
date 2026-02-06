@@ -14,9 +14,10 @@ import {
     View,
 } from 'react-native';
 import { useSound } from './SoundContext';
+import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = { uri: '/backgrounds/games/yapboz_bg.png' };
+const BACKGROUND_IMAGE = asset('/backgrounds/games/yapboz_bg.png');
 
 interface YapbozOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
@@ -32,61 +33,61 @@ const PUZZLES = [
         id: 1,
         name: 'Karpuz',
         icon: '🍉',
-        source: { uri: '/images/karpuz.png' },
+        source: asset('/images/karpuz.png'),
     },
     {
         id: 2,
         name: 'Elma',
         icon: '🍎',
-        source: { uri: '/images/elma.png' },
+        source: asset('/images/elma.png'),
     },
     {
         id: 3,
         name: 'Çilek',
         icon: '🍓',
-        source: { uri: '/images/cilek.png' },
+        source: asset('/images/cilek.png'),
     },
     {
         id: 4,
         name: 'Kedi',
         icon: '🐱',
-        source: { uri: '/images/kedi.png' },
+        source: asset('/images/kedi.png'),
     },
     {
         id: 5,
         name: 'Top',
         icon: '⚽',
-        source: { uri: '/images/top.png' },
+        source: asset('/images/top.png'),
     },
     {
         id: 6,
         name: 'Ev',
         icon: '🏠',
-        source: { uri: '/images/ev.png' },
+        source: asset('/images/ev.png'),
     },
     {
         id: 7,
         name: 'Araba',
         icon: '🚗',
-        source: { uri: '/images/araba.png' },
+        source: asset('/images/araba.png'),
     },
     {
         id: 8,
         name: 'Orman',
         icon: '🌳',
-        source: { uri: '/images/stories/ceviz_macera/intro_scene.png' },
+        source: asset('/images/stories/ceviz_macera/intro_scene.png'),
     },
     {
         id: 9,
         name: 'Nehir',
         icon: '🏞️',
-        source: { uri: '/images/stories/ceviz_macera/scene_a_river.png' },
+        source: asset('/images/stories/ceviz_macera/scene_a_river.png'),
     },
     {
         id: 10,
         name: 'Aile',
         icon: '👨‍👩‍👧',
-        source: { uri: '/images/stories/aile_sepeti_macerasi/s02_final_bg_birlikte_aile.jpg' },
+        source: asset('/images/stories/aile_sepeti_macerasi/s02_final_bg_birlikte_aile.jpg'),
     },
 ];
 
@@ -561,3 +562,4 @@ const styles = StyleSheet.create({
     },
     pieceInner: { flex: 1, overflow: 'hidden', borderRadius: 4 },
 });
+

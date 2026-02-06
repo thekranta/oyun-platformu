@@ -12,9 +12,10 @@ import {
     View,
 } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
+import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = { uri: '/backgrounds/games/sihirli_siseler_bg.png' };
+const BACKGROUND_IMAGE = asset('/backgrounds/games/sihirli_siseler_bg.png');
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
@@ -1045,3 +1046,4 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 });
+

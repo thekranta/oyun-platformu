@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, PanResponder, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
+import { asset } from '../lib/assetMap';
 
 interface Props {
     onGameEnd: (
@@ -18,9 +19,9 @@ interface Props {
 
 // Single fruit per stage
 const STAGE_FRUITS = [
-    { image: { uri: '/images/elma.png' }, name: 'Elma' },
-    { image: { uri: '/images/uzum.png' }, name: 'Üzüm' },
-    { image: { uri: '/images/karpuz.png' }, name: 'Karpuz' },
+    { image: asset('/images/elma.png'), name: 'Elma' },
+    { image: asset('/images/uzum.png'), name: 'Üzüm' },
+    { image: asset('/images/karpuz.png'), name: 'Karpuz' },
 ];
 
 type Point = { x: number; y: number };
@@ -514,3 +515,4 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
 });
+

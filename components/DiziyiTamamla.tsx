@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSound } from './SoundContext';
+import { asset } from '../lib/assetMap';
 
 interface DiziyiTamamlaProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
@@ -18,10 +19,10 @@ interface Pattern {
 }
 
 const SHAPES = {
-    kare: { uri: '/images/kare.png' },
-    ucgen: { uri: '/images/ucgen.png' },
-    daire: { uri: '/images/daire.png' },
-    yildiz: { uri: '/images/yildiz.png' },
+    kare: asset('/images/kare.png'),
+    ucgen: asset('/images/ucgen.png'),
+    daire: asset('/images/daire.png'),
+    yildiz: asset('/images/yildiz.png'),
 };
 
 const PATTERNS: Pattern[] = [
@@ -413,3 +414,4 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
+

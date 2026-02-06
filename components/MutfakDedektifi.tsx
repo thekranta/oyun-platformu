@@ -22,6 +22,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { supabase } from '../lib/supabase';
 import { speak } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
+import { asset } from '../lib/assetMap';
 
 const { width, height } = Dimensions.get('window');
 
@@ -84,8 +85,8 @@ const TARGET_AREAS: TargetArea[] = [
 
 // Sepet ve kasa görselleri
 const BASKET_IMAGES = {
-    meyve: { uri: '/images/mutfak/meyve_sepeti.png' },
-    sebze: { uri: '/images/mutfak/sebze_kasasi.png' },
+    meyve: asset('/images/mutfak/meyve_sepeti.png'),
+    sebze: asset('/images/mutfak/sebze_kasasi.png'),
 };
 
 // Pastel color palette for Soft-UI
@@ -482,7 +483,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         <View style={styles.container}>
             {/* Kitchen Background */}
             <ImageBackground
-                source={{ uri: '/images/mutfak/background.png' }}
+                source={asset('/images/mutfak/background.png')}
                 style={styles.background}
                 resizeMode="cover"
             >
@@ -514,7 +515,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 {/* Maviş Character - Left */}
                 <Animated.View style={[styles.mavisContainer, { transform: [{ translateY: mavisFloat }] }]}>
                     <Image
-                        source={{ uri: '/images/mutfak/mavis_chef.png' }}
+                        source={asset('/images/mutfak/mavis_chef.png')}
                         style={styles.mavisImage}
                         resizeMode="contain"
                     />
@@ -922,3 +923,4 @@ const styles = StyleSheet.create({
         color: '#5D4037',
     },
 });
+

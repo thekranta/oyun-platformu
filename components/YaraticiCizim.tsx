@@ -1,10 +1,11 @@
-﻿import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, ImageBackground, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
+import { asset } from '../lib/assetMap';
 
-// Arka plan görseli
-const BACKGROUND_IMAGE = { uri: '/backgrounds/games/yaratici_cizim_bg.png' };
+// Arka plan g�rseli
+const BACKGROUND_IMAGE = asset('/backgrounds/games/yaratici_cizim_bg.png');
 
 type Point = { x: number; y: number };
 type BrushMode = 'pen' | 'spray' | 'marker' | 'glow';
@@ -48,7 +49,7 @@ const SHAPES: { type: ShapeType; icon: string }[] = [
 // Brush modes
 const BRUSH_MODES: { mode: BrushMode; icon: string; label: string }[] = [
   { mode: 'pen', icon: 'pencil', label: 'Kalem' },
-  { mode: 'marker', icon: 'create', label: 'Keçeli' },
+  { mode: 'marker', icon: 'create', label: 'Ke�eli' },
   { mode: 'spray', icon: 'color-fill', label: 'Sprey' },
   { mode: 'glow', icon: 'sunny', label: 'Parlak' },
 ];
@@ -273,7 +274,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
       cizimResimBase64,
       cizimResimFormat: 'png',
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Yaratıcılık ve Görsel İfade',
+      kazanimOdagi: 'Yarat�c�l�k ve G�rsel �fade',
     });
     setSaved(true);
   };
@@ -565,7 +566,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
               color="#fff"
             />
             <Text style={styles.modeText}>
-              {selectedShape ? 'Dokun: şekil ekle' : BRUSH_MODES.find(b => b.mode === brushMode)?.label}
+              {selectedShape ? 'Dokun: �ekil ekle' : BRUSH_MODES.find(b => b.mode === brushMode)?.label}
             </Text>
           </View>
         )}
@@ -665,3 +666,4 @@ const styles = StyleSheet.create({
   brushModeIndicator: { backgroundColor: 'rgba(76,175,80,0.9)' },
   modeText: { color: '#fff', fontSize: 12, fontWeight: '600' },
 });
+

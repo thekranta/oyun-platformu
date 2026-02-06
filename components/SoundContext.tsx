@@ -1,5 +1,6 @@
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { asset } from '../lib/assetMap';
 
 type SoundName = 'background' | 'correct' | 'wrong';
 
@@ -65,7 +66,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
             // Load sound but don't play yet - wait for user interaction
             const { sound } = await Audio.Sound.createAsync(
-                { uri: '/sounds/background.mp3' },
+                asset('/sounds/background.mp3'),
                 { shouldPlay: false, isLooping: true, volume: 0.5 }
             );
             setBackgroundSound(sound);
@@ -186,3 +187,4 @@ export function useSound() {
     }
     return context;
 }
+

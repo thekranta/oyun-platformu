@@ -14,9 +14,10 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
+import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = { uri: '/backgrounds/games/tarti_dengesi_bg.png' };
+const BACKGROUND_IMAGE = asset('/backgrounds/games/tarti_dengesi_bg.png');
 
 interface TartiDengesiProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
@@ -320,3 +321,4 @@ const styles = StyleSheet.create({
     progressDotActive: { backgroundColor: '#9C27B0', borderColor: '#7B1FA2' },
     progressDotCurrent: { backgroundColor: '#FF9800', borderColor: '#E65100', transform: [{ scale: 1.3 }] },
 });
+

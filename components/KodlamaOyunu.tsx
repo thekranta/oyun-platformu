@@ -13,7 +13,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = { uri: '/backgrounds/games/kodlama_bg.png' };
+const BACKGROUND_IMAGE = asset('/backgrounds/games/kodlama_bg.png');
 
 const { width, height } = Dimensions.get('window');
 
@@ -88,6 +88,7 @@ const LEVELS: LevelConfig[] = [
 
 // ============== AUDIO - Use unified speechService ==============
 import { speak, stopSpeech as stopSpeechService } from '../services/speechService';
+import { asset } from '../lib/assetMap';
 
 const speakTeacher = async (text: string) => {
   if (Platform.OS !== 'web') return;
@@ -586,3 +587,4 @@ const st = StyleSheet.create({
   goOff: { backgroundColor: '#BDBDBD', borderBottomColor: '#9E9E9E' },
   goTxt: { fontSize: 22 },
 });
+

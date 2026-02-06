@@ -3,6 +3,7 @@ import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, View } fro
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
+import { asset } from '../lib/assetMap';
 
 interface EksikSayiBulProps {
   onGameEnd: (
@@ -23,7 +24,7 @@ const TOTAL_STAGES = 5;
 const { width } = Dimensions.get('window');
 const CARD_SIZE = width > 600 ? 96 : 72;
 const OPTION_SIZE = width > 600 ? 90 : 68;
-const PLATFORM_LOGO = { uri: '/images/icon.png' };
+const PLATFORM_LOGO = asset('/images/icon.png');
 
 const shuffle = (items: number[]) => {
   const copy = [...items];
@@ -430,3 +431,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+

@@ -15,9 +15,10 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
+import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = { uri: '/backgrounds/games/uzay_bg.png' };
+const BACKGROUND_IMAGE = asset('/backgrounds/games/uzay_bg.png');
 
 // ============= TYPES =============
 interface UzayBloklariProps {
@@ -901,3 +902,4 @@ const styles = StyleSheet.create({
         transform: [{ scale: 1.1 }],
     },
 });
+

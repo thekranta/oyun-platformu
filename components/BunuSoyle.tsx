@@ -5,17 +5,18 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ProgressBar from './ProgressBar';
 import { useSound } from './SoundContext';
+import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = { uri: '/backgrounds/games/bunu_soyle_bg.png' };
+const BACKGROUND_IMAGE = asset('/backgrounds/games/bunu_soyle_bg.png');
 
 // Aşama Verileri
 const STAGES = [
-    { id: 1, image: { uri: '/images/elma.png' }, word: 'Elma' },
-    { id: 2, image: { uri: '/images/araba.png' }, word: 'Araba' },
-    { id: 3, image: { uri: '/images/kedi.png' }, word: 'Kedi' },
-    { id: 4, image: { uri: '/images/top.png' }, word: 'Top' },
-    { id: 5, image: { uri: '/images/ev.png' }, word: 'Ev' },
+    { id: 1, image: asset('/images/elma.png'), word: 'Elma' },
+    { id: 2, image: asset('/images/araba.png'), word: 'Araba' },
+    { id: 3, image: asset('/images/kedi.png'), word: 'Kedi' },
+    { id: 4, image: asset('/images/top.png'), word: 'Top' },
+    { id: 5, image: asset('/images/ev.png'), word: 'Ev' },
 ];
 
 interface BunuSoyleProps {
@@ -690,3 +691,4 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
     }
 });
+
