@@ -230,6 +230,39 @@ function prepareVectorIconFonts() {
 }
 
 /**
+ * Copy public folder contents to dist
+ * This ensures all static assets (images, sounds, backgrounds) are available during build
+ */
+function preparePublicAssets() {
+    const publicDir = path.join(PROJECT_ROOT, 'public');
+
+    if (!fs.existsSync(publicDir)) {
+        console.log('Public directory not found:', publicDir);
+        return;
+    }
+
+    console.log('Copying public folder contents to dist...');
+
+    // Copy each top-level folder from public to dist
+    const folders = ['images', 'sounds', 'backgrounds'];
+    let totalCopied = 0;
+
+    for (const folder of folders) {
+        const srcPath = path.join(publicDir, folder);
+        const destPath = path.join(DIST_DIR, folder);
+
+        if (fs.existsSync(srcPath)) {
+            fs.mkdirSync(destPath, { recursive: true });
+            const result = copyDirSync(srcPath, destPath);
+            totalCopied += result.count;
+            console.log(`  ${folder}: ${result.count} files`);
+        }
+    }
+
+    console.log(`Public assets copied to dist (${totalCopied} files)`);
+}
+
+/**
  * Main execution
  */
 function main() {
@@ -253,6 +286,7 @@ function main() {
 
     prepareDistDirectory(); // Enabled to ensure directory structure exists
     prepareVectorIconFonts(); // Copy vector icon fonts to dist
+    preparePublicAssets(); // Copy public folder contents to dist
     // prepareReactNavigationAssets(); // Still disabled, let fix-script handle it
 
     console.log('✅ Pre-build preparation complete!');
