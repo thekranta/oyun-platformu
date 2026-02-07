@@ -7,8 +7,9 @@
 const audioCache = new Map<string, string>();
 
 export interface SpeechOptions {
-    voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
-    speed?: number; // 0.25 to 4.0 (default: 0.75 for children - slower)
+    voice?: 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'nova' | 'onyx' | 'sage' | 'shimmer' | 'verse' | 'marin' | 'cedar';
+    speed?: number; // 0.25 to 4.0 (default: child-friendly slower pace)
+    instructions?: string; // Optional TTS style instructions
 }
 
 export interface SpeechResult {
@@ -26,12 +27,13 @@ export async function generateSpeech(
     options: SpeechOptions = {}
 ): Promise<SpeechResult> {
     const {
-        voice = 'shimmer',  // Soft voice - best for children
-        speed = 0.8         // Slightly slower for children comprehension
+        voice = 'nova',  // Warm female voice
+        speed = 0.85,     // Slightly slower for children comprehension
+        instructions,
     } = options;
 
     // Check cache first
-    const cacheKey = `${text}-${voice}-${speed}`;
+    const cacheKey = `${text}-${voice}-${speed}-${instructions ?? ''}`;
     if (audioCache.has(cacheKey)) {
         console.log('🔊 TTS: Using cached audio for:', text.substring(0, 30) + '...');
         return {
@@ -52,7 +54,8 @@ export async function generateSpeech(
             body: JSON.stringify({
                 text,
                 voice,
-                speed
+                speed,
+                instructions
             }),
         });
 

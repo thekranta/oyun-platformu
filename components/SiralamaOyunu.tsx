@@ -104,7 +104,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
         // Start voice during countdown
         if (Platform.OS === 'web') {
-            speechService.speak(`Merhaba ${name}! Sayıları sırala.`, { voice: 'shimmer', speed: 0.8 });
+            speechService.speak(`Merhaba ${name}! Sayıları sırala.`);
         }
 
         // Countdown animation
@@ -174,7 +174,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
                 if (currentRound < TOTAL_ROUNDS) {
                     // Round complete voice
-                    await speechService.speak('Aferin!', { voice: 'shimmer', speed: 0.8 });
+                    await speechService.speak('Aferin!');
 
                     setTimeout(() => {
                         setCurrentRound(r => r + 1);
@@ -182,7 +182,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
                     }, 1200);
                 } else {
                     // Game Complete
-                    await speechService.speak('Tebrikler!', { voice: 'shimmer', speed: 0.8 });
+                    await speechService.speak('Tebrikler!');
 
                     setTimeout(() => {
                         const now = new Date();
@@ -202,7 +202,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
             // Error feedback
             if (Platform.OS === 'web') {
-                speechService.speak('Tekrar dene!', { voice: 'shimmer', speed: 0.8 });
+                speechService.speak('Tekrar dene!');
             }
 
             setTimeout(() => setShowError(null), 500);

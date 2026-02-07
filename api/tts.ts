@@ -25,8 +25,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const {
         text,
-        voice = 'shimmer',  // OpenAI voices: alloy, echo, fable, onyx, nova, shimmer (soft warm voice)
-        speed = 0.9      // 0.25 to 4.0
+        voice = 'nova',  // Warm female voice
+        speed = 0.85,    // 0.25 to 4.0
+        instructions = 'Speak in a warm, friendly, caring female voice suitable for preschool children. Keep the tone gentle and encouraging.'
     } = req.body;
 
     if (!text || typeof text !== 'string') {
@@ -52,10 +53,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                model: 'tts-1-hd',
+                model: 'gpt-4o-mini-tts',
                 input: text,
-                voice: voice,  // nova = warm female, shimmer = soft female
+                voice: voice,
                 speed: Math.max(0.25, Math.min(4.0, speed)),
+                instructions,
                 response_format: 'mp3'
             }),
         });
