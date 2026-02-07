@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const {
         text,
-        voice = 'nova',  // Warm female voice
+        voice = 'coral',  // Warm female voice
         speed = 0.85,    // 0.25 to 4.0
         instructions = 'Speak in a warm, friendly, caring female voice suitable for preschool children. Keep the tone gentle and encouraging.'
     } = req.body;

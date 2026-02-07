@@ -20,6 +20,7 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { supabase } from '../lib/supabase';
+import { speak } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
 
@@ -132,6 +133,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [dragLogs, setDragLogs] = useState<DragLog[]>([]);
     const [mavisMessage, setMavisMessage] = useState('🍎🥕');
     const [levelTimes, setLevelTimes] = useState<number[]>([]); // Track time for each level
+    const introMessage = `Merhaba ${childName}! Meyveleri sepete, sebzeleri kasaya koy. Bir yiyeceğe dokun, sonra nereye gideceğine dokun!`;
 
     // Floating animations for decorations
     const floatAnim1 = useRef(new Animated.Value(0)).current;
@@ -147,6 +149,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [targetLayouts, setTargetLayouts] = useState<{ [key: string]: { x: number; y: number; width: number; height: number } }>({});
 
     const confettiRef = useRef<ConfettiCannon>(null);
+    const hasGreeted = useRef(false);
 
     // ============== FLOATING ANIMATIONS ==============
     useEffect(() => {
@@ -234,8 +237,14 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         if (gameReady) {
             setFoods(generateLevel(level));
             setLevelStartTime(Date.now());
+            if (!hasGreeted.current) {
+                hasGreeted.current = true;
+                setTimeout(() => {
+                    speak(introMessage);
+                }, 500);
+            }
         }
-    }, [gameReady, generateLevel, level]);
+    }, [gameReady, generateLevel, level, introMessage]);
 
     // ============== TAP SELECTION HANDLING ==============
     const handleItemTap = (item: FoodItem) => {
@@ -517,9 +526,14 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 <View style={styles.gameContent}>
                     {/* Header */}
                     <View style={styles.header}>
-                        <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                            <Ionicons name="home" size={22} color="#fff" />
-                        </TouchableOpacity>
+                        <View style={styles.headerLeft}>
+                            <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
+                                <Ionicons name="home" size={22} color="#fff" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.repeatBtn} onPress={() => speak(introMessage)}>
+                                <Ionicons name="volume-high" size={20} color="#fff" />
+                            </TouchableOpacity>
+                        </View>
 
                         <View style={styles.levelBadge}>
                             <Text style={styles.levelEmoji}>⭐</Text>
@@ -692,10 +706,25 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 15,
     },
+    headerLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+    },
     exitBtn: {
         width: 44,
         height: 44,
         borderRadius: 22,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+    },
+    repeatBtn: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
         backgroundColor: 'rgba(255,255,255,0.15)',
         justifyContent: 'center',
         alignItems: 'center',
