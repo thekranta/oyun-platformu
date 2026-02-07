@@ -20,7 +20,6 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { supabase } from '../lib/supabase';
-import { speak } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
 
@@ -126,7 +125,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [totalErrors, setTotalErrors] = useState(0);
     const [moves, setMoves] = useState(0);
     const [showScaffolding, setShowScaffolding] = useState(false);
-    const [highlightTarget, setHighlightTarget] = useState<string | null>(null);
     const [showWin, setShowWin] = useState(false);
     const [gameComplete, setGameComplete] = useState(false);
     const [startTime] = useState(Date.now());
@@ -149,7 +147,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [targetLayouts, setTargetLayouts] = useState<{ [key: string]: { x: number; y: number; width: number; height: number } }>({});
 
     const confettiRef = useRef<ConfettiCannon>(null);
-    const hasGreeted = useRef(false);
 
     // ============== FLOATING ANIMATIONS ==============
     useEffect(() => {
@@ -237,15 +234,8 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         if (gameReady) {
             setFoods(generateLevel(level));
             setLevelStartTime(Date.now());
-            // Voice greeting when game starts
-            if (!hasGreeted.current) {
-                hasGreeted.current = true;
-                setTimeout(() => {
-                    speak(`Merhaba ${childName}! Meyveleri pembe sepete, sebzeleri yeşil kutuya koy! Bir yiyeceğe dokun, sonra nereye gideceğine dokun!`);
-                }, 500);
-            }
         }
-    }, [gameReady, generateLevel, level, childName]);
+    }, [gameReady, generateLevel, level]);
 
     // ============== TAP SELECTION HANDLING ==============
     const handleItemTap = (item: FoodItem) => {
@@ -319,8 +309,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         setShowWin(true);
         confettiRef.current?.start();
         setMavisMessage('\ud83c\udf89 \ud83c\udfc6 \u2728');
-        // Sadece seviye tamamlandığında sesli kutlama
-        speak(`S\u00fcpersin ${childName}!`);
+        // Sesli kutlama kaldırıldı
 
         // DDA Logic - Level 1: Under 20 seconds → Level up for next session
         const shouldLevelUp = errors === 0 && levelTime < 20;
@@ -555,8 +544,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                                     style={[
                                         styles.targetArea,
                                         { backgroundColor: target.color },
-                                        highlightTarget === target.id && styles.targetHighlight,
-                                        selectedItem && selectedItem.category === target.category && styles.targetHint,
                                     ]}
                                     onLayout={() => measureTargets()}
                                 >
@@ -629,6 +616,8 @@ const styles = StyleSheet.create({
     },
     background: {
         flex: 1,
+        width: '100%',
+        height: '100%',
     },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -783,12 +772,6 @@ const styles = StyleSheet.create({
         borderWidth: 3,
         borderColor: 'rgba(255,255,255,0.5)',
     },
-    targetHighlight: {
-        transform: [{ scale: 1.08 }],
-        borderColor: '#FFD700',
-        borderWidth: 4,
-        shadowOpacity: 0.3,
-    },
     targetIcon: {
         fontSize: 40,
     },
@@ -866,11 +849,6 @@ const styles = StyleSheet.create({
         shadowRadius: 12,
         elevation: 10,
     },
-    targetHint: {
-        borderColor: '#FFD700',
-        borderWidth: 4,
-        transform: [{ scale: 1.02 }],
-    },
 
     // Overlays
     winOverlay: {
@@ -923,4 +901,3 @@ const styles = StyleSheet.create({
         color: '#5D4037',
     },
 });
-
