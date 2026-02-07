@@ -133,7 +133,8 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [dragLogs, setDragLogs] = useState<DragLog[]>([]);
     const [mavisMessage, setMavisMessage] = useState('🍎🥕');
     const [levelTimes, setLevelTimes] = useState<number[]>([]); // Track time for each level
-    const introMessage = `Merhaba ${childName}! Meyveleri sepete, sebzeleri kasaya koy. Bir yiyeceğe dokun, sonra nereye gideceğine dokun!`;
+    const introMessage = 'Meyveleri sepete, sebzeleri kasaya koy. Bir yiyeceğe dokun, sonra nereye gideceğine dokun!';
+    const fullIntroMessage = childName ? `Merhaba ${childName}! ${introMessage}` : introMessage;
 
     // Floating animations for decorations
     const floatAnim1 = useRef(new Animated.Value(0)).current;
@@ -149,7 +150,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [targetLayouts, setTargetLayouts] = useState<{ [key: string]: { x: number; y: number; width: number; height: number } }>({});
 
     const confettiRef = useRef<ConfettiCannon>(null);
-    const hasGreeted = useRef(false);
 
     // ============== FLOATING ANIMATIONS ==============
     useEffect(() => {
@@ -237,14 +237,8 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         if (gameReady) {
             setFoods(generateLevel(level));
             setLevelStartTime(Date.now());
-            if (!hasGreeted.current) {
-                hasGreeted.current = true;
-                setTimeout(() => {
-                    speak(introMessage);
-                }, 500);
-            }
         }
-    }, [gameReady, generateLevel, level, introMessage]);
+    }, [gameReady, generateLevel, level]);
 
     // ============== TAP SELECTION HANDLING ==============
     const handleItemTap = (item: FoodItem) => {
@@ -491,7 +485,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 {/* Countdown Overlay */}
                 {!gameReady && (
                     <CountdownOverlay
-                        message="Meyveleri ve sebzeleri doğru yere koyalım!"
+                        message={introMessage}
                         childName={childName}
                         countdownSeconds={5}
                         onComplete={() => setGameReady(true)}
@@ -530,7 +524,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                             <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
                                 <Ionicons name="home" size={22} color="#fff" />
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.repeatBtn} onPress={() => speak(introMessage)}>
+                            <TouchableOpacity style={styles.repeatBtn} onPress={() => speak(fullIntroMessage)}>
                                 <Ionicons name="volume-high" size={20} color="#fff" />
                             </TouchableOpacity>
                         </View>

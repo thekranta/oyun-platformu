@@ -94,7 +94,7 @@ export default function CountdownOverlay({
                     ? `Merhaba ${childName}! ${message}`
                     : message;
 
-                await speak(personalizedMessage, { voice: 'nova', speed: 0.9 });
+                await speak(personalizedMessage);
             } catch (e) {
                 console.log('TTS error:', e);
             }
