@@ -27,6 +27,7 @@ import Toast from '@/components/Toast';
 import UzayBloklari from '@/components/UzayBloklari';
 import YapbozOyunu from '@/components/YapbozOyunu';
 import YaraticiCizim from '@/components/YaraticiCizim';
+import { GAME_CATALOG, GameCatalogItem, GameCatalogStatus } from '@/constants/gameCatalog';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
@@ -36,6 +37,37 @@ import { ActivityIndicator, Dimensions, Modal, Platform, ScrollView, StyleSheet,
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const DRAWING_BUCKET = 'cizimler';
+
+const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof Ionicons.glyphMap; displayTitle?: string; subtitle?: string }> = {
+  'hafiza': { color: '#64B5F6', icon: 'grid', displayTitle: 'Ciftini Bul', subtitle: 'Hafiza ve dikkat' },
+  'siralama': { color: '#FFB74D', icon: 'list', displayTitle: 'Siralama', subtitle: 'Sayilari diz' },
+  'eksik-sayi-bul': { color: '#FF8A65', icon: 'help-circle', displayTitle: 'Eksik Sayi', subtitle: 'Eksik rakami tamamla' },
+  'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Siniflandirma' },
+  'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Gorsel dikkat' },
+  'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcisi', subtitle: 'Hangisi daha cok?' },
+  'sayi-komsulari': { color: '#FFA726', icon: 'train-outline', displayTitle: 'Sayi Komsulari', subtitle: 'Sayi iliskileri' },
+  'diziyi-tamamla': { color: '#BA68C8', icon: 'extension-puzzle', displayTitle: 'Diziyi Tamamla', subtitle: 'Oruntu' },
+  'bunu-soyle': { color: '#F06292', icon: 'mic', displayTitle: 'Bunu Soyle', subtitle: 'Sozlu ifade' },
+  'kodlama': { color: '#00ACC1', icon: 'map', displayTitle: 'Minik Kasif', subtitle: 'Kodlama' },
+  'rakam-yazma': { color: '#4DB6AC', icon: 'pencil', displayTitle: 'Rakam Yazma', subtitle: 'Rakam tanima' },
+  'kutuyu-bul': { color: '#7E57C2', icon: 'cube', displayTitle: 'Kutuyu Bul', subtitle: 'Gorsel takip' },
+  'sayilari-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Sayilari Birlestir', subtitle: 'Sayi sirasi' },
+  'yapboz': { color: '#E91E63', icon: 'apps', displayTitle: 'Yapboz', subtitle: 'Parca-butun' },
+  'golge-dedektifi': { color: '#1565C0', icon: 'eye-outline', displayTitle: 'Golge Dedektifi', subtitle: 'Eslestirme' },
+  'onluk-cerceve': { color: '#FF7043', icon: 'grid-outline', displayTitle: 'Onluk Cerceve', subtitle: 'Onluk sistem' },
+  'tarti-dengesi': { color: '#AB47BC', icon: 'color-filter-outline', displayTitle: 'Tarti Dengesi', subtitle: 'Esitlik' },
+  'sihirli-siseler': { color: '#4CAF50', icon: 'flask-outline', displayTitle: 'Sihirli Siseler', subtitle: 'Renkleri grupla' },
+  'sihirli-tuval': { color: '#3F51B5', icon: 'color-palette-outline', displayTitle: 'Sihirli Tuval', subtitle: 'Gorsel dikkat' },
+  'uzay-bloklari': { color: '#1a1a4e', icon: 'planet-outline', displayTitle: 'Uzay Bloklari', subtitle: 'Uzamsal dusunme' },
+  'renkli-baglantalar': { color: '#6366F1', icon: 'git-merge-outline', displayTitle: 'Renkli Baglantilar', subtitle: 'Baglanti kurma' },
+  'ceviz-macera': { color: '#795548', icon: 'leaf', displayTitle: 'Ceviz Macerasi', subtitle: 'Secim ve sonuc' },
+  'aile-sepeti-macerasi': { color: '#8D6E63', icon: 'basket-outline', displayTitle: 'Aile Sepeti', subtitle: 'Is birligi' },
+  'adalet-hikayesi': { color: '#9C27B0', icon: 'scale-outline', displayTitle: 'Adalet Hikayesi', subtitle: 'Paylasim' },
+  'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratici ifade' },
+  'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Muzik Kutusu', subtitle: 'Sarki ve ritim' },
+};
+
+const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
@@ -534,6 +566,50 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal' | 'yaratici' | 'muzikler'>('bilissel');
   const [selectedSongIndex, setSelectedSongIndex] = useState<number>(0);
 
+  const renderCatalogCard = (game: GameCatalogItem, compact = false) => {
+    const meta = GAME_CARD_META[game.id] || {
+      color: '#607D8B',
+      icon: 'game-controller-outline' as keyof typeof Ionicons.glyphMap,
+      displayTitle: game.title,
+      subtitle: game.skillFocus,
+    };
+
+    return (
+      <TouchableOpacity
+        key={game.id}
+        style={[
+          styles.oyunKarti,
+          styles.catalogGameCard,
+          compact && styles.catalogGameCardCompact,
+          { backgroundColor: meta.color },
+        ]}
+        onPress={() => oyunuBaslat(game.routeKey)}
+      >
+        <Ionicons name={meta.icon} size={compact ? 26 : 34} color="white" style={{ marginBottom: compact ? 5 : 8 }} />
+        <Text style={[styles.oyunBaslik, compact && styles.catalogGameTitleCompact]} numberOfLines={2}>
+          {meta.displayTitle || game.title}
+        </Text>
+        <Text style={[styles.oyunAciklama, compact && styles.catalogGameSubtitleCompact]} numberOfLines={2}>
+          {meta.subtitle || game.skillFocus}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderCatalogSection = (title: string, status: GameCatalogStatus, compact = false) => {
+    const games = getCatalogGames(status);
+    if (games.length === 0) return null;
+
+    return (
+      <View style={styles.catalogSection}>
+        <Text style={styles.catalogSectionTitle}>{title}</Text>
+        <View style={styles.catalogGrid}>
+          {games.map((game) => renderCatalogCard(game, compact))}
+        </View>
+      </View>
+    );
+  };
+
 
   // === EKRANLAR ===
   if (asama === 'giris') {
@@ -892,6 +968,19 @@ export default function App() {
           <View style={styles.headerContainer}>
             <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
             <Text style={styles.bilgi}>Bugün ne oynamak istersin?</Text>
+          </View>
+
+          <View style={styles.catalogShowcase}>
+            <View style={styles.catalogShowcaseHeader}>
+              <Text style={styles.catalogEyebrow}>Ogrenme Yolu</Text>
+              <Text style={styles.catalogTitle}>One Cikan Oyunlar</Text>
+              <Text style={styles.catalogSubtitle}>
+                Az secenekle basla; tum oyunlar asagidaki klasik menude korunuyor.
+              </Text>
+            </View>
+            {renderCatalogSection('Bugunun cekirdek oyunlari', 'core')}
+            {renderCatalogSection('Hikaye ve ifade alanlari', 'story', true)}
+            {renderCatalogSection('Yaraticilik', 'creative', true)}
           </View>
 
           <View style={styles.tabContainer}>
@@ -1568,6 +1657,71 @@ const styles = StyleSheet.create({
   oyunKarti: { width: 160, height: 160, padding: 15, borderRadius: 25, justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 3 },
   oyunBaslik: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginTop: 5 },
   oyunAciklama: { color: 'rgba(255,255,255,0.9)', fontSize: 12, textAlign: 'center' },
+  catalogShowcase: {
+    width: '100%',
+    maxWidth: 980,
+    alignSelf: 'center',
+    marginBottom: 26,
+    paddingHorizontal: 14,
+  },
+  catalogShowcaseHeader: {
+    marginBottom: 14,
+    alignItems: 'center',
+  },
+  catalogEyebrow: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1976D2',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  catalogTitle: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#263238',
+    textAlign: 'center',
+  },
+  catalogSubtitle: {
+    fontSize: 14,
+    color: '#607D8B',
+    textAlign: 'center',
+    marginTop: 6,
+    maxWidth: 560,
+  },
+  catalogSection: {
+    marginTop: 14,
+  },
+  catalogSectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#37474F',
+    marginBottom: 10,
+    textAlign: 'left',
+  },
+  catalogGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  catalogGameCard: {
+    width: 142,
+    height: 138,
+    borderRadius: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  catalogGameCardCompact: {
+    width: 132,
+    height: 124,
+  },
+  catalogGameTitleCompact: {
+    fontSize: 15,
+  },
+  catalogGameSubtitleCompact: {
+    fontSize: 11,
+  },
 
   sonucBaslik: { fontSize: 36, fontWeight: 'bold', color: '#FF9800', marginVertical: 10, textAlign: 'center' },
   soundButton: { position: 'absolute', top: 50, right: 20, backgroundColor: 'rgba(0,0,0,0.3)', padding: 12, borderRadius: 25, zIndex: 10 },
