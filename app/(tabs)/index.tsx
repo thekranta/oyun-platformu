@@ -39,32 +39,32 @@ const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const DRAWING_BUCKET = 'cizimler';
 
 const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof Ionicons.glyphMap; displayTitle?: string; subtitle?: string }> = {
-  'hafiza': { color: '#64B5F6', icon: 'grid', displayTitle: 'Ciftini Bul', subtitle: 'Hafiza ve dikkat' },
-  'siralama': { color: '#FFB74D', icon: 'list', displayTitle: 'Siralama', subtitle: 'Sayilari diz' },
-  'eksik-sayi-bul': { color: '#FF8A65', icon: 'help-circle', displayTitle: 'Eksik Sayi', subtitle: 'Eksik rakami tamamla' },
-  'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Siniflandirma' },
-  'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Gorsel dikkat' },
-  'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcisi', subtitle: 'Hangisi daha cok?' },
-  'sayi-komsulari': { color: '#FFA726', icon: 'train-outline', displayTitle: 'Sayi Komsulari', subtitle: 'Sayi iliskileri' },
-  'diziyi-tamamla': { color: '#BA68C8', icon: 'extension-puzzle', displayTitle: 'Diziyi Tamamla', subtitle: 'Oruntu' },
-  'bunu-soyle': { color: '#F06292', icon: 'mic', displayTitle: 'Bunu Soyle', subtitle: 'Sozlu ifade' },
-  'kodlama': { color: '#00ACC1', icon: 'map', displayTitle: 'Minik Kasif', subtitle: 'Kodlama' },
-  'rakam-yazma': { color: '#4DB6AC', icon: 'pencil', displayTitle: 'Rakam Yazma', subtitle: 'Rakam tanima' },
-  'kutuyu-bul': { color: '#7E57C2', icon: 'cube', displayTitle: 'Kutuyu Bul', subtitle: 'Gorsel takip' },
-  'sayilari-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Sayilari Birlestir', subtitle: 'Sayi sirasi' },
-  'yapboz': { color: '#E91E63', icon: 'apps', displayTitle: 'Yapboz', subtitle: 'Parca-butun' },
-  'golge-dedektifi': { color: '#1565C0', icon: 'eye-outline', displayTitle: 'Golge Dedektifi', subtitle: 'Eslestirme' },
-  'onluk-cerceve': { color: '#FF7043', icon: 'grid-outline', displayTitle: 'Onluk Cerceve', subtitle: 'Onluk sistem' },
-  'tarti-dengesi': { color: '#AB47BC', icon: 'color-filter-outline', displayTitle: 'Tarti Dengesi', subtitle: 'Esitlik' },
-  'sihirli-siseler': { color: '#4CAF50', icon: 'flask-outline', displayTitle: 'Sihirli Siseler', subtitle: 'Renkleri grupla' },
-  'sihirli-tuval': { color: '#3F51B5', icon: 'color-palette-outline', displayTitle: 'Sihirli Tuval', subtitle: 'Gorsel dikkat' },
-  'uzay-bloklari': { color: '#1a1a4e', icon: 'planet-outline', displayTitle: 'Uzay Bloklari', subtitle: 'Uzamsal dusunme' },
-  'renkli-baglantalar': { color: '#6366F1', icon: 'git-merge-outline', displayTitle: 'Renkli Baglantilar', subtitle: 'Baglanti kurma' },
-  'ceviz-macera': { color: '#795548', icon: 'leaf', displayTitle: 'Ceviz Macerasi', subtitle: 'Secim ve sonuc' },
-  'aile-sepeti-macerasi': { color: '#8D6E63', icon: 'basket-outline', displayTitle: 'Aile Sepeti', subtitle: 'Is birligi' },
-  'adalet-hikayesi': { color: '#9C27B0', icon: 'scale-outline', displayTitle: 'Adalet Hikayesi', subtitle: 'Paylasim' },
-  'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratici ifade' },
-  'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Muzik Kutusu', subtitle: 'Sarki ve ritim' },
+  'hafiza': { color: '#64B5F6', icon: 'grid', displayTitle: 'Çiftini Bul', subtitle: 'Hafıza ve dikkat' },
+  'siralama': { color: '#FFB74D', icon: 'list', displayTitle: 'Sıralama', subtitle: 'Sayıları diz' },
+  'eksik-sayi-bul': { color: '#FF8A65', icon: 'help-circle', displayTitle: 'Eksik Sayı', subtitle: 'Eksik rakamı tamamla' },
+  'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Sınıflandırma' },
+  'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Görsel dikkat' },
+  'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcısı', subtitle: 'Hangisi daha çok?' },
+  'sayi-komsulari': { color: '#FFA726', icon: 'train-outline', displayTitle: 'Sayı Komşuları', subtitle: 'Sayı ilişkileri' },
+  'diziyi-tamamla': { color: '#BA68C8', icon: 'extension-puzzle', displayTitle: 'Diziyi Tamamla', subtitle: 'Örüntü' },
+  'bunu-soyle': { color: '#F06292', icon: 'mic', displayTitle: 'Bunu Söyle', subtitle: 'Sözlü ifade' },
+  'kodlama': { color: '#00ACC1', icon: 'map', displayTitle: 'Minik Kaşif', subtitle: 'Kodlama' },
+  'rakam-yazma': { color: '#4DB6AC', icon: 'pencil', displayTitle: 'Rakam Yazma', subtitle: 'Rakam tanıma' },
+  'kutuyu-bul': { color: '#7E57C2', icon: 'cube', displayTitle: 'Kutuyu Bul', subtitle: 'Görsel takip' },
+  'sayilari-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Sayıları Birleştir', subtitle: 'Sayı sırası' },
+  'yapboz': { color: '#E91E63', icon: 'apps', displayTitle: 'Yapboz', subtitle: 'Parça-bütün' },
+  'golge-dedektifi': { color: '#1565C0', icon: 'eye-outline', displayTitle: 'Gölge Dedektifi', subtitle: 'Eşleştirme' },
+  'onluk-cerceve': { color: '#FF7043', icon: 'grid-outline', displayTitle: 'Onluk Çerçeve', subtitle: 'Onluk sistem' },
+  'tarti-dengesi': { color: '#AB47BC', icon: 'color-filter-outline', displayTitle: 'Tartı Dengesi', subtitle: 'Eşitlik' },
+  'sihirli-siseler': { color: '#4CAF50', icon: 'flask-outline', displayTitle: 'Sihirli Şişeler', subtitle: 'Renkleri grupla' },
+  'sihirli-tuval': { color: '#3F51B5', icon: 'color-palette-outline', displayTitle: 'Sihirli Tuval', subtitle: 'Görsel dikkat' },
+  'uzay-bloklari': { color: '#1a1a4e', icon: 'planet-outline', displayTitle: 'Uzay Blokları', subtitle: 'Uzamsal düşünme' },
+  'renkli-baglantalar': { color: '#6366F1', icon: 'git-merge-outline', displayTitle: 'Renkli Bağlantılar', subtitle: 'Bağlantı kurma' },
+  'ceviz-macera': { color: '#795548', icon: 'leaf', displayTitle: 'Ceviz Macerası', subtitle: 'Seçim ve sonuç' },
+  'aile-sepeti-macerasi': { color: '#8D6E63', icon: 'basket-outline', displayTitle: 'Aile Sepeti', subtitle: 'İş birliği' },
+  'adalet-hikayesi': { color: '#9C27B0', icon: 'scale-outline', displayTitle: 'Adalet Hikayesi', subtitle: 'Paylaşım' },
+  'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
+  'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
 
 const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
@@ -972,15 +972,15 @@ export default function App() {
 
           <View style={styles.catalogShowcase}>
             <View style={styles.catalogShowcaseHeader}>
-              <Text style={styles.catalogEyebrow}>Ogrenme Yolu</Text>
-              <Text style={styles.catalogTitle}>One Cikan Oyunlar</Text>
+              <Text style={styles.catalogEyebrow}>Öğrenme Yolu</Text>
+              <Text style={styles.catalogTitle}>Öne Çıkan Oyunlar</Text>
               <Text style={styles.catalogSubtitle}>
-                Az secenekle basla; tum oyunlar asagidaki klasik menude korunuyor.
+                Az seçenekle başla; tüm oyunlar aşağıdaki klasik menüde korunuyor.
               </Text>
             </View>
-            {renderCatalogSection('Bugunun cekirdek oyunlari', 'core')}
-            {renderCatalogSection('Hikaye ve ifade alanlari', 'story', true)}
-            {renderCatalogSection('Yaraticilik', 'creative', true)}
+            {renderCatalogSection('Bugünün çekirdek oyunları', 'core')}
+            {renderCatalogSection('Hikaye ve ifade alanları', 'story', true)}
+            {renderCatalogSection('Yaratıcılık', 'creative', true)}
           </View>
 
           <View style={styles.tabContainer}>
@@ -1659,7 +1659,7 @@ const styles = StyleSheet.create({
   oyunAciklama: { color: 'rgba(255,255,255,0.9)', fontSize: 12, textAlign: 'center' },
   catalogShowcase: {
     width: '100%',
-    maxWidth: 980,
+    maxWidth: 1180,
     alignSelf: 'center',
     marginBottom: 26,
     paddingHorizontal: 14,
@@ -1703,13 +1703,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 12,
+    gap: 10,
   },
   catalogGameCard: {
-    width: 142,
-    height: 138,
+    width: 136,
+    height: 134,
     borderRadius: 18,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 12,
   },
   catalogGameCardCompact: {
