@@ -294,9 +294,11 @@ const styles = StyleSheet.create({
     },
     glassCard: {
         backgroundColor: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(20px)',
         borderWidth: 1,
         borderColor: 'rgba(255, 255, 255, 0.3)',
+        ...(Platform.OS === 'web' ? {
+            backdropFilter: 'blur(20px)',
+        } as any : {}),
     },
     titleContainer: {
         flexDirection: 'row',
@@ -329,7 +331,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         borderWidth: 2,
         borderColor: 'transparent',
-        transition: 'all 0.2s ease',
+        ...(Platform.OS === 'web' ? {
+            transition: 'all 0.2s ease',
+        } as any : {}),
     },
     inputContainerFocused: {
         borderColor: '#6366F1',
@@ -348,7 +352,9 @@ const styles = StyleSheet.create({
         height: 52,
         fontSize: 16,
         color: '#1A1A2E',
-        outlineStyle: 'none',
+        ...(Platform.OS === 'web' ? {
+            outlineStyle: 'none',
+        } as any : {}),
     },
     requirementsContainer: {
         marginBottom: 20,

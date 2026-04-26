@@ -1,5 +1,9 @@
 # Welcome to your Expo app 👋
 
+Bu repo Expo/React Native tabanli cocuk oyun platformudur. Mevcut durum, eksikler, oyun envanteri ve yol haritasi icin [PROJECT_STATUS.md](./PROJECT_STATUS.md) dosyasina bak.
+
+Not: Projede bugune kadar gelistirilmis oyunlar ve varliklar silinmeden korunur. Gerekirse aktif menu disina alinabilir veya deneysel olarak etiketlenebilir.
+
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started

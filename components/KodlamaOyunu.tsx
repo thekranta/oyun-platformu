@@ -333,7 +333,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
     const iv = setInterval(() => {
       if (i >= commands.length) {
         clearInterval(iv);
-        if (status !== GameStatus.WON) { setStatus(GameStatus.LOST); setErrors(e => e + 1); if (soundOn) speakTeacher('Tekrar dene!'); }
+        setStatus(GameStatus.LOST); setErrors(e => e + 1); if (soundOn) speakTeacher('Tekrar dene!');
         return;
       }
       const d = commands[i];
@@ -459,7 +459,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
           <View style={st.editor}>
             <View style={st.tools}>
               {[{ id: CellType.WALL, icon: '📦', bg: '#78909C' }, { id: CellType.START, icon: '🐰', bg: '#64B5F6' }, { id: CellType.GOAL, icon: '🧸', bg: '#FFD54F' }, { id: 'ERASER' as EditorTool, icon: '🧹', bg: '#E0E0E0' }].map(t => (
-                <TouchableOpacity key={t.id} style={[st.toolBtn, { backgroundColor: t.bg }, tool === t.id && st.toolOn]} onPress={() => setTool(t.id)}>
+                <TouchableOpacity key={t.id} style={[st.toolBtn, { backgroundColor: t.bg }, tool === t.id && st.toolOn]} onPress={() => setTool(t.id as EditorTool)}>
                   <Text style={st.toolTxt}>{t.icon}</Text>
                 </TouchableOpacity>
               ))}
@@ -587,4 +587,3 @@ const st = StyleSheet.create({
   goOff: { backgroundColor: '#BDBDBD', borderBottomColor: '#9E9E9E' },
   goTxt: { fontSize: 22 },
 });
-

@@ -28,7 +28,7 @@ import UzayBloklari from '@/components/UzayBloklari';
 import YapbozOyunu from '@/components/YapbozOyunu';
 import YaraticiCizim from '@/components/YaraticiCizim';
 import { Ionicons } from '@expo/vector-icons';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';

@@ -19,6 +19,12 @@ import { asset } from '../lib/assetMap';
 // ============= CONFIG =============
 export interface ShadowDetectiveConfig {
     level: number;
+    itemCount?: number;
+    hasDistractors?: boolean;
+    assets?: {
+        objects?: ImageSourcePropType[];
+        shadows?: ImageSourcePropType[];
+    };
 }
 
 interface ShadowDetectiveProps {
@@ -441,4 +447,3 @@ const styles = StyleSheet.create({
     },
     motivationText: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginTop: 10 },
 });
-
