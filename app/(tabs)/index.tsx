@@ -31,7 +31,7 @@ import { GAME_CATALOG, GameCatalogItem, GameCatalogStatus } from '@/constants/ga
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -68,6 +68,26 @@ const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof Ionicon
 };
 
 const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
+
+const getTodayKey = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = `${now.getMonth() + 1}`.padStart(2, '0');
+  const day = `${now.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const createDailyGamePlan = (ageMonths: number, dayKey: string) => {
+  const coreGames = getCatalogGames('core').map((game) => game.routeKey);
+  if (coreGames.length <= 3) return coreGames;
+
+  // Deterministic daily rotation based on day + age bucket
+  const ageBucket = Math.max(0, Math.floor((ageMonths - 24) / 12));
+  const seed = dayKey.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0) + ageBucket * 17;
+  const shift = seed % coreGames.length;
+  const rotated = [...coreGames.slice(shift), ...coreGames.slice(0, shift)];
+  return rotated.slice(0, 3);
+};
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
@@ -355,6 +375,11 @@ export default function App() {
 
 
   const oyunuBaslat = (oyunTipi: string) => {
+    if (dailyPlanRoutes.includes(oyunTipi)) {
+      setActiveDailyRoute(oyunTipi);
+    } else {
+      setActiveDailyRoute(null);
+    }
     setYukleniyor(false);
     setAsama(oyunTipi);
   };
@@ -382,6 +407,13 @@ export default function App() {
       visual_attention_score?: number;
     },
   ) => {
+    if (activeDailyRoute) {
+      setDailyCompletedRoutes((prev) => {
+        if (prev.includes(activeDailyRoute)) return prev;
+        return [...prev, activeDailyRoute];
+      });
+      setActiveDailyRoute(null);
+    }
     setAsama('sonuc');
     sessizceAnalizEtVeKaydet(oyunAdi, sure, finalHamle, finalHata, algilananKelime, extraData);
   };
@@ -390,6 +422,10 @@ export default function App() {
     setAd('');
     setYas('');
     setEmail('');
+    setActiveDailyRoute(null);
+    setDailyCompletedRoutes([]);
+    setDailyPlanRoutes([]);
+    setDailyPlanDate('');
     setAsama('giris');
   };
 
@@ -565,6 +601,48 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal' | 'yaratici' | 'muzikler'>('bilissel');
   const [selectedSongIndex, setSelectedSongIndex] = useState<number>(0);
+  const [dailyPlanDate, setDailyPlanDate] = useState<string>('');
+  const [dailyPlanRoutes, setDailyPlanRoutes] = useState<string[]>([]);
+  const [dailyCompletedRoutes, setDailyCompletedRoutes] = useState<string[]>([]);
+  const [activeDailyRoute, setActiveDailyRoute] = useState<string | null>(null);
+
+  const parsedAgeMonths = parseInt(yas, 10) || 48;
+  const nextDailyRoute = dailyPlanRoutes.find((route) => !dailyCompletedRoutes.includes(route)) || null;
+  const isDailyPlanComplete = dailyPlanRoutes.length > 0 && dailyCompletedRoutes.length >= dailyPlanRoutes.length;
+
+  const getGameTitleByRoute = (routeKey: string) => {
+    const game = GAME_CATALOG.find((item) => item.routeKey === routeKey);
+    return game?.title || routeKey;
+  };
+
+  const ensureDailyPlan = useCallback(() => {
+    const todayKey = getTodayKey();
+    if (dailyPlanDate === todayKey && dailyPlanRoutes.length === 3) return;
+
+    const plan = createDailyGamePlan(parsedAgeMonths, todayKey);
+    setDailyPlanDate(todayKey);
+    setDailyPlanRoutes(plan);
+    setDailyCompletedRoutes([]);
+    setActiveDailyRoute(null);
+  }, [dailyPlanDate, dailyPlanRoutes.length, parsedAgeMonths]);
+
+  const startDailyFlow = () => {
+    ensureDailyPlan();
+    const nextRoute = (dailyPlanDate === getTodayKey() && dailyPlanRoutes.length > 0)
+      ? (dailyPlanRoutes.find((route) => !dailyCompletedRoutes.includes(route)) || dailyPlanRoutes[0])
+      : createDailyGamePlan(parsedAgeMonths, getTodayKey())[0];
+
+    if (nextRoute) {
+      setActiveDailyRoute(nextRoute);
+      oyunuBaslat(nextRoute);
+    }
+  };
+
+  useEffect(() => {
+    if (asama === 'menu') {
+      ensureDailyPlan();
+    }
+  }, [asama, ensureDailyPlan]);
 
   const renderCatalogCard = (game: GameCatalogItem, compact = false) => {
     const meta = GAME_CARD_META[game.id] || {
@@ -977,6 +1055,33 @@ export default function App() {
               <Text style={styles.catalogSubtitle}>
                 Az seçenekle başla; tüm oyunlar aşağıdaki klasik menüde korunuyor.
               </Text>
+            </View>
+            <View style={styles.dailyPlanCard}>
+              <View style={styles.dailyPlanHeader}>
+                <Text style={styles.dailyPlanTitle}>Bugünün 3 Oyunu</Text>
+                <Text style={styles.dailyPlanCounter}>{dailyCompletedRoutes.length}/3 tamamlandı</Text>
+              </View>
+              <View style={styles.dailyPlanSteps}>
+                {dailyPlanRoutes.map((route, index) => {
+                  const done = dailyCompletedRoutes.includes(route);
+                  return (
+                    <View key={route} style={[styles.dailyPlanStep, done && styles.dailyPlanStepDone]}>
+                      <Text style={[styles.dailyPlanStepIndex, done && styles.dailyPlanStepIndexDone]}>{index + 1}</Text>
+                      <Text style={[styles.dailyPlanStepLabel, done && styles.dailyPlanStepLabelDone]} numberOfLines={1}>
+                        {getGameTitleByRoute(route)}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+              <TouchableOpacity
+                style={[styles.dailyPlanAction, isDailyPlanComplete && styles.dailyPlanActionComplete]}
+                onPress={startDailyFlow}
+              >
+                <Text style={styles.dailyPlanActionText}>
+                  {isDailyPlanComplete ? 'Tekrar Oyna' : nextDailyRoute ? 'Sıradaki Oyunu Başlat' : 'Günlük Akışı Başlat'}
+                </Text>
+              </TouchableOpacity>
             </View>
             {renderCatalogSection('Bugünün çekirdek oyunları', 'core')}
             {renderCatalogSection('Hikaye ve ifade alanları', 'story', true)}
@@ -1475,6 +1580,18 @@ export default function App() {
             <Text style={[styles.baslik, { textAlign: 'center' }]}>{ad}, Harika iş çıkardın!</Text>
             {yukleniyor && <ActivityIndicator size="small" color="#999" style={{ marginTop: 20 }} />}
 
+            {nextDailyRoute && (
+              <TouchableOpacity
+                style={[styles.buton, { backgroundColor: '#1E88E5' }]}
+                onPress={() => {
+                  setActiveDailyRoute(nextDailyRoute);
+                  oyunuBaslat(nextDailyRoute);
+                }}
+              >
+                <Text style={styles.butonYazi}>Siradaki Gunluk Oyun</Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity style={styles.buton} onPress={() => setAsama('menu')}>
               <Text style={styles.butonYazi}>Başka Oyun Oyna 🎮</Text>
             </TouchableOpacity>
@@ -1721,6 +1838,83 @@ const styles = StyleSheet.create({
   },
   catalogGameSubtitleCompact: {
     fontSize: 11,
+  },
+  dailyPlanCard: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(30, 136, 229, 0.18)',
+    marginBottom: 16,
+  },
+  dailyPlanHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dailyPlanTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  dailyPlanCounter: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1E88E5',
+  },
+  dailyPlanSteps: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 10,
+  },
+  dailyPlanStep: {
+    flex: 1,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    minHeight: 64,
+    justifyContent: 'center',
+  },
+  dailyPlanStepDone: {
+    backgroundColor: '#DCFCE7',
+  },
+  dailyPlanStepIndex: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#1E88E5',
+    marginBottom: 2,
+  },
+  dailyPlanStepIndexDone: {
+    color: '#16A34A',
+  },
+  dailyPlanStepLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#334155',
+    textAlign: 'center',
+  },
+  dailyPlanStepLabelDone: {
+    color: '#166534',
+  },
+  dailyPlanAction: {
+    backgroundColor: '#1E88E5',
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  dailyPlanActionComplete: {
+    backgroundColor: '#10B981',
+  },
+  dailyPlanActionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
   },
 
   sonucBaslik: { fontSize: 36, fontWeight: 'bold', color: '#FF9800', marginVertical: 10, textAlign: 'center' },
