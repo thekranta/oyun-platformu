@@ -4,8 +4,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
 import StudentStatsModal from '../components/StudentStatsModal';
+import { supabase } from '../lib/supabase';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+
+const getAuthToken = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || SUPABASE_KEY || '';
+};
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 interface Score {
@@ -132,9 +138,10 @@ export default function AdminPanel() {
 
     // Login State
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loggedInUser, setLoggedInUser] = useState('');
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
 
     // Toggle detail visibility
     const toggleDetailVisibility = (scoreId: number) => {
@@ -152,20 +159,40 @@ export default function AdminPanel() {
         }
     }, [isAuthenticated]);
 
-    const handleLogin = () => {
-        // Valid users: admin/12, fatih/123, türker/123
-        const validUsers: Record<string, { password: string; displayName: string }> = {
-            'admin': { password: '12', displayName: 'Admin' },
-            'fatih': { password: '123', displayName: 'Fatih' },
-            'türker': { password: '123', displayName: 'Türker' },
-        };
+    const handleLogin = async () => {
+        if (email.trim() === '' || password.trim() === '') {
+            alert('Lütfen e-posta ve şifrenizi giriniz.');
+            return;
+        }
 
-        const user = validUsers[username.toLowerCase()];
-        if (user && user.password === password) {
-            setLoggedInUser(user.displayName);
+        setIsLoggingIn(true);
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password,
+            });
+
+            if (error || !data.user) {
+                alert('Hatalı e-posta veya şifre!');
+                return;
+            }
+
+            const { data: adminRow, error: adminError } = await supabase
+                .from('admins')
+                .select('display_name')
+                .eq('user_id', data.user.id)
+                .single();
+
+            if (adminError || !adminRow) {
+                alert('Bu hesabın admin paneline erişim yetkisi yok.');
+                await supabase.auth.signOut();
+                return;
+            }
+
+            setLoggedInUser(adminRow.display_name);
             setIsAuthenticated(true);
-        } else {
-            alert('Hatalı kullanıcı adı veya şifre!');
+        } finally {
+            setIsLoggingIn(false);
         }
     };
 
@@ -196,10 +223,11 @@ export default function AdminPanel() {
     const fetchScores = async () => {
         setLoading(true);
         try {
+            const authToken = await getAuthToken();
             const response = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari?select=*&order=created_at.desc`, {
                 headers: {
                     'apikey': SUPABASE_KEY || '',
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Authorization': `Bearer ${authToken}`,
                 },
             });
 
@@ -280,7 +308,7 @@ export default function AdminPanel() {
                     method: 'PATCH',
                     headers: {
                         'apikey': SUPABASE_KEY || '',
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Authorization': `Bearer ${await getAuthToken()}`,
                         'Content-Type': 'application/json',
                         'Prefer': 'return=minimal',
                     },
@@ -455,7 +483,7 @@ export default function AdminPanel() {
                     {
                         headers: {
                             'apikey': SUPABASE_KEY || '',
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Authorization': `Bearer ${await getAuthToken()}`,
                         },
                     }
                 );
@@ -845,7 +873,7 @@ ChildhoodTech Ekibi
                     method: 'PATCH',
                     headers: {
                         'apikey': SUPABASE_KEY || '',
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Authorization': `Bearer ${await getAuthToken()}`,
                         'Content-Type': 'application/json',
                         'Prefer': 'return=minimal'
                     },
@@ -1363,10 +1391,11 @@ ChildhoodTech Ekibi
                         <Text style={styles.loginTitle}>Admin Girişi 🔒</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="Kullanıcı Adı"
-                            value={username}
-                            onChangeText={setUsername}
+                            placeholder="E-posta"
+                            value={email}
+                            onChangeText={setEmail}
                             autoCapitalize="none"
+                            keyboardType="email-address"
                         />
                         <TextInput
                             style={styles.input}
@@ -1375,8 +1404,8 @@ ChildhoodTech Ekibi
                             onChangeText={setPassword}
                             secureTextEntry
                         />
-                        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                            <Text style={styles.loginButtonText}>Giriş Yap</Text>
+                        <TouchableOpacity style={styles.loginButton} onPress={handleLogin} disabled={isLoggingIn}>
+                            {isLoggingIn ? <ActivityIndicator size="small" color="white" /> : <Text style={styles.loginButtonText}>Giriş Yap</Text>}
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.backButtonSimple} onPress={() => router.back()}>
                             <Text style={{ color: '#666' }}>Geri Dön</Text>

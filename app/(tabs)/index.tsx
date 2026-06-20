@@ -33,98 +33,22 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { supabase } from '../../lib/supabase';
+import {
+  calculateAgeInMonths,
+  createDailyGamePlan,
+  GAME_CARD_META,
+  getCatalogGames,
+  getTodayKey,
+  slugifyName,
+} from '../../lib/menuHelpers';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const DRAWING_BUCKET = 'cizimler';
 
-const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof Ionicons.glyphMap; displayTitle?: string; subtitle?: string }> = {
-  'hafiza': { color: '#64B5F6', icon: 'grid', displayTitle: 'Çiftini Bul', subtitle: 'Hafıza ve dikkat' },
-  'siralama': { color: '#FFB74D', icon: 'list', displayTitle: 'Sıralama', subtitle: 'Sayıları diz' },
-  'eksik-sayi-bul': { color: '#FF8A65', icon: 'help-circle', displayTitle: 'Eksik Sayı', subtitle: 'Eksik rakamı tamamla' },
-  'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Sınıflandırma' },
-  'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Görsel dikkat' },
-  'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcısı', subtitle: 'Hangisi daha çok?' },
-  'sayi-komsulari': { color: '#FFA726', icon: 'train-outline', displayTitle: 'Sayı Komşuları', subtitle: 'Sayı ilişkileri' },
-  'diziyi-tamamla': { color: '#BA68C8', icon: 'extension-puzzle', displayTitle: 'Diziyi Tamamla', subtitle: 'Örüntü' },
-  'bunu-soyle': { color: '#F06292', icon: 'mic', displayTitle: 'Bunu Söyle', subtitle: 'Sözlü ifade' },
-  'kodlama': { color: '#00ACC1', icon: 'map', displayTitle: 'Minik Kaşif', subtitle: 'Kodlama' },
-  'rakam-yazma': { color: '#4DB6AC', icon: 'pencil', displayTitle: 'Rakam Yazma', subtitle: 'Rakam tanıma' },
-  'kutuyu-bul': { color: '#7E57C2', icon: 'cube', displayTitle: 'Kutuyu Bul', subtitle: 'Görsel takip' },
-  'sayilari-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Sayıları Birleştir', subtitle: 'Sayı sırası' },
-  'yapboz': { color: '#E91E63', icon: 'apps', displayTitle: 'Yapboz', subtitle: 'Parça-bütün' },
-  'golge-dedektifi': { color: '#1565C0', icon: 'eye-outline', displayTitle: 'Gölge Dedektifi', subtitle: 'Eşleştirme' },
-  'onluk-cerceve': { color: '#FF7043', icon: 'grid-outline', displayTitle: 'Onluk Çerçeve', subtitle: 'Onluk sistem' },
-  'tarti-dengesi': { color: '#AB47BC', icon: 'color-filter-outline', displayTitle: 'Tartı Dengesi', subtitle: 'Eşitlik' },
-  'sihirli-siseler': { color: '#4CAF50', icon: 'flask-outline', displayTitle: 'Sihirli Şişeler', subtitle: 'Renkleri grupla' },
-  'sihirli-tuval': { color: '#3F51B5', icon: 'color-palette-outline', displayTitle: 'Sihirli Tuval', subtitle: 'Görsel dikkat' },
-  'uzay-bloklari': { color: '#1a1a4e', icon: 'planet-outline', displayTitle: 'Uzay Blokları', subtitle: 'Uzamsal düşünme' },
-  'renkli-baglantalar': { color: '#6366F1', icon: 'git-merge-outline', displayTitle: 'Renkli Bağlantılar', subtitle: 'Bağlantı kurma' },
-  'ceviz-macera': { color: '#795548', icon: 'leaf', displayTitle: 'Ceviz Macerası', subtitle: 'Seçim ve sonuç' },
-  'aile-sepeti-macerasi': { color: '#8D6E63', icon: 'basket-outline', displayTitle: 'Aile Sepeti', subtitle: 'İş birliği' },
-  'adalet-hikayesi': { color: '#9C27B0', icon: 'scale-outline', displayTitle: 'Adalet Hikayesi', subtitle: 'Paylaşım' },
-  'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
-  'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
-};
-
-const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
-
-const getTodayKey = () => {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = `${now.getMonth() + 1}`.padStart(2, '0');
-  const day = `${now.getDate()}`.padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const createDailyGamePlan = (ageMonths: number, dayKey: string) => {
-  const coreGames = getCatalogGames('core').map((game) => game.routeKey);
-  if (coreGames.length <= 3) return coreGames;
-
-  // Deterministic daily rotation based on day + age bucket
-  const ageBucket = Math.max(0, Math.floor((ageMonths - 24) / 12));
-  const seed = dayKey.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0) + ageBucket * 17;
-  const shift = seed % coreGames.length;
-  const rotated = [...coreGames.slice(shift), ...coreGames.slice(0, shift)];
-  return rotated.slice(0, 3);
-};
-
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-
 // Cloudflare Turnstile Sitekey
 const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
-
-// SSR-safe Supabase client initialization
-let supabase: SupabaseClient;
-if (typeof window !== 'undefined') {
-  // Client-side only: use AsyncStorage for session persistence
-  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-  supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
-    auth: {
-      storage: AsyncStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false,
-    },
-  });
-} else {
-  // Server-side: basic client without storage
-  supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!, {
-    auth: {
-      persistSession: false,
-    },
-  });
-}
-
-const slugifyName = (name: string) => {
-  const normalized = name
-    .trim()
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
-  const slug = normalized.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  return slug || 'ogrenci';
-};
 
 export default function App() {
   const router = useRouter();
@@ -242,48 +166,6 @@ export default function App() {
   };
 
 
-
-  // Calculate age in months from birth date
-  const calculateAgeInMonths = (dateString: string): number | null => {
-    // Expected format: DD/MM/YYYY or DD-MM-YYYY or YYYY-MM-DD
-    let day, month, year;
-
-    if (dateString.includes('/')) {
-      const parts = dateString.split('/');
-      if (parts.length === 3) {
-        day = parseInt(parts[0]);
-        month = parseInt(parts[1]);
-        year = parseInt(parts[2]);
-      }
-    } else if (dateString.includes('-')) {
-      const parts = dateString.split('-');
-      if (parts.length === 3) {
-        if (parts[0].length === 4) {
-          // YYYY-MM-DD format
-          year = parseInt(parts[0]);
-          month = parseInt(parts[1]);
-          day = parseInt(parts[2]);
-        } else {
-          // DD-MM-YYYY format
-          day = parseInt(parts[0]);
-          month = parseInt(parts[1]);
-          year = parseInt(parts[2]);
-        }
-      }
-    }
-
-    if (!day || !month || !year || isNaN(day) || isNaN(month) || isNaN(year)) {
-      return null;
-    }
-
-    const birthDate = new Date(year, month - 1, day);
-    const today = new Date();
-
-    const months = (today.getFullYear() - birthDate.getFullYear()) * 12 +
-      (today.getMonth() - birthDate.getMonth());
-
-    return months;
-  };
 
   // Registration function
   const kayitOl = async () => {
@@ -454,6 +336,9 @@ export default function App() {
   ) => {
     setYukleniyor(true);
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const authToken = sessionData.session?.access_token || SUPABASE_KEY || '';
+
       const uploadDrawingImage = async () => {
         if (!extraData?.cizimResimBase64 || !SUPABASE_URL || !SUPABASE_KEY) return null;
         const format = extraData.cizimResimFormat || 'png';
@@ -467,7 +352,7 @@ export default function App() {
         const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${DRAWING_BUCKET}/${filePath}`;
         const headers = {
           apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Authorization: `Bearer ${authToken}`,
           'Content-Type': `image/${format}`,
           'x-upsert': 'true',
         };
@@ -550,7 +435,7 @@ export default function App() {
         method: 'POST',
         headers: {
           apikey: SUPABASE_KEY || '',
-          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Authorization: `Bearer ${authToken}`,
           'Content-Type': 'application/json',
           Prefer: 'return=minimal',
         },
@@ -566,7 +451,7 @@ export default function App() {
             method: 'POST',
             headers: {
               apikey: SUPABASE_KEY || '',
-              Authorization: `Bearer ${SUPABASE_KEY}`,
+              Authorization: `Bearer ${authToken}`,
               'Content-Type': 'application/json',
               Prefer: 'return=minimal',
             },
@@ -579,7 +464,7 @@ export default function App() {
             method: 'POST',
             headers: {
               apikey: SUPABASE_KEY || '',
-              Authorization: `Bearer ${SUPABASE_KEY}`,
+              Authorization: `Bearer ${authToken}`,
               'Content-Type': 'application/json',
               Prefer: 'return=minimal',
             },
