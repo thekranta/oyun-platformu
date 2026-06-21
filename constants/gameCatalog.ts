@@ -1,4 +1,4 @@
-export type GameCatalogStatus = 'core' | 'secondary' | 'story' | 'creative' | 'music' | 'experimental';
+export type GameCatalogStatus = 'core' | 'secondary' | 'story' | 'creative' | 'music';
 
 export interface GameCatalogItem {
   id: string;
@@ -41,6 +41,3 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];
-
-export const getGamesByStatus = (status: GameCatalogStatus) =>
-  GAME_CATALOG.filter((game) => game.status === status);

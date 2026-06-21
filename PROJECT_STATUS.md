@@ -154,6 +154,14 @@ Bilinmeyen/iliskisiz konular (Faz 1 disinda, not edildi):
 - `EXPO_PUBLIC_GEMINI_API_KEY` Google tarafinda askiya alinmis (suspended) - AI yorum ozelligi calismiyor. Ayrica bu anahtar istemci tarafinda (bundle icinde) acik, bu da kendi basina bir risk.
 - TTS (sesli okuma) ozelliginde OpenAI API cagrisi JSON degil HTML donduruyor; sistem otomatik tarayici sesine duserek kullaniciyi etkilemiyor ama konsolda hata birikiyor.
 
+## Bilinen Hata: Cizim resmi web'de tam kaydedilmiyor (2026-06-21, kullanici test bulgusu)
+
+- **Belirti:** Cocuk "Hayal Defteri" (YaraticiCizim) ile cizim yapip kaydedince, admin panelinde cizimin yalnizca kucuk bir parcasi gorunuyor, tamami gorunmuyor.
+- **Kok neden:** `components/YaraticiCizim.tsx:264` cizimin tam PNG'sini `captureRef` (react-native-view-shot) ile yakaliyor. Bu fonksiyon web'de `findNodeHandle` kullaniyor ve web'de DESTEKLENMIYOR -> hata: "findNodeHandle is not supported on web". Resim uretilemeyince `cizimResimBase64` bos kaliyor; sadece vektor verisi (`cizimVerisi` = cizgi koordinatlari) kaydediliyor. Skor kaydi yine basarili (resim opsiyonel fallback), bu yuzden kullanici "✅ kaydedildi" goruyor ama resim eksik.
+- **Ikincil sorun:** Admin paneli resim olmayinca vektor verisini render ediyor ama olceklendirme/viewBox uyumsuzlugu nedeniyle cizimin sadece bir kosesi gorunuyor olabilir.
+- **Olasi cozum yonu:** Web'de `captureRef` yerine platform-ozel yakalama: cizim bir SVG/canvas ise web'de dogrudan `canvas.toDataURL()` veya SVG -> PNG serilestirme kullan. `SihirliTuval.tsx` de ayni `captureRef` desenini kullaniyorsa kontrol edilmeli.
+- **Durum:** Faz 2 (mimari) refactor'undan KAYNAKLANMIYOR; onceden beri var olan web'e ozgu sorun. Henuz duzeltilmedi, sadece not edildi.
+
 ## Faz 2 - Mimari Ayristirma (basladi, 2026-06-20)
 
 - ✅ `app/(tabs)/index.tsx`: kendi Supabase client kurulumu kaldirildi, `lib/supabase.ts`'teki paylasilan client import ediliyor. `npx tsc --noEmit` temiz.
@@ -165,7 +173,7 @@ Bilinmeyen/iliskisiz konular (Faz 1 disinda, not edildi):
 
 ## Bir Sonraki Mantikli Is Paketi
 
-1. `app/(tabs)/index.tsx` icini auth, skor kaydi, vitrin/menu ve oyun yonlendirme olarak ayri dosyalara/hook'lara bol (mimari ayristirma, dosya hala ~2090 satir).
-2. `experimental` etiketini kullanima ac veya kataloga gerek yoksa kaldir.
-3. `teacher-dashboard.tsx`'i gercek Supabase Auth'a tasi (su an sifre kontrolu yok, classes/class_students RLS'i bu yuzden islevsiz).
-4. `EXPO_PUBLIC_GEMINI_API_KEY` askiya alinmasini coz, istemci tarafinda acik olmasi riskini degerlendir.
+1. ✅ `app/(tabs)/index.tsx` mimari ayristirma yapildi (skor kaydi -> services/gameResults.ts, auth -> hooks/useAuth.ts). Dosya 1990 -> 1655 satir. Opsiyonel kalan: menu/vitrin render'ini ayri bilesene almak (dusuk oncelik).
+2. ✅ `experimental` etiketi kaldirildi: hicbir oyun kullanmadigi icin `GameCatalogStatus` union'indan cikarildi; ayrica kullanilmayan `getGamesByStatus` fonksiyonu silindi. tsc temiz, yeni lint uyarisi yok.
+3. ⬜ `teacher-dashboard.tsx`'i gercek Supabase Auth'a tasi (su an sifre kontrolu yok, classes/class_students RLS'i bu yuzden islevsiz).
+4. ⬜ `EXPO_PUBLIC_GEMINI_API_KEY` askiya alinmasini coz, istemci tarafinda acik olmasi riskini degerlendir.
