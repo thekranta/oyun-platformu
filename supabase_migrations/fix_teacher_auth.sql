@@ -58,6 +58,14 @@ CREATE POLICY "teacher_reads_student_scores" ON oyun_skorlari
 -- olarak kuruldu. Bu migration'da classes.teacher_id artik auth kullanici UUID'sini
 -- tasidigi icin (kod tarafi guncellendi) bu politikalar dogru calisir.
 
+-- 5. classes.teacher_id FK duzeltmesi.
+--    Canli DB'de classes.teacher_id ESKIDEN teachers(id)'ye FK ile bagliydi. Artik
+--    teacher_id = auth.uid() (auth kullanici UUID'si) tasidigi icin FK auth.users(id)'ye
+--    bakmali; aksi halde sinif olusturma FK ihlaliyle (HTTP 409) basarisiz olur.
+ALTER TABLE classes DROP CONSTRAINT IF EXISTS classes_teacher_id_fkey;
+ALTER TABLE classes ADD CONSTRAINT classes_teacher_id_fkey
+  FOREIGN KEY (teacher_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
 -- KURULUM (kod degil, manuel islem):
 -- a) Test icin: uygulamadaki Ogretmen Paneli > Kayit Ol ile yeni ogretmen olustur
 --    (artik sifre istiyor). Bu otomatik olarak Auth kullanicisi + teachers satiri olusturur.
