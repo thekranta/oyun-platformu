@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
 import TeacherDashboard from '../components/TeacherDashboard';
+import { supabase } from '../lib/supabase';
 
 // Web-compatible alert function
 const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: 'cancel' | 'default' | 'destructive' }>) => {
@@ -36,9 +37,6 @@ const showAlert = (title: string, message: string, buttons?: Array<{ text: strin
     }
 };
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
-
 interface TeacherProfile {
     id: string;
     email: string;
@@ -50,6 +48,7 @@ interface TeacherProfile {
 export default function TeacherDashboardPage() {
     const router = useRouter();
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [profile, setProfile] = useState<TeacherProfile | null>(null);
 
@@ -57,6 +56,7 @@ export default function TeacherDashboardPage() {
     const [showRegister, setShowRegister] = useState(false);
     const [regName, setRegName] = useState('');
     const [regEmail, setRegEmail] = useState('');
+    const [regPassword, setRegPassword] = useState('');
     const [regSchool, setRegSchool] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
 
@@ -85,56 +85,45 @@ export default function TeacherDashboardPage() {
             showAlert('Hata', 'Geçerli bir email adresi girin');
             return;
         }
+        if (regPassword.trim().length < 6) {
+            showAlert('Hata', 'Şifre en az 6 karakter olmalıdır');
+            return;
+        }
 
         setIsRegistering(true);
         try {
-            // Önce email'in kullanılıp kullanılmadığını kontrol et
-            const checkResponse = await fetch(
-                `${SUPABASE_URL}/rest/v1/teachers?email=eq.${encodeURIComponent(regEmail.trim())}`,
-                {
-                    headers: {
-                        'apikey': SUPABASE_KEY!,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    },
-                }
-            );
-            const existing = await checkResponse.json();
+            // 1. Supabase Auth kullanicisi olustur (otomatik oturum acar)
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: regEmail.trim(),
+                password: regPassword,
+            });
 
-            if (existing && existing.length > 0) {
-                showAlert('Hata', 'Bu email adresi zaten kayıtlı.');
+            if (authError || !authData.user) {
+                showAlert('Hata', `Kayıt hatası: ${authError?.message || 'Bilinmeyen hata'}`);
                 setIsRegistering(false);
                 return;
             }
 
-            // Yeni öğretmen kaydet
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/teachers`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_KEY!,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=representation',
-                },
-                body: JSON.stringify({
-                    name: regName.trim(),
-                    email: regEmail.trim(),
-                    school_name: regSchool.trim() || null,
-                    subscription_tier: 'free',
-                }),
-            });
+            // 2. teachers tablosuna auth kullanicisina bagli kayit ekle
+            const { error: insertError } = await supabase.from('teachers').insert([{
+                user_id: authData.user.id,
+                name: regName.trim(),
+                email: regEmail.trim(),
+                school_name: regSchool.trim() || null,
+                subscription_tier: 'free',
+            }]);
 
-            if (response.ok) {
-                const data = await response.json();
+            if (insertError) {
+                console.error('Öğretmen profili oluşturma hatası:', insertError);
+                showAlert('Hata', 'Hesap oluşturuldu ancak profil kaydedilemedi.');
+            } else {
                 showAlert('Başarılı', 'Kayıt tamamlandı! Artık giriş yapabilirsiniz.');
                 setShowRegister(false);
                 setEmail(regEmail.trim());
                 setRegName('');
                 setRegEmail('');
+                setRegPassword('');
                 setRegSchool('');
-            } else {
-                const errorData = await response.json();
-                console.error('Kayıt hatası:', errorData);
-                showAlert('Hata', 'Kayıt sırasında bir hata oluştu.');
             }
         } catch (error) {
             console.error('Kayıt hatası:', error);
@@ -145,44 +134,48 @@ export default function TeacherDashboardPage() {
     };
 
     const handleLogin = async () => {
-        if (!email.trim()) {
-            showAlert('Hata', 'Lütfen email adresinizi girin');
+        if (!email.trim() || !password.trim()) {
+            showAlert('Hata', 'Lütfen email ve şifrenizi girin');
             return;
         }
 
         setLoading(true);
         try {
-            const emailValue = email.trim();
-            const queryUrl = `${SUPABASE_URL}/rest/v1/teachers?email=eq.${encodeURIComponent(emailValue)}`;
-
-            const response = await fetch(queryUrl, {
-                headers: {
-                    'apikey': SUPABASE_KEY!,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                },
+            // 1. Supabase Auth ile giris
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: email.trim(),
+                password,
             });
 
-            const data = await response.json();
-
-            if (data && Array.isArray(data) && data.length > 0) {
-                setProfile(data[0]);
-            } else if (data && data.message) {
-                console.error('Supabase error:', data.message);
-                showAlert('API Hatası', `Supabase: ${data.message}`);
-            } else {
-                showAlert(
-                    'Kayıt Bulunamadı',
-                    `"${emailValue}" ile kayıtlı öğretmen hesabı bulunamadı.\n\nDemo ile devam edebilirsiniz.`,
-                    [
-                        { text: 'Kapat', style: 'cancel' },
-                        { text: 'Demo Giriş', onPress: useDemoProfile }
-                    ]
-                );
+            if (authError || !authData.user) {
+                showAlert('Giriş Başarısız', 'Hatalı e-posta veya şifre.');
+                return;
             }
+
+            // 2. teachers tablosundan profil bilgilerini cek (user_id = auth.uid())
+            const { data: teacherRow, error: teacherError } = await supabase
+                .from('teachers')
+                .select('name, email, school_name, subscription_tier')
+                .eq('user_id', authData.user.id)
+                .single();
+
+            if (teacherError || !teacherRow) {
+                showAlert('Yetki Yok', 'Bu hesabın öğretmen paneline erişim yetkisi yok.');
+                await supabase.auth.signOut();
+                return;
+            }
+
+            // teacherId olarak auth UUID kullaniliyor; classes.teacher_id bununla eslesir (RLS).
+            setProfile({
+                id: authData.user.id,
+                email: teacherRow.email,
+                name: teacherRow.name,
+                school_name: teacherRow.school_name,
+                subscription_tier: teacherRow.subscription_tier,
+            });
         } catch (error) {
-            console.error('Profil yükleme hatası:', error);
-            showAlert('Hata', `Profil yüklenirken bir hata oluştu: ${error}`);
+            console.error('Giriş hatası:', error);
+            showAlert('Hata', `Giriş sırasında bir hata oluştu: ${error}`);
         } finally {
             setLoading(false);
         }
@@ -263,6 +256,20 @@ export default function TeacherDashboardPage() {
                             />
                         </View>
 
+                        <View style={styles.inputContainer}>
+                            <Ionicons name="lock-closed-outline" size={20} color="#607D8B" style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Şifre"
+                                placeholderTextColor="#9E9E9E"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                                autoCapitalize="none"
+                                onSubmitEditing={handleLogin}
+                            />
+                        </View>
+
                         <View style={styles.buttonRow}>
                             <TouchableOpacity
                                 style={[styles.loginButton, styles.loginButtonFlex, loading && styles.loginButtonDisabled]}
@@ -331,6 +338,19 @@ export default function TeacherDashboardPage() {
                                     value={regEmail}
                                     onChangeText={setRegEmail}
                                     keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+                            </View>
+
+                            <View style={styles.inputContainer}>
+                                <Ionicons name="lock-closed-outline" size={20} color="#607D8B" style={styles.inputIcon} />
+                                <TextInput
+                                    style={styles.input}
+                                    placeholder="Şifre (en az 6 karakter) *"
+                                    placeholderTextColor="#9E9E9E"
+                                    value={regPassword}
+                                    onChangeText={setRegPassword}
+                                    secureTextEntry
                                     autoCapitalize="none"
                                 />
                             </View>

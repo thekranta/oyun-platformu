@@ -13,10 +13,18 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { supabase } from '../lib/supabase';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+
+// RLS'in auth.uid() gormesi icin REST cagrilarinda anon key yerine oturum jetonu kullan.
+// Jeton yoksa anon key'e duser (akis kirilmaz).
+const getSessionToken = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || SUPABASE_KEY || '';
+};
 
 // Web-compatible alert
 const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: string }>) => {
@@ -123,14 +131,14 @@ export default function TeacherDashboard({
         try {
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/classes?teacher_id=eq.${teacherId}&select=*`,
-                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
             );
             const data = await response.json();
             if (Array.isArray(data)) {
                 const classesWithCount = await Promise.all(data.map(async (c: any, idx: number) => {
                     const countResp = await fetch(
                         `${SUPABASE_URL}/rest/v1/class_students?class_id=eq.${c.id}&select=id`,
-                        { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+                        { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
                     );
                     const countData = await countResp.json();
                     return {
@@ -163,7 +171,7 @@ export default function TeacherDashboard({
         try {
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/class_students?class_id=eq.${classId}&select=child_email`,
-                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
             );
             const classStudents = await response.json();
 
@@ -171,7 +179,7 @@ export default function TeacherDashboard({
                 const emails = classStudents.map((s: any) => s.child_email);
                 const profilesResponse = await fetch(
                     `${SUPABASE_URL}/rest/v1/profiles?email=in.(${emails.map(e => `"${e}"`).join(',')})`,
-                    { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+                    { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
                 );
                 const profiles = await profilesResponse.json();
                 if (Array.isArray(profiles)) {
@@ -200,7 +208,7 @@ export default function TeacherDashboard({
         try {
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}`,
-                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
             );
             const data = await response.json();
             if (Array.isArray(data) && data.length > 0) {
@@ -231,7 +239,7 @@ export default function TeacherDashboard({
         try {
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/oyun_skorlari?ogrenci_adi=eq.${encodeURIComponent(studentName)}&ogrenci_yasi=eq.${studentAge}&order=created_at.desc&limit=20`,
-                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
             );
             const data = await response.json();
             if (Array.isArray(data)) setStudentScores(data);
@@ -277,7 +285,7 @@ export default function TeacherDashboard({
                 method: 'POST',
                 headers: {
                     'apikey': SUPABASE_KEY!,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Authorization': `Bearer ${await getSessionToken()}`,
                     'Content-Type': 'application/json',
                     'Prefer': 'return=representation',
                 },
@@ -316,7 +324,7 @@ export default function TeacherDashboard({
                         try {
                             await fetch(`${SUPABASE_URL}/rest/v1/classes?id=eq.${classData.id}`, {
                                 method: 'DELETE',
-                                headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+                                headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` },
                             });
                             fetchClasses();
                             if (selectedClass?.id === classData.id) {
@@ -362,7 +370,7 @@ export default function TeacherDashboard({
                 method: 'POST',
                 headers: {
                     'apikey': SUPABASE_KEY!,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Authorization': `Bearer ${await getSessionToken()}`,
                     'Content-Type': 'application/json',
                     'Prefer': 'return=minimal',
                 },
@@ -404,7 +412,7 @@ export default function TeacherDashboard({
                                 `${SUPABASE_URL}/rest/v1/class_students?class_id=eq.${selectedClass?.id}&child_email=eq.${encodeURIComponent(student.email)}`,
                                 {
                                     method: 'DELETE',
-                                    headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+                                    headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` },
                                 }
                             );
                             if (selectedClass) fetchStudents(selectedClass.id);

@@ -175,5 +175,13 @@ Bilinmeyen/iliskisiz konular (Faz 1 disinda, not edildi):
 
 1. ✅ `app/(tabs)/index.tsx` mimari ayristirma yapildi (skor kaydi -> services/gameResults.ts, auth -> hooks/useAuth.ts). Dosya 1990 -> 1655 satir. Opsiyonel kalan: menu/vitrin render'ini ayri bilesene almak (dusuk oncelik).
 2. ✅ `experimental` etiketi kaldirildi: hicbir oyun kullanmadigi icin `GameCatalogStatus` union'indan cikarildi; ayrica kullanilmayan `getGamesByStatus` fonksiyonu silindi. tsc temiz, yeni lint uyarisi yok.
-3. ⬜ `teacher-dashboard.tsx`'i gercek Supabase Auth'a tasi (su an sifre kontrolu yok, classes/class_students RLS'i bu yuzden islevsiz).
+3. ✅ `teacher-dashboard.tsx` gercek Supabase Auth'a tasindi (asagida Faz 3).
 4. ⬜ `EXPO_PUBLIC_GEMINI_API_KEY` askiya alinmasini coz, istemci tarafinda acik olmasi riskini degerlendir.
+
+## Faz 3 - Ogretmen Paneli Auth (2026-06-21)
+
+- ✅ `app/teacher-dashboard.tsx`: sifresiz email-lookup giris kaldirildi. Giris artik `supabase.auth.signInWithPassword`, kayit `supabase.auth.signUp` + `teachers` tablosuna `user_id` ile insert. Giris/kayit formlarina sifre alani eklendi (kayitta min 6 karakter). `teacherId` olarak artik **auth kullanici UUID'si** geciyor (eskiden teachers satir id'si); bu sayede `classes.teacher_id = auth.uid()` RLS politikasi calisiyor. Kullanilmayan `SUPABASE_URL/KEY` sabitleri kaldirildi.
+- ✅ `components/TeacherDashboard.tsx`: tum REST cagrilarinda (`classes`, `class_students`, `profiles`, `oyun_skorlari` okuma/yazma/silme) `Authorization: Bearer <anon key>` yerine `getSessionToken()` ile oturum jetonu kullaniliyor (jeton yoksa anon key fallback). `apikey` anon key kaldi. AI analizi Gemini cagrisi degismedi (Faz 4 konusu).
+- ✅ `supabase_migrations/fix_teacher_auth.sql` yazildi (**kullanici Supabase SQL Editor'da calistirmali**): test verisini temizler; `teachers.user_id` ekler + unique index; teachers RLS (self read/insert/update); `profiles` icin "ogretmen tum ogrenci profillerini okuyabilir" politikasi (ogrenci ekleme aramasi icin gerekli); `oyun_skorlari` icin "ogretmen yalnizca kendi sinifindaki ogrencilerin skorlarini okur" politikasi.
+- ℹ️ Tasarim notu: profiles okumasi tum ogretmenlere acik (ogrenci eklerken email aramasi sinifa eklemeden once profili gormeyi gerektiriyor); oyun_skorlari ise sinif uyeligine sinirli (daha hassas veri). classes/class_students RLS zaten Faz 1'de teacher_id = auth.uid() ile kuruldu.
+- ⬜ Beklemede: kullanici `fix_teacher_auth.sql`'i calistirip uygulamadan yeni ogretmen kaydi + sinif/ogrenci akisini test edecek. tsc temiz, yeni lint uyarisi yok.
