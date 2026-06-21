@@ -13,17 +13,17 @@ import {
     View,
 } from 'react-native';
 import Svg, { Circle, Line, Polygon, Polyline } from 'react-native-svg';
+import { requestGeminiAnalysis } from '../services/geminiClient';
 import { ReportEngine } from '../services/ReportEngine';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 // Cumulative AI Analysis Function - Sends last 12 games to Gemini for trend analysis
 // Generates DUAL structure: 1) Teacher/Academic section with Maarif codes, 2) Parent section with scaffolding
 const analyzeWithGemini = async (childName: string, childAge: number, games: GameScore[]): Promise<string | null> => {
-    if (!GEMINI_API_KEY || games.length === 0) return null;
+    if (games.length === 0) return null;
 
     const last12Games = games.slice(0, 12);
     const gamesData = last12Games.map((g, idx) => ({
@@ -95,25 +95,7 @@ ChildhoodTech Ekibi
 ÖNEMLİ: Raporu Türkçe yaz. Giriş cümlesi kullanma, doğrudan içerikle başla.`;
 
     try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY.trim()}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
-                }),
-            }
-        );
-
-        if (!response.ok) {
-            console.error('Gemini API hatası:', await response.text());
-            return null;
-        }
-
-        const data = await response.json();
-        return data?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+        return await requestGeminiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 2048 });
     } catch (error) {
         console.error('Gemini analiz hatası:', error);
         return null;

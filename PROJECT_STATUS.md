@@ -176,7 +176,16 @@ Bilinmeyen/iliskisiz konular (Faz 1 disinda, not edildi):
 1. ✅ `app/(tabs)/index.tsx` mimari ayristirma yapildi (skor kaydi -> services/gameResults.ts, auth -> hooks/useAuth.ts). Dosya 1990 -> 1655 satir. Opsiyonel kalan: menu/vitrin render'ini ayri bilesene almak (dusuk oncelik).
 2. ✅ `experimental` etiketi kaldirildi: hicbir oyun kullanmadigi icin `GameCatalogStatus` union'indan cikarildi; ayrica kullanilmayan `getGamesByStatus` fonksiyonu silindi. tsc temiz, yeni lint uyarisi yok.
 3. ✅ `teacher-dashboard.tsx` gercek Supabase Auth'a tasindi (asagida Faz 3).
-4. ⬜ `EXPO_PUBLIC_GEMINI_API_KEY` askiya alinmasini coz, istemci tarafinda acik olmasi riskini degerlendir.
+4. ✅ Gemini anahtari sunucu proxy'sine tasindi (asagida Faz 4).
+
+## Faz 4 - Gemini Anahtari Sunucu Proxy'si (2026-06-21)
+
+- ✅ `api/gemini-analyze.ts` serverless proxy eklendi: `{ prompt, generationConfig? }` alir, sunucu-tarafi `GEMINI_API_KEY` ile Gemini'yi cagirir (model fallback: gemini-2.0-flash/1.5-flash/1.5-pro/pro), `{ text }` doner. Anahtar istemciye HIC gitmez.
+- ✅ `services/geminiClient.ts` eklendi: istemci yardimcisi `requestGeminiAnalysis(prompt, generationConfig?)` -> `/api/gemini-analyze`'a POST.
+- ✅ Uc istemci dosyasi Google'a dogrudan cagriyi birakip proxy'yi kullaniyor: `app/admin.tsx` (analyzeGame), `components/TeacherDashboard.tsx` (analyzeScore), `components/VeliDashboard.tsx` (analyzeWithGemini). Tum `GEMINI_API_KEY` istemci sabitleri ve guard'lari kaldirildi. `grep` ile dogrulandi: app/components icinde artik ne `GEMINI_API_KEY` ne de `generativelanguage` cagrisi var.
+- ✅ `api/gemini-tts.ts` sunucu anahtarini tercih edecek sekilde guncellendi (`GEMINI_API_KEY || EXPO_PUBLIC_...`).
+- ⬜ **Kullanici aksiyonu (gerekli):** (1) Google'dan YENI (askiya alinmamis) bir Gemini anahtari al. (2) Vercel > Project Settings > Environment Variables: `GEMINI_API_KEY` ekle (**`EXPO_PUBLIC_` oneki OLMADAN**). (3) Eski `EXPO_PUBLIC_GEMINI_API_KEY`'i sil. (4) Redeploy. Bu yapilana kadar AI ozellikleri calismaz ama guvenlik acigi (anahtarin bundle'da acik olmasi) bu deploy ile kapanir.
+- ℹ️ Not: TTS (`api/tts.ts` / `gemini-tts.ts`) zaten serverless'ti; bu degisiklik AI metin analizini de ayni guvenli desene tasidi. tsc temiz, yeni lint uyarisi yok.
 
 ## Faz 3 - Ogretmen Paneli Auth (2026-06-21)
 

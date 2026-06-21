@@ -5,6 +5,7 @@ import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, Toucha
 import DynamicBackground from '../components/DynamicBackground';
 import StudentStatsModal from '../components/StudentStatsModal';
 import { supabase } from '../lib/supabase';
+import { requestGeminiAnalysis } from '../services/geminiClient';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -12,7 +13,6 @@ const getAuthToken = async () => {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token || SUPABASE_KEY || '';
 };
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 interface Score {
     id: number;
@@ -364,11 +364,6 @@ export default function AdminPanel() {
             alert('Yaratıcı çizim için yapay zeka yorumu oluşturulmaz.');
             return;
         }
-        if (!GEMINI_API_KEY) {
-            alert('Gemini API anahtarı bulunamadı. Lütfen .env dosyasını kontrol edin.');
-            return;
-        }
-
         setIsAnalyzing(true); // Block all other analysis requests
         setProcessingId(score.id);
         console.log('Gemini isteği gönderildi', { scoreId: score.id, oyunTuru: score.oyun_turu });
@@ -816,58 +811,16 @@ ChildhoodTech Ekibi
                 `;
             }
 
-            // Model fallback mekanizması - birden fazla model dene
-            const models = [
-                { name: 'gemini-2.0-flash', version: 'v1' },
-                { name: 'gemini-1.5-flash', version: 'v1' },
-                { name: 'gemini-1.5-pro', version: 'v1' },
-                { name: 'gemini-pro', version: 'v1beta' },
-            ];
-
-            let response: Response | null = null;
-            let lastError = '';
-
-            for (const model of models) {
-                try {
-                    console.log(`🔄 Deneniyor: ${model.name} (${model.version})`);
-                    response = await fetch(
-                        `https://generativelanguage.googleapis.com/${model.version}/models/${model.name}:generateContent?key=${GEMINI_API_KEY?.trim()}`,
-                        {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                        }
-                    );
-
-                    if (response.ok) {
-                        console.log(`✅ Başarılı model: ${model.name}`);
-                        break;
-                    }
-
-                    const errorData = await response.json();
-                    lastError = errorData.error?.message || `Status: ${response.status}`;
-                    console.log(`❌ ${model.name} başarısız: ${lastError}`);
-
-                    // Sadece model bulunamadı hatalarında diğer modeli dene
-                    if (response.status !== 404 && response.status !== 400) {
-                        break; // Quota veya başka hata - döngüden çık
-                    }
-                    response = null;
-                } catch (e: any) {
-                    lastError = e.message;
-                    console.error(`❌ ${model.name} hata:`, e);
-                }
-            }
-
-            if (!response || !response.ok) {
-                alert(`API Hatası: ${lastError}`);
+            // Gemini cagrisi artik sunucu proxy'si uzerinden (anahtar istemcide degil)
+            let aiComment: string;
+            try {
+                aiComment = await requestGeminiAnalysis(prompt);
+            } catch (e: any) {
+                alert(`API Hatası: ${e.message}`);
                 return;
             }
 
-            const data = await response.json();
-            if (data.candidates && data.candidates.length > 0) {
-                const aiComment = data.candidates[0].content.parts[0].text;
-
+            {
                 // Update Supabase
                 const supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari?id=eq.${score.id}`, {
                     method: 'PATCH',
@@ -898,8 +851,6 @@ ChildhoodTech Ekibi
                 setVisibleCommentIds(prev => new Set(prev).add(score.id));
 
                 console.log('✅ Analiz tamamlandı ve kaydedildi!', { scoreId: score.id, aiComment });
-            } else {
-                throw new Error('Yapay zeka uygun bir yanıt oluşturamadı.');
             }
         } catch (error: any) {
             console.error('❌ Analiz sırasında hata:', error);

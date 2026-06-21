@@ -14,10 +14,10 @@ import {
     View
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { requestGeminiAnalysis } from '../services/geminiClient';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
-const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 // RLS'in auth.uid() gormesi icin REST cagrilarinda anon key yerine oturum jetonu kullan.
 // Jeton yoksa anon key'e duser (akis kirilmaz).
@@ -437,19 +437,8 @@ export default function TeacherDashboard({
         setAnalyzingId(score.id);
         try {
             const prompt = `Sen okul öncesi eğitim uzmanısın. Öğrenci: ${selectedStudent?.child_name} (${selectedStudent?.child_age_months} ay). Oyun: ${score.oyun_turu}, Süre: ${score.sure}sn, Hamle: ${score.hamle_sayisi}, Hata: ${score.hata_sayisi}. Kısa pedagojik analiz yap (3-4 cümle).`;
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }],
-                        generationConfig: { temperature: 0.7, maxOutputTokens: 256 },
-                    }),
-                }
-            );
-            const data = await response.json();
-            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'Analiz yapılamadı.';
+            const text = await requestGeminiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 256 })
+                .catch(() => 'Analiz yapılamadı.');
             setStudentScores(prev => prev.map(s => s.id === score.id ? { ...s, yapay_zeka_yorumu: text } : s));
         } catch (error) {
             console.error('AI hatası:', error);
