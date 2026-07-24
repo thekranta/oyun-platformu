@@ -39,12 +39,14 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
                 setIsDragging(true);
                 pan.setOffset({ x: 0, y: 0 });
                 pan.setValue({ x: 0, y: 0 });
-                Animated.spring(scale, { toValue: 1.15, useNativeDriver: true }).start();
+                // pan (transform) JS driver kullaniyor; ayni transform'daki scale de JS
+                // driver olmali, yoksa native'de "native/JS driven" cakismasi crash eder.
+                Animated.spring(scale, { toValue: 1.15, useNativeDriver: false }).start();
             },
             onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
             onPanResponderRelease: (_, g) => {
                 pan.flattenOffset();
-                Animated.spring(scale, { toValue: 1, useNativeDriver: true }).start();
+                Animated.spring(scale, { toValue: 1, useNativeDriver: false }).start();
                 setIsDragging(false);
                 if (g.dy < -25) {
                     onDrop(value);

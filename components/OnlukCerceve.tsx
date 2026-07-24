@@ -153,12 +153,14 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             onPanResponderGrant: () => {
                 pan.setOffset({ x: 0, y: 0 });
                 pan.setValue({ x: 0, y: 0 });
-                Animated.spring(scaleAnim, { toValue: 1.15, useNativeDriver: true }).start();
+                // pan (transform) JS driver kullaniyor; ayni transform'daki scale de
+                // JS driver olmali, yoksa native'de "native/JS driven" cakismasi crash eder.
+                Animated.spring(scaleAnim, { toValue: 1.15, useNativeDriver: false }).start();
             },
             onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
             onPanResponderRelease: (_, g) => {
                 pan.flattenOffset();
-                Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true }).start();
+                Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: false }).start();
                 if (Math.sqrt(g.dx ** 2 + g.dy ** 2) > 25) handleFruitDropRef.current();
                 else Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
             }
