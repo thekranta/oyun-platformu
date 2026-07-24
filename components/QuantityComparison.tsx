@@ -78,6 +78,9 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [selectedSide, setSelectedSide] = useState<'left' | 'right' | null>(null);
     const [roundHistory, setRoundHistory] = useState<RoundData[]>([]);
+    // finishGame son turun setTimeout'undan cagrilir ve roundHistory'yi eski closure'dan
+    // okur; son tur sayilmaz. Guncel listeyi bu ref'ten okuyoruz.
+    const roundHistoryRef = useRef<RoundData[]>([]);
     const [prevPair, setPrevPair] = useState('');
 
     // Animation
@@ -175,6 +178,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
             distanceEffect,
             responseTime
         };
+        roundHistoryRef.current = [...roundHistoryRef.current, roundData];
         setRoundHistory(prev => [...prev, roundData]);
 
         if (isCorrect) {
@@ -197,12 +201,13 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
 
     const finishGame = () => {
         const duration = Math.floor((Date.now() - startTime) / 1000);
-        const correctAnswers = roundHistory.filter(r => r.isCorrect).length;
-        const avgResponseTime = roundHistory.length > 0
-            ? Math.round(roundHistory.reduce((a, b) => a + b.responseTime, 0) / roundHistory.length)
+        const history = roundHistoryRef.current;
+        const correctAnswers = history.filter(r => r.isCorrect).length;
+        const avgResponseTime = history.length > 0
+            ? Math.round(history.reduce((a, b) => a + b.responseTime, 0) / history.length)
             : 0;
-        const avgDistanceEffect = roundHistory.length > 0
-            ? roundHistory.reduce((a, b) => a + b.distanceEffect, 0) / roundHistory.length
+        const avgDistanceEffect = history.length > 0
+            ? history.reduce((a, b) => a + b.distanceEffect, 0) / history.length
             : 0;
 
         // Cognitive speed score: lower response time + higher accuracy = higher score
@@ -212,7 +217,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
             // Separate columns for Supabase
             distance_effect: parseFloat(avgDistanceEffect.toFixed(2)),
             response_time: avgResponseTime,
-            round_history: roundHistory,
+            round_history: history,
             correct_answers: correctAnswers,
             cognitive_speed_score: cognitiveSpeedScore,
             // Standard fields

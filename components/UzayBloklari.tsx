@@ -93,6 +93,10 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const [gridRotation, setGridRotation] = useState(0); // 0, 90, 180, 270
     const [moveHistory, setMoveHistory] = useState<MoveData[]>([]);
     const [errors, setErrors] = useState(0);
+    // finishGame timer setInterval'inden cagrildiginda state'i eski closure'dan okur
+    // (moveHistory=[], errors=0). Guncel degerleri bu ref'lerden aliyoruz.
+    const moveHistoryRef = useRef<MoveData[]>([]);
+    const errorsRef = useRef(0);
     const [score, setScore] = useState(0);
     const [gameStart] = useState(Date.now());
     const [lastActionTime, setLastActionTime] = useState<number>(Date.now());
@@ -193,20 +197,23 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
 
     const finishGame = () => {
         const duration = Math.floor((Date.now() - gameStart) / 1000);
-        const totalMoves = moveHistory.length;
-        const correctMoves = moveHistory.filter(m => m.isCorrect).length;
-        const avgResponseTime = moveHistory.length > 0
-            ? moveHistory.reduce((sum, m) => sum + m.responseTime, 0) / moveHistory.length
+        // Guncel degerler ref'lerden (timer setInterval closure'i eski state tutar)
+        const history = moveHistoryRef.current;
+        const errorCount = errorsRef.current;
+        const totalMoves = history.length;
+        const correctMoves = history.filter(m => m.isCorrect).length;
+        const avgResponseTime = history.length > 0
+            ? history.reduce((sum, m) => sum + m.responseTime, 0) / history.length
             : 0;
         const visualAttentionScore = duration > 0
             ? Math.min(100, Math.round((correctMoves / Math.max(duration, 1)) * 100))
             : 0;
 
-        onGameEnd('uzay-bloklari', duration, totalMoves, errors, null, {
+        onGameEnd('uzay-bloklari', duration, totalMoves, errorCount, null, {
             response_time: Math.round(avgResponseTime),
-            error_count: errors,
+            error_count: errorCount,
             visual_attention_score: visualAttentionScore,
-            moveHistory,
+            moveHistory: history,
             gridRotation,
         });
     };
@@ -249,13 +256,15 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             b.id === block.id ? { ...b, placed: true, position: { row: startRow, col: startCol } } : b
         ));
         const responseTime = Date.now() - lastActionTime;
-        setMoveHistory(prev => [...prev, {
+        const successMove = {
             blockId: block.id,
             targetCell: { row: startRow, col: startCol },
             isCorrect: true,
             responseTime,
             timestamp: Date.now(),
-        }]);
+        };
+        moveHistoryRef.current = [...moveHistoryRef.current, successMove];
+        setMoveHistory(prev => [...prev, successMove]);
         setLastActionTime(Date.now());
         setScore(prev => prev + 25);
         playSuccessFeedback();
@@ -326,15 +335,18 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             placeBlock(selectedBlock, row, col);
             setSelectedBlock(null);
         } else {
+            errorsRef.current += 1;
             setErrors(prev => prev + 1);
             playErrorFeedback();
-            setMoveHistory(prev => [...prev, {
+            const errorMove = {
                 blockId: selectedBlock.id,
                 targetCell: { row, col },
                 isCorrect: false,
                 responseTime: Date.now() - lastActionTime,
                 timestamp: Date.now(),
-            }]);
+            };
+            moveHistoryRef.current = [...moveHistoryRef.current, errorMove];
+            setMoveHistory(prev => [...prev, errorMove]);
             setLastActionTime(Date.now());
         }
     };

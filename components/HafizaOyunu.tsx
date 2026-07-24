@@ -79,6 +79,13 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     // Confetti Ref
     const confettiRef = useRef<ConfettiCannon>(null);
 
+    // handleNextStage bir setTimeout icinden cagrildigi icin state'i eski closure'dan
+    // okur; son asamanin suresi ve son hamle onGameEnd'e yansimaz. Guncel degerleri
+    // bu ref'lerden okuyoruz.
+    const totalMovesRef = useRef(0);
+    const totalErrorsRef = useRef(0);
+    const cumulativeTimeRef = useRef(0);
+
     // Start stage on mount
     useEffect(() => {
         startStage(0);
@@ -128,6 +135,9 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
         // Start timer only if it's the first stage or resuming
         if (stageIndex === 0) {
             setStartTime(new Date());
+            totalMovesRef.current = 0;
+            totalErrorsRef.current = 0;
+            cumulativeTimeRef.current = 0;
             setTotalMoves(0);
             setTotalErrors(0);
             setCumulativeTime(0);
@@ -203,6 +213,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
 
         if (newSelected.length === 2) {
             setIsProcessing(true);
+            totalMovesRef.current += 1;
             setTotalMoves(m => m + 1);
 
             const [firstCard, secondCard] = newSelected;
@@ -231,6 +242,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 const isSecondSeen = seenCardIds.has(secondCard.id);
 
                 if (isFirstSeen || isSecondSeen) {
+                    totalErrorsRef.current += 1;
                     setTotalErrors(e => e + 1);
                 }
 
@@ -262,6 +274,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     const handleStageComplete = () => {
         const now = new Date();
         const stageDuration = startTime ? Math.round((now.getTime() - startTime.getTime()) / 1000) : 0;
+        cumulativeTimeRef.current += stageDuration;
         setCumulativeTime(prev => prev + stageDuration);
         setStartTime(null); // Stop timer until next stage starts
         setStageComplete(true);
@@ -281,8 +294,8 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
         if (currentStageIndex + 1 < AŞAMA_AYARLARI.length) {
             startStage(currentStageIndex + 1);
         } else {
-            // Game Over
-            onGameEnd('hafiza', cumulativeTime, totalMoves, totalErrors, undefined, {
+            // Game Over — guncel degerler ref'lerden (setTimeout closure'i eski state tutar)
+            onGameEnd('hafiza', cumulativeTimeRef.current, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: currentStageIndex + 1,
                 kazanimOdagi: 'Görsel Bellek ve Eşleştirme',
             });

@@ -201,6 +201,11 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     const [errors, setErrors] = useState(0);
     const [correctAnswers, setCorrectAnswers] = useState(0);
     const [gameStart] = useState(Date.now());
+    // finishGame timer setInterval'inden cagrildiginda state'i eski closure'dan okur
+    // (hepsi 0). Guncel metrikleri bu ref'lerden aliyoruz.
+    const correctAnswersRef = useRef(0);
+    const errorsRef = useRef(0);
+    const moveHistoryRef = useRef<MoveData[]>([]);
     const [lastColorSelectTime, setLastColorSelectTime] = useState<number>(Date.now());
     const [score, setScore] = useState(0);
     const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error'; regionId: string } | null>(null);
@@ -267,26 +272,30 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
 
     const finishGame = () => {
         const duration = Math.floor((Date.now() - gameStart) / 1000);
-        const totalMoves = moveHistory.length;
-        const avgResponseTime = moveHistory.length > 0
-            ? moveHistory.reduce((sum, m) => sum + m.responseTime, 0) / moveHistory.length
+        // Guncel degerler ref'lerden (timer setInterval closure'i eski state tutar)
+        const history = moveHistoryRef.current;
+        const correct = correctAnswersRef.current;
+        const errorCount = errorsRef.current;
+        const totalMoves = history.length;
+        const avgResponseTime = history.length > 0
+            ? history.reduce((sum, m) => sum + m.responseTime, 0) / history.length
             : 0;
 
-        const finalCognitiveSpeed = duration > 0 ? correctAnswers / duration : 0;
+        const finalCognitiveSpeed = duration > 0 ? correct / duration : 0;
 
         // Görsel Dikkat Skoru: (Dogru_Boyama / Toplam_Sure) * 100, max 100
         const visualAttentionScore = duration > 0
-            ? Math.min(100, Math.round((correctAnswers / duration) * 100))
+            ? Math.min(100, Math.round((correct / duration) * 100))
             : 0;
 
-        onGameEnd('sihirli-tuval', duration, totalMoves, errors, undefined, {
+        onGameEnd('sihirli-tuval', duration, totalMoves, errorCount, undefined, {
             zorlukSeviyesi: 1,
             kazanimOdagi: 'Görsel Dikkat ve Sembolik Eşleme (MAB.2.1)',
             response_time: Math.round(avgResponseTime),
-            correct_answers: correctAnswers,
+            correct_answers: correct,
             cognitive_speed_score: Math.round(finalCognitiveSpeed * 1000) / 1000,
             visual_attention_score: visualAttentionScore,
-            round_history: moveHistory,
+            round_history: history,
         });
     };
 
@@ -347,6 +356,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
             timestamp: Date.now(),
         };
 
+        moveHistoryRef.current = [...moveHistoryRef.current, moveData];
         setMoveHistory(prev => [...prev, moveData]);
 
         if (isCorrect) {
@@ -354,13 +364,16 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
             setRegions(prev => prev.map(r =>
                 r.colorNumber === selectedColorNumber ? { ...r, isFilled: true } : r
             ));
-            // Kaç bölge boyandı say
+            // Bir dogru tiklama = bir dogru karar (bolge sayisi kadar degil; onceden
+            // yildiz gibi cok bolgeli renklerde correct_answers sisiyordu).
             const filledCount = regions.filter(r => r.colorNumber === selectedColorNumber).length;
-            setCorrectAnswers(prev => prev + filledCount);
+            correctAnswersRef.current += 1;
+            setCorrectAnswers(prev => prev + 1);
             setScore(prev => prev + (10 * filledCount));
             playSuccessFeedback();
             setShowFeedback({ type: 'success', regionId });
         } else {
+            errorsRef.current += 1;
             setErrors(prev => prev + 1);
             playErrorFeedback();
             setShowFeedback({ type: 'error', regionId });
