@@ -39,8 +39,12 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const [isRecording, setIsRecording] = useState(false);
     const [recordingStatus, setRecordingStatus] = useState('Kayıt Hazır');
     const [startTime] = useState(Date.now());
-    const [moves, setMoves] = useState(0);
-    const [errors, setErrors] = useState(0);
+    const [, setMoves] = useState(0);
+    const [, setErrors] = useState(0);
+    // handleNextStage setTimeout'tan cagrildigi icin final onGameEnd moves/errors'i eski
+    // closure'dan okur ve son asamayi saymaz. Guncel degerleri bu ref'lerden aliyoruz.
+    const movesRef = useRef(0);
+    const errorsRef = useRef(0);
     const [allTranscripts, setAllTranscripts] = useState<string[]>([]);
     const [stageResults, setStageResults] = useState<StageResult[]>([]);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
@@ -262,9 +266,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
         if (maxAudioLevel < -50) {
             setRecordingStatus('Ses Algılanmadı 🔇');
-            setErrors(e => e + 1);
+            errorsRef.current += 1; setErrors(e => e + 1);
             setAllTranscripts(prev => [...prev, "(Sessiz)"]);
-            setMoves(m => m + 1);
+            movesRef.current += 1; setMoves(m => m + 1);
 
             // Record silent result
             const silentResult: StageResult = {
@@ -368,7 +372,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     temizlenenTranscript.includes(temizlenenBeklenen);
 
                 // Her durumda hareketi kaydet
-                setMoves(m => m + 1);
+                movesRef.current += 1; setMoves(m => m + 1);
 
                 // Stage result kaydet
                 const stageResult: StageResult = {
@@ -387,7 +391,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     setTimeout(() => handleNextStage(updatedResults), 2000);
                 } else {
                     // Yanlış cevap - hata kaydet ve yine de devam et
-                    setErrors(e => e + 1);
+                    errorsRef.current += 1; setErrors(e => e + 1);
                     setRecordingStatus(`"${transcript}" ❌`);
                     // Otomatik olarak bir sonraki aşamaya geç
                     setTimeout(() => handleNextStage(updatedResults), 2000);
@@ -414,8 +418,8 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             const updatedResults = [...stageResults, errorResult];
             setStageResults(updatedResults);
 
-            setErrors(e => e + 1);
-            setMoves(m => m + 1);
+            errorsRef.current += 1; setErrors(e => e + 1);
+            movesRef.current += 1; setMoves(m => m + 1);
             setRecordingStatus('API Hatası ⚠️');
             setTimeout(() => handleNextStage(updatedResults), 2000);
         }
@@ -447,7 +451,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
             console.log('📊 Telaffuz Analizi:', pronunciationData);
 
-            onGameEnd('bunu-soyle', duration, moves, errors, pronunciationData, {
+            onGameEnd('bunu-soyle', duration, movesRef.current, errorsRef.current, pronunciationData, {
                 zorlukSeviyesi: currentStage + 1,
                 kazanimOdagi: 'Dil Gelişimi ve Sözel İfade',
             });

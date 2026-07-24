@@ -142,13 +142,18 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
     const [shadows, setShadows] = useState<AnimalAsset[]>([]);
     const [matched, setMatched] = useState<Set<string>>(new Set());
     const [errors, setErrors] = useState(0);
-    const [totalErrors, setTotalErrors] = useState(0);
-    const [moves, setMoves] = useState(0);
+    const [, setTotalErrors] = useState(0);
+    const [, setMoves] = useState(0);
     const [showSuccess, setShowSuccess] = useState(false);
     const [showMotivation, setShowMotivation] = useState<{ emoji: string; text: string } | null>(null);
     const [gameStart] = useState(Date.now());
     const [roundStart, setRoundStart] = useState(Date.now());
-    const [roundData, setRoundData] = useState<any[]>([]);
+    const [, setRoundData] = useState<any[]>([]);
+    // finishGame completeRound'un setTimeout'undan cagrilir ve state'i eski closure'dan
+    // okur; son turun verisi/hamlesi/hatasi eksik gider. Guncel degerler bu ref'lerden.
+    const movesRef = useRef(0);
+    const totalErrorsRef = useRef(0);
+    const roundDataRef = useRef<any[]>([]);
     const [gameReady, setGameReady] = useState(false);
 
     const successScale = useRef(new Animated.Value(0)).current;
@@ -198,7 +203,9 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
 
     const completeRound = () => {
         const dur = Math.floor((Date.now() - roundStart) / 1000);
-        setRoundData(prev => [...prev, { tur: round, hata: errors, sure: dur }]);
+        const roundEntry = { tur: round, hata: errors, sure: dur };
+        roundDataRef.current = [...roundDataRef.current, roundEntry];
+        setRoundData(prev => [...prev, roundEntry]);
 
         const mot = MOTIVATION.find(m => m.round === round);
         if (mot) {
@@ -219,14 +226,15 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
 
     const finishGame = () => {
         const dur = Math.floor((Date.now() - gameStart) / 1000);
-        onGameEnd('Gölge Dedektifi', dur, moves, totalErrors, undefined, {
+        onGameEnd('Gölge Dedektifi', dur, movesRef.current, totalErrorsRef.current, undefined, {
             zorlukSeviyesi: config.level,
             kazanimOdagi: 'Görsel Çözümleme',
-            tur_verisi: roundData,
+            tur_verisi: roundDataRef.current,
         });
     };
 
     const handleDrop = useCallback((id: string, x: number, y: number): boolean => {
+        movesRef.current += 1;
         setMoves(m => m + 1);
         for (const [sid, layout] of shadowRefs.current.entries()) {
             if (x >= layout.x && x <= layout.x + layout.w && y >= layout.y && y <= layout.y + layout.h) {
@@ -235,6 +243,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
                     return true;
                 } else {
                     setErrors(e => e + 1);
+                    totalErrorsRef.current += 1;
                     setTotalErrors(e => e + 1);
                     return false;
                 }

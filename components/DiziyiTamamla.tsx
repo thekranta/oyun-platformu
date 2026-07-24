@@ -55,8 +55,12 @@ const PATTERNS: Pattern[] = [
 
 export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProps) {
     const [currentStage, setCurrentStage] = useState(0);
-    const [totalMoves, setTotalMoves] = useState(0);
-    const [totalErrors, setTotalErrors] = useState(0);
+    const [, setTotalMoves] = useState(0);
+    const [, setTotalErrors] = useState(0);
+    // handleNextStage setTimeout'tan cagrildigi icin onGameEnd totalMoves/totalErrors'i
+    // eski closure'dan okur (son hamle 1 eksik). Guncel degerler bu ref'lerden.
+    const totalMovesRef = useRef(0);
+    const totalErrorsRef = useRef(0);
     const [startTime] = useState(Date.now());
     const [stageCompleted, setStageCompleted] = useState(false);
     const [selectedOption, setSelectedOption] = useState<ShapeType | null>(null);
@@ -91,7 +95,8 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
         if (stageCompleted) return;
 
         setSelectedOption(option);
-        setTotalMoves(totalMoves + 1);
+        totalMovesRef.current += 1;
+        setTotalMoves(m => m + 1);
 
         if (option === currentPattern.answer) {
             setIsCorrect(true);
@@ -121,7 +126,8 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
             }, 1500);
 
         } else {
-            setTotalErrors(totalErrors + 1);
+            totalErrorsRef.current += 1;
+            setTotalErrors(e => e + 1);
             playSound('wrong');
 
             Animated.sequence([
@@ -162,7 +168,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
             scaleAnim.setValue(1);
         } else {
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
-            onGameEnd('diziyi-tamamla', totalTime, totalMoves, totalErrors, undefined, {
+            onGameEnd('diziyi-tamamla', totalTime, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: currentStage + 1,
                 kazanimOdagi: 'Örüntü Algısı ve Mantıksal Düşünme',
             });
