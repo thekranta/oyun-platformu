@@ -2,6 +2,17 @@
 
 Iki otomatik denetim (adversarial dogrulamali). Kod hatalari + okul oncesi yas-uygunlugu.
 
+## Duzeltme Durumu
+
+**Tier 1 — TAMAMLANDI (kritik + veri bozan + native crash), henuz canlida test edilmedi:**
+- ✅ P2 oyun-bozanlar: RenkliBaglantalar (oynanamiyordu, PanResponder stale closure), MutfakDedektifi (seviye 1 sonsuz dongu)
+- ✅ P1 stale-closure skor hatalari: HafizaOyunu, QuantityComparison, SihirliTuval (+cift sayim), UzayBloklari, ShadowDetective, BunuSoyle, DiziyiTamamla — hepsi son tur/asama metriklerini ref'lerden okuyor (DDA verisi de duzeldi)
+- ✅ P4 native/JS driver cakismasi: OnlukCerceve, TartiDengesi
+
+**Tier 2 — BEKLEMEDE (temizlik, dusuk risk):** temizlenmeyen setTimeout/animation loop sizintilari (~15 oyun), GruplamaOyunu cift onGameEnd, KodlamaOyunu ilerleme+hamle sayimi, MuzikCalar (2), SihirliSiseler bos sise, OnlukCerceve ardisik hedef, AileSepeti ses akisi.
+
+**Tier 3 — BEKLEMEDE (yas-uygunluk):** mobilde TTS, olumsuz geri bildirim, zaman baskisi, tekrar-dinle butonu.
+
 ## Bug Denetimi — 49 dogrulandi / 72 aday
 
 ### CRITICAL (1)
