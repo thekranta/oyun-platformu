@@ -63,7 +63,6 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     // Game state
     const [round, setRound] = useState(1);
     const [targetNumber, setTargetNumber] = useState(() => Math.floor(Math.random() * 5) + 1);
-    const [prevTarget, setPrevTarget] = useState(0); // Prevent consecutive same
     const [placedFruits, setPlacedFruits] = useState<boolean[]>(Array(10).fill(false));
     const [mistakes, setMistakes] = useState(0);
     const [startTime] = useState(Date.now());
@@ -94,14 +93,15 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             setShowSuccess(false);
             setPlacedFruits(Array(10).fill(false));
             pan.setValue({ x: 0, y: 0 });
-            // Prevent consecutive same target
+            // Ardisik ayni hedefi engelle. targetNumberRef her zaman GUNCEL (onceki tur)
+            // hedefi tutar; eski prevTarget state'i round 1 hedefine hic ayarlanmadigi icin
+            // round 1->2 gecisinde ayni hedef tekrar edebiliyordu.
             let newTarget: number;
             do {
                 newTarget = round <= 4
                     ? Math.floor(Math.random() * 5) + 1
                     : Math.min(Math.floor(Math.random() * 5) + 6, 10);
-            } while (newTarget === prevTarget);
-            setPrevTarget(newTarget);
+            } while (newTarget === targetNumberRef.current);
             setTargetNumber(newTarget);
         }
     }, [round]);

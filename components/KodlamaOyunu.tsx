@@ -254,11 +254,13 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
   }, [levelIdx, CELL, GAP, soundOn, startTime, moves, errors, onGameEnd]);
 
   useEffect(() => {
-    if (status === GameStatus.WON && showWin) {
+    // Sadece kampanya (PLAY) modunda otomatik ilerle. EDIT modunda ozel harita kazanmak
+    // kampanya ilerlemesini degistirmemeli / oyunu erken bitirmemeli.
+    if (status === GameStatus.WON && showWin && mode === GameMode.PLAY) {
       const t = setTimeout(nextLevel, 2000);
       return () => clearTimeout(t);
     }
-  }, [status, showWin, nextLevel]);
+  }, [status, showWin, nextLevel, mode]);
 
   const reset = useCallback(() => {
     setPlayerPos(level.startPos);
@@ -280,8 +282,10 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
     }
   };
 
-  const clear = () => { if (status !== GameStatus.RUNNING) { setCommands([]); reset(); } };
-  const undo = () => { if (status !== GameStatus.RUNNING && commands.length > 0) setCommands(c => c.slice(0, -1)); };
+  // moves eklenen komutlari sayar; undo/clear ile geri alinan komutlar dusulmezse
+  // hamle sayisi denemeler boyunca sisip yanlis raporlaniyordu.
+  const clear = () => { if (status !== GameStatus.RUNNING) { setMoves(m => Math.max(0, m - commands.length)); setCommands([]); reset(); } };
+  const undo = () => { if (status !== GameStatus.RUNNING && commands.length > 0) { setCommands(c => c.slice(0, -1)); setMoves(m => Math.max(0, m - 1)); } };
 
   // Editor
   const cellClick = (x: number, y: number) => {

@@ -100,8 +100,12 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
 
     // Initialize game
     const initializeGame = useCallback(() => {
-        const { bottles: bottleCount, colors, empty } = getDifficulty();
-        const filledBottles = bottleCount - empty;
+        // Her renk tam olarak bir siseyi doldurur (colors*MAX_LAYERS katman). Dolu sise
+        // sayisi renk sayisina esittir; toplam = colors + empty. Eskiden filledBottles
+        // bottleCount-empty ile hesaplaniyordu ve renk sayisini asinca fazladan bos sise
+        // olusuyordu (ilan edilenden kolay oyun).
+        const { colors, empty } = getDifficulty();
+        const filledBottles = colors;
 
         // Create layers for each color
         const allLayers: number[] = [];
