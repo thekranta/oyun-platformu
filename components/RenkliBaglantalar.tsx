@@ -69,6 +69,12 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
     const floatingAnim = useRef(new Animated.Value(0)).current;
     const ballAnims = useRef<{ [key: string]: Animated.Value }>({});
 
+    // PanResponder asagida useRef ile bir kez olusturuldugu icin handler'lari ilk
+    // render'in (bos) state'ini yakalar. Guncel degerlere bu ref uzerinden erisiyoruz;
+    // aksi halde top secilemez, popCount artmaz ve finishGame sifir rapor eder.
+    const stateRef = useRef({ balls, selectedBalls, isDragging, gridLayout, popCount, errors, score, moveHistory });
+    stateRef.current = { balls, selectedBalls, isDragging, gridLayout, popCount, errors, score, moveHistory };
+
     // Initialize game
     useEffect(() => {
         initializeGame();
@@ -114,7 +120,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
     };
 
     const findBallAtPosition = (x: number, y: number): Ball | null => {
-        for (const ball of balls) {
+        for (const ball of stateRef.current.balls) {
             if (ball.isPopping) continue;
             const pos = getBallPosition(ball);
             const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
@@ -164,7 +170,8 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
         setTimeout(() => {
             dropNewBalls(poppedBalls);
 
-            const newPopCount = popCount + 1;
+            const newPopCount = stateRef.current.popCount + 1;
+            stateRef.current.popCount = newPopCount;
             setPopCount(newPopCount);
             setScore(prev => prev + poppedBalls.length * 50);
             setMoveHistory(prev => [...prev, { type: 'pop', count: poppedBalls.length }]);
@@ -229,11 +236,12 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
 
     const finishGame = () => {
         const duration = Math.floor((Date.now() - gameStart) / 1000);
-        onGameEnd('renkli-baglantalar', duration, popCount, errors, null, {
-            pop_count: popCount,
-            total_score: score,
-            error_count: errors,
-            moveHistory,
+        const { popCount: pc, errors: er, score: sc, moveHistory: mh } = stateRef.current;
+        onGameEnd('renkli-baglantalar', duration, pc, er, null, {
+            pop_count: pc,
+            total_score: sc,
+            error_count: er,
+            moveHistory: mh,
         });
     };
 
@@ -245,11 +253,15 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
             onPanResponderGrant: (evt) => {
                 const touch = evt.nativeEvent;
                 // Use page coordinates and subtract grid offset for reliability
-                const x = touch.pageX - gridLayout.x;
-                const y = touch.pageY - gridLayout.y;
+                const { gridLayout: gl } = stateRef.current;
+                const x = touch.pageX - gl.x;
+                const y = touch.pageY - gl.y;
 
                 const ball = findBallAtPosition(x, y);
                 if (ball) {
+                    // stateRef'i hemen guncelle: sonraki move ayni jestte guncel degeri okumali
+                    stateRef.current.isDragging = true;
+                    stateRef.current.selectedBalls = [ball];
                     setIsDragging(true);
                     setSelectedBalls([ball]);
                     const pos = getBallPosition(ball);
@@ -257,18 +269,19 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                 }
             },
             onPanResponderMove: (evt) => {
-                if (!isDragging) return;
+                if (!stateRef.current.isDragging) return;
 
                 const touch = evt.nativeEvent;
-                const x = touch.pageX - gridLayout.x;
-                const y = touch.pageY - gridLayout.y;
+                const { gridLayout: gl, selectedBalls: selected } = stateRef.current;
+                const x = touch.pageX - gl.x;
+                const y = touch.pageY - gl.y;
 
                 // Update current path endpoint
                 setCurrentPath(prev => {
                     if (prev.length === 0) return prev;
                     const newPath = [...prev];
                     // Keep start points, update end point
-                    if (newPath.length > selectedBalls.length) {
+                    if (newPath.length > selected.length) {
                         newPath.pop();
                     }
                     newPath.push({ x, y });
@@ -276,9 +289,10 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                 });
 
                 const ball = findBallAtPosition(x, y);
-                if (ball && !selectedBalls.some(sb => sb.id === ball.id)) {
-                    const lastBall = selectedBalls[selectedBalls.length - 1];
+                if (ball && !selected.some(sb => sb.id === ball.id)) {
+                    const lastBall = selected[selected.length - 1];
                     if (lastBall && isAdjacent(lastBall, ball) && ball.color === lastBall.color) {
+                        stateRef.current.selectedBalls = [...selected, ball];
                         setSelectedBalls(prev => [...prev, ball]);
                         const pos = getBallPosition(ball);
                         setCurrentPath(prev => {
@@ -291,11 +305,14 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                 }
             },
             onPanResponderRelease: () => {
-                if (selectedBalls.length >= 3) {
-                    handlePop(selectedBalls);
-                } else if (selectedBalls.length > 0) {
+                const selected = stateRef.current.selectedBalls;
+                if (selected.length >= 3) {
+                    handlePop(selected);
+                } else if (selected.length > 0) {
                     setErrors(prev => prev + 1);
                 }
+                stateRef.current.isDragging = false;
+                stateRef.current.selectedBalls = [];
                 setIsDragging(false);
                 setSelectedBalls([]);
                 setCurrentPath([]);

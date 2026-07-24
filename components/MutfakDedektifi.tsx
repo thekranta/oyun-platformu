@@ -302,6 +302,10 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
             // Scaffolding kaldırıldı - kopya vermiyoruz
         }
     };
+    // Seviye 1 kalibrasyon tekrar sayaci. Sinir olmadan, iyi performans gostermeyen
+    // cocuk seviye 1'de sonsuza kadar takilir kalir ve oyun hic bitmezdi.
+    const retryCountRef = useRef(0);
+
     // ============== LEVEL COMPLETION ==============
     const handleLevelComplete = async () => {
         const levelTime = (Date.now() - levelStartTime) / 1000;
@@ -330,7 +334,12 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 setErrors(0);
                 setLevelStartTime(Date.now());
                 setMavisMessage(`Seviye ${newLevel}! 🚀`);
+            } else if (retryCountRef.current >= 1) {
+                // Seviye 1'de bir tekrar hakki verildi; yine yeterli degilse oyunu bitir
+                // (aksi halde ayni seviye sonsuza kadar yeniden uretilirdi).
+                endGame(levelTime);
             } else {
+                retryCountRef.current += 1;
                 setFoods(generateLevel(level));
                 setPlacedItems(new Set());
                 setErrors(0);
