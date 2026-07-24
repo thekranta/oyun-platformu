@@ -154,13 +154,12 @@ Bilinmeyen/iliskisiz konular (Faz 1 disinda, not edildi):
 - `EXPO_PUBLIC_GEMINI_API_KEY` Google tarafinda askiya alinmis (suspended) - AI yorum ozelligi calismiyor. Ayrica bu anahtar istemci tarafinda (bundle icinde) acik, bu da kendi basina bir risk.
 - TTS (sesli okuma) ozelliginde OpenAI API cagrisi JSON degil HTML donduruyor; sistem otomatik tarayici sesine duserek kullaniciyi etkilemiyor ama konsolda hata birikiyor.
 
-## Bilinen Hata: Cizim resmi web'de tam kaydedilmiyor (2026-06-21, kullanici test bulgusu)
+## Bilinen Hata: Cizim resmi web'de tam kaydedilmiyor (2026-06-21) — ✅ DUZELTILDI
 
-- **Belirti:** Cocuk "Hayal Defteri" (YaraticiCizim) ile cizim yapip kaydedince, admin panelinde cizimin yalnizca kucuk bir parcasi gorunuyor, tamami gorunmuyor. Ek olarak (2026-06-21 ogretmen paneli testi): **ogretmen panelinde de cizim goruntusu hic gelmiyor** — ayni kok neden (web'de PNG uretilemiyor) + TeacherDashboard ogrenci skorlarinda cizim resmini render etmiyor olabilir.
-- **Kok neden:** `components/YaraticiCizim.tsx:264` cizimin tam PNG'sini `captureRef` (react-native-view-shot) ile yakaliyor. Bu fonksiyon web'de `findNodeHandle` kullaniyor ve web'de DESTEKLENMIYOR -> hata: "findNodeHandle is not supported on web". Resim uretilemeyince `cizimResimBase64` bos kaliyor; sadece vektor verisi (`cizimVerisi` = cizgi koordinatlari) kaydediliyor. Skor kaydi yine basarili (resim opsiyonel fallback), bu yuzden kullanici "✅ kaydedildi" goruyor ama resim eksik.
-- **Ikincil sorun:** Admin paneli resim olmayinca vektor verisini render ediyor ama olceklendirme/viewBox uyumsuzlugu nedeniyle cizimin sadece bir kosesi gorunuyor olabilir.
-- **Olasi cozum yonu:** Web'de `captureRef` yerine platform-ozel yakalama: cizim bir SVG/canvas ise web'de dogrudan `canvas.toDataURL()` veya SVG -> PNG serilestirme kullan. `SihirliTuval.tsx` de ayni `captureRef` desenini kullaniyorsa kontrol edilmeli.
-- **Durum:** Faz 2 (mimari) refactor'undan KAYNAKLANMIYOR; onceden beri var olan web'e ozgu sorun. Henuz duzeltilmedi, sadece not edildi.
+- **Belirti:** Cocuk "Hayal Defteri" (YaraticiCizim) ile cizim yapip kaydedince, admin/ogretmen panelinde cizim goruntusu gelmiyor / eksik goruniyordu.
+- **Kok neden:** `components/YaraticiCizim.tsx` cizimin tam PNG'sini `captureRef` (react-native-view-shot) ile yakaliyordu. Bu fonksiyon web'de `findNodeHandle` kullaniyor ve web'de DESTEKLENMIYOR ("findNodeHandle is not supported on web"). Resim uretilemeyince sadece vektor verisi kaydediliyordu.
+- **Cozum (2026-06-21):** Yakalama platforma gore ayrildi. Web'de `html-to-image`'in `toPng`'si `canvasRef` DOM dugumune uygulaniyor (dinamik import, yalnizca web'de); native'de `captureRef` korundu. Canvas'in kendi arka plani `#fffef9` oldugu icin export'a `backgroundColor: '#fffef9'` verildi. `html-to-image` bagimliligi eklendi. tsc temiz, yeni lint uyarisi yok. `SihirliTuval.tsx` kontrol edildi — cizim yakalamiyor, etkilenmiyor.
+- **Not:** Admin/ogretmen panelinin cizim resmini gercekten render edip etmedigi (URL'yi `<Image>` ile gosterme) ayrica dogrulanmali; bu fix resmin URETILIP KAYDEDILMESINI sagliyor.
 
 ## Faz 2 - Mimari Ayristirma (basladi, 2026-06-20)
 

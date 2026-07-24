@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, ImageBackground, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, ImageBackground, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import { asset } from '../lib/assetMap';
 
@@ -261,9 +261,19 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     let cizimResimBase64: string | undefined;
     try {
       if (canvasRef.current) {
-        const base64Result = await captureRef(canvasRef, { format: 'png', quality: 0.9, result: 'base64' });
-        if (base64Result) {
-          cizimResimBase64 = base64Result.includes(',') ? base64Result.split(',')[1] : base64Result;
+        let dataOrBase64: string | undefined;
+        if (Platform.OS === 'web') {
+          // react-native-view-shot web'de findNodeHandle kullanir ve calismaz
+          // ("findNodeHandle is not supported on web"). Web'de canvas View'inin
+          // DOM dugumunu dogrudan PNG'ye ceviriyoruz (html-to-image, yalnizca web'de import edilir).
+          const { toPng } = await import('html-to-image');
+          const node = canvasRef.current as unknown as HTMLElement;
+          dataOrBase64 = await toPng(node, { pixelRatio: 2, cacheBust: true, backgroundColor: '#fffef9' });
+        } else {
+          dataOrBase64 = await captureRef(canvasRef, { format: 'png', quality: 0.9, result: 'base64' });
+        }
+        if (dataOrBase64) {
+          cizimResimBase64 = dataOrBase64.includes(',') ? dataOrBase64.split(',')[1] : dataOrBase64;
         }
       }
     } catch (error) {
