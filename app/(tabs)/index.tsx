@@ -1,9 +1,8 @@
 import DynamicBackground from '@/components/DynamicBackground';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
-import { SONGS } from '@/components/MuzikCalar';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
-import { GAME_CATALOG, GameCatalogItem, GameCatalogStatus } from '@/constants/gameCatalog';
+import { GAME_CATALOG } from '@/constants/gameCatalog';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -11,8 +10,9 @@ import { ActivityIndicator, Dimensions, Modal, Platform, ScrollView, StyleSheet,
 import {
   createDailyGamePlan,
   GAME_CARD_META,
-  getCatalogGames,
+  getGamesByDomain,
   getTodayKey,
+  MENU_CATEGORIES,
 } from '../../lib/menuHelpers';
 import { useAuth } from '../../hooks/useAuth';
 import { GameResultExtraData, saveGameResult } from '../../services/gameResults';
@@ -97,6 +97,7 @@ export default function App() {
     setDailyCompletedRoutes([]);
     setDailyPlanRoutes([]);
     setDailyPlanDate('');
+    setSelectedCategory(null);
     setAsama('giris');
   };
 
@@ -126,8 +127,8 @@ export default function App() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<'bilissel' | 'sosyal' | 'yaratici' | 'muzikler'>('bilissel');
-  const [selectedSongIndex, setSelectedSongIndex] = useState<number>(0);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSongIndex] = useState<number>(0);
   const [dailyPlanDate, setDailyPlanDate] = useState<string>('');
   const [dailyPlanRoutes, setDailyPlanRoutes] = useState<string[]>([]);
   const [dailyCompletedRoutes, setDailyCompletedRoutes] = useState<string[]>([]);
@@ -170,51 +171,6 @@ export default function App() {
       ensureDailyPlan();
     }
   }, [asama, ensureDailyPlan]);
-
-  const renderCatalogCard = (game: GameCatalogItem, compact = false) => {
-    const meta = GAME_CARD_META[game.id] || {
-      color: '#607D8B',
-      icon: 'game-controller-outline' as keyof typeof Ionicons.glyphMap,
-      displayTitle: game.title,
-      subtitle: game.skillFocus,
-    };
-
-    return (
-      <TouchableOpacity
-        key={game.id}
-        style={[
-          styles.oyunKarti,
-          styles.catalogGameCard,
-          compact && styles.catalogGameCardCompact,
-          { backgroundColor: meta.color },
-        ]}
-        onPress={() => oyunuBaslat(game.routeKey)}
-      >
-        <Ionicons name={meta.icon} size={compact ? 26 : 34} color="white" style={{ marginBottom: compact ? 5 : 8 }} />
-        <Text style={[styles.oyunBaslik, compact && styles.catalogGameTitleCompact]} numberOfLines={2}>
-          {meta.displayTitle || game.title}
-        </Text>
-        <Text style={[styles.oyunAciklama, compact && styles.catalogGameSubtitleCompact]} numberOfLines={2}>
-          {meta.subtitle || game.skillFocus}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderCatalogSection = (title: string, status: GameCatalogStatus, compact = false) => {
-    const games = getCatalogGames(status);
-    if (games.length === 0) return null;
-
-    return (
-      <View style={styles.catalogSection}>
-        <Text style={styles.catalogSectionTitle}>{title}</Text>
-        <View style={styles.catalogGrid}>
-          {games.map((game) => renderCatalogCard(game, compact))}
-        </View>
-      </View>
-    );
-  };
-
 
   // === EKRANLAR ===
   if (asama === 'giris') {
@@ -566,411 +522,104 @@ export default function App() {
   }
 
   if (asama === 'menu') {
-    // Classic tab view
+    const activeCategory = selectedCategory ? MENU_CATEGORIES.find((c) => c.domain === selectedCategory) : null;
+    const categoryGames = selectedCategory ? getGamesByDomain(selectedCategory) : [];
+
     return (
       <DynamicBackground>
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.headerContainer}>
             <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
-            <Text style={styles.bilgi}>Bugün ne oynamak istersin?</Text>
+            <Text style={styles.bilgi}>
+              {activeCategory ? activeCategory.label : 'Bugün ne oynamak istersin?'}
+            </Text>
           </View>
 
-          <View style={styles.catalogShowcase}>
-            <View style={styles.catalogShowcaseHeader}>
-              <Text style={styles.catalogEyebrow}>Öğrenme Yolu</Text>
-              <Text style={styles.catalogTitle}>Öne Çıkan Oyunlar</Text>
-              <Text style={styles.catalogSubtitle}>
-                Az seçenekle başla; tüm oyunlar aşağıdaki klasik menüde korunuyor.
-              </Text>
-            </View>
-            <View style={styles.dailyPlanCard}>
-              <View style={styles.dailyPlanHeader}>
-                <Text style={styles.dailyPlanTitle}>Bugünün 3 Oyunu</Text>
-                <Text style={styles.dailyPlanCounter}>{dailyCompletedRoutes.length}/3 tamamlandı</Text>
+          {!selectedCategory && (
+            <>
+              {/* Bugünün 3 Oyunu */}
+              <View style={styles.dailyPlanCard}>
+                <View style={styles.dailyPlanHeader}>
+                  <Text style={styles.dailyPlanTitle}>Bugünün 3 Oyunu</Text>
+                  <Text style={styles.dailyPlanCounter}>{dailyCompletedRoutes.length}/3 tamamlandı</Text>
+                </View>
+                <View style={styles.dailyPlanSteps}>
+                  {dailyPlanRoutes.map((route, index) => {
+                    const done = dailyCompletedRoutes.includes(route);
+                    return (
+                      <View key={route} style={[styles.dailyPlanStep, done && styles.dailyPlanStepDone]}>
+                        <Text style={[styles.dailyPlanStepIndex, done && styles.dailyPlanStepIndexDone]}>{index + 1}</Text>
+                        <Text style={[styles.dailyPlanStepLabel, done && styles.dailyPlanStepLabelDone]} numberOfLines={1}>
+                          {getGameTitleByRoute(route)}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+                <TouchableOpacity
+                  style={[styles.dailyPlanAction, isDailyPlanComplete && styles.dailyPlanActionComplete]}
+                  onPress={startDailyFlow}
+                >
+                  <Text style={styles.dailyPlanActionText}>
+                    {isDailyPlanComplete ? 'Tekrar Oyna' : nextDailyRoute ? 'Sıradaki Oyunu Başlat' : 'Günlük Akışı Başlat'}
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.dailyPlanSteps}>
-                {dailyPlanRoutes.map((route, index) => {
-                  const done = dailyCompletedRoutes.includes(route);
+
+              {/* Kategori Hub */}
+              <Text style={styles.hubHeading}>Kategoriler</Text>
+              <View style={styles.categoryGrid}>
+                {MENU_CATEGORIES.map((cat) => {
+                  const count = getGamesByDomain(cat.domain).length;
+                  if (count === 0) return null;
                   return (
-                    <View key={route} style={[styles.dailyPlanStep, done && styles.dailyPlanStepDone]}>
-                      <Text style={[styles.dailyPlanStepIndex, done && styles.dailyPlanStepIndexDone]}>{index + 1}</Text>
-                      <Text style={[styles.dailyPlanStepLabel, done && styles.dailyPlanStepLabelDone]} numberOfLines={1}>
-                        {getGameTitleByRoute(route)}
-                      </Text>
-                    </View>
+                    <TouchableOpacity
+                      key={cat.domain}
+                      style={[styles.categoryCard, { backgroundColor: cat.color }]}
+                      onPress={() => setSelectedCategory(cat.domain)}
+                      activeOpacity={0.85}
+                    >
+                      <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                      <Text style={styles.categoryLabel} numberOfLines={2}>{cat.label}</Text>
+                      <Text style={styles.categoryCount}>{count} oyun</Text>
+                    </TouchableOpacity>
                   );
                 })}
               </View>
-              <TouchableOpacity
-                style={[styles.dailyPlanAction, isDailyPlanComplete && styles.dailyPlanActionComplete]}
-                onPress={startDailyFlow}
-              >
-                <Text style={styles.dailyPlanActionText}>
-                  {isDailyPlanComplete ? 'Tekrar Oyna' : nextDailyRoute ? 'Sıradaki Oyunu Başlat' : 'Günlük Akışı Başlat'}
-                </Text>
+            </>
+          )}
+
+          {selectedCategory && (
+            <>
+              <TouchableOpacity style={styles.backToCategories} onPress={() => setSelectedCategory(null)} activeOpacity={0.7}>
+                <Ionicons name="arrow-back" size={22} color="#37474F" />
+                <Text style={styles.backToCategoriesText}>Kategoriler</Text>
               </TouchableOpacity>
-            </View>
-            {renderCatalogSection('Bugünün çekirdek oyunları', 'core')}
-            {renderCatalogSection('Hikaye ve ifade alanları', 'story', true)}
-            {renderCatalogSection('Yaratıcılık', 'creative', true)}
-          </View>
-
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'bilissel' && styles.activeTabButton]}
-              onPress={() => setActiveTab('bilissel')}
-
-            >
-              <Text style={[styles.tabText, activeTab === 'bilissel' && styles.activeTabText]}>🧠 Bilişsel Beceriler</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'sosyal' && styles.activeTabButton]}
-              onPress={() => setActiveTab('sosyal')}
-            >
-              <Text style={[styles.tabText, activeTab === 'sosyal' && styles.activeTabText]}>🤝 Sosyal-Duygusal</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'yaratici' && styles.activeTabButton]}
-              onPress={() => setActiveTab('yaratici')}
-            >
-              <Text style={[styles.tabText, activeTab === 'yaratici' && styles.activeTabText]}>🎨 Yaratıcılık</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'muzikler' && styles.activeTabButton]}
-              onPress={() => setActiveTab('muzikler')}
-            >
-              <Text style={[styles.tabText, activeTab === 'muzikler' && styles.activeTabText]}>🎵 Müzik Kutusu</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.gridContainer}>
-            {activeTab === 'bilissel' && (
-              <>
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#64B5F6' }]} onPress={() => oyunuBaslat('hafiza')}>
-                  <Ionicons name="grid" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Çiftini Bul!</Text>
-                  <Text style={styles.oyunAciklama}>Hafıza Oyunu</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFB74D' }]} onPress={() => oyunuBaslat('siralama')}>
-                  <Ionicons name="list" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Sıralama</Text>
-                  <Text style={styles.oyunAciklama}>Sayıları Diz</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FF8A65' }]} onPress={() => oyunuBaslat('eksik-sayi-bul')}>
-                  <Ionicons name="help-circle" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Eksik Sayiyi Bul</Text>
-                  <Text style={styles.oyunAciklama}>Eksik rakami tamamla</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#81C784' }]} onPress={() => oyunuBaslat('gruplama')}>
-                  <Ionicons name="basket" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Gruplama</Text>
-                  <Text style={styles.oyunAciklama}>Meyve mi Hayvan mı?</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#BA68C8' }]} onPress={() => oyunuBaslat('diziyi-tamamla')}>
-                  <Ionicons name="extension-puzzle" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Diziyi Tamamla</Text>
-                  <Text style={styles.oyunAciklama}>Örüntü Oyunu</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#F06292' }]} onPress={() => oyunuBaslat('bunu-soyle')}>
-                  <Ionicons name="mic" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Bunu Söyle!</Text>
-                  <Text style={styles.oyunAciklama}>Kelime Oyunu</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#00ACC1' }]} onPress={() => oyunuBaslat('kodlama')}>
-                  <Ionicons name="map" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Minik Kaşif</Text>
-                  <Text style={styles.oyunAciklama}>Kodlama Oyunu</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#4DB6AC' }]} onPress={() => oyunuBaslat('rakam-yazma')}>
-                  <Ionicons name="pencil" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Rakam Yazma</Text>
-                  <Text style={styles.oyunAciklama}>1'den 5'e Yaz</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#7E57C2' }]} onPress={() => oyunuBaslat('kutuyu-bul')}>
-                  <Ionicons name="cube" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Kutuyu Bul!</Text>
-                  <Text style={styles.oyunAciklama}>Doğru Kutuyu Seç</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#26A69A' }]} onPress={() => oyunuBaslat('sayilari-birlestir')}>
-                  <Ionicons name="git-network" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Sayıları Birleştir</Text>
-                  <Text style={styles.oyunAciklama}>Meyveleri Sırayla Bağla</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#E91E63' }]} onPress={() => oyunuBaslat('yapboz')}>
-                  <Ionicons name="apps" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Yapboz</Text>
-                  <Text style={styles.oyunAciklama}>3x3 Puzzle Oyunu</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#1565C0' }]} onPress={() => oyunuBaslat('golge-dedektifi')}>
-                  <Ionicons name="eye-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Gölge Dedektifi</Text>
-                  <Text style={styles.oyunAciklama}>Nesneleri Eşleştir</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FF7043' }]} onPress={() => oyunuBaslat('onluk-cerceve')}>
-                  <Ionicons name="grid-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Onluk Çerçeve</Text>
-                  <Text style={styles.oyunAciklama}>Sayıları Tamamla</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FFA726' }]} onPress={() => oyunuBaslat('sayi-komsulari')}>
-                  <Ionicons name="train-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Sayı Komşuları</Text>
-                  <Text style={styles.oyunAciklama}>Eksik Sayıyı Bul</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#AB47BC' }]} onPress={() => oyunuBaslat('tarti-dengesi')}>
-                  <Ionicons name="color-filter-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Tartı Dengesi</Text>
-                  <Text style={styles.oyunAciklama}>Eşitliği Sağla</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#1E88E5' }]} onPress={() => oyunuBaslat('miktar-karsilastirma')}>
-                  <Ionicons name="bar-chart-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Miktar Avcısı</Text>
-                  <Text style={styles.oyunAciklama}>Hangisi Daha Çok?</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#4CAF50' }]} onPress={() => oyunuBaslat('sihirli-siseler')}>
-                  <Ionicons name="flask-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Sihirli Şişeler</Text>
-                  <Text style={styles.oyunAciklama}>Renkleri Grupla</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#3F51B5' }]} onPress={() => oyunuBaslat('sihirli-tuval')}>
-                  <Ionicons name="color-palette-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Sihirli Tuval</Text>
-                  <Text style={styles.oyunAciklama}>Uzay Boyama</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#1a1a4e' }]} onPress={() => oyunuBaslat('uzay-bloklari')}>
-                  <Ionicons name="planet-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Uzay Blokları</Text>
-                  <Text style={styles.oyunAciklama}>Yıldız Mimarı</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#6366F1' }]} onPress={() => oyunuBaslat('renkli-baglantalar')}>
-                  <Ionicons name="git-merge-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Renkli Bağlantılar</Text>
-                  <Text style={styles.oyunAciklama}>Dot Connect</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#FF6B6B' }]} onPress={() => oyunuBaslat('mutfak-dedektifi')}>
-                  <Ionicons name="restaurant-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Mutfak Dedektifi</Text>
-                  <Text style={styles.oyunAciklama}>Sınıflandırma</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {activeTab === 'sosyal' && (
-              <>
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#795548' }]} onPress={() => oyunuBaslat('ceviz-macera')}>
-                  <Ionicons name="leaf" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Ceviz Macerası</Text>
-                  <Text style={styles.oyunAciklama}>Pıtırcık'ın Macerası</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#8D6E63' }]} onPress={() => oyunuBaslat('aile-sepeti-macerasi')}>
-                  <Ionicons name="basket-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Aile Sepeti</Text>
-                  <Text style={styles.oyunAciklama}>Piknik Macerası</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#9C27B0' }]} onPress={() => oyunuBaslat('adalet-hikayesi')}>
-                  <Ionicons name="scale-outline" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Adalet Hikayesi</Text>
-                  <Text style={styles.oyunAciklama}>Doğru Olan Nedir?</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {activeTab === 'yaratici' && (
-              <>
-                <TouchableOpacity style={[styles.oyunKarti, { backgroundColor: '#ff9f1c' }]} onPress={() => oyunuBaslat('yaratici-cizim')}>
-                  <Ionicons name="brush" size={40} color="white" style={{ marginBottom: 10 }} />
-                  <Text style={styles.oyunBaslik}>Hayal Defteri</Text>
-                  <Text style={styles.oyunAciklama}>Boş sayfada çizim yap</Text>
-                </TouchableOpacity>
-
-
-              </>
-            )}
-
-            {activeTab === 'muzikler' && (
-              <View style={{ width: '100%', paddingBottom: 40 }}>
-                {/* 0. Yeni Sarkilar */}
-                <Text style={styles.sectionTitle}>Yeni Sarkilar</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
-                  {SONGS.filter(s => s.category === 'yeniler').map((song) => (
+              <View style={styles.gridContainer}>
+                {categoryGames.map((game) => {
+                  const meta = GAME_CARD_META[game.id] || {
+                    color: '#607D8B',
+                    icon: 'game-controller-outline' as keyof typeof Ionicons.glyphMap,
+                    displayTitle: game.title,
+                    subtitle: game.skillFocus,
+                  };
+                  return (
                     <TouchableOpacity
-                      key={song.id}
-                      style={[styles.oyunKarti, {
-                        backgroundColor: song.coverColor,
-                        margin: 6,
-                        width: 105,
-                        height: 115,
-                        paddingHorizontal: 8,
-                        paddingVertical: 10,
-                      }]}
-                      onPress={() => {
-                        const realIndex = SONGS.findIndex(s => s.id === song.id);
-                        setSelectedSongIndex(realIndex);
-                        oyunuBaslat('muzik-calar');
-                      }}
+                      key={game.id}
+                      style={[styles.oyunKarti, { backgroundColor: meta.color }]}
+                      onPress={() => oyunuBaslat(game.routeKey)}
+                      activeOpacity={0.85}
                     >
-                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
+                      <Ionicons name={meta.icon} size={40} color="white" style={{ marginBottom: 10 }} />
+                      <Text style={styles.oyunBaslik} numberOfLines={2}>{meta.displayTitle || game.title}</Text>
+                      <Text style={styles.oyunAciklama} numberOfLines={2}>{meta.subtitle || game.skillFocus}</Text>
                     </TouchableOpacity>
-                  ))}
-                </View>
-                {/* 1. Matematik Şarkıları */}
-                <Text style={styles.sectionTitle}>🔢 Matematik Şarkıları</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
-                  {SONGS.filter(s => s.artist.includes('Matematik')).map((song) => (
-                    <TouchableOpacity
-                      key={song.id}
-                      style={[styles.oyunKarti, {
-                        backgroundColor: song.coverColor,
-                        margin: 6,
-                        width: 105,
-                        height: 115,
-                        paddingHorizontal: 8,
-                        paddingVertical: 10,
-                      }]}
-                      onPress={() => {
-                        const realIndex = SONGS.findIndex(s => s.id === song.id);
-                        setSelectedSongIndex(realIndex);
-                        oyunuBaslat('muzik-calar');
-                      }}
-                    >
-                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
 
-                {/* 2. Fen Eğitimi Şarkıları */}
-                <Text style={styles.sectionTitle}>🔬 Fen Eğitimi Şarkıları</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
-                  {SONGS.filter(s => s.artist.includes('Fen')).map((song) => (
-                    <TouchableOpacity
-                      key={song.id}
-                      style={[styles.oyunKarti, {
-                        backgroundColor: song.coverColor,
-                        margin: 6,
-                        width: 105,
-                        height: 115,
-                        paddingHorizontal: 8,
-                        paddingVertical: 10,
-                      }]}
-                      onPress={() => {
-                        const realIndex = SONGS.findIndex(s => s.id === song.id);
-                        setSelectedSongIndex(realIndex);
-                        oyunuBaslat('muzik-calar');
-                      }}
-                    >
-                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* 3. Değerler Eğitimi */}
-                <Text style={styles.sectionTitle}>🌟 Değerler Eğitimi</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
-                  {SONGS.filter(s => !s.artist.includes('Matematik') && !s.artist.includes('Fen') && !s.title.includes('ChildhoodTech')).map((song) => (
-                    <TouchableOpacity
-                      key={song.id}
-                      style={[styles.oyunKarti, {
-                        backgroundColor: song.coverColor,
-                        margin: 6,
-                        width: 105,
-                        height: 115,
-                        paddingHorizontal: 8,
-                        paddingVertical: 10,
-                      }]}
-                      onPress={() => {
-                        const realIndex = SONGS.findIndex(s => s.id === song.id);
-                        setSelectedSongIndex(realIndex);
-                        oyunuBaslat('muzik-calar');
-                      }}
-                    >
-                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                {/* 4. Özel Koleksiyon */}
-                <Text style={styles.sectionTitle}>🎵 Özel Koleksiyon (ChildhoodTech)</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
-                  {SONGS.filter(s => s.title.includes('ChildhoodTech')).map((song) => (
-                    <TouchableOpacity
-                      key={song.id}
-                      style={[styles.oyunKarti, {
-                        backgroundColor: song.coverColor,
-                        margin: 6,
-                        width: 105,
-                        height: 115,
-                        paddingHorizontal: 8,
-                        paddingVertical: 10,
-                      }]}
-                      onPress={() => {
-                        const realIndex = SONGS.findIndex(s => s.id === song.id);
-                        setSelectedSongIndex(realIndex);
-                        oyunuBaslat('muzik-calar');
-                      }}
-                    >
-                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              
-                {/* 5. Tum Sarkilar */}
-                <Text style={styles.sectionTitle}>Tum Sarkilar</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10, justifyContent: 'flex-start' }}>
-                  {SONGS.map((song) => (
-                    <TouchableOpacity
-                      key={song.id}
-                      style={[styles.oyunKarti, {
-                        backgroundColor: song.coverColor,
-                        margin: 6,
-                        width: 105,
-                        height: 115,
-                        paddingHorizontal: 8,
-                        paddingVertical: 10,
-                      }]}
-                      onPress={() => {
-                        const realIndex = SONGS.findIndex(s => s.id === song.id);
-                        setSelectedSongIndex(realIndex);
-                        oyunuBaslat('muzik-calar');
-                      }}
-                    >
-                      <Ionicons name={song.icon} size={28} color="white" style={{ marginBottom: 6 }} />
-                      <Text style={[styles.oyunBaslik, { fontSize: 12 }]} numberOfLines={2}>{song.title}</Text>
-                      <Text style={[styles.oyunAciklama, { fontSize: 9 }]} numberOfLines={1}>{song.artist}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View></View>
-            )}
-          </View>
           <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 30, alignSelf: 'center' }]} onPress={cikisYap}>
             <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
           </TouchableOpacity>
@@ -1194,6 +843,74 @@ const styles = StyleSheet.create({
   butonYazi: { color: 'white', fontSize: 18, fontWeight: 'bold' },
 
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15 },
+
+  // Kategori hub
+  hubHeading: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#37474F',
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 14,
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 16,
+    maxWidth: 720,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  categoryCard: {
+    width: 200,
+    height: 150,
+    borderRadius: 26,
+    padding: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    ...(Platform.OS === 'web' ? { cursor: 'pointer', transition: 'transform 0.15s ease' } : {}),
+  },
+  categoryEmoji: {
+    fontSize: 46,
+    marginBottom: 8,
+  },
+  categoryLabel: {
+    color: 'white',
+    fontSize: 19,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  categoryCount: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  backToCategories: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    marginBottom: 18,
+    marginLeft: 6,
+    elevation: 2,
+  },
+  backToCategoriesText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#37474F',
+  },
+
   oyunKarti: { width: 160, height: 160, padding: 15, borderRadius: 25, justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 3 },
   oyunBaslik: { color: 'white', fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginTop: 5 },
   oyunAciklama: { color: 'rgba(255,255,255,0.9)', fontSize: 12, textAlign: 'center' },

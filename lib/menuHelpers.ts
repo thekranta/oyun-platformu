@@ -32,6 +32,25 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
 
+// Ana menu kategori hub'i: her kategori katalogdaki `domain` alanina karsilik gelir.
+export interface MenuCategory {
+  domain: string;
+  label: string;
+  emoji: string;
+  color: string;
+}
+
+export const MENU_CATEGORIES: MenuCategory[] = [
+  { domain: 'Matematik', label: 'Matematik', emoji: '🔢', color: '#1E88E5' },
+  { domain: 'Bilissel', label: 'Dikkat ve Zekâ', emoji: '🧠', color: '#7E57C2' },
+  { domain: 'Dil', label: 'Dil ve Konuşma', emoji: '💬', color: '#F06292' },
+  { domain: 'Sosyal-duygusal', label: 'Hikâyeler', emoji: '📖', color: '#8D6E63' },
+  { domain: 'Sanat', label: 'Yaratıcılık', emoji: '🎨', color: '#FF9F1C' },
+  { domain: 'Muzik', label: 'Müzik', emoji: '🎵', color: '#EC407A' },
+];
+
+export const getGamesByDomain = (domain: string) => GAME_CATALOG.filter((game) => game.domain === domain);
+
 export const getTodayKey = () => {
   const now = new Date();
   const year = now.getFullYear();
