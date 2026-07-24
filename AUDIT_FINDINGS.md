@@ -9,7 +9,11 @@ Iki otomatik denetim (adversarial dogrulamali). Kod hatalari + okul oncesi yas-u
 - ✅ P1 stale-closure skor hatalari: HafizaOyunu, QuantityComparison, SihirliTuval (+cift sayim), UzayBloklari, ShadowDetective, BunuSoyle, DiziyiTamamla — hepsi son tur/asama metriklerini ref'lerden okuyor (DDA verisi de duzeldi)
 - ✅ P4 native/JS driver cakismasi: OnlukCerceve, TartiDengesi
 
-**Tier 2 — BEKLEMEDE (temizlik, dusuk risk):** temizlenmeyen setTimeout/animation loop sizintilari (~15 oyun), GruplamaOyunu cift onGameEnd, KodlamaOyunu ilerleme+hamle sayimi, MuzikCalar (2), SihirliSiseler bos sise, OnlukCerceve ardisik hedef, AileSepeti ses akisi.
+**Tier 2 — TAMAMLANDI (mantik + temizlik):**
+- ✅ Mantik: GruplamaOyunu cift onGameEnd (finishedRef), MuzikCalar (yanlis sonraki sarki + tekrar modu), KodlamaOyunu (editor kampanya bozma + undo/clear hamle), SihirliSiseler (fazla bos sise), OnlukCerceve (ardisik hedef).
+- ✅ Hikaye oyunlari: AileSepeti (overlapping playAudio generation-token, ses hatasinda donma, olu logData/env-guard onGameEnd atlamasi, final timer), AdaletHikayesi (final timer + ayni onGameEnd-atlama bugu - denetim kacirmisti), CevizMacera (final onExit timer unmount/reset).
+- ✅ Temizlik: EksikSayiBul (cikis sonrasi onGameEnd), MutfakDedektifi (SelectableItem modul seviyesine - remount fix), BunuSoyle (bas-konus yaris kosulu), ve 15 dosyada temizlenmeyen setTimeout/Animated.loop -> unmount temizligi (ref ile takip + stop). Buyuk bolumu paralel subagent'larla yapildi.
+- tsc temiz, lint 120 (baseline 123'un altinda - olu kod da temizlendi).
 
 **Tier 3 — BEKLEMEDE (yas-uygunluk):** mobilde TTS, olumsuz geri bildirim, zaman baskisi, tekrar-dinle butonu.
 
