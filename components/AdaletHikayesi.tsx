@@ -186,12 +186,17 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
     const [storyVolume, setStoryVolume] = useState(1.0);
     const soundRef = useRef<Audio.Sound | null>(null);
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    // Final sahnedeki zamanlayicilar; unmount'ta temizlenmezse component gittikten
+    // sonra setState ve (bazen ikinci kez) onExit tetikliyordu.
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const currentNode = storyData[currentNodeId as keyof typeof storyData] as StoryNode;
 
     useEffect(() => {
         return () => {
             stopAudio();
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            timersRef.current.forEach(clearTimeout);
         };
     }, []);
 
@@ -263,10 +268,10 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
             } else if (currentNode.next) {
                 setCurrentNodeId(currentNode.next);
             } else if (currentNode.isFinal) {
-                setTimeout(() => {
+                timersRef.current.push(setTimeout(() => {
                     setShowConfetti(true);
-                    setTimeout(onExit, 4000);
-                }, 2000);
+                    timersRef.current.push(setTimeout(onExit, 4000));
+                }, 2000));
             }
         }
     };
@@ -280,11 +285,6 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
         setIsLogging(true);
         const endTime = Date.now();
         const durationSeconds = Math.floor((endTime - startTime) / 1000);
-        const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-        const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
-
-        if (!SUPABASE_URL || !SUPABASE_KEY) return;
-
         const pathString = path.join(' -> ');
 
         // Seçilen yoldan anlam çıkar
@@ -296,20 +296,9 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
             return 'Bilinmeyen';
         };
 
-        const logData: Record<string, any> = {
-            ogrenci_adi: userId || 'Misafir',
-            ogrenci_yasi: userAge || 0,
-            oyun_turu: 'adalet-hikayesi',
-            hamle_sayisi: path.length,
-            hata_sayisi: 0,
-            sure: durationSeconds,
-            kazanim_odagi: 'İnteraktif Hikaye - Değerler Eğitimi (Adalet ve Paylaşım)',
-            ekstra_veri: JSON.stringify({
-                secilen_yol: pathString,
-                yaklasim: getAnalysisSummary()
-            }),
-        };
-
+        // Not: Sonuc kaydi onGameEnd -> saveGameResult uzerinden yapiliyor. Eskiden burada
+        // gonderilmeyen (olu) bir logData ve env-var kontrolu vardi; env yoksa erken return
+        // onGameEnd'i de atliyordu. Kaldirildi ki sonuc her zaman raporlansin.
         // onGameEnd varsa merkezi kaydetme fonksiyonunu çağır
         // Veriyi 'cizimVerisi' alanına JSON olarak gömüyoruz, böylece admin paneli 'cizim_verisi'nden okuyabilir.
         if (onGameEnd) {

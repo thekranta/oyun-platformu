@@ -156,12 +156,22 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
     const [storyVolume, setStoryVolume] = useState(1.0);
     const soundRef = useRef<Audio.Sound | null>(null);
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    // Ust uste playAudio cagrilarinda eski ses callback'inin yanlis dugume gitmesini
+    // engellemek icin nesil (generation) sayaci.
+    const playGenRef = useRef(0);
+    // Final sahnedeki zamanlayicilar; unmount'ta temizlenmezse component gittikten
+    // sonra setState/onExit tetikliyordu.
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const currentNode = storyData[currentNodeId as keyof typeof storyData] as StoryNode;
 
     useEffect(() => {
         return () => {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            playGenRef.current++; // bekleyen ses callback'lerini gecersiz kil
             stopAudio();
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            timersRef.current.forEach(clearTimeout);
         };
     }, []);
 
@@ -198,27 +208,33 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
 
     const playAudio = async (audioSource: any, type: 'narrative' | 'question') => {
         await stopAudio();
+        // Bu cagrinin nesli; daha yeni bir playAudio gelirse bu callback gecersiz olur.
+        const gen = ++playGenRef.current;
         if (!audioSource) {
-            // If no audio, simulate finish after 1s? Or just wait? 
-            // For now, let's assume all nodes have audio as requested.
-            // If no audio, we might get stuck, so simple manual fallback could be nice, 
-            // but user explicitly asked to remove buttons.
+            // Ses yoksa hikayeyi kilitleme: anlatida ilerlemeyi tetikle.
+            onAudioFinish(type);
             return;
         }
 
         try {
             const { sound } = await Audio.Sound.createAsync(audioSource, { shouldPlay: true });
+            // Daha yeni bir playAudio araya girdiyse bu ses'i sahiplenme (orphan) ve dokun.
+            if (gen !== playGenRef.current) {
+                await sound.unloadAsync();
+                return;
+            }
             soundRef.current = sound;
             await sound.setVolumeAsync(storyVolume);
 
             sound.setOnPlaybackStatusUpdate((status) => {
-                if (status.isLoaded && status.didJustFinish) {
-                    // Slight delay to avoid instant cut
+                if (status.isLoaded && status.didJustFinish && gen === playGenRef.current) {
                     onAudioFinish(type);
                 }
             });
         } catch (e) {
             console.log('Audio playback error:', e);
+            // Ses yuklenemezse hikaye donmasin: guncel nesilse ilerlemeyi tetikle.
+            if (gen === playGenRef.current) onAudioFinish(type);
         }
     };
 
@@ -235,10 +251,10 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
                 setCurrentNodeId(currentNode.next);
             } else if (currentNode.isFinal) {
                 // Final scene finished -> Wait 2s then Confetti + Exit
-                setTimeout(() => {
+                timersRef.current.push(setTimeout(() => {
                     setShowConfetti(true);
-                    setTimeout(onExit, 4000); // Wait for confetti to fall a bit
-                }, 2000);
+                    timersRef.current.push(setTimeout(onExit, 4000)); // Wait for confetti to fall a bit
+                }, 2000));
             }
         }
         // If type === 'question', do nothing. Wait for user input.
@@ -253,30 +269,13 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
         setIsLogging(true);
         const endTime = Date.now();
         const durationSeconds = Math.floor((endTime - startTime) / 1000);
-        const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-        const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
-
-        if (!SUPABASE_URL || !SUPABASE_KEY) return;
 
         // Build path string like "intro -> scene_a -> end_a1 -> final"
         const pathString = path.join(' -> ');
 
-        const logData = {
-            ogrenci_adi: userId || 'Misafir',
-            ogrenci_yasi: userAge || 0,
-            oyun_turu: 'aile-sepeti',
-            hamle_sayisi: path.length,
-            hata_sayisi: 0,
-            sure: durationSeconds,
-            yapay_zeka_yorumu: null, // Admin panelinden analiz yapılacak
-            email: userEmail,
-            zorluk_seviyesi: null,
-            kazanim_odagi: 'Sosyal-Duygusal Gelişim',
-            deneme_no: null,
-            // Ek veri: seçilen yol
-            ekstra_veri: JSON.stringify({ secilen_yol: pathString }),
-        };
-
+        // Not: Sonuc kaydi onGameEnd -> saveGameResult uzerinden yapiliyor. Eskiden burada
+        // gonderilmeyen (olu) bir logData ve env-var kontrolu vardi; env yoksa erken return
+        // onGameEnd'i de atliyordu. Kaldirildi ki sonuc her zaman raporlansin.
         if (onGameEnd) {
             const analysisData = JSON.stringify({
                 secilen_yol: pathString,

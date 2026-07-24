@@ -165,6 +165,9 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     const [storyVolume, setStoryVolume] = useState(1.0);
     const soundRef = useRef<Audio.Sound | null>(null);
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    // Final sahnedeki otomatik cikis zamanlayicisi; unmount/reset'te temizlenmezse
+    // component gittikten sonra onExit'i (bazen ikinci kez) tetikliyordu.
+    const finalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentNode = storyData[currentNodeId as keyof typeof storyData] as StoryNode;
 
     useEffect(() => {
@@ -172,6 +175,9 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         return () => {
             if (soundRef.current) {
                 soundRef.current.unloadAsync();
+            }
+            if (finalTimerRef.current) {
+                clearTimeout(finalTimerRef.current);
             }
         };
     }, []);
@@ -239,7 +245,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                 setViewState('options');
             } else {
                 setShowConfetti(true);
-                setTimeout(() => onExit(), 4000);
+                finalTimerRef.current = setTimeout(() => onExit(), 4000);
             }
         }
     };
@@ -259,6 +265,11 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     };
 
     const handleReset = () => {
+        // Final sahnede reset'e basilirsa otomatik cikisi iptal et (yaris kosulu)
+        if (finalTimerRef.current) {
+            clearTimeout(finalTimerRef.current);
+            finalTimerRef.current = null;
+        }
         setCurrentNodeId('intro');
         setIsLogging(false);
         setShowConfetti(false);
