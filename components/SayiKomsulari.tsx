@@ -47,9 +47,10 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
         const anim = (a: Animated.Value, d: number) => Animated.loop(Animated.sequence([
             Animated.timing(a, { toValue: 12, duration: d, useNativeDriver: true }),
             Animated.timing(a, { toValue: 0, duration: d, useNativeDriver: true }),
-        ])).start();
-        anim(float1, 3500);
-        anim(float2, 5000);
+        ]));
+        const loops = [anim(float1, 3500), anim(float2, 5000)];
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, []);
 
     const [round, setRound] = useState(1);

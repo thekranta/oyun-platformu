@@ -73,6 +73,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
     const [moves, setMoves] = useState(0);
     const [stageComplete, setStageComplete] = useState(false);
     const startTimeRef = useRef(Date.now());
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
 
@@ -110,6 +111,13 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
     useEffect(() => {
         generateDots();
     }, [stage]);
+
+    useEffect(() => {
+        return () => {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            timersRef.current.forEach(clearTimeout);
+        };
+    }, []);
 
     const getDotPixelPos = (dot: NumberDot): Point => {
         const { width, height } = canvasSize;
@@ -153,7 +161,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                     useNativeDriver: true,
                 }).start();
 
-                setTimeout(() => {
+                timersRef.current.push(setTimeout(() => {
                     successAnim.setValue(0);
                     if (stage < TOTAL_STAGES) {
                         setStage(prev => prev + 1);
@@ -164,7 +172,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                             kazanimOdagi: 'Sayı Sırası ve El-Göz Koordinasyonu',
                         });
                     }
-                }, 1500);
+                }, 1500));
             } else {
                 setCurrentNumber(prev => prev + 1);
             }

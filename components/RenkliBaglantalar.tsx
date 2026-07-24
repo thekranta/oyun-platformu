@@ -68,6 +68,9 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
     // Animations
     const floatingAnim = useRef(new Animated.Value(0)).current;
     const ballAnims = useRef<{ [key: string]: Animated.Value }>({});
+    // Unmount temizligi icin: calisan floating loop ve bekleyen setTimeout'lar
+    const floatingLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     // PanResponder asagida useRef ile bir kez olusturuldugu icin handler'lari ilk
     // render'in (bos) state'ini yakalar. Guncel degerlere bu ref uzerinden erisiyoruz;
@@ -81,13 +84,23 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
         startFloatingAnimation();
     }, []);
 
+    // Unmount'ta calisan loop'u durdur ve bekleyen setTimeout'lari temizle
+    useEffect(() => () => {
+         
+        floatingLoopRef.current?.stop();
+         
+        timersRef.current.forEach(clearTimeout);
+    }, []);
+
     const startFloatingAnimation = () => {
-        Animated.loop(
+        const loop = Animated.loop(
             Animated.sequence([
                 Animated.timing(floatingAnim, { toValue: 1, duration: 3000, useNativeDriver: true }),
                 Animated.timing(floatingAnim, { toValue: 0, duration: 3000, useNativeDriver: true }),
             ])
-        ).start();
+        );
+        floatingLoopRef.current = loop;
+        loop.start();
     };
 
 
@@ -167,7 +180,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
         ));
 
         // After animation, drop new balls
-        setTimeout(() => {
+        timersRef.current.push(setTimeout(() => {
             dropNewBalls(poppedBalls);
 
             const newPopCount = stateRef.current.popCount + 1;
@@ -180,9 +193,9 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
             if (newPopCount >= MAX_POPS) {
                 setIsGameComplete(true);
                 setShowConfetti(true);
-                setTimeout(finishGame, 2500);
+                timersRef.current.push(setTimeout(finishGame, 2500));
             }
-        }, 400);
+        }, 400));
     };
 
     const dropNewBalls = (poppedBalls: Ball[]) => {

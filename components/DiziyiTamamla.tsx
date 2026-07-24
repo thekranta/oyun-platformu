@@ -72,6 +72,8 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const confettiRef = useRef<ConfettiCannon>(null);
+    // Unmount temizligi icin bekleyen setTimeout id'leri
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const currentPattern = PATTERNS[currentStage];
 
@@ -89,6 +91,12 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
         return () => {
             stopSound('background');
         };
+    }, []);
+
+    // Unmount'ta bekleyen setTimeout'lari temizle
+    useEffect(() => () => {
+         
+        timersRef.current.forEach(clearTimeout);
     }, []);
 
     const handleOptionPress = (option: ShapeType) => {
@@ -121,9 +129,9 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
                 }),
             ]).start();
 
-            setTimeout(() => {
+            timersRef.current.push(setTimeout(() => {
                 handleNextStage();
-            }, 1500);
+            }, 1500));
 
         } else {
             totalErrorsRef.current += 1;

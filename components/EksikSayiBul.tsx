@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
@@ -115,6 +115,13 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
   const wrongShake = useRef(new Animated.Value(0)).current;
   const startTimeRef = useRef(Date.now());
   const dropZoneRef = useRef<View>(null);
+  // Asama-gecis/oyun-bitis setTimeout'lari; unmount'ta temizlenmezse cocuk cikis
+  // yaptiktan sonra goNextStage/onGameEnd tetikleniyordu.
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => {
+     
+    timersRef.current.forEach(clearTimeout);
+  }, []);
   const [dropZone, setDropZone] = useState<DropZone | null>(null);
   const stageOrderRef = useRef<number[]>(shuffle(NUMBERS));
 
@@ -162,9 +169,9 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
       ]).start();
       if (currentStage === TOTAL_STAGES - 1) {
         setShowConfetti(true);
-        setTimeout(goNextStage, 1600);
+        timersRef.current.push(setTimeout(goNextStage, 1600));
       } else {
-        setTimeout(goNextStage, 1000);
+        timersRef.current.push(setTimeout(goNextStage, 1000));
       }
     } else {
       setErrors(prev => {
@@ -180,7 +187,7 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
         Animated.timing(wrongShake, { toValue: -6, duration: 70, useNativeDriver: true }),
         Animated.timing(wrongShake, { toValue: 0, duration: 60, useNativeDriver: true }),
       ]).start();
-      setTimeout(() => setFeedback('idle'), 800);
+      timersRef.current.push(setTimeout(() => setFeedback('idle'), 800));
     }
   };
 

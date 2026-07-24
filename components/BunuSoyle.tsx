@@ -51,6 +51,11 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
     // Recording Ref: Asenkron işlemlerde state'in güncel olmama sorununu çözmek için
     const recordingRef = useRef<Audio.Recording | null>(null);
+    // Bas-konus yaris kosulu: async startRecording bitmeden onPressOut gelirse durdurma
+    // istegini bekletiyoruz; kayit olusunca hemen durduruluyor (yetim kayit/hayalet
+    // "dinliyor" durumunu engeller).
+    const startingRef = useRef(false);
+    const pendingStopRef = useRef(false);
 
     const [audioLevels, setAudioLevels] = useState<number[]>([0, 0, 0, 0, 0]);
     const [maxAudioLevel, setMaxAudioLevel] = useState(-160);
@@ -130,6 +135,8 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     }, [audioLevels, isRecording]);
 
     const startRecording = async () => {
+        startingRef.current = true;
+        pendingStopRef.current = false;
         try {
             // Kayıt başlarken arka plan müziğini durdur
             await stopSound('background');
@@ -202,10 +209,17 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             setMaxAudioLevel(-160);
 
             // Push-to-talk: Otomatik durma yok, kullanıcı bıraktığında duracak
-
+            startingRef.current = false;
+            // Kayit olusurken kullanici parmagini kaldirdiysa hemen durdur
+            if (pendingStopRef.current) {
+                pendingStopRef.current = false;
+                stopRecording(true);
+            }
         } catch (err) {
             console.error('❌ Kayıt başlatılamadı:', err);
             // Hata olsa bile kullanıcıya tekrar deneme şansı ver
+            startingRef.current = false;
+            pendingStopRef.current = false;
             setIsRecording(false);
             setRecordingStatus('Basılı Tut ve Söyle 🔴');
         }
@@ -213,6 +227,12 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
     const stopRecording = async (shouldAnalyze = true) => {
         console.log('🛑 stopRecording çağrıldı. Analiz:', shouldAnalyze);
+
+        // Kayit henuz olusuyorsa durdurmayi beklet; startRecording bitince otomatik durur.
+        if (startingRef.current) {
+            pendingStopRef.current = true;
+            return;
+        }
 
         let audioUri: string | null = null;
 

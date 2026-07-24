@@ -68,6 +68,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
     const [moves, setMoves] = useState(0);
     const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
     const startTimeRef = useRef(Date.now());
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     // Animations
     const boxAnims = [
@@ -149,6 +150,13 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         generateRound();
     }, [stage]);
 
+    useEffect(() => {
+        return () => {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            timersRef.current.forEach(clearTimeout);
+        };
+    }, []);
+
     const handleBoxPress = (boxIndex: number) => {
         if (foundCorrect || wrongBoxes.has(boxIndex)) return;
 
@@ -165,7 +173,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                 useNativeDriver: true,
             }).start();
 
-            setTimeout(() => {
+            timersRef.current.push(setTimeout(() => {
                 if (stage < TOTAL_STAGES) {
                     setStage(prev => prev + 1);
                 } else {
@@ -175,7 +183,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                         kazanimOdagi: 'Görsel Arama ve Dikkat',
                     });
                 }
-            }, 1500);
+            }, 1500));
         } else {
             setWrongBoxes(prev => new Set(prev).add(boxIndex));
             setErrors(prev => prev + 1);

@@ -97,9 +97,10 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
         const anim = (a: Animated.Value, d: number) => Animated.loop(Animated.sequence([
             Animated.timing(a, { toValue: 10, duration: d, useNativeDriver: true }),
             Animated.timing(a, { toValue: 0, duration: d, useNativeDriver: true }),
-        ])).start();
-        anim(float1, 4500);
-        anim(float2, 6000);
+        ]));
+        const loops = [anim(float1, 4500), anim(float2, 6000)];
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, []);
 
     const [round, setRound] = useState(1);
@@ -114,6 +115,12 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
     const [options, setOptions] = useState<number[]>([]);
 
     const rotateAnim = useRef(new Animated.Value(-12)).current;
+    // Bekleyen setTimeout'lari unmount'ta temizlemek icin
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+    useEffect(() => () => {
+         
+        timersRef.current.forEach(clearTimeout);
+    }, []);
 
     useEffect(() => {
         setPlacedValue(null);
@@ -153,24 +160,24 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
             setIsBalanced(true);
             setShowConfetti(true);
             animateBalance(0);
-            setTimeout(() => {
+            timersRef.current.push(setTimeout(() => {
                 setShowConfetti(false);
                 if (round < 10) setRound(r => r + 1);
                 else {
                     const d = Math.floor((Date.now() - startTime) / 1000);
                     onGameEnd('Tartı Dengesi', d, 10, mistakes, undefined, { zorlukSeviyesi: 1, kazanimOdagi: 'MAB.1 Sayısal Denge' });
                 }
-            }, 1500);
+            }, 1500));
         } else if (val > targetNumber) {
             setFeedback('wrong');
             setMistakes(m => m + 1);
             animateBalance(10);
-            setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000);
+            timersRef.current.push(setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000));
         } else {
             setFeedback('wrong');
             setMistakes(m => m + 1);
             animateBalance(-6);
-            setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000);
+            timersRef.current.push(setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000));
         }
     };
 

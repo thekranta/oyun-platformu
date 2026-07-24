@@ -116,6 +116,9 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const starAnim = useRef(new Animated.Value(0)).current;
     const rotationAnim = useRef(new Animated.Value(0)).current;
 
+    // Unmount temizligi icin bekleyen setTimeout id'leri
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
     // Initialize blocks on mount
     useEffect(() => {
         initializeBlocks();
@@ -123,12 +126,20 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
 
     // Star animation
     useEffect(() => {
-        Animated.loop(
+        const loop = Animated.loop(
             Animated.sequence([
                 Animated.timing(starAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
                 Animated.timing(starAnim, { toValue: 0, duration: 2000, useNativeDriver: true }),
             ])
-        ).start();
+        );
+        loop.start();
+        return () => loop.stop();
+    }, []);
+
+    // Unmount'ta bekleyen setTimeout'lari temizle
+    useEffect(() => () => {
+         
+        timersRef.current.forEach(clearTimeout);
     }, []);
 
     // Timer
@@ -188,7 +199,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
             useNativeDriver: true,
         }).start(() => {
             setShowConfetti(true);
-            setTimeout(finishGame, 2000);
+            timersRef.current.push(setTimeout(finishGame, 2000));
         });
         if (Platform.OS !== 'web') {
             Vibration.vibrate([0, 100, 100, 200, 100, 300]);

@@ -116,6 +116,54 @@ interface Props {
     userId?: string;
 }
 
+// Modul seviyesinde: bilesen govde icinde tanimlaninca her render'da yeni kimlik alip
+// unmount/remount oluyor (scaleAnim/bounce sifirlaniyor). Disari alindi, gerekli degerler
+// prop olarak geciyor.
+function SelectableItem({ item, isPlaced, isSelected, onTap }: {
+    item: FoodItem;
+    isPlaced: boolean;
+    isSelected: boolean;
+    onTap: (item: FoodItem) => void;
+}) {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    // Bounce animation when selected
+    useEffect(() => {
+        if (isSelected) {
+            const loop = Animated.loop(
+                Animated.sequence([
+                    Animated.timing(scaleAnim, { toValue: 1.15, duration: 300, useNativeDriver: true }),
+                    Animated.timing(scaleAnim, { toValue: 1.05, duration: 300, useNativeDriver: true }),
+                ])
+            );
+            loop.start();
+            return () => loop.stop();
+        } else {
+            scaleAnim.setValue(1);
+        }
+    }, [isSelected, scaleAnim]);
+
+    if (isPlaced) return null;
+
+    return (
+        <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => onTap(item)}
+            style={{ userSelect: 'none' } as any}
+        >
+            <Animated.View
+                style={[
+                    styles.foodItem,
+                    isSelected && styles.selectedItem,
+                    { transform: [{ scale: scaleAnim }] },
+                ]}
+            >
+                <Text style={[styles.foodEmoji, { userSelect: 'none' } as any]}>{item.emoji}</Text>
+            </Animated.View>
+        </TouchableOpacity>
+    );
+}
+
 export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim', userId }: Props) {
     const [gameReady, setGameReady] = useState(false);
     const [level, setLevel] = useState(1);
@@ -437,48 +485,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     }, [gameReady, level]);
 
     // ============== SELECTABLE ITEM COMPONENT (Tap-based for preschoolers) ==============
-    const SelectableItem = ({ item }: { item: FoodItem }) => {
-        const isPlaced = placedItems.has(item.id);
-        const isSelected = selectedItem?.id === item.id;
-        const scaleAnim = useRef(new Animated.Value(1)).current;
-
-        // Bounce animation when selected
-        useEffect(() => {
-            if (isSelected) {
-                Animated.loop(
-                    Animated.sequence([
-                        Animated.timing(scaleAnim, { toValue: 1.15, duration: 300, useNativeDriver: true }),
-                        Animated.timing(scaleAnim, { toValue: 1.05, duration: 300, useNativeDriver: true }),
-                    ])
-                ).start();
-            } else {
-                scaleAnim.setValue(1);
-            }
-        }, [isSelected, scaleAnim]);
-
-        if (isPlaced) return null;
-
-        return (
-            <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => handleItemTap(item)}
-                style={{ userSelect: 'none' } as any}
-            >
-                <Animated.View
-                    style={[
-                        styles.foodItem,
-                        isSelected && styles.selectedItem,
-                        {
-                            transform: [{ scale: scaleAnim }],
-                        },
-                    ]}
-                >
-                    <Text style={[styles.foodEmoji, { userSelect: 'none' } as any]}>{item.emoji}</Text>
-                </Animated.View>
-            </TouchableOpacity>
-        );
-    };
-
     // ============== RENDER ==============
     return (
         <View style={styles.container}>
@@ -586,7 +592,13 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                     <View style={styles.foodsContainer}>
                         <View style={styles.foodsGrid}>
                             {foods.map(food => (
-                                <SelectableItem key={food.id} item={food} />
+                                <SelectableItem
+                                    key={food.id}
+                                    item={food}
+                                    isPlaced={placedItems.has(food.id)}
+                                    isSelected={selectedItem?.id === food.id}
+                                    onTap={handleItemTap}
+                                />
                             ))}
                         </View>
                     </View>

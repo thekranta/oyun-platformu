@@ -188,6 +188,9 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
   const bounce = useRef(new Animated.Value(1)).current;
   const confetti = useRef<ConfettiCannon>(null);
 
+  // Unmount temizligi icin bekleyen setTimeout id'leri
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
   const gridCells = mode === GameMode.EDIT ? 4 : level.gridSize;
   const GAP = 4;
   const CELL = (GRID_SIZE - GAP * (gridCells - 1)) / gridCells;
@@ -195,10 +198,18 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
 
   // Bounce anim
   useEffect(() => {
-    Animated.loop(Animated.sequence([
+    const loop = Animated.loop(Animated.sequence([
       Animated.timing(bounce, { toValue: 1.15, duration: 400, useNativeDriver: true }),
       Animated.timing(bounce, { toValue: 1, duration: 400, useNativeDriver: true }),
-    ])).start();
+    ]));
+    loop.start();
+    return () => loop.stop();
+  }, []);
+
+  // Unmount'ta bekleyen setTimeout'lari temizle
+  useEffect(() => () => {
+     
+    timersRef.current.forEach(clearTimeout);
   }, []);
 
   // Arka plan mÃ¼ziÄŸi baÅŸlat
@@ -226,7 +237,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
   useEffect(() => {
     if (!soundOn) return;
     if (mode === GameMode.PLAY && status === GameStatus.PLANNING && commands.length === 0) {
-      setTimeout(() => speakTeacher(level.story || 'Hadi oynayalÄ±m!'), 300);
+      timersRef.current.push(setTimeout(() => speakTeacher(level.story || 'Hadi oynayalÄ±m!'), 300));
     }
   }, [level, status, soundOn, mode, commands.length]);
 
@@ -250,7 +261,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
     setShowWin(false);
     animX.setValue(next.startPos.x * (CELL + GAP));
     animY.setValue(next.startPos.y * (CELL + GAP));
-    if (soundOn) setTimeout(() => speakTeacher(next.story || 'Yeni bÃ¶lÃ¼m!'), 300);
+    if (soundOn) timersRef.current.push(setTimeout(() => speakTeacher(next.story || 'Yeni bÃ¶lÃ¼m!'), 300));
   }, [levelIdx, CELL, GAP, soundOn, startTime, moves, errors, onGameEnd]);
 
   useEffect(() => {
@@ -346,13 +357,13 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
       setPlayerPos(prev => {
         const n = nextPos(prev, d);
         if (isGoal(n)) {
-          setTimeout(() => { setStatus(GameStatus.WON); setShowWin(true); confetti.current?.start(); if (soundOn) speakTeacher('Aferin!'); }, 150);
+          timersRef.current.push(setTimeout(() => { setStatus(GameStatus.WON); setShowWin(true); confetti.current?.start(); if (soundOn) speakTeacher('Aferin!'); }, 150));
           return n;
         }
         if (valid(n)) return n;
         clearInterval(iv);
         setErrors(e => e + 1);
-        setTimeout(() => { setStatus(GameStatus.LOST); if (soundOn) speakTeacher('Oops!'); }, 150);
+        timersRef.current.push(setTimeout(() => { setStatus(GameStatus.LOST); if (soundOn) speakTeacher('Oops!'); }, 150));
         return prev;
       });
       i++;
@@ -360,7 +371,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
     return () => clearInterval(iv);
   }, [status]);
 
-  const run = () => { if (commands.length === 0) return; reset(); setTimeout(() => setStatus(GameStatus.RUNNING), 50); };
+  const run = () => { if (commands.length === 0) return; reset(); timersRef.current.push(setTimeout(() => setStatus(GameStatus.RUNNING), 50)); };
 
   const selectLvl = (l: LevelConfig, idx: number) => {
     setLevel(l); setLevelIdx(idx); setMode(GameMode.PLAY); setCommands([]);

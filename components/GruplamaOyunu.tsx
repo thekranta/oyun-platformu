@@ -32,9 +32,17 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
     // Son soru bitince butonlar kilitlenmedigi icin tekrar dokunma ikinci bir onGameEnd
     // planliyordu (mukerrer skor kaydi). Bu guard onGameEnd'in tek sefer atmasini saglar.
     const finishedRef = useRef(false);
+    // Unmount'ta temizlenecek zamanlayicilar
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     useEffect(() => {
         baslat();
+    }, []);
+
+    // Unmount cleanup: bekleyen setTimeout'lari temizle
+    useEffect(() => () => {
+         
+        timersRef.current.forEach(clearTimeout);
     }, []);
 
     const baslat = () => {
@@ -74,14 +82,14 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                     confettiRef.current.start();
                 }
 
-                setTimeout(() => {
+                timersRef.current.push(setTimeout(() => {
                     const bitisZamani = new Date();
                     const sure = Math.round((bitisZamani.getTime() - baslangicZamani.getTime()) / 1000);
                     onGameEnd('gruplama', sure, yeniHamle, hataSayisi, undefined, {
                         zorlukSeviyesi: 1,
                         kazanimOdagi: 'Kategorilere Ayırma ve Sınıflandırma',
                     });
-                }, 2000);
+                }, 2000));
             }
         } else {
             // Yanlış

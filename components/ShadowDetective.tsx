@@ -158,6 +158,8 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
 
     const successScale = useRef(new Animated.Value(0)).current;
     const shadowRefs = useRef<Map<string, { x: number; y: number; w: number; h: number }>>(new Map());
+    // Unmount temizligi icin bekleyen setTimeout id'leri
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const cfg = ROUND_CONFIGS[round - 1] || ROUND_CONFIGS[0];
 
@@ -201,6 +203,12 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
         if (matched.size === animals.length && animals.length > 0) completeRound();
     }, [matched, animals.length]);
 
+    // Unmount'ta bekleyen setTimeout'lari temizle
+    useEffect(() => () => {
+         
+        timersRef.current.forEach(clearTimeout);
+    }, []);
+
     const completeRound = () => {
         const dur = Math.floor((Date.now() - roundStart) / 1000);
         const roundEntry = { tur: round, hata: errors, sure: dur };
@@ -210,18 +218,18 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
         const mot = MOTIVATION.find(m => m.round === round);
         if (mot) {
             setShowMotivation(mot);
-            setTimeout(() => setShowMotivation(null), 2000);
+            timersRef.current.push(setTimeout(() => setShowMotivation(null), 2000));
         }
 
         setShowSuccess(true);
         Animated.spring(successScale, { toValue: 1, friction: 4, useNativeDriver: false }).start();
 
-        setTimeout(() => {
+        timersRef.current.push(setTimeout(() => {
             successScale.setValue(0);
             setShowSuccess(false);
             if (round < TOTAL) setRound(r => r + 1);
             else finishGame();
-        }, mot ? 2500 : 1200);
+        }, mot ? 2500 : 1200));
     };
 
     const finishGame = () => {

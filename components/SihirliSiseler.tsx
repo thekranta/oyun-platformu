@@ -82,6 +82,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
     // Animations
     const pourAnim = useRef(new Animated.Value(0)).current;
     const selectedGlow = useRef(new Animated.Value(0)).current;
+    const selectedGlowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
     const celebrateScale = useRef(new Animated.Value(0)).current;
     const bottleAnims = useRef<Animated.Value[]>([]);
 
@@ -162,6 +163,12 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
         };
     }, [initializeGame]);
 
+    // Unmount'ta secili sise glow loop'unu durdur
+    useEffect(() => () => {
+         
+        selectedGlowLoopRef.current?.stop();
+    }, []);
+
     // Sound functions
     const loadSounds = async () => {
         try {
@@ -208,12 +215,14 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 setGameState(prev => ({ ...prev, selectedBottle: bottleIndex }));
 
                 // Glow animation
-                Animated.loop(
+                const glowLoop = Animated.loop(
                     Animated.sequence([
                         Animated.timing(selectedGlow, { toValue: 1, duration: 500, useNativeDriver: true }),
                         Animated.timing(selectedGlow, { toValue: 0.5, duration: 500, useNativeDriver: true }),
                     ])
-                ).start();
+                );
+                selectedGlowLoopRef.current = glowLoop;
+                glowLoop.start();
             }
         } else if (selectedBottle === bottleIndex) {
             // Deselect

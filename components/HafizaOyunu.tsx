@@ -86,9 +86,18 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     const totalErrorsRef = useRef(0);
     const cumulativeTimeRef = useRef(0);
 
+    // Unmount'ta temizlenecek zamanlayicilar
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
     // Start stage on mount
     useEffect(() => {
         startStage(0);
+    }, []);
+
+    // Unmount cleanup: bekleyen setTimeout'lari temizle
+    useEffect(() => () => {
+         
+        timersRef.current.forEach(clearTimeout);
     }, []);
 
     const startStage = (stageIndex: number) => {
@@ -256,7 +265,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 animateError(cards.find(c => c.id === firstCard.id)!);
                 animateError(cards.find(c => c.id === secondCard.id)!);
 
-                setTimeout(() => {
+                timersRef.current.push(setTimeout(() => {
                     unflipCard(cards.find(c => c.id === firstCard.id)!);
                     unflipCard(cards.find(c => c.id === secondCard.id)!);
 
@@ -266,7 +275,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                     setCards(resetCards);
                     setSelectedCards([]);
                     setIsProcessing(false);
-                }, 1000);
+                }, 1000));
             }
         }
     };
@@ -285,9 +294,9 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
         }
 
         // Auto transition after 3 seconds (increased for confetti)
-        setTimeout(() => {
+        timersRef.current.push(setTimeout(() => {
             handleNextStage();
-        }, 3000);
+        }, 3000));
     };
 
     const handleNextStage = () => {

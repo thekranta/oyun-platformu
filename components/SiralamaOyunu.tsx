@@ -81,6 +81,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
     // Confetti Ref
     const confettiRef = useRef<ConfettiCannon>(null);
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     // Initialize game on mount
     useEffect(() => {
@@ -89,6 +90,8 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
         return () => {
             speechService.stopSpeech();
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            timersRef.current.forEach(clearTimeout);
         };
     }, []);
 
@@ -176,22 +179,22 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
                     // Round complete voice
                     await speechService.speak('Aferin!');
 
-                    setTimeout(() => {
+                    timersRef.current.push(setTimeout(() => {
                         setCurrentRound(r => r + 1);
                         baslat(false);
-                    }, 1200);
+                    }, 1200));
                 } else {
                     // Game Complete
                     await speechService.speak('Tebrikler!');
 
-                    setTimeout(() => {
+                    timersRef.current.push(setTimeout(() => {
                         const now = new Date();
                         const totalDuration = startTime ? Math.round((now.getTime() - startTime.getTime()) / 1000) : 0;
                         onGameEnd('siralama', totalDuration, totalHamle + 1, totalHata, undefined, {
                             zorlukSeviyesi: currentRound,
                             kazanimOdagi: 'Sayı Sıralaması ve Ardışıklık',
                         });
-                    }, 1500);
+                    }, 1500));
                 }
             } else {
                 setBeklenenSayi(b => b + 1);

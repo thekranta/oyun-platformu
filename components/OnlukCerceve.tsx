@@ -48,17 +48,16 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const float2 = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        const animate = (anim: Animated.Value, duration: number) => {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(anim, { toValue: 15, duration, useNativeDriver: true }),
-                    Animated.timing(anim, { toValue: 0, duration, useNativeDriver: true }),
-                ])
-            ).start();
-        };
-        animate(float1, 4000);
-        animate(float2, 5500);
-    }, []);
+        const makeLoop = (anim: Animated.Value, duration: number) => Animated.loop(
+            Animated.sequence([
+                Animated.timing(anim, { toValue: 15, duration, useNativeDriver: true }),
+                Animated.timing(anim, { toValue: 0, duration, useNativeDriver: true }),
+            ])
+        );
+        const loops = [makeLoop(float1, 4000), makeLoop(float2, 5500)];
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
+    }, [float1, float2]);
 
     // Game state
     const [round, setRound] = useState(1);
@@ -79,6 +78,14 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const pan = useRef(new Animated.ValueXY()).current;
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const countPulse = useRef(new Animated.Value(1)).current;
+    // Unmount'ta temizlenecek zamanlayicilar
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+    // Unmount cleanup: bekleyen setTimeout'lari temizle
+    useEffect(() => () => {
+         
+        timersRef.current.forEach(clearTimeout);
+    }, []);
 
     const pulseCount = () => {
         Animated.sequence([
@@ -130,7 +137,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                 setShowConfetti(true);
                 setShowSuccess(true);
                 setRoundData(prev => [...prev, { round, target, result: 'success' }]);
-                setTimeout(() => {
+                timersRef.current.push(setTimeout(() => {
                     if (round < 10) setRound(r => r + 1);
                     else {
                         const duration = Math.floor((Date.now() - startTime) / 1000);
@@ -138,7 +145,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                             zorlukSeviyesi: 1, kazanimOdagi: 'MAB.1 Sayı Kompozisyonu'
                         });
                     }
-                }, 1500);
+                }, 1500));
             }
         }
     }, [round, mistakes, startTime, onGameEnd, pan]);

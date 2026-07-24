@@ -61,9 +61,10 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
         const anim = (a: Animated.Value, d: number) => Animated.loop(Animated.sequence([
             Animated.timing(a, { toValue: 12, duration: d, useNativeDriver: true }),
             Animated.timing(a, { toValue: 0, duration: d, useNativeDriver: true }),
-        ])).start();
-        anim(float1, 4500);
-        anim(float2, 6000);
+        ]));
+        const loops = [anim(float1, 4500), anim(float2, 6000)];
+        loops.forEach(l => l.start());
+        return () => loops.forEach(l => l.stop());
     }, []);
 
     // Game state
@@ -88,6 +89,14 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
     const rightScale = useRef(new Animated.Value(1)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const questionPulse = useRef(new Animated.Value(1)).current;
+    // Unmount'ta temizlenecek zamanlayicilar
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+    // Unmount cleanup: bekleyen setTimeout'lari temizle
+    useEffect(() => () => {
+         
+        timersRef.current.forEach(clearTimeout);
+    }, []);
 
     useEffect(() => {
         if (gameReady) generateRound();
@@ -184,18 +193,18 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
         if (isCorrect) {
             setFeedback('correct');
             setShowConfetti(true);
-            setTimeout(() => {
+            timersRef.current.push(setTimeout(() => {
                 setShowConfetti(false);
                 if (round < 10) setRound(r => r + 1);
                 else finishGame();
-            }, 1100);
+            }, 1100));
         } else {
             setFeedback('wrong');
             setMistakes(m => m + 1);
-            setTimeout(() => {
+            timersRef.current.push(setTimeout(() => {
                 setFeedback(null);
                 setSelectedSide(null);
-            }, 700);
+            }, 700));
         }
     };
 
