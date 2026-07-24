@@ -91,7 +91,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     );
     const [blocks, setBlocks] = useState<Block[]>([]);
     const [gridRotation, setGridRotation] = useState(0); // 0, 90, 180, 270
-    const [moveHistory, setMoveHistory] = useState<MoveData[]>([]);
+    const [, setMoveHistory] = useState<MoveData[]>([]);
     const [errors, setErrors] = useState(0);
     // finishGame timer setInterval'inden cagrildiginda state'i eski closure'dan okur
     // (moveHistory=[], errors=0). Guncel degerleri bu ref'lerden aliyoruz.

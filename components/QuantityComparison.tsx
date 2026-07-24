@@ -77,7 +77,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
     const [showConfetti, setShowConfetti] = useState(false);
     const [feedback, setFeedback] = useState<'correct' | 'wrong' | null>(null);
     const [selectedSide, setSelectedSide] = useState<'left' | 'right' | null>(null);
-    const [roundHistory, setRoundHistory] = useState<RoundData[]>([]);
+    const [, setRoundHistory] = useState<RoundData[]>([]);
     // finishGame son turun setTimeout'undan cagrilir ve roundHistory'yi eski closure'dan
     // okur; son tur sayilmaz. Guncel listeyi bu ref'ten okuyoruz.
     const roundHistoryRef = useRef<RoundData[]>([]);

@@ -197,7 +197,7 @@ const SPACE_ADVENTURE_REGIONS: ColorRegion[] = [
 export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük Ressam' }: SihirliTuvalProps) {
     const [regions, setRegions] = useState<ColorRegion[]>(SPACE_ADVENTURE_REGIONS.map(r => ({ ...r })));
     const [selectedColorNumber, setSelectedColorNumber] = useState<number | null>(null);
-    const [moveHistory, setMoveHistory] = useState<MoveData[]>([]);
+    const [, setMoveHistory] = useState<MoveData[]>([]);
     const [errors, setErrors] = useState(0);
     const [correctAnswers, setCorrectAnswers] = useState(0);
     const [gameStart] = useState(Date.now());

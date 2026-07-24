@@ -67,10 +67,10 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     const [stageComplete, setStageComplete] = useState(false);
 
     // Cumulative Stats
-    const [totalMoves, setTotalMoves] = useState(0);
-    const [totalErrors, setTotalErrors] = useState(0);
+    const [, setTotalMoves] = useState(0);
+    const [, setTotalErrors] = useState(0);
     const [startTime, setStartTime] = useState<Date | null>(null);
-    const [cumulativeTime, setCumulativeTime] = useState(0); // Seconds from previous stages
+    const [, setCumulativeTime] = useState(0); // Seconds from previous stages
 
     // Smart Scoring: Track seen card IDs
     const [seenCardIds, setSeenCardIds] = useState<Set<number>>(new Set());
