@@ -29,6 +29,9 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
     // Animations
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const confettiRef = useRef<ConfettiCannon>(null);
+    // Son soru bitince butonlar kilitlenmedigi icin tekrar dokunma ikinci bir onGameEnd
+    // planliyordu (mukerrer skor kaydi). Bu guard onGameEnd'in tek sefer atmasini saglar.
+    const finishedRef = useRef(false);
 
     useEffect(() => {
         baslat();
@@ -51,7 +54,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
     };
 
     const kategoriSec = (secilenKategori: string) => {
-        if (sorular.length === 0) return;
+        if (sorular.length === 0 || finishedRef.current) return;
 
         const mevcutSoru = sorular[suankiSoruIndex];
         const yeniHamle = hamle + 1;
@@ -66,6 +69,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                 setSuankiSoruIndex(i => i + 1);
             } else {
                 // Game Complete
+                finishedRef.current = true;
                 if (confettiRef.current) {
                     confettiRef.current.start();
                 }

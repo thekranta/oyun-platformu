@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { asset } from '../lib/assetMap';
 import {
     Platform,
@@ -398,6 +398,13 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
     const [repeatMode, setRepeatMode] = useState<'none' | 'one' | 'all'>('none');
     const [selectedCategory, setSelectedCategory] = useState<'tumu' | 'yeniler' | 'degerler' | 'matematik' | 'fen' | 'sosyal-duygusal'>('tumu');
 
+    // handleSongFinish, ses callback'i icinde eski closure'dan calisir; guncel degerleri
+    // ref'lerden okuyoruz (yoksa oto-gecis yanlis sarkiya gider, tekrar modu ulasmaz).
+    const currentSongIndexRef = useRef(currentSongIndex);
+    currentSongIndexRef.current = currentSongIndex;
+    const repeatModeRef = useRef(repeatMode);
+    repeatModeRef.current = repeatMode;
+
     const currentSong = SONGS[currentSongIndex];
 
     // Kategori filtreleme
@@ -468,20 +475,23 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
     };
 
     const handleSongFinish = async () => {
-        if (repeatMode === 'one') {
+        // Guncel degerler ref'lerden (callback eski closure tutar)
+        const repeat = repeatModeRef.current;
+        const songIndex = currentSongIndexRef.current;
+        if (repeat === 'one') {
             // Repeat current song
             if (sound) {
                 await sound.setPositionAsync(0);
                 await sound.playAsync();
             }
-        } else if (repeatMode === 'all') {
+        } else if (repeat === 'all') {
             // Play next song, loop to beginning if at end
-            const nextIndex = (currentSongIndex + 1) % SONGS.length;
+            const nextIndex = (songIndex + 1) % SONGS.length;
             loadSound(nextIndex);
         } else {
             // No repeat - play next if available
-            if (currentSongIndex < SONGS.length - 1) {
-                loadSound(currentSongIndex + 1);
+            if (songIndex < SONGS.length - 1) {
+                loadSound(songIndex + 1);
             } else {
                 setIsPlaying(false);
             }
