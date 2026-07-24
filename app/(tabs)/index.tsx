@@ -1,32 +1,8 @@
-import AdaletHikayesi from '@/components/AdaletHikayesi';
-import AileSepetiMacerasi from '@/components/AileSepetiMacerasi';
-import BunuSoyle from '@/components/BunuSoyle';
-import CevizMacera from '@/components/CevizMacera';
-import DiziyiTamamla from '@/components/DiziyiTamamla';
 import DynamicBackground from '@/components/DynamicBackground';
-import EksikSayiBul from '@/components/EksikSayiBul';
-import GruplamaOyunu from '@/components/GruplamaOyunu';
-import HafizaOyunu from '@/components/HafizaOyunu';
-import KodlamaOyunu from '@/components/KodlamaOyunu';
-import KutuyuBul from '@/components/KutuyuBul';
-import MutfakDedektifi from '@/components/MutfakDedektifi';
-import MuzikCalar, { SONGS } from '@/components/MuzikCalar';
-import OnlukCerceve from '@/components/OnlukCerceve';
-import QuantityComparison from '@/components/QuantityComparison';
-import RakamYazma from '@/components/RakamYazma';
-import RenkliBaglantalar from '@/components/RenkliBaglantalar';
-import SayiKomsulari from '@/components/SayiKomsulari';
-import SayilariBirlestir from '@/components/SayilariBirlestir';
-import ShadowDetective from '@/components/ShadowDetective';
-import SihirliSiseler from '@/components/SihirliSiseler';
-import SihirliTuval from '@/components/SihirliTuval';
-import SiralamaOyunu from '@/components/SiralamaOyunu';
+import { GAME_RENDERERS } from '@/components/gameRegistry';
+import { SONGS } from '@/components/MuzikCalar';
 import { useSound } from '@/components/SoundContext';
-import TartiDengesi from '@/components/TartiDengesi';
 import Toast from '@/components/Toast';
-import UzayBloklari from '@/components/UzayBloklari';
-import YapbozOyunu from '@/components/YapbozOyunu';
-import YaraticiCizim from '@/components/YaraticiCizim';
 import { GAME_CATALOG, GameCatalogItem, GameCatalogStatus } from '@/constants/gameCatalog';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -1003,122 +979,18 @@ export default function App() {
     );
   }
 
-  if (asama === 'hafiza') {
-    return <HafizaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'siralama') {
-    return <SiralamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
-  }
-
-  if (asama === 'eksik-sayi-bul') {
-    return <EksikSayiBul onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'gruplama') {
-    return <GruplamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'diziyi-tamamla') {
-    return <DiziyiTamamla onGameEnd={oyunuBitir} onLogout={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'bunu-soyle') {
-    return <BunuSoyle onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'kodlama') {
-    return <KodlamaOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'rakam-yazma') {
-    return <RakamYazma onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'kutuyu-bul') {
-    return <KutuyuBul onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'sayilari-birlestir') {
-    return <SayilariBirlestir onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'yapboz') {
-    return <YapbozOyunu onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'golge-dedektifi') {
-    return (
-      <ShadowDetective
-        config={{ level: 1, itemCount: 3, hasDistractors: false, assets: { objects: [], shadows: [] } }}
-        onGameEnd={oyunuBitir}
-        onExit={() => setAsama('menu')}
-      />
-    );
-  }
-
-  if (asama === 'onluk-cerceve') {
-    return <OnlukCerceve onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'sayi-komsulari') {
-    return <SayiKomsulari onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'tarti-dengesi') {
-    return <TartiDengesi onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'miktar-karsilastirma') {
-    return <QuantityComparison onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'ceviz-macera') {
-    return <CevizMacera onExit={() => setAsama('menu')} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
-  }
-
-  if (asama === 'aile-sepeti-macerasi') {
-    return <AileSepetiMacerasi onExit={() => setAsama('menu')} onGameEnd={oyunuBitir} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
-  }
-
-  if (asama === 'adalet-hikayesi') {
-    return <AdaletHikayesi onExit={() => setAsama('menu')} onGameEnd={oyunuBitir} userId={ad} userEmail={email} userAge={parseInt(yas)} />;
-  }
-
-  if (asama === 'yaratici-cizim') {
-    return <YaraticiCizim onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'muzik-calar') {
-    return <MuzikCalar onExit={() => setAsama('menu')} initialSongIndex={selectedSongIndex} />;
-  }
-
-  if (asama === 'sihirli-siseler') {
-    return (
-      <SihirliSiseler
-        childName={ad}
-        childAge={parseInt(yas) || 48}
-        email={email}
-        onClose={() => setAsama('menu')}
-        onGameEnd={(data) => oyunuBitir('sihirli-siseler', data.response_time, data.total_moves, 0)}
-      />
-    );
-  }
-
-  if (asama === 'sihirli-tuval') {
-    return <SihirliTuval onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} />;
-  }
-
-  if (asama === 'uzay-bloklari') {
-    return <UzayBloklari onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
-  }
-
-  if (asama === 'renkli-baglantalar') {
-    return <RenkliBaglantalar onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
-  }
-
-  if (asama === 'mutfak-dedektifi') {
-    return <MutfakDedektifi onGameEnd={oyunuBitir} onExit={() => setAsama('menu')} childName={ad} />;
+  // Oyun ekranlari: routeKey -> bilesen eslesmesi components/gameRegistry.tsx'te.
+  // Yeni oyun eklemek icin index.tsx'e dokunmaya gerek yok (bkz. gameRegistry).
+  const gameRenderer = GAME_RENDERERS[asama];
+  if (gameRenderer) {
+    return gameRenderer({
+      onGameEnd: oyunuBitir,
+      onExit: () => setAsama('menu'),
+      ad,
+      yas,
+      email,
+      selectedSongIndex,
+    });
   }
 
   if (asama === 'sonuc') {
