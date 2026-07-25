@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, ImageBackground, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import { asset } from '../lib/assetMap';
 
@@ -298,34 +299,19 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     }
   };
 
-  const getStrokeExtra = (mode?: BrushMode, color: string = '#000') => {
-    if (mode === 'glow') {
-      return {
-        shadowColor: color,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.8,
-        shadowRadius: 8,
-      };
+  // Cizgi noktalarini tek bir SVG path'ine cevir. Eskiden her nokta ayri bir <View>
+  // olarak render ediliyordu (yuzlerce View -> jank/donma); tek path cok daha akici.
+  const strokeToPath = (points: Point[]): string => {
+    if (!points || points.length === 0) return '';
+    if (points.length === 1) {
+      const p = points[0];
+      // Tek nokta: yuvarlak uc ile bir nokta cizmek icin sifir uzunluklu cizgi
+      return `M ${p.x} ${p.y} L ${p.x} ${p.y}`;
     }
-    return {};
+    return points
+      .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+      .join(' ');
   };
-
-  const renderStrokeDots = (stroke: Stroke, strokeIndex: number) =>
-    (stroke?.points ?? []).map((pt, idx) => (
-      <View
-        key={`stroke-${strokeIndex}-${idx}`}
-        style={[{
-          position: 'absolute',
-          left: pt.x - stroke.size / 2,
-          top: pt.y - stroke.size / 2,
-          width: stroke.size,
-          height: stroke.size,
-          borderRadius: stroke.size / 2,
-          backgroundColor: stroke.color,
-          opacity: getStrokeOpacity(stroke.mode),
-        }, getStrokeExtra(stroke.mode, stroke.color)]}
-      />
-    ));
 
   const renderShape = (shape: PlacedShape, index: number) => {
     const halfSize = shape.size / 2;
@@ -414,7 +400,20 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
         </TouchableOpacity>
 
         <View ref={canvasRef} style={styles.canvas} {...panResponder.panHandlers}>
-          {safeStrokes.map((s, i) => renderStrokeDots(s, i))}
+          <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
+            {safeStrokes.map((s, i) => (
+              <Path
+                key={`stroke-${i}`}
+                d={strokeToPath(s.points)}
+                stroke={s.color}
+                strokeWidth={s.size}
+                strokeOpacity={getStrokeOpacity(s.mode)}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
+          </Svg>
           {placedShapes.map((shape, i) => renderShape(shape, i))}
         </View>
 
