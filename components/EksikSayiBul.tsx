@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 import { asset } from '../lib/assetMap';
@@ -110,6 +111,7 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
   const [placedNumber, setPlacedNumber] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [showConfetti, setShowConfetti] = useState(false);
+  const [gameReady, setGameReady] = useState(false);
   const confettiRef = useRef<ConfettiCannon>(null);
   const correctScale = useRef(new Animated.Value(1)).current;
   const wrongShake = useRef(new Animated.Value(0)).current;
@@ -273,6 +275,14 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
           <Text style={styles.helperText}>Eksik kutuyu tamamlamak icin sayiyi surukle birak.</Text>
         </View>
       </View>
+
+      {!gameReady && (
+        <CountdownOverlay
+          message="Sıradaki eksik sayıyı bul ve yerine koy!"
+          countdownSeconds={5}
+          onComplete={() => setGameReady(true)}
+        />
+      )}
     </DynamicBackground>
   );
 }

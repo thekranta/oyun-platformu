@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 
 type Point = { x: number; y: number };
@@ -154,6 +155,7 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
     const startTimeRef = useRef(Date.now());
     const [successAnim] = useState(new Animated.Value(0));
     const [showSuccess, setShowSuccess] = useState(false);
+    const [gameReady, setGameReady] = useState(false);
 
     // Selected pen color
     const [selectedColor, setSelectedColor] = useState(PEN_COLORS[0].color);
@@ -430,6 +432,14 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                     </TouchableOpacity>
                 </View>
             </View>
+
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Rakamları parmağınla çiz!"
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
         </DynamicBackground>
     );
 }

@@ -10,6 +10,7 @@ import {
     View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 
 interface SayiKomsulariProps {
@@ -61,6 +62,7 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
     const [showConfetti, setShowConfetti] = useState(false);
     const [droppedAnswer, setDroppedAnswer] = useState<number | null>(null);
     const [prevCorrect, setPrevCorrect] = useState(0); // Prevent consecutive same
+    const [gameReady, setGameReady] = useState(false);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -195,6 +197,14 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
                     ))}
                 </View>
             </View>
+
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Eksik olan komşu sayıyı bul!"
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
         </View>
     );
 }

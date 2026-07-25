@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 
@@ -67,6 +68,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
     const [errors, setErrors] = useState(0);
     const [moves, setMoves] = useState(0);
     const [usedQuestions, setUsedQuestions] = useState<number[]>([]);
+    const [gameReady, setGameReady] = useState(false);
     const startTimeRef = useRef(Date.now());
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -335,6 +337,14 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                     </Animated.View>
                 )}
             </View>
+
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Doğru kutuyu bul ve dokun!"
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
         </DynamicBackground>
     );
 }

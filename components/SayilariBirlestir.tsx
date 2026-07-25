@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, PanResponder, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
@@ -72,6 +73,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
     const [errors, setErrors] = useState(0);
     const [moves, setMoves] = useState(0);
     const [stageComplete, setStageComplete] = useState(false);
+    const [gameReady, setGameReady] = useState(false);
     const startTimeRef = useRef(Date.now());
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -375,6 +377,14 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                     </Animated.View>
                 )}
             </View>
+
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Sayıları küçükten büyüğe sırayla birleştir!"
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
         </DynamicBackground>
     );
 }

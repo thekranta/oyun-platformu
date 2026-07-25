@@ -3,6 +3,7 @@ import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CountdownOverlay from './CountdownOverlay';
 import ProgressBar from './ProgressBar';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
@@ -36,6 +37,7 @@ interface StageResult {
 export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const { stopSound, playSound } = useSound();
     const [currentStage, setCurrentStage] = useState(0);
+    const [gameReady, setGameReady] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingStatus, setRecordingStatus] = useState('Kayıt Hazır');
     const [startTime] = useState(Date.now());
@@ -547,6 +549,14 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     </Text>
                 </View>
             </View>
+
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Gördüğün resmin adını yüksek sesle söyle!"
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
         </ImageBackground>
     );
 }

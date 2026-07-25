@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
@@ -25,6 +26,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
     const [hamle, setHamle] = useState(0);
     const [hataSayisi, setHataSayisi] = useState(0);
     const [baslangicZamani] = useState(new Date());
+    const [gameReady, setGameReady] = useState(false);
 
     // Animations
     const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -137,6 +139,14 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                 ref={confettiRef}
                 fadeOut={true}
             />
+
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Nesneleri doğru gruba ayır. Meyve mi, hayvan mı?"
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
         </DynamicBackground>
     );
 }

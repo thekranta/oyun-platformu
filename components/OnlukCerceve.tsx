@@ -11,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 
 interface OnlukCerceveProps {
@@ -69,6 +70,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
     const [showConfetti, setShowConfetti] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [dragCount, setDragCount] = useState(0);
+    const [gameReady, setGameReady] = useState(false);
 
     const placedFruitsRef = useRef(placedFruits);
     const targetNumberRef = useRef(targetNumber);
@@ -265,6 +267,14 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                     ))}
                 </View>
             </View>
+
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Söylenen sayı kadar meyveyi çerçeveye koy!"
+                    countdownSeconds={5}
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
         </View>
     );
 }
