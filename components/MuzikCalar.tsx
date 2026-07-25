@@ -3,14 +3,53 @@ import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { asset } from '../lib/assetMap';
 import {
+    Animated,
+    Easing,
     Platform,
     ScrollView,
     StyleSheet,
     Text,
     TouchableOpacity,
-    useWindowDimensions,
     View
 } from 'react-native';
+
+const MP_USE_NATIVE = Platform.OS !== 'web';
+
+// Calarken zıplayan ekolayzer çubukları.
+function EqualizerBars({ active, color = '#fff' }: { active: boolean; color?: string }) {
+    const vals = useRef([0, 1, 2, 3, 4].map(() => new Animated.Value(0.3))).current;
+    useEffect(() => {
+        const loops = vals.map((v, i) =>
+            Animated.loop(
+                Animated.sequence([
+                    Animated.timing(v, { toValue: 1, duration: 380 + i * 90, useNativeDriver: MP_USE_NATIVE }),
+                    Animated.timing(v, { toValue: 0.3, duration: 380 + i * 90, useNativeDriver: MP_USE_NATIVE }),
+                ]),
+            ),
+        );
+        if (active) loops.forEach((l) => l.start());
+        return () => loops.forEach((l) => l.stop());
+    }, [active, vals]);
+    return (
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 24, gap: 5, marginVertical: 8 }}>
+            {vals.map((v, i) => (
+                <Animated.View
+                    key={i}
+                    style={{ width: 6, height: 22, borderRadius: 4, backgroundColor: color, opacity: 0.9, transform: [{ scaleY: active ? v : 0.3 }] }}
+                />
+            ))}
+        </View>
+    );
+}
+
+const MP_CATS: { key: 'tumu' | 'yeniler' | 'degerler' | 'matematik' | 'fen' | 'sosyal-duygusal'; label: string }[] = [
+    { key: 'tumu', label: '🎵 Tümü' },
+    { key: 'yeniler', label: '✨ Yeni' },
+    { key: 'matematik', label: '🔢 Matematik' },
+    { key: 'fen', label: '🔬 Fen' },
+    { key: 'degerler', label: '❤️ Değerler' },
+    { key: 'sosyal-duygusal', label: '💜 Sosyal' },
+];
 
 export interface Song {
     id: string;
@@ -385,11 +424,6 @@ interface MuzikCalarProps {
 }
 
 export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarProps) {
-    const { width, height } = useWindowDimensions();
-    const isSmallScreen = height < 700;
-    const coverSize = Math.min(220, Math.max(150, Math.round(width * 0.55)));
-    const coverIconSize = isSmallScreen ? 64 : 80;
-    const playButtonSize = isSmallScreen ? 68 : 80;
     const [sound, setSound] = useState<Audio.Sound | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
@@ -406,6 +440,20 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
     repeatModeRef.current = repeatMode;
 
     const currentSong = SONGS[currentSongIndex];
+
+    // Calarken donen plak
+    const spin = useRef(new Animated.Value(0)).current;
+    useEffect(() => {
+        const loop = Animated.loop(
+            Animated.timing(spin, { toValue: 1, duration: 6000, easing: Easing.linear, useNativeDriver: MP_USE_NATIVE }),
+        );
+        if (isPlaying) {
+            spin.setValue(0);
+            loop.start();
+        }
+        return () => loop.stop();
+    }, [isPlaying, spin]);
+    const discRotate = spin.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
 
     // Kategori filtreleme
     const filteredSongs = selectedCategory === 'tumu'
@@ -539,211 +587,151 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
         return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     };
 
-    // Skip forward 10 seconds
-    const skipForward = async () => {
-        if (sound) {
-            const newPosition = Math.min(position + 10000, duration);
-            await sound.setPositionAsync(newPosition);
-        }
-    };
-
-    // Skip backward 10 seconds
-    const skipBackward = async () => {
-        if (sound) {
-            const newPosition = Math.max(position - 10000, 0);
-            await sound.setPositionAsync(newPosition);
-        }
-    };
-
     const progress = position / duration;
 
     return (
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={onExit}>
-                    <Ionicons name="arrow-back" size={28} color="#546E7A" />
+        <View style={styles.mpContainer}>
+            <View style={styles.mpHeader}>
+                <TouchableOpacity style={styles.mpBack} onPress={onExit} activeOpacity={0.7}>
+                    <Ionicons name="arrow-back" size={24} color="#3a1d6e" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>🎵 Müzik Kutusu</Text>
-                <View style={{ width: 40 }} />
+                <Text style={styles.mpTitle}>🎵 Müzik Kutusu</Text>
+                <View style={{ width: 44 }} />
             </View>
 
-            <View style={styles.content}>
-                {/* Plak / Kapak Görseli */}
-                <View style={[styles.coverContainer, isSmallScreen && styles.coverContainerSmall]}>
-                    <View
-                        style={[
-                            styles.coverCircle,
-                            {
-                                backgroundColor: currentSong.coverColor,
-                                width: coverSize,
-                                height: coverSize,
-                                borderRadius: coverSize / 2,
-                            },
-                        ]}
-                    >
-                        <Ionicons name={currentSong.icon} size={coverIconSize} color="#fff" />
+            <ScrollView contentContainerStyle={styles.mpScroll} showsVerticalScrollIndicator={false}>
+                {/* Now Playing */}
+                <View style={[styles.mpNow, { backgroundColor: currentSong.coverColor }]}>
+                    <Animated.View style={[styles.mpDisc, { transform: [{ rotate: discRotate }] }]}>
+                        <View style={styles.mpDiscHole} />
+                        <Ionicons name={currentSong.icon} size={52} color="#fff" />
+                    </Animated.View>
+                    <Text style={styles.mpNowTitle} numberOfLines={1}>{currentSong.title}</Text>
+                    <Text style={styles.mpNowArtist} numberOfLines={1}>{currentSong.artist}</Text>
+
+                    <EqualizerBars active={isPlaying} />
+
+                    <View style={styles.mpBarBg}>
+                        <View style={[styles.mpBarFill, { width: `${Math.max(0, Math.min(100, progress * 100))}%` }]} />
                     </View>
-                    {isPlaying && (
-                        <View style={styles.noteDecor}>
-                            <Ionicons name="musical-note" size={24} color={currentSong.coverColor} />
-                        </View>
-                    )}
-                </View>
-
-                {/* Şarkı Bilgisi */}
-                <View style={styles.infoContainer}>
-                    <Text style={styles.songTitle}>{currentSong.title}</Text>
-                    <Text style={styles.artistName}>{currentSong.artist}</Text>
-                </View>
-
-                {/* Progress Bar (Görsel) */}
-                <View style={styles.progressContainer}>
-                    <View style={styles.progressBarBackground}>
-                        <View style={[styles.progressBarFill, { width: `${progress * 100}%`, backgroundColor: currentSong.coverColor }]} />
-                        <View style={[styles.progressKnob, { left: `${progress * 100}%`, backgroundColor: currentSong.coverColor }]} />
+                    <View style={styles.mpTimes}>
+                        <Text style={styles.mpTime}>{formatTime(position)}</Text>
+                        <Text style={styles.mpTime}>{formatTime(duration)}</Text>
                     </View>
-                    <View style={styles.timeContainer}>
-                        <Text style={styles.timeText}>{formatTime(position)}</Text>
-                        <Text style={styles.timeText}>{formatTime(duration)}</Text>
+
+                    <View style={styles.mpControls}>
+                        <TouchableOpacity style={styles.mpCtrlSm} onPress={playPrevious} activeOpacity={0.8}>
+                            <Ionicons name="play-skip-back" size={30} color={currentSong.coverColor} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.mpPlay} onPress={togglePlayback} activeOpacity={0.85}>
+                            <Ionicons name={isPlaying ? 'pause' : 'play'} size={48} color={currentSong.coverColor} style={{ marginLeft: isPlaying ? 0 : 5 }} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.mpCtrlSm} onPress={playNext} activeOpacity={0.8}>
+                            <Ionicons name="play-skip-forward" size={30} color={currentSong.coverColor} />
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.mpRepeatRow}>
+                        <TouchableOpacity
+                            onPress={() => setRepeatMode(repeatMode === 'one' ? 'none' : 'one')}
+                            style={[styles.mpRepeat, repeatMode === 'one' && styles.mpRepeatOn]}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="repeat" size={18} color="#fff" />
+                            <Text style={styles.mpRepeatText}>Şarkı</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setRepeatMode(repeatMode === 'all' ? 'none' : 'all')}
+                            style={[styles.mpRepeat, repeatMode === 'all' && styles.mpRepeatOn]}
+                            activeOpacity={0.8}
+                        >
+                            <Ionicons name="sync" size={18} color="#fff" />
+                            <Text style={styles.mpRepeatText}>Liste</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
 
-                {/* Kontroller */}
-                <View style={styles.controlsContainer}>
-                    {/* Tekrar Dinleme Butonu (Tek Şarkı) */}
-                    <TouchableOpacity
-                        onPress={() => setRepeatMode(repeatMode === 'one' ? 'none' : 'one')}
-                        style={[styles.controlButtonSmall, repeatMode === 'one' && { backgroundColor: currentSong.coverColor }]}
-                    >
-                        <Ionicons name="repeat" size={24} color={repeatMode === 'one' ? '#fff' : '#546E7A'} />
-                        {repeatMode === 'one' && <Text style={styles.repeatBadge}>1</Text>}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={playPrevious} style={styles.controlButtonSmall}>
-                        <Ionicons name="play-skip-back" size={24} color="#546E7A" />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={skipBackward} style={styles.controlButtonSmall}>
-                        <Ionicons name="play-back" size={20} color="#546E7A" />
-                        <Text style={styles.skipLabel}>10</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={togglePlayback}
-                        style={[
-                            styles.playButton,
-                            {
-                                backgroundColor: currentSong.coverColor,
-                                width: playButtonSize,
-                                height: playButtonSize,
-                                borderRadius: playButtonSize / 2,
-                            },
-                        ]}
-                    >
-                        <Ionicons name={isPlaying ? "pause" : "play"} size={isSmallScreen ? 34 : 40} color="#fff" style={{ marginLeft: isPlaying ? 0 : 4 }} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={skipForward} style={styles.controlButtonSmall}>
-                        <Ionicons name="play-forward" size={20} color="#546E7A" />
-                        <Text style={styles.skipLabel}>10</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={playNext} style={styles.controlButtonSmall}>
-                        <Ionicons name="play-skip-forward" size={24} color="#546E7A" />
-                    </TouchableOpacity>
-
-                    {/* Listeyi Tekrar Dinle Butonu */}
-                    <TouchableOpacity
-                        onPress={() => setRepeatMode(repeatMode === 'all' ? 'none' : 'all')}
-                        style={[styles.controlButtonSmall, repeatMode === 'all' && { backgroundColor: currentSong.coverColor }]}
-                    >
-                        <Ionicons name="sync" size={24} color={repeatMode === 'all' ? '#fff' : '#546E7A'} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Şarkı Listesi - Kategorili */}
-                <Text style={styles.listTitle}>Şarkılar</Text>
-
-                {/* Kategori Sekmeleri */}
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryTabsContainer}>
-                    <TouchableOpacity
-                        style={[styles.categoryTab, selectedCategory === 'tumu' && styles.categoryTabActive]}
-                        onPress={() => setSelectedCategory('tumu')}
-                    >
-                        <Text style={[styles.categoryTabText, selectedCategory === 'tumu' && styles.categoryTabTextActive]}>🎵 Tümü</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.categoryTab, selectedCategory === 'yeniler' && { backgroundColor: '#EC407A' }]}
-                        onPress={() => setSelectedCategory('yeniler')}
-                    >
-                        <Text style={[styles.categoryTabText, selectedCategory === 'yeniler' && styles.categoryTabTextActive]}>Yeni</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.categoryTab, selectedCategory === 'sosyal-duygusal' && { backgroundColor: '#E91E63' }]}
-                        onPress={() => setSelectedCategory('sosyal-duygusal')}
-                    >
-                        <Text style={[styles.categoryTabText, selectedCategory === 'sosyal-duygusal' && styles.categoryTabTextActive]}>💜 Sosyal-Duygusal</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.categoryTab, selectedCategory === 'matematik' && { backgroundColor: '#7E57C2' }]}
-                        onPress={() => setSelectedCategory('matematik')}
-                    >
-                        <Text style={[styles.categoryTabText, selectedCategory === 'matematik' && styles.categoryTabTextActive]}>🔢 Matematik</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.categoryTab, selectedCategory === 'fen' && { backgroundColor: '#4CAF50' }]}
-                        onPress={() => setSelectedCategory('fen')}
-                    >
-                        <Text style={[styles.categoryTabText, selectedCategory === 'fen' && styles.categoryTabTextActive]}>🔬 Fen</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.categoryTab, selectedCategory === 'degerler' && { backgroundColor: '#FF7043' }]}
-                        onPress={() => setSelectedCategory('degerler')}
-                    >
-                        <Text style={[styles.categoryTabText, selectedCategory === 'degerler' && styles.categoryTabTextActive]}>❤️ Değerler</Text>
-                    </TouchableOpacity>
+                {/* Kategori filtreleri */}
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mpChips}>
+                    {MP_CATS.map((c) => (
+                        <TouchableOpacity
+                            key={c.key}
+                            onPress={() => setSelectedCategory(c.key)}
+                            style={[styles.mpChip, selectedCategory === c.key && styles.mpChipOn]}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={[styles.mpChipText, selectedCategory === c.key && styles.mpChipTextOn]}>{c.label}</Text>
+                        </TouchableOpacity>
+                    ))}
                 </ScrollView>
 
-                <ScrollView
-                    style={styles.listContainer}
-                    contentContainerStyle={{ paddingBottom: 24 }}
-                    nestedScrollEnabled
-                    showsVerticalScrollIndicator={false}
-                >
+                {/* Şarkı listesi */}
+                <View style={styles.mpList}>
                     {filteredSongs.map((song) => {
-                        const songIndex = SONGS.findIndex(s => s.id === song.id);
+                        const songIndex = SONGS.findIndex((s) => s.id === song.id);
+                        const on = songIndex === currentSongIndex;
                         return (
                             <TouchableOpacity
                                 key={song.id}
-                                style={[
-                                    styles.songItem,
-                                    songIndex === currentSongIndex && { backgroundColor: '#F0F4C3', borderColor: song.coverColor, borderWidth: 1 }
-                                ]}
                                 onPress={() => loadSound(songIndex)}
+                                style={[styles.mpRow, on && styles.mpRowOn]}
+                                activeOpacity={0.85}
                             >
-                                <View style={[styles.songIconSmall, { backgroundColor: song.coverColor }]}>
-                                    <Ionicons name={song.icon} size={20} color="#fff" />
+                                <View style={[styles.mpCover, { backgroundColor: song.coverColor }]}>
+                                    <Ionicons name={song.icon} size={22} color="#fff" />
                                 </View>
-                                <View style={styles.songItemInfo}>
-                                    <Text style={[styles.songItemTitle, songIndex === currentSongIndex && { color: '#333', fontWeight: 'bold' }]}>
-                                        {song.title}
-                                    </Text>
-                                    <Text style={styles.songItemArtist}>{song.artist}</Text>
+                                <View style={{ flex: 1, minWidth: 0 }}>
+                                    <Text style={[styles.mpRowTitle, on && { color: '#2a2350' }]} numberOfLines={1}>{song.title}</Text>
+                                    <Text style={styles.mpRowArtist} numberOfLines={1}>{song.artist}</Text>
                                 </View>
-                                {songIndex === currentSongIndex && isPlaying && (
-                                    <Ionicons name="stats-chart" size={20} color={song.coverColor} />
-                                )}
+                                <Ionicons name={on && isPlaying ? 'volume-high' : 'play'} size={22} color={on ? '#ff3d81' : '#b0a7d6'} />
                             </TouchableOpacity>
                         );
                     })}
-                </ScrollView>
-            </View>
+                </View>
+            </ScrollView>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
+  // ===== Eğlenceli medya çalar =====
+  mpContainer: { flex: 1, backgroundColor: '#EDE7FF' },
+  mpHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 12 },
+  mpBack: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
+  mpTitle: { fontSize: 22, fontWeight: '900', color: '#3a1d6e' },
+  mpScroll: { padding: 16, paddingBottom: 44, alignItems: 'center' },
+
+  mpNow: { width: '100%', maxWidth: 460, borderRadius: 28, padding: 20, alignItems: 'center', marginBottom: 16, backgroundColor: '#A24BFF', shadowColor: '#000', shadowOffset: { width: 0, height: 12 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 8 },
+  mpDisc: { width: 120, height: 120, borderRadius: 60, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 8, borderColor: 'rgba(0,0,0,0.18)', marginBottom: 12 },
+  mpDiscHole: { position: 'absolute', width: 18, height: 18, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.9)' },
+  mpNowTitle: { color: '#fff', fontSize: 22, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.25)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 2 },
+  mpNowArtist: { color: 'rgba(255,255,255,0.9)', fontSize: 14, fontWeight: '700', marginTop: 2 },
+  mpBarBg: { width: '100%', height: 12, borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.35)', overflow: 'hidden', marginTop: 4 },
+  mpBarFill: { height: '100%', backgroundColor: '#fff', borderRadius: 8 },
+  mpTimes: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 6, marginBottom: 12 },
+  mpTime: { color: 'rgba(255,255,255,0.9)', fontSize: 12, fontWeight: '700' },
+  mpControls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 22 },
+  mpCtrlSm: { width: 72, height: 72, borderRadius: 36, backgroundColor: 'rgba(255,255,255,0.95)', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 4 },
+  mpPlay: { width: 104, height: 104, borderRadius: 52, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.22, shadowRadius: 1, elevation: 5 },
+  mpRepeatRow: { flexDirection: 'row', gap: 12, marginTop: 14 },
+  mpRepeat: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.2)' },
+  mpRepeatOn: { backgroundColor: 'rgba(255,255,255,0.45)' },
+  mpRepeatText: { color: '#fff', fontSize: 13, fontWeight: '800' },
+
+  mpChips: { gap: 8, paddingVertical: 4, paddingHorizontal: 2 },
+  mpChip: { paddingVertical: 8, paddingHorizontal: 15, borderRadius: 999, backgroundColor: 'rgba(122,43,214,0.12)' },
+  mpChipOn: { backgroundColor: '#3a1d6e' },
+  mpChipText: { fontSize: 13, fontWeight: '800', color: '#3a1d6e' },
+  mpChipTextOn: { color: '#fff' },
+
+  mpList: { width: '100%', maxWidth: 460, marginTop: 12, gap: 10 },
+  mpRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 18, padding: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 2, elevation: 2 },
+  mpRowOn: { backgroundColor: '#fff', borderWidth: 2, borderColor: '#FF6AA9' },
+  mpCover: { width: 46, height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  mpRowTitle: { fontWeight: '800', color: '#3a3357', fontSize: 15 },
+  mpRowArtist: { fontSize: 12, color: '#8a85a3', marginTop: 1 },
+
     container: {
         flex: 1,
         backgroundColor: '#FFF9C4', // Krem/Pastel sarı arka plan
