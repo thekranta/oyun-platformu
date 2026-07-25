@@ -48,46 +48,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(500).json({ error: 'TTS service not configured' });
     }
 
-    try {
-        // Call OpenAI TTS API
-        const response = await fetch('https://api.openai.com/v1/audio/speech', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                model: 'gpt-4o-mini-tts',
-                input: text,
-                voice: voice,
-                speed: Math.max(0.25, Math.min(4.0, speed)),
-                instructions,
-                response_format: 'mp3'
-            }),
-        });
+    // gpt-4o-mini-tts 'coral' + instructions'i destekler ama her anahtarda olmayabilir;
+    // basarisiz olursa tts-1'e duseriz (genis erisim). tts-1 'coral'/instructions desteklemez,
+    // o yuzden sicak bir kadin sese (nova) esleriz.
+    const TTS1_VOICE_MAP: Record<string, string> = {
+        coral: 'nova', shimmer: 'shimmer', nova: 'nova', sage: 'nova', ballad: 'shimmer',
+        alloy: 'alloy', echo: 'echo', fable: 'fable', onyx: 'onyx',
+    };
+    const safeSpeed = Math.max(0.25, Math.min(4.0, speed));
+    const attempts = [
+        { model: 'gpt-4o-mini-tts', voice, useInstructions: true },
+        { model: 'tts-1', voice: TTS1_VOICE_MAP[voice] || 'nova', useInstructions: false },
+    ];
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('OpenAI TTS Error:', response.status, errorText);
-            return res.status(response.status).json({
-                error: 'TTS generation failed',
-                details: response.status === 401 ? 'Invalid API key' : 'API error'
+    let lastStatus = 500;
+    let lastDetail = 'API error';
+    try {
+        for (const attempt of attempts) {
+            const body: Record<string, unknown> = {
+                model: attempt.model,
+                input: text,
+                voice: attempt.voice,
+                speed: safeSpeed,
+                response_format: 'mp3',
+            };
+            if (attempt.useInstructions && instructions) body.instructions = instructions;
+
+            const response = await fetch('https://api.openai.com/v1/audio/speech', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(body),
             });
+
+            if (response.ok) {
+                const audioBuffer = await response.arrayBuffer();
+                const base64Audio = Buffer.from(audioBuffer).toString('base64');
+                res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
+                return res.status(200).json({ audioContent: base64Audio, format: 'mp3', model: attempt.model });
+            }
+
+            const errorText = await response.text();
+            console.error(`OpenAI TTS Error (${attempt.model}):`, response.status, errorText);
+            lastStatus = response.status;
+            lastDetail = response.status === 401 ? 'Invalid API key' : response.status === 429 ? 'Quota/rate limit' : 'API error';
+            // 401 (gecersiz anahtar) ise diger modeli denemenin anlami yok
+            if (response.status === 401) break;
         }
 
-        // Get audio as buffer and send as base64
-        const audioBuffer = await response.arrayBuffer();
-        const base64Audio = Buffer.from(audioBuffer).toString('base64');
-
-        // Cache this response
-        res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
-
-        // Return audioContent (base64 encoded MP3)
-        return res.status(200).json({
-            audioContent: base64Audio,
-            format: 'mp3'
-        });
-
+        return res.status(lastStatus).json({ error: 'TTS generation failed', details: lastDetail });
     } catch (error: any) {
         console.error('TTS Error:', error);
         return res.status(500).json({
