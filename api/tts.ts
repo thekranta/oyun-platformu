@@ -6,8 +6,12 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-// OpenAI API key (server-side only)
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+// OpenAI API key (server-side). Sunucu env'i EXPO_PUBLIC degiskenlerini de okuyabilir;
+// Vercel'de yalnizca EXPO_PUBLIC_OPENAI_API_KEY/SPEECH_API_KEY tanimliysa da TTS calissin
+// diye fallback ekli (aksi halde 500 -> istemci robotik tarayici sesine dusuyordu).
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+    || process.env.EXPO_PUBLIC_OPENAI_API_KEY
+    || process.env.EXPO_PUBLIC_SPEECH_API_KEY;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS headers

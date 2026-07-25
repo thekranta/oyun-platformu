@@ -128,54 +128,24 @@ export async function speak(
             const audio = new Audio(result.audioUrl);
             audio.onended = () => resolve();
             audio.onerror = () => {
-                console.warn('🔊 TTS: Audio playback error, using fallback');
-                fallbackTTS(text);
+                console.warn('🔊 TTS: Audio oynatma hatasi (sessiz gecildi)');
                 resolve();
             };
             audio.play().catch(() => {
-                console.warn('🔊 TTS: Audio play failed, using fallback');
-                fallbackTTS(text);
+                console.warn('🔊 TTS: Audio play basarisiz (sessiz gecildi)');
                 resolve();
             });
         });
     } else {
-        // Fallback to browser TTS
-        console.warn('🔊 TTS: Using browser fallback TTS for:', text);
-        fallbackTTS(text);
+        // Coral (OpenAI) sesi uretilemezse robotik tarayici sesine DUSMUYORUZ; robotik ses
+        // okul oncesi cocuk icin uygun degil ve tekduzeligi bozuyor. Sessiz geciyoruz.
+        console.warn('🔊 TTS: coral uretilemedi, sessiz gecildi:', text.substring(0, 40));
     }
 }
 
 /**
- * Browser fallback TTS using Web Speech API
- * Much slower rate for child-friendly speech
- */
-function fallbackTTS(text: string): void {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'tr-TR';
-        utterance.rate = 0.7;   // Very slow for children
-        utterance.pitch = 1.1;  // Slightly higher pitch
-
-        // Try to find a Turkish female voice
-        const voices = window.speechSynthesis.getVoices();
-        const turkishFemale = voices.find(v =>
-            v.lang.includes('tr') && v.name.toLowerCase().includes('female')
-        );
-        const anyTurkish = voices.find(v => v.lang.includes('tr'));
-
-        if (turkishFemale) {
-            utterance.voice = turkishFemale;
-        } else if (anyTurkish) {
-            utterance.voice = anyTurkish;
-        }
-
-        window.speechSynthesis.speak(utterance);
-    }
-}
-
-/**
- * Stop any currently playing speech
+ * Stop any currently playing speech (robotik tarayici sesi fallback'i kaldirildi;
+ * yine de eski oturumlardan kalan speechSynthesis'i iptal etmek zararsiz).
  */
 export function stopSpeech(): void {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
