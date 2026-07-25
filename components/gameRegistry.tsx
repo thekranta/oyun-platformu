@@ -18,6 +18,7 @@ import QuantityComparison from './QuantityComparison';
 import RakamYazma from './RakamYazma';
 import RenkliBaglantalar from './RenkliBaglantalar';
 import SayiKomsulari from './SayiKomsulari';
+import SevgiHikayesi from './SevgiHikayesi';
 import SayilariBirlestir from './SayilariBirlestir';
 import ShadowDetective from './ShadowDetective';
 import SihirliSiseler from './SihirliSiseler';
@@ -89,6 +90,9 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   ),
   'adalet-hikayesi': (c) => (
     <AdaletHikayesi onExit={c.onExit} onGameEnd={c.onGameEnd} userId={c.ad} userEmail={c.email} userAge={parseInt(c.yas)} />
+  ),
+  'sevgi-hikayesi': (c) => (
+    <SevgiHikayesi onExit={c.onExit} onGameEnd={c.onGameEnd} userId={c.ad} userEmail={c.email} userAge={parseInt(c.yas)} />
   ),
   'yaratici-cizim': (c) => <YaraticiCizim onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'muzik-calar': (c) => <MuzikCalar onExit={c.onExit} initialSongIndex={c.selectedSongIndex} />,
