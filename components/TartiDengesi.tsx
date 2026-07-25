@@ -31,6 +31,13 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
     const scale = useRef(new Animated.Value(1)).current;
     const [isDragging, setIsDragging] = useState(false);
 
+    // PanResponder bir kez olusturuldugu icin onDrop'un ilk render closure'ini yakalar;
+    // parent'in handleDrop'u guncel targetNumber'i tasidigi icin ref uzerinden okuyoruz
+    // (aksi halde tur gecisinde birakma eski hedefe gore kontrol edilip dogru cevap
+    // yanlis sayilabiliyordu -> bazi seviyeler gecilemez).
+    const onDropRef = useRef(onDrop);
+    onDropRef.current = onDrop;
+
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => !disabled,
@@ -49,7 +56,7 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
                 Animated.spring(scale, { toValue: 1, useNativeDriver: false }).start();
                 setIsDragging(false);
                 if (g.dy < -25) {
-                    onDrop(value);
+                    onDropRef.current(value);
                 }
                 Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
             }

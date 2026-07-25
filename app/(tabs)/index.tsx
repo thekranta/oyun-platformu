@@ -635,7 +635,7 @@ export default function App() {
             </View>
             <WiggleButton onPress={startDailyFlow} style={styles.adventureBtn}>
               <Text style={styles.adventureBtnText}>
-                {isDailyPlanComplete ? 'Tekrar Oyna 🔁' : nextDailyRoute ? 'Devam Et ▶️' : 'Hadi Başla! ▶️'}
+                {isDailyPlanComplete ? 'Tekrar Oyna 🔁' : dailyCompletedRoutes.length > 0 ? 'Devam Et ▶️' : 'Hadi Başla! ▶️'}
               </Text>
             </WiggleButton>
           </View>
@@ -944,10 +944,10 @@ const styles = StyleSheet.create({
   adventureBtnText: { color: '#FF3D81', fontSize: 20, fontWeight: '900' },
 
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, maxWidth: 560, marginBottom: 4 },
-  catCard: { width: 158, height: 150, borderRadius: 26, padding: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#4FACFE', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.35, shadowRadius: 1, elevation: 8 },
-  catEmoji: { fontSize: 50, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 4 },
-  catLabel: { color: '#fff', fontSize: 19, fontWeight: '900', marginTop: 6, textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
-  catCountPill: { marginTop: 8, backgroundColor: 'rgba(255,255,255,0.28)', paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999 },
+  catCard: { width: 158, minHeight: 176, borderRadius: 26, paddingVertical: 18, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#4FACFE', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.35, shadowRadius: 1, elevation: 8 },
+  catEmoji: { fontSize: 44, lineHeight: 52, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 4 },
+  catLabel: { color: '#fff', fontSize: 17, lineHeight: 22, fontWeight: '900', marginTop: 6, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
+  catCountPill: { marginTop: 8, backgroundColor: 'rgba(255,255,255,0.28)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
   catCountText: { color: '#fff', fontSize: 12, fontWeight: '800' },
 
   logoutBtn: { marginTop: 26, backgroundColor: 'rgba(255,82,82,0.92)', paddingVertical: 12, paddingHorizontal: 28, borderRadius: 22, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
