@@ -37,16 +37,18 @@ export interface MenuCategory {
   domain: string;
   label: string;
   emoji: string;
-  color: string;
+  color: string;      // duz renk (native fallback)
+  gradient: [string, string]; // web gradient (from, to)
+  shadow: string;     // 3B alt golge rengi
 }
 
 export const MENU_CATEGORIES: MenuCategory[] = [
-  { domain: 'Matematik', label: 'Matematik', emoji: '🔢', color: '#1E88E5' },
-  { domain: 'Bilissel', label: 'Dikkat ve Zekâ', emoji: '🧠', color: '#7E57C2' },
-  { domain: 'Dil', label: 'Dil ve Konuşma', emoji: '💬', color: '#F06292' },
-  { domain: 'Sosyal-duygusal', label: 'Hikâyeler', emoji: '📖', color: '#8D6E63' },
-  { domain: 'Sanat', label: 'Yaratıcılık', emoji: '🎨', color: '#FF9F1C' },
-  { domain: 'Muzik', label: 'Müzik', emoji: '🎵', color: '#EC407A' },
+  { domain: 'Matematik', label: 'Matematik', emoji: '🔢', color: '#2E86FF', gradient: ['#4FACFE', '#1E6FE0'], shadow: '#1552B0' },
+  { domain: 'Bilissel', label: 'Dikkat', emoji: '🧠', color: '#9B59F6', gradient: ['#C07BFF', '#7A2BD6'], shadow: '#5A1BA8' },
+  { domain: 'Dil', label: 'Konuşma', emoji: '💬', color: '#FF5E9A', gradient: ['#FF8FB1', '#FF3D7F'], shadow: '#C72862' },
+  { domain: 'Sosyal-duygusal', label: 'Hikâyeler', emoji: '📖', color: '#FF9130', gradient: ['#FFB14E', '#FF7A18'], shadow: '#C85B0C' },
+  { domain: 'Sanat', label: 'Çizim', emoji: '🎨', color: '#25C685', gradient: ['#5BE7A9', '#12B36A'], shadow: '#0A8F52' },
+  { domain: 'Muzik', label: 'Müzik', emoji: '🎵', color: '#F158B7', gradient: ['#FF7BD5', '#E0359A'], shadow: '#B01F76' },
 ];
 
 export const getGamesByDomain = (domain: string) => GAME_CATALOG.filter((game) => game.domain === domain);

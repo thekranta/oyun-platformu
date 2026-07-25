@@ -2,11 +2,10 @@ import DynamicBackground from '@/components/DynamicBackground';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
-import { GAME_CATALOG } from '@/constants/gameCatalog';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import {
   createDailyGamePlan,
   GAME_CARD_META,
@@ -19,6 +18,91 @@ import { GameResultExtraData, saveGameResult } from '../../services/gameResults'
 
 // Cloudflare Turnstile Sitekey
 const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
+
+const USE_NATIVE = Platform.OS !== 'web';
+
+// Web'de CSS gradient, native'de duz renk (RN gradient'i CSS gibi desteklemez).
+const gradientStyle = (from: string, to: string, fallback: string): any =>
+  Platform.OS === 'web'
+    ? { background: `linear-gradient(135deg, ${from} 0%, ${to} 100%)` }
+    : { backgroundColor: fallback };
+
+// Acilista tek tek "pop" ile giren, basinca hafif kuculen oyuncakli kart.
+function BouncyCard({
+  delay = 0,
+  onPress,
+  style,
+  children,
+}: {
+  delay?: number;
+  onPress: () => void;
+  style?: any;
+  children: React.ReactNode;
+}) {
+  const anim = useRef(new Animated.Value(0)).current;
+  const press = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.spring(anim, { toValue: 1, friction: 6, tension: 70, delay, useNativeDriver: USE_NATIVE }).start();
+  }, [anim, delay]);
+
+  const scale = Animated.multiply(anim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }), press);
+
+  return (
+    <Animated.View style={{ opacity: anim, transform: [{ scale }] }}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPress={onPress}
+        onPressIn={() => Animated.spring(press, { toValue: 0.93, useNativeDriver: USE_NATIVE }).start()}
+        onPressOut={() => Animated.spring(press, { toValue: 1, friction: 4, useNativeDriver: USE_NATIVE }).start()}
+        style={style}
+      >
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+// Hafifce sallanan buton (gunluk macera "Basla").
+function WiggleButton({ onPress, style, children }: { onPress: () => void; style?: any; children: React.ReactNode }) {
+  const rot = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(rot, { toValue: 1, duration: 900, useNativeDriver: USE_NATIVE }),
+        Animated.timing(rot, { toValue: -1, duration: 900, useNativeDriver: USE_NATIVE }),
+        Animated.timing(rot, { toValue: 0, duration: 900, useNativeDriver: USE_NATIVE }),
+      ]),
+    ).start();
+  }, [rot]);
+  const rotate = rot.interpolate({ inputRange: [-1, 1], outputRange: ['-2.5deg', '2.5deg'] });
+  return (
+    <Animated.View style={{ transform: [{ rotate }] }}>
+      <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={style}>
+        {children}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+// Yumusakca yukari-asagi suzulen dekoratif emoji.
+function FloatingDeco({ emoji, style, delay = 0 }: { emoji: string; style?: any; delay?: number }) {
+  const y = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(y, { toValue: 1, duration: 2600, delay, useNativeDriver: USE_NATIVE }),
+        Animated.timing(y, { toValue: 0, duration: 2600, useNativeDriver: USE_NATIVE }),
+      ]),
+    ).start();
+  }, [y, delay]);
+  const translateY = y.interpolate({ inputRange: [0, 1], outputRange: [0, -14] });
+  return (
+    <Animated.Text style={[style, { position: 'absolute', transform: [{ translateY }] }]} pointerEvents="none">
+      {emoji}
+    </Animated.Text>
+  );
+}
 
 export default function App() {
   const router = useRouter();
@@ -138,10 +222,6 @@ export default function App() {
   const nextDailyRoute = dailyPlanRoutes.find((route) => !dailyCompletedRoutes.includes(route)) || null;
   const isDailyPlanComplete = dailyPlanRoutes.length > 0 && dailyCompletedRoutes.length >= dailyPlanRoutes.length;
 
-  const getGameTitleByRoute = (routeKey: string) => {
-    const game = GAME_CATALOG.find((item) => item.routeKey === routeKey);
-    return game?.title || routeKey;
-  };
 
   const ensureDailyPlan = useCallback(() => {
     const todayKey = getTodayKey();
@@ -527,76 +607,84 @@ export default function App() {
 
     return (
       <DynamicBackground>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.headerContainer}>
-            <Text style={styles.baslik}>Merhaba {ad} 👋</Text>
-            <Text style={styles.bilgi}>
-              {activeCategory ? activeCategory.label : 'Bugün ne oynamak istersin?'}
-            </Text>
+        {/* Uçuşan dekorlar */}
+        <FloatingDeco emoji="☁️" style={styles.decoCloud} />
+        <FloatingDeco emoji="⭐" style={styles.decoStar} delay={800} />
+        <FloatingDeco emoji="🌈" style={styles.decoRainbow} delay={400} />
+        <FloatingDeco emoji="✨" style={styles.decoSparkle} delay={1200} />
+
+        <ScrollView contentContainerStyle={styles.menuScroll}>
+          <View style={styles.menuHeader}>
+            <Text style={styles.greetBig}>Merhaba {ad || 'küçük kaşif'}! 👋</Text>
+            <Text style={styles.greetSub}>Bugün hangi maceraya atılalım?</Text>
           </View>
 
-          {!selectedCategory && (
-            <>
-              {/* Bugünün 3 Oyunu */}
-              <View style={styles.dailyPlanCard}>
-                <View style={styles.dailyPlanHeader}>
-                  <Text style={styles.dailyPlanTitle}>Bugünün 3 Oyunu</Text>
-                  <Text style={styles.dailyPlanCounter}>{dailyCompletedRoutes.length}/3 tamamlandı</Text>
-                </View>
-                <View style={styles.dailyPlanSteps}>
-                  {dailyPlanRoutes.map((route, index) => {
-                    const done = dailyCompletedRoutes.includes(route);
-                    return (
-                      <View key={route} style={[styles.dailyPlanStep, done && styles.dailyPlanStepDone]}>
-                        <Text style={[styles.dailyPlanStepIndex, done && styles.dailyPlanStepIndexDone]}>{index + 1}</Text>
-                        <Text style={[styles.dailyPlanStepLabel, done && styles.dailyPlanStepLabelDone]} numberOfLines={1}>
-                          {getGameTitleByRoute(route)}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-                <TouchableOpacity
-                  style={[styles.dailyPlanAction, isDailyPlanComplete && styles.dailyPlanActionComplete]}
-                  onPress={startDailyFlow}
+          {/* Bugünün Macerası */}
+          <View style={[styles.adventureCard, gradientStyle('#FF9A3C', '#FF3D81', '#FF5E7E')]}>
+            <Text style={styles.adventureTitle}>🚀 Bugünün Macerası</Text>
+            <View style={styles.adventureStars}>
+              {[0, 1, 2].map((i) => {
+                const route = dailyPlanRoutes[i];
+                const done = route ? dailyCompletedRoutes.includes(route) : false;
+                return (
+                  <View key={i} style={[styles.advStar, done && styles.advStarDone]}>
+                    <Text style={styles.advStarText}>{done ? '⭐' : '🎯'}</Text>
+                  </View>
+                );
+              })}
+            </View>
+            <WiggleButton onPress={startDailyFlow} style={styles.adventureBtn}>
+              <Text style={styles.adventureBtnText}>
+                {isDailyPlanComplete ? 'Tekrar Oyna 🔁' : nextDailyRoute ? 'Devam Et ▶️' : 'Hadi Başla! ▶️'}
+              </Text>
+            </WiggleButton>
+          </View>
+
+          {/* Kategori kartları */}
+          <View style={styles.catGrid}>
+            {MENU_CATEGORIES.map((cat, i) => {
+              const count = getGamesByDomain(cat.domain).length;
+              if (count === 0) return null;
+              return (
+                <BouncyCard
+                  key={cat.domain}
+                  delay={i * 80}
+                  onPress={() => setSelectedCategory(cat.domain)}
+                  style={[styles.catCard, gradientStyle(cat.gradient[0], cat.gradient[1], cat.color), { shadowColor: cat.shadow }]}
                 >
-                  <Text style={styles.dailyPlanActionText}>
-                    {isDailyPlanComplete ? 'Tekrar Oyna' : nextDailyRoute ? 'Sıradaki Oyunu Başlat' : 'Günlük Akışı Başlat'}
-                  </Text>
+                  <Text style={styles.catEmoji}>{cat.emoji}</Text>
+                  <Text style={styles.catLabel} numberOfLines={1}>{cat.label}</Text>
+                  <View style={styles.catCountPill}>
+                    <Text style={styles.catCountText}>{count} oyun</Text>
+                  </View>
+                </BouncyCard>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity style={styles.logoutBtn} onPress={cikisYap} activeOpacity={0.85}>
+            <Text style={styles.logoutText}>Çıkış Yap 🚪</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* Kategori oyunları - modal sheet */}
+        <Modal
+          visible={!!selectedCategory}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setSelectedCategory(null)}
+        >
+          <View style={styles.sheetOverlay}>
+            <TouchableOpacity style={styles.sheetBackdrop} activeOpacity={1} onPress={() => setSelectedCategory(null)} />
+            <View style={styles.sheet}>
+              <View style={[styles.sheetHeader, gradientStyle(activeCategory?.gradient[0] || '#7E57C2', activeCategory?.gradient[1] || '#5A1BA8', activeCategory?.color || '#7E57C2')]}>
+                <Text style={styles.sheetTitle}>{activeCategory?.emoji} {activeCategory?.label}</Text>
+                <TouchableOpacity style={styles.sheetClose} onPress={() => setSelectedCategory(null)} activeOpacity={0.7}>
+                  <Ionicons name="close" size={26} color="#fff" />
                 </TouchableOpacity>
               </View>
-
-              {/* Kategori Hub */}
-              <Text style={styles.hubHeading}>Kategoriler</Text>
-              <View style={styles.categoryGrid}>
-                {MENU_CATEGORIES.map((cat) => {
-                  const count = getGamesByDomain(cat.domain).length;
-                  if (count === 0) return null;
-                  return (
-                    <TouchableOpacity
-                      key={cat.domain}
-                      style={[styles.categoryCard, { backgroundColor: cat.color }]}
-                      onPress={() => setSelectedCategory(cat.domain)}
-                      activeOpacity={0.85}
-                    >
-                      <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
-                      <Text style={styles.categoryLabel} numberOfLines={2}>{cat.label}</Text>
-                      <Text style={styles.categoryCount}>{count} oyun</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </>
-          )}
-
-          {selectedCategory && (
-            <>
-              <TouchableOpacity style={styles.backToCategories} onPress={() => setSelectedCategory(null)} activeOpacity={0.7}>
-                <Ionicons name="arrow-back" size={22} color="#37474F" />
-                <Text style={styles.backToCategoriesText}>Kategoriler</Text>
-              </TouchableOpacity>
-              <View style={styles.gridContainer}>
-                {categoryGames.map((game) => {
+              <ScrollView contentContainerStyle={styles.sheetGrid}>
+                {categoryGames.map((game, i) => {
                   const meta = GAME_CARD_META[game.id] || {
                     color: '#607D8B',
                     icon: 'game-controller-outline' as keyof typeof Ionicons.glyphMap,
@@ -604,26 +692,22 @@ export default function App() {
                     subtitle: game.skillFocus,
                   };
                   return (
-                    <TouchableOpacity
+                    <BouncyCard
                       key={game.id}
-                      style={[styles.oyunKarti, { backgroundColor: meta.color }]}
-                      onPress={() => oyunuBaslat(game.routeKey)}
-                      activeOpacity={0.85}
+                      delay={i * 45}
+                      onPress={() => { const rk = game.routeKey; setSelectedCategory(null); oyunuBaslat(rk); }}
+                      style={[styles.gameCard, { backgroundColor: meta.color }]}
                     >
-                      <Ionicons name={meta.icon} size={40} color="white" style={{ marginBottom: 10 }} />
-                      <Text style={styles.oyunBaslik} numberOfLines={2}>{meta.displayTitle || game.title}</Text>
-                      <Text style={styles.oyunAciklama} numberOfLines={2}>{meta.subtitle || game.skillFocus}</Text>
-                    </TouchableOpacity>
+                      <Ionicons name={meta.icon} size={38} color="white" style={{ marginBottom: 6 }} />
+                      <Text style={styles.gameCardTitle} numberOfLines={2}>{meta.displayTitle || game.title}</Text>
+                      <Text style={styles.gameCardSub} numberOfLines={2}>{meta.subtitle || game.skillFocus}</Text>
+                    </BouncyCard>
                   );
                 })}
-              </View>
-            </>
-          )}
-
-          <TouchableOpacity style={[styles.buton, { backgroundColor: '#FF5252', marginTop: 30, alignSelf: 'center' }]} onPress={cikisYap}>
-            <Text style={styles.butonYazi}>Çıkış Yap 🚪</Text>
-          </TouchableOpacity>
-        </ScrollView>
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
       </DynamicBackground>
     );
   }
@@ -843,6 +927,49 @@ const styles = StyleSheet.create({
   butonYazi: { color: 'white', fontSize: 18, fontWeight: 'bold' },
 
   gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15 },
+
+  // ===== Eğlenceli menü (kategori hub) =====
+  menuScroll: { flexGrow: 1, paddingVertical: 28, paddingHorizontal: 16, alignItems: 'center' },
+  menuHeader: { alignItems: 'center', marginBottom: 18, marginTop: 6 },
+  greetBig: { fontSize: 30, fontWeight: '900', color: '#0B3D66', textAlign: 'center', textShadowColor: 'rgba(255,255,255,0.6)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
+  greetSub: { fontSize: 16, fontWeight: '700', color: '#0B3D66', opacity: 0.75, marginTop: 4, textAlign: 'center' },
+
+  adventureCard: { width: '100%', maxWidth: 560, borderRadius: 26, padding: 18, marginBottom: 24, backgroundColor: '#FF5E7E', shadowColor: '#D6336C', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.4, shadowRadius: 1, elevation: 8 },
+  adventureTitle: { color: '#fff', fontSize: 22, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.15)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
+  adventureStars: { flexDirection: 'row', gap: 10, marginVertical: 14 },
+  advStar: { flex: 1, height: 58, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.28)', borderWidth: 2, borderColor: 'rgba(255,255,255,0.6)', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center' },
+  advStarDone: { backgroundColor: '#fff', borderStyle: 'solid' },
+  advStarText: { fontSize: 26 },
+  adventureBtn: { backgroundColor: '#fff', borderRadius: 18, paddingVertical: 14, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 4 },
+  adventureBtnText: { color: '#FF3D81', fontSize: 20, fontWeight: '900' },
+
+  catGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, maxWidth: 560, marginBottom: 4 },
+  catCard: { width: 158, height: 150, borderRadius: 26, padding: 16, alignItems: 'center', justifyContent: 'center', backgroundColor: '#4FACFE', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.35, shadowRadius: 1, elevation: 8 },
+  catEmoji: { fontSize: 50, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 4 },
+  catLabel: { color: '#fff', fontSize: 19, fontWeight: '900', marginTop: 6, textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
+  catCountPill: { marginTop: 8, backgroundColor: 'rgba(255,255,255,0.28)', paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999 },
+  catCountText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+
+  logoutBtn: { marginTop: 26, backgroundColor: 'rgba(255,82,82,0.92)', paddingVertical: 12, paddingHorizontal: 28, borderRadius: 22, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
+  logoutText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+
+  // Kategori oyunları modal sheet
+  sheetOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' },
+  sheetBackdrop: { ...StyleSheet.absoluteFillObject },
+  sheet: { backgroundColor: '#F5F7FF', borderTopLeftRadius: 30, borderTopRightRadius: 30, maxHeight: '86%', overflow: 'hidden' },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 18, paddingHorizontal: 22, backgroundColor: '#7E57C2' },
+  sheetTitle: { color: '#fff', fontSize: 22, fontWeight: '900', textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
+  sheetClose: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center' },
+  sheetGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, padding: 20, paddingBottom: 40 },
+  gameCard: { width: 150, height: 150, borderRadius: 24, padding: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#607D8B', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5 },
+  gameCardTitle: { color: '#fff', fontSize: 16, fontWeight: '800', textAlign: 'center', marginTop: 2 },
+  gameCardSub: { color: 'rgba(255,255,255,0.9)', fontSize: 11, textAlign: 'center', marginTop: 2 },
+
+  // Uçuşan dekorlar
+  decoCloud: { top: 14, left: 16, fontSize: 40, zIndex: 0 },
+  decoStar: { top: 44, right: 20, fontSize: 30, zIndex: 0 },
+  decoRainbow: { bottom: 30, left: 22, fontSize: 30, zIndex: 0 },
+  decoSparkle: { bottom: 84, right: 18, fontSize: 26, zIndex: 0 },
 
   // Kategori hub
   hubHeading: {
