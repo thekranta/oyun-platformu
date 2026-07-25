@@ -34,7 +34,8 @@ const STORY: Record<string, StoryNode> = {
   q1: {
     id: 'q1',
     scene: 'sad',
-    narration: 'Pamuk, Diken’e sevgisini göstermek istedi. Sence Pamuk ne yapsın?',
+    narration:
+      'Pamuk, Diken’e sevgisini göstermek istedi. Sence ne yapsın? Yanına oturup ona sıkıca sarılsın mı, yoksa onu güldürecek eğlenceli bir şey mi yapsın? Haydi sen seç!',
     options: [
       { id: 'A', temsil: 'duygusal-teselli', label: 'Yanına oturup sarıl', emoji: '🫂', next: 'scene2' },
       { id: 'B', temsil: 'neselendirme', label: 'Güldürecek bir şey yap', emoji: '🎈', next: 'scene2' },
@@ -43,13 +44,15 @@ const STORY: Record<string, StoryNode> = {
   scene2: {
     id: 'scene2',
     scene: 'comfort',
-    narration: 'Diken biraz rahatladı ve usulca fısıldadı: “Annemi çok özledim, ama onu bir türlü bulamıyorum.”',
+    narration:
+      'Pamuk’un sevgisiyle Diken biraz rahatladı ve usulca fısıldadı: “Annemi çok özledim, ama onu bir türlü bulamıyorum.”',
     next: 'q2',
   },
   q2: {
     id: 'q2',
     scene: 'comfort',
-    narration: 'Pamuk, Diken’e yardım etmek istedi. Sence nasıl yardım etsin?',
+    narration:
+      'Pamuk, Diken’e yardım etmek istedi. Sence nasıl yardım etsin? En sevdiği kırmızı çileği ona hediye mi etsin, yoksa elinden tutup birlikte annesini mi arasın? Haydi sen seç!',
     options: [
       { id: 'A', temsil: 'paylasma', label: 'En sevdiği çileği ver', emoji: '🍓', next: 'ending' },
       { id: 'B', temsil: 'isbirligi', label: 'Elinden tut, birlikte ara', emoji: '🤝', next: 'ending' },
@@ -59,7 +62,7 @@ const STORY: Record<string, StoryNode> = {
     id: 'ending',
     scene: 'happy',
     narration:
-      'Tam o sırada Diken’in annesi göründü! Diken koşup annesine sımsıkı sarıldı, sonra da Pamuk’a. “Sen gerçek bir dostsun Pamuk, sevgin kalbimi ısıttı!” Pamuk mutlulukla gülümsedi. Sevgiyi göstermenin bin bir yolu vardı ve hepsi kalpleri ısıtıyordu.',
+      'Tam o sırada Diken’in annesi göründü! Diken koşup annesine sımsıkı sarıldı, sonra da Pamuk’a. “Sen gerçek bir dostsun Pamuk, sevgin kalbimi ısıttı!” dedi. Pamuk mutlulukla gülümsedi. Sevgiyi göstermenin bin bir yolu vardı ve hepsi kalpleri ısıtıyordu. Aferin sana, senin de kocaman bir kalbin var!',
     isFinal: true,
   },
 };
