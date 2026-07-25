@@ -197,6 +197,7 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
   const [path, setPath] = useState<string[]>([]);
   const [startTime] = useState(Date.now());
   const [showConfetti, setShowConfetti] = useState(false);
+  const [started, setStarted] = useState(false); // ilk dokunusa kadar bekle (ses otomatik-oynatma icin)
 
   const finishedRef = useRef(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -222,6 +223,7 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
 
   // Her düğümde: anlatımı seslendir, bitince seçim göster / ilerle / bitir.
   useEffect(() => {
+    if (!started) return;
     let active = true;
     setPhase('narrating');
     (async () => {
@@ -243,7 +245,7 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
       stopSpeech();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeId]);
+  }, [nodeId, started]);
 
   // Unmount: konuşmayı durdur, zamanlayıcıları temizle
   useEffect(() => () => {
@@ -270,6 +272,29 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
 
       <View style={styles.sceneWrap}>
         <StoryScene scene={node.scene} />
+
+        {/* Anlatim metni balonu - ses gelmese de ne oldugu anlasilsin */}
+        {node.narration ? (
+          <View style={styles.caption}>
+            <Text style={styles.captionText}>{node.narration}</Text>
+          </View>
+        ) : null}
+
+        {/* Baslangic: ilk dokunusla sesi baslat (otomatik-oynatma engelini asar) */}
+        {!started && (
+          <View style={styles.startOverlay}>
+            <Text style={styles.startEmoji}>❤️</Text>
+            <Text style={styles.startTitle}>Küçük Kalpler</Text>
+            <TouchableOpacity
+              style={styles.startBtn}
+              onPress={() => { setStarted(true); speak(node.narration, { instructions: MOTHER_VOICE }); }}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="play" size={26} color="#E0359A" />
+              <Text style={styles.startBtnText}>Hikayeyi Dinle</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <View style={styles.bottom}>
@@ -282,7 +307,7 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
               </TouchableOpacity>
             ))}
           </View>
-        ) : (
+        ) : started ? (
           <TouchableOpacity
             style={styles.replayBtn}
             onPress={() => speak(node.narration, { instructions: MOTHER_VOICE })}
@@ -291,7 +316,7 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
             <Ionicons name="volume-high" size={22} color="#fff" />
             <Text style={styles.replayText}>Tekrar Dinle</Text>
           </TouchableOpacity>
-        )}
+        ) : null}
       </View>
     </View>
   );
@@ -327,4 +352,11 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 4,
   },
   replayText: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  caption: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.92)', paddingVertical: 12, paddingHorizontal: 16 },
+  captionText: { fontSize: 15, fontWeight: '700', color: '#5A3A66', textAlign: 'center', lineHeight: 21 },
+  startOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(224,53,154,0.38)', alignItems: 'center', justifyContent: 'center' },
+  startEmoji: { fontSize: 56 },
+  startTitle: { fontSize: 26, fontWeight: '900', color: '#fff', marginBottom: 16, textShadowColor: 'rgba(0,0,0,0.25)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 2 },
+  startBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', paddingVertical: 14, paddingHorizontal: 28, borderRadius: 26, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.25, shadowRadius: 1, elevation: 5 },
+  startBtnText: { color: '#E0359A', fontSize: 18, fontWeight: '900' },
 });
