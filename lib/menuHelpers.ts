@@ -27,6 +27,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'aile-sepeti-macerasi': { color: '#8D6E63', icon: 'basket-outline', displayTitle: 'Aile Sepeti', subtitle: 'İş birliği' },
   'adalet-hikayesi': { color: '#9C27B0', icon: 'scale-outline', displayTitle: 'Adalet Hikayesi', subtitle: 'Paylaşım' },
   'sevgi-hikayesi': { color: '#E0359A', icon: 'heart', displayTitle: 'Küçük Kalpler', subtitle: 'Sevgi ve empati' },
+  'duygu-yuzleri': { color: '#FF8FB1', icon: 'happy', displayTitle: 'Duygu Yüzleri', subtitle: 'Duyguları tanı' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
@@ -47,7 +48,7 @@ export const MENU_CATEGORIES: MenuCategory[] = [
   { domain: 'Matematik', label: 'Matematik', emoji: '🔢', color: '#2E86FF', gradient: ['#4FACFE', '#1E6FE0'], shadow: '#1552B0' },
   { domain: 'Bilissel', label: 'Dikkat', emoji: '🧠', color: '#9B59F6', gradient: ['#C07BFF', '#7A2BD6'], shadow: '#5A1BA8' },
   { domain: 'Dil', label: 'Konuşma', emoji: '💬', color: '#FF5E9A', gradient: ['#FF8FB1', '#FF3D7F'], shadow: '#C72862' },
-  { domain: 'Sosyal-duygusal', label: 'Hikâyeler', emoji: '📖', color: '#FF9130', gradient: ['#FFB14E', '#FF7A18'], shadow: '#C85B0C' },
+  { domain: 'Sosyal-duygusal', label: 'Duygular', emoji: '💛', color: '#FF9130', gradient: ['#FFB14E', '#FF7A18'], shadow: '#C85B0C' },
   { domain: 'Sanat', label: 'Çizim', emoji: '🎨', color: '#25C685', gradient: ['#5BE7A9', '#12B36A'], shadow: '#0A8F52' },
   { domain: 'Muzik', label: 'Müzik', emoji: '🎵', color: '#F158B7', gradient: ['#FF7BD5', '#E0359A'], shadow: '#B01F76' },
 ];

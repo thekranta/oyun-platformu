@@ -38,6 +38,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'aile-sepeti-macerasi', title: 'Aile Sepeti Macerasi', status: 'story', domain: 'Sosyal-duygusal', skillFocus: 'Aile ve is birligi', routeKey: 'aile-sepeti-macerasi' },
   { id: 'adalet-hikayesi', title: 'Adalet Hikayesi', status: 'story', domain: 'Sosyal-duygusal', skillFocus: 'Adalet ve paylasim', routeKey: 'adalet-hikayesi' },
   { id: 'sevgi-hikayesi', title: 'Kucuk Kalpler', status: 'story', domain: 'Sosyal-duygusal', skillFocus: 'Sevgi ve empati', routeKey: 'sevgi-hikayesi' },
+  { id: 'duygu-yuzleri', title: 'Duygu Yuzleri', status: 'secondary', domain: 'Sosyal-duygusal', skillFocus: 'Duygulari tanima', routeKey: 'duygu-yuzleri' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },

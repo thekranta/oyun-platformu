@@ -6,6 +6,7 @@ import AileSepetiMacerasi from './AileSepetiMacerasi';
 import BunuSoyle from './BunuSoyle';
 import CevizMacera from './CevizMacera';
 import DiziyiTamamla from './DiziyiTamamla';
+import DuyguYuzleri from './DuyguYuzleri';
 import EksikSayiBul from './EksikSayiBul';
 import GruplamaOyunu from './GruplamaOyunu';
 import HafizaOyunu from './HafizaOyunu';
@@ -109,4 +110,5 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'uzay-bloklari': (c) => <UzayBloklari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'renkli-baglantalar': (c) => <RenkliBaglantalar onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'mutfak-dedektifi': (c) => <MutfakDedektifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'duygu-yuzleri': (c) => <DuyguYuzleri onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };
