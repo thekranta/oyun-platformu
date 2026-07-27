@@ -18,6 +18,7 @@ import OnlukCerceve from './OnlukCerceve';
 import QuantityComparison from './QuantityComparison';
 import RakamYazma from './RakamYazma';
 import RenkliBaglantalar from './RenkliBaglantalar';
+import RenkSepetleri from './RenkSepetleri';
 import SayiKomsulari from './SayiKomsulari';
 import SevgiHikayesi from './SevgiHikayesi';
 import SayilariBirlestir from './SayilariBirlestir';
@@ -27,6 +28,7 @@ import SihirliTuval from './SihirliTuval';
 import SiralamaOyunu from './SiralamaOyunu';
 import TartiDengesi from './TartiDengesi';
 import UzayBloklari from './UzayBloklari';
+import ZitlariEslestir from './ZitlariEslestir';
 import YapbozOyunu from './YapbozOyunu';
 import YaraticiCizim from './YaraticiCizim';
 
@@ -111,4 +113,6 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'renkli-baglantalar': (c) => <RenkliBaglantalar onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'mutfak-dedektifi': (c) => <MutfakDedektifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'duygu-yuzleri': (c) => <DuyguYuzleri onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'renk-sepetleri': (c) => <RenkSepetleri onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'zitlari-eslestir': (c) => <ZitlariEslestir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

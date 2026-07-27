@@ -40,6 +40,9 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'sevgi-hikayesi', title: 'Kucuk Kalpler', status: 'story', domain: 'Sosyal-duygusal', skillFocus: 'Sevgi ve empati', routeKey: 'sevgi-hikayesi' },
   { id: 'duygu-yuzleri', title: 'Duygu Yuzleri', status: 'secondary', domain: 'Sosyal-duygusal', skillFocus: 'Duygulari tanima', routeKey: 'duygu-yuzleri' },
 
+  { id: 'renk-sepetleri', title: 'Renk Sepetleri', status: 'secondary', domain: 'Kavram', skillFocus: 'Renkleri ayirt etme', routeKey: 'renk-sepetleri' },
+  { id: 'zitlari-eslestir', title: 'Zitlari Eslestir', status: 'secondary', domain: 'Kavram', skillFocus: 'Zit kavramlar', routeKey: 'zitlari-eslestir' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];
