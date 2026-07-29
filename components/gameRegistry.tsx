@@ -3,8 +3,11 @@ import { GameResultExtraData } from '../services/gameResults';
 
 import AdaletHikayesi from './AdaletHikayesi';
 import AileSepetiMacerasi from './AileSepetiMacerasi';
+import AyiAilesi from './AyiAilesi';
+import AyniFarkli from './AyniFarkli';
 import BunuSoyle from './BunuSoyle';
 import CevizMacera from './CevizMacera';
+import CiftlikteSayalim from './CiftlikteSayalim';
 import DiziyiTamamla from './DiziyiTamamla';
 import DuyguYuzleri from './DuyguYuzleri';
 import EksikSayiBul from './EksikSayiBul';
@@ -22,6 +25,7 @@ import RenkSepetleri from './RenkSepetleri';
 import SayiKomsulari from './SayiKomsulari';
 import SevgiHikayesi from './SevgiHikayesi';
 import SayilariBirlestir from './SayilariBirlestir';
+import SekilTreni from './SekilTreni';
 import ShadowDetective from './ShadowDetective';
 import SihirliSiseler from './SihirliSiseler';
 import SihirliTuval from './SihirliTuval';
@@ -115,4 +119,8 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'duygu-yuzleri': (c) => <DuyguYuzleri onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'renk-sepetleri': (c) => <RenkSepetleri onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'zitlari-eslestir': (c) => <ZitlariEslestir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'sekil-treni': (c) => <SekilTreni onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ayi-ailesi': (c) => <AyiAilesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ciftlikte-sayalim': (c) => <CiftlikteSayalim onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ayni-farkli': (c) => <AyniFarkli onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

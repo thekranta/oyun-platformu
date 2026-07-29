@@ -6,6 +6,7 @@ import DynamicBackground from '../components/DynamicBackground';
 import StudentStatsModal from '../components/StudentStatsModal';
 import { supabase } from '../lib/supabase';
 import { requestGeminiAnalysis } from '../services/geminiClient';
+import { getMaarif } from '../constants/maarifMap';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -368,90 +369,10 @@ export default function AdminPanel() {
         setProcessingId(score.id);
         console.log('Gemini isteği gönderildi', { scoreId: score.id, oyunTuru: score.oyun_turu });
         try {
-            // Maarif Modeli Referans Matrisi - Oyun Eşleştirmeleri (raw_curriculum.txt'ye göre - SADECE belgede var olan kodlar kullanılmalı!)
-            const maarifMatrisi: Record<string, { alan: string; surec: string; cikti: string; ciktiAciklama: string; deger?: string }> = {
-                // Matematik Alanı
-                'hafiza': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme' },
-                'yapboz': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Bir bütünü oluşturan parçaları gösterir, parçalar arası ilişkiyi açıklar' },
-                'sayilari-birlestir': { alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme (1-5 arası nesne/varlık sayısını söyler)' },
-                'siralama': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.4', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelere ilişkin çıkarım yapabilme (karşılaştırma)' },
-                'diziyi-tamamla': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.4', ciktiAciklama: 'Örüntüyü kuralına uygun olarak devam ettirir' },
-                'eksik-sayi-bul': { alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.5', ciktiAciklama: 'Matematiksel durumlara ilişkin eksik/fazla/uyumsuz olan parçaları söyler' },
-                'kodlama': { alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.7', ciktiAciklama: 'Matematiksel problemler ve çözümlerine ilişkin stratejiler geliştirebilme' },
-                'kutuyu-bul': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesnelerin özelliklerini çözümleyebilme, görsel tarama' },
-                // Fen Alanı
-                'gruplama': { alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Fene yönelik nesne, olayları benzerlik ve farklılıklarına göre sınıflandırabilme' },
-                // Türkçe Alanı
-                'bunu-soyle': { alan: 'Türkçe', surec: 'Konuşma / İçerik Oluşturma', cikti: 'TAKB.2', ciktiAciklama: 'Konuşma sürecinin içeriğini oluşturabilme' },
-                'rakam-yazma': { alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)' },
-                // Sanat Alanı - NOT: SNAB kodları raw_curriculum.txt'de yok, bu nedenle kullanılmamalı
-                'yaratici-cizim': { alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)' },
-                // Hikaye Tabanlı Oyunlar - Türkçe Alanı Dinleme/İzleme (raw_curriculum.txt'ye göre)
-                'ceviz_macera': { alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Dinledikleri/izledikleri materyaller ile ilgili yeni anlamlar oluşturabilme', deger: 'Yardımseverlik' },
-                'aile-sepeti': { alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Dinledikleri/izledikleri iletilerde yer alan bilgiler ile günlük yaşamı arasında ilişki kurar', deger: 'Aile Bütünlüğü' },
-                // Yeni Oyunlar
-                'golge-dedektifi': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme' },
-                // Yeni Bilişsel Oyunlar (Ocak 2026)
-                'onluk-cerceve': { alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme (1-20 arası nesne/varlık sayısını söyler)' },
-                'sayi-komsulari': { alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.4', ciktiAciklama: 'Matematiksel olgu, olay ve nesnelere ilişkin çıkarım yapabilme' },
-                'tarti-dengesi': { alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.5', ciktiAciklama: 'Matematiksel problemlerin parçaları arasındaki ilişkileri açıklar' },
-                // Sihirli Tuval - Matematik Alanı Görsel Temsil
-                'sihirli-tuval': {
-                    alan: 'Matematik',
-                    surec: 'Matematiksel Temsil',
-                    cikti: 'MAB.9',
-                    ciktiAciklama: 'Farklı matematiksel temsillerden yararlanabilme - Çeşitli semboller arasından belirtilen matematiksel temsilleri gösterir'
-                },
-                // Uzay Blokları: Yıldız Mimarı - Matematik Alanı Parça-Bütün İlişkisi
-                'uzay-bloklari': {
-                    alan: 'Matematik',
-                    surec: 'Matematiksel Muhakeme',
-                    cikti: 'MAB.2',
-                    ciktiAciklama: 'Bir bütünü oluşturan parçaları gösterir, parçalar arasındaki ilişki/ilişkisizlik durumlarını açıklar'
-                },
-                // Adalet Hikayesi - Türkçe Alanı Dinleme/İzleme (raw_curriculum.txt'ye göre)
-                'adalet-hikayesi': {
-                    alan: 'Türkçe',
-                    surec: 'Dinleme/İzleme',
-                    cikti: 'TADB.2',
-                    ciktiAciklama: 'Dinledikleri/izledikleri materyaller ile ilgili yeni anlamlar oluşturabilme - Materyallerdeki olayları belirler',
-                    deger: 'Adalet'
-                },
-            };
+            // Maarif eslemesi tek merkezden (constants/maarifMap.ts)
+            const oyunBilgisi = getMaarif(score.oyun_turu);
 
-            const oyunBilgisi = maarifMatrisi[score.oyun_turu] || {
-                // Bilinmeyen oyunlar için varsayılan: Matematik - Muhakeme (en genel bilişsel beceri)
-                alan: 'Matematik',
-                surec: 'Matematiksel Muhakeme',
-                cikti: 'MAB.2',
-                ciktiAciklama: 'Matematiksel olgu, olay ve nesnelerin özelliklerini çözümleyebilme'
-            };
-
-            // Oyun adını Türkçe'ye çevir
-            const oyunAdiMap: Record<string, string> = {
-                'hafiza': 'Çiftini Bul!',
-                'siralama': 'Sıralama',
-                'eksik-sayi-bul': 'Eksik Sayıyı Bul',
-                'gruplama': 'Gruplama',
-                'diziyi-tamamla': 'Diziyi Tamamla',
-                'bunu-soyle': 'Bunu Söyle!',
-                'kodlama': 'Minik Kaşif',
-                'rakam-yazma': 'Rakam Yazma',
-                'ceviz_macera': 'Ceviz Macerası',
-                'aile-sepeti': 'Aile Sepeti',
-                'yapboz': 'Yapboz',
-                'sayilari-birlestir': 'Sayıları Birleştir',
-                'kutuyu-bul': 'Kutuyu Bul!',
-                'golge-dedektifi': 'Gölge Dedektifi',
-                'onluk-cerceve': 'Onluk Çerçeve',
-                'sayi-komsulari': 'Sayı Komşuları',
-                'tarti-dengesi': 'Tartı Dengesi',
-                'miktar-avcisi': 'Miktar Avcısı',
-                'sihirli-tuval': 'Sihirli Tuval: Sayılarla Boyama',
-                'uzay-bloklari': 'Uzay Blokları: Yıldız Mimarı',
-                'adalet-hikayesi': 'Adalet Hikayesi',
-            };
-            const oyunAdiTR = oyunAdiMap[score.oyun_turu] || score.oyun_turu;
+            const oyunAdiTR = oyunBilgisi.displayName || score.oyun_turu;
 
             // Gelişimsel dönem belirleme
             const yasAy = score.ogrenci_yasi;
@@ -562,7 +483,7 @@ ${gelisimGecmisi}
 Gemini olarak bu verileri kıyasla ve "Gelişim Seyri" analizi yap.
 ` : '';
 
-            if (score.oyun_turu === 'ceviz_macera' || score.oyun_turu === 'aile-sepeti' || score.oyun_turu === 'adalet-hikayesi') {
+            if (oyunBilgisi.isValueStory) {
                 // Sosyal-Duygusal oyunlar için özel prompt
                 const secilenYol = score.yapay_zeka_yorumu || 'Bilinmiyor';
                 prompt = `
@@ -1037,35 +958,8 @@ ChildhoodTech Ekibi
 
     // Maarif Matrisi yardımcı fonksiyonu
     const getOyunBilgisi = (oyunTuru: string) => {
-        const maarifMatrisi: Record<string, { alan: string; cikti: string }> = {
-            'hafiza': { alan: 'Matematik', cikti: 'MAB.2' },
-            'yapboz': { alan: 'Matematik', cikti: 'MAB.2' },
-            'sayilari-birlestir': { alan: 'Matematik', cikti: 'MAB.1' },
-            'siralama': { alan: 'Matematik', cikti: 'MAB.4' },
-            'diziyi-tamamla': { alan: 'Matematik', cikti: 'MAB.4' },
-            'eksik-sayi-bul': { alan: 'Matematik', cikti: 'MAB.5' },
-            'kodlama': { alan: 'Matematik', cikti: 'MAB.7' },
-            'kutuyu-bul': { alan: 'Matematik', cikti: 'MAB.2' },
-            'gruplama': { alan: 'Fen', cikti: 'FAB.2' },
-            'bunu-soyle': { alan: 'Türkçe', cikti: 'TAKB.2' },
-            'rakam-yazma': { alan: 'Türkçe', cikti: 'TAEOB.6' },
-            'yaratici-cizim': { alan: 'Sanat', cikti: 'SNAB4' },
-            'ceviz_macera': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.3' },
-            'aile-sepeti': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.2.1' },
-            'golge-dedektifi': { alan: 'Matematik', cikti: 'MAB.2' },
-            // Yeni Matematik Oyunları
-            'onluk-cerceve': { alan: 'Matematik', cikti: 'MAB.1' },
-            'sayi-komsulari': { alan: 'Matematik', cikti: 'MAB.4' },
-            'tarti-dengesi': { alan: 'Matematik', cikti: 'MAB.1' },
-            'miktar-avcisi': { alan: 'Matematik', cikti: 'MAB.1' },
-            'sihirli-tuval': { alan: 'Matematik', cikti: 'MAB.2.1' },
-            'sihirli-siseler': { alan: 'Matematik', cikti: 'MAB.2' },
-            'uzay-bloklari': { alan: 'Bilişsel Gelişim', cikti: 'KB.2.4' },
-            'adalet-hikayesi': { alan: 'Sosyal-Duygusal Gelişim', cikti: 'SDB.1' },
-        };
-        // Bilinmeyen oyunlar için varsayılan: MAB.2 (Matematik - Muhakeme)
-        // ASLA GB.1 veya 'Genel Gelişim' kullanma!
-        return maarifMatrisi[oyunTuru] || { alan: 'Matematik', cikti: 'MAB.2' };
+        const e = getMaarif(oyunTuru);
+        return { alan: e.badgeAlan ?? e.alan, cikti: e.cikti };
     };
 
     // Özet çıkarma fonksiyonu

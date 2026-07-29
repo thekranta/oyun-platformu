@@ -42,6 +42,10 @@ export const GAME_CATALOG: GameCatalogItem[] = [
 
   { id: 'renk-sepetleri', title: 'Renk Sepetleri', status: 'secondary', domain: 'Kavram', skillFocus: 'Renkleri ayirt etme', routeKey: 'renk-sepetleri' },
   { id: 'zitlari-eslestir', title: 'Zitlari Eslestir', status: 'secondary', domain: 'Kavram', skillFocus: 'Zit kavramlar', routeKey: 'zitlari-eslestir' },
+  { id: 'sekil-treni', title: 'Sekil Treni', status: 'secondary', domain: 'Kavram', skillFocus: 'Geometrik sekiller', routeKey: 'sekil-treni' },
+  { id: 'ayi-ailesi', title: 'Ayi Ailesi', status: 'secondary', domain: 'Kavram', skillFocus: 'Boyut siralama', routeKey: 'ayi-ailesi' },
+  { id: 'ciftlikte-sayalim', title: 'Ciftlikte Sayalim', status: 'secondary', domain: 'Kavram', skillFocus: 'Sayma (1-5)', routeKey: 'ciftlikte-sayalim' },
+  { id: 'ayni-farkli', title: 'Ayni mi Farkli mi', status: 'secondary', domain: 'Kavram', skillFocus: 'Ayni/farkli ayirt etme', routeKey: 'ayni-farkli' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
