@@ -79,6 +79,10 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'ayi-ailesi': { displayName: 'Ayı Ailesi', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Nesneleri özelliklerine (boyut) göre karşılaştırır ve küçükten büyüğe sıralar', badgeAlan: 'Kavram (Boyut)' },
   'ciftlikte-sayalim': { displayName: 'Çiftlikte Sayalım', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme (1-5 arası nesne sayısını söyler, sayı-nicelik ilişkisi)', badgeAlan: 'Kavram (Sayma)' },
   'ayni-farkli': { displayName: 'Aynı mı Farklı mı?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Nesne ve görselleri karşılaştırır; aynı/farklı olanı ayırt eder', badgeAlan: 'Kavram (Ayırt Etme)' },
+  'hangisi-farkli': { displayName: 'Hangisi Farklı?', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Nesneleri benzerlik ve farklılıklarına göre değerlendirir; gruba uymayanı bulur', badgeAlan: 'Kavram (Ayırt Etme)' },
+  'buyuk-orta-kucuk': { displayName: 'Büyük-Orta-Küçük', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Nesneleri boyutlarına göre karşılaştırır (büyük/orta/küçük)', badgeAlan: 'Kavram (Boyut)' },
+  'neredeyim': { displayName: 'Neredeyim?', alan: 'Sosyal Bilgiler', surec: 'Mekânsal Düşünme', cikti: 'SAB.5', ciktiAciklama: 'Nesnelerin/kişilerin konumlarını mekânsal kavramlarla ifade eder (içinde/üstünde/altında/yanında)', badgeAlan: 'Kavram (Konum)' },
+  'once-sonra': { displayName: 'Önce-Sonra', alan: 'Sosyal Bilgiler', surec: 'Zamanı Algılama ve Kronolojik Düşünme', cikti: 'SAB.1', ciktiAciklama: 'Günlük hayatında zaman kavramını kullanır; olayları oluş sırasına (önce-sonra) göre dizer', badgeAlan: 'Kavram (Zaman)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

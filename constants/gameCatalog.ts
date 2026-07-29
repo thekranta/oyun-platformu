@@ -46,6 +46,10 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'ayi-ailesi', title: 'Ayi Ailesi', status: 'secondary', domain: 'Kavram', skillFocus: 'Boyut siralama', routeKey: 'ayi-ailesi' },
   { id: 'ciftlikte-sayalim', title: 'Ciftlikte Sayalim', status: 'secondary', domain: 'Kavram', skillFocus: 'Sayma (1-5)', routeKey: 'ciftlikte-sayalim' },
   { id: 'ayni-farkli', title: 'Ayni mi Farkli mi', status: 'secondary', domain: 'Kavram', skillFocus: 'Ayni/farkli ayirt etme', routeKey: 'ayni-farkli' },
+  { id: 'hangisi-farkli', title: 'Hangisi Farkli', status: 'secondary', domain: 'Kavram', skillFocus: 'Gruba uymayani bulma', routeKey: 'hangisi-farkli' },
+  { id: 'buyuk-orta-kucuk', title: 'Buyuk-Orta-Kucuk', status: 'secondary', domain: 'Kavram', skillFocus: 'Boyut ayirt etme', routeKey: 'buyuk-orta-kucuk' },
+  { id: 'neredeyim', title: 'Neredeyim', status: 'secondary', domain: 'Kavram', skillFocus: 'Konum kavramlari', routeKey: 'neredeyim' },
+  { id: 'once-sonra', title: 'Once-Sonra', status: 'secondary', domain: 'Kavram', skillFocus: 'Zaman sirasi', routeKey: 'once-sonra' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },

@@ -8,6 +8,10 @@ import AyniFarkli from './AyniFarkli';
 import BunuSoyle from './BunuSoyle';
 import CevizMacera from './CevizMacera';
 import CiftlikteSayalim from './CiftlikteSayalim';
+import BuyukOrtaKucuk from './BuyukOrtaKucuk';
+import HangisiFarkli from './HangisiFarkli';
+import Neredeyim from './Neredeyim';
+import OnceSonra from './OnceSonra';
 import DiziyiTamamla from './DiziyiTamamla';
 import DuyguYuzleri from './DuyguYuzleri';
 import EksikSayiBul from './EksikSayiBul';
@@ -123,4 +127,8 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'ayi-ailesi': (c) => <AyiAilesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ciftlikte-sayalim': (c) => <CiftlikteSayalim onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ayni-farkli': (c) => <AyniFarkli onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'hangisi-farkli': (c) => <HangisiFarkli onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'buyuk-orta-kucuk': (c) => <BuyukOrtaKucuk onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'neredeyim': (c) => <Neredeyim onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'once-sonra': (c) => <OnceSonra onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

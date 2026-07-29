@@ -34,6 +34,10 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'ayi-ailesi': { color: '#8D6E63', icon: 'resize', displayTitle: 'Ayı Ailesi', subtitle: 'Küçükten büyüğe' },
   'ciftlikte-sayalim': { color: '#66BB6A', icon: 'calculator', displayTitle: 'Çiftlikte Sayalım', subtitle: 'Saymayı öğren' },
   'ayni-farkli': { color: '#7E57C2', icon: 'search', displayTitle: 'Aynı mı Farklı mı?', subtitle: 'Ayırt et' },
+  'hangisi-farkli': { color: '#00ACC1', icon: 'funnel', displayTitle: 'Hangisi Farklı?', subtitle: 'Uymayanı bul' },
+  'buyuk-orta-kucuk': { color: '#8D6E63', icon: 'expand', displayTitle: 'Büyük-Orta-Küçük', subtitle: 'Boyutu bul' },
+  'neredeyim': { color: '#6D4C41', icon: 'cube-outline', displayTitle: 'Neredeyim?', subtitle: 'Nerede? Konum' },
+  'once-sonra': { color: '#26A69A', icon: 'hourglass', displayTitle: 'Önce-Sonra', subtitle: 'Sıraya koy' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
