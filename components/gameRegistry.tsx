@@ -17,6 +17,12 @@ import EnUzun from './EnUzun';
 import DogruKutu from './DogruKutu';
 import IkizleriBul from './IkizleriBul';
 import NeIseYarar from './NeIseYarar';
+import RenkOruntusu from './RenkOruntusu';
+import NoktaSay from './NoktaSay';
+import CanliCansiz from './CanliCansiz';
+import YuzerBatar from './YuzerBatar';
+import DuyguEslestir from './DuyguEslestir';
+import SirayiHatirla from './SirayiHatirla';
 import DiziyiTamamla from './DiziyiTamamla';
 import DuyguYuzleri from './DuyguYuzleri';
 import EksikSayiBul from './EksikSayiBul';
@@ -141,4 +147,10 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'dogru-kutu': (c) => <DogruKutu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ikizleri-bul': (c) => <IkizleriBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ne-ise-yarar': (c) => <NeIseYarar onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'renk-oruntusu': (c) => <RenkOruntusu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'nokta-say': (c) => <NoktaSay onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'canli-cansiz': (c) => <CanliCansiz onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'yuzer-batar': (c) => <YuzerBatar onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'duygu-eslestir': (c) => <DuyguEslestir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'sirayi-hatirla': (c) => <SirayiHatirla onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

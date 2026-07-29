@@ -43,6 +43,12 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'dogru-kutu': { color: '#8D6E63', icon: 'file-tray-stacked', displayTitle: 'Doğru Kutu', subtitle: 'Kutulara ayır' },
   'ikizleri-bul': { color: '#EC407A', icon: 'copy', displayTitle: 'İkizleri Bul', subtitle: 'Aynısını bul' },
   'ne-ise-yarar': { color: '#26A69A', icon: 'link', displayTitle: 'Ne İşe Yarar?', subtitle: 'İlişkili ikili' },
+  'renk-oruntusu': { color: '#8E24AA', icon: 'ellipsis-horizontal', displayTitle: 'Renk Örüntüsü', subtitle: 'Sıradaki renk' },
+  'nokta-say': { color: '#00ACC1', icon: 'ellipse', displayTitle: 'Nokta Say', subtitle: 'Noktaları say' },
+  'canli-cansiz': { color: '#7CB342', icon: 'leaf-outline', displayTitle: 'Canlı mı Cansız mı?', subtitle: 'Canlı/cansız' },
+  'yuzer-batar': { color: '#039BE5', icon: 'water', displayTitle: 'Yüzer mi Batar mı?', subtitle: 'Tahmin et' },
+  'duygu-eslestir': { color: '#EC407A', icon: 'heart-half', displayTitle: 'Duygu Eşleştir', subtitle: 'Aynı duygu' },
+  'sirayi-hatirla': { color: '#5E35B1', icon: 'flash', displayTitle: 'Sırayı Hatırla', subtitle: 'Belleği çalıştır' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };

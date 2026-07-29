@@ -88,6 +88,12 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'dogru-kutu': { displayName: 'Doğru Kutu', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Nesneleri türlerine/kategorilerine göre sınıflandırır (hayvan/yiyecek)', badgeAlan: 'Kavram (Sınıflandırma)' },
   'ikizleri-bul': { displayName: 'İkizleri Bul', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesnelerin özelliklerini çözümler; birbirinin aynısı olanları eşleştirir', badgeAlan: 'Kavram (Eşleştirme)' },
   'ne-ise-yarar': { displayName: 'Ne İşe Yarar?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Nesneleri günlük yaşamdaki ilişkilerine göre eşleştirir (şemsiye-yağmur gibi)', badgeAlan: 'Kavram (İlişki)' },
+  'renk-oruntusu': { displayName: 'Renk Örüntüsü', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Örüntüyü kuralına uygun olarak sürdürür; sıradaki ögeyi belirler', badgeAlan: 'Kavram (Örüntü)' },
+  'nokta-say': { displayName: 'Nokta Say', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme (noktaları sayıp sayıyı belirler)', badgeAlan: 'Kavram (Sayma)' },
+  'canli-cansiz': { displayName: 'Canlı mı Cansız mı?', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Nesneleri canlı/cansız özelliğine göre sınıflandırır', badgeAlan: 'Kavram (Canlı/Cansız)' },
+  'yuzer-batar': { displayName: 'Yüzer mi Batar mı?', alan: 'Fen', surec: 'Bilimsel Gözleme Dayalı Tahmin Etme', cikti: 'FAB.3', ciktiAciklama: 'Nesnelerin suda yüzüp batacağına yönelik gözleme dayalı tahmin yapar', badgeAlan: 'Kavram (Tahmin)' },
+  'duygu-eslestir': { displayName: 'Duygu Eşleştir', alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Duygu ifadelerini tanır; aynı duyguya sahip yüzleri eşleştirir', deger: 'Duygu Farkındalığı', badgeAlan: 'Sosyal-Duygusal' },
+  'sirayi-hatirla': { displayName: 'Sırayı Hatırla', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Sıralı bilgiyi kısa süreli bellekte tutar ve aynı sırayla tekrarlar (çalışma belleği/dikkat)', badgeAlan: 'Bilişsel (Bellek)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

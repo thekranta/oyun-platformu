@@ -55,6 +55,12 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'dogru-kutu', title: 'Dogru Kutu', status: 'secondary', domain: 'Kavram', skillFocus: 'Kategoriye ayirma', routeKey: 'dogru-kutu' },
   { id: 'ikizleri-bul', title: 'Ikizleri Bul', status: 'secondary', domain: 'Kavram', skillFocus: 'Ayni olani esleme', routeKey: 'ikizleri-bul' },
   { id: 'ne-ise-yarar', title: 'Ne Ise Yarar', status: 'secondary', domain: 'Kavram', skillFocus: 'Iliskili esleme', routeKey: 'ne-ise-yarar' },
+  { id: 'renk-oruntusu', title: 'Renk Oruntusu', status: 'secondary', domain: 'Kavram', skillFocus: 'Oruntu surdurme', routeKey: 'renk-oruntusu' },
+  { id: 'nokta-say', title: 'Nokta Say', status: 'secondary', domain: 'Kavram', skillFocus: 'Sayma (nokta)', routeKey: 'nokta-say' },
+  { id: 'canli-cansiz', title: 'Canli mi Cansiz mi', status: 'secondary', domain: 'Kavram', skillFocus: 'Canli/cansiz', routeKey: 'canli-cansiz' },
+  { id: 'yuzer-batar', title: 'Yuzer mi Batar mi', status: 'secondary', domain: 'Kavram', skillFocus: 'Tahmin (yuzer/batar)', routeKey: 'yuzer-batar' },
+  { id: 'duygu-eslestir', title: 'Duygu Eslestir', status: 'secondary', domain: 'Kavram', skillFocus: 'Ayni duyguyu esleme', routeKey: 'duygu-eslestir' },
+  { id: 'sirayi-hatirla', title: 'Sirayi Hatirla', status: 'secondary', domain: 'Kavram', skillFocus: 'Calisma bellegi', routeKey: 'sirayi-hatirla' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
