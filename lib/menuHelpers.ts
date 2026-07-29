@@ -38,6 +38,11 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'buyuk-orta-kucuk': { color: '#8D6E63', icon: 'expand', displayTitle: 'Büyük-Orta-Küçük', subtitle: 'Boyutu bul' },
   'neredeyim': { color: '#6D4C41', icon: 'cube-outline', displayTitle: 'Neredeyim?', subtitle: 'Nerede? Konum' },
   'once-sonra': { color: '#26A69A', icon: 'hourglass', displayTitle: 'Önce-Sonra', subtitle: 'Sıraya koy' },
+  'sayiyi-bul': { color: '#1E88E5', icon: 'keypad', displayTitle: 'Sayıyı Bul', subtitle: 'Rakam-nicelik' },
+  'en-uzun': { color: '#F97316', icon: 'resize-outline', displayTitle: 'En Uzun Hangisi?', subtitle: 'Uzunluk' },
+  'dogru-kutu': { color: '#8D6E63', icon: 'file-tray-stacked', displayTitle: 'Doğru Kutu', subtitle: 'Kutulara ayır' },
+  'ikizleri-bul': { color: '#EC407A', icon: 'copy', displayTitle: 'İkizleri Bul', subtitle: 'Aynısını bul' },
+  'ne-ise-yarar': { color: '#26A69A', icon: 'link', displayTitle: 'Ne İşe Yarar?', subtitle: 'İlişkili ikili' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };

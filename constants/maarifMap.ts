@@ -83,6 +83,11 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'buyuk-orta-kucuk': { displayName: 'Büyük-Orta-Küçük', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Nesneleri boyutlarına göre karşılaştırır (büyük/orta/küçük)', badgeAlan: 'Kavram (Boyut)' },
   'neredeyim': { displayName: 'Neredeyim?', alan: 'Sosyal Bilgiler', surec: 'Mekânsal Düşünme', cikti: 'SAB.5', ciktiAciklama: 'Nesnelerin/kişilerin konumlarını mekânsal kavramlarla ifade eder (içinde/üstünde/altında/yanında)', badgeAlan: 'Kavram (Konum)' },
   'once-sonra': { displayName: 'Önce-Sonra', alan: 'Sosyal Bilgiler', surec: 'Zamanı Algılama ve Kronolojik Düşünme', cikti: 'SAB.1', ciktiAciklama: 'Günlük hayatında zaman kavramını kullanır; olayları oluş sırasına (önce-sonra) göre dizer', badgeAlan: 'Kavram (Zaman)' },
+  'sayiyi-bul': { displayName: 'Sayıyı Bul', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Rakamı tanır; verilen rakam kadar nesne içeren grubu eşler (sayı-nicelik ilişkisi)', badgeAlan: 'Kavram (Sayı)' },
+  'en-uzun': { displayName: 'En Uzun Hangisi?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Nesneleri uzunluklarına göre karşılaştırır; en uzun olanı belirler', badgeAlan: 'Kavram (Uzunluk)' },
+  'dogru-kutu': { displayName: 'Doğru Kutu', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Nesneleri türlerine/kategorilerine göre sınıflandırır (hayvan/yiyecek)', badgeAlan: 'Kavram (Sınıflandırma)' },
+  'ikizleri-bul': { displayName: 'İkizleri Bul', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesnelerin özelliklerini çözümler; birbirinin aynısı olanları eşleştirir', badgeAlan: 'Kavram (Eşleştirme)' },
+  'ne-ise-yarar': { displayName: 'Ne İşe Yarar?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Nesneleri günlük yaşamdaki ilişkilerine göre eşleştirir (şemsiye-yağmur gibi)', badgeAlan: 'Kavram (İlişki)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

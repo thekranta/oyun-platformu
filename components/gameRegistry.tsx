@@ -12,6 +12,11 @@ import BuyukOrtaKucuk from './BuyukOrtaKucuk';
 import HangisiFarkli from './HangisiFarkli';
 import Neredeyim from './Neredeyim';
 import OnceSonra from './OnceSonra';
+import SayiyiBul from './SayiyiBul';
+import EnUzun from './EnUzun';
+import DogruKutu from './DogruKutu';
+import IkizleriBul from './IkizleriBul';
+import NeIseYarar from './NeIseYarar';
 import DiziyiTamamla from './DiziyiTamamla';
 import DuyguYuzleri from './DuyguYuzleri';
 import EksikSayiBul from './EksikSayiBul';
@@ -131,4 +136,9 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'buyuk-orta-kucuk': (c) => <BuyukOrtaKucuk onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'neredeyim': (c) => <Neredeyim onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'once-sonra': (c) => <OnceSonra onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'sayiyi-bul': (c) => <SayiyiBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'en-uzun': (c) => <EnUzun onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'dogru-kutu': (c) => <DogruKutu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ikizleri-bul': (c) => <IkizleriBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ne-ise-yarar': (c) => <NeIseYarar onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

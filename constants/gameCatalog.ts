@@ -50,6 +50,11 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'buyuk-orta-kucuk', title: 'Buyuk-Orta-Kucuk', status: 'secondary', domain: 'Kavram', skillFocus: 'Boyut ayirt etme', routeKey: 'buyuk-orta-kucuk' },
   { id: 'neredeyim', title: 'Neredeyim', status: 'secondary', domain: 'Kavram', skillFocus: 'Konum kavramlari', routeKey: 'neredeyim' },
   { id: 'once-sonra', title: 'Once-Sonra', status: 'secondary', domain: 'Kavram', skillFocus: 'Zaman sirasi', routeKey: 'once-sonra' },
+  { id: 'sayiyi-bul', title: 'Sayiyi Bul', status: 'secondary', domain: 'Kavram', skillFocus: 'Rakam-nicelik', routeKey: 'sayiyi-bul' },
+  { id: 'en-uzun', title: 'En Uzun Hangisi', status: 'secondary', domain: 'Kavram', skillFocus: 'Uzunluk karsilastirma', routeKey: 'en-uzun' },
+  { id: 'dogru-kutu', title: 'Dogru Kutu', status: 'secondary', domain: 'Kavram', skillFocus: 'Kategoriye ayirma', routeKey: 'dogru-kutu' },
+  { id: 'ikizleri-bul', title: 'Ikizleri Bul', status: 'secondary', domain: 'Kavram', skillFocus: 'Ayni olani esleme', routeKey: 'ikizleri-bul' },
+  { id: 'ne-ise-yarar', title: 'Ne Ise Yarar', status: 'secondary', domain: 'Kavram', skillFocus: 'Iliskili esleme', routeKey: 'ne-ise-yarar' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
