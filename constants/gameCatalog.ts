@@ -74,6 +74,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'kac-kaldi', title: 'Kac Kaldi', status: 'secondary', domain: 'Matematik', skillFocus: 'Cikarma (5e kadar)', routeKey: 'kac-kaldi' },
   { id: 'buyuk-sayi', title: 'Buyuk Sayi Hangisi', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi karsilastirma', routeKey: 'buyuk-sayi' },
   { id: 'boyama', title: 'Boyama', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'boyama' },
+  { id: 'cizim-sayfalari', title: 'Cizim Sayfalari', status: 'creative', domain: 'Sanat', skillFocus: 'Kilavuzlu cizgi calismasi', routeKey: 'cizim-sayfalari' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },

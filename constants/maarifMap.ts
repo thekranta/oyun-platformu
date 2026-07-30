@@ -108,6 +108,7 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'buyuk-sayi': { displayName: 'Büyük Sayı Hangisi?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'İki sayıyı karşılaştırır; hangisinin daha büyük olduğunu belirler', badgeAlan: 'Matematik (Karşılaştırma)' },
   'ne-degisti': { displayName: 'Ne Değişti?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Görsel bilgiyi bellekte tutar; değişen ögeyi fark eder (dikkat/çalışma belleği)', badgeAlan: 'Bilişsel (Dikkat)' },
   'iyilik-yap': { displayName: 'İyilik Yap', alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Durumları yorumlar; empati kurarak nazik/yardımsever davranışı seçer', deger: 'Yardımseverlik ve Nezaket', badgeAlan: 'Sosyal-Duygusal' },
+  'cizim-sayfalari': { displayName: 'Çizim Sayfaları', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Kılavuz çizgileri takip ederek yazma öncesi çizgi çalışması ve el-göz koordinasyonu geliştirir', badgeAlan: 'Sanat / Çizgi Çalışması' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

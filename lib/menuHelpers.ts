@@ -61,6 +61,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'kac-kaldi': { color: '#00897B', icon: 'remove-circle', displayTitle: 'Kaç Kaldı?', subtitle: 'Çıkarma' },
   'buyuk-sayi': { color: '#1E88E5', icon: 'swap-vertical', displayTitle: 'Büyük Sayı Hangisi?', subtitle: 'Karşılaştır' },
   'boyama': { color: '#8E24AA', icon: 'color-fill', displayTitle: 'Boyama', subtitle: 'Serbest boya' },
+  'cizim-sayfalari': { color: '#26A69A', icon: 'brush', displayTitle: 'Çizim Sayfaları', subtitle: 'Kılavuzla çiz' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
