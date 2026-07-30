@@ -94,6 +94,12 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'yuzer-batar': { displayName: 'Yüzer mi Batar mı?', alan: 'Fen', surec: 'Bilimsel Gözleme Dayalı Tahmin Etme', cikti: 'FAB.3', ciktiAciklama: 'Nesnelerin suda yüzüp batacağına yönelik gözleme dayalı tahmin yapar', badgeAlan: 'Kavram (Tahmin)' },
   'duygu-eslestir': { displayName: 'Duygu Eşleştir', alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Duygu ifadelerini tanır; aynı duyguya sahip yüzleri eşleştirir', deger: 'Duygu Farkındalığı', badgeAlan: 'Sosyal-Duygusal' },
   'sirayi-hatirla': { displayName: 'Sırayı Hatırla', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Sıralı bilgiyi kısa süreli bellekte tutar ve aynı sırayla tekrarlar (çalışma belleği/dikkat)', badgeAlan: 'Bilişsel (Bellek)' },
+  'agir-hafif': { displayName: 'En Ağır Hangisi?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Nesneleri ağırlıklarına göre karşılaştırır; en ağır olanı belirler', badgeAlan: 'Kavram (Ağırlık)' },
+  'gunduz-gece': { displayName: 'Gündüz mü Gece mi?', alan: 'Sosyal Bilgiler', surec: 'Zamanı Algılama ve Kronolojik Düşünme', cikti: 'SAB.1', ciktiAciklama: 'Zaman kavramını kullanır; nesne/olayları gündüz-gece ile ilişkilendirir', badgeAlan: 'Kavram (Zaman)' },
+  'kac-oldu': { displayName: 'Kaç Oldu?', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'İki grubu birleştirip toplam nesne sayısını söyler (5e kadar toplama)', badgeAlan: 'Kavram (Toplama)' },
+  'renkleri-karistir': { displayName: 'Renkleri Karıştır', alan: 'Fen', surec: 'Bilimsel Gözleme Dayalı Tahmin Etme', cikti: 'FAB.3', ciktiAciklama: 'İki rengin karışımı sonucu oluşacak rengi gözleme dayalı tahmin eder', badgeAlan: 'Kavram (Renk)' },
+  'sekil-deligi': { displayName: 'Şekil Deliği', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Geometrik şeklin özelliklerini çözümler; aynı şekilli boşlukla eşler', badgeAlan: 'Kavram (Şekil)' },
+  'az-cok-sirala': { displayName: 'Az → Çok Sırala', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Grupları niceliklerine göre karşılaştırır ve az-çok sırasına dizer', badgeAlan: 'Kavram (Nicelik)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

@@ -61,6 +61,12 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'yuzer-batar', title: 'Yuzer mi Batar mi', status: 'secondary', domain: 'Kavram', skillFocus: 'Tahmin (yuzer/batar)', routeKey: 'yuzer-batar' },
   { id: 'duygu-eslestir', title: 'Duygu Eslestir', status: 'secondary', domain: 'Kavram', skillFocus: 'Ayni duyguyu esleme', routeKey: 'duygu-eslestir' },
   { id: 'sirayi-hatirla', title: 'Sirayi Hatirla', status: 'secondary', domain: 'Kavram', skillFocus: 'Calisma bellegi', routeKey: 'sirayi-hatirla' },
+  { id: 'agir-hafif', title: 'En Agir Hangisi', status: 'secondary', domain: 'Kavram', skillFocus: 'Agirlik karsilastirma', routeKey: 'agir-hafif' },
+  { id: 'gunduz-gece', title: 'Gunduz mu Gece mi', status: 'secondary', domain: 'Kavram', skillFocus: 'Zaman (gunduz/gece)', routeKey: 'gunduz-gece' },
+  { id: 'kac-oldu', title: 'Kac Oldu', status: 'secondary', domain: 'Kavram', skillFocus: 'Toplama (5e kadar)', routeKey: 'kac-oldu' },
+  { id: 'renkleri-karistir', title: 'Renkleri Karistir', status: 'secondary', domain: 'Kavram', skillFocus: 'Renk karisimi', routeKey: 'renkleri-karistir' },
+  { id: 'sekil-deligi', title: 'Sekil Deligi', status: 'secondary', domain: 'Kavram', skillFocus: 'Sekil esleme', routeKey: 'sekil-deligi' },
+  { id: 'az-cok-sirala', title: 'Az Cok Sirala', status: 'secondary', domain: 'Kavram', skillFocus: 'Nicelik siralama', routeKey: 'az-cok-sirala' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },

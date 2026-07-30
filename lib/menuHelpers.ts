@@ -49,6 +49,12 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'yuzer-batar': { color: '#039BE5', icon: 'water', displayTitle: 'Yüzer mi Batar mı?', subtitle: 'Tahmin et' },
   'duygu-eslestir': { color: '#EC407A', icon: 'heart-half', displayTitle: 'Duygu Eşleştir', subtitle: 'Aynı duygu' },
   'sirayi-hatirla': { color: '#5E35B1', icon: 'flash', displayTitle: 'Sırayı Hatırla', subtitle: 'Belleği çalıştır' },
+  'agir-hafif': { color: '#8D6E63', icon: 'barbell', displayTitle: 'En Ağır Hangisi?', subtitle: 'Ağırlık' },
+  'gunduz-gece': { color: '#5C6BC0', icon: 'partly-sunny', displayTitle: 'Gündüz mü Gece mi?', subtitle: 'Zaman' },
+  'kac-oldu': { color: '#00897B', icon: 'add-circle', displayTitle: 'Kaç Oldu?', subtitle: 'Toplama' },
+  'renkleri-karistir': { color: '#8E24AA', icon: 'color-fill', displayTitle: 'Renkleri Karıştır', subtitle: 'Renk karışımı' },
+  'sekil-deligi': { color: '#546E7A', icon: 'shapes', displayTitle: 'Şekil Deliği', subtitle: 'Şekli yerleştir' },
+  'az-cok-sirala': { color: '#43A047', icon: 'stats-chart', displayTitle: 'Az → Çok Sırala', subtitle: 'Nicelik sırası' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
