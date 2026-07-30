@@ -55,7 +55,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'renkleri-karistir': { color: '#8E24AA', icon: 'color-fill', displayTitle: 'Renkleri Karıştır', subtitle: 'Renk karışımı' },
   'sekil-deligi': { color: '#546E7A', icon: 'shapes', displayTitle: 'Şekil Deliği', subtitle: 'Şekli yerleştir' },
   'az-cok-sirala': { color: '#43A047', icon: 'stats-chart', displayTitle: 'Az → Çok Sırala', subtitle: 'Nicelik sırası' },
-  'ayni-harf': { color: '#C2185B', icon: 'text', displayTitle: 'Aynı Harf', subtitle: 'Harfi bul' },
+  'ilk-harf': { color: '#C2185B', icon: 'text', displayTitle: 'İlk Harf', subtitle: 'Harfle başlayan' },
   'iyilik-yap': { color: '#E0359A', icon: 'heart-circle', displayTitle: 'İyilik Yap', subtitle: 'Nazik davran' },
   'ne-degisti': { color: '#00838F', icon: 'eye', displayTitle: 'Ne Değişti?', subtitle: 'Değişeni bul' },
   'kac-kaldi': { color: '#00897B', icon: 'remove-circle', displayTitle: 'Kaç Kaldı?', subtitle: 'Çıkarma' },

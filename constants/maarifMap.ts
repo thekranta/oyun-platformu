@@ -102,7 +102,7 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'az-cok-sirala': { displayName: 'Az → Çok Sırala', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Grupları niceliklerine göre karşılaştırır ve az-çok sırasına dizer', badgeAlan: 'Kavram (Nicelik)' },
 
   // ---------- Diğer kategoriler (Sanat / Dil / Sosyal-Duygusal / Dikkat / Matematik) ----------
-  'ayni-harf': { displayName: 'Aynı Harf', alan: 'Türkçe', surec: 'Erken Okuryazarlık', cikti: 'TAEOB.6', ciktiAciklama: 'Harfleri görsel olarak tanır ve ayırt eder (harf farkındalığı)', badgeAlan: 'Dil (Harf)' },
+  'ilk-harf': { displayName: 'İlk Harf', alan: 'Türkçe', surec: 'Erken Okuryazarlık', cikti: 'TAEOB.6', ciktiAciklama: 'Harf-ses ilişkisi; verilen harfle başlayan kelimeyi/görseli bulur (ilk ses farkındalığı)', badgeAlan: 'Dil (İlk Harf)' },
   'kac-kaldi': { displayName: 'Kaç Kaldı?', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Kalan nesneleri sayar (5e kadar çıkarma sezgisi)', badgeAlan: 'Matematik (Çıkarma)' },
   'buyuk-sayi': { displayName: 'Büyük Sayı Hangisi?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'İki sayıyı karşılaştırır; hangisinin daha büyük olduğunu belirler', badgeAlan: 'Matematik (Karşılaştırma)' },
   'ne-degisti': { displayName: 'Ne Değişti?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Görsel bilgiyi bellekte tutar; değişen ögeyi fark eder (dikkat/çalışma belleği)', badgeAlan: 'Bilişsel (Dikkat)' },

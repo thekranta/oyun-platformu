@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View, PanResponder } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, PanResponder } from 'react-native';
 import Svg, { Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import { speak } from '../services/speechService';
@@ -97,6 +97,55 @@ const THEMES: Theme[] = [
       </>
     ),
   },
+  { key: 'gunes', name: 'Güneş', emoji: '☀️', guide: (<>
+    <Circle cx={150} cy={150} r={55} {...G} />
+    <Line x1={150} y1={78} x2={150} y2={42} {...G} /><Line x1={150} y1={222} x2={150} y2={258} {...G} />
+    <Line x1={78} y1={150} x2={42} y2={150} {...G} /><Line x1={222} y1={150} x2={258} y2={150} {...G} />
+    <Line x1={99} y1={99} x2={72} y2={72} {...G} /><Line x1={201} y1={99} x2={228} y2={72} {...G} />
+    <Line x1={99} y1={201} x2={72} y2={228} {...G} /><Line x1={201} y1={201} x2={228} y2={228} {...G} />
+  </>) },
+  { key: 'agac', name: 'Ağaç', emoji: '🌳', guide: (<>
+    <Circle cx={150} cy={125} r={72} {...G} /><Rect x={133} y={185} width={34} height={90} {...G} />
+  </>) },
+  { key: 'bulut', name: 'Bulut', emoji: '☁️', guide: (<>
+    <Circle cx={108} cy={165} r={40} {...G} /><Circle cx={158} cy={138} r={52} {...G} /><Circle cx={208} cy={168} r={38} {...G} />
+    <Rect x={95} y={170} width={120} height={44} rx={22} {...G} />
+  </>) },
+  { key: 'kalp', name: 'Kalp', emoji: '❤️', guide: (<>
+    <Path d="M150 215 C 70 155 95 75 150 118 C 205 75 230 155 150 215 Z" {...G} />
+  </>) },
+  { key: 'top', name: 'Top', emoji: '⚽', guide: (<>
+    <Circle cx={150} cy={150} r={72} {...G} /><Polygon points="150,120 178,142 167,176 133,176 122,142" {...G} />
+  </>) },
+  { key: 'elma', name: 'Elma', emoji: '🍎', guide: (<>
+    <Circle cx={150} cy={165} r={65} {...G} /><Line x1={150} y1={102} x2={150} y2={72} {...G} /><Ellipse cx={175} cy={85} rx={20} ry={10} {...G} />
+  </>) },
+  { key: 'balon', name: 'Balon', emoji: '🎈', guide: (<>
+    <Ellipse cx={150} cy={128} rx={54} ry={64} {...G} /><Polygon points="142,190 158,190 150,204" {...G} /><Line x1={150} y1={204} x2={150} y2={272} {...G} />
+  </>) },
+  { key: 'semsiye', name: 'Şemsiye', emoji: '☂️', guide: (<>
+    <Path d="M72 158 A78 78 0 0 1 228 158 Z" {...G} /><Line x1={150} y1={158} x2={150} y2={240} {...G} /><Path d="M150 240 A16 16 0 0 1 122 240" {...G} />
+  </>) },
+  { key: 'ucurtma', name: 'Uçurtma', emoji: '🪁', guide: (<>
+    <Polygon points="150,55 212,150 150,235 88,150" {...G} /><Line x1={150} y1={55} x2={150} y2={235} {...G} /><Line x1={88} y1={150} x2={212} y2={150} {...G} /><Line x1={150} y1={235} x2={175} y2={278} {...G} />
+  </>) },
+  { key: 'kaplumbaga', name: 'Kaplumbağa', emoji: '🐢', guide: (<>
+    <Ellipse cx={150} cy={150} rx={78} ry={52} {...G} /><Circle cx={236} cy={150} r={20} {...G} />
+    <Ellipse cx={95} cy={198} rx={16} ry={11} {...G} /><Ellipse cx={205} cy={198} rx={16} ry={11} {...G} /><Ellipse cx={95} cy={104} rx={16} ry={11} {...G} /><Ellipse cx={205} cy={104} rx={16} ry={11} {...G} />
+  </>) },
+  { key: 'kar', name: 'Kar Tanesi', emoji: '❄️', guide: (<>
+    <Line x1={150} y1={65} x2={150} y2={235} {...G} /><Line x1={77} y1={107} x2={223} y2={193} {...G} /><Line x1={223} y1={107} x2={77} y2={193} {...G} /><Circle cx={150} cy={150} r={8} {...G} />
+  </>) },
+  { key: 'roket', name: 'Roket', emoji: '🚀', guide: (<>
+    <Rect x={124} y={100} width={52} height={112} rx={22} {...G} /><Polygon points="124,102 176,102 150,55" {...G} />
+    <Polygon points="124,188 98,236 124,212" {...G} /><Polygon points="176,188 202,236 176,212" {...G} /><Circle cx={150} cy={135} r={16} {...G} />
+  </>) },
+  { key: 'dondurma', name: 'Dondurma', emoji: '🍦', guide: (<>
+    <Polygon points="118,150 182,150 150,255" {...G} /><Circle cx={150} cy={128} r={42} {...G} /><Circle cx={124} cy={110} r={28} {...G} /><Circle cx={176} cy={110} r={28} {...G} />
+  </>) },
+  { key: 'gemi', name: 'Gemi', emoji: '⛵', guide: (<>
+    <Polygon points="82,205 218,205 198,240 102,240" {...G} /><Line x1={150} y1={80} x2={150} y2={205} {...G} /><Polygon points="150,88 150,190 212,190" {...G} />
+  </>) },
 ];
 
 const MIN_STEP = 2;
@@ -234,14 +283,14 @@ export default function CizimSayfalari({ onGameEnd, onExit }: Props) {
           <View style={{ width: 44 }} />
         </View>
         <Text style={styles.pickPrompt}>Bir tema seç, çizmeye başla!</Text>
-        <View style={styles.themeGrid}>
+        <ScrollView style={styles.themeScroll} contentContainerStyle={styles.themeGrid} showsVerticalScrollIndicator={false}>
           {THEMES.map((t, i) => (
             <TouchableOpacity key={t.key} style={styles.themeCard} onPress={() => openTheme(i)} activeOpacity={0.85}>
-              <Svg width={92} height={92} viewBox="0 0 300 300">{t.guide}</Svg>
+              <Svg width={88} height={88} viewBox="-10 -10 320 320" preserveAspectRatio="xMidYMid meet">{t.guide}</Svg>
               <Text style={styles.themeName}>{t.emoji} {t.name}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
     );
   }
@@ -345,10 +394,11 @@ const styles = StyleSheet.create({
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },
   savedBtn: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
 
-  pickPrompt: { fontSize: 17, fontWeight: '700', color: '#00897B', marginTop: 6, marginBottom: 14 },
-  themeGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, maxWidth: 440, paddingHorizontal: 12 },
-  themeCard: { width: 130, height: 150, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
-  themeName: { fontSize: 16, fontWeight: '900', color: '#00695C' },
+  pickPrompt: { fontSize: 17, fontWeight: '700', color: '#00897B', marginTop: 6, marginBottom: 10 },
+  themeScroll: { width: '100%' },
+  themeGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, paddingHorizontal: 12, paddingBottom: 30 },
+  themeCard: { width: 116, height: 138, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
+  themeName: { fontSize: 15, fontWeight: '900', color: '#00695C' },
 
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#B2DFDB', overflow: 'hidden', marginTop: 4 },
 

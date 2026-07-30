@@ -29,7 +29,7 @@ import KacOldu from './KacOldu';
 import RenkleriKaristir from './RenkleriKaristir';
 import SekilDeligi from './SekilDeligi';
 import AzCokSirala from './AzCokSirala';
-import AyniHarf from './AyniHarf';
+import IlkHarf from './IlkHarf';
 import IyilikYap from './IyilikYap';
 import NeDegisti from './NeDegisti';
 import KacKaldi from './KacKaldi';
@@ -171,7 +171,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'renkleri-karistir': (c) => <RenkleriKaristir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'sekil-deligi': (c) => <SekilDeligi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'az-cok-sirala': (c) => <AzCokSirala onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
-  'ayni-harf': (c) => <AyniHarf onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ilk-harf': (c) => <IlkHarf onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'iyilik-yap': (c) => <IyilikYap onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ne-degisti': (c) => <NeDegisti onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'kac-kaldi': (c) => <KacKaldi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

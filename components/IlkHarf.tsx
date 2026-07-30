@@ -6,17 +6,46 @@ import CountdownOverlay from './CountdownOverlay';
 import { speak } from '../services/speechService';
 
 // ============================================
-// 🔤 AYNI HARF - Harf tanıma/eşleştirme (Dil / Erken Okuryazarlık, TAEOB)
-// Üstteki harfin aynısını seçeneklerde bul. Harf farkındalığı (görsel harf
-// ayırt etme). Görsel; ses harfi de söyler.
+// 🔤 İLK HARF - İlk ses/harf farkındalığı (Dil / Erken Okuryazarlık, TAEOB)
+// Bir harf gösterilir; çocuk O HARFLE BAŞLAYAN resmi bulur (A → Arı).
+// Gerçek okuryazarlık becerisi (harf-ses ilişkisi), "aynısını bul" DEĞİL.
+// Resim adları etiketli; ses de harfi söyler.
 // ============================================
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const USE_NATIVE = Platform.OS !== 'web';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const TOTAL_ROUNDS = 8;
-const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'K', 'L', 'M', 'O', 'P', 'R', 'S', 'T', 'U', 'Y', 'Z'];
-const COLORS = ['#FF6B6B', '#4FACFE', '#66BB6A', '#FFA726', '#AB47BC'];
+
+interface Word { emoji: string; letter: string; name: string }
+
+const WORDS: Word[] = [
+  { emoji: '🐝', letter: 'A', name: 'Arı' },
+  { emoji: '🐻', letter: 'A', name: 'Ayı' },
+  { emoji: '🚗', letter: 'A', name: 'Araba' },
+  { emoji: '🌙', letter: 'A', name: 'Ay' },
+  { emoji: '🐟', letter: 'B', name: 'Balık' },
+  { emoji: '🎈', letter: 'B', name: 'Balon' },
+  { emoji: '🌸', letter: 'Ç', name: 'Çiçek' },
+  { emoji: '🍓', letter: 'Ç', name: 'Çilek' },
+  { emoji: '🍎', letter: 'E', name: 'Elma' },
+  { emoji: '🏠', letter: 'E', name: 'Ev' },
+  { emoji: '🐱', letter: 'K', name: 'Kedi' },
+  { emoji: '🐶', letter: 'K', name: 'Köpek' },
+  { emoji: '🦋', letter: 'K', name: 'Kelebek' },
+  { emoji: '🍌', letter: 'M', name: 'Muz' },
+  { emoji: '🐵', letter: 'M', name: 'Maymun' },
+  { emoji: '🍕', letter: 'P', name: 'Pizza' },
+  { emoji: '🐧', letter: 'P', name: 'Penguen' },
+  { emoji: '⚽', letter: 'T', name: 'Top' },
+  { emoji: '🐰', letter: 'T', name: 'Tavşan' },
+  { emoji: '🚂', letter: 'T', name: 'Tren' },
+  { emoji: '⭐', letter: 'Y', name: 'Yıldız' },
+  { emoji: '🐍', letter: 'Y', name: 'Yılan' },
+  { emoji: '🥚', letter: 'Y', name: 'Yumurta' },
+  { emoji: '☀️', letter: 'G', name: 'Güneş' },
+];
+const LETTERS = Array.from(new Set(WORDS.map((w) => w.letter)));
 
 const shuffle = <T,>(arr: T[]): T[] => {
   const a = [...arr];
@@ -27,7 +56,7 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-const optionCount = (round: number) => (round <= 3 ? 2 : round <= 6 ? 3 : 4);
+const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 interface Props {
   onGameEnd: (
@@ -39,12 +68,11 @@ interface Props {
   childName?: string;
 }
 
-export default function AyniHarf({ onGameEnd, onExit, childName }: Props) {
+export default function IlkHarf({ onGameEnd, onExit, childName }: Props) {
   const [gameReady, setGameReady] = useState(false);
   const [round, setRound] = useState(1);
-  const [target, setTarget] = useState('A');
-  const [color, setColor] = useState(COLORS[0]);
-  const [options, setOptions] = useState<string[]>([]);
+  const [letter, setLetter] = useState('A');
+  const [options, setOptions] = useState<Word[]>([]);
   const [locked, setLocked] = useState(false);
   const [wrong, setWrong] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -64,18 +92,23 @@ export default function AyniHarf({ onGameEnd, onExit, childName }: Props) {
   useEffect(() => {
     if (!gameReady) return;
     const pool = LETTERS.filter((l) => l !== prevRef.current);
-    const t = pool[Math.floor(Math.random() * pool.length)];
-    prevRef.current = t;
-    const n = optionCount(round);
-    const distract = shuffle(LETTERS.filter((l) => l !== t)).slice(0, n - 1);
-    setTarget(t);
-    setColor(COLORS[(round - 1) % COLORS.length]);
-    setOptions(shuffle([t, ...distract]));
+    const target = pick(pool);
+    prevRef.current = target;
+    const correct = pick(WORDS.filter((w) => w.letter === target));
+    // Farklı ilk harfli 2 çeldirici (tek doğru cevap olsun)
+    const distractors: Word[] = [];
+    const used = new Set<string>([target]);
+    for (const w of shuffle(WORDS)) {
+      if (!used.has(w.letter)) { distractors.push(w); used.add(w.letter); }
+      if (distractors.length === 2) break;
+    }
+    setLetter(target);
+    setOptions(shuffle([correct, ...distractors]));
     setLocked(false);
     setWrong(null);
     bounce.setValue(0.8);
     Animated.spring(bounce, { toValue: 1, friction: 5, useNativeDriver: USE_NATIVE }).start();
-    speak(`${t} harfini bul!`, { instructions: HAPPY_VOICE });
+    speak(`${target} ile başlayan resmi bul!`, { instructions: HAPPY_VOICE });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round, gameReady]);
 
@@ -83,30 +116,30 @@ export default function AyniHarf({ onGameEnd, onExit, childName }: Props) {
     if (finishedRef.current) return;
     finishedRef.current = true;
     const duration = Math.floor((Date.now() - startTime) / 1000);
-    onGameEnd('ayni-harf', duration, movesRef.current, errorsRef.current, undefined, {
+    onGameEnd('ilk-harf', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Türkçe: Erken Okuryazarlık - Harf Tanıma ve Eşleştirme (TAEOB.6)',
+      kazanimOdagi: 'Türkçe: Erken Okuryazarlık - Harf-Ses İlişkisi / İlk Ses Farkındalığı (TAEOB.6)',
       correct_answers: correctRef.current,
     });
   };
 
-  const handlePick = (l: string) => {
+  const handlePick = (w: Word) => {
     if (locked) return;
     movesRef.current += 1;
-    if (l === target) {
+    if (w.letter === letter) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak(`Aferin! ${target} harfi.`, { instructions: HAPPY_VOICE });
+      speak(`Aferin! ${w.name}, ${letter} ile başlar.`, { instructions: HAPPY_VOICE });
       const t = setTimeout(() => {
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);
         else finish();
-      }, 1300);
+      }, 1500);
       timersRef.current.push(t);
     } else {
       errorsRef.current += 1;
-      setWrong(l);
+      setWrong(w.emoji);
       Animated.sequence([
         Animated.timing(shake, { toValue: 7, duration: 55, useNativeDriver: USE_NATIVE }),
         Animated.timing(shake, { toValue: -7, duration: 55, useNativeDriver: USE_NATIVE }),
@@ -122,7 +155,7 @@ export default function AyniHarf({ onGameEnd, onExit, childName }: Props) {
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Yukarıdaki harfin aynısını aşağıda bul!"
+          message="Bir harf göstereceğim. O harfle BAŞLAYAN resmi bul!"
           childName={childName}
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}
@@ -137,23 +170,24 @@ export default function AyniHarf({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Bu harfi bul:</Text>
-      <Animated.View style={[styles.targetCard, { transform: [{ scale: bounce }] }]}>
-        <Text style={[styles.targetLetter, { color }]}>{target}</Text>
+      <Text style={styles.prompt}>Bu harfle başlayan?</Text>
+      <Animated.View style={[styles.letterCard, { transform: [{ scale: bounce }] }]}>
+        <Text style={styles.letterBig}>{letter}</Text>
       </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target} harfini bul!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${letter} ile başlayan resmi bul!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
         <Ionicons name="volume-high" size={20} color="#fff" />
         <Text style={styles.listenText}>Tekrar Dinle</Text>
       </TouchableOpacity>
 
       <View style={styles.options}>
-        {options.map((l) => {
-          const isWrong = wrong === l;
+        {options.map((w) => {
+          const isWrong = wrong === w.emoji;
           return (
-            <Animated.View key={l} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(l)} activeOpacity={0.85}>
-                <Text style={styles.optLetter}>{l}</Text>
+            <Animated.View key={w.emoji} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+              <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(w)} activeOpacity={0.85}>
+                <Text style={styles.optEmoji}>{w.emoji}</Text>
+                <Text style={styles.optName}>{w.name}</Text>
               </TouchableOpacity>
             </Animated.View>
           );
@@ -170,15 +204,16 @@ const styles = StyleSheet.create({
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#C2185B' },
 
-  prompt: { fontSize: 20, fontWeight: '800', color: '#C2185B', marginTop: 10 },
-  targetCard: { width: 140, height: 140, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
-  targetLetter: { fontSize: 92, fontWeight: '900' },
+  prompt: { fontSize: 20, fontWeight: '800', color: '#C2185B', marginTop: 8 },
+  letterCard: { width: 130, height: 130, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
+  letterBig: { fontSize: 88, fontWeight: '900', color: '#EC407A' },
 
   listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EC407A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
   listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
-  options: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 20, maxWidth: 440, paddingHorizontal: 12 },
-  optCard: { width: 96, height: 96, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
+  options: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 22, maxWidth: 460, paddingHorizontal: 12 },
+  optCard: { width: 120, height: 128, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   optWrong: { backgroundColor: '#FFE0E0' },
-  optLetter: { fontSize: 54, fontWeight: '900', color: '#5A3A66' },
+  optEmoji: { fontSize: 62 },
+  optName: { fontSize: 15, fontWeight: '800', color: '#5A3A66' },
 });
