@@ -68,6 +68,13 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'sekil-deligi', title: 'Sekil Deligi', status: 'secondary', domain: 'Kavram', skillFocus: 'Sekil esleme', routeKey: 'sekil-deligi' },
   { id: 'az-cok-sirala', title: 'Az Cok Sirala', status: 'secondary', domain: 'Kavram', skillFocus: 'Nicelik siralama', routeKey: 'az-cok-sirala' },
 
+  { id: 'ayni-harf', title: 'Ayni Harf', status: 'secondary', domain: 'Dil', skillFocus: 'Harf tanima', routeKey: 'ayni-harf' },
+  { id: 'iyilik-yap', title: 'Iyilik Yap', status: 'secondary', domain: 'Sosyal-duygusal', skillFocus: 'Empati ve nezaket', routeKey: 'iyilik-yap' },
+  { id: 'ne-degisti', title: 'Ne Degisti', status: 'secondary', domain: 'Bilissel', skillFocus: 'Dikkat ve bellek', routeKey: 'ne-degisti' },
+  { id: 'kac-kaldi', title: 'Kac Kaldi', status: 'secondary', domain: 'Matematik', skillFocus: 'Cikarma (5e kadar)', routeKey: 'kac-kaldi' },
+  { id: 'buyuk-sayi', title: 'Buyuk Sayi Hangisi', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi karsilastirma', routeKey: 'buyuk-sayi' },
+  { id: 'boyama', title: 'Boyama', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'boyama' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];

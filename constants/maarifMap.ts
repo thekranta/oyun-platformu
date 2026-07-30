@@ -100,6 +100,14 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'renkleri-karistir': { displayName: 'Renkleri Karıştır', alan: 'Fen', surec: 'Bilimsel Gözleme Dayalı Tahmin Etme', cikti: 'FAB.3', ciktiAciklama: 'İki rengin karışımı sonucu oluşacak rengi gözleme dayalı tahmin eder', badgeAlan: 'Kavram (Renk)' },
   'sekil-deligi': { displayName: 'Şekil Deliği', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Geometrik şeklin özelliklerini çözümler; aynı şekilli boşlukla eşler', badgeAlan: 'Kavram (Şekil)' },
   'az-cok-sirala': { displayName: 'Az → Çok Sırala', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Grupları niceliklerine göre karşılaştırır ve az-çok sırasına dizer', badgeAlan: 'Kavram (Nicelik)' },
+
+  // ---------- Diğer kategoriler (Sanat / Dil / Sosyal-Duygusal / Dikkat / Matematik) ----------
+  'boyama': { displayName: 'Boyama', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme; serbest boyama ile yaratıcı ifade ve ince motor', badgeAlan: 'Sanat / Yaratıcı İfade' },
+  'ayni-harf': { displayName: 'Aynı Harf', alan: 'Türkçe', surec: 'Erken Okuryazarlık', cikti: 'TAEOB.6', ciktiAciklama: 'Harfleri görsel olarak tanır ve ayırt eder (harf farkındalığı)', badgeAlan: 'Dil (Harf)' },
+  'kac-kaldi': { displayName: 'Kaç Kaldı?', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Kalan nesneleri sayar (5e kadar çıkarma sezgisi)', badgeAlan: 'Matematik (Çıkarma)' },
+  'buyuk-sayi': { displayName: 'Büyük Sayı Hangisi?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'İki sayıyı karşılaştırır; hangisinin daha büyük olduğunu belirler', badgeAlan: 'Matematik (Karşılaştırma)' },
+  'ne-degisti': { displayName: 'Ne Değişti?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Görsel bilgiyi bellekte tutar; değişen ögeyi fark eder (dikkat/çalışma belleği)', badgeAlan: 'Bilişsel (Dikkat)' },
+  'iyilik-yap': { displayName: 'İyilik Yap', alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Durumları yorumlar; empati kurarak nazik/yardımsever davranışı seçer', deger: 'Yardımseverlik ve Nezaket', badgeAlan: 'Sosyal-Duygusal' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

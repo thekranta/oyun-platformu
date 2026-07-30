@@ -55,6 +55,12 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'renkleri-karistir': { color: '#8E24AA', icon: 'color-fill', displayTitle: 'Renkleri Karıştır', subtitle: 'Renk karışımı' },
   'sekil-deligi': { color: '#546E7A', icon: 'shapes', displayTitle: 'Şekil Deliği', subtitle: 'Şekli yerleştir' },
   'az-cok-sirala': { color: '#43A047', icon: 'stats-chart', displayTitle: 'Az → Çok Sırala', subtitle: 'Nicelik sırası' },
+  'ayni-harf': { color: '#C2185B', icon: 'text', displayTitle: 'Aynı Harf', subtitle: 'Harfi bul' },
+  'iyilik-yap': { color: '#E0359A', icon: 'heart-circle', displayTitle: 'İyilik Yap', subtitle: 'Nazik davran' },
+  'ne-degisti': { color: '#00838F', icon: 'eye', displayTitle: 'Ne Değişti?', subtitle: 'Değişeni bul' },
+  'kac-kaldi': { color: '#00897B', icon: 'remove-circle', displayTitle: 'Kaç Kaldı?', subtitle: 'Çıkarma' },
+  'buyuk-sayi': { color: '#1E88E5', icon: 'swap-vertical', displayTitle: 'Büyük Sayı Hangisi?', subtitle: 'Karşılaştır' },
+  'boyama': { color: '#8E24AA', icon: 'color-fill', displayTitle: 'Boyama', subtitle: 'Serbest boya' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
