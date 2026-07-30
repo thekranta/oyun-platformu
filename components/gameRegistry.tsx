@@ -34,7 +34,6 @@ import IyilikYap from './IyilikYap';
 import NeDegisti from './NeDegisti';
 import KacKaldi from './KacKaldi';
 import BuyukSayi from './BuyukSayi';
-import Boyama from './Boyama';
 import CizimSayfalari from './CizimSayfalari';
 import DiziyiTamamla from './DiziyiTamamla';
 import DuyguYuzleri from './DuyguYuzleri';
@@ -177,6 +176,5 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'ne-degisti': (c) => <NeDegisti onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'kac-kaldi': (c) => <KacKaldi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'buyuk-sayi': (c) => <BuyukSayi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
-  'boyama': (c) => <Boyama onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'cizim-sayfalari': (c) => <CizimSayfalari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

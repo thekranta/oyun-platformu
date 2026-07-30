@@ -121,6 +121,7 @@ export default function CizimSayfalari({ onGameEnd, onExit }: Props) {
   const [size, setSize] = useState(SIZES[1]);
   const [erase, setErase] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [canvas, setCanvas] = useState({ w: 0, h: 0 });
   const startTimeRef = useRef(Date.now());
 
   const colorRef = useRef(color);
@@ -269,34 +270,65 @@ export default function CizimSayfalari({ onGameEnd, onExit }: Props) {
         </View>
       </View>
 
-      <View ref={canvasRef} style={styles.canvas} {...panResponder.panHandlers}>
-        {/* Kılavuz (kesik) çizgiler - altta */}
-        <Svg style={StyleSheet.absoluteFill} viewBox="0 0 300 300" preserveAspectRatio="xMidYMid meet" pointerEvents="none">
-          {theme.guide}
-        </Svg>
-        {/* Çocuğun çizimi - üstte */}
-        <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
-          {allStrokes.filter((s): s is Stroke => Boolean(s && s.points)).map((s, i) => (
-            <Path key={i} d={strokeToPath(s.points)} stroke={s.color} strokeWidth={s.size} fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          ))}
-        </Svg>
+      <View
+        ref={canvasRef}
+        style={styles.canvas}
+        onLayout={(e) => setCanvas({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+        {...panResponder.panHandlers}
+      >
+        {canvas.w > 0 && (
+          <>
+            {/* Kılavuz (kesik) çizgiler - altta, sayfaya ortalanmış ve tam sığar */}
+            <Svg width={canvas.w} height={canvas.h} viewBox="-18 -18 336 336" preserveAspectRatio="xMidYMid meet" pointerEvents="none" style={StyleSheet.absoluteFill}>
+              {theme.guide}
+            </Svg>
+            {/* Çocuğun çizimi - üstte (piksel uzayı) */}
+            <Svg width={canvas.w} height={canvas.h} pointerEvents="none" style={StyleSheet.absoluteFill}>
+              {allStrokes.filter((s): s is Stroke => Boolean(s && s.points)).map((s, i) => (
+                <Path key={i} d={strokeToPath(s.points)} stroke={s.color} strokeWidth={s.size} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              ))}
+            </Svg>
+          </>
+        )}
       </View>
 
-      {/* Renk paleti + silgi + kalınlık */}
-      <View style={styles.palette}>
-        {COLORS.map((c) => (
-          <TouchableOpacity
-            key={c}
-            style={[styles.swatch, { backgroundColor: c }, color === c && !erase && styles.swatchActive]}
-            onPress={() => { setColor(c); setErase(false); }}
-            activeOpacity={0.85}
-          />
-        ))}
-        <TouchableOpacity style={[styles.swatch, styles.eraser, erase && styles.swatchActive]} onPress={() => setErase(true)} activeOpacity={0.85}>
-          <Ionicons name="bandage-outline" size={20} color="#607D8B" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.sizeBtn} onPress={() => setSize((s) => SIZES[(SIZES.indexOf(s) + 1) % SIZES.length])} activeOpacity={0.85}>
-          <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: erase ? '#90A4AE' : color }} />
+      {/* Renk paleti (büyük, seçiliye tik) */}
+      <View style={styles.colorsRow}>
+        {COLORS.map((c) => {
+          const on = color === c && !erase;
+          return (
+            <TouchableOpacity
+              key={c}
+              style={[styles.swatch, { backgroundColor: c }, on && styles.swatchActive]}
+              onPress={() => { setColor(c); setErase(false); }}
+              activeOpacity={0.85}
+            >
+              {on && <Ionicons name="checkmark" size={24} color="#fff" />}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Kalem kalınlığı + Silgi */}
+      <View style={styles.toolsRow}>
+        <Text style={styles.toolLabel}>Kalem</Text>
+        {SIZES.map((s, idx) => {
+          const on = size === s && !erase;
+          return (
+            <TouchableOpacity
+              key={s}
+              style={[styles.sizeOpt, on && styles.sizeOptActive]}
+              onPress={() => { setSize(s); setErase(false); }}
+              activeOpacity={0.85}
+            >
+              <View style={{ width: 8 + idx * 9, height: 8 + idx * 9, borderRadius: 20, backgroundColor: erase ? '#B0BEC5' : color }} />
+            </TouchableOpacity>
+          );
+        })}
+        <View style={styles.toolDivider} />
+        <TouchableOpacity style={[styles.eraserBtn, erase && styles.eraserActive]} onPress={() => setErase(true)} activeOpacity={0.85}>
+          <Ionicons name="bandage" size={22} color={erase ? '#fff' : '#546E7A'} />
+          <Text style={[styles.eraserLabel, erase && { color: '#fff' }]}>Sil</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -319,9 +351,17 @@ const styles = StyleSheet.create({
   themeName: { fontSize: 16, fontWeight: '900', color: '#00695C' },
 
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#B2DFDB', overflow: 'hidden', marginTop: 4 },
-  palette: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 12, maxWidth: 460 },
-  swatch: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'transparent', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  swatchActive: { borderColor: '#212121', transform: [{ scale: 1.12 }] },
-  eraser: { backgroundColor: '#ECEFF1' },
-  sizeBtn: { width: 46, height: 46, borderRadius: 23, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#B0BEC5' },
+
+  colorsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 12, paddingTop: 12, paddingHorizontal: 12, maxWidth: 520 },
+  swatch: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(0,0,0,0.08)', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 3 },
+  swatchActive: { borderColor: '#212121', transform: [{ scale: 1.15 }] },
+
+  toolsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 12, flexWrap: 'wrap', maxWidth: 520 },
+  toolLabel: { fontSize: 15, fontWeight: '900', color: '#00695C', marginRight: 2 },
+  sizeOpt: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#E0E0E0' },
+  sizeOptActive: { borderColor: '#00897B', backgroundColor: '#E0F2F1' },
+  toolDivider: { width: 2, height: 30, backgroundColor: '#CFD8DC', marginHorizontal: 6, borderRadius: 1 },
+  eraserBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 18, backgroundColor: '#ECEFF1', borderWidth: 2, borderColor: '#B0BEC5' },
+  eraserActive: { backgroundColor: '#546E7A', borderColor: '#37474F' },
+  eraserLabel: { fontSize: 15, fontWeight: '900', color: '#546E7A' },
 });

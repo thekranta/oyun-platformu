@@ -73,7 +73,6 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'ne-degisti', title: 'Ne Degisti', status: 'secondary', domain: 'Bilissel', skillFocus: 'Dikkat ve bellek', routeKey: 'ne-degisti' },
   { id: 'kac-kaldi', title: 'Kac Kaldi', status: 'secondary', domain: 'Matematik', skillFocus: 'Cikarma (5e kadar)', routeKey: 'kac-kaldi' },
   { id: 'buyuk-sayi', title: 'Buyuk Sayi Hangisi', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi karsilastirma', routeKey: 'buyuk-sayi' },
-  { id: 'boyama', title: 'Boyama', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'boyama' },
   { id: 'cizim-sayfalari', title: 'Cizim Sayfalari', status: 'creative', domain: 'Sanat', skillFocus: 'Kilavuzlu cizgi calismasi', routeKey: 'cizim-sayfalari' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
