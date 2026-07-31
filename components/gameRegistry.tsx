@@ -47,6 +47,12 @@ import Meslekler from './Meslekler';
 import Buyuyunce from './Buyuyunce';
 import GeriDonusum from './GeriDonusum';
 import EsitPaylastir from './EsitPaylastir';
+import AraclarNerede from './AraclarNerede';
+import NeYer from './NeYer';
+import NeNerede from './NeNerede';
+import Gunum from './Gunum';
+import RenkTonlari from './RenkTonlari';
+import SicakSoguk from './SicakSoguk';
 import DiziyiTamamla from './DiziyiTamamla';
 import DuyguYuzleri from './DuyguYuzleri';
 import EksikSayiBul from './EksikSayiBul';
@@ -201,4 +207,10 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'buyuyunce': (c) => <Buyuyunce onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'geri-donusum': (c) => <GeriDonusum onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'esit-paylastir': (c) => <EsitPaylastir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'araclar': (c) => <AraclarNerede onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ne-yer': (c) => <NeYer onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ne-nerede': (c) => <NeNerede onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'gunum': (c) => <Gunum onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'renk-tonlari': (c) => <RenkTonlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'sicak-soguk': (c) => <SicakSoguk onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

@@ -124,6 +124,14 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'buyuyunce': { displayName: 'Büyüyünce Ne Olur?', alan: 'Fen', surec: 'Bilimsel Gözlem Yapma', cikti: 'FAB.1', ciktiAciklama: 'Canlıların büyüme ve değişimini gözlemler (tırtıl-kelebek, yaşam döngüsü)', badgeAlan: 'Fen (Değişim)' },
   'geri-donusum': { displayName: 'Geri Dönüşüm', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Atıkları malzemesine göre sınıflandırır; çevre bilinci geliştirir', badgeAlan: 'Fen (Çevre)' },
   'esit-paylastir': { displayName: 'Eşit Paylaştır', alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.4', ciktiAciklama: 'Nesneleri eşit gruplara ayırır; adil paylaşım (bölmeye giriş)', badgeAlan: 'Matematik (Paylaşım)' },
+
+  // ---------- Dalga 9 (taşıtlar, beslenme, günlük yaşam, ton, sıcaklık) ----------
+  'araclar': { displayName: 'Araçlar Nerede Gider?', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Taşıtları hareket ettiği ortama göre sınıflandırır (kara/deniz/hava)', badgeAlan: 'Fen (Taşıtlar)' },
+  'ne-yer': { displayName: 'Ne Yer?', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Canlıların beslenmesine dair bilgi; hayvan-besin ilişkisi kurar', badgeAlan: 'Fen (Beslenme)' },
+  'ne-nerede': { displayName: 'Ne Nerede?', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Eşyaları kullanıldığı yere/odaya göre sınıflandırır (günlük yaşam)', badgeAlan: 'Fen (Günlük Yaşam)' },
+  'gunum': { displayName: 'Günüm', alan: 'Sosyal Bilgiler', surec: 'Zamanı Algılama ve Kronolojik Düşünme', cikti: 'SAB.1', ciktiAciklama: 'Günlük rutini zaman sırasına (sabah-akşam) koyar; zaman kavramı', badgeAlan: 'Kavram (Zaman)' },
+  'renk-tonlari': { displayName: 'Renk Tonları', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Renk tonlarını açıktan koyuya göre karşılaştırır ve sıralar (seriation)', badgeAlan: 'Kavram (Ton)' },
+  'sicak-soguk': { displayName: 'Sıcak mı Soğuk mu?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesneleri sıcaklık özelliğine göre çözümler ve sınıflandırır', badgeAlan: 'Kavram (Sıcaklık)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

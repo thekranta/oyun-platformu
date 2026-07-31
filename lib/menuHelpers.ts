@@ -73,6 +73,12 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'buyuyunce': { color: '#00897B', icon: 'trending-up', displayTitle: 'Büyüyünce Ne Olur?', subtitle: 'Yaşam döngüsü' },
   'geri-donusum': { color: '#66BB6A', icon: 'sync-circle', displayTitle: 'Geri Dönüşüm', subtitle: 'Doğru kutuya' },
   'esit-paylastir': { color: '#8D6E63', icon: 'pie-chart', displayTitle: 'Eşit Paylaştır', subtitle: 'Adil böl' },
+  'araclar': { color: '#1E88E5', icon: 'car-sport', displayTitle: 'Araçlar Nerede Gider?', subtitle: 'Kara/deniz/hava' },
+  'ne-yer': { color: '#FB8C00', icon: 'fast-food', displayTitle: 'Ne Yer?', subtitle: 'Hayvan besini' },
+  'ne-nerede': { color: '#00ACC1', icon: 'home', displayTitle: 'Ne Nerede?', subtitle: 'Hangi oda?' },
+  'gunum': { color: '#26A69A', icon: 'time', displayTitle: 'Günüm', subtitle: 'Günü sırala' },
+  'renk-tonlari': { color: '#8E24AA', icon: 'contrast', displayTitle: 'Renk Tonları', subtitle: 'Açıktan koyuya' },
+  'sicak-soguk': { color: '#EF5350', icon: 'thermometer', displayTitle: 'Sıcak mı Soğuk mu?', subtitle: 'Sıcaklığı ayır' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
