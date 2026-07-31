@@ -108,6 +108,14 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'ne-degisti': { displayName: 'Ne Değişti?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Görsel bilgiyi bellekte tutar; değişen ögeyi fark eder (dikkat/çalışma belleği)', badgeAlan: 'Bilişsel (Dikkat)' },
   'iyilik-yap': { displayName: 'İyilik Yap', alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Durumları yorumlar; empati kurarak nazik/yardımsever davranışı seçer', deger: 'Yardımseverlik ve Nezaket', badgeAlan: 'Sosyal-Duygusal' },
   'cizim-sayfalari': { displayName: 'Çizim Sayfaları', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Kılavuz çizgileri takip ederek yazma öncesi çizgi çalışması ve el-göz koordinasyonu geliştirir', badgeAlan: 'Sanat / Çizgi Çalışması' },
+
+  // ---------- Sağlık & Öz Bakım (Hareket/Sağlık - HSAB) ----------
+  'vucudum': { displayName: 'Vücudum', alan: 'Hareket ve Sağlık', surec: 'Beden Farkındalığı', cikti: 'HSAB.4', ciktiAciklama: 'Beden farkındalığı; yüz/vücut organlarını tanır ve gösterir', badgeAlan: 'Sağlık (Beden)' },
+  'duyularimiz': { displayName: 'Duyularımız', alan: 'Hareket ve Sağlık', surec: 'Beden Farkındalığı', cikti: 'HSAB.4', ciktiAciklama: 'Duyu farkındalığı; uyaranı algıladığımız duyu organını eşler', badgeAlan: 'Sağlık (Duyular)' },
+  'saglikli-yiyecek': { displayName: 'Sağlıklı mı?', alan: 'Hareket ve Sağlık', surec: 'Sağlıklı Beslenme', cikti: 'HSAB.7', ciktiAciklama: 'Sağlıklı beslenme farkındalığı; sağlıklı yiyeceği ayırt eder', badgeAlan: 'Sağlık (Beslenme)' },
+  'temizlik-zamani': { displayName: 'Temizlik Zamanı', alan: 'Hareket ve Sağlık', surec: 'Temizlik ve Düzen', cikti: 'HSAB.9', ciktiAciklama: 'Temizlik ve düzen alışkanlığı; duruma uygun temizlik aracını seçer', badgeAlan: 'Sağlık (Temizlik)' },
+  'guvende-kal': { displayName: 'Güvende Kal', alan: 'Hareket ve Sağlık', surec: 'Güvenlik', cikti: 'HSAB.10', ciktiAciklama: 'Tehlike ve kazalardan korunma; güvenli davranışı seçer', badgeAlan: 'Sağlık (Güvenlik)' },
+  'hava-kiyafet': { displayName: 'Hava & Kıyafet', alan: 'Fen', surec: 'Bilimsel Gözlem Yapma', cikti: 'FAB.1', ciktiAciklama: 'Hava olaylarını günlük yaşamla ilişkilendirir; duruma uygun kıyafeti seçer', badgeAlan: 'Fen (Günlük Yaşam)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

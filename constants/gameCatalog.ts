@@ -75,6 +75,13 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'buyuk-sayi', title: 'Buyuk Sayi Hangisi', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi karsilastirma', routeKey: 'buyuk-sayi' },
   { id: 'cizim-sayfalari', title: 'Cizim Sayfalari', status: 'creative', domain: 'Sanat', skillFocus: 'Kilavuzlu cizgi calismasi', routeKey: 'cizim-sayfalari' },
 
+  { id: 'vucudum', title: 'Vucudum', status: 'secondary', domain: 'Saglik', skillFocus: 'Beden farkindaligi', routeKey: 'vucudum' },
+  { id: 'duyularimiz', title: 'Duyularimiz', status: 'secondary', domain: 'Saglik', skillFocus: 'Duyu organlari', routeKey: 'duyularimiz' },
+  { id: 'saglikli-yiyecek', title: 'Saglikli mi', status: 'secondary', domain: 'Saglik', skillFocus: 'Saglikli beslenme', routeKey: 'saglikli-yiyecek' },
+  { id: 'temizlik-zamani', title: 'Temizlik Zamani', status: 'secondary', domain: 'Saglik', skillFocus: 'Temizlik ve oz bakim', routeKey: 'temizlik-zamani' },
+  { id: 'guvende-kal', title: 'Guvende Kal', status: 'secondary', domain: 'Saglik', skillFocus: 'Guvenlik', routeKey: 'guvende-kal' },
+  { id: 'hava-kiyafet', title: 'Hava ve Kiyafet', status: 'secondary', domain: 'Bilissel', skillFocus: 'Hava-gunluk yasam', routeKey: 'hava-kiyafet' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];
