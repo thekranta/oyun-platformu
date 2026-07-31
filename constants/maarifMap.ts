@@ -116,6 +116,14 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'temizlik-zamani': { displayName: 'Temizlik Zamanı', alan: 'Hareket ve Sağlık', surec: 'Temizlik ve Düzen', cikti: 'HSAB.9', ciktiAciklama: 'Temizlik ve düzen alışkanlığı; duruma uygun temizlik aracını seçer', badgeAlan: 'Sağlık (Temizlik)' },
   'guvende-kal': { displayName: 'Güvende Kal', alan: 'Hareket ve Sağlık', surec: 'Güvenlik', cikti: 'HSAB.10', ciktiAciklama: 'Tehlike ve kazalardan korunma; güvenli davranışı seçer', badgeAlan: 'Sağlık (Güvenlik)' },
   'hava-kiyafet': { displayName: 'Hava & Kıyafet', alan: 'Fen', surec: 'Bilimsel Gözlem Yapma', cikti: 'FAB.1', ciktiAciklama: 'Hava olaylarını günlük yaşamla ilişkilendirir; duruma uygun kıyafeti seçer', badgeAlan: 'Fen (Günlük Yaşam)' },
+
+  // ---------- Dalga 8 (problem çözme, fen, sosyal, matematik) ----------
+  'labirent': { displayName: 'Labirent', alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.7', ciktiAciklama: 'Hedefe ulaşmak için yol/strateji planlar; problem çözer', badgeAlan: 'Bilişsel (Problem Çözme)' },
+  'hayvan-evi': { displayName: 'Hayvan Evi', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Canlıları yaşam alanlarına göre sınıflandırır (balık-su, aslan-orman)', badgeAlan: 'Fen (Canlılar)' },
+  'meslekler': { displayName: 'Meslekler', alan: 'Sosyal Bilgiler', surec: 'Toplumsal Yaşam', cikti: 'SAB.3', ciktiAciklama: 'Meslekleri ve toplumsal rolleri tanır; meslek-araç ilişkisi kurar', badgeAlan: 'Sosyal (Meslekler)' },
+  'buyuyunce': { displayName: 'Büyüyünce Ne Olur?', alan: 'Fen', surec: 'Bilimsel Gözlem Yapma', cikti: 'FAB.1', ciktiAciklama: 'Canlıların büyüme ve değişimini gözlemler (tırtıl-kelebek, yaşam döngüsü)', badgeAlan: 'Fen (Değişim)' },
+  'geri-donusum': { displayName: 'Geri Dönüşüm', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Atıkları malzemesine göre sınıflandırır; çevre bilinci geliştirir', badgeAlan: 'Fen (Çevre)' },
+  'esit-paylastir': { displayName: 'Eşit Paylaştır', alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.4', ciktiAciklama: 'Nesneleri eşit gruplara ayırır; adil paylaşım (bölmeye giriş)', badgeAlan: 'Matematik (Paylaşım)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

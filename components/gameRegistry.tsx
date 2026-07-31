@@ -41,6 +41,12 @@ import SaglikliYiyecek from './SaglikliYiyecek';
 import TemizlikZamani from './TemizlikZamani';
 import GuvendeKal from './GuvendeKal';
 import HavaKiyafet from './HavaKiyafet';
+import Labirent from './Labirent';
+import HayvanEvi from './HayvanEvi';
+import Meslekler from './Meslekler';
+import Buyuyunce from './Buyuyunce';
+import GeriDonusum from './GeriDonusum';
+import EsitPaylastir from './EsitPaylastir';
 import DiziyiTamamla from './DiziyiTamamla';
 import DuyguYuzleri from './DuyguYuzleri';
 import EksikSayiBul from './EksikSayiBul';
@@ -189,4 +195,10 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'temizlik-zamani': (c) => <TemizlikZamani onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'guvende-kal': (c) => <GuvendeKal onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'hava-kiyafet': (c) => <HavaKiyafet onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'labirent': (c) => <Labirent onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'hayvan-evi': (c) => <HayvanEvi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'meslekler': (c) => <Meslekler onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'buyuyunce': (c) => <Buyuyunce onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'geri-donusum': (c) => <GeriDonusum onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'esit-paylastir': (c) => <EsitPaylastir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

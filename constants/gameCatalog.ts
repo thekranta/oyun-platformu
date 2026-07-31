@@ -82,6 +82,13 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'guvende-kal', title: 'Guvende Kal', status: 'secondary', domain: 'Saglik', skillFocus: 'Guvenlik', routeKey: 'guvende-kal' },
   { id: 'hava-kiyafet', title: 'Hava ve Kiyafet', status: 'secondary', domain: 'Bilissel', skillFocus: 'Hava-gunluk yasam', routeKey: 'hava-kiyafet' },
 
+  { id: 'labirent', title: 'Labirent', status: 'secondary', domain: 'Bilissel', skillFocus: 'Problem cozme / yol bulma', routeKey: 'labirent' },
+  { id: 'hayvan-evi', title: 'Hayvan Evi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Yasam alani', routeKey: 'hayvan-evi' },
+  { id: 'meslekler', title: 'Meslekler', status: 'secondary', domain: 'Kavram', skillFocus: 'Meslek-arac iliskisi', routeKey: 'meslekler' },
+  { id: 'buyuyunce', title: 'Buyuyunce Ne Olur', status: 'secondary', domain: 'Kavram', skillFocus: 'Yasam dongusu', routeKey: 'buyuyunce' },
+  { id: 'geri-donusum', title: 'Geri Donusum', status: 'secondary', domain: 'Kavram', skillFocus: 'Malzeme siniflandirma', routeKey: 'geri-donusum' },
+  { id: 'esit-paylastir', title: 'Esit Paylastir', status: 'secondary', domain: 'Matematik', skillFocus: 'Esit paylasim', routeKey: 'esit-paylastir' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];
