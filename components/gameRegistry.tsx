@@ -43,6 +43,10 @@ import SayiBoya from './SayiBoya';
 import Mandala from './Mandala';
 import NoktaBoyama from './NoktaBoyama';
 import CizimiCanlandir from './CizimiCanlandir';
+import YuzYap from './YuzYap';
+import YarisiniTamamla from './YarisiniTamamla';
+import KumBoyasi from './KumBoyasi';
+import AdimAdim from './AdimAdim';
 import Vucudum from './Vucudum';
 import Duyularimiz from './Duyularimiz';
 import SaglikliYiyecek from './SaglikliYiyecek';
@@ -211,6 +215,10 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'mandala': (c) => <Mandala onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'nokta-boyama': (c) => <NoktaBoyama onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'cizimi-canlandir': (c) => <CizimiCanlandir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'yuz-yap': (c) => <YuzYap onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'yarisini-tamamla': (c) => <YarisiniTamamla onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'kum-boyasi': (c) => <KumBoyasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'adim-adim': (c) => <AdimAdim onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'vucudum': (c) => <Vucudum onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'duyularimiz': (c) => <Duyularimiz onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'saglikli-yiyecek': (c) => <SaglikliYiyecek onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

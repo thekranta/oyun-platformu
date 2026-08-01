@@ -142,6 +142,10 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'mandala': { displayName: 'Mandala', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yaratıcı ifade ve radyal simetri (çizim merkez etrafında çoğalır)', badgeAlan: 'Sanat / Simetri' },
   'nokta-boyama': { displayName: 'Nokta Boyama', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Noktalarla (pointillism) yaratıcı boyama; el-göz koordinasyonu', badgeAlan: 'Sanat / Boyama' },
   'cizimi-canlandir': { displayName: 'Çizimini Canlandır', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Serbest yaratıcı çizim; çizimini canlandırarak eğlenme', badgeAlan: 'Sanat / Yaratıcı' },
+  'yuz-yap': { displayName: 'Yüz Yap', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Parçalarla yüz/karakter oluşturma; parça-bütün ve yaratıcı ifade', badgeAlan: 'Sanat / Kolaj' },
+  'yarisini-tamamla': { displayName: 'Yarısını Tamamla', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Simetri farkındalığı; resmin eksik yarısını çizerek tamamlama', badgeAlan: 'Sanat / Simetri' },
+  'kum-boyasi': { displayName: 'Kum Boyası', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Duyusal yaratıcı ifade; akan renklerle serbest boyama', badgeAlan: 'Sanat / Boyama' },
+  'adim-adim': { displayName: 'Adım Adım Çizim', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yönerge takibiyle adım adım çizim; el-göz koordinasyonu (yazma öncesi)', badgeAlan: 'Sanat / Rehberli' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */
