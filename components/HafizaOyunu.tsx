@@ -33,25 +33,20 @@ const GORSELLER_SETI = [
     //...
 ];
 
-// Bu set, 5 aşamanın tamamı için yeterli benzersiz görsele sahiptir.
-const AŞAMA_AYARLARI = [
-    { pairs: 2, totalCards: 4, images: GORSELLER_SETI.slice(0, 2) }, // Aşama 1: 4 Kart
-    { pairs: 3, totalCards: 6, images: GORSELLER_SETI.slice(0, 3) }, // Aşama 2: 6 Kart
-    { pairs: 4, totalCards: 8, images: GORSELLER_SETI.slice(0, 4) }, // Aşama 3: 8 Kart
-    { pairs: 5, totalCards: 10, images: GORSELLER_SETI.slice(0, 5) }, // Aşama 4: 10 Kart
-    { pairs: 5, totalCards: 10, images: GORSELLER_SETI.slice(0, 5) }, // Aşama 5: 10 Kart
-];
-
 interface HafizaOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
     onExit?: () => void;
     childName?: string;
+    emojiSet?: string[];   // verilirse görsel yerine emoji kartlar (temalı varyant)
+    oyunAdi?: string;      // varyant oyun kimliği
+    title?: string;        // başlık metni
 }
 
 interface Card {
     id: number;
     matchId: number; // Used for matching logic (corresponds to image ID)
     source: any;     // Image source
+    emoji?: string;  // emoji varyantı için
     isFlipped: boolean;
     isMatched: boolean;
     animValue: Animated.Value;
@@ -59,7 +54,20 @@ interface Card {
     shakeValue: Animated.Value;
 }
 
-export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: HafizaOyunuProps) {
+export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük Kaşif', emojiSet, oyunAdi = 'hafiza', title = '🧠 Çiftini Bul!' }: HafizaOyunuProps) {
+    // Emoji seti verilirse görsel yerine emoji kartlar kullan (temalı varyant)
+    const gorseller: { id: number; name: string; source?: any; emoji?: string }[] =
+        emojiSet && emojiSet.length >= 5
+            ? emojiSet.slice(0, 5).map((e, i) => ({ id: i + 1, name: e, emoji: e }))
+            : GORSELLER_SETI;
+    const stages = [
+        { pairs: 2, totalCards: 4, images: gorseller.slice(0, 2) },
+        { pairs: 3, totalCards: 6, images: gorseller.slice(0, 3) },
+        { pairs: 4, totalCards: 8, images: gorseller.slice(0, 4) },
+        { pairs: 5, totalCards: 10, images: gorseller.slice(0, 5) },
+        { pairs: 5, totalCards: 10, images: gorseller.slice(0, 5) },
+    ];
+
     const [currentStageIndex, setCurrentStageIndex] = useState(0);
     const [cards, setCards] = useState<Card[]>([]);
     const [selectedCards, setSelectedCards] = useState<Card[]>([]);
@@ -101,7 +109,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     }, []);
 
     const startStage = (stageIndex: number) => {
-        const config = AŞAMA_AYARLARI[stageIndex];
+        const config = stages[stageIndex];
         const stageImages = config.images;
 
         // Create pairs
@@ -112,6 +120,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 id: idx * 2,
                 matchId: imgObj.id,
                 source: imgObj.source,
+                emoji: imgObj.emoji,
                 isFlipped: false,
                 isMatched: false,
                 animValue: new Animated.Value(0),
@@ -123,6 +132,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 id: idx * 2 + 1,
                 matchId: imgObj.id,
                 source: imgObj.source,
+                emoji: imgObj.emoji,
                 isFlipped: false,
                 isMatched: false,
                 animValue: new Animated.Value(0),
@@ -300,11 +310,11 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     };
 
     const handleNextStage = () => {
-        if (currentStageIndex + 1 < AŞAMA_AYARLARI.length) {
+        if (currentStageIndex + 1 < stages.length) {
             startStage(currentStageIndex + 1);
         } else {
             // Game Over — guncel degerler ref'lerden (setTimeout closure'i eski state tutar)
-            onGameEnd('hafiza', cumulativeTimeRef.current, totalMovesRef.current, totalErrorsRef.current, undefined, {
+            onGameEnd(oyunAdi, cumulativeTimeRef.current, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: currentStageIndex + 1,
                 kazanimOdagi: 'Görsel Bellek ve Eşleştirme',
             });
@@ -358,12 +368,12 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 />
             )}
             <View style={styles.topBar}>
-                <ProgressBar current={currentStageIndex + 1} total={AŞAMA_AYARLARI.length} />
+                <ProgressBar current={currentStageIndex + 1} total={stages.length} />
             </View>
 
             <ScrollView contentContainerStyle={styles.gameContainer}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>🧠 Çiftini Bul!</Text>
+                    <Text style={styles.title}>{title}</Text>
                 </View>
 
                 <View style={styles.grid}>
@@ -392,7 +402,11 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                                         ]
                                     }
                                 ]}>
-                                    <Image source={card.source} style={[styles.cardImage, { width: CARD_SIZE * 0.6, height: CARD_SIZE * 0.6 }]} resizeMode="contain" />
+                                    {card.emoji ? (
+                                        <Text style={{ fontSize: CARD_SIZE * 0.5 }}>{card.emoji}</Text>
+                                    ) : (
+                                        <Image source={card.source} style={[styles.cardImage, { width: CARD_SIZE * 0.6, height: CARD_SIZE * 0.6 }]} resizeMode="contain" />
+                                    )}
                                 </Animated.View>
 
                                 {/* Back Face (Visible initially) */}

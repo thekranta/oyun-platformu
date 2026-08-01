@@ -17,9 +17,13 @@ import { useSound } from './SoundContext';
 interface OnlukCerceveProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
     onExit: () => void;
+    fruitEmoji?: string;              // temalı varyant için toplanan nesne emojisi
+    fruitWord?: string;               // "... topla!" etiketindeki kelime
+    oyunAdi?: string;                 // varyant oyun kimliği
+    targetRange?: [number, number];   // verilirse tüm turlar bu aralıktan hedef seçer
 }
 
-export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
+export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', fruitWord = 'elma', oyunAdi = 'Onluk Çerçeve', targetRange }: OnlukCerceveProps) {
     const { isMuted, toggleMute } = useSound();
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
@@ -62,7 +66,8 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
 
     // Game state
     const [round, setRound] = useState(1);
-    const [targetNumber, setTargetNumber] = useState(() => Math.floor(Math.random() * 5) + 1);
+    const [targetNumber, setTargetNumber] = useState(() =>
+        targetRange ? Math.floor(Math.random() * (targetRange[1] - targetRange[0] + 1)) + targetRange[0] : Math.floor(Math.random() * 5) + 1);
     const [placedFruits, setPlacedFruits] = useState<boolean[]>(Array(10).fill(false));
     const [mistakes, setMistakes] = useState(0);
     const [startTime] = useState(Date.now());
@@ -107,9 +112,11 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
             // round 1->2 gecisinde ayni hedef tekrar edebiliyordu.
             let newTarget: number;
             do {
-                newTarget = round <= 4
-                    ? Math.floor(Math.random() * 5) + 1
-                    : Math.min(Math.floor(Math.random() * 5) + 6, 10);
+                newTarget = targetRange
+                    ? Math.floor(Math.random() * (targetRange[1] - targetRange[0] + 1)) + targetRange[0]
+                    : round <= 4
+                        ? Math.floor(Math.random() * 5) + 1
+                        : Math.min(Math.floor(Math.random() * 5) + 6, 10);
             } while (newTarget === targetNumberRef.current);
             setTargetNumber(newTarget);
         }
@@ -143,7 +150,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                     if (round < 10) setRound(r => r + 1);
                     else {
                         const duration = Math.floor((Date.now() - startTime) / 1000);
-                        onGameEnd('Onluk Çerçeve', duration, 10, mistakes, undefined, {
+                        onGameEnd(oyunAdi, duration, 10, mistakes, undefined, {
                             zorlukSeviyesi: 1, kazanimOdagi: 'MAB.1 Sayı Kompozisyonu'
                         });
                     }
@@ -208,9 +215,9 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                     {/* Left */}
                     <View style={styles.instructionPanel}>
                         <View style={styles.targetCard}>
-                            <Text style={{ fontSize: 24 }}>🍎</Text>
+                            <Text style={{ fontSize: 24 }}>{fruitEmoji}</Text>
                             <Text style={[styles.targetNumber, { fontSize: containerHeight * 0.12 }]}>{targetNumber}</Text>
-                            <Text style={styles.targetLabel}>elma topla!</Text>
+                            <Text style={styles.targetLabel}>{fruitWord} topla!</Text>
                         </View>
                         <Animated.View style={[styles.counterBox, { transform: [{ scale: countPulse }] }]}>
                             <Text style={[styles.counterText, { fontSize: containerHeight * 0.07 }]}>{currentCount} / {targetNumber}</Text>
@@ -227,7 +234,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                                         const i = row * 5 + col;
                                         return (
                                             <View key={i} style={[styles.cell, { width: CELL_SIZE, height: CELL_SIZE }]}>
-                                                {placedFruits[i] && <Text style={{ fontSize: APPLE_SIZE }}>🍎</Text>}
+                                                {placedFruits[i] && <Text style={{ fontSize: APPLE_SIZE }}>{fruitEmoji}</Text>}
                                                 {!placedFruits[i] && round <= 4 && (
                                                     <Text style={[styles.cellNumber, { fontSize: CELL_SIZE * 0.28 }]}>{i + 1}</Text>
                                                 )}
@@ -254,7 +261,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
                             ]}
                             {...panResponder.panHandlers}
                         >
-                            <Text style={{ fontSize: BASKET_APPLE_SIZE * 0.6 }}>🍎</Text>
+                            <Text style={{ fontSize: BASKET_APPLE_SIZE * 0.6 }}>{fruitEmoji}</Text>
                         </Animated.View>
                         <Text style={styles.dragHint}>⬆️ Tabloya</Text>
                     </View>

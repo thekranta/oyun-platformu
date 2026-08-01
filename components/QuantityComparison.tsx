@@ -17,6 +17,8 @@ interface QuantityComparisonProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
     onExit: () => void;
     childName?: string;
+    fruits?: { left: string; right: string };  // temalı varyant için emoji seti
+    oyunAdi?: string;                            // varyant oyun kimliği
 }
 
 type QuestionType = 'MORE' | 'LESS';
@@ -33,10 +35,10 @@ interface RoundData {
     responseTime: number;
 }
 
-// Flat 2D fruit emojis (Apple and Orange for variety)
-const FRUITS = { left: '🍎', right: '🍊' };
+// Varsayılan tema: elma vs portakal (varyantlar `fruits` prop'u ile override eder)
+const DEFAULT_FRUITS = { left: '🍎', right: '🍊' };
 
-export default function QuantityComparison({ onGameEnd, onExit, childName = 'Çocuk' }: QuantityComparisonProps) {
+export default function QuantityComparison({ onGameEnd, onExit, childName = 'Çocuk', fruits = DEFAULT_FRUITS, oyunAdi = 'miktar-avcisi' }: QuantityComparisonProps) {
     const { isMuted, toggleMute } = useSound();
     const [gameReady, setGameReady] = useState(false);
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
@@ -222,7 +224,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
         // Cognitive speed score: lower response time + higher accuracy = higher score
         const cognitiveSpeedScore = Math.round((correctAnswers / 10) * 100 - (avgResponseTime / 100));
 
-        onGameEnd('miktar-avcisi', duration, 10, mistakes, undefined, {
+        onGameEnd(oyunAdi, duration, 10, mistakes, undefined, {
             // Separate columns for Supabase
             distance_effect: parseFloat(avgDistanceEffect.toFixed(2)),
             response_time: avgResponseTime,
@@ -307,7 +309,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
                         activeOpacity={0.8}
                     >
                         <Animated.View style={[styles.sideContent, { transform: [{ scale: leftScale }] }]}>
-                            {renderFruits(leftCount, FRUITS.left)}
+                            {renderFruits(leftCount, fruits.left)}
                             <View style={styles.countBadge}>
                                 <Text style={styles.countNumber}>{leftCount}</Text>
                             </View>
@@ -333,7 +335,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
                         activeOpacity={0.8}
                     >
                         <Animated.View style={[styles.sideContent, { transform: [{ scale: rightScale }] }]}>
-                            {renderFruits(rightCount, FRUITS.right)}
+                            {renderFruits(rightCount, fruits.right)}
                             <View style={styles.countBadge}>
                                 <Text style={styles.countNumber}>{rightCount}</Text>
                             </View>

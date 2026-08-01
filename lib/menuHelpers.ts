@@ -3,13 +3,17 @@ import { Ionicons } from '@expo/vector-icons';
 
 export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof Ionicons.glyphMap; displayTitle?: string; subtitle?: string }> = {
   'hafiza': { color: '#64B5F6', icon: 'grid', displayTitle: 'Çiftini Bul', subtitle: 'Hafıza ve dikkat' },
+  'hafiza-2': { color: '#4DD0E1', icon: 'paw', displayTitle: 'Hayvan Çiftleri', subtitle: 'Hafıza (hayvanlar)' },
   'siralama': { color: '#FFB74D', icon: 'list', displayTitle: 'Sıralama', subtitle: 'Sayıları diz' },
   'eksik-sayi-bul': { color: '#FF8A65', icon: 'help-circle', displayTitle: 'Eksik Sayı', subtitle: 'Eksik rakamı tamamla' },
+  'eksik-sayi-bul-2': { color: '#FF7043', icon: 'help-circle', displayTitle: 'Eksik Sayı 6-10', subtitle: '6-10 arası eksik' },
   'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Sınıflandırma' },
   'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Görsel dikkat' },
   'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcısı', subtitle: 'Hangisi daha çok?' },
+  'miktar-avcisi-2': { color: '#039BE5', icon: 'fish', displayTitle: 'Deniz Avcısı', subtitle: 'Hangisi daha çok?' },
   'sayi-komsulari': { color: '#FFA726', icon: 'train-outline', displayTitle: 'Sayı Komşuları', subtitle: 'Sayı ilişkileri' },
   'diziyi-tamamla': { color: '#BA68C8', icon: 'extension-puzzle', displayTitle: 'Diziyi Tamamla', subtitle: 'Örüntü' },
+  'diziyi-tamamla-2': { color: '#9575CD', icon: 'star', displayTitle: 'Örüntü Ustası', subtitle: 'İleri örüntü' },
   'bunu-soyle': { color: '#F06292', icon: 'mic', displayTitle: 'Bunu Söyle', subtitle: 'Sözlü ifade' },
   'kodlama': { color: '#00ACC1', icon: 'map', displayTitle: 'Minik Kaşif', subtitle: 'Kodlama' },
   'rakam-yazma': { color: '#4DB6AC', icon: 'pencil', displayTitle: 'Rakam Yazma', subtitle: 'Rakam tanıma' },
@@ -18,7 +22,9 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'sayilari-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Sayıları Birleştir', subtitle: 'Sayı sırası' },
   'yapboz': { color: '#E91E63', icon: 'apps', displayTitle: 'Yapboz', subtitle: 'Parça-bütün' },
   'golge-dedektifi': { color: '#1565C0', icon: 'eye-outline', displayTitle: 'Gölge Dedektifi', subtitle: 'Eşleştirme' },
+  'golge-dedektifi-2': { color: '#0D47A1', icon: 'eye', displayTitle: 'Gölge: Uzman', subtitle: 'Zor eşleştirme' },
   'onluk-cerceve': { color: '#FF7043', icon: 'grid-outline', displayTitle: 'Onluk Çerçeve', subtitle: 'Onluk sistem' },
+  'onluk-cerceve-2': { color: '#FFB300', icon: 'star', displayTitle: 'Yıldız Çerçevesi', subtitle: '6-10 yıldız' },
   'tarti-dengesi': { color: '#AB47BC', icon: 'color-filter-outline', displayTitle: 'Tartı Dengesi', subtitle: 'Eşitlik' },
   'sihirli-siseler': { color: '#4CAF50', icon: 'flask-outline', displayTitle: 'Sihirli Şişeler', subtitle: 'Renkleri grupla' },
   'sihirli-tuval': { color: '#3F51B5', icon: 'color-palette-outline', displayTitle: 'Sihirli Tuval', subtitle: 'Görsel dikkat' },
@@ -120,6 +126,8 @@ export const GAME_EMOJI: Record<string, string> = {
   'simetri-cizim': '🦋', 'damga-sanati': '✨', 'boyama-kitabi': '🎨', 'nokta-birlestir': '✏️',
   'sayi-boya': '🔢', 'mandala': '🌀', 'nokta-boyama': '🔵', 'cizimi-canlandir': '💫',
   'yuz-yap': '😀', 'yarisini-tamamla': '🪞', 'kum-boyasi': '🏖️', 'adim-adim': '📝', 'sayi-boya-2': '🖼️',
+  // Temalı varyantlar
+  'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

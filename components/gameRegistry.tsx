@@ -129,10 +129,35 @@ export interface GameRenderContext {
  */
 export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.ReactNode> = {
   hafiza: (c) => <HafizaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'hafiza-2': (c) => (
+    <HafizaOyunu
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      emojiSet={['🐶', '🐱', '🐭', '🐰', '🦊', '🐻', '🐼', '🐨']}
+      oyunAdi="hafiza-2"
+      title="🐾 Hayvan Çiftleri"
+    />
+  ),
   siralama: (c) => <SiralamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'eksik-sayi-bul': (c) => <EksikSayiBul onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'eksik-sayi-bul-2': (c) => <EksikSayiBul onGameEnd={c.onGameEnd} onExit={c.onExit} numbers={[6, 7, 8, 9, 10]} oyunAdi="eksik-sayi-bul-2" />,
   gruplama: (c) => <GruplamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'diziyi-tamamla': (c) => <DiziyiTamamla onGameEnd={c.onGameEnd} onLogout={c.onExit} />,
+  'diziyi-tamamla-2': (c) => (
+    <DiziyiTamamla
+      onGameEnd={c.onGameEnd}
+      onLogout={c.onExit}
+      oyunAdi="diziyi-tamamla-2"
+      title="Örüntü Ustası 🌟"
+      patterns={[
+        { sequence: ['yildiz', 'daire', 'yildiz', 'daire', 'yildiz'], answer: 'daire', options: ['daire', 'yildiz', 'kare', 'ucgen'] },
+        { sequence: ['kare', 'ucgen', 'yildiz', 'kare', 'ucgen'], answer: 'yildiz', options: ['yildiz', 'kare', 'ucgen', 'daire'] },
+        { sequence: ['daire', 'daire', 'ucgen', 'daire', 'daire'], answer: 'ucgen', options: ['ucgen', 'daire', 'yildiz', 'kare'] },
+        { sequence: ['ucgen', 'kare', 'yildiz', 'ucgen', 'kare'], answer: 'yildiz', options: ['yildiz', 'ucgen', 'kare', 'daire'] },
+        { sequence: ['yildiz', 'kare', 'daire', 'yildiz', 'kare'], answer: 'daire', options: ['daire', 'yildiz', 'kare', 'ucgen'] },
+      ]}
+    />
+  ),
   'bunu-soyle': (c) => <BunuSoyle onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   kodlama: (c) => <KodlamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'rakam-yazma': (c) => <RakamYazma onGameEnd={c.onGameEnd} onExit={c.onExit} />,
@@ -147,10 +172,47 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       onExit={c.onExit}
     />
   ),
+  'golge-dedektifi-2': (c) => (
+    <ShadowDetective
+      config={{
+        level: 2,
+        oyunAdi: 'golge-dedektifi-2',
+        roundConfigs: [
+          { count: 4, distractors: 1 },
+          { count: 4, distractors: 1 },
+          { count: 5, distractors: 2 },
+          { count: 5, distractors: 2 },
+          { count: 6, distractors: 2 },
+          { count: 6, distractors: 3 },
+        ],
+        assets: { objects: [], shadows: [] },
+      }}
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+    />
+  ),
   'onluk-cerceve': (c) => <OnlukCerceve onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'onluk-cerceve-2': (c) => (
+    <OnlukCerceve
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      fruitEmoji="🌟"
+      fruitWord="yıldız"
+      oyunAdi="onluk-cerceve-2"
+      targetRange={[6, 10]}
+    />
+  ),
   'sayi-komsulari': (c) => <SayiKomsulari onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'tarti-dengesi': (c) => <TartiDengesi onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'miktar-karsilastirma': (c) => <QuantityComparison onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'miktar-avcisi-2': (c) => (
+    <QuantityComparison
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      fruits={{ left: '🐟', right: '🐙' }}
+      oyunAdi="miktar-avcisi-2"
+    />
+  ),
   'ceviz-macera': (c) => <CevizMacera onExit={c.onExit} userId={c.ad} userEmail={c.email} userAge={parseInt(c.yas)} />,
   'aile-sepeti-macerasi': (c) => (
     <AileSepetiMacerasi onExit={c.onExit} onGameEnd={c.onGameEnd} userId={c.ad} userEmail={c.email} userAge={parseInt(c.yas)} />

@@ -16,12 +16,13 @@ interface EksikSayiBulProps {
     extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string },
   ) => void;
   onExit?: () => void;
+  numbers?: number[];   // temalı varyant için sayı aralığı (ör. [6,7,8,9,10])
+  oyunAdi?: string;     // varyant oyun kimliği
 }
 
 type DropZone = { x: number; y: number; width: number; height: number };
 
-const NUMBERS = [1, 2, 3, 4, 5];
-const TOTAL_STAGES = 5;
+const DEFAULT_NUMBERS = [1, 2, 3, 4, 5];
 const { width } = Dimensions.get('window');
 const CARD_SIZE = width > 600 ? 96 : 72;
 const OPTION_SIZE = width > 600 ? 90 : 68;
@@ -102,7 +103,8 @@ const DraggableOption = ({
   );
 };
 
-export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
+export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMBERS, oyunAdi = 'eksik-sayi-bul' }: EksikSayiBulProps) {
+  const TOTAL_STAGES = numbers.length;
   const [currentStage, setCurrentStage] = useState(0);
   const [moves, setMoves] = useState(0);
   const [errors, setErrors] = useState(0);
@@ -125,11 +127,11 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
     timersRef.current.forEach(clearTimeout);
   }, []);
   const [dropZone, setDropZone] = useState<DropZone | null>(null);
-  const stageOrderRef = useRef<number[]>(shuffle(NUMBERS));
+  const stageOrderRef = useRef<number[]>(shuffle(numbers));
 
   const missingNumber = stageOrderRef.current[currentStage];
-  const options = useMemo(() => shuffle(NUMBERS), [currentStage]);
-  const sequence = NUMBERS.map(n => (n === missingNumber ? null : n));
+  const options = useMemo(() => shuffle(numbers), [currentStage]);
+  const sequence = numbers.map(n => (n === missingNumber ? null : n));
 
   const measureDropZone = () => {
     if (!dropZoneRef.current) return;
@@ -148,7 +150,7 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
       requestAnimationFrame(measureDropZone);
     } else {
       const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-      onGameEnd('eksik-sayi-bul', duration, movesRef.current, errorsRef.current, undefined, {
+      onGameEnd(oyunAdi, duration, movesRef.current, errorsRef.current, undefined, {
         zorlukSeviyesi: currentStage + 1,
         kazanimOdagi: 'Sayı Dizisi Tamamlama',
       });
@@ -209,7 +211,7 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
           <Image source={PLATFORM_LOGO} style={styles.logo} resizeMode="contain" />
           <View>
             <Text style={styles.title}>Eksik Sayiyi Bul</Text>
-            <Text style={styles.subtitle}>1-5 arasinda eksik sayiyi surukle birak.</Text>
+            <Text style={styles.subtitle}>{numbers[0]}-{numbers[numbers.length - 1]} arasinda eksik sayiyi surukle birak.</Text>
           </View>
         </View>
 

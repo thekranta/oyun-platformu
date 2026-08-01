@@ -21,6 +21,8 @@ export interface ShadowDetectiveConfig {
     level: number;
     itemCount?: number;
     hasDistractors?: boolean;
+    roundConfigs?: { count: number; distractors: number }[];  // zorluk varyantı için tur ayarları
+    oyunAdi?: string;                                          // varyant oyun kimliği
     assets?: {
         objects?: ImageSourcePropType[];
         shadows?: ImageSourcePropType[];
@@ -136,7 +138,8 @@ function DraggableAnimal({ animal, size, isMatched, onDrop }: {
 
 // ============= MAIN =============
 export default function ShadowDetective({ config, onGameEnd, onExit, childName = 'Dedektif' }: ShadowDetectiveProps) {
-    const TOTAL = 10;
+    const ROUNDS = config.roundConfigs ?? ROUND_CONFIGS;
+    const TOTAL = ROUNDS.length;
     const [round, setRound] = useState(1);
     const [animals, setAnimals] = useState<AnimalAsset[]>([]);
     const [shadows, setShadows] = useState<AnimalAsset[]>([]);
@@ -161,7 +164,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
     // Unmount temizligi icin bekleyen setTimeout id'leri
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-    const cfg = ROUND_CONFIGS[round - 1] || ROUND_CONFIGS[0];
+    const cfg = ROUNDS[round - 1] || ROUNDS[0];
 
     // Responsive boyutlandırma
     const totalItems = cfg.count + cfg.distractors;
@@ -234,7 +237,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
 
     const finishGame = () => {
         const dur = Math.floor((Date.now() - gameStart) / 1000);
-        onGameEnd('Gölge Dedektifi', dur, movesRef.current, totalErrorsRef.current, undefined, {
+        onGameEnd(config.oyunAdi ?? 'Gölge Dedektifi', dur, movesRef.current, totalErrorsRef.current, undefined, {
             zorlukSeviyesi: config.level,
             kazanimOdagi: 'Görsel Çözümleme',
             tur_verisi: roundDataRef.current,

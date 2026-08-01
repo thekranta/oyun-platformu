@@ -5,17 +5,20 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 
-interface DiziyiTamamlaProps {
-    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
-    onLogout: () => void;
-}
+export type ShapeType = 'kare' | 'ucgen' | 'daire' | 'yildiz';
 
-type ShapeType = 'kare' | 'ucgen' | 'daire' | 'yildiz';
-
-interface Pattern {
+export interface Pattern {
     sequence: ShapeType[];
     answer: ShapeType;
     options: ShapeType[];
+}
+
+interface DiziyiTamamlaProps {
+    onGameEnd: (oyunAdi: string, sure: number, finalHamle: number, finalHata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;
+    onLogout: () => void;
+    patterns?: Pattern[];   // temalı varyant için örüntü seti
+    oyunAdi?: string;       // varyant oyun kimliği
+    title?: string;         // başlık metni
 }
 
 const SHAPES = {
@@ -25,7 +28,7 @@ const SHAPES = {
     yildiz: asset('/images/yildiz.png'),
 };
 
-const PATTERNS: Pattern[] = [
+const DEFAULT_PATTERNS: Pattern[] = [
     {
         sequence: ['kare', 'daire', 'kare', 'daire', 'kare'],
         answer: 'daire',
@@ -53,7 +56,7 @@ const PATTERNS: Pattern[] = [
     }
 ];
 
-export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProps) {
+export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_PATTERNS, oyunAdi = 'diziyi-tamamla', title = 'Diziyi Tamamla 🧩' }: DiziyiTamamlaProps) {
     const [currentStage, setCurrentStage] = useState(0);
     const [, setTotalMoves] = useState(0);
     const [, setTotalErrors] = useState(0);
@@ -75,7 +78,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
     // Unmount temizligi icin bekleyen setTimeout id'leri
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-    const currentPattern = PATTERNS[currentStage];
+    const currentPattern = patterns[currentStage];
 
     const shuffledOptions = React.useMemo(() => {
         const options = [...currentPattern.options];
@@ -168,7 +171,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
     const handleNextStage = () => {
         setShowConfetti(false);
 
-        if (currentStage < PATTERNS.length - 1) {
+        if (currentStage < patterns.length - 1) {
             setCurrentStage(prev => prev + 1);
             setStageCompleted(false);
             setSelectedOption(null);
@@ -176,7 +179,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
             scaleAnim.setValue(1);
         } else {
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
-            onGameEnd('diziyi-tamamla', totalTime, totalMovesRef.current, totalErrorsRef.current, undefined, {
+            onGameEnd(oyunAdi, totalTime, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: currentStage + 1,
                 kazanimOdagi: 'Örüntü Algısı ve Mantıksal Düşünme',
             });
@@ -198,7 +201,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
             {/* Üst Bar: Başlık ve Ses */}
             <View style={styles.topBar}>
                 <View style={{ width: 40 }} /> {/* Spacer for centering title */}
-                <Text style={styles.title}>Diziyi Tamamla 🧩</Text>
+                <Text style={styles.title}>{title}</Text>
 
                 <View style={styles.soundContainer}>
                     <TouchableOpacity
@@ -212,7 +215,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout }: DiziyiTamamlaProp
 
             {/* Progress Bar */}
             <View style={styles.progressContainer}>
-                <View style={[styles.progressBar, { width: `${((currentStage) / PATTERNS.length) * 100}%` }]} />
+                <View style={[styles.progressBar, { width: `${((currentStage) / patterns.length) * 100}%` }]} />
             </View>
 
             {/* Oyun Alanı */}

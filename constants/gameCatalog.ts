@@ -12,14 +12,18 @@ export interface GameCatalogItem {
 
 export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'hafiza', title: 'Hafiza Oyunu', status: 'core', domain: 'Bilissel', skillFocus: 'Bellek ve dikkat', routeKey: 'hafiza' },
+  { id: 'hafiza-2', title: 'Hayvan Ciftleri', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel bellek (hayvan temasi)', routeKey: 'hafiza-2' },
   { id: 'siralama', title: 'Siralama Oyunu', status: 'core', domain: 'Matematik', skillFocus: 'Siralama ve dizilim', routeKey: 'siralama' },
   { id: 'eksik-sayi-bul', title: 'Eksik Sayi Bul', status: 'core', domain: 'Matematik', skillFocus: 'Sayi farkindaligi', routeKey: 'eksik-sayi-bul' },
+  { id: 'eksik-sayi-bul-2', title: 'Eksik Sayi Bul 6-10', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi farkindaligi (6-10)', routeKey: 'eksik-sayi-bul-2' },
   { id: 'gruplama', title: 'Gruplama Oyunu', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma', routeKey: 'gruplama' },
   { id: 'mutfak-dedektifi', title: 'Mutfak Dedektifi', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma ve gorsel dikkat', routeKey: 'mutfak-dedektifi' },
   { id: 'miktar-karsilastirma', title: 'Miktar Karsilastirma', status: 'core', domain: 'Matematik', skillFocus: 'Miktar algisi', routeKey: 'miktar-karsilastirma' },
+  { id: 'miktar-avcisi-2', title: 'Deniz Avcisi', status: 'secondary', domain: 'Matematik', skillFocus: 'Miktar algisi (deniz temasi)', routeKey: 'miktar-avcisi-2' },
   { id: 'sayi-komsulari', title: 'Sayi Komsulari', status: 'core', domain: 'Matematik', skillFocus: 'Sayi iliskileri', routeKey: 'sayi-komsulari' },
 
   { id: 'diziyi-tamamla', title: 'Diziyi Tamamla', status: 'secondary', domain: 'Bilissel', skillFocus: 'Oruntu', routeKey: 'diziyi-tamamla' },
+  { id: 'diziyi-tamamla-2', title: 'Oruntu Ustasi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Oruntu (ileri seviye)', routeKey: 'diziyi-tamamla-2' },
   { id: 'bunu-soyle', title: 'Bunu Soyle', status: 'secondary', domain: 'Dil', skillFocus: 'Sozlu ifade', routeKey: 'bunu-soyle' },
   { id: 'kodlama', title: 'Kodlama Oyunu', status: 'secondary', domain: 'Bilissel', skillFocus: 'Algoritmik dusunme', routeKey: 'kodlama' },
   { id: 'rakam-yazma', title: 'Rakam Yazma', status: 'secondary', domain: 'Matematik', skillFocus: 'Rakam tanima ve yazma', routeKey: 'rakam-yazma' },
@@ -28,7 +32,9 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'sayilari-birlestir', title: 'Sayilari Birlestir', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi sirasi', routeKey: 'sayilari-birlestir' },
   { id: 'yapboz', title: 'Yapboz Oyunu', status: 'secondary', domain: 'Bilissel', skillFocus: 'Parca-butun iliskisi', routeKey: 'yapboz' },
   { id: 'golge-dedektifi', title: 'Golge Dedektifi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel eslestirme', routeKey: 'golge-dedektifi' },
+  { id: 'golge-dedektifi-2', title: 'Golge Dedektifi: Uzman', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel eslestirme (ileri seviye)', routeKey: 'golge-dedektifi-2' },
   { id: 'onluk-cerceve', title: 'Onluk Cerceve', status: 'secondary', domain: 'Matematik', skillFocus: 'Onluk sistem farkindaligi', routeKey: 'onluk-cerceve' },
+  { id: 'onluk-cerceve-2', title: 'Yildiz Cercevesi', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi kompozisyonu (6-10, yildiz temasi)', routeKey: 'onluk-cerceve-2' },
   { id: 'tarti-dengesi', title: 'Tarti Dengesi', status: 'secondary', domain: 'Matematik', skillFocus: 'Denge ve karsilastirma', routeKey: 'tarti-dengesi' },
   { id: 'sihirli-siseler', title: 'Sihirli Siseler', status: 'secondary', domain: 'Bilissel', skillFocus: 'Dikkat ve problem cozme', routeKey: 'sihirli-siseler' },
   { id: 'sihirli-tuval', title: 'Sihirli Tuval', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel dikkat', routeKey: 'sihirli-tuval' },

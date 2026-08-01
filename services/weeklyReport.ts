@@ -117,6 +117,7 @@ const GAME_EMOJI: Record<string, string> = {
     'miktar-avcisi': '🎯', 'golge-dedektifi': '🔍', 'sihirli-tuval': '🎨',
     'uzay-bloklari': '🌌', 'yapboz': '🧩', 'hafiza': '🃏', 'eslestirme': '🃏',
     'onluk-cerceve': '🧮', 'tarti-dengesi': '⚖️', 'rakam-yazma': '✏️', 'rakam-yazma-2': '🔟',
+    'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
     'yaratici-cizim': '🖍️', 'duygu-yuzleri': '😊', 'sayi-komsulari': '🔗',
     'sayilari-birlestir': '🔗', 'diziyi-tamamla': '🔢', 'sihirli-siseler': '✨',
     'ceviz-macera': '🌰', 'aile-sepeti': '🧺', 'bunu-soyle': '🗣️',
