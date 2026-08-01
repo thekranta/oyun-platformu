@@ -380,6 +380,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
 
             {!gameReady && (
                 <CountdownOverlay
+                    interaction="draw"
                     message="Sayıları küçükten büyüğe sırayla birleştir!"
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}

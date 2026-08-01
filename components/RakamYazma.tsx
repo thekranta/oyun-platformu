@@ -435,6 +435,7 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
 
             {!gameReady && (
                 <CountdownOverlay
+                    interaction="draw"
                     message="Rakamları parmağınla çiz!"
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}

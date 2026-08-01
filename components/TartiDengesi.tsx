@@ -203,6 +203,7 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
+        interaction="drag"
                     message="Tartı Dengesi oyununa hoş geldin! Teraziyi dengele!"
                     childName={childName}
                     countdownSeconds={5}

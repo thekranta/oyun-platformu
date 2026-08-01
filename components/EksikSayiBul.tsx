@@ -278,6 +278,7 @@ export default function EksikSayiBul({ onGameEnd, onExit }: EksikSayiBulProps) {
 
       {!gameReady && (
         <CountdownOverlay
+                    interaction="drag"
           message="Sıradaki eksik sayıyı bul ve yerine koy!"
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}

@@ -346,6 +346,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
+        interaction="drag"
                     message="Aynı renk topları birbirine bağla ve patlat!"
                     childName={childName}
                     countdownSeconds={5}

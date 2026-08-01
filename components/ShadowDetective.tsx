@@ -276,6 +276,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
+        interaction="drag"
                     message="Gölge Dedektifi oyununa hoş geldin! Hayvanları gölgeleriyle eşleştir!"
                     childName={childName}
                     countdownSeconds={5}

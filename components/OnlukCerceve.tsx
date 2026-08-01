@@ -270,6 +270,7 @@ export default function OnlukCerceve({ onGameEnd, onExit }: OnlukCerceveProps) {
 
             {!gameReady && (
                 <CountdownOverlay
+                    interaction="drag"
                     message="Söylenen sayı kadar meyveyi çerçeveye koy!"
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}
