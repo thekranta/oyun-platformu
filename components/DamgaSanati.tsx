@@ -15,8 +15,16 @@ const STAMPS = ['🌸', '⭐', '❤️', '🦋', '🐞', '🌈', '🍄', '🐝',
 const BGS = [
   { key: 'gok', color: '#BBDEFB', name: 'Gökyüzü' },
   { key: 'cayir', color: '#C8E6C9', name: 'Çayır' },
-  { key: 'gece', color: '#3949AB', name: 'Gece' },
   { key: 'deniz', color: '#B2EBF2', name: 'Deniz' },
+  { key: 'pembe', color: '#F8BBD0', name: 'Pembe' },
+  { key: 'gul', color: '#F48FB1', name: 'Gül' },
+  { key: 'kirmizi', color: '#FF8A80', name: 'Kırmızı' },
+  { key: 'turuncu', color: '#FFCC80', name: 'Turuncu' },
+  { key: 'sari', color: '#FFF59D', name: 'Sarı' },
+  { key: 'mor', color: '#CE93D8', name: 'Mor' },
+  { key: 'lila', color: '#D1C4E9', name: 'Lila' },
+  { key: 'krem', color: '#FFF8E1', name: 'Krem' },
+  { key: 'gece', color: '#3949AB', name: 'Gece' },
 ];
 const SIZES = [34, 52, 72];
 
@@ -121,12 +129,14 @@ export default function DamgaSanati({ onGameEnd, onExit }: Props) {
         ))}
       </View>
 
-      {/* Arka plan + boyut */}
-      <View style={styles.toolsRow}>
+      {/* Arka plan renkleri */}
+      <View style={styles.bgRow}>
         {BGS.map((b) => (
           <TouchableOpacity key={b.key} style={[styles.bgBtn, { backgroundColor: b.color }, bg.key === b.key && styles.bgActive]} onPress={() => setBg(b)} activeOpacity={0.85} />
         ))}
-        <View style={styles.divider} />
+      </View>
+      {/* Damga boyutu */}
+      <View style={styles.sizeRow}>
         {SIZES.map((s, idx) => (
           <TouchableOpacity key={s} style={[styles.sizeOpt, size === s && styles.sizeOptActive]} onPress={() => setSize(s)} activeOpacity={0.85}>
             <Text style={{ fontSize: 14 + idx * 6 }}>{active}</Text>
@@ -154,10 +164,10 @@ const styles = StyleSheet.create({
   stampActive: { borderColor: '#00ACC1', transform: [{ scale: 1.1 }] },
   stampEmoji: { fontSize: 26 },
 
-  toolsRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 12, flexWrap: 'wrap' },
-  bgBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 3, borderColor: 'rgba(0,0,0,0.1)' },
-  bgActive: { borderColor: '#212121', transform: [{ scale: 1.12 }] },
-  divider: { width: 2, height: 30, backgroundColor: '#B0BEC5', marginHorizontal: 6, borderRadius: 1 },
+  bgRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, paddingTop: 10, paddingHorizontal: 12, maxWidth: 470 },
+  sizeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, paddingVertical: 10 },
+  bgBtn: { width: 34, height: 34, borderRadius: 17, borderWidth: 3, borderColor: 'rgba(0,0,0,0.12)' },
+  bgActive: { borderColor: '#212121', transform: [{ scale: 1.15 }] },
   sizeOpt: { width: 50, height: 50, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#E0E0E0' },
   sizeOptActive: { borderColor: '#00ACC1', backgroundColor: '#E0F7FA' },
 });

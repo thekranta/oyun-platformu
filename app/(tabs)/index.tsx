@@ -1,5 +1,6 @@
 import DynamicBackground from '@/components/DynamicBackground';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
+import { SONGS } from '@/components/MuzikCalar';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
@@ -671,7 +672,7 @@ export default function App() {
                   <BobbingEmoji emoji={cat.emoji} size={46} delay={i * 100} style={styles.catEmoji} />
                   <Text style={styles.catLabel} numberOfLines={1}>{cat.label}</Text>
                   <View style={styles.catCountPill}>
-                    <Text style={styles.catCountText}>{count} oyun</Text>
+                    <Text style={styles.catCountText}>{cat.domain === 'Muzik' ? `${SONGS.length} şarkı` : `${count} oyun`}</Text>
                   </View>
                 </BouncyCard>
               );
