@@ -40,6 +40,7 @@ import DamgaSanati from './DamgaSanati';
 import BoyamaKitabi from './BoyamaKitabi';
 import NoktaBirlestir from './NoktaBirlestir';
 import SayiBoya from './SayiBoya';
+import SayiBoya2 from './SayiBoya2';
 import Mandala from './Mandala';
 import NoktaBoyama from './NoktaBoyama';
 import CizimiCanlandir from './CizimiCanlandir';
@@ -212,6 +213,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'boyama-kitabi': (c) => <BoyamaKitabi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'nokta-birlestir': (c) => <NoktaBirlestir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'sayi-boya': (c) => <SayiBoya onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'sayi-boya-2': (c) => <SayiBoya2 onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'mandala': (c) => <Mandala onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'nokta-boyama': (c) => <NoktaBoyama onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'cizimi-canlandir': (c) => <CizimiCanlandir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

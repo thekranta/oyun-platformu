@@ -146,6 +146,7 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'yarisini-tamamla': { displayName: 'Yarısını Tamamla', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Simetri farkındalığı; resmin eksik yarısını çizerek tamamlama', badgeAlan: 'Sanat / Simetri' },
   'kum-boyasi': { displayName: 'Kum Boyası', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Duyusal yaratıcı ifade; akan renklerle serbest boyama', badgeAlan: 'Sanat / Boyama' },
   'adim-adim': { displayName: 'Adım Adım Çizim', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yönerge takibiyle adım adım çizim; el-göz koordinasyonu (yazma öncesi)', badgeAlan: 'Sanat / Rehberli' },
+  'sayi-boya-2': { displayName: 'Sayı-Boya 2', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Detaylı sayı-renk eşleştirmeli boyama (daha büyük grid, 6 renk); renk-sayı ilişkisi + ince motor', badgeAlan: 'Sanat / Sayı-Boya' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

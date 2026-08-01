@@ -86,6 +86,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'yarisini-tamamla', title: 'Yarisini Tamamla', status: 'creative', domain: 'Sanat', skillFocus: 'Simetrik tamamlama', routeKey: 'yarisini-tamamla' },
   { id: 'kum-boyasi', title: 'Kum Boyasi', status: 'creative', domain: 'Sanat', skillFocus: 'Duyusal boyama', routeKey: 'kum-boyasi' },
   { id: 'adim-adim', title: 'Adim Adim Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Rehberli cizim', routeKey: 'adim-adim' },
+  { id: 'sayi-boya-2', title: 'Sayi-Boya 2', status: 'creative', domain: 'Sanat', skillFocus: 'Detayli sayi-boya', routeKey: 'sayi-boya-2' },
 
   { id: 'vucudum', title: 'Vucudum', status: 'secondary', domain: 'Saglik', skillFocus: 'Beden farkindaligi', routeKey: 'vucudum' },
   { id: 'duyularimiz', title: 'Duyularimiz', status: 'secondary', domain: 'Saglik', skillFocus: 'Duyu organlari', routeKey: 'duyularimiz' },

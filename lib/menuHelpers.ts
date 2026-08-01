@@ -73,6 +73,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'yarisini-tamamla': { color: '#7E57C2', icon: 'contract', displayTitle: 'Yarısını Tamamla', subtitle: 'Diğer yarısını çiz' },
   'kum-boyasi': { color: '#F57C00', icon: 'color-fill', displayTitle: 'Kum Boyası', subtitle: 'Akan renkler' },
   'adim-adim': { color: '#00ACC1', icon: 'footsteps', displayTitle: 'Adım Adım Çizim', subtitle: 'Rehberli çiz' },
+  'sayi-boya-2': { color: '#5E35B1', icon: 'apps', displayTitle: 'Sayı-Boya 2', subtitle: 'Detaylı boyama' },
   'vucudum': { color: '#EF5350', icon: 'body', displayTitle: 'Vücudum', subtitle: 'Organları göster' },
   'duyularimiz': { color: '#8E24AA', icon: 'eye', displayTitle: 'Duyularımız', subtitle: 'Hangi duyu?' },
   'saglikli-yiyecek': { color: '#43A047', icon: 'nutrition', displayTitle: 'Sağlıklı mı?', subtitle: 'Sağlıklıyı seç' },
@@ -117,7 +118,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'sicak-soguk': '🌡️',
   'simetri-cizim': '🦋', 'damga-sanati': '✨', 'boyama-kitabi': '🎨', 'nokta-birlestir': '✏️',
   'sayi-boya': '🔢', 'mandala': '🌀', 'nokta-boyama': '🔵', 'cizimi-canlandir': '💫',
-  'yuz-yap': '😀', 'yarisini-tamamla': '🪞', 'kum-boyasi': '🏖️', 'adim-adim': '📝',
+  'yuz-yap': '😀', 'yarisini-tamamla': '🪞', 'kum-boyasi': '🏖️', 'adim-adim': '📝', 'sayi-boya-2': '🖼️',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

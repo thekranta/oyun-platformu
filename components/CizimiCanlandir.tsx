@@ -1,13 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { captureRef } from 'react-native-view-shot';
 import { speak } from '../services/speechService';
 
 // ============================================
 // ✨ ÇİZİMİNİ CANLANDIR - Çiz, sonra çizimin oynasın (Sanat)
-// Serbest çizim + "Canlandır" düğmesi: çizim hafifçe sallanıp zıplar.
-// Yaratıcı ifade + eğlence. (Kayıt yok — oynatma odaklı.)
+// Serbest çizim + "Canlandır" düğmesi: çizim hafifçe sallanıp zıplar (sadece
+// animasyon; oyunu bitirmez). Kaydet düğmesi eseri panele gönderir.
 // ============================================
 
 const USE_NATIVE = true;
@@ -24,7 +25,7 @@ interface Props {
   onGameEnd: (
     oyunAdi: string, sure: number, finalHamle: number, finalHata: number,
     algilananKelime?: string,
-    extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string },
+    extraData?: { cizimVerisi?: string; cizimResimBase64?: string; cizimResimFormat?: 'png' | 'jpeg'; zorlukSeviyesi?: number; kazanimOdagi?: string },
   ) => void;
   onExit?: () => void;
   childName?: string;
@@ -34,10 +35,12 @@ export default function CizimiCanlandir({ onGameEnd, onExit }: Props) {
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
   const liveStrokeRef = useRef<Stroke | null>(null);
+  const canvasRef = useRef<View>(null);
   const [canvas, setCanvas] = useState({ w: 0, h: 0 });
   const [color, setColor] = useState(COLORS[0]);
   const [size, setSize] = useState(SIZES[1]);
   const [playing, setPlaying] = useState(false);
+  const [saved, setSaved] = useState(false);
   const startTimeRef = useRef(Date.now());
   const colorRef = useRef(color); colorRef.current = color;
   const sizeRef = useRef(size); sizeRef.current = size;
@@ -72,6 +75,7 @@ export default function CizimiCanlandir({ onGameEnd, onExit }: Props) {
     const next = { ...base, points };
     liveStrokeRef.current = next;
     setLiveStroke(next);
+    setSaved(false);
   };
   const finishStroke = () => {
     const c = liveStrokeRef.current;
@@ -94,22 +98,46 @@ export default function CizimiCanlandir({ onGameEnd, onExit }: Props) {
     return pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
   };
 
-  const clearCanvas = () => { setStrokes([]); setLiveStroke(null); liveStrokeRef.current = null; setPlaying(false); };
+  const clearCanvas = () => { setStrokes([]); setLiveStroke(null); liveStrokeRef.current = null; setPlaying(false); setSaved(false); };
   const hasContent = strokes.length > 0 || !!liveStroke;
 
+  // SADECE animasyon; oyunu BİTİRMEZ.
   const togglePlay = () => {
     if (!hasContent) return;
-    const nextPlaying = !playing;
-    setPlaying(nextPlaying);
-    if (nextPlaying) {
-      speak('Bak, çizimin oynuyor!', { instructions: HAPPY_VOICE });
-      const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-      const totalPoints = strokes.reduce((s, st) => s + st.points.length, 0);
-      onGameEnd('cizimi-canlandir', duration, totalPoints, 0, undefined, {
-        zorlukSeviyesi: 1,
-        kazanimOdagi: 'Sanat: Yaratıcı İfade (çizim + canlandırma)',
-      });
-    }
+    const next = !playing;
+    setPlaying(next);
+    if (next) speak('Bak, çizimin oynuyor!', { instructions: HAPPY_VOICE });
+  };
+
+  // Kaydet: eseri panele gönderir (oyunu bitirir).
+  const saveDrawing = async () => {
+    const bundle = liveStrokeRef.current ? [...strokes, liveStrokeRef.current] : strokes;
+    if (bundle.length === 0) return;
+    setPlaying(false);
+    const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
+    const totalPoints = bundle.reduce((s, st) => s + st.points.length, 0);
+    let base64: string | undefined;
+    try {
+      if (canvasRef.current) {
+        let data: string | undefined;
+        if (Platform.OS === 'web') {
+          const { toPng } = await import('html-to-image');
+          data = await toPng(canvasRef.current as unknown as HTMLElement, { pixelRatio: 2, cacheBust: true, backgroundColor: CANVAS_BG });
+        } else {
+          data = await captureRef(canvasRef, { format: 'png', quality: 0.9, result: 'base64' });
+        }
+        if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
+      }
+    } catch (e) { console.warn('Resim olusturulamadi:', e); }
+    speak('Çizimini kaydettim! Aferin.', { instructions: HAPPY_VOICE });
+    onGameEnd('cizimi-canlandir', duration, totalPoints, 0, undefined, {
+      cizimVerisi: JSON.stringify({ strokes: bundle }),
+      cizimResimBase64: base64,
+      cizimResimFormat: 'png',
+      zorlukSeviyesi: 1,
+      kazanimOdagi: 'Sanat: Yaratıcı İfade (çizim + canlandırma)',
+    });
+    setSaved(true);
   };
 
   const rotate = wiggle.interpolate({ inputRange: [-1, 1], outputRange: ['-5deg', '5deg'] });
@@ -122,14 +150,20 @@ export default function CizimiCanlandir({ onGameEnd, onExit }: Props) {
           <Ionicons name="arrow-back" size={24} color="#EC407A" />
         </TouchableOpacity>
         <Text style={styles.title}>✨ Çizimini Canlandır</Text>
-        <TouchableOpacity style={styles.smallBtn} onPress={clearCanvas} disabled={!hasContent} activeOpacity={0.8}>
-          <Ionicons name="trash-outline" size={20} color={hasContent ? '#e53935' : '#ccc'} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity style={styles.smallBtn} onPress={clearCanvas} disabled={!hasContent} activeOpacity={0.8}>
+            <Ionicons name="trash-outline" size={20} color={hasContent ? '#e53935' : '#ccc'} />
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.smallBtn, styles.saveBtnSm, saved && styles.savedBtnSm]} onPress={saveDrawing} disabled={!hasContent} activeOpacity={0.8}>
+            <Ionicons name={saved ? 'checkmark' : 'save'} size={20} color={saved ? '#fff' : hasContent ? '#43A047' : '#ccc'} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Text style={styles.hint}>{playing ? 'Çizimin dans ediyor! 💃' : 'Bir şey çiz, sonra "Canlandır"a bas!'}</Text>
 
       <View
+        ref={canvasRef}
         style={styles.canvas}
         onLayout={(e) => setCanvas({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
         {...panResponder.panHandlers}
@@ -171,7 +205,10 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
   iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   title: { fontSize: 18, fontWeight: '900', color: '#EC407A' },
+  headerActions: { flexDirection: 'row', gap: 8 },
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
+  saveBtnSm: { borderWidth: 2, borderColor: '#43A047' },
+  savedBtnSm: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
   hint: { fontSize: 15, fontWeight: '700', color: '#C2185B', marginVertical: 6, textAlign: 'center', paddingHorizontal: 16 },
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#F8BBD0', overflow: 'hidden' },
   playBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EC407A', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 26, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 4 },
