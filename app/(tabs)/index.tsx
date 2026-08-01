@@ -701,6 +701,12 @@ export default function App() {
                   <Ionicons name="close" size={26} color="#fff" />
                 </TouchableOpacity>
               </View>
+              {categoryGames.some(g => g.adaptive) && (
+                <View style={styles.adaptiveLegend}>
+                  <Text style={styles.adaptiveBadgeText}>📈</Text>
+                  <Text style={styles.adaptiveLegendText}>= Akıllı zorluk: çocuğa göre uyarlanır</Text>
+                </View>
+              )}
               <ScrollView contentContainerStyle={styles.sheetGrid}>
                 {categoryGames.map((game, i) => {
                   const meta = GAME_CARD_META[game.id] || {
@@ -716,6 +722,11 @@ export default function App() {
                       onPress={() => { const rk = game.routeKey; setSelectedCategory(null); oyunuBaslat(rk); }}
                       style={[styles.gameCard, { backgroundColor: meta.color }]}
                     >
+                      {game.adaptive && (
+                        <View style={styles.adaptiveBadge}>
+                          <Text style={styles.adaptiveBadgeText}>📈</Text>
+                        </View>
+                      )}
                       <View style={styles.gameEmojiBadge}>
                         <BobbingEmoji emoji={GAME_EMOJI[game.id] || '🎮'} size={46} delay={i * 120} />
                       </View>
@@ -988,6 +999,10 @@ const styles = StyleSheet.create({
   sheetGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, padding: 20, paddingBottom: 40 },
   gameCard: { width: 150, height: 158, borderRadius: 26, padding: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#607D8B', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.22, shadowRadius: 4, elevation: 5 },
   gameEmojiBadge: { width: 82, height: 82, borderRadius: 41, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 2 },
+  adaptiveBadge: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 12, paddingHorizontal: 6, paddingVertical: 2, zIndex: 5, elevation: 3 },
+  adaptiveBadgeText: { fontSize: 14 },
+  adaptiveLegend: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 12, paddingBottom: 2 },
+  adaptiveLegendText: { color: '#607D8B', fontSize: 12, fontWeight: '600' },
   gameCardTitle: { color: '#fff', fontSize: 15, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
   gameCardSub: { color: 'rgba(255,255,255,0.9)', fontSize: 11, textAlign: 'center', marginTop: 2 },
 

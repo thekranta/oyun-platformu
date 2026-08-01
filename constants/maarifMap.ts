@@ -55,6 +55,7 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'tarti-dengesi': { displayName: 'Tartı Dengesi', alan: 'Matematik', surec: 'Matematiksel Problem Çözme', cikti: 'MAB.5', ciktiAciklama: 'Matematiksel problemlerin parçaları arasındaki ilişkileri açıklar' },
   'miktar-avcisi': { displayName: 'Miktar Avcısı', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme; nicelikleri karşılaştırır (çok/az)' },
   'miktar-avcisi-2': { displayName: 'Deniz Avcısı', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme; nicelikleri karşılaştırır (çok/az), deniz teması' },
+  'akilli-sayi-avi': { displayName: 'Akıllı Sayı Avı', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Ritmik ve algısal sayabilme; nesneleri sayıp doğru sayıyla eşleştirir (performansa göre uyarlanır zorluk)' },
   'sihirli-siseler': { displayName: 'Sihirli Şişeler', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesnelerin özelliklerini çözümleyebilme; renklere göre gruplama' },
   'renkli-baglantalar': { displayName: 'Renkli Bağlantılar', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesnelerin özelliklerini çözümleyebilme; eşleştirme ve dikkat' },
   'mutfak-dedektifi': { displayName: 'Mutfak Dedektifi', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesnelerin özelliklerini çözümleyebilme; görsel dikkat ve sınıflandırma' },

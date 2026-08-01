@@ -79,6 +79,7 @@ import OnlukCerceve from './OnlukCerceve';
 import QuantityComparison from './QuantityComparison';
 import RakamYazma from './RakamYazma';
 import RakamYazma2 from './RakamYazma2';
+import AkilliSayiAvi from './AkilliSayiAvi';
 import RenkliBaglantalar from './RenkliBaglantalar';
 import RenkSepetleri from './RenkSepetleri';
 import SayiKomsulari from './SayiKomsulari';
@@ -141,6 +142,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   siralama: (c) => <SiralamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'eksik-sayi-bul': (c) => <EksikSayiBul onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'eksik-sayi-bul-2': (c) => <EksikSayiBul onGameEnd={c.onGameEnd} onExit={c.onExit} numbers={[6, 7, 8, 9, 10]} oyunAdi="eksik-sayi-bul-2" />,
+  'akilli-sayi-avi': (c) => <AkilliSayiAvi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   gruplama: (c) => <GruplamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'diziyi-tamamla': (c) => <DiziyiTamamla onGameEnd={c.onGameEnd} onLogout={c.onExit} />,
   'diziyi-tamamla-2': (c) => (

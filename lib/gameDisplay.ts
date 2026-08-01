@@ -47,6 +47,8 @@ const GAME_EMOJI: Record<string, string> = {
     // Temalı varyantlar
     'rakam-yazma-2': '🔟', 'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟',
     'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
+    // Adaptif oyunlar
+    'akilli-sayi-avi': '🔢',
 };
 
 export interface GameDisplay {

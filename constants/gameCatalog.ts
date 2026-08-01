@@ -8,6 +8,7 @@ export interface GameCatalogItem {
   skillFocus: string;
   routeKey: string;
   notes?: string;
+  adaptive?: boolean;   // true => performansa göre uyarlanır (dinamik) zorluk; kartta 📈 rozeti
 }
 
 export const GAME_CATALOG: GameCatalogItem[] = [
@@ -16,6 +17,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'siralama', title: 'Siralama Oyunu', status: 'core', domain: 'Matematik', skillFocus: 'Siralama ve dizilim', routeKey: 'siralama' },
   { id: 'eksik-sayi-bul', title: 'Eksik Sayi Bul', status: 'core', domain: 'Matematik', skillFocus: 'Sayi farkindaligi', routeKey: 'eksik-sayi-bul' },
   { id: 'eksik-sayi-bul-2', title: 'Eksik Sayi Bul 6-10', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi farkindaligi (6-10)', routeKey: 'eksik-sayi-bul-2' },
+  { id: 'akilli-sayi-avi', title: 'Akilli Sayi Avi', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi-nicelik (uyarlanir zorluk)', routeKey: 'akilli-sayi-avi', adaptive: true },
   { id: 'gruplama', title: 'Gruplama Oyunu', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma', routeKey: 'gruplama' },
   { id: 'mutfak-dedektifi', title: 'Mutfak Dedektifi', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma ve gorsel dikkat', routeKey: 'mutfak-dedektifi' },
   { id: 'miktar-karsilastirma', title: 'Miktar Karsilastirma', status: 'core', domain: 'Matematik', skillFocus: 'Miktar algisi', routeKey: 'miktar-karsilastirma' },
