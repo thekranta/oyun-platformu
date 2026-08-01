@@ -16,6 +16,7 @@ import Svg, { Circle, Line, Polygon, Polyline } from 'react-native-svg';
 import { requestGeminiAnalysis } from '../services/geminiClient';
 import { ReportEngine } from '../services/ReportEngine';
 import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyReport';
+import { getGameDisplay } from '../lib/gameDisplay';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -290,34 +291,6 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             .replace(/ç/g, 'c').replace(/Ç/g, 'c');
     };
 
-    // Game Labels Mapping (Updated with DB variations)
-    const gameLabels: Record<string, { emoji: string, name: string }> = {
-        'miktar-avcisi': { emoji: '🎯', name: 'Miktar Avcısı' },
-        'golge-dedektifi': { emoji: '🔍', name: 'Gölge Dedektifi' },
-        'diziyi-tamamla': { emoji: '🔢', name: 'Diziyi Tamamla' },
-        'dizi-tamamla': { emoji: '🔢', name: 'Dizi Tamamla' },
-        'rakam-yazma': { emoji: '✏️', name: 'Rakam Yazma' },
-        'rakam-yazma-2': { emoji: '🔟', name: 'Rakam Yazma 6-10' },
-        'hafiza-2': { emoji: '🐾', name: 'Hayvan Çiftleri' },
-        'eksik-sayi-bul-2': { emoji: '❔', name: 'Eksik Sayı 6-10' },
-        'miktar-avcisi-2': { emoji: '🐟', name: 'Deniz Avcısı' },
-        'diziyi-tamamla-2': { emoji: '✨', name: 'Örüntü Ustası' },
-        'golge-dedektifi-2': { emoji: '🔦', name: 'Gölge Dedektifi: Uzman' },
-        'onluk-cerceve-2': { emoji: '⭐', name: 'Yıldız Çerçevesi' },
-        'yapboz': { emoji: '🧩', name: 'Yapboz' },
-        'ceviz-macera': { emoji: '🌰', name: 'Ceviz Macerası' },
-        'aile-sepeti': { emoji: '🧱', name: 'Aile Sepeti' },
-        'sayi-komsulari': { emoji: '🔗', name: 'Sayı Komşuları' },
-        'sayilari-birlestir': { emoji: '🔗', name: 'Sayıları Birleştir' },
-        'tarti-dengesi': { emoji: '⚖️', name: 'Tartı Dengesi' },
-        'onluk-cerceve': { emoji: '🧮', name: 'Onluk Çerçeve' },
-        'bunu-soyle': { emoji: '🗣️', name: 'Bunu Söyle' },
-        'eslestirme': { emoji: '🃏', name: 'Eşleştirme' },
-        'ritmik-sayma': { emoji: '🔢', name: 'Ritmik Sayma' },
-        'sihirli-tuval': { emoji: '🎨', name: 'Sihirli Tuval' },
-        'sihirli-siseler': { emoji: '✨', name: 'Sihirli Şişeler' },
-        'uzay-bloklari': { emoji: '🌌', name: 'Uzay Blokları' },
-    };
 
     const fetchData = async () => {
         setLoading(true);
@@ -727,8 +700,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
     // Timeline item for game history
     const TimelineItem = ({ game, index, isSelected }: { game: GameScore, index: number, isSelected: boolean }) => {
-        const normalizedType = normalizeGameName(game.oyun_turu);
-        const gameInfo = gameLabels[normalizedType] || { emoji: '🎮', name: game.oyun_turu?.replace(/-/g, ' ') || 'Oyun' };
+        const gameInfo = getGameDisplay(game.oyun_turu);
 
         const gameDate = new Date(game.created_at).toLocaleDateString('tr-TR', {
             day: 'numeric',
@@ -1027,8 +999,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
                                         return Object.entries(gameTypes).slice(0, 5).map(([type, count], index) => {
                                             const percent = Math.round((count / total) * 100);
-                                            const normalizedType = normalizeGameName(type);
-                                            const info = gameLabels[normalizedType] || { emoji: '🎮', name: type };
+                                            const info = getGameDisplay(type);
 
                                             return (
                                                 <View key={type} style={styles.distributionRow}>
@@ -1489,7 +1460,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     {selectedGameIndex !== null && scores[selectedGameIndex] && (
                                         <View style={{ backgroundColor: COLORS.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginLeft: 8 }}>
                                             <Text style={{ fontSize: 11, color: '#fff', fontWeight: 'bold' }}>
-                                                {gameLabels[normalizeGameName(scores[selectedGameIndex].oyun_turu)]?.name || 'Seçili Oyun'}
+                                                {getGameDisplay(scores[selectedGameIndex].oyun_turu).name}
                                             </Text>
                                         </View>
                                     )}
@@ -1560,7 +1531,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     {scores.slice(0, 20).map((score, index) => {
                                         const date = new Date(score.created_at);
                                         const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
-                                        const info = gameLabels[normalizeGameName(score.oyun_turu)] || { emoji: '🎮', name: score.oyun_turu };
+                                        const info = getGameDisplay(score.oyun_turu);
 
                                         const scoreEmoji = (score.correct_answers || 0) >= 8 ? '🌟' :
                                             (score.correct_answers || 0) >= 5 ? '⭐' : '💪';

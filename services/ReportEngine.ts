@@ -9,6 +9,8 @@
  * const adminReport = ReportEngine.generateAdminReport(games);
  */
 
+import { getMaarif } from '../constants/maarifMap';
+
 // ============== TYPES ==============
 export interface GameData {
     id: number;
@@ -437,20 +439,25 @@ export class ReportEngine {
     }
 
     private static getMaarifCodes(games: GameData[]): string[] {
-        // Map game types to Maarif curriculum codes
-        const codeMap: Record<string, string> = {
-            'mutfak-dedektifi': 'BİSD-3: Sınıflandırma ve Gruplama',
-            'golge-dedektifi': 'BİSD-4: Görsel Eşleştirme',
-            'hafiza-oyunu': 'BİSD-5: Kısa Süreli Bellek',
-            'miktar-karsilastirma': 'MAT-1: Miktar Karşılaştırma',
-            'sayi-komsulari': 'MAT-2: Sayı İlişkileri',
-            'siralama-oyunu': 'MAT-3: Sıralama ve Dizilim',
-        };
+        // Gerçek Maarif kodları constants/maarifMap.ts'ten alınır — uydurma kod YOK.
+        const normalize = (name: string) => (name || '')
+            .toLowerCase().trim()
+            .replace(/_/g, '-').replace(/\s+/g, '-')
+            .replace(/ı/g, 'i').replace(/İ/g, 'i').replace(/ş/g, 's').replace(/Ş/g, 's')
+            .replace(/ğ/g, 'g').replace(/Ğ/g, 'g').replace(/ü/g, 'u').replace(/Ü/g, 'u')
+            .replace(/ö/g, 'o').replace(/Ö/g, 'o').replace(/ç/g, 'c').replace(/Ç/g, 'c');
 
-        const uniqueTypes = [...new Set(games.map(g => g.oyun_turu))];
-        return uniqueTypes
-            .map(type => codeMap[type])
-            .filter(code => code !== undefined);
+        const seen = new Set<string>();
+        const codes: string[] = [];
+        for (const type of new Set(games.map(g => g.oyun_turu))) {
+            const m = getMaarif(normalize(type));
+            const label = `${m.cikti} — ${m.surec} (${m.alan})`;
+            if (!seen.has(label)) {
+                seen.add(label);
+                codes.push(label);
+            }
+        }
+        return codes;
     }
 
     // ============== ADMIN VIEW ==============

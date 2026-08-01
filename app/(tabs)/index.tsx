@@ -1,5 +1,6 @@
 import DynamicBackground from '@/components/DynamicBackground';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
+import GameErrorBoundary from '@/components/GameErrorBoundary';
 import { SONGS } from '@/components/MuzikCalar';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
@@ -734,14 +735,20 @@ export default function App() {
   // Yeni oyun eklemek icin index.tsx'e dokunmaya gerek yok (bkz. gameRegistry).
   const gameRenderer = GAME_RENDERERS[asama];
   if (gameRenderer) {
-    return gameRenderer({
-      onGameEnd: oyunuBitir,
-      onExit: () => setAsama('menu'),
-      ad,
-      yas,
-      email,
-      selectedSongIndex,
-    });
+    // ErrorBoundary: bir oyun çökerse tüm uygulama yerine sadece o oyun düşer,
+    // çocuk "Menüye Dön" ile devam eder. key={asama} => her oyuna taze sınır.
+    return (
+      <GameErrorBoundary key={asama} gameName={asama} onExit={() => setAsama('menu')}>
+        {gameRenderer({
+          onGameEnd: oyunuBitir,
+          onExit: () => setAsama('menu'),
+          ad,
+          yas,
+          email,
+          selectedSongIndex,
+        })}
+      </GameErrorBoundary>
+    );
   }
 
   if (asama === 'sonuc') {
