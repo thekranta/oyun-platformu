@@ -536,7 +536,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         }
         setGeneratingPDF(true);
         try {
-            const html = buildWeeklyReportHTML(weekly);
+            const html = buildWeeklyReportHTML(weekly, isPremium);
             const win = window.open('', '_blank', 'width=920,height=1000');
             if (!win) {
                 Alert.alert('Açılır Pencere Engellendi', 'Raporu görüntülemek için tarayıcınızda açılır pencerelere (popup) izin verin, sonra tekrar deneyin.');
@@ -909,8 +909,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     ))}
                                 </View>
 
-                                {/* Çalışılan gelişim alanları (Maarif) */}
-                                {weekly.skillAreas.length > 0 && (
+                                {/* Premium: çalışılan gelişim alanları (Maarif) */}
+                                {isPremium && weekly.skillAreas.length > 0 && (
                                     <View style={{ marginTop: 14 }}>
                                         <Text style={styles.weeklySubTitle}>📚 Çalışılan Gelişim Alanları</Text>
                                         <View style={styles.skillChipWrap}>
@@ -926,6 +926,19 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     </View>
                                 )}
 
+                                {/* Ücretsiz: kilitli premium ipucu */}
+                                {!isPremium && (
+                                    <View style={styles.weeklyLockBox}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                                            <Ionicons name="lock-closed" size={15} color="#A07D2F" />
+                                            <Text style={styles.weeklyLockTitle}>Premium raporda ayrıca</Text>
+                                        </View>
+                                        <Text style={styles.weeklyLockText}>
+                                            Maarif kazanım analizi · gelişim profili · en çok oynanan oyunlar · güçlü yönler · eve özel etkinlik önerileri · uzman notu
+                                        </Text>
+                                    </View>
+                                )}
+
                                 {/* PDF / Yazdır butonu — herkese açık */}
                                 <TouchableOpacity
                                     style={styles.weeklyDownloadBtn}
@@ -938,7 +951,9 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     ) : (
                                         <>
                                             <Ionicons name="document-text" size={20} color="#fff" />
-                                            <Text style={styles.weeklyDownloadBtnText}>PDF Olarak İndir / Yazdır</Text>
+                                            <Text style={styles.weeklyDownloadBtnText}>
+                                                {isPremium ? 'Detaylı Raporu İndir (PDF)' : 'Özet Raporu İndir (PDF)'}
+                                            </Text>
                                         </>
                                     )}
                                 </TouchableOpacity>
@@ -2780,5 +2795,24 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 8,
         lineHeight: 15,
+    },
+    weeklyLockBox: {
+        marginTop: 14,
+        backgroundColor: '#FBF6E8',
+        borderWidth: 1,
+        borderColor: '#E6D9B8',
+        borderRadius: 12,
+        padding: 12,
+    },
+    weeklyLockTitle: {
+        fontSize: 13,
+        fontWeight: '800',
+        color: '#8A6D2F',
+        marginLeft: 6,
+    },
+    weeklyLockText: {
+        fontSize: 12,
+        color: '#8A6D2F',
+        lineHeight: 18,
     },
 });

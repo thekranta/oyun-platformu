@@ -306,85 +306,113 @@ const esc = (s: string): string =>
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
 
-const DIM_COLORS = ['#1E88E5', '#26A69A', '#7E57C2', '#EF6C00', '#EC407A'];
+// Gelişim profili boyutları için sade lacivert tonları (editöryal palet)
+const DIM_COLORS = ['#12172b', '#2b3350', '#3d466b', '#586394', '#7580ab'];
 
-export function buildWeeklyReportHTML(r: WeeklyReportData): string {
+/**
+ * Premium Editöryal tasarımlı yazdırılabilir rapor.
+ * @param premium  true → tam detaylı rapor; false → temel özet + günlük grafik
+ *                 + kilitli premium bölümü (ücretsiz kademe).
+ */
+export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = true): string {
     const initial = esc((r.childName || '?').charAt(0).toUpperCase());
 
-    const statTile = (emoji: string, value: string, label: string, color: string) => `
-      <div class="stat">
-        <div class="stat-emoji">${emoji}</div>
-        <div class="stat-value" style="color:${color}">${esc(value)}</div>
-        <div class="stat-label">${esc(label)}</div>
-      </div>`;
+    let n = 0;
+    const sec = (title: string, inner: string) => {
+        n++;
+        return `
+    <section class="sec">
+      <div class="sec-h"><span class="sec-n">${String(n).padStart(2, '0')}</span><h2 class="sec-t">${esc(title)}</h2><span class="sec-rule"></span></div>
+      ${inner}
+    </section>`;
+    };
 
-    const skillRows = r.skillAreas.map(a => `
-      <div class="skill-row">
-        <div class="skill-head">
-          <span class="skill-name">${esc(a.area)}</span>
-          <span class="skill-count">${a.count} etkinlik</span>
-        </div>
-        <div class="bar"><div class="bar-fill" style="width:${a.pct}%;background:linear-gradient(90deg,#1E88E5,#42A5F5)"></div></div>
+    // ---- İstatistik şeridi (her iki kademede) ----
+    const stat = (num: string, label: string) =>
+        `<div class="stat"><div class="stat-num">${esc(num)}</div><div class="stat-rule"></div><div class="stat-lbl">${esc(label)}</div></div>`;
+    const statStrip = `<div class="stats">
+      ${stat(String(r.gamesCount), r.hasWeekData ? 'Oyun' : 'Son Oyun')}
+      ${stat(`${r.activeDays}/7`, 'Aktif Gün')}
+      ${stat(String(r.totalMinutes), 'Dakika')}
+      ${stat(`%${r.avgSuccess}`, 'Başarı')}
+    </div>`;
+
+    // ---- Günlük aktivite (her iki kademede) ----
+    const maxDay = Math.max(1, ...r.dailyActivity.map(d => d.count));
+    const dailyBars = r.dailyActivity.map(d => {
+        const h = d.count > 0 ? Math.max(12, Math.round((d.count / maxDay) * 64)) : 3;
+        return `<div class="day"><div class="day-wrap"><div class="day-bar" style="height:${h}px">${d.count > 0 ? `<span>${d.count}</span>` : ''}</div></div><div class="day-lbl">${esc(d.label)}</div></div>`;
+    }).join('');
+    const dailySection = sec('Günlük Aktivite', `<div class="daily">${dailyBars}</div><div class="cap">Son yedi gündeki oyun etkinliği.</div>`);
+
+    // ---- Premium bölümleri ----
+    const skillInner = r.skillAreas.map(a => `
+      <div class="row">
+        <div class="row-h"><span class="row-name">${esc(a.area)}</span><span class="row-count">${a.count} etkinlik</span></div>
+        <div class="bar"><div class="fill" style="width:${a.pct}%"></div></div>
         ${a.codes.length ? `<div class="codes">${a.codes.map(c => `<span class="code">${esc(c)}</span>`).join('')}</div>` : ''}
       </div>`).join('');
 
-    const maxDay = Math.max(1, ...r.dailyActivity.map(d => d.count));
-    const dailyBars = r.dailyActivity.map(d => {
-        const h = d.count > 0 ? Math.max(14, Math.round((d.count / maxDay) * 68)) : 4;
-        const active = d.count > 0;
-        return `
-      <div class="day">
-        <div class="day-bar-wrap">
-          <div class="day-bar" style="height:${h}px;background:${active ? '#1E88E5' : '#E3E8EF'}">${active ? `<span class="day-count">${d.count}</span>` : ''}</div>
-        </div>
-        <div class="day-label">${esc(d.label)}</div>
-      </div>`;
-    }).join('');
+    const dimInner = r.dimensions.map((d, i) => `
+      <div class="drow"><span class="dlabel">${esc(d.label)}</span><div class="bar"><div class="fill" style="width:${d.value}%;background:${DIM_COLORS[i % DIM_COLORS.length]}"></div></div><span class="dval">${d.value}</span></div>`).join('');
 
-    const topGamesRows = r.topGames.map(g => `
-      <div class="game-row">
-        <div class="game-emoji">${g.emoji}</div>
-        <div class="game-main">
-          <div class="game-name">${esc(g.name)}</div>
-          <div class="bar sm"><div class="bar-fill" style="width:${g.success}%;background:linear-gradient(90deg,#66BB6A,#43A047)"></div></div>
-        </div>
-        <div class="game-meta">
-          <div class="game-count">${g.count}x</div>
-          <div class="game-success">%${g.success}</div>
-        </div>
-      </div>`).join('');
+    const gamesInner = r.topGames.map(g => `
+      <div class="grow"><span class="gem">${g.emoji}</span><div class="gmain"><div class="gname">${esc(g.name)}</div><div class="bar sm"><div class="fill gold" style="width:${g.success}%"></div></div></div><div class="gmeta"><span class="gc">${g.count}×</span><span class="gs">%${g.success}</span></div></div>`).join('');
 
-    const dimRows = r.dimensions.map((d, i) => `
-      <div class="dim-row">
-        <div class="dim-label">${esc(d.label)}</div>
-        <div class="bar"><div class="bar-fill" style="width:${d.value}%;background:${DIM_COLORS[i % DIM_COLORS.length]}"></div></div>
-        <div class="dim-value">${d.value}</div>
-      </div>`).join('');
+    const strengthsInner = `<div class="strengths">${r.strengths.map(s => `<div class="strength"><span class="tick">✓</span><span>${esc(s)}</span></div>`).join('')}</div>`;
 
-    const strengthChips = r.strengths.map(s => `<div class="strength">✔ ${esc(s)}</div>`).join('');
+    const homeInner = r.homeActivities.map(a => `
+      <div class="home"><span class="hem">${a.emoji}</span><div class="hbody"><div class="ht"><span class="htitle">${esc(a.title)}</span><span class="hdur">${esc(a.duration)}</span></div><div class="hdesc">${esc(a.description)}</div></div></div>`).join('');
 
-    const homeCards = r.homeActivities.map(a => `
-      <div class="home-card">
-        <div class="home-emoji">${a.emoji}</div>
-        <div class="home-body">
-          <div class="home-top"><span class="home-title">${esc(a.title)}</span><span class="home-dur">${esc(a.duration)}</span></div>
-          <div class="home-desc">${esc(a.description)}</div>
-        </div>
-      </div>`).join('');
+    // ---- Ortak öğeler ----
+    const highlight = `<div class="hl"><span class="hl-em">${r.highlight.emoji}</span><div><div class="hl-t">${esc(r.highlight.title)}</div><div class="hl-d">${esc(r.highlight.description)}</div></div></div>`;
+    const encourage = `<div class="encourage">“${esc(r.encouragingMessage)}”</div>`;
 
     const emptyBanner = r.gamesCount === 0
         ? `<div class="empty">Bu hafta henüz oyun oynanmadı. Aşağıdaki özet, en son oynanan oyunlardan derlenmiştir.</div>`
         : (!r.hasWeekData
-            ? `<div class="empty soft">Son 7 günde kayıt bulunmadığından özet, en son ${r.sourceCount} oyundan derlenmiştir.</div>`
+            ? `<div class="empty">Son yedi günde kayıt bulunmadığından özet, en son ${r.sourceCount} oyundan derlenmiştir.</div>`
             : '');
 
-    const aiSection = r.aiNote ? `
-      <div class="section">
-        <div class="section-title">🧠 Uzman Değerlendirme Notu</div>
-        <div class="ai-note">${esc(r.aiNote).replace(/\n/g, '<br/>')}</div>
-      </div>` : '';
+    // ---- Ücretsiz kademe: kilitli premium bölümü ----
+    const lockedList = [
+        'Maarif kazanımlarına göre çalışılan gelişim alanları',
+        'Gelişim profili (5 beceri boyutu)',
+        'En çok oynanan oyunlar ve başarı dağılımı',
+        'Güçlü yönler değerlendirmesi',
+        'Eve özel etkinlik önerileri',
+        'Uzman değerlendirme notu',
+    ];
+    const lockedSection = `
+    <section class="sec">
+      <div class="locked">
+        <div class="locked-lock">🔒</div>
+        <div class="locked-kicker">Premium Rapor</div>
+        <h3 class="locked-title">Detaylı Gelişim Analizi</h3>
+        <p class="locked-desc">Çocuğunuzun Maarif kazanımlarına göre ayrıntılı analizini, gelişim profilini ve eve özel önerileri Premium raporda bulabilirsiniz.</p>
+        <ul class="locked-list">${lockedList.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+        <div class="locked-badge">Premium&apos;a Geçin</div>
+      </div>
+    </section>`;
 
-    return `<!DOCTYPE html>
+    // ---- Bölümleri sıraya diz ----
+    let sections = dailySection;
+    if (premium) {
+        if (r.skillAreas.length) sections += sec('Çalışılan Gelişim Alanları · Maarif Modeli', skillInner);
+        if (r.dimensions.length) sections += sec('Gelişim Profili', dimInner);
+        if (r.topGames.length) sections += sec('En Çok Oynanan Oyunlar', gamesInner);
+        if (r.strengths.length) sections += sec('Güçlü Yönler', strengthsInner);
+        if (r.homeActivities.length) sections += sec('Evde Ne Yapabilirsiniz?', homeInner);
+        if (r.aiNote) sections += sec('Uzman Değerlendirme Notu', `<div class="ai">${esc(r.aiNote).replace(/\n/g, '<br/>')}</div>`);
+    } else {
+        sections += lockedSection;
+    }
+
+    const tierTag = premium
+        ? `<span class="tier tier-p">Premium Rapor</span>`
+        : `<span class="tier tier-f">Özet Rapor</span>`;
+
+    return `<!doctype html>
 <html lang="tr">
 <head>
 <meta charset="utf-8"/>
@@ -392,174 +420,164 @@ export function buildWeeklyReportHTML(r: WeeklyReportData): string {
 <title>Haftalık Gelişim Raporu — ${esc(r.childName)}</title>
 <style>
   *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0}
-  @page{size:A4;margin:12mm}
-  body{font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:#1f2a37;background:#eef1f6;line-height:1.45}
+  @page{size:A4;margin:11mm}
+  :root{--navy:#12172b;--navy2:#20263f;--gold:#c8a45c;--gold-l:#e6ce94;--ink:#2a2f45;--muted:#7a7f8d;--line:#e9e5d9;--serif:Georgia,'Times New Roman',serif}
+  body{font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#e7e9ef;line-height:1.5}
   .sheet{max-width:800px;margin:0 auto;background:#fff}
   /* Toolbar (yazdırılmaz) */
-  .toolbar{position:sticky;top:0;z-index:10;display:flex;gap:12px;align-items:center;justify-content:center;padding:14px;background:#1f2a37;color:#fff}
-  .toolbar button{cursor:pointer;border:0;border-radius:10px;padding:10px 18px;font-size:15px;font-weight:700;font-family:inherit}
-  .btn-print{background:#66BB6A;color:#fff}
-  .btn-close{background:rgba(255,255,255,.15);color:#fff}
-  .toolbar .hint{font-size:12px;color:rgba(255,255,255,.7);font-weight:400}
+  .toolbar{position:sticky;top:0;z-index:10;display:flex;gap:12px;align-items:center;justify-content:center;padding:13px;background:var(--navy)}
+  .toolbar button{cursor:pointer;border:0;border-radius:3px;padding:10px 20px;font-size:14px;font-weight:700;font-family:inherit;letter-spacing:.5px}
+  .btn-print{background:var(--gold);color:var(--navy)}
+  .btn-close{background:rgba(255,255,255,.12);color:#fff}
+  .toolbar .hint{font-size:11.5px;color:rgba(255,255,255,.6)}
   @media print{.toolbar{display:none}body{background:#fff}}
-  /* Header */
-  .hero{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:26px 30px;display:flex;align-items:center;gap:18px}
-  .avatar{width:66px;height:66px;border-radius:50%;background:rgba(255,255,255,.22);border:3px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;flex:0 0 auto}
-  .hero-main{flex:1}
-  .hero-kicker{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;opacity:.85;font-weight:700}
-  .hero-title{font-size:25px;font-weight:800;margin-top:2px}
-  .hero-sub{font-size:13px;opacity:.9;margin-top:4px}
-  .hero-range{text-align:right;font-size:12px;opacity:.95}
-  .hero-range b{display:block;font-size:14px;margin-top:2px}
-  /* Child strip */
-  .child{display:flex;flex-wrap:wrap;gap:10px 26px;padding:14px 30px;background:#f7f8fc;border-bottom:1px solid #eceff1;font-size:13px;color:#455a64}
-  .child b{color:#1f2a37}
+  /* Masthead */
+  .gold-top{height:5px;background:linear-gradient(90deg,var(--gold),var(--gold-l),var(--gold))}
+  .mast{background:var(--navy);color:#fff;padding:26px 34px;display:flex;align-items:center;gap:20px}
+  .monogram{width:62px;height:62px;border-radius:50%;border:2px solid var(--gold);background:rgba(200,164,92,.14);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:28px;color:#fff;flex:0 0 auto}
+  .mast-main{flex:1}
+  .kicker{font-size:10.5px;letter-spacing:3.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
+  .mast-name{font-family:var(--serif);font-size:26px;font-weight:700;margin-top:4px;letter-spacing:.3px}
+  .mast-brand{font-size:11.5px;color:rgba(255,255,255,.6);margin-top:5px;letter-spacing:.6px}
+  .mast-right{text-align:right;flex:0 0 auto}
+  .mast-right .lbl{font-size:9.5px;letter-spacing:2px;text-transform:uppercase;color:var(--gold)}
+  .mast-right .val{font-family:var(--serif);font-size:13.5px;margin-top:3px;color:#fff;max-width:150px}
+  .tier{display:inline-block;margin-top:8px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;padding:3px 9px;border-radius:2px}
+  .tier-p{background:var(--gold);color:var(--navy)}
+  .tier-f{background:rgba(255,255,255,.14);color:var(--gold-l);border:1px solid rgba(200,164,92,.5)}
+  /* Meta strip */
+  .meta{display:flex;border-bottom:1px solid var(--line);background:#faf9f5}
+  .meta > div{flex:1;padding:11px 20px;font-size:11px;color:var(--muted);border-right:1px solid var(--line)}
+  .meta > div:last-child{border-right:0}
+  .meta b{display:block;color:var(--navy);font-size:12.5px;margin-top:2px;font-weight:700}
   /* Highlight */
-  .highlight{margin:18px 30px 0;background:linear-gradient(135deg,#FFF8E1,#FFECB3);border:1px solid #FFE082;border-radius:14px;padding:14px 16px;display:flex;align-items:center;gap:14px}
-  .highlight .h-emoji{font-size:34px}
-  .highlight .h-title{font-size:16px;font-weight:800;color:#8D6E00}
-  .highlight .h-desc{font-size:13px;color:#795548}
-  .empty{margin:16px 30px 0;padding:12px 14px;border-radius:12px;background:#FFF3E0;border:1px solid #FFCC80;color:#8D5A00;font-size:13px}
-  .empty.soft{background:#E3F2FD;border-color:#90CAF9;color:#1565C0}
+  .hl{margin:20px 34px 0;border-left:3px solid var(--gold);background:#faf7ef;padding:13px 18px;display:flex;gap:14px;align-items:center}
+  .hl-em{font-size:26px}
+  .hl-t{font-family:var(--serif);font-size:16px;color:var(--navy);font-weight:700}
+  .hl-d{font-size:12.5px;color:#6c6f5f;margin-top:2px}
+  .empty{margin:18px 34px 0;padding:11px 16px;border:1px solid #e6d9b8;background:#fbf6e8;color:#8a6d2f;font-size:12px}
   /* Stats */
-  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 30px 4px}
-  .stat{background:#fff;border:1px solid #eceff1;border-radius:14px;padding:14px 8px;text-align:center;box-shadow:0 2px 8px rgba(31,42,55,.05)}
-  .stat-emoji{font-size:22px}
-  .stat-value{font-size:24px;font-weight:800;margin-top:2px}
-  .stat-label{font-size:11px;color:#78909C;margin-top:2px;font-weight:600}
+  .stats{display:flex;margin:20px 34px 0;border:1px solid var(--line)}
+  .stat{flex:1;padding:16px 8px;text-align:center;border-right:1px solid var(--line)}
+  .stat:last-child{border-right:0}
+  .stat-num{font-family:var(--serif);font-size:27px;color:var(--navy);font-weight:700;line-height:1}
+  .stat-rule{width:22px;height:2px;background:var(--gold);margin:8px auto 0}
+  .stat-lbl{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:7px}
   /* Sections */
-  .section{padding:16px 30px 2px}
-  .section-title{font-size:16px;font-weight:800;color:#263238;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-  .bar{height:12px;border-radius:8px;background:#eef1f6;overflow:hidden}
-  .bar.sm{height:8px}
-  .bar-fill{height:100%;border-radius:8px}
-  .skill-row{margin-bottom:12px}
-  .skill-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
-  .skill-name{font-size:14px;font-weight:700;color:#37474F}
-  .skill-count{font-size:12px;color:#78909C}
+  .sec{padding:22px 34px 0}
+  .sec-h{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+  .sec-n{font-family:var(--serif);font-size:13px;color:var(--gold);font-weight:700;letter-spacing:1px}
+  .sec-t{font-size:12.5px;letter-spacing:2px;text-transform:uppercase;color:var(--navy);font-weight:700}
+  .sec-rule{flex:1;height:1px;background:var(--line)}
+  .cap{font-size:10.5px;color:var(--muted);margin-top:9px;font-style:italic}
+  .bar{height:9px;border-radius:6px;background:#eef0f4;overflow:hidden}
+  .bar.sm{height:7px}
+  .fill{height:100%;border-radius:6px;background:var(--navy)}
+  .fill.gold{background:linear-gradient(90deg,var(--gold),var(--gold-l))}
+  /* Skill rows */
+  .row{margin-bottom:13px}
+  .row-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .row-name{font-size:14px;font-weight:700;color:var(--navy)}
+  .row-count{font-size:11px;color:var(--muted)}
   .codes{margin-top:6px;display:flex;flex-wrap:wrap;gap:5px}
-  .code{font-size:10px;font-weight:700;color:#5E35B1;background:#EDE7F6;border-radius:6px;padding:2px 7px}
+  .code{font-size:9.5px;font-weight:700;letter-spacing:.5px;color:#a07d2f;border:1px solid #dcc79a;border-radius:3px;padding:2px 7px}
   /* Daily */
-  .daily{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:96px;padding:6px 4px 0}
+  .daily{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:92px;padding:4px 2px 0}
   .day{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
-  .day-bar-wrap{flex:1;display:flex;align-items:flex-end}
-  .day-bar{width:26px;border-radius:7px 7px 3px 3px;display:flex;align-items:flex-start;justify-content:center;min-height:4px}
-  .day-count{color:#fff;font-size:11px;font-weight:800;margin-top:3px}
-  .day-label{font-size:11px;color:#78909C;margin-top:6px;font-weight:600}
+  .day-wrap{flex:1;display:flex;align-items:flex-end}
+  .day-bar{width:24px;border-radius:4px 4px 2px 2px;background:var(--navy);display:flex;align-items:flex-start;justify-content:center;min-height:3px}
+  .day-bar span{color:var(--gold-l);font-size:10.5px;font-weight:800;margin-top:3px}
+  .day-lbl{font-size:10px;color:var(--muted);margin-top:6px;letter-spacing:.5px}
   /* Games */
-  .game-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f2f4f7}
-  .game-row:last-child{border-bottom:0}
-  .game-emoji{font-size:22px;width:30px;text-align:center}
-  .game-main{flex:1}
-  .game-name{font-size:14px;font-weight:700;color:#37474F;margin-bottom:4px}
-  .game-meta{text-align:right;min-width:52px}
-  .game-count{font-size:14px;font-weight:800;color:#1E88E5}
-  .game-success{font-size:11px;color:#78909C}
+  .grow{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f2f1ea}
+  .grow:last-child{border-bottom:0}
+  .gem{font-size:21px;width:28px;text-align:center}
+  .gmain{flex:1}
+  .gname{font-size:13.5px;font-weight:700;color:var(--navy);margin-bottom:4px}
+  .gmeta{text-align:right;min-width:52px}
+  .gc{display:block;font-family:var(--serif);font-size:15px;font-weight:700;color:var(--navy)}
+  .gs{font-size:10.5px;color:var(--muted)}
   /* Dimensions */
-  .dim-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-  .dim-label{width:120px;font-size:13px;font-weight:600;color:#455a64;flex:0 0 auto}
-  .dim-row .bar{flex:1}
-  .dim-value{width:34px;text-align:right;font-size:13px;font-weight:800;color:#37474F}
+  .drow{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+  .dlabel{width:118px;font-size:12.5px;font-weight:600;color:var(--ink);flex:0 0 auto}
+  .drow .bar{flex:1}
+  .dval{width:30px;text-align:right;font-family:var(--serif);font-size:13px;font-weight:700;color:var(--navy)}
   /* Strengths */
   .strengths{display:flex;flex-direction:column;gap:8px}
-  .strength{background:#E8F5E9;border-left:4px solid #66BB6A;border-radius:8px;padding:9px 12px;font-size:13px;color:#2E7D32;font-weight:600}
+  .strength{display:flex;gap:10px;align-items:flex-start;background:#faf9f5;border-left:3px solid var(--gold);padding:9px 13px;font-size:13px;color:var(--ink)}
+  .tick{color:var(--gold);font-weight:800}
   /* Home */
-  .home-card{display:flex;gap:12px;background:#F1F8E9;border:1px solid #DCEDC8;border-radius:12px;padding:12px;margin-bottom:10px}
-  .home-emoji{font-size:26px}
-  .home-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
-  .home-title{font-size:14px;font-weight:700;color:#33691E}
-  .home-dur{font-size:11px;font-weight:700;color:#558B2F;background:#DCEDC8;border-radius:8px;padding:2px 8px}
-  .home-desc{font-size:12.5px;color:#5b6b52}
+  .home{display:flex;gap:12px;border:1px solid var(--line);border-radius:4px;padding:12px;margin-bottom:9px}
+  .hem{font-size:24px}
+  .ht{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
+  .htitle{font-size:13.5px;font-weight:700;color:var(--navy)}
+  .hdur{font-size:10px;font-weight:700;color:#a07d2f;border:1px solid #dcc79a;border-radius:3px;padding:2px 7px}
+  .hdesc{font-size:12px;color:#5f6470}
   /* Encourage */
-  .encourage{margin:6px 30px 0;background:linear-gradient(135deg,#FFF3E0,#FFE0B2);border-radius:14px;padding:16px;text-align:center;font-size:14.5px;font-weight:700;color:#6D4C41}
-  .ai-note{background:#F3E5F5;border-radius:12px;padding:14px;font-size:13px;color:#4A148C;white-space:normal}
+  .encourage{margin:22px 34px 0;font-family:var(--serif);font-style:italic;font-size:15px;color:var(--navy);text-align:center;padding:16px 24px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .ai{background:#faf9f5;border:1px solid var(--line);border-radius:4px;padding:14px;font-size:12.5px;color:var(--ink);line-height:1.65}
+  /* Locked */
+  .locked{border:1px solid #e6d9b8;background:linear-gradient(180deg,#fbfaf5,#f4edda);border-radius:4px;padding:26px 26px;text-align:center}
+  .locked-lock{font-size:30px}
+  .locked-kicker{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-top:8px}
+  .locked-title{font-family:var(--serif);font-size:20px;color:var(--navy);margin-top:5px}
+  .locked-desc{font-size:12.5px;color:#6c6f5f;max-width:460px;margin:9px auto 0;line-height:1.6}
+  .locked-list{list-style:none;max-width:420px;margin:15px auto 0;text-align:left}
+  .locked-list li{font-size:12.5px;color:var(--ink);padding:6px 0 6px 24px;position:relative;border-bottom:1px dashed #e6d9b8}
+  .locked-list li:before{content:'✦';position:absolute;left:2px;color:var(--gold)}
+  .locked-badge{display:inline-block;margin-top:18px;background:var(--navy);color:var(--gold-l);border:1px solid var(--gold);border-radius:2px;padding:10px 26px;font-size:11.5px;letter-spacing:2px;text-transform:uppercase;font-weight:700}
   /* Footer */
-  .foot{margin-top:20px;background:#1f2a37;color:#fff;padding:18px 30px;text-align:center}
-  .foot .maarif{font-size:11.5px;opacity:.8;max-width:620px;margin:0 auto 8px}
-  .foot .brand{font-size:15px;font-weight:800}
-  .foot .site{font-size:11px;opacity:.75;margin-top:2px}
-  .foot .gen{font-size:10.5px;opacity:.6;margin-top:8px}
+  .foot{margin-top:24px}
+  .foot .rule{height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-l),var(--gold))}
+  .foot-in{background:var(--navy);color:#fff;padding:18px 34px;text-align:center}
+  .foot .maarif{font-size:11px;color:rgba(255,255,255,.62);max-width:620px;margin:0 auto 9px;line-height:1.55}
+  .foot .brand{font-family:var(--serif);font-size:15px;font-weight:700;color:#fff}
+  .foot .site{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:3px}
+  .foot .gen{font-size:10px;color:var(--gold);margin-top:9px;letter-spacing:.5px}
 </style>
 </head>
 <body>
   <div class="toolbar">
-    <button class="btn-print" onclick="window.print()">🖨️  Yazdır / PDF Kaydet</button>
+    <button class="btn-print" onclick="window.print()">Yazdır / PDF Kaydet</button>
     <button class="btn-close" onclick="window.close()">Kapat</button>
-    <span class="hint">İpucu: Yazdır penceresinde “Hedef → PDF olarak kaydet” seçin.</span>
+    <span class="hint">İpucu: “Hedef → PDF olarak kaydet” seçin.</span>
   </div>
   <div class="sheet">
-    <div class="hero">
-      <div class="avatar">${initial}</div>
-      <div class="hero-main">
-        <div class="hero-kicker">Haftalık Gelişim Raporu</div>
-        <div class="hero-title">${esc(r.childName)}</div>
-        <div class="hero-sub">ChildhoodTech Akademi • Erken Çocukluk Gelişim Takibi</div>
+    <div class="gold-top"></div>
+    <div class="mast">
+      <div class="monogram">${initial}</div>
+      <div class="mast-main">
+        <div class="kicker">Haftalık Gelişim Raporu</div>
+        <div class="mast-name">${esc(r.childName)}</div>
+        <div class="mast-brand">CHILDHOODTECH AKADEMİ · Erken Çocukluk Gelişim Takibi</div>
       </div>
-      <div class="hero-range">Rapor Dönemi<b>${esc(r.rangeLabel)}</b></div>
-    </div>
-
-    <div class="child">
-      <span>👶 <b>${esc(r.ageLabel)}</b></span>
-      <span>📈 Gelişim Dönemi: <b>${esc(r.period)}</b></span>
-      <span>🎮 Rapora giren oyun: <b>${r.sourceCount}</b></span>
-    </div>
-
-    <div class="highlight">
-      <div class="h-emoji">${r.highlight.emoji}</div>
-      <div>
-        <div class="h-title">${esc(r.highlight.title)}</div>
-        <div class="h-desc">${esc(r.highlight.description)}</div>
+      <div class="mast-right">
+        <div class="lbl">Rapor Dönemi</div>
+        <div class="val">${esc(r.rangeLabel)}</div>
+        ${tierTag}
       </div>
     </div>
 
+    <div class="meta">
+      <div>Yaş<b>${esc(r.ageLabel)}</b></div>
+      <div>Gelişim Dönemi<b>${esc(r.period)}</b></div>
+      <div>Rapora Giren Oyun<b>${r.sourceCount}</b></div>
+    </div>
+
+    ${highlight}
     ${emptyBanner}
-
-    <div class="stats">
-      ${statTile('🎮', String(r.gamesCount), r.hasWeekData ? 'Oyun' : 'Son Oyun', '#1E88E5')}
-      ${statTile('📅', `${r.activeDays}/7`, 'Aktif Gün', '#66BB6A')}
-      ${statTile('⏱️', `${r.totalMinutes} dk`, 'Toplam Süre', '#FF7043')}
-      ${statTile('⭐', `%${r.avgSuccess}`, 'Başarı', '#FFB300')}
-    </div>
-
-    ${r.skillAreas.length ? `<div class="section">
-      <div class="section-title">📚 Çalışılan Gelişim Alanları <span style="font-size:11px;font-weight:600;color:#9AA7B4">(Maarif Modeli)</span></div>
-      ${skillRows}
-    </div>` : ''}
-
-    <div class="section">
-      <div class="section-title">📅 Günlük Aktivite</div>
-      <div class="daily">${dailyBars}</div>
-    </div>
-
-    ${r.topGames.length ? `<div class="section">
-      <div class="section-title">🎯 En Çok Oynanan Oyunlar</div>
-      ${topGamesRows}
-    </div>` : ''}
-
-    ${r.dimensions.length ? `<div class="section">
-      <div class="section-title">🧭 Gelişim Profili</div>
-      ${dimRows}
-    </div>` : ''}
-
-    ${r.strengths.length ? `<div class="section">
-      <div class="section-title">💪 Güçlü Yönler</div>
-      <div class="strengths">${strengthChips}</div>
-    </div>` : ''}
-
-    ${r.homeActivities.length ? `<div class="section">
-      <div class="section-title">🏠 Evde Ne Yapabilirsiniz?</div>
-      ${homeCards}
-    </div>` : ''}
-
-    <div class="encourage">${esc(r.encouragingMessage)}</div>
-
-    ${aiSection}
+    ${statStrip}
+    ${sections}
+    ${encourage}
 
     <div class="foot">
-      <div class="maarif">${esc(r.maarifNote)}</div>
-      <div class="brand">🎓 ChildhoodTech Ekibi</div>
-      <div class="site">childhoodtech.com • Çocuğunuzun gelişimini birlikte takip ediyoruz 💜</div>
-      <div class="gen">Oluşturulma: ${esc(r.generatedLabel)}</div>
+      <div class="rule"></div>
+      <div class="foot-in">
+        <div class="maarif">${esc(r.maarifNote)}</div>
+        <div class="brand">ChildhoodTech Ekibi</div>
+        <div class="site">childhoodtech.com · Çocuğunuzun gelişimini birlikte takip ediyoruz</div>
+        <div class="gen">Oluşturulma: ${esc(r.generatedLabel)}</div>
+      </div>
     </div>
   </div>
   <script>
