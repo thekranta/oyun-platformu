@@ -61,6 +61,7 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   // ---------- Türkçe ----------
   'bunu-soyle': { displayName: 'Bunu Söyle!', alan: 'Türkçe', surec: 'Konuşma / İçerik Oluşturma', cikti: 'TAKB.2', ciktiAciklama: 'Konuşma sürecinin içeriğini oluşturabilme' },
   'rakam-yazma': { displayName: 'Rakam Yazma', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)' },
+  'rakam-yazma-2': { displayName: 'Rakam Yazma 6-10', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme; 6-10 rakamlarını çizerek yazı öncesi el kaslarını güçlendirir', badgeAlan: 'Sanat / Yazma Öncesi' },
   'yaratici-cizim': { displayName: 'Hayal Defteri', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)', badgeAlan: 'Sanat / Yazma Öncesi' },
 
   // ---------- Değer Hikayeleri (Türkçe Dinleme/İzleme + değer) ----------

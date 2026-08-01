@@ -116,7 +116,7 @@ const AREA_EMOJI: Record<string, string> = {
 const GAME_EMOJI: Record<string, string> = {
     'miktar-avcisi': '🎯', 'golge-dedektifi': '🔍', 'sihirli-tuval': '🎨',
     'uzay-bloklari': '🌌', 'yapboz': '🧩', 'hafiza': '🃏', 'eslestirme': '🃏',
-    'onluk-cerceve': '🧮', 'tarti-dengesi': '⚖️', 'rakam-yazma': '✏️',
+    'onluk-cerceve': '🧮', 'tarti-dengesi': '⚖️', 'rakam-yazma': '✏️', 'rakam-yazma-2': '🔟',
     'yaratici-cizim': '🖍️', 'duygu-yuzleri': '😊', 'sayi-komsulari': '🔗',
     'sayilari-birlestir': '🔗', 'diziyi-tamamla': '🔢', 'sihirli-siseler': '✨',
     'ceviz-macera': '🌰', 'aile-sepeti': '🧺', 'bunu-soyle': '🗣️',

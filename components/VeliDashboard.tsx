@@ -297,6 +297,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         'diziyi-tamamla': { emoji: '🔢', name: 'Diziyi Tamamla' },
         'dizi-tamamla': { emoji: '🔢', name: 'Dizi Tamamla' },
         'rakam-yazma': { emoji: '✏️', name: 'Rakam Yazma' },
+        'rakam-yazma-2': { emoji: '🔟', name: 'Rakam Yazma 6-10' },
         'yapboz': { emoji: '🧩', name: 'Yapboz' },
         'ceviz-macera': { emoji: '🌰', name: 'Ceviz Macerası' },
         'aile-sepeti': { emoji: '🧱', name: 'Aile Sepeti' },

@@ -32,6 +32,7 @@ const GAME_INFO: Record<string, { name: string; icon: string; color: string }> =
     'eksik-sayi-bul': { name: 'Eksik Sayıyı Bul', icon: '❓', color: '#3F51B5' },
     'kodlama': { name: 'Minik Kaşif', icon: '🧩', color: '#009688' },
     'rakam-yazma': { name: 'Rakam Yazma', icon: '✏️', color: '#607D8B' },
+    'rakam-yazma-2': { name: 'Rakam Yazma 6-10', icon: '🔟', color: '#26A69A' },
     'yapboz': { name: 'Yapboz', icon: '🧩', color: '#8BC34A' },
     'sayilari-birlestir': { name: 'Sayıları Birleştir', icon: '🔗', color: '#CDDC39' },
     'kutuyu-bul': { name: 'Kutuyu Bul!', icon: '📦', color: '#FFC107' },

@@ -13,6 +13,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'bunu-soyle': { color: '#F06292', icon: 'mic', displayTitle: 'Bunu Söyle', subtitle: 'Sözlü ifade' },
   'kodlama': { color: '#00ACC1', icon: 'map', displayTitle: 'Minik Kaşif', subtitle: 'Kodlama' },
   'rakam-yazma': { color: '#4DB6AC', icon: 'pencil', displayTitle: 'Rakam Yazma', subtitle: 'Rakam tanıma' },
+  'rakam-yazma-2': { color: '#26A69A', icon: 'pencil', displayTitle: 'Rakam Yazma 6-10', subtitle: 'Büyük rakamlar' },
   'kutuyu-bul': { color: '#7E57C2', icon: 'cube', displayTitle: 'Kutuyu Bul', subtitle: 'Görsel takip' },
   'sayilari-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Sayıları Birleştir', subtitle: 'Sayı sırası' },
   'yapboz': { color: '#E91E63', icon: 'apps', displayTitle: 'Yapboz', subtitle: 'Parça-bütün' },
@@ -100,7 +101,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
 export const GAME_EMOJI: Record<string, string> = {
   hafiza: '🧠', siralama: '🔢', 'eksik-sayi-bul': '❓', gruplama: '🧺', 'mutfak-dedektifi': '🍳',
   'miktar-karsilastirma': '📊', 'sayi-komsulari': '🚂', 'diziyi-tamamla': '🔁', 'bunu-soyle': '🎤',
-  kodlama: '🗺️', 'rakam-yazma': '✏️', 'kutuyu-bul': '📦', 'sayilari-birlestir': '🔗', yapboz: '🧩',
+  kodlama: '🗺️', 'rakam-yazma': '✏️', 'rakam-yazma-2': '🔟', 'kutuyu-bul': '📦', 'sayilari-birlestir': '🔗', yapboz: '🧩',
   'golge-dedektifi': '🕵️', 'onluk-cerceve': '🔟', 'tarti-dengesi': '⚖️', 'sihirli-siseler': '🧪',
   'sihirli-tuval': '🖼️', 'uzay-bloklari': '🚀', 'renkli-baglantalar': '🔀',
   'ceviz-macera': '🌰', 'aile-sepeti-macerasi': '👨‍👩‍👧', 'adalet-hikayesi': '🤝', 'sevgi-hikayesi': '❤️', 'duygu-yuzleri': '😊',

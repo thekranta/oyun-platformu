@@ -797,6 +797,7 @@ ChildhoodTech Ekibi
             else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
             else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
             else if (score.oyun_turu === 'rakam-yazma') oyunAdiTR = 'Rakam Yazma';
+            else if (score.oyun_turu === 'rakam-yazma-2') oyunAdiTR = 'Rakam Yazma 6-10';
             else oyunAdiTR = score.oyun_turu;
 
             const response = await fetch('/api/send-email', {
