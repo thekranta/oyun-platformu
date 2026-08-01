@@ -138,6 +138,10 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'damga-sanati': { displayName: 'Damga Sanatı', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yaratıcı ifade ve kompozisyon; damga/çıkartma ile sahne oluşturma', badgeAlan: 'Sanat / Kompozisyon' },
   'boyama-kitabi': { displayName: 'Boyama Kitabı', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yaratıcı ifade ve renk seçimi; resim bölgelerini boyama (ince motor)', badgeAlan: 'Sanat / Boyama' },
   'nokta-birlestir': { displayName: 'Nokta Birleştir', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Sayıları 1\'den itibaren sırayla izler ve çizgiyle birleştirir (sayı sırası + çizgi çalışması)', badgeAlan: 'Çizim / Sayı Sırası' },
+  'sayi-boya': { displayName: 'Sayı-Boya', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Sayı-renk eşleştirerek boyama; renk seçimi + sayı tanıma + ince motor', badgeAlan: 'Sanat / Sayı-Boya' },
+  'mandala': { displayName: 'Mandala', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yaratıcı ifade ve radyal simetri (çizim merkez etrafında çoğalır)', badgeAlan: 'Sanat / Simetri' },
+  'nokta-boyama': { displayName: 'Nokta Boyama', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Noktalarla (pointillism) yaratıcı boyama; el-göz koordinasyonu', badgeAlan: 'Sanat / Boyama' },
+  'cizimi-canlandir': { displayName: 'Çizimini Canlandır', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Serbest yaratıcı çizim; çizimini canlandırarak eğlenme', badgeAlan: 'Sanat / Yaratıcı' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

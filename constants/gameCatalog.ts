@@ -78,6 +78,10 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'damga-sanati', title: 'Damga Sanati', status: 'creative', domain: 'Sanat', skillFocus: 'Damga / kompozisyon', routeKey: 'damga-sanati' },
   { id: 'boyama-kitabi', title: 'Boyama Kitabi', status: 'creative', domain: 'Sanat', skillFocus: 'Bolge boyama', routeKey: 'boyama-kitabi' },
   { id: 'nokta-birlestir', title: 'Nokta Birlestir', status: 'creative', domain: 'Sanat', skillFocus: 'Nokta birlestirme / sayi sirasi', routeKey: 'nokta-birlestir' },
+  { id: 'sayi-boya', title: 'Sayi-Boya', status: 'creative', domain: 'Sanat', skillFocus: 'Sayi-renk esleme boyama', routeKey: 'sayi-boya' },
+  { id: 'mandala', title: 'Mandala', status: 'creative', domain: 'Sanat', skillFocus: 'Radyal simetri cizim', routeKey: 'mandala' },
+  { id: 'nokta-boyama', title: 'Nokta Boyama', status: 'creative', domain: 'Sanat', skillFocus: 'Pointillism', routeKey: 'nokta-boyama' },
+  { id: 'cizimi-canlandir', title: 'Cizimini Canlandir', status: 'creative', domain: 'Sanat', skillFocus: 'Cizim + canlandirma', routeKey: 'cizimi-canlandir' },
 
   { id: 'vucudum', title: 'Vucudum', status: 'secondary', domain: 'Saglik', skillFocus: 'Beden farkindaligi', routeKey: 'vucudum' },
   { id: 'duyularimiz', title: 'Duyularimiz', status: 'secondary', domain: 'Saglik', skillFocus: 'Duyu organlari', routeKey: 'duyularimiz' },
