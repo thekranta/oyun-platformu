@@ -7,6 +7,7 @@ import StudentStatsModal from '../components/StudentStatsModal';
 import { supabase } from '../lib/supabase';
 import { requestGeminiAnalysis } from '../services/geminiClient';
 import { getMaarif } from '../constants/maarifMap';
+import { getGameDisplay } from '../lib/gameDisplay';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -789,16 +790,8 @@ ChildhoodTech Ekibi
         }
         setProcessingId(score.id);
         try {
-            let oyunAdiTR = '';
-            if (score.oyun_turu === 'hafiza') oyunAdiTR = 'Hafıza Kartları';
-            else if (score.oyun_turu === 'siralama') oyunAdiTR = 'Sayı Sıralama';
-            else if (score.oyun_turu === 'eksik-sayi-bul') oyunAdiTR = 'Eksik Sayiyi Bul';
-            else if (score.oyun_turu === 'gruplama') oyunAdiTR = 'Gruplama (Kategorizasyon)';
-            else if (score.oyun_turu === 'diziyi-tamamla') oyunAdiTR = 'Diziyi Tamamla';
-            else if (score.oyun_turu === 'yaratici-cizim') oyunAdiTR = 'Hayal Defteri';
-            else if (score.oyun_turu === 'rakam-yazma') oyunAdiTR = 'Rakam Yazma';
-            else if (score.oyun_turu === 'rakam-yazma-2') oyunAdiTR = 'Rakam Yazma 6-10';
-            else oyunAdiTR = score.oyun_turu;
+            // Tek kaynak: oyun adı lib/gameDisplay (maarifMap.displayName) üzerinden
+            const oyunAdiTR = getGameDisplay(score.oyun_turu).name;
 
             const response = await fetch('/api/send-email', {
                 method: 'POST',

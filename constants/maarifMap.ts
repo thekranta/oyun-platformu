@@ -14,6 +14,8 @@
 // Yeni oyun eklerken: buraya bir kayıt ekle -> analiz + rozet otomatik doğru olur.
 // ============================================================
 
+import { isValidCikti } from './maarifCurriculum';
+
 export interface MaarifEntry {
   displayName: string;        // Panelde/raporda görünen Türkçe oyun adı
   alan: string;               // Analiz alanı (belgede geçen): Matematik | Fen | Türkçe ...
@@ -158,6 +160,18 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */
+// Geliştirme-zamanı bekçisi: bir oyunun `cikti` kodu kanonik curriculum'da
+// (constants/maarifCurriculum.ts, raw_curriculum.txt'ten) yoksa UYARI ver.
+// Böylece Maarif'e yönelik uydurma kodlar üretim öncesi yakalanır.
+if (typeof __DEV__ !== 'undefined' && __DEV__) {
+  const uydurma = Object.entries(MAARIF_MAP)
+    .filter(([, m]) => m.cikti && !isValidCikti(m.cikti))
+    .map(([oyun, m]) => `${oyun} → ${m.cikti}`);
+  if (uydurma.length) {
+    console.warn('⚠️ maarifMap: belgede OLMAYAN (uydurma) Maarif kodu:', uydurma);
+  }
+}
+
 export function getMaarif(oyunTuru: string): MaarifEntry {
   return MAARIF_MAP[oyunTuru] ?? { ...DEFAULT_MAARIF, displayName: oyunTuru };
 }
