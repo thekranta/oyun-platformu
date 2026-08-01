@@ -15,6 +15,7 @@ import {
 import Svg, { Circle, Line, Polygon, Polyline } from 'react-native-svg';
 import { requestGeminiAnalysis } from '../services/geminiClient';
 import { ReportEngine } from '../services/ReportEngine';
+import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyReport';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -518,311 +519,35 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         return '💪';
     };
 
-    // PDF Generation Function - Uses CDN to avoid Metro bundler issues
+    // Haftalık Gelişim Raporu verisi (tamamen yerel hesaplanır — AI olmasa da çalışır)
+    const weekly = buildWeeklyReport(childName, childAge, scores, cumulativeReport);
+
+    // Haftalık Gelişim Raporu — güvenilir yazdırma tabanlı PDF (tarayıcı motoru).
+    // jsPDF/CDN yerine tarayıcının kendi yazdırma motorunu kullanır: Türkçe + emoji
+    // kusursuz, çevrimdışı çalışır, "PDF olarak kaydet" ile indirilir.
     const handleDownloadPDF = async () => {
-        if (!isPremium) {
-            Alert.alert(
-                '🔒 Premium Özellik',
-                'Tam rapor çıktısı almak için paketinizi yükseltin!',
-                [
-                    { text: 'Tamam', style: 'cancel' },
-                    { text: 'Premium\'a Geç', onPress: () => { /* Navigate to upgrade */ } }
-                ]
-            );
-            return;
-        }
-
         if (Platform.OS !== 'web') {
-            Alert.alert('Bilgi', 'PDF indirme şu an sadece web versiyonunda desteklenmektedir.');
+            Alert.alert('Bilgi', 'Rapor çıktısı/PDF web sürümünde kullanılabilir. Mobil cihazda gelişimi panelden takip edebilirsiniz.');
             return;
         }
-
+        if (scores.length === 0) {
+            Alert.alert('Bilgi', 'Rapor oluşturmak için önce birkaç oyun oynanmalıdır.');
+            return;
+        }
         setGeneratingPDF(true);
         try {
-            // Load jsPDF from CDN at runtime (avoids Metro bundler issues)
-            const loadJsPDF = (): Promise<any> => {
-                return new Promise((resolve, reject) => {
-                    if ((window as any).jspdf) {
-                        resolve((window as any).jspdf.jsPDF);
-                        return;
-                    }
-                    const script = document.createElement('script');
-                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-                    script.onload = () => resolve((window as any).jspdf.jsPDF);
-                    script.onerror = () => reject(new Error('jsPDF yüklenemedi'));
-                    document.head.appendChild(script);
-                });
-            };
-
-            // Load Roboto font from CDN for Turkish character support
-            const loadRobotoFont = async (): Promise<string | null> => {
-                try {
-                    const fontResponse = await fetch(
-                        'https://raw.githubusercontent.com/nicktaras/roboto-font-base64/main/Roboto-Regular.txt'
-                    );
-                    if (fontResponse.ok) {
-                        return await fontResponse.text();
-                    }
-                    return null;
-                } catch {
-                    console.warn('Roboto font yüklenemedi, varsayılan font kullanılacak');
-                    return null;
-                }
-            };
-
-            const [jsPDF, robotoBase64] = await Promise.all([loadJsPDF(), loadRobotoFont()]);
-            const doc = new jsPDF('p', 'mm', 'a4');
-
-            // Embed Roboto font if loaded successfully
-            if (robotoBase64) {
-                doc.addFileToVFS('Roboto-Regular.ttf', robotoBase64);
-                doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-                doc.setFont('Roboto');
-                console.log('✅ Roboto font embedded for Turkish support');
+            const html = buildWeeklyReportHTML(weekly);
+            const win = window.open('', '_blank', 'width=920,height=1000');
+            if (!win) {
+                Alert.alert('Açılır Pencere Engellendi', 'Raporu görüntülemek için tarayıcınızda açılır pencerelere (popup) izin verin, sonra tekrar deneyin.');
+                return;
             }
-
-            const pageWidth = 210;
-            const pageHeight = 297;
-            const margin = 15;
-            let yPos = margin;
-
-            // ========== COLORFUL GRADIENT HEADER ==========
-            // Main gradient header
-            doc.setFillColor(102, 126, 234); // Purple gradient start
-            doc.rect(0, 0, pageWidth, 50, 'F');
-            doc.setFillColor(118, 75, 162); // Purple gradient end
-            doc.rect(0, 25, pageWidth, 25, 'F');
-
-            // Logo area
-            doc.setFillColor(255, 255, 255);
-            doc.circle(pageWidth / 2, 28, 18, 'F');
-            doc.setTextColor(102, 126, 234);
-            doc.setFontSize(24);
-            // Dynamic Title based on selection
-            let reportTitle = "Akademik Gelişim Raporu";
-            if (selectedGameIndex !== null && scores[selectedGameIndex]) {
-                const gameName = gameLabels[normalizeGameName(scores[selectedGameIndex].oyun_turu)]?.name || scores[selectedGameIndex].oyun_turu;
-                reportTitle = `${gameName} Analiz Raporu`;
-            }
-            doc.text(reportTitle, pageWidth / 2, 33, { align: 'center' });
-
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(10);
-            doc.text('childhoodtech.com', pageWidth / 2, 48, { align: 'center' });
-
-            yPos = 58;
-
-            // ========== CHILD INFO CARD ==========
-            // Rounded card with soft colors
-            doc.setFillColor(255, 249, 230); // Soft cream
-            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 30, 5, 5, 'F');
-
-            doc.setTextColor(38, 50, 56);
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
-            const cleanChildName = childName
-                .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-                .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
-                .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
-            doc.text(cleanChildName, margin + 10, yPos + 15);
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`${childAge} aylik`, margin + 10, yPos + 23);
-
-            // Date badge
-            const today = new Date();
-            const dateStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
-            doc.setFillColor(30, 136, 229);
-            doc.roundedRect(pageWidth - margin - 45, yPos + 8, 40, 14, 3, 3, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(9);
-            doc.text(dateStr, pageWidth - margin - 25, yPos + 17, { align: 'center' });
-
-            yPos += 38;
-
-            // ========== ACHIEVEMENT BADGE ==========
-            doc.setFillColor(255, 179, 0); // Golden yellow
-            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 25, 5, 5, 'F');
-
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(20);
-            doc.text('TROPHY', margin + 12, yPos + 16); // Placeholder for emoji
-            doc.setFontSize(14);
-            doc.setFont('helvetica', 'bold');
-            const cleanAchievement = bestAchievement.title
-                .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-                .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
-                .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
-            doc.text(cleanAchievement, margin + 35, yPos + 12);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            const cleanDesc = bestAchievement.description
-                .replace(/ş/g, 's').replace(/Ş/g, 'S').replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-                .replace(/ü/g, 'u').replace(/Ü/g, 'U').replace(/ö/g, 'o').replace(/Ö/g, 'O')
-                .replace(/ı/g, 'i').replace(/İ/g, 'I').replace(/ç/g, 'c').replace(/Ç/g, 'C');
-            doc.text(cleanDesc, margin + 35, yPos + 20);
-
-            yPos += 33;
-
-            // ========== STATS GRID (4 colorful cards) ==========
-            const cardWidth = (pageWidth - 2 * margin - 15) / 2;
-            const cardHeight = 28;
-            const gap = 5;
-
-            // Card 1 - Green (Correct Answers)
-            doc.setFillColor(102, 187, 106);
-            doc.roundedRect(margin, yPos, cardWidth, cardHeight, 4, 4, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${avgCorrectAnswers}/10`, margin + cardWidth / 2, yPos + 12, { align: 'center' });
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Dogru Cevap', margin + cardWidth / 2, yPos + 22, { align: 'center' });
-
-            // Card 2 - Blue (Cognitive Speed)
-            doc.setFillColor(66, 165, 245);
-            doc.roundedRect(margin + cardWidth + gap, yPos, cardWidth, cardHeight, 4, 4, 'F');
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${recalculatedCognitiveSpeed}`, margin + cardWidth + gap + cardWidth / 2, yPos + 12, { align: 'center' });
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Bilissel Hiz', margin + cardWidth + gap + cardWidth / 2, yPos + 22, { align: 'center' });
-
-            yPos += cardHeight + gap;
-
-            // Card 3 - Orange (Response Time)
-            doc.setFillColor(255, 112, 67);
-            doc.roundedRect(margin, yPos, cardWidth, cardHeight, 4, 4, 'F');
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text(formatTime(avgResponseTime), margin + cardWidth / 2, yPos + 12, { align: 'center' });
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Tepki Suresi', margin + cardWidth / 2, yPos + 22, { align: 'center' });
-
-            // Card 4 - Purple (Total Games)
-            doc.setFillColor(156, 39, 176);
-            doc.roundedRect(margin + cardWidth + gap, yPos, cardWidth, cardHeight, 4, 4, 'F');
-            doc.setFontSize(20);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`${scores.length}`, margin + cardWidth + gap + cardWidth / 2, yPos + 12, { align: 'center' });
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Toplam Oyun', margin + cardWidth + gap + cardWidth / 2, yPos + 22, { align: 'center' });
-
-            yPos += cardHeight + gap;
-
-            // ========== GÖRSEL DİKKAT SKORU (Sihirli Tuval ve Uzay Blokları için) ==========
-            if (visualAttentionGameScores.length > 0) {
-                // Card 5 - Green (Visual Attention Score)
-                doc.setFillColor(76, 175, 80); // Green
-                doc.roundedRect(margin, yPos, pageWidth - 2 * margin, cardHeight + 8, 4, 4, 'F');
-                doc.setTextColor(255, 255, 255);
-                doc.setFontSize(24);
-                doc.setFont('helvetica', 'bold');
-                doc.text(`${avgVisualAttentionScore}/100`, pageWidth / 2, yPos + 14, { align: 'center' });
-                doc.setFontSize(11);
-                doc.setFont('helvetica', 'normal');
-                doc.text('Gorsel Dikkat Skoru', pageWidth / 2, yPos + 26, { align: 'center' });
-                doc.setFontSize(8);
-                doc.text('Gorsel tarama ve odaklanma becerisini temsil eder', pageWidth / 2, yPos + 34, { align: 'center' });
-                yPos += cardHeight + 16;
-            }
-
-            yPos += 4;
-            doc.setFillColor(224, 224, 224);
-            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
-            doc.setFillColor(76, 175, 80);
-            doc.roundedRect(margin, yPos, (pageWidth - 2 * margin) * (successRate / 100), 12, 3, 3, 'F');
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'bold');
-            doc.text(`Basari Orani: %${successRate}`, pageWidth / 2, yPos + 8, { align: 'center' });
-
-            yPos += 20;
-
-            // ========== AI REPORT SECTION ==========
-            doc.setFillColor(243, 229, 245); // Light purple
-            doc.roundedRect(margin, yPos, pageWidth - 2 * margin, 12, 3, 3, 'F');
-            doc.setTextColor(123, 31, 162);
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('AI Pedagojik Analiz', margin + 5, yPos + 8);
-            yPos += 18;
-
-            // Choose the most relevant AI comment:
-            // 1. Cumulative report if available
-            // 2. Selected game's AI comment if game is selected
-            // 3. Latest AI comment as fallback
-            const pdfAIComment = cumulativeReport
-                ? cumulativeReport
-                : (selectedGameIndex !== null && scores[selectedGameIndex]?.yapay_zeka_yorumu)
-                    ? scores[selectedGameIndex].yapay_zeka_yorumu
-                    : latestAIComment;
-
-            if (pdfAIComment) {
-                doc.setFontSize(10);
-                // Use Roboto if available, otherwise fallback to helvetica
-                doc.setFont(robotoBase64 ? 'Roboto' : 'helvetica', 'normal');
-                doc.setTextColor(38, 50, 56);
-
-                let cleanText = pdfAIComment
-                    // Strip markdown bold/italic syntax
-                    .replace(/\*\*([^*]+)\*\*/g, '$1')  // **bold** -> bold
-                    .replace(/\*([^*]+)\*/g, '$1')      // *italic* -> italic
-                    .replace(/__([^_]+)__/g, '$1')      // __bold__ -> bold
-                    .replace(/_([^_]+)_/g, '$1');       // _italic_ -> italic
-
-                // Only transliterate if Roboto font not loaded (fallback)
-                if (!robotoBase64) {
-                    cleanText = cleanText
-                        .replace(/ş/g, 's').replace(/Ş/g, 'S')
-                        .replace(/ğ/g, 'g').replace(/Ğ/g, 'G')
-                        .replace(/ü/g, 'u').replace(/Ü/g, 'U')
-                        .replace(/ö/g, 'o').replace(/Ö/g, 'O')
-                        .replace(/ı/g, 'i').replace(/İ/g, 'I')
-                        .replace(/ç/g, 'c').replace(/Ç/g, 'C');
-                }
-
-                const lines = doc.splitTextToSize(cleanText, pageWidth - 2 * margin - 5);
-                lines.forEach((line: string) => {
-                    if (yPos > pageHeight - 35) {
-                        doc.addPage();
-                        yPos = margin;
-                    }
-                    doc.text(line, margin + 2, yPos);
-                    yPos += 5;
-                });
-            } else {
-                doc.setFontSize(10);
-                doc.setTextColor(96, 125, 139);
-                doc.text('Henuz bir AI analizi bulunmamaktadir.', margin + 5, yPos);
-                yPos += 10;
-            }
-
-            // ========== FOOTER ==========
-            yPos = pageHeight - 25;
-            doc.setFillColor(102, 126, 234);
-            doc.rect(0, yPos - 5, pageWidth, 30, 'F');
-
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(8);
-            doc.text('Turkiye Yuzyili Maarif Modeli kriterlerine uygun hazirlanmistir', pageWidth / 2, yPos + 2, { align: 'center' });
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('ChildhoodTech Ekibi', pageWidth / 2, yPos + 12, { align: 'center' });
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.text('childhoodtech.com - Erken Cocukluk Egitim Teknolojileri', pageWidth / 2, yPos + 20, { align: 'center' });
-
-            // Download
-            doc.save(`${cleanChildName}_Infografik_Rapor_${dateStr.replace(/\//g, '-')}.pdf`);
-
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
         } catch (error) {
-            console.error('PDF olusturma hatasi:', error);
-            Alert.alert('Hata', 'PDF olusturulurken bir hata olustu.');
+            console.error('Rapor oluşturma hatası:', error);
+            Alert.alert('Hata', 'Rapor oluşturulurken bir sorun oluştu. Lütfen tekrar deneyin.');
         } finally {
             setGeneratingPDF(false);
         }
@@ -1152,6 +877,78 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     {/* OZET TAB */}
                     {activeTab === 'ozet' && (
                         <Animated.View style={{ opacity: fadeAnim }}>
+                            {/* ================== HAFTALIK GELİŞİM RAPORU (Headline) ================== */}
+                            <View style={styles.weeklyReportCard}>
+                                <View style={styles.weeklyReportHeader}>
+                                    <Text style={{ fontSize: 26, marginRight: 10 }}>🗂️</Text>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={styles.weeklyReportTitle}>Haftalık Gelişim Raporu</Text>
+                                        <Text style={styles.weeklyReportRange}>{weekly.rangeLabel}</Text>
+                                    </View>
+                                </View>
+
+                                {weekly.gamesCount === 0 && (
+                                    <Text style={styles.weeklyEmptyText}>
+                                        Bu hafta henüz oyun oynanmadı. Rapor, en son oynanan oyunlardan derlenmiş bir gelişim özeti sunar.
+                                    </Text>
+                                )}
+
+                                {/* Özet istatistik kutucukları */}
+                                <View style={styles.weeklyStatRow}>
+                                    {[
+                                        { e: '🎮', v: `${weekly.gamesCount}`, l: weekly.hasWeekData ? 'Oyun' : 'Son Oyun', c: COLORS.primary },
+                                        { e: '📅', v: `${weekly.activeDays}/7`, l: 'Aktif Gün', c: COLORS.accent },
+                                        { e: '⏱️', v: `${weekly.totalMinutes}dk`, l: 'Süre', c: COLORS.orange },
+                                        { e: '⭐', v: `%${weekly.avgSuccess}`, l: 'Başarı', c: COLORS.secondary },
+                                    ].map((t, i) => (
+                                        <View key={i} style={styles.weeklyStatTile}>
+                                            <Text style={{ fontSize: 20 }}>{t.e}</Text>
+                                            <Text style={[styles.weeklyStatValue, { color: t.c }]}>{t.v}</Text>
+                                            <Text style={styles.weeklyStatLabel}>{t.l}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+
+                                {/* Çalışılan gelişim alanları (Maarif) */}
+                                {weekly.skillAreas.length > 0 && (
+                                    <View style={{ marginTop: 14 }}>
+                                        <Text style={styles.weeklySubTitle}>📚 Çalışılan Gelişim Alanları</Text>
+                                        <View style={styles.skillChipWrap}>
+                                            {weekly.skillAreas.slice(0, 6).map((a, i) => (
+                                                <View key={i} style={styles.skillChip}>
+                                                    <Text style={styles.skillChipText}>{a.area}</Text>
+                                                    <View style={styles.skillChipCount}>
+                                                        <Text style={styles.skillChipCountText}>{a.count}</Text>
+                                                    </View>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </View>
+                                )}
+
+                                {/* PDF / Yazdır butonu — herkese açık */}
+                                <TouchableOpacity
+                                    style={styles.weeklyDownloadBtn}
+                                    onPress={handleDownloadPDF}
+                                    disabled={generatingPDF}
+                                    activeOpacity={0.85}
+                                >
+                                    {generatingPDF ? (
+                                        <ActivityIndicator color="#fff" />
+                                    ) : (
+                                        <>
+                                            <Ionicons name="document-text" size={20} color="#fff" />
+                                            <Text style={styles.weeklyDownloadBtnText}>PDF Olarak İndir / Yazdır</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                                {Platform.OS === 'web' && (
+                                    <Text style={styles.weeklyHint}>
+                                        Açılan pencerede “Hedef → PDF olarak kaydet” seçerek cihazınıza indirebilirsiniz.
+                                    </Text>
+                                )}
+                            </View>
+
                             {/* Best Achievement Badge */}
                             <View style={styles.achievementCard}>
                                 <Text style={styles.achievementEmoji}>{bestAchievement.emoji}</Text>
@@ -1768,10 +1565,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     )}
 
 
-                    {/* PDF DOWNLOAD CARD - Modern centered design */}
+                    {/* PDF DOWNLOAD CARD - Haftalık Gelişim Raporu (herkese açık) */}
                     <View style={styles.pdfSection}>
                         <TouchableOpacity
-                            style={[styles.pdfCard, !isPremium && styles.pdfCardLocked]}
+                            style={styles.pdfCard}
                             onPress={handleDownloadPDF}
                             disabled={generatingPDF}
                         >
@@ -1784,18 +1581,15 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             <Ionicons name="document-text" size={32} color="#fff" />
                                         </View>
                                         <Text style={styles.pdfCardTitle}>
-                                            {isPremium ? '📄 Akademik Raporu İndir' : '🔒 Rapor İndirmek İçin Premium'}
+                                            📄 Haftalık Gelişim Raporu
                                         </Text>
                                         <Text style={styles.pdfCardSubtitle}>
-                                            {isPremium
-                                                ? 'Detaylı performans analizi ve AI önerilerini PDF olarak kaydedin'
-                                                : 'Full PDF raporu almak için paketinizi yükseltin'
-                                            }
+                                            Çocuğunuzun bu haftaki gelişimini profesyonel bir raporla PDF olarak kaydedin veya yazdırın
                                         </Text>
                                         <View style={styles.pdfCardButton}>
-                                            <Ionicons name={isPremium ? "download" : "lock-closed"} size={20} color={isPremium ? COLORS.primary : COLORS.textLight} />
-                                            <Text style={[styles.pdfCardButtonText, !isPremium && { color: COLORS.textLight }]}>
-                                                {isPremium ? 'PDF İndir' : 'Premium\'a Yükselt'}
+                                            <Ionicons name="download" size={20} color={COLORS.primary} />
+                                            <Text style={styles.pdfCardButtonText}>
+                                                PDF İndir / Yazdır
                                             </Text>
                                         </View>
                                     </>
@@ -2854,5 +2648,137 @@ const styles = StyleSheet.create({
     },
     tabTextActive: {
         color: '#ffffff',
+    },
+
+    // ================== Haftalık Gelişim Raporu Kartı ==================
+    weeklyReportCard: {
+        backgroundColor: COLORS.card,
+        borderRadius: 22,
+        padding: 18,
+        marginBottom: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(102,126,234,0.18)',
+        borderTopWidth: 5,
+        borderTopColor: COLORS.gradient1,
+        ...Platform.select({
+            web: { boxShadow: '0 6px 22px rgba(102,126,234,0.14)' },
+            default: { elevation: 5 },
+        }),
+    },
+    weeklyReportHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    weeklyReportTitle: {
+        fontSize: 18,
+        fontWeight: '800',
+        color: COLORS.text,
+    },
+    weeklyReportRange: {
+        fontSize: 12.5,
+        color: COLORS.textLight,
+        marginTop: 2,
+        fontWeight: '600',
+    },
+    weeklyEmptyText: {
+        fontSize: 12.5,
+        color: '#8D5A00',
+        backgroundColor: '#FFF3E0',
+        borderRadius: 10,
+        padding: 10,
+        marginBottom: 12,
+        lineHeight: 18,
+    },
+    weeklyStatRow: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    weeklyStatTile: {
+        flex: 1,
+        backgroundColor: '#F7F8FC',
+        borderRadius: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 4,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#ECEFF1',
+    },
+    weeklyStatValue: {
+        fontSize: 19,
+        fontWeight: '800',
+        marginTop: 3,
+    },
+    weeklyStatLabel: {
+        fontSize: 10.5,
+        color: COLORS.textLight,
+        marginTop: 2,
+        fontWeight: '600',
+    },
+    weeklySubTitle: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: COLORS.text,
+    },
+    skillChipWrap: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginTop: 8,
+    },
+    skillChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(30,136,229,0.10)',
+        borderRadius: 20,
+        paddingLeft: 12,
+        paddingRight: 5,
+        paddingVertical: 5,
+    },
+    skillChipText: {
+        fontSize: 12.5,
+        color: COLORS.primary,
+        fontWeight: '700',
+        marginRight: 6,
+    },
+    skillChipCount: {
+        minWidth: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: COLORS.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingHorizontal: 5,
+    },
+    skillChipCountText: {
+        fontSize: 11,
+        color: '#fff',
+        fontWeight: '800',
+    },
+    weeklyDownloadBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        backgroundColor: COLORS.gradient2,
+        borderRadius: 14,
+        paddingVertical: 14,
+        marginTop: 16,
+        ...Platform.select({
+            web: { background: `linear-gradient(135deg, ${COLORS.gradient1} 0%, ${COLORS.gradient2} 100%)` } as any,
+            default: {},
+        }),
+    },
+    weeklyDownloadBtnText: {
+        color: '#fff',
+        fontSize: 15.5,
+        fontWeight: '800',
+    },
+    weeklyHint: {
+        fontSize: 11,
+        color: COLORS.textLight,
+        textAlign: 'center',
+        marginTop: 8,
+        lineHeight: 15,
     },
 });
