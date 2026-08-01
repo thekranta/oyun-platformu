@@ -5,10 +5,9 @@ import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
 
-// Akıllı Sayı Avı — UYARLANIR (adaptif) zorluk gösterim oyunu.
-// Maarif: MAB.1 (Ritmik ve algısal sayabilme; sayı-nicelik ilişkisi).
-// Her seviye sonunda performans (doğru/hata/süre) motora bildirilir; her 3
-// seviyede bir sayı aralığı ve seçenek yakınlığı çocuğa göre ayarlanır.
+// Akıllı Örüntü — UYARLANIR (adaptif) zorluk. Maarif: MAB.3
+// (Matematiksel olgu/olay/nesnelere ilişkin çıkarım — örüntüyü sürdürme).
+// Zorluk arttıkça örüntü birimi uzar, renk çeşidi ve çeldirici sayısı artar.
 
 interface Props {
     onGameEnd: (
@@ -23,14 +22,9 @@ interface Props {
     childName?: string;
 }
 
-const TOTAL_ROUNDS = 9;         // 3 checkpoint (her 3 seviyede uyarlama)
-const OBJECT = '🍎';
-const TARGET_MS = 7000;         // "hızlı" eşiği (hız değerlendirmesi için)
-
-// Zorluğa göre sayı aralığı
-const RANGE_BY_DIFF: Record<number, [number, number]> = {
-    1: [1, 3], 2: [1, 5], 3: [2, 6], 4: [4, 8], 5: [5, 10],
-};
+const TOTAL_ROUNDS = 9;
+const TARGET_MS = 9000;
+const PALETTE = ['🔴', '🔵', '🟡', '🟢', '🟣', '🟠'];
 
 const shuffle = <T,>(arr: T[]): T[] => {
     const a = [...arr];
@@ -41,20 +35,27 @@ const shuffle = <T,>(arr: T[]): T[] => {
     return a;
 };
 
-function buildRound(diff: number): { count: number; options: number[] } {
-    const [lo, hi] = RANGE_BY_DIFF[diff] || [1, 5];
-    const count = lo + Math.floor(Math.random() * (hi - lo + 1));
+interface Round { shown: string[]; answer: string; options: string[]; }
 
-    const pool: number[] = [];
-    for (let n = 1; n <= 10; n++) if (n !== count) pool.push(n);
-    // Yüksek zorlukta çeldiriciler sayıya YAKIN (ayırt etmesi zor), düşükte uzak
-    if (diff >= 4) pool.sort((a, b) => Math.abs(a - count) - Math.abs(b - count));
-    else shuffle(pool);
-    const options = shuffle([count, ...pool.slice(0, 3)]);
-    return { count, options };
+function buildRound(diff: number): Round {
+    const colorsCount = diff <= 2 ? 2 : diff <= 4 ? 3 : 4;
+    const unitLen = diff <= 2 ? 2 : 3;
+    const colors = shuffle(PALETTE).slice(0, colorsCount);
+    const unit = colors.slice(0, unitLen);          // örüntü birimi (sıra karışık paletten)
+    const reps = 2;
+    const p = Math.floor(Math.random() * unitLen);  // kısmi tekrar → cevap değişkenliği
+    const shownCount = reps * unitLen + p;
+    const shown = Array.from({ length: shownCount }, (_, i) => unit[i % unitLen]);
+    const answer = unit[shownCount % unitLen];
+
+    const optionCount = diff >= 3 ? 4 : 3;
+    const distractPool = [...colors.filter(c => c !== answer), ...PALETTE.filter(c => !colors.includes(c))];
+    const distractors = shuffle(distractPool).slice(0, optionCount - 1);
+    const options = shuffle([answer, ...distractors]);
+    return { shown, answer, options };
 }
 
-export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
+export default function AkilliOruntu({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
     const START_DIFF = 2;
     const { recordLevel } = useAdaptiveDifficulty({
         minDifficulty: 1, maxDifficulty: 5, checkpointEvery: 3, startDifficulty: START_DIFF,
@@ -62,9 +63,8 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
 
     const [round, setRound] = useState(1);
     const [current, setCurrent] = useState(() => buildRound(START_DIFF));
-    const [displayDiff, setDisplayDiff] = useState(START_DIFF);
     const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
-    const [selected, setSelected] = useState<number | null>(null);
+    const [selected, setSelected] = useState<string | null>(null);
     const [gameReady, setGameReady] = useState(false);
 
     const startTimeRef = useRef(Date.now());
@@ -72,6 +72,7 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
     const levelErrorsRef = useRef(0);
     const totalMovesRef = useRef(0);
     const totalErrorsRef = useRef(0);
+    const diffRef = useRef(START_DIFF);
     const lockRef = useRef(false);
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -79,46 +80,43 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
     const shake = useRef(new Animated.Value(0)).current;
 
     React.useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
-
     const startTimer = (t: ReturnType<typeof setTimeout>) => { timersRef.current.push(t); return t; };
 
     const nextRound = useCallback((solvedInDiff: number) => {
-        // Seviye sonucu motora bildirilir; sıradaki zorluk döner
         const timeMs = Date.now() - levelStartRef.current;
-        const errs = levelErrorsRef.current;
-        const nextDiff = recordLevel({ correct: 1, total: 1, errors: errs, timeMs, targetMs: TARGET_MS });
+        const nextDiff = recordLevel({ correct: 1, total: 1, errors: levelErrorsRef.current, timeMs, targetMs: TARGET_MS });
 
         if (round >= TOTAL_ROUNDS) {
             const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-            onGameEnd('akilli-sayi-avi', duration, totalMovesRef.current, totalErrorsRef.current, undefined, {
+            onGameEnd('akilli-oruntu', duration, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: solvedInDiff,
-                kazanimOdagi: 'MAB.1 Sayı-Nicelik İlişkisi (uyarlanır zorluk)',
+                kazanimOdagi: 'MAB.3 Örüntüyü sürdürme / çıkarım (uyarlanır zorluk)',
             });
             return;
         }
         levelErrorsRef.current = 0;
         levelStartRef.current = Date.now();
+        diffRef.current = nextDiff;
         setRound(r => r + 1);
         setCurrent(buildRound(nextDiff));
-        setDisplayDiff(nextDiff);
         setSelected(null);
         setFeedback('idle');
         lockRef.current = false;
     }, [round, recordLevel, onGameEnd]);
 
-    const handlePick = (n: number) => {
+    const handlePick = (c: string) => {
         if (lockRef.current || feedback === 'correct') return;
         totalMovesRef.current += 1;
-        setSelected(n);
+        setSelected(c);
 
-        if (n === current.count) {
+        if (c === current.answer) {
             lockRef.current = true;
             setFeedback('correct');
             Animated.sequence([
                 Animated.timing(bump, { toValue: 1.15, duration: 140, useNativeDriver: true }),
                 Animated.timing(bump, { toValue: 1, duration: 140, useNativeDriver: true }),
             ]).start();
-            const solvedInDiff = displayDiff;
+            const solvedInDiff = diffRef.current;
             startTimer(setTimeout(() => nextRound(solvedInDiff), 850));
         } else {
             levelErrorsRef.current += 1;
@@ -136,54 +134,52 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
     return (
         <DynamicBackground>
             <View style={styles.container}>
-                {/* Header */}
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
                         <Ionicons name="close" size={26} color="#d84315" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>📈 Akıllı Sayı Avı</Text>
+                    <Text style={styles.title}>📈 Akıllı Örüntü</Text>
                     <View style={styles.roundBadge}>
                         <Text style={styles.roundText}>{round}/{TOTAL_ROUNDS}</Text>
                     </View>
                 </View>
 
-                {/* Soru */}
-                <Text style={styles.question}>Kaç tane {OBJECT} var?</Text>
+                <Text style={styles.question}>Sırada hangisi gelmeli?</Text>
 
-                {/* Nesneler */}
-                <Animated.View style={[styles.objectsCard, { transform: [{ scale: bump }, { translateX: shake }] }]}>
-                    <View style={styles.objectsWrap}>
-                        {Array.from({ length: current.count }, (_, i) => (
-                            <Text key={i} style={styles.object}>{OBJECT}</Text>
+                {/* Örüntü dizisi */}
+                <Animated.View style={[styles.seqCard, { transform: [{ scale: bump }, { translateX: shake }] }]}>
+                    <View style={styles.seqWrap}>
+                        {current.shown.map((c, i) => (
+                            <Text key={i} style={styles.seqItem}>{c}</Text>
                         ))}
+                        <View style={styles.qBox}><Text style={styles.qMark}>?</Text></View>
                     </View>
                 </Animated.View>
 
-                {/* Sayı seçenekleri */}
+                {/* Seçenekler */}
                 <View style={styles.optionsRow}>
-                    {current.options.map((n) => {
-                        const isSel = selected === n;
-                        const showCorrect = feedback !== 'idle' && n === current.count && (isSel || feedback === 'correct');
-                        const showWrong = feedback === 'wrong' && isSel && n !== current.count;
+                    {current.options.map((c, idx) => {
+                        const isSel = selected === c;
+                        const showCorrect = feedback !== 'idle' && c === current.answer && (isSel || feedback === 'correct');
+                        const showWrong = feedback === 'wrong' && isSel && c !== current.answer;
                         return (
                             <TouchableOpacity
-                                key={n}
+                                key={`${c}-${idx}`}
                                 style={[styles.optionBtn, showCorrect && styles.optionCorrect, showWrong && styles.optionWrong]}
-                                onPress={() => handlePick(n)}
+                                onPress={() => handlePick(c)}
                                 activeOpacity={0.85}
                                 disabled={feedback === 'correct'}
                             >
-                                <Text style={[styles.optionText, (showCorrect || showWrong) && { color: '#fff' }]}>{n}</Text>
+                                <Text style={styles.optionEmoji}>{c}</Text>
                             </TouchableOpacity>
                         );
                     })}
                 </View>
 
                 <Text style={styles.hint}>
-                    {feedback === 'correct' ? 'Harika! 🎉' : feedback === 'wrong' ? 'Tekrar say ve dene 👀' : 'Doğru sayıya dokun'}
+                    {feedback === 'correct' ? 'Harika! 🎉' : feedback === 'wrong' ? 'Örüntüye tekrar bak 👀' : 'Örüntüyü sürdür'}
                 </Text>
 
-                {/* İlerleme noktaları */}
                 <View style={styles.progressDots}>
                     {Array.from({ length: TOTAL_ROUNDS }, (_, i) => (
                         <View key={i} style={[styles.pDot, i < round - 1 && styles.pDotDone, i === round - 1 && styles.pDotCurrent]} />
@@ -193,7 +189,7 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Nesneleri say ve doğru sayıya dokun! Sen başardıkça oyun akıllanır 📈"
+                    message="Renk örüntüsünü çöz ve sıradakini bul! Sen başardıkça zorlaşır 📈"
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}
@@ -211,24 +207,26 @@ const styles = StyleSheet.create({
     roundBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
-    question: { fontSize: 20, fontWeight: '800', color: '#37474F', marginBottom: 12, marginTop: 6, textAlign: 'center' },
+    question: { fontSize: 20, fontWeight: '800', color: '#37474F', marginTop: 6, marginBottom: 12, textAlign: 'center' },
 
-    objectsCard: {
+    seqCard: {
         backgroundColor: '#FFFDF5', borderRadius: 24, borderWidth: 3, borderColor: '#FFE0B2',
-        padding: 16, minHeight: 150, width: '100%', maxWidth: 460, justifyContent: 'center',
+        padding: 16, minHeight: 96, width: '100%', maxWidth: 480, justifyContent: 'center',
         elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 4,
     },
-    objectsWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 6 },
-    object: { fontSize: 40, margin: 3 },
+    seqWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 6 },
+    seqItem: { fontSize: 38, marginHorizontal: 2 },
+    qBox: { width: 52, height: 52, borderRadius: 14, borderWidth: 3, borderColor: '#FF8C00', borderStyle: 'dashed', backgroundColor: '#FFF3E0', alignItems: 'center', justifyContent: 'center', marginLeft: 4 },
+    qMark: { fontSize: 30, fontWeight: '900', color: '#FF8C00' },
 
-    optionsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 20 },
+    optionsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 22 },
     optionBtn: {
-        width: 64, height: 64, borderRadius: 20, backgroundColor: '#E3F2FD', borderWidth: 3, borderColor: '#2196F3',
+        width: 68, height: 68, borderRadius: 20, backgroundColor: '#fff', borderWidth: 3, borderColor: '#CFD8DC',
         alignItems: 'center', justifyContent: 'center', elevation: 4,
     },
-    optionCorrect: { backgroundColor: '#4CAF50', borderColor: '#2E7D32' },
-    optionWrong: { backgroundColor: '#EF5350', borderColor: '#C62828' },
-    optionText: { fontSize: 28, fontWeight: '900', color: '#0D47A1' },
+    optionCorrect: { borderColor: '#2E7D32', backgroundColor: '#E8F5E9' },
+    optionWrong: { borderColor: '#C62828', backgroundColor: '#FFEBEE' },
+    optionEmoji: { fontSize: 34 },
 
     hint: { fontSize: 15, color: '#5D4037', marginTop: 16, fontWeight: '600', minHeight: 22 },
 

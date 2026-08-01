@@ -18,6 +18,8 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'eksik-sayi-bul', title: 'Eksik Sayi Bul', status: 'core', domain: 'Matematik', skillFocus: 'Sayi farkindaligi', routeKey: 'eksik-sayi-bul' },
   { id: 'eksik-sayi-bul-2', title: 'Eksik Sayi Bul 6-10', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi farkindaligi (6-10)', routeKey: 'eksik-sayi-bul-2' },
   { id: 'akilli-sayi-avi', title: 'Akilli Sayi Avi', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi-nicelik (uyarlanir zorluk)', routeKey: 'akilli-sayi-avi', adaptive: true },
+  { id: 'akilli-miktar', title: 'Akilli Miktar', status: 'secondary', domain: 'Matematik', skillFocus: 'Nicelik karsilastirma (uyarlanir zorluk)', routeKey: 'akilli-miktar', adaptive: true },
+  { id: 'akilli-oruntu', title: 'Akilli Oruntu', status: 'secondary', domain: 'Bilissel', skillFocus: 'Oruntu / cikarim (uyarlanir zorluk)', routeKey: 'akilli-oruntu', adaptive: true },
   { id: 'gruplama', title: 'Gruplama Oyunu', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma', routeKey: 'gruplama' },
   { id: 'mutfak-dedektifi', title: 'Mutfak Dedektifi', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma ve gorsel dikkat', routeKey: 'mutfak-dedektifi' },
   { id: 'miktar-karsilastirma', title: 'Miktar Karsilastirma', status: 'core', domain: 'Matematik', skillFocus: 'Miktar algisi', routeKey: 'miktar-karsilastirma' },
