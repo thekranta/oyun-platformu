@@ -9,6 +9,7 @@ import { ActivityIndicator, Animated, Dimensions, Modal, Platform, ScrollView, S
 import {
   createDailyGamePlan,
   GAME_CARD_META,
+  GAME_EMOJI,
   getGamesByDomain,
   getTodayKey,
   MENU_CATEGORIES,
@@ -83,6 +84,21 @@ function WiggleButton({ onPress, style, children }: { onPress: () => void; style
       </TouchableOpacity>
     </Animated.View>
   );
+}
+
+// Surekli hafifce zıplayan emoji (oyun/kategori kartlarindaki canli gorsel).
+function BobbingEmoji({ emoji, delay = 0, size = 44, style }: { emoji: string; delay?: number; size?: number; style?: any }) {
+  const y = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(y, { toValue: 1, duration: 1150, delay, useNativeDriver: USE_NATIVE }),
+        Animated.timing(y, { toValue: 0, duration: 1150, useNativeDriver: USE_NATIVE }),
+      ]),
+    ).start();
+  }, [y, delay]);
+  const translateY = y.interpolate({ inputRange: [0, 1], outputRange: [0, -7] });
+  return <Animated.Text style={[{ fontSize: size }, style, { transform: [{ translateY }] }]}>{emoji}</Animated.Text>;
 }
 
 // Yumusakca yukari-asagi suzulen dekoratif emoji.
@@ -652,7 +668,7 @@ export default function App() {
                   onPress={() => setSelectedCategory(cat.domain)}
                   style={[styles.catCard, gradientStyle(cat.gradient[0], cat.gradient[1], cat.color), { shadowColor: cat.shadow }]}
                 >
-                  <Text style={styles.catEmoji}>{cat.emoji}</Text>
+                  <BobbingEmoji emoji={cat.emoji} size={46} delay={i * 100} style={styles.catEmoji} />
                   <Text style={styles.catLabel} numberOfLines={1}>{cat.label}</Text>
                   <View style={styles.catCountPill}>
                     <Text style={styles.catCountText}>{count} oyun</Text>
@@ -698,9 +714,10 @@ export default function App() {
                       onPress={() => { const rk = game.routeKey; setSelectedCategory(null); oyunuBaslat(rk); }}
                       style={[styles.gameCard, { backgroundColor: meta.color }]}
                     >
-                      <Ionicons name={meta.icon} size={38} color="white" style={{ marginBottom: 6 }} />
+                      <View style={styles.gameEmojiBadge}>
+                        <BobbingEmoji emoji={GAME_EMOJI[game.id] || '🎮'} size={46} delay={i * 120} />
+                      </View>
                       <Text style={styles.gameCardTitle} numberOfLines={2}>{meta.displayTitle || game.title}</Text>
-                      <Text style={styles.gameCardSub} numberOfLines={2}>{meta.subtitle || game.skillFocus}</Text>
                     </BouncyCard>
                   );
                 })}
@@ -945,7 +962,7 @@ const styles = StyleSheet.create({
 
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, maxWidth: 560, marginBottom: 4 },
   catCard: { width: 158, minHeight: 176, borderRadius: 26, paddingVertical: 18, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#4FACFE', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.35, shadowRadius: 1, elevation: 8 },
-  catEmoji: { fontSize: 44, lineHeight: 52, textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 4 },
+  catEmoji: { textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 4 },
   catLabel: { color: '#fff', fontSize: 17, lineHeight: 22, fontWeight: '900', marginTop: 6, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
   catCountPill: { marginTop: 8, backgroundColor: 'rgba(255,255,255,0.28)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
   catCountText: { color: '#fff', fontSize: 12, fontWeight: '800' },
@@ -961,8 +978,9 @@ const styles = StyleSheet.create({
   sheetTitle: { color: '#fff', fontSize: 22, fontWeight: '900', textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
   sheetClose: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center' },
   sheetGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, padding: 20, paddingBottom: 40 },
-  gameCard: { width: 150, height: 150, borderRadius: 24, padding: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#607D8B', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 5 },
-  gameCardTitle: { color: '#fff', fontSize: 16, fontWeight: '800', textAlign: 'center', marginTop: 2 },
+  gameCard: { width: 150, height: 158, borderRadius: 26, padding: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#607D8B', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.22, shadowRadius: 4, elevation: 5 },
+  gameEmojiBadge: { width: 82, height: 82, borderRadius: 41, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 2 },
+  gameCardTitle: { color: '#fff', fontSize: 15, fontWeight: '900', textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
   gameCardSub: { color: 'rgba(255,255,255,0.9)', fontSize: 11, textAlign: 'center', marginTop: 2 },
 
   // Uçuşan dekorlar

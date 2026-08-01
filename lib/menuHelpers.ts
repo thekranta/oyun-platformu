@@ -83,6 +83,28 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
 
+// Her oyun icin cocuk dostu buyuk emoji (secim ekraninda animasyonlu gorsel).
+export const GAME_EMOJI: Record<string, string> = {
+  hafiza: '🧠', siralama: '🔢', 'eksik-sayi-bul': '❓', gruplama: '🧺', 'mutfak-dedektifi': '🍳',
+  'miktar-karsilastirma': '📊', 'sayi-komsulari': '🚂', 'diziyi-tamamla': '🔁', 'bunu-soyle': '🎤',
+  kodlama: '🗺️', 'rakam-yazma': '✏️', 'kutuyu-bul': '📦', 'sayilari-birlestir': '🔗', yapboz: '🧩',
+  'golge-dedektifi': '🕵️', 'onluk-cerceve': '🔟', 'tarti-dengesi': '⚖️', 'sihirli-siseler': '🧪',
+  'sihirli-tuval': '🖼️', 'uzay-bloklari': '🚀', 'renkli-baglantalar': '🔀',
+  'ceviz-macera': '🌰', 'aile-sepeti-macerasi': '👨‍👩‍👧', 'adalet-hikayesi': '🤝', 'sevgi-hikayesi': '❤️', 'duygu-yuzleri': '😊',
+  'yaratici-cizim': '🖍️', 'muzik-calar': '🎵',
+  'renk-sepetleri': '🌈', 'zitlari-eslestir': '↔️', 'sekil-treni': '🔷', 'ayi-ailesi': '🐻', 'ciftlikte-sayalim': '🐔',
+  'ayni-farkli': '🟰', 'hangisi-farkli': '🔎', 'buyuk-orta-kucuk': '🧸', neredeyim: '📦', 'once-sonra': '⏳',
+  'sayiyi-bul': '3️⃣', 'en-uzun': '📏', 'dogru-kutu': '🗂️', 'ikizleri-bul': '👯', 'ne-ise-yarar': '🛠️',
+  'renk-oruntusu': '🔴', 'nokta-say': '⚫', 'canli-cansiz': '🌱', 'yuzer-batar': '🌊', 'duygu-eslestir': '🥰',
+  'sirayi-hatirla': '💡', 'agir-hafif': '🏋️', 'gunduz-gece': '🌗', 'kac-oldu': '➕', 'renkleri-karistir': '🎨',
+  'sekil-deligi': '🔺', 'az-cok-sirala': '📈',
+  'ilk-harf': '🔤', 'iyilik-yap': '💛', 'ne-degisti': '🔍', 'kac-kaldi': '➖', 'buyuk-sayi': '💯', 'cizim-sayfalari': '🖌️',
+  vucudum: '🧒', duyularimiz: '👀', 'saglikli-yiyecek': '🍎', 'temizlik-zamani': '🧼', 'guvende-kal': '🚦',
+  'hava-kiyafet': '🌦️', labirent: '🐭', 'hayvan-evi': '🏡', meslekler: '👷', buyuyunce: '🐛', 'geri-donusum': '♻️',
+  'esit-paylastir': '🍪', araclar: '🚗', 'ne-yer': '🥕', 'ne-nerede': '🏠', gunum: '⏰', 'renk-tonlari': '🌗',
+  'sicak-soguk': '🌡️',
+};
+
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
 
 // Ana menu kategori hub'i: her kategori katalogdaki `domain` alanina karsilik gelir.
