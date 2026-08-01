@@ -132,6 +132,12 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'gunum': { displayName: 'Günüm', alan: 'Sosyal Bilgiler', surec: 'Zamanı Algılama ve Kronolojik Düşünme', cikti: 'SAB.1', ciktiAciklama: 'Günlük rutini zaman sırasına (sabah-akşam) koyar; zaman kavramı', badgeAlan: 'Kavram (Zaman)' },
   'renk-tonlari': { displayName: 'Renk Tonları', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.3', ciktiAciklama: 'Renk tonlarını açıktan koyuya göre karşılaştırır ve sıralar (seriation)', badgeAlan: 'Kavram (Ton)' },
   'sicak-soguk': { displayName: 'Sıcak mı Soğuk mu?', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Nesneleri sıcaklık özelliğine göre çözümler ve sınıflandırır', badgeAlan: 'Kavram (Sıcaklık)' },
+
+  // ---------- Çizim (Sanat) - farklı formatlar ----------
+  'simetri-cizim': { displayName: 'Simetri Çizim', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Serbest çizim ve el-göz koordinasyonu; simetri sezgisi (aynalı çizim)', badgeAlan: 'Sanat / Simetri' },
+  'damga-sanati': { displayName: 'Damga Sanatı', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yaratıcı ifade ve kompozisyon; damga/çıkartma ile sahne oluşturma', badgeAlan: 'Sanat / Kompozisyon' },
+  'boyama-kitabi': { displayName: 'Boyama Kitabı', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yaratıcı ifade ve renk seçimi; resim bölgelerini boyama (ince motor)', badgeAlan: 'Sanat / Boyama' },
+  'nokta-birlestir': { displayName: 'Nokta Birleştir', alan: 'Matematik', surec: 'Sayma', cikti: 'MAB.1', ciktiAciklama: 'Sayıları 1\'den itibaren sırayla izler ve çizgiyle birleştirir (sayı sırası + çizgi çalışması)', badgeAlan: 'Çizim / Sayı Sırası' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

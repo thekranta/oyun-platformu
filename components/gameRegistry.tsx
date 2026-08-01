@@ -35,6 +35,10 @@ import NeDegisti from './NeDegisti';
 import KacKaldi from './KacKaldi';
 import BuyukSayi from './BuyukSayi';
 import CizimSayfalari from './CizimSayfalari';
+import SimetriCizim from './SimetriCizim';
+import DamgaSanati from './DamgaSanati';
+import BoyamaKitabi from './BoyamaKitabi';
+import NoktaBirlestir from './NoktaBirlestir';
 import Vucudum from './Vucudum';
 import Duyularimiz from './Duyularimiz';
 import SaglikliYiyecek from './SaglikliYiyecek';
@@ -195,6 +199,10 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'kac-kaldi': (c) => <KacKaldi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'buyuk-sayi': (c) => <BuyukSayi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'cizim-sayfalari': (c) => <CizimSayfalari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'simetri-cizim': (c) => <SimetriCizim onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'damga-sanati': (c) => <DamgaSanati onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'boyama-kitabi': (c) => <BoyamaKitabi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'nokta-birlestir': (c) => <NoktaBirlestir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'vucudum': (c) => <Vucudum onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'duyularimiz': (c) => <Duyularimiz onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'saglikli-yiyecek': (c) => <SaglikliYiyecek onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

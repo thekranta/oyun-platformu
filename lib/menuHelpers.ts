@@ -61,6 +61,10 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'kac-kaldi': { color: '#00897B', icon: 'remove-circle', displayTitle: 'Kaç Kaldı?', subtitle: 'Çıkarma' },
   'buyuk-sayi': { color: '#1E88E5', icon: 'swap-vertical', displayTitle: 'Büyük Sayı Hangisi?', subtitle: 'Karşılaştır' },
   'cizim-sayfalari': { color: '#26A69A', icon: 'brush', displayTitle: 'Çizim Sayfaları', subtitle: 'Kılavuzla çiz' },
+  'simetri-cizim': { color: '#7E57C2', icon: 'git-compare', displayTitle: 'Simetri Çizim', subtitle: 'Aynalı çiz' },
+  'damga-sanati': { color: '#00ACC1', icon: 'sparkles', displayTitle: 'Damga Sanatı', subtitle: 'Süsle' },
+  'boyama-kitabi': { color: '#AB47BC', icon: 'color-fill', displayTitle: 'Boyama Kitabı', subtitle: 'Bölgeleri boya' },
+  'nokta-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Nokta Birleştir', subtitle: 'Sırayla birleştir' },
   'vucudum': { color: '#EF5350', icon: 'body', displayTitle: 'Vücudum', subtitle: 'Organları göster' },
   'duyularimiz': { color: '#8E24AA', icon: 'eye', displayTitle: 'Duyularımız', subtitle: 'Hangi duyu?' },
   'saglikli-yiyecek': { color: '#43A047', icon: 'nutrition', displayTitle: 'Sağlıklı mı?', subtitle: 'Sağlıklıyı seç' },
@@ -103,6 +107,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'hava-kiyafet': '🌦️', labirent: '🐭', 'hayvan-evi': '🏡', meslekler: '👷', buyuyunce: '🐛', 'geri-donusum': '♻️',
   'esit-paylastir': '🍪', araclar: '🚗', 'ne-yer': '🥕', 'ne-nerede': '🏠', gunum: '⏰', 'renk-tonlari': '🌗',
   'sicak-soguk': '🌡️',
+  'simetri-cizim': '🦋', 'damga-sanati': '✨', 'boyama-kitabi': '🎨', 'nokta-birlestir': '✏️',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

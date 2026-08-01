@@ -74,6 +74,10 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'kac-kaldi', title: 'Kac Kaldi', status: 'secondary', domain: 'Matematik', skillFocus: 'Cikarma (5e kadar)', routeKey: 'kac-kaldi' },
   { id: 'buyuk-sayi', title: 'Buyuk Sayi Hangisi', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi karsilastirma', routeKey: 'buyuk-sayi' },
   { id: 'cizim-sayfalari', title: 'Cizim Sayfalari', status: 'creative', domain: 'Sanat', skillFocus: 'Kilavuzlu cizgi calismasi', routeKey: 'cizim-sayfalari' },
+  { id: 'simetri-cizim', title: 'Simetri Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Aynali cizim / simetri', routeKey: 'simetri-cizim' },
+  { id: 'damga-sanati', title: 'Damga Sanati', status: 'creative', domain: 'Sanat', skillFocus: 'Damga / kompozisyon', routeKey: 'damga-sanati' },
+  { id: 'boyama-kitabi', title: 'Boyama Kitabi', status: 'creative', domain: 'Sanat', skillFocus: 'Bolge boyama', routeKey: 'boyama-kitabi' },
+  { id: 'nokta-birlestir', title: 'Nokta Birlestir', status: 'creative', domain: 'Sanat', skillFocus: 'Nokta birlestirme / sayi sirasi', routeKey: 'nokta-birlestir' },
 
   { id: 'vucudum', title: 'Vucudum', status: 'secondary', domain: 'Saglik', skillFocus: 'Beden farkindaligi', routeKey: 'vucudum' },
   { id: 'duyularimiz', title: 'Duyularimiz', status: 'secondary', domain: 'Saglik', skillFocus: 'Duyu organlari', routeKey: 'duyularimiz' },
