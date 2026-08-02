@@ -20,6 +20,9 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'akilli-siniflandir': { color: '#43A047', icon: 'file-tray-stacked', displayTitle: 'Akıllı Sınıflandır', subtitle: 'Uyarlanır zorluk' },
   'akilli-once-sonra': { color: '#7E57C2', icon: 'hourglass', displayTitle: 'Akıllı Önce-Sonra', subtitle: 'Uyarlanır zorluk' },
   'dunya-bayraklari': { color: '#00897B', icon: 'flag', displayTitle: 'Dünya Bayrakları', subtitle: 'Kültürleri keşfet' },
+  'dunya-selamlari': { color: '#00ACC1', icon: 'hand-left', displayTitle: 'Dünya Selamları', subtitle: 'Merhaba de' },
+  'dunya-yapilari': { color: '#6D4C41', icon: 'business', displayTitle: 'Dünya Yapıları', subtitle: 'Anıtları tanı' },
+  'dunya-yiyecekleri': { color: '#F4511E', icon: 'restaurant', displayTitle: 'Dünya Yiyecekleri', subtitle: 'Lezzetleri keşfet' },
   'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Sınıflandırma' },
   'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Görsel dikkat' },
   'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcısı', subtitle: 'Hangisi daha çok?' },
@@ -147,7 +150,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
   'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
   // Kültür / Montessori
-  'dunya-bayraklari': '🌍',
+  'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

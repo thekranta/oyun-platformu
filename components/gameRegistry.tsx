@@ -92,6 +92,8 @@ import AkilliHarf from './AkilliHarf';
 import AkilliSiniflandir from './AkilliSiniflandir';
 import AkilliOnceSonra from './AkilliOnceSonra';
 import DunyaBayraklari from './DunyaBayraklari';
+import DunyaSelamlari from './DunyaSelamlari';
+import KulturEslestirme, { YAPILAR, YIYECEKLER } from './KulturEslestirme';
 import RenkliBaglantalar from './RenkliBaglantalar';
 import RenkSepetleri from './RenkSepetleri';
 import SayiKomsulari from './SayiKomsulari';
@@ -167,6 +169,25 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'akilli-siniflandir': (c) => <AkilliSiniflandir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-once-sonra': (c) => <AkilliOnceSonra onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-bayraklari': (c) => <DunyaBayraklari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'dunya-selamlari': (c) => <DunyaSelamlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'dunya-yapilari': (c) => (
+    <KulturEslestirme
+      onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad}
+      items={YAPILAR} oyunAdi="dunya-yapilari" title="🏛️ Dünya Yapıları"
+      kazanimOdagi="SAB.2 Kültürel yapıları tanıma (Montessori)"
+      introMessage="Dünyanın farklı yapıları ve anıtları! Aynısını sakince bul."
+      doneText="Aferin! Tüm yapıları keşfettin."
+    />
+  ),
+  'dunya-yiyecekleri': (c) => (
+    <KulturEslestirme
+      onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad}
+      items={YIYECEKLER} oyunAdi="dunya-yiyecekleri" title="🍽️ Dünya Yiyecekleri"
+      kazanimOdagi="SAB.2 Kültürel yiyecekleri tanıma (Montessori)"
+      introMessage="Dünyanın farklı lezzetleri! Aynısını sakince bul."
+      doneText="Aferin! Tüm lezzetleri keşfettin."
+    />
+  ),
   gruplama: (c) => <GruplamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'diziyi-tamamla': (c) => <DiziyiTamamla onGameEnd={c.onGameEnd} onLogout={c.onExit} />,
   'diziyi-tamamla-2': (c) => (

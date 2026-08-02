@@ -3,14 +3,44 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
-import { Flag, FLAGS, FlagSpec } from './WorldFlag';
 
-// Dünya Bayrakları — MONTESSORI tarzı kültürel farkındalık çalışması.
-// Puan/yarış YOK; kendi kendini düzelten (yanlış nazikçe titrer), doğru
-// eşleşmede ülke adı görünür (nomenklatür). Amaç: tüm bayrakları eşleştirmek.
-// Maarif: SAB.2 (36-48) — Toplumsal yaşama yönelik kültürel unsurları çözümleme.
-//
-// Bayraklar emoji DEĞİL, basit renkli View'larla çizilir → her cihazda aynı görünür.
+// KulturEslestirme — MONTESSORI genel kültürel eşleştirme (emoji öğeler).
+// Hedefteki öğenin (emoji + ad) aynısını koleksiyondan bul. Puan/yarış YOK,
+// kendi kendini düzeltir (yanlış nazikçe titrer), bulununca öğenin ADI görünür
+// (nomenklatür). Dünya Yapıları ve Dünya Yiyecekleri bu bileşeni paylaşır.
+// Maarif: SAB.2 (kültürel unsurları tanıma).
+
+export interface KItem { id: string; emoji: string; name: string; }
+
+export const YAPILAR: KItem[] = [
+    { id: 'kule', emoji: '🗼', name: 'Kule' },
+    { id: 'ozgurluk', emoji: '🗽', name: 'Özgürlük Anıtı' },
+    { id: 'tori', emoji: '⛩️', name: 'Tapınak Kapısı' },
+    { id: 'cami', emoji: '🕌', name: 'Cami' },
+    { id: 'tapinak', emoji: '🛕', name: 'Tapınak' },
+    { id: 'moai', emoji: '🗿', name: 'Taş Heykel' },
+    { id: 'sato', emoji: '🏰', name: 'Şato' },
+    { id: 'dolap', emoji: '🎡', name: 'Dönme Dolap' },
+    { id: 'kopru', emoji: '🌉', name: 'Köprü' },
+    { id: 'antik', emoji: '🏛️', name: 'Antik Yapı' },
+    { id: 'cesme', emoji: '⛲', name: 'Çeşme' },
+    { id: 'sinagog', emoji: '🕍', name: 'Sinagog' },
+];
+
+export const YIYECEKLER: KItem[] = [
+    { id: 'susi', emoji: '🍣', name: 'Suşi' },
+    { id: 'taco', emoji: '🌮', name: 'Taco' },
+    { id: 'kruvasan', emoji: '🥐', name: 'Kruvasan' },
+    { id: 'pizza', emoji: '🍕', name: 'Pizza' },
+    { id: 'manti', emoji: '🥟', name: 'Mantı' },
+    { id: 'eriste', emoji: '🍜', name: 'Erişte' },
+    { id: 'guvec', emoji: '🥘', name: 'Güveç' },
+    { id: 'kofte', emoji: '🧆', name: 'Köfte' },
+    { id: 'baget', emoji: '🥖', name: 'Baget' },
+    { id: 'corba', emoji: '🍲', name: 'Çorba' },
+    { id: 'simit', emoji: '🥯', name: 'Simit' },
+    { id: 'pasta', emoji: '🍰', name: 'Pasta' },
+];
 
 interface Props {
     onGameEnd: (
@@ -23,6 +53,12 @@ interface Props {
     ) => void;
     onExit?: () => void;
     childName?: string;
+    items: KItem[];
+    oyunAdi: string;
+    title: string;
+    kazanimOdagi: string;
+    introMessage: string;
+    doneText: string;
 }
 
 const BOARD_SIZE = 8;
@@ -36,8 +72,8 @@ const shuffle = <T,>(arr: T[]): T[] => {
     return a;
 };
 
-export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
-    const board = useMemo(() => shuffle(FLAGS).slice(0, BOARD_SIZE), []);
+export default function KulturEslestirme({ onGameEnd, onExit, childName = 'Küçük Kaşif', items, oyunAdi, title, kazanimOdagi, introMessage, doneText }: Props) {
+    const board = useMemo(() => shuffle(items).slice(0, Math.min(BOARD_SIZE, items.length)), [items]);
     const targetOrder = useMemo(() => shuffle(board.map((_, i) => i)), [board]);
 
     const [found, setFound] = useState<Set<string>>(new Set());
@@ -59,36 +95,35 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
         return shakeMap.current[id];
     };
 
-    // Sıradaki hedef: targetOrder'da henüz bulunmayan ilk bayrak
     const targetIndex = targetOrder.find(i => !found.has(board[i].id));
     const target = targetIndex !== undefined ? board[targetIndex] : null;
     const allDone = target === null;
 
-    const handleTap = (spec: FlagSpec) => {
+    const handleTap = (id: string) => {
         if (lockRef.current || allDone || !target) return;
-        if (found.has(spec.id)) return;
+        if (found.has(id)) return;
         movesRef.current += 1;
 
-        if (spec.id === target.id) {
-            const nf = new Set(found); nf.add(spec.id);
+        if (id === target.id) {
+            const nf = new Set(found); nf.add(id);
             setFound(nf);
-            setJustFound(spec.id);
+            setJustFound(id);
             startTimer(setTimeout(() => setJustFound(null), 900));
 
             if (nf.size === board.length) {
                 lockRef.current = true;
                 startTimer(setTimeout(() => {
                     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-                    onGameEnd('dunya-bayraklari', duration, movesRef.current, errorsRef.current, undefined, {
+                    onGameEnd(oyunAdi, duration, movesRef.current, errorsRef.current, undefined, {
                         zorlukSeviyesi: 1,
-                        kazanimOdagi: 'SAB.2 Kültürel unsurları tanıma (dünya bayrakları) — Montessori',
+                        kazanimOdagi,
                     });
-                }, 1600));
+                }, 1500));
             }
         } else {
             errorsRef.current += 1;
-            setWrongId(spec.id);
-            const sh = shakeFor(spec.id);
+            setWrongId(id);
+            const sh = shakeFor(id);
             Animated.sequence([
                 Animated.timing(sh, { toValue: 7, duration: 55, useNativeDriver: true }),
                 Animated.timing(sh, { toValue: -7, duration: 55, useNativeDriver: true }),
@@ -105,44 +140,42 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
                     <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
                         <Ionicons name="close" size={26} color="#37474F" />
                     </TouchableOpacity>
-                    <Text style={styles.title}>🌍 Dünya Bayrakları</Text>
+                    <Text style={styles.title}>{title}</Text>
                     <View style={styles.countBadge}>
                         <Text style={styles.countText}>{found.size}/{board.length}</Text>
                     </View>
                 </View>
 
-                {/* Hedef (nomenklatür kartı) */}
                 {target && !allDone && (
                     <View style={styles.targetCard}>
                         <Text style={styles.targetLabel}>Bunun aynısını bul</Text>
-                        <Flag spec={target} w={120} />
+                        <Text style={styles.targetEmoji}>{target.emoji}</Text>
                         <Text style={styles.targetName}>{target.name}</Text>
                     </View>
                 )}
                 {allDone && (
                     <View style={styles.targetCard}>
-                        <Text style={styles.doneEmoji}>🌍✨</Text>
-                        <Text style={styles.doneText}>Aferin! Tüm bayrakları eşleştirdin.</Text>
+                        <Text style={styles.targetEmoji}>🌍✨</Text>
+                        <Text style={styles.doneText}>{doneText}</Text>
                     </View>
                 )}
 
-                {/* Bayrak koleksiyonu */}
                 <View style={styles.grid}>
-                    {board.map((spec) => {
-                        const isFound = found.has(spec.id);
-                        const isJust = justFound === spec.id;
-                        const isWrong = wrongId === spec.id;
+                    {board.map((item) => {
+                        const isFound = found.has(item.id);
+                        const isJust = justFound === item.id;
+                        const isWrong = wrongId === item.id;
                         return (
-                            <Animated.View key={spec.id} style={{ transform: [{ translateX: shakeFor(spec.id) }] }}>
+                            <Animated.View key={item.id} style={{ transform: [{ translateX: shakeFor(item.id) }] }}>
                                 <TouchableOpacity
                                     style={[styles.slot, isFound && styles.slotFound, isJust && styles.slotJust, isWrong && styles.slotWrong]}
-                                    onPress={() => handleTap(spec)}
+                                    onPress={() => handleTap(item.id)}
                                     activeOpacity={0.9}
                                     disabled={isFound || allDone}
                                 >
-                                    <Flag spec={spec} w={82} />
+                                    <Text style={styles.slotEmoji}>{item.emoji}</Text>
                                     {isFound
-                                        ? <Text style={styles.slotName}>{spec.name}</Text>
+                                        ? <Text style={styles.slotName}>{item.name}</Text>
                                         : <Text style={styles.slotNamePlaceholder}> </Text>}
                                     {isFound && <View style={styles.check}><Text style={styles.checkText}>✓</Text></View>}
                                 </TouchableOpacity>
@@ -152,14 +185,14 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
                 </View>
 
                 <Text style={styles.hint}>
-                    {allDone ? 'Dünyayı gezdin! 🌏' : 'Yukarıdaki bayrağın aynısına dokun — acele yok'}
+                    {allDone ? 'Dünyayı keşfettin! 🌏' : 'Yukarıdakinin aynısına dokun — acele yok'}
                 </Text>
             </View>
 
             {!gameReady && (
                 <CountdownOverlay
                     interaction="tap"
-                    message="Dünyanın farklı ülkelerinden bayraklar! Aynı olanı sakince bul ve eşleştir."
+                    message={introMessage}
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
@@ -181,21 +214,22 @@ const styles = StyleSheet.create({
         alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 20, paddingVertical: 14, paddingHorizontal: 24,
         marginBottom: 18, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4,
     },
-    targetLabel: { fontSize: 12, color: '#78909C', fontWeight: '600', marginBottom: 8, letterSpacing: 0.5 },
-    targetName: { fontSize: 20, fontWeight: '800', color: '#263238', marginTop: 10 },
-    doneEmoji: { fontSize: 44 },
+    targetLabel: { fontSize: 12, color: '#78909C', fontWeight: '600', marginBottom: 6, letterSpacing: 0.5 },
+    targetEmoji: { fontSize: 72 },
+    targetName: { fontSize: 20, fontWeight: '800', color: '#263238', marginTop: 6 },
     doneText: { fontSize: 17, fontWeight: '800', color: '#2E7D32', marginTop: 8, textAlign: 'center' },
 
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, maxWidth: 520 },
     slot: {
-        width: 104, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.9)', borderWidth: 2, borderColor: '#E0E0E0',
-        alignItems: 'center', justifyContent: 'center', paddingVertical: 10, paddingHorizontal: 6,
+        width: 96, height: 96, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.9)', borderWidth: 2, borderColor: '#E0E0E0',
+        alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4,
     },
     slotFound: { borderColor: '#66BB6A', backgroundColor: '#F1F8E9' },
     slotJust: { borderColor: '#43A047', backgroundColor: '#E8F5E9' },
     slotWrong: { borderColor: '#EF9A9A' },
-    slotName: { fontSize: 12, fontWeight: '700', color: '#33691E', marginTop: 6, textAlign: 'center' },
-    slotNamePlaceholder: { fontSize: 12, marginTop: 6 },
+    slotEmoji: { fontSize: 42 },
+    slotName: { fontSize: 11, fontWeight: '700', color: '#33691E', marginTop: 4, textAlign: 'center' },
+    slotNamePlaceholder: { fontSize: 11, marginTop: 4 },
     check: { position: 'absolute', top: -8, right: -8, width: 24, height: 24, borderRadius: 12, backgroundColor: '#43A047', alignItems: 'center', justifyContent: 'center', elevation: 3 },
     checkText: { color: '#fff', fontSize: 14, fontWeight: '900' },
 

@@ -52,7 +52,7 @@ const GAME_EMOJI: Record<string, string> = {
     'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
     'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
     'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
-    'dunya-bayraklari': '🌍',
+    'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
 };
 
 export interface GameDisplay {
