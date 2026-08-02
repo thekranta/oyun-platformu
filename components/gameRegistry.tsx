@@ -86,6 +86,8 @@ import AkilliEksikSayi from './AkilliEksikSayi';
 import AkilliSiralama from './AkilliSiralama';
 import AkilliToplama from './AkilliToplama';
 import AkilliFarkli from './AkilliFarkli';
+import AkilliCikarma from './AkilliCikarma';
+import AkilliHafiza from './AkilliHafiza';
 import RenkliBaglantalar from './RenkliBaglantalar';
 import RenkSepetleri from './RenkSepetleri';
 import SayiKomsulari from './SayiKomsulari';
@@ -155,6 +157,8 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'akilli-siralama': (c) => <AkilliSiralama onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-toplama': (c) => <AkilliToplama onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-farkli': (c) => <AkilliFarkli onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-cikarma': (c) => <AkilliCikarma onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-hafiza': (c) => <AkilliHafiza onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   gruplama: (c) => <GruplamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'diziyi-tamamla': (c) => <DiziyiTamamla onGameEnd={c.onGameEnd} onLogout={c.onExit} />,
   'diziyi-tamamla-2': (c) => (
