@@ -19,6 +19,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'akilli-harf': { color: '#EC407A', icon: 'text', displayTitle: 'Akıllı Harf', subtitle: 'Uyarlanır zorluk' },
   'akilli-siniflandir': { color: '#43A047', icon: 'file-tray-stacked', displayTitle: 'Akıllı Sınıflandır', subtitle: 'Uyarlanır zorluk' },
   'akilli-once-sonra': { color: '#7E57C2', icon: 'hourglass', displayTitle: 'Akıllı Önce-Sonra', subtitle: 'Uyarlanır zorluk' },
+  'dunya-bayraklari': { color: '#00897B', icon: 'flag', displayTitle: 'Dünya Bayrakları', subtitle: 'Kültürleri keşfet' },
   'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Sınıflandırma' },
   'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Görsel dikkat' },
   'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcısı', subtitle: 'Hangisi daha çok?' },
@@ -145,6 +146,8 @@ export const GAME_EMOJI: Record<string, string> = {
   'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
   'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
   'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
+  // Kültür / Montessori
+  'dunya-bayraklari': '🌍',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
