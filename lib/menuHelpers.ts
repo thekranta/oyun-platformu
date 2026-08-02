@@ -16,6 +16,9 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'akilli-farkli': { color: '#00ACC1', icon: 'color-filter', displayTitle: 'Akıllı Farklı', subtitle: 'Uyarlanır zorluk' },
   'akilli-cikarma': { color: '#8D6E63', icon: 'remove-circle', displayTitle: 'Akıllı Çıkarma', subtitle: 'Uyarlanır zorluk' },
   'akilli-hafiza': { color: '#5C6BC0', icon: 'grid', displayTitle: 'Akıllı Hafıza', subtitle: 'Uyarlanır zorluk' },
+  'akilli-harf': { color: '#EC407A', icon: 'text', displayTitle: 'Akıllı Harf', subtitle: 'Uyarlanır zorluk' },
+  'akilli-siniflandir': { color: '#43A047', icon: 'file-tray-stacked', displayTitle: 'Akıllı Sınıflandır', subtitle: 'Uyarlanır zorluk' },
+  'akilli-once-sonra': { color: '#7E57C2', icon: 'hourglass', displayTitle: 'Akıllı Önce-Sonra', subtitle: 'Uyarlanır zorluk' },
   'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Sınıflandırma' },
   'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Görsel dikkat' },
   'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcısı', subtitle: 'Hangisi daha çok?' },
@@ -141,6 +144,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
   'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
   'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
+  'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

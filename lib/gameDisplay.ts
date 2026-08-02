@@ -51,6 +51,7 @@ const GAME_EMOJI: Record<string, string> = {
     'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
     'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
     'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
+    'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
 };
 
 export interface GameDisplay {
