@@ -49,7 +49,7 @@ const GAME_EMOJI: Record<string, string> = {
     'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
     // Adaptif oyunlar
     'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
-    'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊',
+    'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
 };
 
 export interface GameDisplay {

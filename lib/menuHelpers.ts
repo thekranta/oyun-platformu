@@ -12,6 +12,8 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'akilli-oruntu': { color: '#7E57C2', icon: 'color-palette', displayTitle: 'Akıllı Örüntü', subtitle: 'Uyarlanır zorluk' },
   'akilli-eksik-sayi': { color: '#66BB6A', icon: 'help-circle', displayTitle: 'Akıllı Eksik Sayı', subtitle: 'Uyarlanır zorluk' },
   'akilli-siralama': { color: '#26A69A', icon: 'swap-vertical', displayTitle: 'Akıllı Sıralama', subtitle: 'Uyarlanır zorluk' },
+  'akilli-toplama': { color: '#EF6C00', icon: 'add-circle', displayTitle: 'Akıllı Toplama', subtitle: 'Uyarlanır zorluk' },
+  'akilli-farkli': { color: '#00ACC1', icon: 'color-filter', displayTitle: 'Akıllı Farklı', subtitle: 'Uyarlanır zorluk' },
   'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Sınıflandırma' },
   'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Görsel dikkat' },
   'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcısı', subtitle: 'Hangisi daha çok?' },
@@ -135,7 +137,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
   // Adaptif oyunlar
   'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
-  'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊',
+  'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

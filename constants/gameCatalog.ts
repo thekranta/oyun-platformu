@@ -22,6 +22,8 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'akilli-oruntu', title: 'Akilli Oruntu', status: 'secondary', domain: 'Bilissel', skillFocus: 'Oruntu / cikarim (uyarlanir zorluk)', routeKey: 'akilli-oruntu', adaptive: true },
   { id: 'akilli-eksik-sayi', title: 'Akilli Eksik Sayi', status: 'secondary', domain: 'Matematik', skillFocus: 'Eksik parca / sayi dizisi (uyarlanir zorluk)', routeKey: 'akilli-eksik-sayi', adaptive: true },
   { id: 'akilli-siralama', title: 'Akilli Siralama', status: 'secondary', domain: 'Matematik', skillFocus: 'Azdan coga siralama (uyarlanir zorluk)', routeKey: 'akilli-siralama', adaptive: true },
+  { id: 'akilli-toplama', title: 'Akilli Toplama', status: 'secondary', domain: 'Matematik', skillFocus: 'Toplama / problem cozme (uyarlanir zorluk)', routeKey: 'akilli-toplama', adaptive: true },
+  { id: 'akilli-farkli', title: 'Akilli Farkli', status: 'secondary', domain: 'Bilissel', skillFocus: 'Farkli olani ayirt etme (uyarlanir zorluk)', routeKey: 'akilli-farkli', adaptive: true },
   { id: 'gruplama', title: 'Gruplama Oyunu', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma', routeKey: 'gruplama' },
   { id: 'mutfak-dedektifi', title: 'Mutfak Dedektifi', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma ve gorsel dikkat', routeKey: 'mutfak-dedektifi' },
   { id: 'miktar-karsilastirma', title: 'Miktar Karsilastirma', status: 'core', domain: 'Matematik', skillFocus: 'Miktar algisi', routeKey: 'miktar-karsilastirma' },
