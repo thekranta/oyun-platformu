@@ -24,6 +24,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'dunya-yapilari': { color: '#6D4C41', icon: 'business', displayTitle: 'Dünya Yapıları', subtitle: 'Anıtları tanı' },
   'dunya-yiyecekleri': { color: '#F4511E', icon: 'restaurant', displayTitle: 'Dünya Yiyecekleri', subtitle: 'Lezzetleri keşfet' },
   'bayrak-boya': { color: '#EC407A', icon: 'color-palette', displayTitle: 'Bayrak Boya', subtitle: 'Bayrakları boya' },
+  'dunya-haritasi': { color: '#039BE5', icon: 'globe', displayTitle: 'Kıtaları Bul', subtitle: 'Dünya haritası' },
   'gruplama': { color: '#81C784', icon: 'basket', displayTitle: 'Gruplama', subtitle: 'Sınıflandırma' },
   'mutfak-dedektifi': { color: '#FF6B6B', icon: 'restaurant-outline', displayTitle: 'Mutfak Dedektifi', subtitle: 'Görsel dikkat' },
   'miktar-karsilastirma': { color: '#1E88E5', icon: 'bar-chart-outline', displayTitle: 'Miktar Avcısı', subtitle: 'Hangisi daha çok?' },
@@ -152,7 +153,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
   // Kültür / Montessori
   'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
-  'bayrak-boya': '🎨',
+  'bayrak-boya': '🎨', 'dunya-haritasi': '🗺️',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
