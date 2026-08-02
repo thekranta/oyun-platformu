@@ -177,6 +177,7 @@ export const MENU_CATEGORIES: MenuCategory[] = [
   { domain: 'Sosyal-duygusal', label: 'Duygular', emoji: '💛', color: '#FF9130', gradient: ['#FFB14E', '#FF7A18'], shadow: '#C85B0C' },
   { domain: 'Sanat', label: 'Çizim', emoji: '🎨', color: '#25C685', gradient: ['#5BE7A9', '#12B36A'], shadow: '#0A8F52' },
   { domain: 'Muzik', label: 'Müzik', emoji: '🎵', color: '#F158B7', gradient: ['#FF7BD5', '#E0359A'], shadow: '#B01F76' },
+  { domain: 'Kultur', label: 'Dünya', emoji: '🌍', color: '#00ACC1', gradient: ['#26C6DA', '#00838F'], shadow: '#006064' },
 ];
 
 export const getGamesByDomain = (domain: string) => GAME_CATALOG.filter((game) => game.domain === domain);

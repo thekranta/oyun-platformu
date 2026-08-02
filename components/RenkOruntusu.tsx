@@ -153,7 +153,8 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>Sırada ne var?</Text>
 
-      <View style={styles.pattern}>
+      {/* Örüntü şeridi — beyaz tepside, "?" ile biter */}
+      <View style={styles.patternTray}>
         {shown.map((col, i) => (
           <View key={i} style={[styles.bead, { backgroundColor: col.c }]} />
         ))}
@@ -162,12 +163,16 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
         </Animated.View>
       </View>
 
-      <View style={styles.options}>
+      {/* Seçenekler — ayrı etiketli panel, beyaz buton karolar */}
+      <Text style={styles.optionsLabel}>👇 Hangi renk gelmeli? Birini seç</Text>
+      <View style={styles.optionsPanel}>
         {options.map((col) => {
           const isWrong = wrongKey === col.key;
           return (
             <Animated.View key={col.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.optBead, { backgroundColor: col.c }, isWrong && styles.optWrong]} onPress={() => handlePick(col)} activeOpacity={0.85} />
+              <TouchableOpacity style={[styles.optTile, isWrong && styles.optWrong]} onPress={() => handlePick(col)} activeOpacity={0.85}>
+                <View style={[styles.optBead, { backgroundColor: col.c }]} />
+              </TouchableOpacity>
             </Animated.View>
           );
         })}
@@ -184,12 +189,26 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#6A1B9A', marginTop: 12, marginBottom: 18 },
-  pattern: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10, maxWidth: 420, paddingHorizontal: 12 },
-  bead: { width: 46, height: 46, borderRadius: 23, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 2 },
-  qBox: { width: 52, height: 52, borderRadius: 26, borderWidth: 3, borderColor: '#B39DDB', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' },
-  qMark: { fontSize: 28, fontWeight: '900', color: '#8E24AA' },
+  // Örüntü şeridi (beyaz tepsi)
+  patternTray: {
+    flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10,
+    maxWidth: 440, paddingVertical: 16, paddingHorizontal: 18, backgroundColor: '#fff', borderRadius: 24,
+    borderWidth: 2, borderColor: '#E1BEE7', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
+  },
+  bead: { width: 44, height: 44, borderRadius: 22, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.12, shadowRadius: 1, elevation: 1 },
+  qBox: { width: 50, height: 50, borderRadius: 25, borderWidth: 3, borderColor: '#B39DDB', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F0FB' },
+  qMark: { fontSize: 26, fontWeight: '900', color: '#8E24AA' },
 
-  options: { flexDirection: 'row', justifyContent: 'center', gap: 22, marginTop: 40 },
-  optBead: { width: 74, height: 74, borderRadius: 37, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 5 },
-  optWrong: { opacity: 0.55 },
+  // Seçenekler paneli (ayrı, etiketli)
+  optionsLabel: { fontSize: 15, fontWeight: '800', color: '#7B1FA2', marginTop: 26, marginBottom: 12 },
+  optionsPanel: {
+    flexDirection: 'row', justifyContent: 'center', gap: 16, backgroundColor: '#EDE7F6', borderRadius: 24,
+    borderWidth: 2, borderColor: '#B39DDB', paddingVertical: 16, paddingHorizontal: 20,
+  },
+  optTile: {
+    width: 82, height: 82, borderRadius: 41, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: '#D1C4E9', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 2, elevation: 5,
+  },
+  optBead: { width: 54, height: 54, borderRadius: 27 },
+  optWrong: { borderColor: '#EF5350', borderWidth: 4 },
 });
