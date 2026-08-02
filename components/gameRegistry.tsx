@@ -94,6 +94,7 @@ import AkilliOnceSonra from './AkilliOnceSonra';
 import DunyaBayraklari from './DunyaBayraklari';
 import DunyaSelamlari from './DunyaSelamlari';
 import KulturEslestirme, { YAPILAR, YIYECEKLER } from './KulturEslestirme';
+import BayrakBoya from './BayrakBoya';
 import RenkliBaglantalar from './RenkliBaglantalar';
 import RenkSepetleri from './RenkSepetleri';
 import SayiKomsulari from './SayiKomsulari';
@@ -169,6 +170,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'akilli-siniflandir': (c) => <AkilliSiniflandir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-once-sonra': (c) => <AkilliOnceSonra onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-bayraklari': (c) => <DunyaBayraklari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'bayrak-boya': (c) => <BayrakBoya onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-selamlari': (c) => <DunyaSelamlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-yapilari': (c) => (
     <KulturEslestirme

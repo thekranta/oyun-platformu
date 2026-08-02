@@ -33,6 +33,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'dunya-selamlari', title: 'Dunya Selamlari', status: 'secondary', domain: 'Kavram', skillFocus: 'Kulturel farkindalik (Montessori) - dunya selamlari', routeKey: 'dunya-selamlari' },
   { id: 'dunya-yapilari', title: 'Dunya Yapilari', status: 'secondary', domain: 'Kavram', skillFocus: 'Kulturel farkindalik (Montessori) - dunya yapilari', routeKey: 'dunya-yapilari' },
   { id: 'dunya-yiyecekleri', title: 'Dunya Yiyecekleri', status: 'secondary', domain: 'Kavram', skillFocus: 'Kulturel farkindalik (Montessori) - dunya yiyecekleri', routeKey: 'dunya-yiyecekleri' },
+  { id: 'bayrak-boya', title: 'Bayrak Boya', status: 'creative', domain: 'Sanat', skillFocus: 'Boyama + kulturel farkindalik (bayraklar)', routeKey: 'bayrak-boya' },
   { id: 'gruplama', title: 'Gruplama Oyunu', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma', routeKey: 'gruplama' },
   { id: 'mutfak-dedektifi', title: 'Mutfak Dedektifi', status: 'core', domain: 'Bilissel', skillFocus: 'Siniflandirma ve gorsel dikkat', routeKey: 'mutfak-dedektifi' },
   { id: 'miktar-karsilastirma', title: 'Miktar Karsilastirma', status: 'core', domain: 'Matematik', skillFocus: 'Miktar algisi', routeKey: 'miktar-karsilastirma' },
