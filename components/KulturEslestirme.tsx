@@ -25,6 +25,12 @@ export const YAPILAR: KItem[] = [
     { id: 'antik', emoji: '🏛️', name: 'Antik Yapı' },
     { id: 'cesme', emoji: '⛲', name: 'Çeşme' },
     { id: 'sinagog', emoji: '🕍', name: 'Sinagog' },
+    { id: 'japonsato', emoji: '🏯', name: 'Japon Şatosu' },
+    { id: 'kilise', emoji: '⛪', name: 'Kilise' },
+    { id: 'stadyum', emoji: '🏟️', name: 'Stadyum' },
+    { id: 'atlikarinca', emoji: '🎠', name: 'Atlıkarınca' },
+    { id: 'kulube', emoji: '🛖', name: 'Kulübe' },
+    { id: 'gokdelen', emoji: '🏙️', name: 'Gökdelenler' },
 ];
 
 export const YIYECEKLER: KItem[] = [
@@ -40,6 +46,12 @@ export const YIYECEKLER: KItem[] = [
     { id: 'corba', emoji: '🍲', name: 'Çorba' },
     { id: 'simit', emoji: '🥯', name: 'Simit' },
     { id: 'pasta', emoji: '🍰', name: 'Pasta' },
+    { id: 'kori', emoji: '🍛', name: 'Köri' },
+    { id: 'durum', emoji: '🥙', name: 'Dürüm' },
+    { id: 'waffle', emoji: '🧇', name: 'Waffle' },
+    { id: 'onigiri', emoji: '🍙', name: 'Onigiri' },
+    { id: 'krep', emoji: '🥞', name: 'Krep' },
+    { id: 'fondu', emoji: '🫕', name: 'Fondü' },
 ];
 
 interface Props {

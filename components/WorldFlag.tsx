@@ -27,6 +27,17 @@ export const FLAGS: FlagSpec[] = [
     { id: 'ng', name: 'Nijerya', hello: 'Sannu', render: 'v', colors: ['#008751', '#ffffff', '#008751'] },
     { id: 'ch', name: 'İsviçre', hello: 'Grüezi', render: 'cross', bg: '#D52B1E', cross: '#ffffff' },
     { id: 'ca', name: 'Kanada', hello: 'Hi', render: 'maple', band: '#FF0000' },
+    { id: 'ru', name: 'Rusya', hello: 'Privet', render: 'h', colors: ['#ffffff', '#0039A6', '#D52B1E'] },
+    { id: 'pl', name: 'Polonya', hello: 'Cześć', render: 'h', colors: ['#ffffff', '#DC143C'] },
+    { id: 'ua', name: 'Ukrayna', hello: 'Pryvit', render: 'h', colors: ['#0057B7', '#FFD700'] },
+    { id: 'ro', name: 'Romanya', hello: 'Bună', render: 'v', colors: ['#002B7F', '#FCD116', '#CE1126'] },
+    { id: 'hu', name: 'Macaristan', hello: 'Szia', render: 'h', colors: ['#CD2A3E', '#ffffff', '#436F4D'] },
+    { id: 'es', name: 'İspanya', hello: 'Hola', render: 'h', colors: ['#AA151B', '#F1BF00', '#AA151B'] },
+    { id: 'bd', name: 'Bangladeş', hello: 'Nomoshkar', render: 'circle', bg: '#006A4E', circle: '#F42A41' },
+    { id: 'bg', name: 'Bulgaristan', hello: 'Zdravei', render: 'h', colors: ['#ffffff', '#00966E', '#D62612'] },
+    { id: 'ee', name: 'Estonya', hello: 'Tere', render: 'h', colors: ['#0072CE', '#000000', '#ffffff'] },
+    { id: 'lt', name: 'Litvanya', hello: 'Labas', render: 'h', colors: ['#FDB913', '#006A44', '#C1272D'] },
+    { id: 'ga', name: 'Gabon', hello: 'Mbolo', render: 'h', colors: ['#009E60', '#FCD116', '#3A75C4'] },
 ];
 
 export function Flag({ spec, w }: { spec: FlagSpec; w: number }) {
