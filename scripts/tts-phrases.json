@@ -1,0 +1,645 @@
+[
+  {
+    "slug": "dogru-aferin",
+    "text": "Doğru! Aferin.",
+    "count": 3,
+    "games": [
+      "Duyularimiz",
+      "NeYer",
+      "SayiyiBul"
+    ]
+  },
+  {
+    "slug": "bu-arac-nerede-gider",
+    "text": "Bu araç nerede gider?",
+    "count": 2,
+    "games": [
+      "AraclarNerede"
+    ]
+  },
+  {
+    "slug": "bu-buyuyunce-ne-olur",
+    "text": "Bu büyüyünce ne olur?",
+    "count": 2,
+    "games": [
+      "Buyuyunce"
+    ]
+  },
+  {
+    "slug": "bu-esya-hangi-odada-kullanilir",
+    "text": "Bu eşya hangi odada kullanılır?",
+    "count": 2,
+    "games": [
+      "NeNerede"
+    ]
+  },
+  {
+    "slug": "bu-hayvan-ne-yer",
+    "text": "Bu hayvan ne yer?",
+    "count": 2,
+    "games": [
+      "NeYer"
+    ]
+  },
+  {
+    "slug": "bu-hayvan-nerede-yasar",
+    "text": "Bu hayvan nerede yaşar?",
+    "count": 2,
+    "games": [
+      "HayvanEvi"
+    ]
+  },
+  {
+    "slug": "en-uzun-olani-bul",
+    "text": "En uzun olanı bul!",
+    "count": 2,
+    "games": [
+      "EnUzun"
+    ]
+  },
+  {
+    "slug": "harika-siraladin-aferin",
+    "text": "Harika sıraladın! Aferin.",
+    "count": 2,
+    "games": [
+      "Gunum",
+      "OnceSonra"
+    ]
+  },
+  {
+    "slug": "hepsi-kac-etti-say-bakalim",
+    "text": "Hepsi kaç etti? Say bakalım!",
+    "count": 2,
+    "games": [
+      "KacOldu"
+    ]
+  },
+  {
+    "slug": "iki-tabaga-esit-paylastir-her-tabaga-kac-duser",
+    "text": "İki tabağa eşit paylaştır. Her tabağa kaç düşer?",
+    "count": 2,
+    "games": [
+      "EsitPaylastir"
+    ]
+  },
+  {
+    "slug": "kac-nokta-var-say-bakalim",
+    "text": "Kaç nokta var? Say bakalım!",
+    "count": 2,
+    "games": [
+      "NoktaSay"
+    ]
+  },
+  {
+    "slug": "kac-tane-kaldi-say-bakalim",
+    "text": "Kaç tane kaldı? Say bakalım!",
+    "count": 2,
+    "games": [
+      "KacKaldi"
+    ]
+  },
+  {
+    "slug": "kac-tane-var-say-bakalim",
+    "text": "Kaç tane var? Say bakalım!",
+    "count": 2,
+    "games": [
+      "CiftlikteSayalim"
+    ]
+  },
+  {
+    "slug": "1-rakamindan-basla-noktalari-sirayla-birlestir",
+    "text": "1 rakamından başla, noktaları sırayla birleştir!",
+    "count": 1,
+    "games": [
+      "NoktaBirlestir"
+    ]
+  },
+  {
+    "slug": "aferin",
+    "text": "Aferin!",
+    "count": 1,
+    "games": [
+      "SiralamaOyunu"
+    ]
+  },
+  {
+    "slug": "aferin-dogru-siraladin",
+    "text": "Aferin! Doğru sıraladın.",
+    "count": 1,
+    "games": [
+      "AzCokSirala"
+    ]
+  },
+  {
+    "slug": "aferin-farkli-olani-buldun",
+    "text": "Aferin! Farklı olanı buldun.",
+    "count": 1,
+    "games": [
+      "HangisiFarkli"
+    ]
+  },
+  {
+    "slug": "aferin-hepsini-siraladin",
+    "text": "Aferin! Hepsini sıraladın.",
+    "count": 1,
+    "games": [
+      "AyiAilesi"
+    ]
+  },
+  {
+    "slug": "aferin-ikizleri-buldun",
+    "text": "Aferin! İkizleri buldun.",
+    "count": 1,
+    "games": [
+      "IkizleriBul"
+    ]
+  },
+  {
+    "slug": "aferin-iste-degisen-buydu",
+    "text": "Aferin! İşte değişen buydu.",
+    "count": 1,
+    "games": [
+      "NeDegisti"
+    ]
+  },
+  {
+    "slug": "aferin-tertemiz-oldu",
+    "text": "Aferin! Tertemiz oldu.",
+    "count": 1,
+    "games": [
+      "TemizlikZamani"
+    ]
+  },
+  {
+    "slug": "aferin-tonlari-dogru-siraladin",
+    "text": "Aferin! Tonları doğru sıraladın.",
+    "count": 1,
+    "games": [
+      "RenkTonlari"
+    ]
+  },
+  {
+    "slug": "arkadasimiza-nasil-iyilik-yapariz-bir-daha-bakalim",
+    "text": "Arkadaşımıza nasıl iyilik yaparız? Bir daha bakalım.",
+    "count": 1,
+    "games": [
+      "IyilikYap"
+    ]
+  },
+  {
+    "slug": "ayni-duyguya-sahip-iki-yuzu-bul",
+    "text": "Aynı duyguya sahip iki yüzü bul!",
+    "count": 1,
+    "games": [
+      "DuyguEslestir"
+    ]
+  },
+  {
+    "slug": "ayni-mi-farkli-mi",
+    "text": "Aynı mı, farklı mı?",
+    "count": 1,
+    "games": [
+      "AyniFarkli"
+    ]
+  },
+  {
+    "slug": "bak-cizimin-oynuyor",
+    "text": "Bak, çizimin oynuyor!",
+    "count": 1,
+    "games": [
+      "CizimiCanlandir"
+    ]
+  },
+  {
+    "slug": "birbirinin-aynisi-iki-resmi-bul",
+    "text": "Birbirinin aynısı iki resmi bul!",
+    "count": 1,
+    "games": [
+      "IkizleriBul"
+    ]
+  },
+  {
+    "slug": "birbiriyle-giden-ikilileri-eslestir",
+    "text": "Birbiriyle giden ikilileri eşleştir!",
+    "count": 1,
+    "games": [
+      "NeIseYarar"
+    ]
+  },
+  {
+    "slug": "bu-canli-mi-cansiz-mi",
+    "text": "Bu canlı mı, cansız mı?",
+    "count": 1,
+    "games": [
+      "CanliCansiz"
+    ]
+  },
+  {
+    "slug": "bu-gunduz-mu-gece-mi",
+    "text": "Bu gündüz mü, gece mi?",
+    "count": 1,
+    "games": [
+      "GunduzGece"
+    ]
+  },
+  {
+    "slug": "bu-guvenli-degil-kendimizi-nasil-koruruz-bir-daha-bak",
+    "text": "Bu güvenli değil. Kendimizi nasıl koruruz, bir daha bak.",
+    "count": 1,
+    "games": [
+      "GuvendeKal"
+    ]
+  },
+  {
+    "slug": "bu-iki-renk-karisinca-ne-olur",
+    "text": "Bu iki renk karışınca ne olur?",
+    "count": 1,
+    "games": [
+      "RenkleriKaristir"
+    ]
+  },
+  {
+    "slug": "bu-sicak-mi-soguk-mu",
+    "text": "Bu sıcak mı, soğuk mu?",
+    "count": 1,
+    "games": [
+      "SicakSoguk"
+    ]
+  },
+  {
+    "slug": "bu-suya-atilinca-yuzer-mi-batar-mi",
+    "text": "Bu suya atılınca yüzer mi, batar mı?",
+    "count": 1,
+    "games": [
+      "YuzerBatar"
+    ]
+  },
+  {
+    "slug": "bunu-dogru-kutuya-koy",
+    "text": "Bunu doğru kutuya koy!",
+    "count": 1,
+    "games": [
+      "DogruKutu"
+    ]
+  },
+  {
+    "slug": "bunu-hangi-kutuya-atariz",
+    "text": "Bunu hangi kutuya atarız?",
+    "count": 1,
+    "games": [
+      "GeriDonusum"
+    ]
+  },
+  {
+    "slug": "cizimini-kaydettim-aferin",
+    "text": "Çizimini kaydettim! Aferin.",
+    "count": 1,
+    "games": [
+      "CizimiCanlandir"
+    ]
+  },
+  {
+    "slug": "cok-guzel-boyadin-aferin",
+    "text": "Çok güzel boyadın! Aferin.",
+    "count": 1,
+    "games": [
+      "BoyamaKitabi"
+    ]
+  },
+  {
+    "slug": "diger-yarisini-da-tamamladin-aferin",
+    "text": "Diğer yarısını da tamamladın! Aferin.",
+    "count": 1,
+    "games": [
+      "YarisiniTamamla"
+    ]
+  },
+  {
+    "slug": "dogru-secim-aferin",
+    "text": "Doğru seçim! Aferin.",
+    "count": 1,
+    "games": [
+      "HavaKiyafet"
+    ]
+  },
+  {
+    "slug": "dogru-batiyor",
+    "text": "Doğru, batıyor!",
+    "count": 1,
+    "games": [
+      "YuzerBatar"
+    ]
+  },
+  {
+    "slug": "dogru-bu-daha-saglikli-aferin",
+    "text": "Doğru, bu daha sağlıklı! Aferin.",
+    "count": 1,
+    "games": [
+      "SaglikliYiyecek"
+    ]
+  },
+  {
+    "slug": "dogru-farklilar",
+    "text": "Doğru, farklılar!",
+    "count": 1,
+    "games": [
+      "AyniFarkli"
+    ]
+  },
+  {
+    "slug": "dogru-ikisi-de-ayni",
+    "text": "Doğru, ikisi de aynı!",
+    "count": 1,
+    "games": [
+      "AyniFarkli"
+    ]
+  },
+  {
+    "slug": "dogru-yuzuyor",
+    "text": "Doğru, yüzüyor!",
+    "count": 1,
+    "games": [
+      "YuzerBatar"
+    ]
+  },
+  {
+    "slug": "dogru-iste-buyumus-hali-aferin",
+    "text": "Doğru! İşte büyümüş hali. Aferin.",
+    "count": 1,
+    "games": [
+      "Buyuyunce"
+    ]
+  },
+  {
+    "slug": "dogru-iste-karisim-rengi",
+    "text": "Doğru! İşte karışım rengi.",
+    "count": 1,
+    "games": [
+      "RenkleriKaristir"
+    ]
+  },
+  {
+    "slug": "dogru-oruntuyu-buldun",
+    "text": "Doğru! Örüntüyü buldun.",
+    "count": 1,
+    "games": [
+      "RenkOruntusu"
+    ]
+  },
+  {
+    "slug": "en-acik-tondan-en-koyuya-sirala",
+    "text": "En açık tondan en koyuya sırala!",
+    "count": 1,
+    "games": [
+      "RenkTonlari"
+    ]
+  },
+  {
+    "slug": "en-agir-olani-bul",
+    "text": "En ağır olanı bul!",
+    "count": 1,
+    "games": [
+      "AgirHafif"
+    ]
+  },
+  {
+    "slug": "en-azdan-en-coga-dogru-sirala",
+    "text": "En azdan en çoğa doğru sırala!",
+    "count": 1,
+    "games": [
+      "AzCokSirala"
+    ]
+  },
+  {
+    "slug": "en-kucuk-ayidan-en-buyuge-dogru-sirala",
+    "text": "En küçük ayıdan en büyüğe doğru sırala!",
+    "count": 1,
+    "games": [
+      "AyiAilesi"
+    ]
+  },
+  {
+    "slug": "evet-bu-daha-agir-aferin",
+    "text": "Evet, bu daha ağır! Aferin.",
+    "count": 1,
+    "games": [
+      "AgirHafif"
+    ]
+  },
+  {
+    "slug": "evet-en-uzun-bu-aferin",
+    "text": "Evet! En uzun bu. Aferin.",
+    "count": 1,
+    "games": [
+      "EnUzun"
+    ]
+  },
+  {
+    "slug": "fareyi-peynire-ulastir-komsu-kareye-dokun",
+    "text": "Fareyi peynire ulaştır! Komşu kareye dokun.",
+    "count": 1,
+    "games": [
+      "Labirent"
+    ]
+  },
+  {
+    "slug": "gunun-sirasini-yap-once-ne-olur-en-bastan-dokun",
+    "text": "Günün sırasını yap! Önce ne olur, en baştan dokun.",
+    "count": 1,
+    "games": [
+      "Gunum"
+    ]
+  },
+  {
+    "slug": "hangi-sayi-daha-buyuk",
+    "text": "Hangi sayı daha büyük?",
+    "count": 1,
+    "games": [
+      "BuyukSayi"
+    ]
+  },
+  {
+    "slug": "hangisi-daha-saglikli",
+    "text": "Hangisi daha sağlıklı?",
+    "count": 1,
+    "games": [
+      "SaglikliYiyecek"
+    ]
+  },
+  {
+    "slug": "hangisi-farkli-otekilere-benzemeyeni-bul",
+    "text": "Hangisi farklı? Ötekilere benzemeyeni bul!",
+    "count": 1,
+    "games": [
+      "HangisiFarkli"
+    ]
+  },
+  {
+    "slug": "harika-dogru-boyut",
+    "text": "Harika! Doğru boyut.",
+    "count": 1,
+    "games": [
+      "BuyukOrtaKucuk"
+    ]
+  },
+  {
+    "slug": "harika-dogru-hatirladin",
+    "text": "Harika! Doğru hatırladın.",
+    "count": 1,
+    "games": [
+      "SirayiHatirla"
+    ]
+  },
+  {
+    "slug": "harika-dogru-sekil",
+    "text": "Harika! Doğru şekil.",
+    "count": 1,
+    "games": [
+      "SekilTreni"
+    ]
+  },
+  {
+    "slug": "harika-tam-oturdu",
+    "text": "Harika! Tam oturdu.",
+    "count": 1,
+    "games": [
+      "SekilDeligi"
+    ]
+  },
+  {
+    "slug": "iyi-bak-ezberle",
+    "text": "İyi bak, ezberle!",
+    "count": 1,
+    "games": [
+      "NeDegisti"
+    ]
+  },
+  {
+    "slug": "izle-ve-ayni-sirayla-tekrarla",
+    "text": "İzle ve aynı sırayla tekrarla!",
+    "count": 1,
+    "games": [
+      "SirayiHatirla"
+    ]
+  },
+  {
+    "slug": "muhtesem-bir-mandala-aferin",
+    "text": "Muhteşem bir mandala! Aferin.",
+    "count": 1,
+    "games": [
+      "Mandala"
+    ]
+  },
+  {
+    "slug": "ne-degisti-degiseni-bul",
+    "text": "Ne değişti? Değişeni bul!",
+    "count": 1,
+    "games": [
+      "NeDegisti"
+    ]
+  },
+  {
+    "slug": "ne-guzel-bir-simetri-aferin",
+    "text": "Ne güzel bir simetri! Aferin.",
+    "count": 1,
+    "games": [
+      "SimetriCizim"
+    ]
+  },
+  {
+    "slug": "ne-guzel-cizdin-aferin",
+    "text": "Ne güzel çizdin! Aferin.",
+    "count": 1,
+    "games": [
+      "CizimSayfalari"
+    ]
+  },
+  {
+    "slug": "ne-guzel-noktalar-aferin",
+    "text": "Ne güzel noktalar! Aferin.",
+    "count": 1,
+    "games": [
+      "NoktaBoyama"
+    ]
+  },
+  {
+    "slug": "ne-guzel-susledin-aferin",
+    "text": "Ne güzel süsledin! Aferin.",
+    "count": 1,
+    "games": [
+      "DamgaSanati"
+    ]
+  },
+  {
+    "slug": "ne-komik-bir-yuz-aferin",
+    "text": "Ne komik bir yüz! Aferin.",
+    "count": 1,
+    "games": [
+      "YuzYap"
+    ]
+  },
+  {
+    "slug": "once-ne-olur-en-bastan-sirayla-dokun",
+    "text": "Önce ne olur? En baştan sırayla dokun!",
+    "count": 1,
+    "games": [
+      "OnceSonra"
+    ]
+  },
+  {
+    "slug": "rengarenk-bir-kum-resmi-aferin",
+    "text": "Rengarenk bir kum resmi! Aferin.",
+    "count": 1,
+    "games": [
+      "KumBoyasi"
+    ]
+  },
+  {
+    "slug": "sirada-hangi-renk-var",
+    "text": "Sırada hangi renk var?",
+    "count": 1,
+    "games": [
+      "RenkOruntusu"
+    ]
+  },
+  {
+    "slug": "tebrikler",
+    "text": "Tebrikler!",
+    "count": 1,
+    "games": [
+      "SiralamaOyunu"
+    ]
+  },
+  {
+    "slug": "tekrar-dene",
+    "text": "Tekrar dene!",
+    "count": 1,
+    "games": [
+      "SiralamaOyunu"
+    ]
+  },
+  {
+    "slug": "tekrar-izle-bakalim",
+    "text": "Tekrar izle bakalım.",
+    "count": 1,
+    "games": [
+      "SirayiHatirla"
+    ]
+  },
+  {
+    "slug": "yasasin-peyniri-buldun-aferin",
+    "text": "Yaşasın! Peyniri buldun. Aferin!",
+    "count": 1,
+    "games": [
+      "Labirent"
+    ]
+  },
+  {
+    "slug": "zit-olanlari-eslestir",
+    "text": "Zıt olanları eşleştir!",
+    "count": 1,
+    "games": [
+      "ZitlariEslestir"
+    ]
+  }
+]

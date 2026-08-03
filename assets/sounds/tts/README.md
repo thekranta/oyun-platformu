@@ -1,44 +1,48 @@
-# 🔊 Hazır Seslendirme (TTS) MP3'leri
+# 🔊 Hazır Seslendirme (TTS) klipleri
 
-Bu klasör, oyun/hikaye **sabit metinlerinin** önceden üretilmiş seslendirmelerini tutar.
-`speak(text)` çağrıldığında uygulama önce buraya bakar; eşleşen MP3 varsa **çevrimdışı** çalar
-(canlı API/anahtar gerekmez), yoksa sessiz geçer.
+Bu klasör, oyun **sabit metinlerinin** önceden üretilmiş seslendirmelerini tutar (`.wav`).
+`speak(text)` çağrıldığında uygulama önce `ttsSlug(text)` ile `lib/ttsAssets.ts`'e bakar;
+eşleşen klip varsa **çevrimdışı** çalar (canlı API/anahtar gerekmez), yoksa sessiz geçer.
 
-## Dosya adlandırma (ÇOK ÖNEMLİ)
+Klipler **VoiceBox** yerel API'siyle, klonlanmış **"Hikaye Sesi"** profilinden otomatik üretilir.
 
-Dosya adı = metnin **slug**'ı + `.mp3`. Slug kuralı:
+## Yeni/güncel ses üretme akışı
+
+VoiceBox uygulaması **açık** olmalı (yerel sunucu `127.0.0.1:17493`) ve "Hikaye Sesi" profili var olmalı.
+
+```bash
+# 1) Kaynaktaki sabit speak('...') metinlerini tara → scripts/tts-phrases.json
+node scripts/extract-tts-phrases.mjs
+
+# 2) Eksik olan her metni klon sesle üret → assets/sounds/tts/<slug>.wav
+#    (var olanları atlar; --force ile hepsini yeniden üretir; ~30 sn/klip, CPU)
+node scripts/gen-voices.mjs
+
+# 3) slug→dosya haritasını yeniden yaz → lib/ttsAssets.ts
+node scripts/gen-tts-assets.mjs
+```
+
+Yeni bir oyun eklediğinde bu üç adımı tekrar çalıştırman yeni yönerge/geri bildirim
+metinlerini otomatik seslendirir.
+
+Profili sıfırdan kurmak için: `node scripts/make-profile.mjs` (coral hikaye örneklerinden klonlar).
+
+## Dosya adlandırma (slug kuralı)
+
+Dosya adı = metnin slug'ı + `.wav`. Slug = `services/speechService.ts` `ttsSlug()`:
 
 - Türkçe harfler sadeleşir: `ç→c, ş→s, ğ→g, ü→u, ö→o, ı/İ/I→i`
-- Tümü **küçük harf**
-- Harf/rakam dışındaki her şey (boşluk, `!`, `?`, `.`, `,`) tek bir `-` olur
-- Baştaki/sondaki `-` atılır
+- tümü küçük harf; harf/rakam dışındaki her şey tek `-`; baş/son `-` atılır
 
-| Söylenecek metin | Dosya adı |
+| Metin | Dosya |
 |---|---|
-| `Aferin!` | `aferin.mp3` |
-| `Doğru! Aferin.` | `dogru-aferin.mp3` |
-| `Tekrar dene!` | `tekrar-dene.mp3` |
-| `Sırada hangi renk var?` | `sirada-hangi-renk-var.mp3` |
-| `Aferin! Örüntüyü buldun.` | `aferin-oruntuyu-buldun.mp3` |
-
-> Emin değilsen dosya adını sen uydurmana gerek yok — Claude her metin için tam dosya adını verir.
-
-## İş akışı
-
-1. Metni PC programına ver → MP3 al.
-2. MP3'ü **tam olarak yukarıdaki dosya adıyla** bu klasöre (`assets/sounds/tts/`) koy.
-3. Şu komutu çalıştır (Claude da çalıştırabilir):
-   ```bash
-   node scripts/gen-tts-assets.mjs
-   ```
-   Bu, `lib/ttsAssets.ts` haritasını otomatik günceller.
-4. Uygulamayı aç → ses kendiliğinden gelir.
+| `Doğru! Aferin.` | `dogru-aferin.wav` |
+| `Sırada hangi renk var?` | `sirada-hangi-renk-var.wav` |
 
 ## Notlar
 
-- **Tek ses/ton kullan:** Tüm dosyaları aynı ses ve aynı hızla üret (tutarlılık için).
-  Okul öncesi için sıcak, sakin, biraz yavaş bir kadın sesi idealdir.
-- Format **MP3** (hem web hem tablet oynatır). Dosya adları **küçük harf** olmalı
-  (Vercel/Linux büyük-küçük harfe duyarlıdır).
-- Dinamik metinler (çocuğun adı, sayı içeren "3 tane!" gibi) şimdilik seslenmez; bunları
-  ileride ayrıca ele alacağız. Önce sabit metinler.
+- Format **.wav** (24kHz mono). `metro.config.js` `assetExts`'te `wav` var; her klip yalnız
+  çalınınca yüklenir (bundle şişmez). `.mp3` de desteklenir (aynı slug'ta `.mp3` tercih edilir).
+- Dosya adları **küçük harf** (Vercel/Linux büyük-küçük harfe duyarlı).
+- Dinamik metinler (çocuğun adı, "3 tane!" gibi sayı içerenler) henüz seslenmez — sonra ele alınacak.
+- Elle ekleme (yedek yol): doğru adlı `<slug>.wav` dosyasını klasöre koy → `node scripts/gen-tts-assets.mjs`.

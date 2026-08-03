@@ -33,14 +33,15 @@ function ttsSlug(text) {
 
 if (!existsSync(TTS_DIR)) mkdirSync(TTS_DIR, { recursive: true });
 
+const AUDIO_EXT = /\.(mp3|wav|m4a|ogg)$/i;
 const files = readdirSync(TTS_DIR)
-  .filter((f) => f.toLowerCase().endsWith('.mp3'))
-  .sort();
+  .filter((f) => AUDIO_EXT.test(f))
+  .sort(); // .mp3, aynı slug'ta .wav'dan önce gelir → mp3 tercih edilir
 
 const seen = new Map(); // slug -> filename (ilk gelen kazanır; çakışma uyarısı)
 const entries = [];
 for (const file of files) {
-  const base = file.replace(/\.mp3$/i, '');
+  const base = file.replace(AUDIO_EXT, '');
   const slug = ttsSlug(base);
   if (!slug) continue;
   if (seen.has(slug)) {
