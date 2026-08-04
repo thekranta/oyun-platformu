@@ -122,6 +122,10 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'minik-market': { color: '#43A047', icon: 'cart', displayTitle: 'Minik Market', subtitle: 'Alışveriş yap' },
   'hazine-haritasi': { color: '#8D6E63', icon: 'map', displayTitle: 'Hazine Haritası', subtitle: 'Haritayı takip et' },
   'grafik-ustasi': { color: '#1E88E5', icon: 'bar-chart', displayTitle: 'Grafik Ustası', subtitle: 'Grafiği oku' },
+  'resimde-ne-oluyor': { color: '#3949AB', icon: 'image', displayTitle: 'Resimde Ne Oluyor?', subtitle: 'Resimden anlam' },
+  'iz-dedektifi': { color: '#6D4C41', icon: 'paw', displayTitle: 'İz Dedektifi', subtitle: 'İzi kime ait bul' },
+  'mevsim-bahcesi': { color: '#FF7043', icon: 'leaf', displayTitle: 'Mevsim Bahçesi', subtitle: 'Mevsimi bul' },
+  'manzara-kasifi': { color: '#00897B', icon: 'earth', displayTitle: 'Manzara Kaşifi', subtitle: 'Manzarayı tanı' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
@@ -163,6 +167,8 @@ export const GAME_EMOJI: Record<string, string> = {
   'kafiye-bahcesi': '🌸', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
   // Yeni oyunlar (Sosyal / Matematik)
   'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊',
+  // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
+  'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

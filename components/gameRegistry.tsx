@@ -116,6 +116,10 @@ import SonraNeOlur from './SonraNeOlur';
 import MinikMarket from './MinikMarket';
 import HazineHaritasi from './HazineHaritasi';
 import GrafikUstasi from './GrafikUstasi';
+import ResimdeNeOluyor from './ResimdeNeOluyor';
+import IzDedektifi from './IzDedektifi';
+import MevsimBahcesi from './MevsimBahcesi';
+import ManzaraKasifi from './ManzaraKasifi';
 
 /**
  * Oyun sonucu bildirimi. index.tsx'teki oyunuBitir ile ayni imza.
@@ -375,4 +379,8 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'minik-market': (c) => <MinikMarket onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'hazine-haritasi': (c) => <HazineHaritasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'grafik-ustasi': (c) => <GrafikUstasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'resimde-ne-oluyor': (c) => <ResimdeNeOluyor onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'iz-dedektifi': (c) => <IzDedektifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'mevsim-bahcesi': (c) => <MevsimBahcesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'manzara-kasifi': (c) => <ManzaraKasifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

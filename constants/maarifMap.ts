@@ -181,6 +181,12 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'minik-market': { displayName: 'Minik Market', alan: 'Sosyal', surec: 'Sosyal Alan / Ekonomi Okuryazarlığı', cikti: 'SAB.22', ciktiAciklama: 'İhtiyaçların karşılanabilmesi için bir gelire/paraya ihtiyaç olduğunu anlayabilme; markette parayla alışveriş yapar (pratik yaşam, ihtiyaç-istek)', badgeAlan: 'Sosyal / Ekonomi' },
   'hazine-haritasi': { displayName: 'Hazine Haritası', alan: 'Sosyal', surec: 'Sosyal Alan / Mekânsal Düşünme (Kroki)', cikti: 'SAB.15', ciktiAciklama: 'Yakın çevresi ile ilgili hazırlanmış basit krokiyi/haritayı okuyabilme; haritadaki yönergeleri takip ederek hazineyi bulur (uzamsal yön)', badgeAlan: 'Sosyal / Harita' },
   'grafik-ustasi': { displayName: 'Grafik Ustası', alan: 'Matematik', surec: 'Veri İşleme', cikti: 'MAB.11', ciktiAciklama: 'Elde ettiği/eriştiği verileri düzenleyebilme; nesneleri sayıp basit sütun grafiği oluşturur/okur (veri okuryazarlığına giriş)', badgeAlan: 'Matematik (Veri)' },
+
+  // ---------- Yeni oyunlar (Türkçe / Fen / Sosyal - tap) ----------
+  'resimde-ne-oluyor': { displayName: 'Resimde Ne Oluyor?', alan: 'Türkçe', surec: 'Görsel Okuma', cikti: 'TAOB.2', ciktiAciklama: 'Görsel materyallerden anlamlar üretebilme; resimde ne olduğunu yorumlayıp uygun ifadeyi seçer (görsel okuryazarlık)', badgeAlan: 'Dil (Görsel Okuma)' },
+  'iz-dedektifi': { displayName: 'İz Dedektifi', alan: 'Fen', surec: 'Bilimsel Çıkarım', cikti: 'FAB.7', ciktiAciklama: 'Günlük hayattaki fene yönelik olaylar hakkında gözlemlerine dayalı basit düzeyde bilimsel çıkarım yapabilme; izlere/ipuçlarına bakarak hangi canlıya ait olduğunu bulur', badgeAlan: 'Fen (Çıkarım)' },
+  'mevsim-bahcesi': { displayName: 'Mevsim Bahçesi', alan: 'Sosyal', surec: 'Sosyal Alan / Zaman', cikti: 'SAB.1', ciktiAciklama: 'Günlük hayatında zaman kavramını yerinde kullanabilme; mevsimleri özellikleriyle tanıyıp doğru mevsimle eşleştirir', badgeAlan: 'Sosyal / Zaman' },
+  'manzara-kasifi': { displayName: 'Manzara Kaşifi', alan: 'Sosyal', surec: 'Sosyal Alan / Coğrafi Mekân', cikti: 'SAB.10', ciktiAciklama: 'Yakın çevresinde yer alan mekânın coğrafi koşullarını tanımlayabilme; farklı manzaraları (dağ/deniz/orman/şehir) tanıyıp özellikleriyle eşleştirir', badgeAlan: 'Sosyal / Coğrafya' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

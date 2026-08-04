@@ -147,6 +147,14 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'hazine-haritasi', title: 'Hazine Haritasi', status: 'secondary', domain: 'Kavram', skillFocus: 'Kroki/harita okuma / uzamsal yon', routeKey: 'hazine-haritasi' },
   { id: 'grafik-ustasi', title: 'Grafik Ustasi', status: 'secondary', domain: 'Matematik', skillFocus: 'Veri okuma / basit grafik', routeKey: 'grafik-ustasi' },
 
+  // ---------- Yeni oyunlar (Turkce / Fen / Sosyal - tap) ----------
+  // Maarif alani Turkce/Fen/Sosyal; menu domaini platform desenine gore Dil/Bilissel/Kavram
+  // (bkz. resimde-ne-ters=Dil, sonra-ne-olur=Bilissel, minik-market/hazine-haritasi=Kavram)
+  { id: 'resimde-ne-oluyor', title: 'Resimde Ne Oluyor', status: 'secondary', domain: 'Dil', skillFocus: 'Gorsel okuma / resimden anlam uretme', routeKey: 'resimde-ne-oluyor' },
+  { id: 'iz-dedektifi', title: 'Iz Dedektifi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Bilimsel cikarim / iz-canli iliskisi', routeKey: 'iz-dedektifi' },
+  { id: 'mevsim-bahcesi', title: 'Mevsim Bahcesi', status: 'secondary', domain: 'Kavram', skillFocus: 'Mevsim / zaman kavrami', routeKey: 'mevsim-bahcesi' },
+  { id: 'manzara-kasifi', title: 'Manzara Kasifi', status: 'secondary', domain: 'Kavram', skillFocus: 'Cografi mekan / manzara tanima', routeKey: 'manzara-kasifi' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];

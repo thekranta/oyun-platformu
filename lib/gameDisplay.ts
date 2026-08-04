@@ -58,6 +58,8 @@ const GAME_EMOJI: Record<string, string> = {
     'kafiye-bahcesi': '🌸', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
     // Yeni oyunlar (Sosyal / Matematik)
     'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊',
+    // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
+    'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
 };
 
 export interface GameDisplay {
