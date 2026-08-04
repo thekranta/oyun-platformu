@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // ⏰ GÜNÜM - Günlük rutini zaman sırasına koyma (Sosyal Bilgiler, SAB.1)
@@ -57,11 +57,12 @@ export default function Gunum({ onGameEnd, onExit, childName }: Props) {
   const errorsRef = useRef(0);
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const roundDoneRef = useRef(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -99,12 +100,11 @@ export default function Gunum({ onGameEnd, onExit, childName }: Props) {
         roundDoneRef.current = true;
         const isLast = round >= TOTAL_ROUNDS;
         if (isLast) setShowConfetti(true);
-        speak('Harika sıraladın! Aferin.', { instructions: HAPPY_VOICE });
-        const t = setTimeout(() => {
+        speakThenWait('Harika sıraladın! Aferin.', isLast ? 1500 : 1000, { instructions: HAPPY_VOICE }).then(() => {
+          if (!isMountedRef.current) return;
           if (isLast) finish();
           else setRound((r) => r + 1);
-        }, isLast ? 1500 : 1000);
-        timersRef.current.push(t);
+        });
       }
     } else {
       errorsRef.current += 1;

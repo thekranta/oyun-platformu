@@ -107,6 +107,9 @@ async function main() {
     // Sayı klipleri: ses kelime-formu (text), dosya adı rakamlı (slug override)
     const NUM = join(__dirname, 'tts-phrases-numbers.json');
     if (existsSync(NUM)) phrases = phrases.concat(JSON.parse(readFileSync(NUM, 'utf8')));
+    // Giriş yönergeleri (CountdownOverlay message'ları)
+    const CD = join(__dirname, 'tts-phrases-countdown.json');
+    if (existsSync(CD)) phrases = phrases.concat(JSON.parse(readFileSync(CD, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 📦 NEREDEYİM? - Konum/mekânsal kavramlar (Sosyal Bilgiler/SAB.5)
@@ -89,11 +89,12 @@ export default function Neredeyim({ onGameEnd, onExit, childName }: Props) {
   const correctRef = useRef(0);
   const prevKeyRef = useRef<string | null>(null);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const targetBounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -137,13 +138,12 @@ export default function Neredeyim({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak(`Aferin! ${targetName} olanı buldun.`, { instructions: HAPPY_VOICE });
-      const t = setTimeout(() => {
+      speakThenWait(`Aferin! ${targetName} olanı buldun.`, 1300, { instructions: HAPPY_VOICE }).then(() => {
+        if (!isMountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);
         else finish();
-      }, 1300);
-      timersRef.current.push(t);
+      });
     } else {
       errorsRef.current += 1;
       setWrongKey(p.key);

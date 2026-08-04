@@ -34,8 +34,6 @@ interface CountdownOverlayProps {
     interaction?: InteractionType;
 }
 
-type CountdownPhase = 'speaking' | 'countdown' | 'done';
-
 // ============================================================
 // Etkileşim demosu: geri sayım sırasında el/parmak animasyonuyla
 // oyunun nasıl oynandığını gösterir. Sessizken bile anlaşılır (tamamen görsel).
@@ -95,107 +93,106 @@ export default function CountdownOverlay({
     skip = false,
     interaction = 'tap',
 }: CountdownOverlayProps) {
-    const [phase, setPhase] = useState<CountdownPhase>('speaking');
     const [countdown, setCountdown] = useState(countdownSeconds);
     const [isVisible, setIsVisible] = useState(true);
 
     const fadeAnim = useRef(new Animated.Value(1)).current;
-    const scaleAnim = useRef(new Animated.Value(0)).current;
     const pulseAnim = useRef(new Animated.Value(1)).current;
     const countdownScale = useRef(new Animated.Value(0)).current;
 
+    // Kapanış için: hem geri sayım hem yönerge sesi bitmeden overlay kapanmaz
+    // (böylece uzun yönerge sesi yarıda kesilmez). Sessiz/native durumda ses "bitmiş" sayılır.
+    const audioDoneRef = useRef(false);
+    const countdownDoneRef = useRef(false);
+    const finishedRef = useRef(false);
+
+    const tryFinish = () => {
+        if (finishedRef.current || !audioDoneRef.current || !countdownDoneRef.current) return;
+        finishedRef.current = true;
+        Animated.timing(fadeAnim, { toValue: 0, duration: 300, useNativeDriver: true }).start(() => {
+            setIsVisible(false);
+            onComplete();
+        });
+    };
+
+    // Atlama
     useEffect(() => {
-        if (skip) {
+        if (skip && !finishedRef.current) {
+            finishedRef.current = true;
             setIsVisible(false);
             onComplete();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [skip]);
 
+    // Yönergeyi seslendir — geri sayımla EŞ ZAMANLI (kişiselleştirilmemiş `message` = klip eşleşir).
     useEffect(() => {
-        if (skip || Platform.OS !== 'web') {
-            if (!skip) setPhase('countdown');
-            return;
-        }
-        const startSpeaking = async () => {
-            Animated.spring(scaleAnim, { toValue: 1, friction: 6, useNativeDriver: true }).start();
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(pulseAnim, { toValue: 1.2, duration: 500, useNativeDriver: true }),
-                    Animated.timing(pulseAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
-                ])
-            ).start();
-            try {
-                const personalizedMessage = childName ? `Merhaba ${childName}! ${message}` : message;
-                await speak(personalizedMessage);
-            } catch (e) {
-                console.log('TTS error:', e);
-            }
+        if (skip) return;
+        if (Platform.OS !== 'web') { audioDoneRef.current = true; tryFinish(); return; }
+        // Konuşan hoparlör simgesi nabzı
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(pulseAnim, { toValue: 1.18, duration: 500, useNativeDriver: true }),
+                Animated.timing(pulseAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+            ])
+        ).start();
+        speak(message).catch(() => { }).finally(() => {
             pulseAnim.stopAnimation();
-            setPhase('countdown');
-        };
-        startSpeaking();
+            audioDoneRef.current = true;
+            tryFinish();
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // 5→1 geri sayım ( sesle eş zamanlı çalışır)
     useEffect(() => {
-        if (phase !== 'countdown') return;
+        if (skip) return;
         Animated.spring(countdownScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
         const timer = setInterval(() => {
             setCountdown(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    setPhase('done');
-                    return 0;
-                }
+                if (prev <= 1) { clearInterval(timer); return 0; }
                 countdownScale.setValue(0);
                 Animated.spring(countdownScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
                 return prev - 1;
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [phase]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
+    // Geri sayım 0'a ulaşınca — hazır olduğunu işaretle (ses de bittiyse overlay kapanır)
     useEffect(() => {
-        if (phase !== 'done') return;
-        Animated.timing(fadeAnim, { toValue: 0, duration: 300, useNativeDriver: true }).start(() => {
-            setIsVisible(false);
-            onComplete();
-        });
-    }, [phase]);
+        if (!skip && countdown === 0) {
+            countdownDoneRef.current = true;
+            tryFinish();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [countdown, skip]);
 
     if (!isVisible) return null;
 
     return (
         <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
             <View style={styles.content}>
-                {phase === 'speaking' && (
-                    <Animated.View style={[styles.speakingContainer, { transform: [{ scale: scaleAnim }] }]}>
-                        <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                            <View style={styles.speakerCircle}>
-                                <Ionicons name="volume-high" size={60} color="#fff" />
-                            </View>
-                        </Animated.View>
-                        <Text style={styles.listeningText}>Dinle...</Text>
-                        <Text style={styles.messagePreview} numberOfLines={2}>
-                            {childName ? `Merhaba ${childName}!` : message}
-                        </Text>
-                    </Animated.View>
-                )}
-
-                {phase === 'countdown' && (
-                    <View style={styles.countdownContainer}>
-                        <Text style={styles.readyText}>Nasıl oynanır?</Text>
-
-                        {/* Görsel etkileşim demosu — ses kapalıyken bile anlaşılır */}
-                        <GestureDemo type={interaction} />
-                        <View style={styles.gestureLabelWrap}>
-                            <Text style={styles.gestureLabel}>{GESTURE_LABEL[interaction]}</Text>
-                        </View>
-
-                        <Animated.View style={[styles.countdownCircle, { transform: [{ scale: countdownScale }] }]}>
-                            <Text style={styles.countdownNumber}>{countdown}</Text>
-                        </Animated.View>
+                {/* Konuşan hoparlör + yönerge metni (ses eş zamanlı çalar) */}
+                <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+                    <View style={styles.speakerCircle}>
+                        <Ionicons name="volume-high" size={44} color="#fff" />
                     </View>
-                )}
+                </Animated.View>
+                <Text style={styles.messagePreview} numberOfLines={3}>
+                    {childName ? `${childName}, ${message}` : message}
+                </Text>
+
+                <Text style={styles.readyText}>Nasıl oynanır?</Text>
+                <GestureDemo type={interaction} />
+                <View style={styles.gestureLabelWrap}>
+                    <Text style={styles.gestureLabel}>{GESTURE_LABEL[interaction]}</Text>
+                </View>
+
+                <Animated.View style={[styles.countdownCircle, { transform: [{ scale: countdownScale }] }]}>
+                    <Text style={styles.countdownNumber}>{countdown}</Text>
+                </Animated.View>
             </View>
         </Animated.View>
     );
@@ -204,13 +201,10 @@ export default function CountdownOverlay({
 const styles = StyleSheet.create({
     overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.85)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 },
     content: { alignItems: 'center', justifyContent: 'center', padding: 20 },
-    speakingContainer: { alignItems: 'center' },
-    speakerCircle: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', marginBottom: 20, shadowColor: '#4CAF50', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10 },
-    listeningText: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: 10 },
-    messagePreview: { fontSize: 18, color: 'rgba(255, 255, 255, 0.7)', textAlign: 'center', maxWidth: width * 0.8 },
+    speakerCircle: { width: 88, height: 88, borderRadius: 44, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', marginBottom: 14, shadowColor: '#4CAF50', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 10 },
+    messagePreview: { fontSize: 18, color: 'rgba(255, 255, 255, 0.85)', textAlign: 'center', maxWidth: width * 0.82, marginBottom: 16, fontWeight: '600' },
 
-    countdownContainer: { alignItems: 'center' },
-    readyText: { fontSize: 26, fontWeight: 'bold', color: '#FFD700', marginBottom: 14, textShadowColor: 'rgba(255, 215, 0, 0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 15 },
+    readyText: { fontSize: 24, fontWeight: 'bold', color: '#FFD700', marginBottom: 12, textShadowColor: 'rgba(255, 215, 0, 0.5)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 15 },
 
     // Etkileşim demosu
     demoBox: { width: 200, height: 96, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 20, borderWidth: 2, borderColor: 'rgba(255,255,255,0.25)', overflow: 'hidden', justifyContent: 'center' },

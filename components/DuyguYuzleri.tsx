@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 💛 DUYGU YÜZLERİ - Duygu tanıma (Sosyal-Duygusal / SAB)
@@ -87,12 +87,14 @@ export default function DuyguYuzleri({ onGameEnd, onExit, childName }: Props) {
   const correctRef = useRef(0);
   const prevSceneRef = useRef<string | null>(null);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const sceneBounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
   useEffect(() => () => {
+    isMountedRef.current = false;
     timersRef.current.forEach(clearTimeout);
   }, []);
 
@@ -139,13 +141,12 @@ export default function DuyguYuzleri({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak(`Aferin! ${emo.name} hissediyor.`, { instructions: MOTHER_VOICE });
-      const t = setTimeout(() => {
+      speakThenWait(`Aferin! ${emo.name} hissediyor.`, 1500, { instructions: MOTHER_VOICE }).then(() => {
+        if (!isMountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);
         else finish();
-      }, 1500);
-      timersRef.current.push(t);
+      });
     } else {
       // Nazik geri bildirim: sallanma, ceza/kırmızı çarpı yok
       errorsRef.current += 1;

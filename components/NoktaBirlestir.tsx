@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import Svg, { Line } from 'react-native-svg';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 🔢 NOKTA BİRLEŞTİR - Noktaları sırayla birleştir (Çizim + sayı sırası)
@@ -50,13 +50,14 @@ export default function NoktaBirlestir({ onGameEnd, onExit, childName }: Props) 
   const errorsRef = useRef(0);
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const shake = useRef(new Animated.Value(0)).current;
 
   const pic = PICTURES[(round - 1) % PICTURES.length];
   const TOTAL_ROUNDS = PICTURES.length;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -89,13 +90,12 @@ export default function NoktaBirlestir({ onGameEnd, onExit, childName }: Props) 
         const isLast = round >= TOTAL_ROUNDS;
         if (isLast) setShowConfetti(true);
         else setShowConfetti(true);
-        speak(`Bak, bir ${pic.name} oldu! Aferin.`, { instructions: HAPPY_VOICE });
-        const t = setTimeout(() => {
+        speakThenWait(`Bak, bir ${pic.name} oldu! Aferin.`, 1800, { instructions: HAPPY_VOICE }).then(() => {
+          if (!isMountedRef.current) return;
           setShowConfetti(false);
           if (isLast) finish();
           else setRound((r) => r + 1);
-        }, 1800);
-        timersRef.current.push(t);
+        });
       }
     } else {
       errorsRef.current += 1;

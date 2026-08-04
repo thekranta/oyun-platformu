@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 🐻 AYI AİLESİ - Boyut sıralama (Matematik/MAB.3 karşılaştırma-sıralama)
@@ -55,11 +55,12 @@ export default function AyiAilesi({ onGameEnd, onExit, childName }: Props) {
   const errorsRef = useRef(0);
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const roundDoneRef = useRef(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -94,12 +95,11 @@ export default function AyiAilesi({ onGameEnd, onExit, childName }: Props) {
         roundDoneRef.current = true;
         const isLast = round >= TOTAL_ROUNDS;
         if (isLast) setShowConfetti(true);
-        speak('Aferin! Hepsini sıraladın.', { instructions: HAPPY_VOICE });
-        const t = setTimeout(() => {
+        speakThenWait('Aferin! Hepsini sıraladın.', isLast ? 1500 : 900, { instructions: HAPPY_VOICE }).then(() => {
+          if (!isMountedRef.current) return;
           if (isLast) finish();
           else setRound((r) => r + 1);
-        }, isLast ? 1500 : 900);
-        timersRef.current.push(t);
+        });
       }
     } else {
       errorsRef.current += 1;

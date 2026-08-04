@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import Svg, { Circle, Polygon, Rect } from 'react-native-svg';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 🕳️ ŞEKİL DELİĞİ - Şekil-delik eşleme (Matematik/MAB.2)
@@ -74,11 +74,12 @@ export default function SekilDeligi({ onGameEnd, onExit, childName }: Props) {
   const correctRef = useRef(0);
   const prevRef = useRef<string | null>(null);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const bounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -116,13 +117,12 @@ export default function SekilDeligi({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak('Harika! Tam oturdu.', { instructions: HAPPY_VOICE });
-      const t = setTimeout(() => {
+      speakThenWait('Harika! Tam oturdu.', 1300, { instructions: HAPPY_VOICE }).then(() => {
+        if (!isMountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);
         else finish();
-      }, 1300);
-      timersRef.current.push(t);
+      });
     } else {
       errorsRef.current += 1;
       setWrongKey(s.key);

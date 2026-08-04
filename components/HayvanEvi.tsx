@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 🏡 HAYVAN EVİ - Yaşam alanı eşleme (Bilişsel/Fen, FAB.2)
@@ -66,11 +66,12 @@ export default function HayvanEvi({ onGameEnd, onExit, childName }: Props) {
   const errorsRef = useRef(0);
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const bounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -106,13 +107,12 @@ export default function HayvanEvi({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak(`Doğru! ${HABITATS[key].loc} yaşar. Aferin.`, { instructions: HAPPY_VOICE });
-      const t = setTimeout(() => {
+      speakThenWait(`Doğru! ${HABITATS[key].loc} yaşar. Aferin.`, 1400, { instructions: HAPPY_VOICE }).then(() => {
+        if (!isMountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);
         else finish();
-      }, 1400);
-      timersRef.current.push(t);
+      });
     } else {
       errorsRef.current += 1;
       setWrong(key);

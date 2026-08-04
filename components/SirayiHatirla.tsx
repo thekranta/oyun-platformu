@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 🧠 SIRAYI HATIRLA - Çalışma belleği/dikkat (Bilişsel)
@@ -49,9 +49,10 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
   const errorsRef = useRef(0);
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   const playSequence = (sequence: number[]) => {
     setPhase('showing');
@@ -104,11 +105,11 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
         correctRef.current += 1;
         const isLast = round >= TOTAL_ROUNDS;
         if (isLast) setShowConfetti(true);
-        speak('Harika! Doğru hatırladın.', { instructions: HAPPY_VOICE });
-        timersRef.current.push(setTimeout(() => {
+        speakThenWait('Harika! Doğru hatırladın.', isLast ? 1500 : 1100, { instructions: HAPPY_VOICE }).then(() => {
+          if (!isMountedRef.current) return;
           if (isLast) finish();
           else setRound((r) => r + 1);
-        }, isLast ? 1500 : 1100));
+        });
       }
     } else {
       // yanlış - nazik: diziyi tekrar göster

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 🐭 LABİRENT - Problem çözme / yol bulma (Bilişsel, MAB.7)
@@ -68,13 +68,14 @@ export default function Labirent({ onGameEnd, onExit, childName }: Props) {
   const errorsRef = useRef(0);
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const shake = useRef(new Animated.Value(0)).current;
 
   const maze = MAZES[(round - 1) % MAZES.length];
   const goal = findCell(maze, 'G');
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -114,12 +115,11 @@ export default function Labirent({ onGameEnd, onExit, childName }: Props) {
       correctRef.current += 1;
       const isLast = round >= TOTAL_ROUNDS;
       if (isLast) setShowConfetti(true);
-      speak('Yaşasın! Peyniri buldun. Aferin!', { instructions: HAPPY_VOICE });
-      const t = setTimeout(() => {
+      speakThenWait('Yaşasın! Peyniri buldun. Aferin!', isLast ? 1600 : 1100, { instructions: HAPPY_VOICE }).then(() => {
+        if (!isMountedRef.current) return;
         if (isLast) finish();
         else setRound((x) => x + 1);
-      }, isLast ? 1600 : 1100);
-      timersRef.current.push(t);
+      });
     }
   };
 

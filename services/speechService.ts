@@ -205,6 +205,19 @@ export async function speak(
 }
 
 /**
+ * Metni seslendirir ve max(ses süresi, minMs) kadar bekledikten SONRA çözülür.
+ * Doğru cevap sonrası "Aferin" sesinin yarıda kesilmemesi için: bir sonraki aşamaya /
+ * tura geçmeden önce `await speakThenWait(text, minMs)` (ya da .then(...)) kullanılır.
+ * Ses yoksa (klip eşleşmezse) yalnız minMs beklenir; ses uzunsa ses bitene kadar beklenir.
+ */
+export async function speakThenWait(text: string, minMs = 1200, options: SpeechOptions = {}): Promise<void> {
+    await Promise.all([
+        speak(text, options),
+        new Promise<void>((resolve) => setTimeout(resolve, minMs)),
+    ]);
+}
+
+/**
  * Stop any currently playing speech (hazır MP3 + eski tarayıcı speechSynthesis).
  */
 export function stopSpeech(): void {
@@ -251,6 +264,7 @@ export async function preloadCommonPhrases(childName: string): Promise<void> {
 
 export default {
     speak,
+    speakThenWait,
     generateSpeech,
     stopSpeech,
     clearSpeechCache,

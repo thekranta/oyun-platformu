@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
 // 🔗 NE İŞE YARAR? - İlişkili ikilileri eşleştir (Matematik/MAB.3 ilişki)
@@ -79,10 +79,11 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
   const errorsRef = useRef(0);
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
+  const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -129,15 +130,17 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
       next.add(card.cardId);
       setMatched(next);
       setFirstId(null);
-      speak(`${firstCard.name} ile ${card.name} birbirine gider!`, { instructions: HAPPY_VOICE });
+      const fb = `${firstCard.name} ile ${card.name} birbirine gider!`;
       if (next.size >= cards.length) {
         const roundDone = round >= TOTAL_ROUNDS;
         if (roundDone) setShowConfetti(true);
-        const t = setTimeout(() => {
+        speakThenWait(fb, roundDone ? 1500 : 950, { instructions: HAPPY_VOICE }).then(() => {
+          if (!isMountedRef.current) return;
           if (roundDone) finish();
           else setRound((r) => r + 1);
-        }, roundDone ? 1500 : 950);
-        timersRef.current.push(t);
+        });
+      } else {
+        speak(fb, { instructions: HAPPY_VOICE });
       }
     } else {
       errorsRef.current += 1;
