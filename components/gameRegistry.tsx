@@ -110,6 +110,9 @@ import UzayBloklari from './UzayBloklari';
 import ZitlariEslestir from './ZitlariEslestir';
 import YapbozOyunu from './YapbozOyunu';
 import YaraticiCizim from './YaraticiCizim';
+import KafiyeBahcesi from './KafiyeBahcesi';
+import ResimdeNeTers from './ResimdeNeTers';
+import SonraNeOlur from './SonraNeOlur';
 
 /**
  * Oyun sonucu bildirimi. index.tsx'teki oyunuBitir ile ayni imza.
@@ -363,4 +366,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'gunum': (c) => <Gunum onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'renk-tonlari': (c) => <RenkTonlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'sicak-soguk': (c) => <SicakSoguk onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'kafiye-bahcesi': (c) => <KafiyeBahcesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'resimde-ne-ters': (c) => <ResimdeNeTers onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'sonra-ne-olur': (c) => <SonraNeOlur onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

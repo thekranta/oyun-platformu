@@ -54,6 +54,8 @@ const GAME_EMOJI: Record<string, string> = {
     'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
     'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
     'bayrak-boya': '🎨',
+    // Yeni oyunlar (Türkçe / Fen)
+    'kafiye-bahcesi': '🌸', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
 };
 
 export interface GameDisplay {

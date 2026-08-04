@@ -110,6 +110,9 @@ async function main() {
     // Giriş yönergeleri (CountdownOverlay message'ları)
     const CD = join(__dirname, 'tts-phrases-countdown.json');
     if (existsSync(CD)) phrases = phrases.concat(JSON.parse(readFileSync(CD, 'utf8')));
+    // Yeni oyunların metinleri
+    const NG = join(__dirname, 'tts-phrases-newgames.json');
+    if (existsSync(NG)) phrases = phrases.concat(JSON.parse(readFileSync(NG, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

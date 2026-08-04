@@ -82,12 +82,15 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
 
   // ---------- Fen ----------
   'gruplama': { displayName: 'Gruplama', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Fene yönelik nesne, olayları benzerlik ve farklılıklarına göre sınıflandırabilme' },
+  'sonra-ne-olur': { displayName: 'Sonra Ne Olur?', alan: 'Fen', surec: 'Bilimsel Veriye Dayalı Tahmin', cikti: 'FAB.4', ciktiAciklama: 'Fene yönelik olay/olgulara bilimsel veriye dayalı tahminde bulunabilme; olaylar dizisinde "sonra ne olur?" mantığıyla sonucu öngörür', badgeAlan: 'Fen (Tahmin)' },
 
   // ---------- Türkçe ----------
   'bunu-soyle': { displayName: 'Bunu Söyle!', alan: 'Türkçe', surec: 'Konuşma / İçerik Oluşturma', cikti: 'TAKB.2', ciktiAciklama: 'Konuşma sürecinin içeriğini oluşturabilme' },
   'rakam-yazma': { displayName: 'Rakam Yazma', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)' },
   'rakam-yazma-2': { displayName: 'Rakam Yazma 6-10', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme; 6-10 rakamlarını çizerek yazı öncesi el kaslarını güçlendirir', badgeAlan: 'Sanat / Yazma Öncesi' },
   'yaratici-cizim': { displayName: 'Hayal Defteri', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yazma öncesi becerileri kazanabilme (boyama ve çizgi çalışmaları)', badgeAlan: 'Sanat / Yazma Öncesi' },
+  'kafiye-bahcesi': { displayName: 'Kafiye Bahçesi', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Okuma Öncesi', cikti: 'TAEOB.5', ciktiAciklama: 'Okuma öncesi becerileri kazanabilme; kafiyeli (uyaklı) kelimeleri sesletip eşleştirir (sesbilgisel farkındalık)', badgeAlan: 'Dil (Kafiye)' },
+  'resimde-ne-ters': { displayName: 'Resimde Ne Ters?', alan: 'Türkçe', surec: 'Görsel Okuma', cikti: 'TAOB.3', ciktiAciklama: 'Görsel materyalleri çözümleyebilme; resimdeki uyumsuz/yanlış ögeyi (ne ters?) fark eder (görsel okuryazarlık ve dikkat)', badgeAlan: 'Dil (Görsel Okuma)' },
 
   // ---------- Değer Hikayeleri (Türkçe Dinleme/İzleme + değer) ----------
   'ceviz_macera': { displayName: 'Ceviz Macerası', alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Dinledikleri/izledikleri materyaller ile ilgili yeni anlamlar oluşturabilme', deger: 'Yardımseverlik', isValueStory: true, badgeAlan: 'Sosyal-Duygusal' },

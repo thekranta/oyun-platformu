@@ -134,6 +134,12 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'renk-tonlari', title: 'Renk Tonlari', status: 'secondary', domain: 'Kavram', skillFocus: 'Ton siralama', routeKey: 'renk-tonlari' },
   { id: 'sicak-soguk', title: 'Sicak mi Soguk mu', status: 'secondary', domain: 'Kavram', skillFocus: 'Sicaklik', routeKey: 'sicak-soguk' },
 
+  // ---------- Yeni oyunlar (Turkce / Fen - tap) ----------
+  // Maarif alani Turkce/Fen; menu domaini platform desenine gore Dil/Bilissel (bkz. akilli-harf=Dil, akilli-siniflandir=Bilissel)
+  { id: 'kafiye-bahcesi', title: 'Kafiye Bahcesi', status: 'secondary', domain: 'Dil', skillFocus: 'Kafiye / ses farkindaligi', routeKey: 'kafiye-bahcesi' },
+  { id: 'resimde-ne-ters', title: 'Resimde Ne Ters', status: 'secondary', domain: 'Dil', skillFocus: 'Gorsel dikkat / uyumsuzu bulma', routeKey: 'resimde-ne-ters' },
+  { id: 'sonra-ne-olur', title: 'Sonra Ne Olur', status: 'secondary', domain: 'Bilissel', skillFocus: 'Neden-sonuc / tahmin', routeKey: 'sonra-ne-olur' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];
