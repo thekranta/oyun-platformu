@@ -15,10 +15,10 @@ const USE_NATIVE = Platform.OS !== 'web';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const TOTAL_ROUNDS = 8;
 
-const MEDIA: Record<string, { emoji: string; name: string }> = {
-  kara: { emoji: '🛣️', name: 'Kara' },
-  deniz: { emoji: '🌊', name: 'Deniz' },
-  hava: { emoji: '☁️', name: 'Gökyüzü' },
+const MEDIA: Record<string, { emoji: string; name: string; loc: string }> = {
+  kara: { emoji: '🛣️', name: 'Kara', loc: 'Karada' },
+  deniz: { emoji: '🌊', name: 'Deniz', loc: 'Denizde' },
+  hava: { emoji: '☁️', name: 'Gökyüzü', loc: 'Gökyüzünde' },
 };
 const MED_KEYS = Object.keys(MEDIA);
 
@@ -98,7 +98,7 @@ export default function AraclarNerede({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak(`Doğru! ${MEDIA[key].name}'da gider. Aferin.`, { instructions: HAPPY_VOICE });
+      speak(`Doğru! ${MEDIA[key].loc} gider. Aferin.`, { instructions: HAPPY_VOICE });
       const t = setTimeout(() => {
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);

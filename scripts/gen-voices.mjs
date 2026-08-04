@@ -27,12 +27,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const argv = process.argv.slice(2);
 let profileOverride = null, limit = null, force = false, outDirArg = null;
 const onlySlugs = [];
+const adhocTexts = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   if (a === '--force') force = true;
   else if (a === '--limit') limit = parseInt(argv[++i], 10);
   else if (a === '--profile') profileOverride = argv[++i];
   else if (a === '--outdir') outDirArg = argv[++i];
+  else if (a === '--text') adhocTexts.push(argv[++i]);
   else onlySlugs.push(a);
 }
 const OUT_DIR = outDirArg || TTS_DIR;
@@ -94,9 +96,20 @@ async function generateOne(profile, text) {
 
 async function main() {
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
-  let phrases = JSON.parse(readFileSync(PHRASES, 'utf8'));
-  if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
-  if (limit != null) phrases = phrases.slice(0, limit);
+  let phrases;
+  if (adhocTexts.length) {
+    phrases = adhocTexts.map((t) => ({ text: t }));
+  } else {
+    phrases = JSON.parse(readFileSync(PHRASES, 'utf8'));
+    // Dinamik (çözülmüş şablon) cümleler varsa onları da kat
+    const DYN = join(__dirname, 'tts-phrases-dynamic.json');
+    if (existsSync(DYN)) phrases = phrases.concat(JSON.parse(readFileSync(DYN, 'utf8')));
+    // Sayı klipleri: ses kelime-formu (text), dosya adı rakamlı (slug override)
+    const NUM = join(__dirname, 'tts-phrases-numbers.json');
+    if (existsSync(NUM)) phrases = phrases.concat(JSON.parse(readFileSync(NUM, 'utf8')));
+    if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
+    if (limit != null) phrases = phrases.slice(0, limit);
+  }
 
   const profile = await pickProfile();
   console.log(`Profil: "${profile.name}" (${profile.id})  dil=${profile.language}  motor=${profile.default_engine || 'chatterbox'}`);
@@ -106,7 +119,7 @@ async function main() {
   const t0 = Date.now();
   for (let i = 0; i < phrases.length; i++) {
     const p = phrases[i];
-    const slug = ttsSlug(p.text);
+    const slug = p.slug || ttsSlug(p.text);
     const out = join(OUT_DIR, slug + '.wav');
     const tag = `[${i + 1}/${phrases.length}] ${slug}`;
     if (!force && existsSync(out) && statSync(out).size > 1024) {

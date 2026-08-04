@@ -16,13 +16,13 @@ const USE_NATIVE = Platform.OS !== 'web';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const TOTAL_ROUNDS = 8;
 
-const HABITATS: Record<string, { emoji: string; name: string }> = {
-  su: { emoji: '🌊', name: 'Su' },
-  orman: { emoji: '🌳', name: 'Orman' },
-  ciftlik: { emoji: '🚜', name: 'Çiftlik' },
-  kutup: { emoji: '❄️', name: 'Kutup' },
-  bahce: { emoji: '🌸', name: 'Bahçe' },
-  gokyuzu: { emoji: '☁️', name: 'Gökyüzü' },
+const HABITATS: Record<string, { emoji: string; name: string; loc: string }> = {
+  su: { emoji: '🌊', name: 'Su', loc: 'Suda' },
+  orman: { emoji: '🌳', name: 'Orman', loc: 'Ormanda' },
+  ciftlik: { emoji: '🚜', name: 'Çiftlik', loc: 'Çiftlikte' },
+  kutup: { emoji: '❄️', name: 'Kutup', loc: 'Kutupta' },
+  bahce: { emoji: '🌸', name: 'Bahçe', loc: 'Bahçede' },
+  gokyuzu: { emoji: '☁️', name: 'Gökyüzü', loc: 'Gökyüzünde' },
 };
 const HAB_KEYS = Object.keys(HABITATS);
 
@@ -106,7 +106,7 @@ export default function HayvanEvi({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak(`Doğru! ${HABITATS[key].name}'da yaşar. Aferin.`, { instructions: HAPPY_VOICE });
+      speak(`Doğru! ${HABITATS[key].loc} yaşar. Aferin.`, { instructions: HAPPY_VOICE });
       const t = setTimeout(() => {
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);

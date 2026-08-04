@@ -16,10 +16,10 @@ const USE_NATIVE = Platform.OS !== 'web';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const TOTAL_ROUNDS = 8;
 
-const ROOMS: Record<string, { emoji: string; name: string }> = {
-  mutfak: { emoji: '🍽️', name: 'Mutfak' },
-  banyo: { emoji: '🛁', name: 'Banyo' },
-  yatak: { emoji: '🛏️', name: 'Yatak Odası' },
+const ROOMS: Record<string, { emoji: string; name: string; loc: string }> = {
+  mutfak: { emoji: '🍽️', name: 'Mutfak', loc: 'Mutfakta' },
+  banyo: { emoji: '🛁', name: 'Banyo', loc: 'Banyoda' },
+  yatak: { emoji: '🛏️', name: 'Yatak Odası', loc: 'Yatak Odasında' },
 };
 const ROOM_KEYS = Object.keys(ROOMS);
 
@@ -99,7 +99,7 @@ export default function NeNerede({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak(`Doğru! ${ROOMS[key].name}'da. Aferin.`, { instructions: HAPPY_VOICE });
+      speak(`Doğru! ${ROOMS[key].loc}. Aferin.`, { instructions: HAPPY_VOICE });
       const t = setTimeout(() => {
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);

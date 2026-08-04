@@ -1,0 +1,898 @@
+[
+  {
+    "text": "Bir kedi çizdin! Aferin.",
+    "game": "AdimAdim"
+  },
+  {
+    "text": "Bir kardan adam çizdin! Aferin.",
+    "game": "AdimAdim"
+  },
+  {
+    "text": "Küçük olanı bul!",
+    "game": "BuyukOrtaKucuk"
+  },
+  {
+    "text": "Orta olanı bul!",
+    "game": "BuyukOrtaKucuk"
+  },
+  {
+    "text": "Büyük olanı bul!",
+    "game": "BuyukOrtaKucuk"
+  },
+  {
+    "text": "Ev çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Çiçek çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Balık çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Araba çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Kelebek çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Yıldız çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Güneş çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Ağaç çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Bulut çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Kalp çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Top çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Elma çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Balon çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Şemsiye çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Uçurtma çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Kaplumbağa çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Kar Tanesi çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Roket çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Dondurma çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Gemi çizelim! Kesik çizgileri takip et.",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "İkisi de mutlu! Aferin.",
+    "game": "DuyguEslestir"
+  },
+  {
+    "text": "İkisi de üzgün! Aferin.",
+    "game": "DuyguEslestir"
+  },
+  {
+    "text": "İkisi de kızgın! Aferin.",
+    "game": "DuyguEslestir"
+  },
+  {
+    "text": "İkisi de korkmuş! Aferin.",
+    "game": "DuyguEslestir"
+  },
+  {
+    "text": "İkisi de şaşkın! Aferin.",
+    "game": "DuyguEslestir"
+  },
+  {
+    "text": "İkisi de sevgi dolu! Aferin.",
+    "game": "DuyguEslestir"
+  },
+  {
+    "text": "İkisi de uykulu! Aferin.",
+    "game": "DuyguEslestir"
+  },
+  {
+    "text": "Doğum günü partisi var! Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Kocaman bir dondurma yiyor! Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Lunaparka gitti! Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Sevdiği oyuncağı kırıldı. Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Dondurması yere düştü. Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Karanlıkta bir hayalet gördü! Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Bir arı peşine takıldı! Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Gök gürledi, şimşek çaktı! Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Bir sürpriz hediye çıktı! Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Biri oyuncağını izinsiz aldı. Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Annesi ona sımsıkı sarıldı. Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Sevimli köpeğini kucakladı. Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Gece oldu, yatma vakti geldi. Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Çok yoruldu, gözleri kapanıyor. Sence nasıl hissediyor?",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Aferin! Mutlu hissediyor.",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Aferin! Üzgün hissediyor.",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Aferin! Kızgın hissediyor.",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Aferin! Korkmuş hissediyor.",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Aferin! Şaşkın hissediyor.",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Aferin! Sevgi Dolu hissediyor.",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Aferin! Uykulu hissediyor.",
+    "game": "DuyguYuzleri"
+  },
+  {
+    "text": "Kırmızı ışık yanıyor. Ne yapmalı?",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Ocak/soba çok sıcak. Ne yapmalı?",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Elektrik prizi var. Ne yapmalı?",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Yerde renkli ilaçlar var. Ne yapmalı?",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Arabaya biniyorsun. Ne yapmalı?",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Havuz kenarı kaygan. Ne yapmalı?",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Dur, bekle. Çok güvenlisin, aferin!",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Dokunma. Çok güvenlisin, aferin!",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Uzak dur. Çok güvenlisin, aferin!",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Yeme, büyüğe söyle. Çok güvenlisin, aferin!",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Emniyet kemeri tak. Çok güvenlisin, aferin!",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Yavaş yürü. Çok güvenlisin, aferin!",
+    "game": "GuvendeKal"
+  },
+  {
+    "text": "Dışarıda yağmur yağıyor. Ne alırız?",
+    "game": "HavaKiyafet"
+  },
+  {
+    "text": "Hava çok güneşli. Ne alırız?",
+    "game": "HavaKiyafet"
+  },
+  {
+    "text": "Hava soğuk, kar var. Ne alırız?",
+    "game": "HavaKiyafet"
+  },
+  {
+    "text": "Buz gibi soğuk. Ne alırız?",
+    "game": "HavaKiyafet"
+  },
+  {
+    "text": "Sıcak, denize gidiyorsun. Ne alırız?",
+    "game": "HavaKiyafet"
+  },
+  {
+    "text": "Çok rüzgarlı. Ne alırız?",
+    "game": "HavaKiyafet"
+  },
+  {
+    "text": "A ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "B ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Ç ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "E ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "K ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "M ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "P ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "T ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Y ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "G ile başlayan resmi bul!",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Arı, A ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Ayı, A ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Araba, A ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Ay, A ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Balık, B ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Balon, B ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Çiçek, Ç ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Çilek, Ç ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Elma, E ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Ev, E ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Kedi, K ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Köpek, K ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Kelebek, K ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Muz, M ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Maymun, M ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Pizza, P ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Penguen, P ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Top, T ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Tavşan, T ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Tren, T ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Yıldız, Y ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Yılan, Y ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Yumurta, Y ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Aferin! Güneş, G ile başlar.",
+    "game": "IlkHarf"
+  },
+  {
+    "text": "Arkadaşın üzgün. Sence ne yapmalı?",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Arkadaşının içeceği yok. Sence ne yapmalı?",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Sınıf dağınık. Sence ne yapmalı?",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Ninenin poşetleri ağır. Sence ne yapmalı?",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Kardeşin dizini incitti. Sence ne yapmalı?",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Arkadaşının doğum günü. Sence ne yapmalı?",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Sarıl! Ne kadar naziksin.",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Paylaş! Ne kadar naziksin.",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Toplamaya yardım et! Ne kadar naziksin.",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Taşımaya yardım et! Ne kadar naziksin.",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Yardım et! Ne kadar naziksin.",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Sevindir! Ne kadar naziksin.",
+    "game": "IyilikYap"
+  },
+  {
+    "text": "Doktor ne kullanır?",
+    "game": "Meslekler"
+  },
+  {
+    "text": "İtfaiyeci ne kullanır?",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Öğretmen ne kullanır?",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Aşçı ne kullanır?",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Polis ne kullanır?",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Çiftçi ne kullanır?",
+    "game": "Meslekler"
+  },
+  {
+    "text": "İnşaatçı ne kullanır?",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Ressam ne kullanır?",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Doğru! Doktor bunu kullanır. Aferin.",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Doğru! İtfaiyeci bunu kullanır. Aferin.",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Doğru! Öğretmen bunu kullanır. Aferin.",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Doğru! Aşçı bunu kullanır. Aferin.",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Doğru! Polis bunu kullanır. Aferin.",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Doğru! Çiftçi bunu kullanır. Aferin.",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Doğru! İnşaatçı bunu kullanır. Aferin.",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Doğru! Ressam bunu kullanır. Aferin.",
+    "game": "Meslekler"
+  },
+  {
+    "text": "Şemsiye ile Yağmur birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Yağmur ile Şemsiye birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Arı ile Bal birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Bal ile Arı birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Diş fırçası ile Diş birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Diş ile Diş fırçası birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Anahtar ile Kilit birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Kilit ile Anahtar birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Çorap ile Ayakkabı birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Ayakkabı ile Çorap birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "İnek ile Süt birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Süt ile İnek birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Fidan ile Su birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "Su ile Fidan birbirine gider!",
+    "game": "NeIseYarar"
+  },
+  {
+    "text": "İçinde olanı bul!",
+    "game": "Neredeyim"
+  },
+  {
+    "text": "Üstünde olanı bul!",
+    "game": "Neredeyim"
+  },
+  {
+    "text": "Altında olanı bul!",
+    "game": "Neredeyim"
+  },
+  {
+    "text": "Yanında olanı bul!",
+    "game": "Neredeyim"
+  },
+  {
+    "text": "Aferin! İçinde olanı buldun.",
+    "game": "Neredeyim"
+  },
+  {
+    "text": "Aferin! Üstünde olanı buldun.",
+    "game": "Neredeyim"
+  },
+  {
+    "text": "Aferin! Altında olanı buldun.",
+    "game": "Neredeyim"
+  },
+  {
+    "text": "Aferin! Yanında olanı buldun.",
+    "game": "Neredeyim"
+  },
+  {
+    "text": "Bak, bir üçgen oldu! Aferin.",
+    "game": "NoktaBirlestir"
+  },
+  {
+    "text": "Bak, bir kare oldu! Aferin.",
+    "game": "NoktaBirlestir"
+  },
+  {
+    "text": "Bak, bir ev oldu! Aferin.",
+    "game": "NoktaBirlestir"
+  },
+  {
+    "text": "Bak, bir yıldız oldu! Aferin.",
+    "game": "NoktaBirlestir"
+  },
+  {
+    "text": "Kırmızı!",
+    "game": "RenkSepetleri"
+  },
+  {
+    "text": "Mavi!",
+    "game": "RenkSepetleri"
+  },
+  {
+    "text": "Sarı!",
+    "game": "RenkSepetleri"
+  },
+  {
+    "text": "Yeşil!",
+    "game": "RenkSepetleri"
+  },
+  {
+    "text": "Bak, bir kalp oldu! Aferin.",
+    "game": "SayiBoya"
+  },
+  {
+    "text": "Bak, bir ağaç oldu! Aferin.",
+    "game": "SayiBoya"
+  },
+  {
+    "text": "Bak, bir çiçek oldu! Aferin.",
+    "game": "SayiBoya"
+  },
+  {
+    "text": "Bak, bir balık oldu! Aferin.",
+    "game": "SayiBoya2"
+  },
+  {
+    "text": "Bak, bir roket oldu! Aferin.",
+    "game": "SayiBoya2"
+  },
+  {
+    "text": "Daire hangi deliğe girer?",
+    "game": "SekilDeligi"
+  },
+  {
+    "text": "Kare hangi deliğe girer?",
+    "game": "SekilDeligi"
+  },
+  {
+    "text": "Üçgen hangi deliğe girer?",
+    "game": "SekilDeligi"
+  },
+  {
+    "text": "Yıldız hangi deliğe girer?",
+    "game": "SekilDeligi"
+  },
+  {
+    "text": "Daire nerede? Vagonda bul!",
+    "game": "SekilTreni"
+  },
+  {
+    "text": "Kare nerede? Vagonda bul!",
+    "game": "SekilTreni"
+  },
+  {
+    "text": "Üçgen nerede? Vagonda bul!",
+    "game": "SekilTreni"
+  },
+  {
+    "text": "Yıldız nerede? Vagonda bul!",
+    "game": "SekilTreni"
+  },
+  {
+    "text": "Daire nerede?",
+    "game": "SekilTreni"
+  },
+  {
+    "text": "Kare nerede?",
+    "game": "SekilTreni"
+  },
+  {
+    "text": "Üçgen nerede?",
+    "game": "SekilTreni"
+  },
+  {
+    "text": "Yıldız nerede?",
+    "game": "SekilTreni"
+  },
+  {
+    "text": "Ellerin kirlendi. Ne kullanırız?",
+    "game": "TemizlikZamani"
+  },
+  {
+    "text": "Yemek yedin, dişlerin. Ne kullanırız?",
+    "game": "TemizlikZamani"
+  },
+  {
+    "text": "Saçların dağınık. Ne kullanırız?",
+    "game": "TemizlikZamani"
+  },
+  {
+    "text": "Burnun aktı. Ne kullanırız?",
+    "game": "TemizlikZamani"
+  },
+  {
+    "text": "Oyuncaklar yerde dağınık. Ne kullanırız?",
+    "game": "TemizlikZamani"
+  },
+  {
+    "text": "Çok kirlendin. Ne kullanırız?",
+    "game": "TemizlikZamani"
+  },
+  {
+    "text": "Göz nerede? Göster bakalım!",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Burun nerede? Göster bakalım!",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Ağız nerede? Göster bakalım!",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Kulak nerede? Göster bakalım!",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Aferin! İşte göz.",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Aferin! İşte burun.",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Aferin! İşte ağız.",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Aferin! İşte kulak.",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Göz nerede?",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Burun nerede?",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Ağız nerede?",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Kulak nerede?",
+    "game": "Vucudum"
+  },
+  {
+    "text": "Gündüz ile Gece zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Gece ile Gündüz zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Sıcak ile Soğuk zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Soğuk ile Sıcak zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Mutlu ile Üzgün zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Üzgün ile Mutlu zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Büyük ile Küçük zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Küçük ile Büyük zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Hızlı ile Yavaş zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Yavaş ile Hızlı zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Yukarı ile Aşağı zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Aşağı ile Yukarı zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Açık ile Kapalı zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Kapalı ile Açık zıttır. Aferin!",
+    "game": "ZitlariEslestir"
+  },
+  {
+    "text": "Doğru! Karada gider. Aferin.",
+    "game": "AraclarNerede"
+  },
+  {
+    "text": "Doğru! Denizde gider. Aferin.",
+    "game": "AraclarNerede"
+  },
+  {
+    "text": "Doğru! Gökyüzünde gider. Aferin.",
+    "game": "AraclarNerede"
+  },
+  {
+    "text": "Doğru! Suda yaşar. Aferin.",
+    "game": "HayvanEvi"
+  },
+  {
+    "text": "Doğru! Ormanda yaşar. Aferin.",
+    "game": "HayvanEvi"
+  },
+  {
+    "text": "Doğru! Çiftlikte yaşar. Aferin.",
+    "game": "HayvanEvi"
+  },
+  {
+    "text": "Doğru! Kutupta yaşar. Aferin.",
+    "game": "HayvanEvi"
+  },
+  {
+    "text": "Doğru! Bahçede yaşar. Aferin.",
+    "game": "HayvanEvi"
+  },
+  {
+    "text": "Doğru! Gökyüzünde yaşar. Aferin.",
+    "game": "HayvanEvi"
+  },
+  {
+    "text": "Doğru! Mutfakta. Aferin.",
+    "game": "NeNerede"
+  },
+  {
+    "text": "Doğru! Banyoda. Aferin.",
+    "game": "NeNerede"
+  },
+  {
+    "text": "Doğru! Yatak Odasında. Aferin.",
+    "game": "NeNerede"
+  }
+]
