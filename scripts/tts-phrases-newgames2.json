@@ -1,0 +1,23 @@
+[
+  { "text": "Alışveriş yapalım! Fiyattaki para kadar parası olan keseyi seç.", "game": "MinikMarket" },
+  { "text": "Kaç para? Say ve aynı sayıda parası olan keseyi bul!", "game": "MinikMarket" },
+  { "text": "Aferin! Doğru parayı verdin.", "game": "MinikMarket" },
+
+  { "text": "Hazine haritasını oku! İpucunu dinle, hazinenin gömülü olduğu yere dokun.", "game": "HazineHaritasi" },
+  { "text": "Hazine ağacın hemen SAĞINDA.", "game": "HazineHaritasi" },
+  { "text": "Hazine evin hemen ALTINDA.", "game": "HazineHaritasi" },
+  { "text": "Hazine gölün hemen ÜSTÜNDE.", "game": "HazineHaritasi" },
+  { "text": "Hazine dağın hemen SOLUNDA.", "game": "HazineHaritasi" },
+  { "text": "Hazine gölün hemen SAĞINDA.", "game": "HazineHaritasi" },
+  { "text": "Hazine evin hemen ÜSTÜNDE.", "game": "HazineHaritasi" },
+  { "text": "Hazine dağın hemen ALTINDA.", "game": "HazineHaritasi" },
+  { "text": "Hazine çiçeğin hemen SOLUNDA.", "game": "HazineHaritasi" },
+  { "text": "Aferin! Hazineyi buldun.", "game": "HazineHaritasi" },
+
+  { "text": "Meyveleri türlerine göre dizip grafik yapalım! Sonra en çok ya da en az olanı bul.", "game": "GrafikUstasi" },
+  { "text": "Meyveleri türüne göre yerleştir!", "game": "GrafikUstasi" },
+  { "text": "Hangisi en çok?", "game": "GrafikUstasi" },
+  { "text": "Hangisi en az?", "game": "GrafikUstasi" },
+  { "text": "Aferin! En çok olanı buldun.", "game": "GrafikUstasi" },
+  { "text": "Aferin! En az olanı buldun.", "game": "GrafikUstasi" }
+]

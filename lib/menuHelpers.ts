@@ -119,6 +119,9 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'kafiye-bahcesi': { color: '#EC407A', icon: 'flower', displayTitle: 'Kafiye Bahçesi', subtitle: 'Kafiyeyi bul' },
   'resimde-ne-ters': { color: '#5C6BC0', icon: 'search', displayTitle: 'Resimde Ne Ters?', subtitle: 'Yanlışı bul' },
   'sonra-ne-olur': { color: '#5E35B1', icon: 'sparkles', displayTitle: 'Sonra Ne Olur?', subtitle: 'Sonrasını tahmin et' },
+  'minik-market': { color: '#43A047', icon: 'cart', displayTitle: 'Minik Market', subtitle: 'Alışveriş yap' },
+  'hazine-haritasi': { color: '#8D6E63', icon: 'map', displayTitle: 'Hazine Haritası', subtitle: 'Haritayı takip et' },
+  'grafik-ustasi': { color: '#1E88E5', icon: 'bar-chart', displayTitle: 'Grafik Ustası', subtitle: 'Grafiği oku' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
@@ -158,6 +161,8 @@ export const GAME_EMOJI: Record<string, string> = {
   'bayrak-boya': '🎨',
   // Yeni oyunlar (Türkçe / Fen)
   'kafiye-bahcesi': '🌸', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
+  // Yeni oyunlar (Sosyal / Matematik)
+  'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

@@ -176,6 +176,11 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'kum-boyasi': { displayName: 'Kum Boyası', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Duyusal yaratıcı ifade; akan renklerle serbest boyama', badgeAlan: 'Sanat / Boyama' },
   'adim-adim': { displayName: 'Adım Adım Çizim', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Yönerge takibiyle adım adım çizim; el-göz koordinasyonu (yazma öncesi)', badgeAlan: 'Sanat / Rehberli' },
   'sayi-boya-2': { displayName: 'Sayı-Boya 2', alan: 'Türkçe', surec: 'Erken Okuryazarlık / Yazma Öncesi', cikti: 'TAEOB.6', ciktiAciklama: 'Detaylı sayı-renk eşleştirmeli boyama (daha büyük grid, 6 renk); renk-sayı ilişkisi + ince motor', badgeAlan: 'Sanat / Sayı-Boya' },
+
+  // ---------- Yeni oyunlar (Sosyal / Matematik - tap) ----------
+  'minik-market': { displayName: 'Minik Market', alan: 'Sosyal', surec: 'Sosyal Alan / Ekonomi Okuryazarlığı', cikti: 'SAB.22', ciktiAciklama: 'İhtiyaçların karşılanabilmesi için bir gelire/paraya ihtiyaç olduğunu anlayabilme; markette parayla alışveriş yapar (pratik yaşam, ihtiyaç-istek)', badgeAlan: 'Sosyal / Ekonomi' },
+  'hazine-haritasi': { displayName: 'Hazine Haritası', alan: 'Sosyal', surec: 'Sosyal Alan / Mekânsal Düşünme (Kroki)', cikti: 'SAB.15', ciktiAciklama: 'Yakın çevresi ile ilgili hazırlanmış basit krokiyi/haritayı okuyabilme; haritadaki yönergeleri takip ederek hazineyi bulur (uzamsal yön)', badgeAlan: 'Sosyal / Harita' },
+  'grafik-ustasi': { displayName: 'Grafik Ustası', alan: 'Matematik', surec: 'Veri İşleme', cikti: 'MAB.11', ciktiAciklama: 'Elde ettiği/eriştiği verileri düzenleyebilme; nesneleri sayıp basit sütun grafiği oluşturur/okur (veri okuryazarlığına giriş)', badgeAlan: 'Matematik (Veri)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

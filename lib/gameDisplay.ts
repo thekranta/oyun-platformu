@@ -56,6 +56,8 @@ const GAME_EMOJI: Record<string, string> = {
     'bayrak-boya': '🎨',
     // Yeni oyunlar (Türkçe / Fen)
     'kafiye-bahcesi': '🌸', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
+    // Yeni oyunlar (Sosyal / Matematik)
+    'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊',
 };
 
 export interface GameDisplay {

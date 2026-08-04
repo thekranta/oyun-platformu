@@ -140,6 +140,13 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'resimde-ne-ters', title: 'Resimde Ne Ters', status: 'secondary', domain: 'Dil', skillFocus: 'Gorsel dikkat / uyumsuzu bulma', routeKey: 'resimde-ne-ters' },
   { id: 'sonra-ne-olur', title: 'Sonra Ne Olur', status: 'secondary', domain: 'Bilissel', skillFocus: 'Neden-sonuc / tahmin', routeKey: 'sonra-ne-olur' },
 
+  // ---------- Yeni oyunlar (Sosyal / Matematik - tap) ----------
+  // Maarif alani Sosyal/Matematik; menu domaini platform desenine gore Kavram/Matematik
+  // (bkz. neredeyim=uzamsal SAB->Kavram, meslekler SAB->Kavram; grafik-ustasi=veri->Matematik)
+  { id: 'minik-market', title: 'Minik Market', status: 'secondary', domain: 'Kavram', skillFocus: 'Para-alisveris / ihtiyac (pratik yasam)', routeKey: 'minik-market' },
+  { id: 'hazine-haritasi', title: 'Hazine Haritasi', status: 'secondary', domain: 'Kavram', skillFocus: 'Kroki/harita okuma / uzamsal yon', routeKey: 'hazine-haritasi' },
+  { id: 'grafik-ustasi', title: 'Grafik Ustasi', status: 'secondary', domain: 'Matematik', skillFocus: 'Veri okuma / basit grafik', routeKey: 'grafik-ustasi' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];
