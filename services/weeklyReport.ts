@@ -11,6 +11,7 @@
  */
 
 import { getMaarif } from '../constants/maarifMap';
+import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
 import { ReportEngine } from './ReportEngine';
 
 // ============== TİPLER ==============
@@ -86,49 +87,9 @@ export interface WeeklyReportData {
 // ============== YARDIMCILAR ==============
 const DAY_LABELS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
-const normalize = (name: string): string => {
-    if (!name) return 'bilinmeyen-oyun';
-    return name.toLowerCase().trim()
-        .replace(/_/g, '-')
-        .replace(/\s+/g, '-')
-        .replace(/ı/g, 'i').replace(/İ/g, 'i')
-        .replace(/ş/g, 's').replace(/Ş/g, 's')
-        .replace(/ğ/g, 'g').replace(/Ğ/g, 'g')
-        .replace(/ü/g, 'u').replace(/Ü/g, 'u')
-        .replace(/ö/g, 'o').replace(/Ö/g, 'o')
-        .replace(/ç/g, 'c').replace(/Ç/g, 'c');
-};
-
-// Alanına göre varsayılan emoji (oyun özel emojisi yoksa)
-const AREA_EMOJI: Record<string, string> = {
-    'Matematik': '🔢',
-    'Fen': '🔬',
-    'Türkçe': '📖',
-    'Müzik': '🎵',
-    'Sanat': '🎨',
-    'Sağlık': '🏃',
-    'Hareket': '🏃',
-    'Sosyal': '🤝',
-    'Sosyal-Duygusal': '💛',
-};
-
-// Bilinen oyunlar için özel emoji (DB oyun_turu -> emoji)
-const GAME_EMOJI: Record<string, string> = {
-    'miktar-avcisi': '🎯', 'golge-dedektifi': '🔍', 'sihirli-tuval': '🎨',
-    'uzay-bloklari': '🌌', 'yapboz': '🧩', 'hafiza': '🃏', 'eslestirme': '🃏',
-    'onluk-cerceve': '🧮', 'tarti-dengesi': '⚖️', 'rakam-yazma': '✏️', 'rakam-yazma-2': '🔟',
-    'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
-    'yaratici-cizim': '🖍️', 'duygu-yuzleri': '😊', 'sayi-komsulari': '🔗',
-    'sayilari-birlestir': '🔗', 'diziyi-tamamla': '🔢', 'sihirli-siseler': '✨',
-    'ceviz-macera': '🌰', 'aile-sepeti': '🧺', 'bunu-soyle': '🗣️',
-    'renk-sepetleri': '🌈', 'zitlari-eslestir': '↔️', 'sekil-treni': '🚂',
-    'ayi-ailesi': '🐻', 'ciftlikte-sayalim': '🐔', 'ayni-farkli': '🔎',
-    'hangisi-farkli': '🧐', 'sayi-boya': '🖌️', 'sayi-boya-2': '🖌️',
-    'kutuyu-bul': '📦', 'gruplama': '🗂️', 'siralama': '📊', 'kodlama': '🤖',
-};
-
-const emojiFor = (key: string, area: string): string =>
-    GAME_EMOJI[key] || AREA_EMOJI[area] || '🎮';
+// Oyun adı + emoji ve slug normalizasyonu TEK KAYNAK: lib/gameDisplay.ts.
+// (Buradaki yerel normalize/AREA_EMOJI/GAME_EMOJI/emojiFor kopyaları kaldırıldı; emoji
+// haritası bayatlamıştı ve çoğu oyun raporda genel ikon gösteriyordu.)
 
 const clampPct = (n: number): number => Math.max(0, Math.min(100, Math.round(n)));
 
@@ -199,7 +160,7 @@ export function buildWeeklyReport(
     // Gelişim alanları (Maarif) — badgeAlan öncelikli, yoksa alan
     const areaMap = new Map<string, { count: number; codes: Set<string> }>();
     source.forEach(g => {
-        const m = getMaarif(normalize(g.oyun_turu));
+        const m = getMaarif(normalizeOyunTuru(g.oyun_turu));
         const area = m.badgeAlan || m.alan || 'Genel';
         if (!areaMap.has(area)) areaMap.set(area, { count: 0, codes: new Set() });
         const entry = areaMap.get(area)!;
@@ -213,24 +174,26 @@ export function buildWeeklyReport(
         .slice(0, 6);
 
     // En çok oynanan oyunlar
-    const gameMap = new Map<string, { count: number; success: number; area: string }>();
+    const gameMap = new Map<string, { count: number; success: number }>();
     source.forEach(g => {
-        const key = normalize(g.oyun_turu);
-        const m = getMaarif(key);
-        const area = m.badgeAlan || m.alan || 'Genel';
-        if (!gameMap.has(key)) gameMap.set(key, { count: 0, success: 0, area });
+        const key = normalizeOyunTuru(g.oyun_turu);
+        if (!gameMap.has(key)) gameMap.set(key, { count: 0, success: 0 });
         const entry = gameMap.get(key)!;
         entry.count += 1;
         entry.success += successOf(g);
     });
     const topGames: WeeklyTopGame[] = Array.from(gameMap.entries())
-        .map(([key, v]) => ({
-            key,
-            name: getMaarif(key).displayName || key.replace(/-/g, ' '),
-            emoji: emojiFor(key, v.area),
-            count: v.count,
-            success: Math.round(v.success / v.count),
-        }))
+        .map(([key, v]) => {
+            // İsim + emoji tek kaynaktan (lib/gameDisplay.ts); alan yedeği dahili çözülür.
+            const display = getGameDisplay(key);
+            return {
+                key,
+                name: display.name,
+                emoji: display.emoji,
+                count: v.count,
+                success: Math.round(v.success / v.count),
+            };
+        })
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
 

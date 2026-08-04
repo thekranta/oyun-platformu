@@ -20,7 +20,7 @@ const TOTAL_ROUNDS = 5;
 const SEQUENCES: { emojis: string[]; label: string }[] = [
   { emojis: ['🌰', '🌱', '🌸'], label: 'Tohum çiçek olur' },
   { emojis: ['🥚', '🐣', '🐔'], label: 'Yumurta tavuk olur' },
-  { emojis: ['🐛', '🛡️', '🦋'], label: 'Tırtıl kelebek olur' },
+  { emojis: ['🐛', '🥚', '🦋'], label: 'Tırtıl kelebek olur' },
   { emojis: ['🌅', '☀️', '🌙'], label: 'Sabah, gündüz, gece' },
   { emojis: ['⛄', '🌤️', '💧'], label: 'Kardan adam erir' },
   { emojis: ['🧱', '🏗️', '🏠'], label: 'Ev yapılır' },

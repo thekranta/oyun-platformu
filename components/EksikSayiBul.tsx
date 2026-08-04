@@ -210,15 +210,15 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
         <View style={styles.header}>
           <Image source={PLATFORM_LOGO} style={styles.logo} resizeMode="contain" />
           <View>
-            <Text style={styles.title}>Eksik Sayiyi Bul</Text>
-            <Text style={styles.subtitle}>{numbers[0]}-{numbers[numbers.length - 1]} arasinda eksik sayiyi surukle birak.</Text>
+            <Text style={styles.title}>Eksik Sayıyı Bul</Text>
+            <Text style={styles.subtitle}>{numbers[0]}-{numbers[numbers.length - 1]} arasında eksik sayıyı sürükle bırak.</Text>
           </View>
         </View>
 
         <View style={styles.progressRow}>
           <ProgressBar current={currentStage + 1} total={TOTAL_STAGES} />
           <View style={styles.roundBadge}>
-            <Text style={styles.roundBadgeText}>{currentStage + 1}. Asama</Text>
+            <Text style={styles.roundBadgeText}>{currentStage + 1}. Aşama</Text>
           </View>
         </View>
 
@@ -259,7 +259,7 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
         </View>
 
         <View style={styles.optionsArea}>
-          <Text style={styles.sectionLabel}>Secenekler</Text>
+          <Text style={styles.sectionLabel}>Seçenekler</Text>
           <View style={styles.optionsGrid}>
             {options.map(option => {
               if (placedNumber === missingNumber && option === missingNumber) return null;
@@ -274,7 +274,7 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
               );
             })}
           </View>
-          <Text style={styles.helperText}>Eksik kutuyu tamamlamak icin sayiyi surukle birak.</Text>
+          <Text style={styles.helperText}>Eksik kutuyu tamamlamak için sayıyı sürükle bırak.</Text>
         </View>
       </View>
 

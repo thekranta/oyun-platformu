@@ -109,7 +109,7 @@ interface Props {
         hamle: number,
         hata: number,
         algilananKelime?: string,
-        extraData?: { zorlukSeviyesi?: number; kazanimOdagi?: string }
+        extraData?: { zorlukSeviyesi?: number; kazanimOdagi?: string; cognitive_speed_score?: number; round_history?: any }
     ) => void;
     onExit?: () => void;
     childName?: string;
@@ -431,39 +431,27 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         // Calculate Dynamic Difficulty Score (0-100)
         const dynamicDifficultyScore = calculateDynamicDifficultyScore(level, totalErrors, avgLevelTime, level1Time);
 
-        // Save to Supabase with dynamic_difficulty_score
-        if (userId) {
-            try {
-                await supabase.from('oyun_skorlari').insert({
-                    user_id: userId,
-                    oyun_adi: 'Mutfak Dedektifi',
-                    sure: totalTime,
-                    hamle_sayisi: moves,
-                    hata_sayisi: totalErrors,
-                    piramit_tamamlandi: true,
-                    cognitive_speed_score: dynamicDifficultyScore, // Using existing column
-                    piramit_verisi: JSON.stringify({
-                        finalLevel: level,
-                        initialLevel: initialLevel,
-                        dynamic_difficulty_score: dynamicDifficultyScore,
-                        level1Time: level1Time,
-                        averageLevelTime: Math.round(avgLevelTime * 10) / 10,
-                        levelTimes: allLevelTimes.map(t => Math.round(t * 10) / 10),
-                        dragLogs: dragLogs,
-                        averageDragTime: dragLogs.length > 0
-                            ? Math.round(dragLogs.reduce((a, b) => a + b.dragDuration, 0) / dragLogs.length)
-                            : 0,
-                        scaffoldingUsed: showScaffolding,
-                    }),
-                });
-            } catch (e) {
-                console.error('Score save error:', e);
-            }
-        }
-
+        // Tek kayit yolu: onGameEnd -> saveGameResult (oyun_turu semasi). Onceki dogrudan
+        // supabase.insert (oyun_adi/piramit_verisi semasi) her oyunda ikinci bir satir
+        // yaziyor ve rapor sayimlarini sisiriyordu. Direct insert'e ozel veriler burada
+        // korunuyor: DDA skoru -> cognitive_speed_score, ayrintili analitik -> round_history.
         onGameEnd('Mutfak Dedektifi', totalTime, moves, totalErrors, undefined, {
             zorlukSeviyesi: level,
             kazanimOdagi: 'Sınıflandırma ve Kategorileme',
+            cognitive_speed_score: dynamicDifficultyScore,
+            round_history: {
+                finalLevel: level,
+                initialLevel: initialLevel,
+                dynamic_difficulty_score: dynamicDifficultyScore,
+                level1Time: level1Time,
+                averageLevelTime: Math.round(avgLevelTime * 10) / 10,
+                levelTimes: allLevelTimes.map(t => Math.round(t * 10) / 10),
+                dragLogs: dragLogs,
+                averageDragTime: dragLogs.length > 0
+                    ? Math.round(dragLogs.reduce((a, b) => a + b.dragDuration, 0) / dragLogs.length)
+                    : 0,
+                scaffoldingUsed: showScaffolding,
+            },
         });
     };
 

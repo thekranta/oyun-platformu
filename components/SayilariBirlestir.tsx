@@ -20,9 +20,9 @@ interface Props {
 
 // Single fruit per stage
 const STAGE_FRUITS = [
-    { image: asset('/images/elma.png'), name: 'Elma' },
-    { image: asset('/images/uzum.png'), name: 'Üzüm' },
-    { image: asset('/images/karpuz.png'), name: 'Karpuz' },
+    { image: asset('/images/elma.png'), name: 'Elma', plural: 'Elmaları' },
+    { image: asset('/images/uzum.png'), name: 'Üzüm', plural: 'Üzümleri' },
+    { image: asset('/images/karpuz.png'), name: 'Karpuz', plural: 'Karpuzları' },
 ];
 
 type Point = { x: number; y: number };
@@ -30,6 +30,9 @@ type NumberDot = { number: number; x: number; y: number };
 
 const TOTAL_STAGES = 3;
 const NUMBERS_COUNT = 5;
+
+// Türkçe ünsüz uyumu: sert ünsüzle biten sayı okunuşları (üç, dört, beş) '-ten' alır
+const ayrilmaEki = (n: number) => ([3, 4, 5].includes(n) ? 'ten' : 'den');
 
 // Pre-defined layouts for each stage (relative positions 0-1)
 const STAGE_LAYOUTS: { x: number; y: number }[][] = [
@@ -280,10 +283,10 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                 {/* Instructions */}
                 <View style={styles.instructionContainer}>
                     <Text style={styles.instructionText}>
-                        {currentFruit.name}ları 1'den 5'e çizgi çizerek birleştir!
+                        {currentFruit.plural} 1'den 5'e çizgi çizerek birleştir!
                     </Text>
                     <Text style={styles.hintText}>
-                        {currentNumber <= NUMBERS_COUNT ? `Şimdi ${currentNumber}'den başla` : ''}
+                        {currentNumber <= NUMBERS_COUNT ? `Şimdi ${currentNumber}'${ayrilmaEki(currentNumber)} başla` : ''}
                     </Text>
                 </View>
 

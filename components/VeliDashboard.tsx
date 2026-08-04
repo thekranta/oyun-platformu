@@ -589,7 +589,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             ctx.fillText(`%${successRate}`, 540, 600);
             ctx.font = '28px Arial';
             ctx.fillStyle = '#607D8B';
-            ctx.fillText('Basari Orani', 540, 650);
+            ctx.fillText('Başarı Oranı', 540, 650);
 
             // Games played
             ctx.font = 'bold 48px Arial';
@@ -605,7 +605,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             ctx.fillText(`${avgCorrectAnswers}/10`, 780, 780);
             ctx.font = '24px Arial';
             ctx.fillStyle = '#607D8B';
-            ctx.fillText('Dogru Cevap', 780, 820);
+            ctx.fillText('Doğru Cevap', 780, 820);
 
             // Branding - ChildhoodTech Ekibi
             ctx.fillStyle = '#9C27B0';

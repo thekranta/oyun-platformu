@@ -280,7 +280,18 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       childAge={parseInt(c.yas) || 48}
       email={c.email}
       onClose={c.onExit}
-      onGameEnd={(data) => c.onGameEnd('sihirli-siseler', data.response_time, data.total_moves, 0)}
+      onGameEnd={(data) =>
+        // data.sure = saniye (dogru), data.response_time = ms (Dakika istatistigini sisiriyordu).
+        // Analitik alanlar (correct_answers, cognitive_speed_score, response_time, zorluk, round_history)
+        // diger oyunlardaki gibi extraData ile iletilir; onceden tamamen dusuyordu.
+        c.onGameEnd('sihirli-siseler', data.sure, data.total_moves ?? 0, data.hata_sayisi ?? 0, undefined, {
+          zorlukSeviyesi: data.zorluk_seviyesi,
+          response_time: data.response_time,
+          correct_answers: data.correct_answers,
+          cognitive_speed_score: data.cognitive_speed_score,
+          round_history: data.round_history,
+        })
+      }
     />
   ),
   'sihirli-tuval': (c) => <SihirliTuval onGameEnd={c.onGameEnd} onExit={c.onExit} />,

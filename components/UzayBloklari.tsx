@@ -97,6 +97,9 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     // (moveHistory=[], errors=0). Guncel degerleri bu ref'lerden aliyoruz.
     const moveHistoryRef = useRef<MoveData[]>([]);
     const errorsRef = useRef(0);
+    // finishGame hem sayac (timeLeft<=1) hem roket-tamamlanma callback'inden cagrilabilir;
+    // tek sefer calismasini garanti eder (cift onGameEnd/cift kayit olmaz).
+    const finishedRef = useRef(false);
     const [score, setScore] = useState(0);
     const [gameStart] = useState(Date.now());
     const [lastActionTime, setLastActionTime] = useState<number>(Date.now());
@@ -207,6 +210,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     };
 
     const finishGame = () => {
+        if (finishedRef.current) return;
+        finishedRef.current = true;
         const duration = Math.floor((Date.now() - gameStart) / 1000);
         // Guncel degerler ref'lerden (timer setInterval closure'i eski state tutar)
         const history = moveHistoryRef.current;

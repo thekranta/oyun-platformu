@@ -343,7 +343,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         <DynamicBackground onExit={onExit}>
             <View style={styles.mainContainer}>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>CEVIZ MACERASI</Text>
+                    <Text style={styles.headerTitle}>CEVİZ MACERASI</Text>
                     <View style={styles.volumeControl}>
                         <Ionicons name="volume-low" size={24} color="white" />
                         <Slider

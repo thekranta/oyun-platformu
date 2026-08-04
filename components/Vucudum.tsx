@@ -17,10 +17,10 @@ const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher.
 const TOTAL_ROUNDS = 8;
 
 const PARTS = [
-  { key: 'goz', emoji: '👁️', name: 'Göz' },
-  { key: 'burun', emoji: '👃', name: 'Burun' },
-  { key: 'agiz', emoji: '👄', name: 'Ağız' },
-  { key: 'kulak', emoji: '👂', name: 'Kulak' },
+  { key: 'goz', emoji: '👁️', name: 'Göz', acc: 'Gözü' },
+  { key: 'burun', emoji: '👃', name: 'Burun', acc: 'Burnu' },
+  { key: 'agiz', emoji: '👄', name: 'Ağız', acc: 'Ağzı' },
+  { key: 'kulak', emoji: '👂', name: 'Kulak', acc: 'Kulağı' },
 ];
 
 interface Props {
@@ -135,7 +135,7 @@ export default function Vucudum({ onGameEnd, onExit, childName }: Props) {
       </View>
 
       <Animated.View style={[styles.targetPill, { transform: [{ scale: bounce }] }]}>
-        <Text style={styles.targetText}>{target.emoji}  {target.name}'ı göster!</Text>
+        <Text style={styles.targetText}>{target.emoji}  {target.acc} göster!</Text>
       </Animated.View>
 
       <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target.name} nerede?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>

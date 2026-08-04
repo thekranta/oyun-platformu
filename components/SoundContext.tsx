@@ -20,6 +20,9 @@ const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
     const [backgroundSound, setBackgroundSound] = useState<Audio.Sound | null>(null);
+    // Unmount temizligi mount'ta ([]) backgroundSound=null closure'ini yakaliyordu; yuklenen
+    // Sound hic unload edilmiyordu (sizinti). Bu ref her zaman guncel Sound'u tutar.
+    const backgroundSoundRef = useRef<Audio.Sound | null>(null);
     const [isMuted, setIsMuted] = useState(false);
     const [volume, setVolume] = useState(0.5);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -28,8 +31,9 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         loadBackgroundSound();
         return () => {
-            if (backgroundSound) {
-                backgroundSound.unloadAsync();
+            if (backgroundSoundRef.current) {
+                backgroundSoundRef.current.unloadAsync();
+                backgroundSoundRef.current = null;
             }
         };
     }, []);
@@ -70,6 +74,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
                 { shouldPlay: false, isLooping: true, volume: 0.5 }
             );
             setBackgroundSound(sound);
+            backgroundSoundRef.current = sound;
             console.log("✅ Background sound loaded (waiting for user interaction)");
         } catch (error) {
             console.log("❌ Error loading background sound:", error);

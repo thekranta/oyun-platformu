@@ -206,6 +206,11 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     const correctAnswersRef = useRef(0);
     const errorsRef = useRef(0);
     const moveHistoryRef = useRef<MoveData[]>([]);
+    // finishGame hem sayac (timeLeft<=1) hem tamamlanma timeout'undan cagrilabilir;
+    // tek sefer calismasini garanti eder (cift onGameEnd/cift kayit olmaz).
+    const finishedRef = useRef(false);
+    // Tamamlanma sonrasi finishGame'i geciktiren setTimeout; cikista/unmount'ta temizlenir.
+    const completeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [lastColorSelectTime, setLastColorSelectTime] = useState<number>(Date.now());
     const [score, setScore] = useState(0);
     const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error'; regionId: string } | null>(null);
@@ -219,19 +224,28 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     const flashAnim = useRef(new Animated.Value(0)).current;
     const selectedButtonScale = useRef(new Animated.Value(1)).current;
     const pulseAnim = useRef(new Animated.Value(1)).current;
+    // Secili renk pulse loop'u; her secim degisiminde onceki durdurulur (sonsuz loop yiginlanmaz).
+    const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
 
     // Pulse animation for selected button
     useEffect(() => {
+        // Onceki loop'u durdur; degisimde/unmount'ta temizlenir
+        pulseLoopRef.current?.stop();
         if (selectedColorNumber) {
-            Animated.loop(
+            const loop = Animated.loop(
                 Animated.sequence([
                     Animated.timing(pulseAnim, { toValue: 1.1, duration: 500, useNativeDriver: true }),
                     Animated.timing(pulseAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
                 ])
-            ).start();
+            );
+            pulseLoopRef.current = loop;
+            loop.start();
         } else {
             pulseAnim.setValue(1);
         }
+        return () => {
+            pulseLoopRef.current?.stop();
+        };
     }, [selectedColorNumber]);
 
     // Timer - only starts when game is ready
@@ -266,11 +280,19 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
         const allFilled = regions.every(r => r.isFilled);
         if (allFilled && !isGameComplete) {
             setIsGameComplete(true);
-            setTimeout(finishGame, 1500);
+            completeTimeoutRef.current = setTimeout(finishGame, 1500);
         }
     }, [regions]);
 
+    // Unmount'ta bekleyen tamamlanma timeout'unu temizle (cocuk ayrildiktan sonra
+    // finishGame/onGameEnd tetiklenmesin).
+    useEffect(() => () => {
+        if (completeTimeoutRef.current) clearTimeout(completeTimeoutRef.current);
+    }, []);
+
     const finishGame = () => {
+        if (finishedRef.current) return;
+        finishedRef.current = true;
         const duration = Math.floor((Date.now() - gameStart) / 1000);
         // Guncel degerler ref'lerden (timer setInterval closure'i eski state tutar)
         const history = moveHistoryRef.current;
@@ -297,6 +319,17 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
             visual_attention_score: visualAttentionScore,
             round_history: history,
         });
+    };
+
+    // Cikista bekleyen tamamlanma timeout'unu iptal et ve finishGame'i kilitle
+    // (1.5 sn icinde cikilirsa cocuk ayrildiktan sonra onGameEnd tetiklenmesin).
+    const handleExit = () => {
+        if (completeTimeoutRef.current) {
+            clearTimeout(completeTimeoutRef.current);
+            completeTimeoutRef.current = null;
+        }
+        finishedRef.current = true;
+        onExit();
     };
 
     const playErrorFeedback = () => {
@@ -447,7 +480,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
+                <TouchableOpacity onPress={handleExit} style={styles.exitBtn}>
                     <Ionicons name="home" size={22} color="#FFF" />
                 </TouchableOpacity>
 

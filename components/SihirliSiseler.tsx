@@ -61,8 +61,6 @@ interface SihirliSiselerProps {
 }
 
 // Supabase config
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY || '';
 
 export default function SihirliSiseler({ childName, childAge, email, onClose, onGameEnd }: SihirliSiselerProps) {
     const [gameState, setGameState] = useState<GameState>({
@@ -385,22 +383,10 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
             }),
         };
 
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_KEY,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal',
-                },
-                body: JSON.stringify(gameData),
-            });
-            console.log('✅ Game saved to Supabase');
-        } catch (error) {
-            console.error('Failed to save game:', error);
-        }
-
+        // Tek kayıt yolu: onGameEnd → saveGameResult. Önceki doğrudan fetch POST'u ile
+        // birlikte her tamamlanan oyun iki satır yazıyordu (raporda çift sayım). gameData'nın
+        // tüm alanları (sure, response_time, cognitive_speed_score, round_history…) gameRegistry
+        // wrapper'ı üzerinden onGameEnd/extraData ile iletiliyor.
         onGameEnd?.(gameData);
     };
 
