@@ -2,14 +2,14 @@
  * Unified Speech Service
  * ----------------------
  * Seslendirme önceliği:
- *   1) HAZIR MP3 (assets/sounds/tts/<slug>.mp3) — çevrimdışı, ücretsiz, tutarlı.
- *      Metin ttsSlug() ile bir dosya adına (slug) çevrilir; lib/ttsAssets.ts içinde
- *      varsa expo-av ile çalınır. Sabit metinlerin ~%95'i buradan seslenir.
+ *   1) HAZIR KLİP (assets/sounds/tts/<slug>.wav — klon "Hikaye Sesi") — çevrimdışı,
+ *      ücretsiz, tutarlı. Metin ttsSlug() ile bir dosya adına (slug) çevrilir;
+ *      lib/ttsAssets.ts içinde varsa expo-av ile çalınır (web + native).
  *   2) Canlı OpenAI proxy (/api/tts) — yalnızca geçerli anahtar varsa. Şu an anahtar
  *      yoksa SESSİZ geçilir (robotik tarayıcı sesine düşmeyiz; okul öncesi için uygun değil).
  *
- * Yeni ses eklemek: metni programınla MP3 yap → assets/sounds/tts/<slug>.mp3 olarak
- * kaydet → `node scripts/gen-tts-assets.mjs` çalıştır (lib/ttsAssets.ts güncellenir).
+ * Yeni ses eklemek: scripts/gen-voices.mjs (VoiceBox) → scripts/trim-voices.mjs →
+ * `node scripts/gen-tts-assets.mjs` (lib/ttsAssets.ts güncellenir). Bkz. scripts/.
  */
 
 import { Audio as ExpoAudio } from 'expo-av';

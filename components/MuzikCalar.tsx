@@ -425,6 +425,11 @@ interface MuzikCalarProps {
 
 export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarProps) {
     const [sound, setSound] = useState<Audio.Sound | null>(null);
+    // Yetim-ses koruması: hızlı şarkı değiştirmede eski createAsync sonucu sızmasın diye
+    // token; unmount temizliği her zaman güncel Sound'u tutan ref üzerinden yapılır
+    // (MuzikDuruncaDon ile aynı desen).
+    const soundRef = useRef<Audio.Sound | null>(null);
+    const loadTokenRef = useRef(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentSongIndex, setCurrentSongIndex] = useState(initialSongIndex);
     const [position, setPosition] = useState(0);
@@ -488,24 +493,21 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
         // Load the initial song when component mounts
         loadSound(initialSongIndex);
         return () => {
-            if (sound) {
-                sound.unloadAsync();
-            }
+            // Uçuştaki createAsync sonuçlarını geçersiz kıl + güncel sesi boşalt
+            loadTokenRef.current += 1;
+            soundRef.current?.unloadAsync().catch(() => { });
+            soundRef.current = null;
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    useEffect(() => {
-        return () => {
-            if (sound) {
-                sound.unloadAsync();
-            }
-        };
-    }, [sound]);
-
     const loadSound = async (index: number) => {
+        const token = ++loadTokenRef.current;
         try {
-            if (sound) {
-                await sound.unloadAsync();
+            if (soundRef.current) {
+                const prev = soundRef.current;
+                soundRef.current = null;
+                await prev.unloadAsync().catch(() => { });
             }
 
             const { sound: newSound } = await Audio.Sound.createAsync(
@@ -514,6 +516,13 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
                 onPlaybackStatusUpdate
             );
 
+            // Bu yükleme sırasında yenisi istendiyse/çıkıldıysa: yetim bırakma, boşalt
+            if (token !== loadTokenRef.current) {
+                newSound.unloadAsync().catch(() => { });
+                return;
+            }
+
+            soundRef.current = newSound;
             setSound(newSound);
             setIsPlaying(true);
             setCurrentSongIndex(index);

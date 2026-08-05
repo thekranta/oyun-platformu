@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -12,6 +11,7 @@ import {
     View,
 } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
+import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
@@ -84,10 +84,8 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
     const celebrateScale = useRef(new Animated.Value(0)).current;
     const bottleAnims = useRef<Animated.Value[]>([]);
 
-    // Sound refs
-    const pourSound = useRef<Audio.Sound | null>(null);
-    const completeSound = useRef<Audio.Sound | null>(null);
-    const winSound = useRef<Audio.Sound | null>(null);
+    // Geri bildirim earcon'ları global SoundContext'ten (yerel ölü Audio.Sound ref'leri kaldırıldı)
+    const { playSound: playGlobalSfx } = useSound();
 
     // Get difficulty based on age
     const getDifficulty = useCallback(() => {
@@ -154,11 +152,6 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
 
     useEffect(() => {
         initializeGame();
-        loadSounds();
-        return () => {
-            // Cleanup sounds synchronously
-            unloadSounds();
-        };
     }, [initializeGame]);
 
     // Unmount'ta secili sise glow loop'unu durdur
@@ -167,25 +160,11 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
         selectedGlowLoopRef.current?.stop();
     }, []);
 
-    // Sound functions
-    const loadSounds = async () => {
-        try {
-            // We'll use placeholder since actual sound files may not exist
-            // In production, load actual sound files
-        } catch (e) {
-            console.log('Sound loading skipped');
-        }
-    };
-
-    const unloadSounds = async () => {
-        if (pourSound.current) await pourSound.current.unloadAsync();
-        if (completeSound.current) await completeSound.current.unloadAsync();
-        if (winSound.current) await winSound.current.unloadAsync();
-    };
-
+    // Geri bildirim sesi: şişe tamamlanınca/kazanınca global 'correct' earcon'u çalar.
     const playSound = async (type: 'pour' | 'complete' | 'win') => {
-        // Sound playback placeholder
-        // In production, implement actual sound playing
+        if (type === 'complete' || type === 'win') {
+            playGlobalSfx('correct').catch(() => { });
+        }
     };
 
     // Check if a bottle is complete (all same color)

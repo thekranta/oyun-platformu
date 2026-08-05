@@ -23,6 +23,9 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     // Unmount temizligi mount'ta ([]) backgroundSound=null closure'ini yakaliyordu; yuklenen
     // Sound hic unload edilmiyordu (sizinti). Bu ref her zaman guncel Sound'u tutar.
     const backgroundSoundRef = useRef<Audio.Sound | null>(null);
+    // Dogru/yanlis earcon'lari: ilk kullanımda tembel yüklenir, unmount'ta boşaltılır.
+    const sfxRef = useRef<{ correct: Audio.Sound | null; wrong: Audio.Sound | null }>({ correct: null, wrong: null });
+    const isMutedRef = useRef(false);
     const [isMuted, setIsMuted] = useState(false);
     const [volume, setVolume] = useState(0.5);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -35,6 +38,10 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
                 backgroundSoundRef.current.unloadAsync();
                 backgroundSoundRef.current = null;
             }
+            const sfx = sfxRef.current;
+            sfx.correct?.unloadAsync().catch(() => { });
+            sfx.wrong?.unloadAsync().catch(() => { });
+            sfxRef.current = { correct: null, wrong: null };
         };
     }, []);
 
@@ -114,12 +121,17 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
                     // The sound will start when user interacts via resumeAfterInteraction
                     console.log("Background sound not loaded yet");
                 }
-            } else if (name === 'correct') {
-                // SFX logic here
-                console.log("Playing correct sound (placeholder)");
-            } else if (name === 'wrong') {
-                // SFX logic here
-                console.log("Playing wrong sound (placeholder)");
+            } else if (name === 'correct' || name === 'wrong') {
+                // Kısa earcon: sessizdeyken çalınmaz; tembel yüklenir, tekrarında başa sarılır.
+                if (isMutedRef.current) return;
+                let sfx = sfxRef.current[name];
+                if (!sfx) {
+                    const src = name === 'correct' ? asset('/sounds/sfx/correct.wav') : asset('/sounds/sfx/wrong.wav');
+                    const { sound } = await Audio.Sound.createAsync(src, { shouldPlay: false, volume: 0.9 });
+                    sfxRef.current[name] = sound;
+                    sfx = sound;
+                }
+                await sfx.replayAsync();
             }
         } catch (error) {
             console.log(`Error playing sound ${name}:`, error);
@@ -141,6 +153,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     const toggleMute = async () => {
         try {
             const newMutedState = !isMuted;
+            isMutedRef.current = newMutedState;
             setIsMuted(newMutedState);
 
             if (backgroundSound) {

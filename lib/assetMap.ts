@@ -84,6 +84,8 @@ const ASSET_MAP: Record<string, AssetSource> = {
   '/images/uzum.webp': require('../assets/images/uzum.webp'),
   '/images/yildiz.webp': require('../assets/images/yildiz.webp'),
   '/sounds/background.mp3': require('../assets/sounds/background.mp3'),
+  '/sounds/sfx/correct.wav': require('../assets/sounds/sfx/correct.wav'),
+  '/sounds/sfx/wrong.wav': require('../assets/sounds/sfx/wrong.wav'),
   '/sounds/songs/ADIL_OYUN_GUZEL_OYUN.mp3': require('../assets/sounds/songs/ADIL_OYUN_GUZEL_OYUN.mp3'),
   '/sounds/songs/AZ_AZ_KULLANIRIM.mp3': require('../assets/sounds/songs/AZ_AZ_KULLANIRIM.mp3'),
   '/sounds/songs/BEKLERIM_SAKINCE.mp3': require('../assets/sounds/songs/BEKLERIM_SAKINCE.mp3'),
