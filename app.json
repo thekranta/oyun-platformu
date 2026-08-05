@@ -9,9 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oyunprojesi.app"
     },
     "android": {
+      "package": "com.oyunprojesi.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,6 +40,12 @@
           "dark": {
             "backgroundColor": "#000000"
           }
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Uygulama, çocuğun sesli yanıtlarını değerlendirmek için mikrofonu kullanır."
         }
       ]
     ],

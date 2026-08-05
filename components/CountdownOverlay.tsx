@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
-    Platform,
     StyleSheet,
     Text,
     View,
@@ -101,7 +100,7 @@ export default function CountdownOverlay({
     const countdownScale = useRef(new Animated.Value(0)).current;
 
     // Kapanış için: hem geri sayım hem yönerge sesi bitmeden overlay kapanmaz
-    // (böylece uzun yönerge sesi yarıda kesilmez). Sessiz/native durumda ses "bitmiş" sayılır.
+    // (böylece uzun yönerge sesi yarıda kesilmez). Klip eşleşmezse speak() sessizce çözülür.
     const audioDoneRef = useRef(false);
     const countdownDoneRef = useRef(false);
     const finishedRef = useRef(false);
@@ -126,9 +125,10 @@ export default function CountdownOverlay({
     }, [skip]);
 
     // Yönergeyi seslendir — geri sayımla EŞ ZAMANLI (kişiselleştirilmemiş `message` = klip eşleşir).
+    // Paketli klipler expo-av ile çalındığından bu yol hem web'de hem native'de çalışır;
+    // klip yoksa speak() sessizce çözülür ve overlay yalnız geri sayımı bekler.
     useEffect(() => {
         if (skip) return;
-        if (Platform.OS !== 'web') { audioDoneRef.current = true; tryFinish(); return; }
         // Konuşan hoparlör simgesi nabzı
         Animated.loop(
             Animated.sequence([
