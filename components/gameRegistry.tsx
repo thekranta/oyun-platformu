@@ -120,6 +120,9 @@ import ResimdeNeOluyor from './ResimdeNeOluyor';
 import IzDedektifi from './IzDedektifi';
 import MevsimBahcesi from './MevsimBahcesi';
 import ManzaraKasifi from './ManzaraKasifi';
+import MuzikDuruncaDon from './MuzikDuruncaDon';
+import SakinlesmeBahcesi from './SakinlesmeBahcesi';
+import KucukAnlatici from './KucukAnlatici';
 
 /**
  * Oyun sonucu bildirimi. index.tsx'teki oyunuBitir ile ayni imza.
@@ -383,4 +386,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'iz-dedektifi': (c) => <IzDedektifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'mevsim-bahcesi': (c) => <MevsimBahcesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'manzara-kasifi': (c) => <ManzaraKasifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'muzik-durunca-don': (c) => <MuzikDuruncaDon onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'sakinlesme-bahcesi': (c) => <SakinlesmeBahcesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'kucuk-anlatici': (c) => <KucukAnlatici onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };

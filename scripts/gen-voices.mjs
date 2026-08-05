@@ -117,6 +117,8 @@ async function main() {
     if (existsSync(NG2)) phrases = phrases.concat(JSON.parse(readFileSync(NG2, 'utf8')));
     const NG3 = join(__dirname, 'tts-phrases-newgames3.json');
     if (existsSync(NG3)) phrases = phrases.concat(JSON.parse(readFileSync(NG3, 'utf8')));
+    const NG4 = join(__dirname, 'tts-phrases-newgames4.json');
+    if (existsSync(NG4)) phrases = phrases.concat(JSON.parse(readFileSync(NG4, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

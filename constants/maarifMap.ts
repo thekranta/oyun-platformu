@@ -187,6 +187,11 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'iz-dedektifi': { displayName: 'İz Dedektifi', alan: 'Fen', surec: 'Bilimsel Çıkarım', cikti: 'FAB.7', ciktiAciklama: 'Günlük hayattaki fene yönelik olaylar hakkında gözlemlerine dayalı basit düzeyde bilimsel çıkarım yapabilme; izlere/ipuçlarına bakarak hangi canlıya ait olduğunu bulur', badgeAlan: 'Fen (Çıkarım)' },
   'mevsim-bahcesi': { displayName: 'Mevsim Bahçesi', alan: 'Sosyal', surec: 'Sosyal Alan / Zaman', cikti: 'SAB.1', ciktiAciklama: 'Günlük hayatında zaman kavramını yerinde kullanabilme; mevsimleri özellikleriyle tanıyıp doğru mevsimle eşleştirir', badgeAlan: 'Sosyal / Zaman' },
   'manzara-kasifi': { displayName: 'Manzara Kaşifi', alan: 'Sosyal', surec: 'Sosyal Alan / Coğrafi Mekân', cikti: 'SAB.10', ciktiAciklama: 'Yakın çevresinde yer alan mekânın coğrafi koşullarını tanımlayabilme; farklı manzaraları (dağ/deniz/orman/şehir) tanıyıp özellikleriyle eşleştirir', badgeAlan: 'Sosyal / Coğrafya' },
+
+  // ---------- Yeni oyunlar (Müzik / Sosyal-Duygusal / Dil - tap) ----------
+  'muzik-durunca-don': { displayName: 'Müzik Durunca Don', alan: 'Müzik', surec: 'Müzik ve Hareket', cikti: 'MHB.3', ciktiAciklama: 'Müzik ve ritimlerle hareket ve dans edebilme; müzik durunca hareketini durdurur (dur/başla öz-düzenleme)' },
+  'sakinlesme-bahcesi': { displayName: 'Sakinleşme Bahçesi', alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Dinledikleri/izledikleri durumlarla ilgili yeni anlamlar oluşturabilme; büyük duyguları tanıyıp uygun sakinleşme stratejisini (derin nefes/say/sarıl/yardım iste) seçer (öz düzenleme)', deger: 'Öz Düzenleme', badgeAlan: 'Sosyal-Duygusal' },
+  'kucuk-anlatici': { displayName: 'Küçük Anlatıcı', alan: 'Türkçe', surec: 'Konuşma / Süreç Yönetimi', cikti: 'TAKB.1', ciktiAciklama: 'Konuşma sürecini yönetebilme; olayları önce-sonra sırasına dizip kendi cümleleriyle anlatır (sözlü anlatım)', badgeAlan: 'Dil (Anlatım)' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

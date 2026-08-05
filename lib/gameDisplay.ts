@@ -60,6 +60,8 @@ const GAME_EMOJI: Record<string, string> = {
     'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊',
     // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
     'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
+    // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
+    'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖',
 };
 
 export interface GameDisplay {

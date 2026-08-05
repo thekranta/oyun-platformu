@@ -155,6 +155,13 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'mevsim-bahcesi', title: 'Mevsim Bahcesi', status: 'secondary', domain: 'Kavram', skillFocus: 'Mevsim / zaman kavrami', routeKey: 'mevsim-bahcesi' },
   { id: 'manzara-kasifi', title: 'Manzara Kasifi', status: 'secondary', domain: 'Kavram', skillFocus: 'Cografi mekan / manzara tanima', routeKey: 'manzara-kasifi' },
 
+  // ---------- Yeni oyunlar (Muzik / Sosyal-duygusal / Dil - tap) ----------
+  // Maarif alani Muzik/Turkce; menu domaini platform desenine gore Muzik/Sosyal-duygusal/Dil
+  // (bkz. muzik-calar=Muzik, duygu-yuzleri/sevgi-hikayesi=Sosyal-duygusal, bunu-soyle/kafiye-bahcesi=Dil)
+  { id: 'muzik-durunca-don', title: 'Muzik Durunca Don', status: 'secondary', domain: 'Muzik', skillFocus: 'Muzik ve hareket / dur-basla oz-duzenleme', routeKey: 'muzik-durunca-don' },
+  { id: 'sakinlesme-bahcesi', title: 'Sakinlesme Bahcesi', status: 'secondary', domain: 'Sosyal-duygusal', skillFocus: 'Oz duzenleme / sakinlesme stratejisi', routeKey: 'sakinlesme-bahcesi' },
+  { id: 'kucuk-anlatici', title: 'Kucuk Anlatici', status: 'secondary', domain: 'Dil', skillFocus: 'Sozlu anlatim / oyku siralama', routeKey: 'kucuk-anlatici' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];

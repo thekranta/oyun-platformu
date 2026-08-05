@@ -126,6 +126,9 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'iz-dedektifi': { color: '#6D4C41', icon: 'paw', displayTitle: 'İz Dedektifi', subtitle: 'İzi kime ait bul' },
   'mevsim-bahcesi': { color: '#FF7043', icon: 'leaf', displayTitle: 'Mevsim Bahçesi', subtitle: 'Mevsimi bul' },
   'manzara-kasifi': { color: '#00897B', icon: 'earth', displayTitle: 'Manzara Kaşifi', subtitle: 'Manzarayı tanı' },
+  'muzik-durunca-don': { color: '#F158B7', icon: 'musical-notes', displayTitle: 'Müzik Durunca Don', subtitle: 'Dur ve don!' },
+  'sakinlesme-bahcesi': { color: '#4DB6AC', icon: 'flower-outline', displayTitle: 'Sakinleşme Bahçesi', subtitle: 'Sakinleşmeyi öğren' },
+  'kucuk-anlatici': { color: '#5C6BC0', icon: 'book-outline', displayTitle: 'Küçük Anlatıcı', subtitle: 'Sırala ve anlat' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
@@ -169,6 +172,8 @@ export const GAME_EMOJI: Record<string, string> = {
   'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊',
   // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
   'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
+  // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
+  'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);
