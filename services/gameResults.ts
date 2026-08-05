@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import { slugifyName } from '../lib/menuHelpers';
@@ -6,6 +7,90 @@ import { supabase } from '../lib/supabase';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const DRAWING_BUCKET = 'cizimler';
+
+// Çevrimdışı / başarısız kayıtlar için yerel kuyruk (uygulama açılışında ve
+// sonraki başarılı kayıtla birlikte yeniden denenir).
+const PENDING_KEY = 'oyunPlatformu.bekleyenSonuclar.v1';
+const PENDING_MAX = 50;
+
+/** oyun_skorlari'na REST POST + şema toleransı (eksik kolonu düşürüp yeniden dener). */
+async function postScore(kayitVerisi: Record<string, any>, authToken: string): Promise<boolean> {
+  const headers = {
+    apikey: SUPABASE_KEY || '',
+    Authorization: `Bearer ${authToken}`,
+    'Content-Type': 'application/json',
+    Prefer: 'return=minimal',
+  };
+  const post = (body: Record<string, any>) =>
+    fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, { method: 'POST', headers, body: JSON.stringify(body) });
+
+  let body = kayitVerisi;
+  let res = await post(body);
+  if (res.ok) return true;
+
+  const responseText = await res.text();
+  console.error('Supabase Kayıt Hatası:', responseText);
+  if (responseText.includes('cizim_verisi')) {
+    const { cizim_verisi: _cizim, ...rest } = body;
+    body = rest;
+    res = await post(body);
+    if (res.ok) return true;
+  }
+  if (responseText.includes("Could not find the 'email' column")) {
+    const { email: _email, ...rest } = body;
+    body = rest;
+    res = await post(body);
+    if (res.ok) {
+      console.log('✅ Veri başarıyla kaydedildi (Email sütunu olmadan).');
+      return true;
+    }
+  }
+  return false;
+}
+
+async function enqueuePending(kayitVerisi: Record<string, any>): Promise<void> {
+  try {
+    const raw = await AsyncStorage.getItem(PENDING_KEY);
+    const list: Record<string, any>[] = raw ? JSON.parse(raw) : [];
+    list.push({ ...kayitVerisi, _queuedAt: new Date().toISOString() });
+    while (list.length > PENDING_MAX) list.shift();
+    await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(list));
+    console.log(`📥 Sonuç yerel kuyruğa alındı (${list.length} bekliyor).`);
+  } catch (e) {
+    console.log('Kuyruğa alınamadı:', e);
+  }
+}
+
+let flushing = false;
+/** Yerel kuyruktaki sonuçları gönderir; gönderilemeyenler kuyrukta kalır. */
+export async function flushPendingResults(): Promise<void> {
+  if (flushing) return;
+  flushing = true;
+  try {
+    const raw = await AsyncStorage.getItem(PENDING_KEY);
+    const list: Record<string, any>[] = raw ? JSON.parse(raw) : [];
+    if (list.length === 0) return;
+    const { data: sessionData } = await supabase.auth.getSession();
+    const authToken = sessionData.session?.access_token || SUPABASE_KEY || '';
+    const kalan: Record<string, any>[] = [];
+    for (const item of list) {
+      const { _queuedAt, ...kayit } = item;
+      try {
+        if (!(await postScore(kayit, authToken))) kalan.push(item);
+      } catch {
+        kalan.push(item);
+      }
+    }
+    await AsyncStorage.setItem(PENDING_KEY, JSON.stringify(kalan));
+    if (kalan.length < list.length) {
+      console.log(`📤 Bekleyen ${list.length - kalan.length} sonuç gönderildi (${kalan.length} kaldı).`);
+    }
+  } catch (e) {
+    console.log('Kuyruk gönderimi hatası:', e);
+  } finally {
+    flushing = false;
+  }
+}
 
 export interface GameResultExtraData {
   cizimVerisi?: string;
@@ -147,51 +232,19 @@ export async function saveGameResult({
       kayitVerisi.cizim_verisi = JSON.stringify(cizimPayload);
     }
 
-    let supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_KEY || '',
-        Authorization: `Bearer ${authToken}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(kayitVerisi),
-    });
-
-    if (!supabaseResponse.ok) {
-      const responseText = await supabaseResponse.text();
-      console.error('Supabase Kayıt Hatası:', responseText);
-      if (responseText.includes('cizim_verisi')) {
-        const { cizim_verisi, ...kayitVerisiCizimsiz } = kayitVerisi;
-        supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_KEY || '',
-            Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal',
-          },
-          body: JSON.stringify(kayitVerisiCizimsiz),
-        });
-      }
-      if (responseText.includes("Could not find the 'email' column")) {
-        const { email: _email, ...kayitVerisiEmailsiz } = kayitVerisi;
-        supabaseResponse = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
-          method: 'POST',
-          headers: {
-            apikey: SUPABASE_KEY || '',
-            Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-            Prefer: 'return=minimal',
-          },
-          body: JSON.stringify(kayitVerisiEmailsiz),
-        });
-        if (supabaseResponse.ok) {
-          console.log('✅ Veri başarıyla kaydedildi (Email sütunu olmadan).');
-        }
-      }
-    } else {
+    let saved = false;
+    try {
+      saved = await postScore(kayitVerisi, authToken);
+    } catch (e) {
+      console.log('Kayıt gönderim hatası:', e);
+    }
+    if (saved) {
       console.log('✅ Veri başarıyla kaydedildi.');
+      // Fırsattan istifade: varsa bekleyen sonuçları da gönder (await etmeden).
+      flushPendingResults();
+    } else {
+      // Çevrimdışı / yetki / sunucu hatası: sonuç kaybolmasın, yerel kuyruğa al.
+      await enqueuePending(kayitVerisi);
     }
   } catch (error) {
     console.log('Kayıt Hatası:', error);

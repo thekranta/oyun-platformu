@@ -17,7 +17,8 @@ import {
   MENU_CATEGORIES,
 } from '../../lib/menuHelpers';
 import { useAuth } from '../../hooks/useAuth';
-import { GameResultExtraData, saveGameResult } from '../../services/gameResults';
+import { supabase } from '../../lib/supabase';
+import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
 // Cloudflare Turnstile Sitekey
 const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
@@ -147,6 +148,34 @@ export default function App() {
     matchingChildren, showChildSelection, setShowChildSelection, selectChild,
   } = useAuth({ email, setEmail, setAd, setYas, setAsama, showToast, resumeAfterInteraction });
 
+  // Kalıcı Supabase oturumu varsa yenilemede giriş ekranını atla (sessiz geri yükleme);
+  // ayrıca çevrimdışı kalmış oyun sonuçlarını arka planda gönder.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const sessionEmail = data.session?.user?.email;
+        if (!sessionEmail || cancelled) return;
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('child_name, child_age_months')
+          .eq('email', sessionEmail)
+          .limit(1);
+        if (cancelled || !profiles || profiles.length === 0) return;
+        setEmail(sessionEmail);
+        setAd(profiles[0].child_name);
+        setYas(String(profiles[0].child_age_months));
+        setAsama((prev) => (prev === 'giris' ? 'menu' : prev));
+        flushPendingResults();
+      } catch {
+        // sessiz: oturum geri yüklenemezse giriş ekranı kalır
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const oyunuBaslat = (oyunTipi: string) => {
     if (dailyPlanRoutes.includes(oyunTipi)) {
       setActiveDailyRoute(oyunTipi);
@@ -192,6 +221,8 @@ export default function App() {
   };
 
   const cikisYap = () => {
+    // Açık çıkış: kalıcı oturumu da kapat ki yenilemede otomatik girilmesin.
+    supabase.auth.signOut().catch(() => { });
     setAd('');
     setYas('');
     setEmail('');
