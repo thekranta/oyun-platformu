@@ -7,7 +7,7 @@ import ProgressBar from './ProgressBar';
 import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = asset('/backgrounds/games/hafiza_bg.png');
+const BACKGROUND_IMAGE = asset('/backgrounds/games/hafiza_bg.webp');
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window');

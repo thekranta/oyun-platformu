@@ -17,7 +17,7 @@ import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = asset('/backgrounds/games/yapboz_bg.png');
+const BACKGROUND_IMAGE = asset('/backgrounds/games/yapboz_bg.webp');
 
 interface YapbozOyunuProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string }) => void;

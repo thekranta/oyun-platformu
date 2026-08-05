@@ -6,7 +6,7 @@ import { captureRef } from 'react-native-view-shot';
 import { asset } from '../lib/assetMap';
 
 // Arka plan g�rseli
-const BACKGROUND_IMAGE = asset('/backgrounds/games/yaratici_cizim_bg.png');
+const BACKGROUND_IMAGE = asset('/backgrounds/games/yaratici_cizim_bg.webp');
 
 type Point = { x: number; y: number };
 type BrushMode = 'pen' | 'spray' | 'marker' | 'glow';

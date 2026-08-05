@@ -9,7 +9,7 @@ import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = asset('/backgrounds/games/bunu_soyle_bg.png');
+const BACKGROUND_IMAGE = asset('/backgrounds/games/bunu_soyle_bg.webp');
 
 // Aşama Verileri
 const STAGES = [

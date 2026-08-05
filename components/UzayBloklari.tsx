@@ -18,7 +18,7 @@ import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
-const BACKGROUND_IMAGE = asset('/backgrounds/games/uzay_bg.png');
+const BACKGROUND_IMAGE = asset('/backgrounds/games/uzay_bg.webp');
 
 // ============= TYPES =============
 interface UzayBloklariProps {

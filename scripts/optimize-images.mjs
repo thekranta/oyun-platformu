@@ -1,9 +1,9 @@
 /**
  * optimize-images.mjs
  *
- * Converts assets/images PNG/JPG art to WebP (quality 80, alpha preserved),
- * resizing so the longest side is:
- *   - <= 1600 px for files under assets/images/stories/** (full-screen story backgrounds)
+ * Converts assets/images + assets/backgrounds PNG/JPG art to WebP (quality 80,
+ * alpha preserved), resizing so the longest side is:
+ *   - <= 1600 px for assets/images/stories/** ve assets/backgrounds/** (tam ekran)
  *   - <= 1024 px for everything else (game object art shown small)
  * Never upscales. On success the original .png/.jpg is DELETED (git history keeps it).
  *
@@ -27,6 +27,7 @@ import sharp from 'sharp';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const IMAGES_ROOT = path.join(PROJECT_ROOT, 'assets', 'images');
+const BACKGROUNDS_ROOT = path.join(PROJECT_ROOT, 'assets', 'backgrounds');
 const STORIES_ROOT = path.join(IMAGES_ROOT, 'stories');
 
 const WEBP_QUALITY = 80;
@@ -67,9 +68,14 @@ async function walk(dir, out = []) {
   return out;
 }
 
-function isUnderStories(filePath) {
-  const rel = path.relative(STORIES_ROOT, filePath);
+function isUnder(root, filePath) {
+  const rel = path.relative(root, filePath);
   return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
+}
+
+// Tam ekran görseller (hikâye sahneleri + oyun arka planları) 1600px sınıfında.
+function isFullScreenArt(filePath) {
+  return isUnder(STORIES_ROOT, filePath) || isUnder(BACKGROUNDS_ROOT, filePath);
 }
 
 function kb(bytes) {
@@ -98,6 +104,12 @@ async function main() {
   }
 
   const allFiles = await walk(IMAGES_ROOT);
+  try {
+    await fs.access(BACKGROUNDS_ROOT);
+    await walk(BACKGROUNDS_ROOT, allFiles);
+  } catch {
+    // assets/backgrounds yoksa yalnız assets/images işlenir
+  }
   const results = []; // { rel, folder, action, before, after }
   let converted = 0;
   let excluded = 0;
@@ -117,7 +129,7 @@ async function main() {
       continue;
     }
 
-    const maxSide = isUnderStories(filePath) ? MAX_SIDE_STORIES : MAX_SIDE_DEFAULT;
+    const maxSide = isFullScreenArt(filePath) ? MAX_SIDE_STORIES : MAX_SIDE_DEFAULT;
     const webpPath = filePath.slice(0, -ext.length) + '.webp';
 
     // Convert: rotate() applies EXIF orientation; fit:'inside' caps the longest side;
@@ -186,11 +198,15 @@ async function main() {
     );
   }
 
-  // Current on-disk size of the whole assets/images tree
+  // Current on-disk size of the processed trees
   const finalFiles = await walk(IMAGES_ROOT);
+  try {
+    await fs.access(BACKGROUNDS_ROOT);
+    await walk(BACKGROUNDS_ROOT, finalFiles);
+  } catch { /* yok */ }
   let treeSize = 0;
   for (const f of finalFiles) treeSize += (await fileSize(f)) ?? 0;
-  console.log(`assets/images on disk now: ${mb(treeSize)} (${finalFiles.length} files)`);
+  console.log(`assets/images + assets/backgrounds on disk now: ${mb(treeSize)} (${finalFiles.length} files)`);
   console.log(`Summary: converted=${converted}, excluded=${excluded}, errors=${skipped}`);
 
   if (skipped > 0) process.exitCode = 1;
