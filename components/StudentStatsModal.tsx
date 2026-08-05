@@ -27,6 +27,7 @@ const GAME_INFO: Record<string, { name: string; icon: string; color: string }> =
     'diziyi-tamamla': { name: 'Diziyi Tamamla', icon: '🔢', color: '#FF9800' },
     'bunu-soyle': { name: 'Bunu Söyle!', icon: '🎤', color: '#E91E63' },
     'ceviz_macera': { name: 'Ceviz Macerası', icon: '🌰', color: '#795548' },
+    'ceviz-macera': { name: 'Ceviz Macerası', icon: '🌰', color: '#795548' },
     'aile-sepeti': { name: 'Aile Sepeti', icon: '👨‍👩‍👧', color: '#FF5722' },
     'yaratici-cizim': { name: 'Hayal Defteri', icon: '🎨', color: '#00BCD4' },
     'eksik-sayi-bul': { name: 'Eksik Sayıyı Bul', icon: '❓', color: '#3F51B5' },

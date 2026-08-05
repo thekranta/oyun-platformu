@@ -7,7 +7,7 @@ import StudentStatsModal from '../components/StudentStatsModal';
 import { supabase } from '../lib/supabase';
 import { requestGeminiAnalysis } from '../services/geminiClient';
 import { getMaarif } from '../constants/maarifMap';
-import { getGameDisplay } from '../lib/gameDisplay';
+import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -371,7 +371,7 @@ export default function AdminPanel() {
         console.log('Gemini isteği gönderildi', { scoreId: score.id, oyunTuru: score.oyun_turu });
         try {
             // Maarif eslemesi tek merkezden (constants/maarifMap.ts)
-            const oyunBilgisi = getMaarif(score.oyun_turu);
+            const oyunBilgisi = getMaarif(normalizeOyunTuru(score.oyun_turu));
 
             const oyunAdiTR = oyunBilgisi.displayName || score.oyun_turu;
 
@@ -833,7 +833,7 @@ ChildhoodTech Ekibi
                 }
                 if (typeof data === 'string') {
                     const obj = JSON.parse(data);
-                    if (obj?.strokes || obj?.imageUrl) return obj as DrawingPayload;
+                    if (obj?.strokes || obj?.imageUrl || obj?.imagePath || obj?.cizimResimBase64) return obj as DrawingPayload;
                 }
                 return null;
             } catch {
@@ -841,14 +841,35 @@ ChildhoodTech Ekibi
             }
         }, [data]);
 
+        // Özel bucket: depo yolundan imzalı URL üret. Eski kayıtlar public URL taşır —
+        // yolunu ayıklayıp yine imzalarız (bucket özele çevrilince public URL 404 olur).
+        const storagePath = useMemo(() => {
+            if (!parsed) return null;
+            if (parsed.imagePath) return parsed.imagePath;
+            const m = parsed.imageUrl?.match(/\/object\/(?:public\/)?cizimler\/(.+)$/);
+            return m ? decodeURIComponent(m[1]) : null;
+        }, [parsed]);
+        const [signedUrl, setSignedUrl] = useState<string | null>(null);
+        useEffect(() => {
+            let cancelled = false;
+            if (!storagePath) { setSignedUrl(null); return; }
+            supabase.storage.from('cizimler').createSignedUrl(storagePath, 3600)
+                .then(({ data: signed }) => {
+                    if (!cancelled && signed?.signedUrl) setSignedUrl(signed.signedUrl);
+                })
+                .catch(() => { });
+            return () => { cancelled = true; };
+        }, [storagePath]);
+
         if (!parsed) {
             return <Text style={styles.drawingError}>Çizim yüklenemedi</Text>;
         }
 
-        if (parsed.imageUrl) {
+        const imageUri = signedUrl || parsed.imageUrl;
+        if (imageUri) {
             return (
                 <View style={styles.drawingBox}>
-                    <Image source={{ uri: parsed.imageUrl }} style={styles.drawingImage} resizeMode="contain" />
+                    <Image source={{ uri: imageUri }} style={styles.drawingImage} resizeMode="contain" />
                 </View>
             );
         }
@@ -952,7 +973,7 @@ ChildhoodTech Ekibi
 
     // Maarif Matrisi yardımcı fonksiyonu
     const getOyunBilgisi = (oyunTuru: string) => {
-        const e = getMaarif(oyunTuru);
+        const e = getMaarif(normalizeOyunTuru(oyunTuru));
         return { alan: e.badgeAlan ?? e.alan, cikti: e.cikti };
     };
 

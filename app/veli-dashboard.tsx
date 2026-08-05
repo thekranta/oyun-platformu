@@ -2,7 +2,8 @@ import DynamicBackground from '@/components/DynamicBackground';
 import VeliDashboard from '@/components/VeliDashboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
 import {
     ActivityIndicator,
     Alert,
@@ -39,9 +40,6 @@ const showAlert = (title: string, message: string, buttons?: Array<{ text: strin
     }
 };
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
-
 interface ProfileData {
     email: string;
     parent_name: string;
@@ -53,6 +51,7 @@ interface ProfileData {
 export default function VeliDashboardPage() {
     const router = useRouter();
     const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [profile, setProfile] = useState<ProfileData | null>(null);
 
@@ -67,60 +66,88 @@ export default function VeliDashboardPage() {
         });
     };
 
+    // Profili supabase istemcisiyle çek — oturum jetonu otomatik eklenir (RLS ile uyumlu).
+    const loadProfile = async (emailValue: string): Promise<boolean> => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('email, parent_name, child_name, child_age_months, subscription_tier')
+            .eq('email', emailValue)
+            .limit(1);
+        if (error) {
+            showAlert('Hata', `Profil yüklenemedi: ${error.message}`);
+            return false;
+        }
+        if (data && data.length > 0) {
+            setProfile(data[0] as ProfileData);
+            return true;
+        }
+        showAlert(
+            'Kayıt Bulunamadı',
+            'Bu hesaba bağlı profil bulunamadı.\n\nÖnce ana ekrandan "Kayıt Ol" ile kayıt olun veya Demo ile devam edin.',
+            [
+                { text: 'Kapat', style: 'cancel' },
+                { text: 'Demo Giriş', onPress: useDemoProfile }
+            ]
+        );
+        return false;
+    };
+
+    // Aktif oturum varsa doğrudan panele geç (parola tekrar sorulmaz).
+    useEffect(() => {
+        (async () => {
+            try {
+                const { data } = await supabase.auth.getSession();
+                const sessionEmail = data.session?.user?.email;
+                if (sessionEmail) await loadProfile(sessionEmail);
+            } catch {
+                // sessiz: oturum yoksa giriş formu gösterilir
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     const handleLogin = async () => {
-        if (!email.trim()) {
-            showAlert('Hata', 'Lütfen email adresinizi girin');
+        if (!email.trim() || !password.trim()) {
+            showAlert('Hata', 'Lütfen e-posta ve şifrenizi girin');
             return;
         }
 
         setLoading(true);
         try {
             const emailValue = email.trim();
-            const queryUrl = `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(emailValue)}`;
-
-            console.log('🔍 Supabase Query URL:', queryUrl);
-            console.log('🔍 Looking for email:', emailValue);
-
-            const response = await fetch(queryUrl, {
-                headers: {
-                    'apikey': SUPABASE_KEY!,
-                    'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    'Content-Type': 'application/json',
-                },
+            const { error } = await supabase.auth.signInWithPassword({
+                email: emailValue,
+                password,
             });
-
-            console.log('📡 Response status:', response.status);
-            console.log('📡 Response ok:', response.ok);
-
-            const data = await response.json();
-            console.log('📦 Profile response data:', JSON.stringify(data, null, 2));
-            console.log('📦 Data type:', typeof data);
-            console.log('📦 Is array:', Array.isArray(data));
-            console.log('📦 Length:', Array.isArray(data) ? data.length : 'N/A');
-
-            if (data && Array.isArray(data) && data.length > 0) {
-                console.log('✅ Profile found:', data[0]);
-                setProfile(data[0]);
-            } else if (data && data.message) {
-                // Supabase error response
-                console.error('❌ Supabase error:', data.message);
-                showAlert('API Hatası', `Supabase: ${data.message}`);
-            } else {
-                console.log('⚠️ No profile found for email:', emailValue);
-                showAlert(
-                    'Kayıt Bulunamadı',
-                    `"${emailValue}" ile kayıtlı hesap bulunamadı.\n\nÖnce ana ekrandan "Kayıt Ol" ile kayıt olun veya Demo ile devam edin.`,
-                    [
-                        { text: 'Kapat', style: 'cancel' },
-                        { text: 'Demo Giriş', onPress: useDemoProfile }
-                    ]
-                );
+            if (error) {
+                if (error.message.includes('Invalid login credentials')) {
+                    showAlert('Hata', 'Hatalı e-posta veya şifre.');
+                } else {
+                    showAlert('Hata', `Giriş başarısız: ${error.message}`);
+                }
+                return;
             }
+            await loadProfile(emailValue);
         } catch (error) {
-            console.error('❌ Profil yükleme hatası:', error);
-            showAlert('Hata', `Profil yüklenirken bir hata oluştu: ${error}`);
+            showAlert('Hata', `Giriş sırasında bir hata oluştu: ${error}`);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleForgotPassword = async () => {
+        if (!email.trim()) {
+            showAlert('Hata', 'Şifre sıfırlama bağlantısı için önce e-postanızı girin');
+            return;
+        }
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+            });
+            if (error) throw error;
+            showAlert('Gönderildi', 'Şifre sıfırlama bağlantısı e-postanıza gönderildi.');
+        } catch (error: any) {
+            showAlert('Hata', error.message || 'Bağlantı gönderilemedi.');
         }
     };
 
@@ -132,7 +159,7 @@ export default function VeliDashboardPage() {
                 childAge={profile.child_age_months}
                 email={profile.email}
                 subscriptionTier={profile.subscription_tier}
-                onClose={() => setProfile(null)} // Go back to login
+                onClose={() => router.back()}
             />
         );
     }
@@ -181,7 +208,7 @@ export default function VeliDashboardPage() {
                     ]}>
                         <Text style={styles.cardTitle}>Giriş Yapın</Text>
                         <Text style={styles.cardSubtitle}>
-                            Kayıt olurken kullandığınız email adresini girin
+                            Kayıt olurken kullandığınız e-posta ve şifrenizle giriş yapın
                         </Text>
 
                         <View style={styles.inputContainer}>
@@ -195,6 +222,21 @@ export default function VeliDashboardPage() {
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 autoCorrect={false}
+                            />
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <Ionicons name="lock-closed-outline" size={20} color="#607D8B" style={styles.inputIcon} />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Şifreniz"
+                                placeholderTextColor="#9E9E9E"
+                                value={password}
+                                onChangeText={setPassword}
+                                secureTextEntry
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                onSubmitEditing={handleLogin}
                             />
                         </View>
 
@@ -223,6 +265,10 @@ export default function VeliDashboardPage() {
                                 <Text style={styles.demoButtonText}>Demo</Text>
                             </TouchableOpacity>
                         </View>
+
+                        <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotLink}>
+                            <Text style={styles.forgotLinkText}>Şifremi unuttum</Text>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Info */}
@@ -387,6 +433,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
         color: '#4CAF50',
+    },
+    forgotLink: {
+        alignSelf: 'center',
+        marginTop: 14,
+        padding: 4,
+    },
+    forgotLinkText: {
+        fontSize: 13,
+        color: '#1E88E5',
+        textDecorationLine: 'underline',
     },
     info: {
         flexDirection: 'row',

@@ -94,11 +94,12 @@ export async function saveGameResult({
         await FileSystem.deleteAsync(fileUri, { idempotent: true });
       }
 
-      const imageUrl = `${SUPABASE_URL}/storage/v1/object/public/${DRAWING_BUCKET}/${filePath}`;
-      return { imageUrl, filePath, format };
+      // Gizlilik: bucket özel — public URL üretilmez. Yalnız yol saklanır;
+      // görüntüleme tarafı (admin paneli) imzalı URL üretir.
+      return { filePath, format };
     };
 
-    let uploadResult: { imageUrl: string; filePath: string; format: string } | null = null;
+    let uploadResult: { filePath: string; format: string } | null = null;
     try {
       uploadResult = await uploadDrawingImage();
     } catch (error) {
@@ -127,7 +128,7 @@ export async function saveGameResult({
       visual_attention_score: extraData?.visual_attention_score ?? null,
     };
 
-    if (extraData?.cizimVerisi || uploadResult?.imageUrl) {
+    if (extraData?.cizimVerisi || uploadResult) {
       let cizimPayload: Record<string, any> | string = extraData?.cizimVerisi || '';
       try {
         if (extraData?.cizimVerisi) {
@@ -136,11 +137,10 @@ export async function saveGameResult({
       } catch {
         cizimPayload = { raw: extraData?.cizimVerisi || '' };
       }
-      if (uploadResult?.imageUrl) {
+      if (uploadResult) {
         if (typeof cizimPayload !== 'object' || cizimPayload === null) {
           cizimPayload = { raw: extraData?.cizimVerisi || '' };
         }
-        cizimPayload.imageUrl = uploadResult.imageUrl;
         cizimPayload.imagePath = uploadResult.filePath;
         cizimPayload.imageFormat = uploadResult.format;
       }

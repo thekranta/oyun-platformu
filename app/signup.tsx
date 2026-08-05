@@ -148,11 +148,15 @@ export default function SignUp() {
                     created_at: new Date().toISOString(),
                 };
 
+                // RLS (own_insert_profiles: email = auth.email()) icin kayittan donen
+                // oturum jetonunu kullan; e-posta dogrulamasi acikken jeton gelmez —
+                // o durumda anon key'e duser ve profil kaydi girin sonrasina kalir.
+                const signupToken: string | undefined = authData.access_token || authData.session?.access_token;
                 const profileResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
                     method: 'POST',
                     headers: {
                         'apikey': SUPABASE_KEY || '',
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Authorization': `Bearer ${signupToken || SUPABASE_KEY}`,
                         'Content-Type': 'application/json',
                         'Prefer': 'return=minimal',
                     },

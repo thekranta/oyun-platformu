@@ -17,10 +17,19 @@ import { requestGeminiAnalysis } from '../services/geminiClient';
 import { ReportEngine } from '../services/ReportEngine';
 import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyReport';
 import { getGameDisplay } from '../lib/gameDisplay';
+import { supabase } from '../lib/supabase';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+
+// RLS: okuma/yazma istekleri oturum jetonuyla gider (yoksa anon key'e düşer —
+// RLS açıkken anon istek veri döndürmez, sızdırmaz).
+const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token || SUPABASE_KEY || '';
+    return { apikey: SUPABASE_KEY || '', Authorization: `Bearer ${token}` };
+};
 
 // Cumulative AI Analysis Function - Sends last 12 games to Gemini for trend analysis
 // Generates DUAL structure: 1) Teacher/Academic section with Maarif codes, 2) Parent section with scaffolding
@@ -226,8 +235,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             {
                                 method: 'PATCH',
                                 headers: {
-                                    'apikey': SUPABASE_KEY || '',
-                                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                    ...(await getAuthHeaders()),
                                     'Content-Type': 'application/json',
                                     'Prefer': 'return=minimal',
                                 },
@@ -296,35 +304,22 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         setLoading(true);
         try {
             // First try with childName
-            console.log('🔍 Fetching scores for childName:', childName);
             let scoresData: GameScore[] = [];
+            const authHeaders = await getAuthHeaders();
 
             const scoresResponse = await fetch(
                 `${SUPABASE_URL}/rest/v1/oyun_skorlari?ogrenci_adi=eq.${encodeURIComponent(childName)}&order=created_at.desc&limit=50`,
-                {
-                    headers: {
-                        'apikey': SUPABASE_KEY || '',
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    },
-                }
+                { headers: authHeaders }
             );
             scoresData = await scoresResponse.json();
-            console.log('📦 Scores by childName:', scoresData?.length || 0);
 
             // If no scores found by childName, try by email
             if (!scoresData || scoresData.length === 0) {
-                console.log('🔄 No scores by childName, trying by email:', email);
                 const emailScoresResponse = await fetch(
                     `${SUPABASE_URL}/rest/v1/oyun_skorlari?email=eq.${encodeURIComponent(email)}&order=created_at.desc&limit=50`,
-                    {
-                        headers: {
-                            'apikey': SUPABASE_KEY || '',
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                        },
-                    }
+                    { headers: authHeaders }
                 );
                 scoresData = await emailScoresResponse.json();
-                console.log('📦 Scores by email:', scoresData?.length || 0);
             }
 
             setScores(Array.isArray(scoresData) ? scoresData : []);
@@ -342,12 +337,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
             const profileResponse = await fetch(
                 `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=subscription_tier`,
-                {
-                    headers: {
-                        'apikey': SUPABASE_KEY || '',
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
-                    },
-                }
+                { headers: await getAuthHeaders() }
             );
             const profileData = await profileResponse.json();
             // Only update if we got data AND we didn't receive a prop value

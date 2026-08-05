@@ -7,12 +7,13 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
+import { supabase } from '../lib/supabase';
 
 // STORY DATA - KEsin Yapı
 const storyData = {
     intro: {
         id: 'intro',
-        bgImage: asset('/images/stories/ceviz_macera/intro_scene.png'),
+        bgImage: asset('/images/stories/ceviz_macera/intro_scene.webp'),
         text: "Pıtır o gün çok şanslıydı! Kış uykusu için kocaman bir ceviz çuvalı bulmuştu ama kaldıramıyordu. Üstelik yağmur başladı! Sence kimden yardım istesin?",
         audio: asset('/sounds/stories/ceviz_macera/audio_intro.mp3'),
         questionAudio: asset('/sounds/stories/ceviz_macera/question_intro.mp3.mp3'),
@@ -20,7 +21,7 @@ const storyData = {
             {
                 id: 'A',
                 type: 'image_button',
-                image: asset('/images/stories/ceviz_macera/btn_filo.png'),
+                image: asset('/images/stories/ceviz_macera/btn_filo.webp'),
                 label: 'Güçlü Fil Filo',
                 next: 'scene_a',
                 audio: null,
@@ -28,7 +29,7 @@ const storyData = {
             {
                 id: 'B',
                 type: 'image_button',
-                image: asset('/images/stories/ceviz_macera/btn_mavis.png'),
+                image: asset('/images/stories/ceviz_macera/btn_mavis.webp'),
                 label: 'Akıllı Kuş Maviş',
                 next: 'scene_b',
                 audio: null,
@@ -37,7 +38,7 @@ const storyData = {
     },
     scene_a: {
         id: 'scene_a',
-        bgImage: asset('/images/stories/ceviz_macera/scene_a_river.png'),
+        bgImage: asset('/images/stories/ceviz_macera/scene_a_river.webp'),
         text: "Filo çuvalı kaldırdı ama dere kenarındaki köprü yıkılmış! Karşıya nasıl geçsinler?",
         audio: asset('/sounds/stories/ceviz_macera/audio_scene_a.mp3'),
         questionAudio: asset('/sounds/stories/ceviz_macera/question_scene_a.mp3.mp3'),
@@ -45,7 +46,7 @@ const storyData = {
             {
                 id: 'A1',
                 type: 'image_button',
-                image: asset('/images/stories/ceviz_macera/end_a1_badge.png'),
+                image: asset('/images/stories/ceviz_macera/end_a1_badge.webp'),
                 label: 'Kütükten Köprü Yap',
                 next: 'end_a1',
                 audio: null,
@@ -53,7 +54,7 @@ const storyData = {
             {
                 id: 'A2',
                 type: 'image_button',
-                image: asset('/images/stories/ceviz_macera/end_a2_badge.png'),
+                image: asset('/images/stories/ceviz_macera/end_a2_badge.webp'),
                 label: "Filo'nun Sırtına Bin",
                 next: 'end_a2',
                 audio: null,
@@ -62,7 +63,7 @@ const storyData = {
     },
     scene_b: {
         id: 'scene_b',
-        bgImage: asset('/images/stories/ceviz_macera/scene_b_thinking.png'),
+        bgImage: asset('/images/stories/ceviz_macera/scene_b_thinking.webp'),
         text: "Maviş çuvalı kaldıramaz ama harika bir fikri var! Sence ne yapsınlar?",
         audio: asset('/sounds/stories/ceviz_macera/audio_scene_b.mp3'),
         questionAudio: asset('/sounds/stories/ceviz_macera/question_scene_b.mp3.mp3'),
@@ -70,7 +71,7 @@ const storyData = {
             {
                 id: 'B1',
                 type: 'image_button',
-                image: asset('/images/stories/ceviz_macera/end_b1_badge.png'),
+                image: asset('/images/stories/ceviz_macera/end_b1_badge.webp'),
                 label: 'Kuş Arkadaşları Çağır',
                 next: 'end_b1',
                 audio: null,
@@ -78,7 +79,7 @@ const storyData = {
             {
                 id: 'B2',
                 type: 'image_button',
-                image: asset('/images/stories/ceviz_macera/end_b2_badge.png'),
+                image: asset('/images/stories/ceviz_macera/end_b2_badge.webp'),
                 label: 'Yaprak Kızak Yap',
                 next: 'end_b2',
                 audio: null,
@@ -88,8 +89,8 @@ const storyData = {
     end_a1: {
         id: 'end_a1',
         isFinal: true,
-        bgImage: asset('/images/stories/ceviz_macera/end_a1_scene.png'),
-        badgeImage: asset('/images/stories/ceviz_macera/end_a1_badge.png'),
+        bgImage: asset('/images/stories/ceviz_macera/end_a1_scene.webp'),
+        badgeImage: asset('/images/stories/ceviz_macera/end_a1_badge.webp'),
         audio: asset('/sounds/stories/ceviz_macera/audio_end_a1.mp3'),
         text: "Filo hortumuyla kütükten köprü yaptı! Pıtır güvenle geçti.",
         analysisTag: 'Fiziksel-Cozum-Kopru',
@@ -97,8 +98,8 @@ const storyData = {
     end_a2: {
         id: 'end_a2',
         isFinal: true,
-        bgImage: asset('/images/stories/ceviz_macera/end_a2_scene.png'),
-        badgeImage: asset('/images/stories/ceviz_macera/end_a2_badge.png'),
+        bgImage: asset('/images/stories/ceviz_macera/end_a2_scene.webp'),
+        badgeImage: asset('/images/stories/ceviz_macera/end_a2_badge.webp'),
         audio: asset('/sounds/stories/ceviz_macera/audio_end_a2.mp3'),
         text: "Pıtır, Filo'nun sırtında sudan geçti. Hiç ıslanmadı!",
         analysisTag: 'Fiziksel-Cozum-Destek',
@@ -106,8 +107,8 @@ const storyData = {
     end_b1: {
         id: 'end_b1',
         isFinal: true,
-        bgImage: asset('/images/stories/ceviz_macera/end_b1_scene.png'),
-        badgeImage: asset('/images/stories/ceviz_macera/end_b1_badge.png'),
+        bgImage: asset('/images/stories/ceviz_macera/end_b1_scene.webp'),
+        badgeImage: asset('/images/stories/ceviz_macera/end_b1_badge.webp'),
         audio: asset('/sounds/stories/ceviz_macera/audio_end_b1.mp3'),
         text: "Yüzlerce kuş geldi ve her biri bir ceviz taşıdı!",
         analysisTag: 'Sosyal-Cozum-Isbirligi',
@@ -115,8 +116,8 @@ const storyData = {
     end_b2: {
         id: 'end_b2',
         isFinal: true,
-        bgImage: asset('/images/stories/ceviz_macera/end_b2_scene.png'),
-        badgeImage: asset('/images/stories/ceviz_macera/end_b2_badge.png'),
+        bgImage: asset('/images/stories/ceviz_macera/end_b2_scene.webp'),
+        badgeImage: asset('/images/stories/ceviz_macera/end_b2_badge.webp'),
         audio: asset('/sounds/stories/ceviz_macera/audio_end_b2.mp3'),
         text: "Cevizleri yaprakların üzerine koyup kızak gibi kaydırdılar!",
         analysisTag: 'Bilissel-Cozum-Yaraticilik',
@@ -290,7 +291,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         const logData = {
             ogrenci_adi: userId || 'Misafir',
             ogrenci_yasi: userAge || 0,
-            oyun_turu: 'ceviz_macera',
+            oyun_turu: 'ceviz-macera',
             hamle_sayisi: 1,
             hata_sayisi: 0,
             sure: durationSeconds,
@@ -302,11 +303,14 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
         };
 
         try {
+            // RLS: oturum jetonuyla yaz (anon key yalnız apikey başlığında kalır)
+            const { data: sessionData } = await supabase.auth.getSession();
+            const authToken = sessionData.session?.access_token || SUPABASE_KEY;
             let response = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari`, {
                 method: 'POST',
                 headers: {
                     apikey: SUPABASE_KEY,
-                    Authorization: `Bearer ${SUPABASE_KEY}`,
+                    Authorization: `Bearer ${authToken}`,
                     'Content-Type': 'application/json',
                     Prefer: 'return=minimal',
                 },
@@ -324,7 +328,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                         method: 'POST',
                         headers: {
                             apikey: SUPABASE_KEY,
-                            Authorization: `Bearer ${SUPABASE_KEY}`,
+                            Authorization: `Bearer ${authToken}`,
                             'Content-Type': 'application/json',
                             Prefer: 'return=minimal',
                         },
