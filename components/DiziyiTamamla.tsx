@@ -22,10 +22,10 @@ interface DiziyiTamamlaProps {
 }
 
 const SHAPES = {
-    kare: asset('/images/kare.png'),
-    ucgen: asset('/images/ucgen.png'),
-    daire: asset('/images/daire.png'),
-    yildiz: asset('/images/yildiz.png'),
+    kare: asset('/images/kare.webp'),
+    ucgen: asset('/images/ucgen.webp'),
+    daire: asset('/images/daire.webp'),
+    yildiz: asset('/images/yildiz.webp'),
 };
 
 const DEFAULT_PATTERNS: Pattern[] = [

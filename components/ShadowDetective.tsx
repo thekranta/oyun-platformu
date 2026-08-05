@@ -51,17 +51,17 @@ interface AnimalAsset {
 }
 
 const ANIMALS: AnimalAsset[] = [
-    { id: 'horse', name: 'At', source: asset('/images/animal_horse.png') },
-    { id: 'elephant', name: 'Fil', source: asset('/images/animal_elephant.png') },
-    { id: 'lion', name: 'Aslan', source: asset('/images/animal_lion.png') },
-    { id: 'monkey', name: 'Maymun', source: asset('/images/animal_monkey.png') },
-    { id: 'giraffe', name: 'Zürafa', source: asset('/images/animal_giraffe.png') },
-    { id: 'snake', name: 'Yılan', source: asset('/images/animal_snake.png') },
-    { id: 'bird', name: 'Kuş', source: asset('/images/animal_bird.png') },
-    { id: 'octopus', name: 'Ahtapot', source: asset('/images/animal_octopus.png') },
-    { id: 'crab', name: 'Yengeç', source: asset('/images/animal_crab.png') },
-    { id: 'whale', name: 'Balina', source: asset('/images/animal_whale.png') },
-    { id: 'turtle', name: 'Kaplumbağa', source: asset('/images/animal_turtle.png') },
+    { id: 'horse', name: 'At', source: asset('/images/animal_horse.webp') },
+    { id: 'elephant', name: 'Fil', source: asset('/images/animal_elephant.webp') },
+    { id: 'lion', name: 'Aslan', source: asset('/images/animal_lion.webp') },
+    { id: 'monkey', name: 'Maymun', source: asset('/images/animal_monkey.webp') },
+    { id: 'giraffe', name: 'Zürafa', source: asset('/images/animal_giraffe.webp') },
+    { id: 'snake', name: 'Yılan', source: asset('/images/animal_snake.webp') },
+    { id: 'bird', name: 'Kuş', source: asset('/images/animal_bird.webp') },
+    { id: 'octopus', name: 'Ahtapot', source: asset('/images/animal_octopus.webp') },
+    { id: 'crab', name: 'Yengeç', source: asset('/images/animal_crab.webp') },
+    { id: 'whale', name: 'Balina', source: asset('/images/animal_whale.webp') },
+    { id: 'turtle', name: 'Kaplumbağa', source: asset('/images/animal_turtle.webp') },
 ];
 
 const { width: screenW, height: screenH } = Dimensions.get('window');

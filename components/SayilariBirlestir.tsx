@@ -20,9 +20,9 @@ interface Props {
 
 // Single fruit per stage
 const STAGE_FRUITS = [
-    { image: asset('/images/elma.png'), name: 'Elma', plural: 'Elmaları' },
-    { image: asset('/images/uzum.png'), name: 'Üzüm', plural: 'Üzümleri' },
-    { image: asset('/images/karpuz.png'), name: 'Karpuz', plural: 'Karpuzları' },
+    { image: asset('/images/elma.webp'), name: 'Elma', plural: 'Elmaları' },
+    { image: asset('/images/uzum.webp'), name: 'Üzüm', plural: 'Üzümleri' },
+    { image: asset('/images/karpuz.webp'), name: 'Karpuz', plural: 'Karpuzları' },
 ];
 
 type Point = { x: number; y: number };

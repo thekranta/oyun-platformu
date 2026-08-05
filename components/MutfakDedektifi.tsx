@@ -85,8 +85,8 @@ const TARGET_AREAS: TargetArea[] = [
 
 // Sepet ve kasa görselleri
 const BASKET_IMAGES = {
-    meyve: asset('/images/mutfak/meyve_sepeti.png'),
-    sebze: asset('/images/mutfak/sebze_kasasi.png'),
+    meyve: asset('/images/mutfak/meyve_sepeti.webp'),
+    sebze: asset('/images/mutfak/sebze_kasasi.webp'),
 };
 
 // Pastel color palette for Soft-UI
@@ -478,7 +478,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         <View style={styles.container}>
             {/* Kitchen Background */}
             <ImageBackground
-                source={asset('/images/mutfak/background.png')}
+                source={asset('/images/mutfak/background.webp')}
                 style={styles.background}
                 resizeMode="cover"
             >
@@ -510,7 +510,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 {/* Maviş Character - Left */}
                 <Animated.View style={[styles.mavisContainer, { transform: [{ translateY: mavisFloat }] }]}>
                     <Image
-                        source={asset('/images/mutfak/mavis_chef.png')}
+                        source={asset('/images/mutfak/mavis_chef.webp')}
                         style={styles.mavisImage}
                         resizeMode="contain"
                     />

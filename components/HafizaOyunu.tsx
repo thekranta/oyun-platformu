@@ -25,11 +25,11 @@ const CARD_SIZE = (AVAILABLE_WIDTH / COLUMNS) - (CARD_MARGIN * 2);
 // Placeholder images - User needs to add these to assets
 const GORSELLER_SETI = [
     // Her obje, bir benzersiz kart çiftini temsil eder
-    { id: 1, source: asset('/images/cilek.png'), name: 'Çilek' },
-    { id: 2, source: asset('/images/elma.png'), name: 'Elma' },
-    { id: 3, source: asset('/images/nar.png'), name: 'Nar' },
-    { id: 4, source: asset('/images/kiraz.png'), name: 'Kiraz' },
-    { id: 5, source: asset('/images/avokado.png'), name: 'Avokado' },
+    { id: 1, source: asset('/images/cilek.webp'), name: 'Çilek' },
+    { id: 2, source: asset('/images/elma.webp'), name: 'Elma' },
+    { id: 3, source: asset('/images/nar.webp'), name: 'Nar' },
+    { id: 4, source: asset('/images/kiraz.webp'), name: 'Kiraz' },
+    { id: 5, source: asset('/images/avokado.webp'), name: 'Avokado' },
     //...
 ];
 

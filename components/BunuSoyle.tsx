@@ -13,11 +13,11 @@ const BACKGROUND_IMAGE = asset('/backgrounds/games/bunu_soyle_bg.png');
 
 // Aşama Verileri
 const STAGES = [
-    { id: 1, image: asset('/images/elma.png'), word: 'Elma' },
-    { id: 2, image: asset('/images/araba.png'), word: 'Araba' },
-    { id: 3, image: asset('/images/kedi.png'), word: 'Kedi' },
-    { id: 4, image: asset('/images/top.png'), word: 'Top' },
-    { id: 5, image: asset('/images/ev.png'), word: 'Ev' },
+    { id: 1, image: asset('/images/elma.webp'), word: 'Elma' },
+    { id: 2, image: asset('/images/araba.webp'), word: 'Araba' },
+    { id: 3, image: asset('/images/kedi.webp'), word: 'Kedi' },
+    { id: 4, image: asset('/images/top.webp'), word: 'Top' },
+    { id: 5, image: asset('/images/ev.webp'), word: 'Ev' },
 ];
 
 interface BunuSoyleProps {
