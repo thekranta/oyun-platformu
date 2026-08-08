@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
+import CountdownOverlay from './CountdownOverlay';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -32,7 +33,8 @@ interface Props {
   childName?: string;
 }
 
-export default function YuzYap({ onGameEnd, onExit }: Props) {
+export default function YuzYap({ onGameEnd, onExit, childName }: Props) {
+  const [gameReady, setGameReady] = useState(false);
   const [placed, setPlaced] = useState<Placed[]>([]);
   const [active, setActive] = useState(PARTS[0]);
   const [size, setSize] = useState(SIZES[1]);
@@ -85,6 +87,16 @@ export default function YuzYap({ onGameEnd, onExit }: Props) {
 
   return (
     <View style={styles.container}>
+      {!gameReady && (
+        <CountdownOverlay
+          message="Bir parça seç, kafaya dokun ve komik bir yüz yap!"
+          childName={childName}
+          countdownSeconds={5}
+          interaction="tap"
+          onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
+        />
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
           <Ionicons name="arrow-back" size={24} color="#F57C00" />

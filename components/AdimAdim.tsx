@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
+import CountdownOverlay from './CountdownOverlay';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -52,7 +53,8 @@ interface Props {
   childName?: string;
 }
 
-export default function AdimAdim({ onGameEnd, onExit }: Props) {
+export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
+  const [gameReady, setGameReady] = useState(false);
   const [picIdx, setPicIdx] = useState(0);
   const [cur, setCur] = useState(0);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
@@ -140,6 +142,16 @@ export default function AdimAdim({ onGameEnd, onExit }: Props) {
 
   return (
     <View style={styles.container}>
+      {!gameReady && (
+        <CountdownOverlay
+          message="Kesik çizgileri parmağınla takip et, resmi adım adım çiz!"
+          childName={childName}
+          countdownSeconds={5}
+          interaction="draw"
+          onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
+        />
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
           <Ionicons name="arrow-back" size={24} color="#00838F" />

@@ -3,6 +3,7 @@ import React, { useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, Ellipse, Polygon, Rect } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
+import CountdownOverlay from './CountdownOverlay';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -72,7 +73,8 @@ interface Props {
   childName?: string;
 }
 
-export default function BoyamaKitabi({ onGameEnd, onExit }: Props) {
+export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
+  const [gameReady, setGameReady] = useState(false);
   const [picIdx, setPicIdx] = useState(0);
   const [fills, setFills] = useState<Fills>({});
   const [color, setColor] = useState(COLORS[0]);
@@ -117,6 +119,16 @@ export default function BoyamaKitabi({ onGameEnd, onExit }: Props) {
 
   return (
     <View style={styles.container}>
+      {!gameReady && (
+        <CountdownOverlay
+          message="Bir renk seç, resmin bölümlerine dokunarak boya!"
+          childName={childName}
+          countdownSeconds={5}
+          interaction="tap"
+          onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
+        />
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
           <Ionicons name="arrow-back" size={24} color="#6A1B9A" />

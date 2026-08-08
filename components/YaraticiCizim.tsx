@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, ImageBackground, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
+import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
 
 // Arka plan g�rseli
@@ -58,6 +59,7 @@ const BRUSH_MODES: { mode: BrushMode; icon: string; label: string }[] = [
 const MIN_STEP = 2;
 
 export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
+  const [gameReady, setGameReady] = useState(false);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [placedShapes, setPlacedShapes] = useState<PlacedShape[]>([]);
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
@@ -395,6 +397,15 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
     <ImageBackground source={BACKGROUND_IMAGE} style={styles.bgContainer} resizeMode="cover">
       <View style={styles.darkOverlay} />
       <View style={styles.container}>
+        {!gameReady && (
+          <CountdownOverlay
+            message="Parmağınla istediğin resmi çiz, renkleri ve fırçaları dene!"
+            countdownSeconds={5}
+            interaction="draw"
+            onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
+          />
+        )}
+
         <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
           <Ionicons name="close" size={28} color="#d84315" />
         </TouchableOpacity>

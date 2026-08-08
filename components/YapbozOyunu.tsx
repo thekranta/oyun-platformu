@@ -13,6 +13,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 
@@ -96,6 +97,7 @@ const SHUFFLE_ORDER = [4, 7, 2, 8, 5, 0, 1, 6, 3];
 
 export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const { isMuted, toggleMute } = useSound();
+    const [gameReady, setGameReady] = useState(false);
     const [selectedPuzzle, setSelectedPuzzle] = useState<number | null>(null);
     const [lockedPieces, setLockedPieces] = useState<Set<number>>(new Set());
     const [moves, setMoves] = useState(0);
@@ -396,6 +398,14 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     return (
         <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
             <View style={styles.darkOverlay} />
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Bir yapboz seç, parçaları sürükleyip resmi tamamla!"
+                    countdownSeconds={5}
+                    interaction="drag"
+                    onComplete={() => setGameReady(true)}
+                />
+            )}
             <View style={styles.header}>
                 <TouchableOpacity
                     style={styles.btn}

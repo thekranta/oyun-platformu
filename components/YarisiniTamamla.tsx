@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, Ellipse, Line, Path, Rect } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
+import CountdownOverlay from './CountdownOverlay';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -65,7 +66,8 @@ interface Props {
   childName?: string;
 }
 
-export default function YarisiniTamamla({ onGameEnd, onExit }: Props) {
+export default function YarisiniTamamla({ onGameEnd, onExit, childName }: Props) {
+  const [gameReady, setGameReady] = useState(false);
   const [themeIdx, setThemeIdx] = useState(0);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
@@ -152,6 +154,16 @@ export default function YarisiniTamamla({ onGameEnd, onExit }: Props) {
 
   return (
     <View style={styles.container}>
+      {!gameReady && (
+        <CountdownOverlay
+          message="Resmin sol yarısı hazır, sen sağ yarısını çiz!"
+          childName={childName}
+          countdownSeconds={5}
+          interaction="draw"
+          onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
+        />
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
           <Ionicons name="arrow-back" size={24} color="#5E35B1" />

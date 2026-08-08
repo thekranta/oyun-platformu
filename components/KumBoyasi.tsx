@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
+import CountdownOverlay from './CountdownOverlay';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -30,7 +31,8 @@ interface Props {
   childName?: string;
 }
 
-export default function KumBoyasi({ onGameEnd, onExit }: Props) {
+export default function KumBoyasi({ onGameEnd, onExit, childName }: Props) {
+  const [gameReady, setGameReady] = useState(false);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
   const liveStrokeRef = useRef<Stroke | null>(null);
@@ -115,6 +117,16 @@ export default function KumBoyasi({ onGameEnd, onExit }: Props) {
 
   return (
     <View style={styles.container}>
+      {!gameReady && (
+        <CountdownOverlay
+          message="Bir renk seç, parmağını sürükle ve rengarenk kum aksın!"
+          childName={childName}
+          countdownSeconds={5}
+          interaction="draw"
+          onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
+        />
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
           <Ionicons name="arrow-back" size={24} color="#F57C00" />

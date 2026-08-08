@@ -1,0 +1,62 @@
+[
+  {
+    "text": "Kesik çizgileri parmağınla takip et, resmi adım adım çiz!",
+    "game": "AdimAdim"
+  },
+  {
+    "text": "Bir renk seç, resmin bölümlerine dokunarak boya!",
+    "game": "BoyamaKitabi"
+  },
+  {
+    "text": "Bir resim seç, kesik çizgilerin üstünden parmağınla çiz!",
+    "game": "CizimSayfalari"
+  },
+  {
+    "text": "Parmağınla bir resim çiz, sonra çizimini canlandır!",
+    "game": "CizimiCanlandir"
+  },
+  {
+    "text": "Bir damga seç, tuvale dokun ve resmini süsle!",
+    "game": "DamgaSanati"
+  },
+  {
+    "text": "Sıraya bak, sıradaki şekil hangisi? Doğru şekle dokun!",
+    "game": "DiziyiTamamla"
+  },
+  {
+    "text": "Bir renk seç, parmağını sürükle ve rengarenk kum aksın!",
+    "game": "KumBoyasi"
+  },
+  {
+    "text": "Parmağınla çiz, deseninin altı kopyası birden oluşsun!",
+    "game": "Mandala"
+  },
+  {
+    "text": "Bir renk seç, tuvale dokun ve renkli noktalar bırak!",
+    "game": "NoktaBoyama"
+  },
+  {
+    "text": "Bir tarafa parmağınla çiz, diğer taraf aynalansın!",
+    "game": "SimetriCizim"
+  },
+  {
+    "text": "Sayıları birden beşe kadar sırayla bul ve dokun!",
+    "game": "SiralamaOyunu"
+  },
+  {
+    "text": "Bir yapboz seç, parçaları sürükleyip resmi tamamla!",
+    "game": "YapbozOyunu"
+  },
+  {
+    "text": "Parmağınla istediğin resmi çiz, renkleri ve fırçaları dene!",
+    "game": "YaraticiCizim"
+  },
+  {
+    "text": "Resmin sol yarısı hazır, sen sağ yarısını çiz!",
+    "game": "YarisiniTamamla"
+  },
+  {
+    "text": "Bir parça seç, kafaya dokun ve komik bir yüz yap!",
+    "game": "YuzYap"
+  }
+]

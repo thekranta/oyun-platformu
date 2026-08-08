@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
+import CountdownOverlay from './CountdownOverlay';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -40,7 +41,8 @@ interface Props {
   childName?: string;
 }
 
-export default function DamgaSanati({ onGameEnd, onExit }: Props) {
+export default function DamgaSanati({ onGameEnd, onExit, childName }: Props) {
+  const [gameReady, setGameReady] = useState(false);
   const [stamps, setStamps] = useState<Stamp[]>([]);
   const [active, setActive] = useState(STAMPS[0]);
   const [size, setSize] = useState(SIZES[1]);
@@ -94,6 +96,16 @@ export default function DamgaSanati({ onGameEnd, onExit }: Props) {
 
   return (
     <View style={styles.container}>
+      {!gameReady && (
+        <CountdownOverlay
+          message="Bir damga seç, tuvale dokun ve resmini süsle!"
+          childName={childName}
+          countdownSeconds={5}
+          interaction="tap"
+          onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
+        />
+      )}
+
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
           <Ionicons name="arrow-back" size={24} color="#00838F" />

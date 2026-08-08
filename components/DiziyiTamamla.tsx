@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 
@@ -57,6 +58,7 @@ const DEFAULT_PATTERNS: Pattern[] = [
 ];
 
 export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_PATTERNS, oyunAdi = 'diziyi-tamamla', title = 'Diziyi Tamamla 🧩' }: DiziyiTamamlaProps) {
+    const [gameReady, setGameReady] = useState(false);
     const [currentStage, setCurrentStage] = useState(0);
     const [, setTotalMoves] = useState(0);
     const [, setTotalErrors] = useState(0);
@@ -64,7 +66,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
     // eski closure'dan okur (son hamle 1 eksik). Guncel degerler bu ref'lerden.
     const totalMovesRef = useRef(0);
     const totalErrorsRef = useRef(0);
-    const [startTime] = useState(Date.now());
+    const [startTime, setStartTime] = useState(Date.now());
     const [stageCompleted, setStageCompleted] = useState(false);
     const [selectedOption, setSelectedOption] = useState<ShapeType | null>(null);
     const [isCorrect, setIsCorrect] = useState(false);
@@ -188,6 +190,15 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
 
     return (
         <View style={styles.container}>
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Sıraya bak, sıradaki şekil hangisi? Doğru şekle dokun!"
+                    countdownSeconds={5}
+                    interaction="tap"
+                    onComplete={() => { setStartTime(Date.now()); setGameReady(true); }}
+                />
+            )}
+
             {showConfetti && (
                 <ConfettiCannon
                     count={200}

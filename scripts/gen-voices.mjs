@@ -119,6 +119,9 @@ async function main() {
     if (existsSync(NG3)) phrases = phrases.concat(JSON.parse(readFileSync(NG3, 'utf8')));
     const NG4 = join(__dirname, 'tts-phrases-newgames4.json');
     if (existsSync(NG4)) phrases = phrases.concat(JSON.parse(readFileSync(NG4, 'utf8')));
+    // Serbest/cizim oyunlarina sonradan eklenen giris yonergeleri
+    const INTRO2 = join(__dirname, 'tts-phrases-intro2.json');
+    if (existsSync(INTRO2)) phrases = phrases.concat(JSON.parse(readFileSync(INTRO2, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

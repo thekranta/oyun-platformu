@@ -1,7 +1,8 @@
 import speechService from '@/services/speechService';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import ProgressBar from './ProgressBar';
 
@@ -62,10 +63,9 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
     const [beklenenSayi, setBeklenenSayi] = useState(1);
     const [positions, setPositions] = useState<{ x: number; y: number }[]>([]);
 
-    // Countdown State
-    const [countdown, setCountdown] = useState<number | null>(5);
+    // Countdown State (sesli yönerge CountdownOverlay ile verilir)
+    const [gameReady, setGameReady] = useState(false);
     const [gameStarted, setGameStarted] = useState(false);
-    const countdownScale = useRef(new Animated.Value(1)).current;
 
     // Round State
     const [currentRound, setCurrentRound] = useState(1);
@@ -86,7 +86,6 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
     // Initialize game on mount
     useEffect(() => {
         initializeGame();
-        startCountdown();
 
         return () => {
             speechService.stopSpeech();
@@ -102,36 +101,9 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
         setBeklenenSayi(1);
     };
 
-    const startCountdown = async () => {
-        const name = childName || 'küçük kaşif';
-
-        // Start voice during countdown
-        if (Platform.OS === 'web') {
-            speechService.speak(`Merhaba ${name}! Sayıları sırala.`);
-        }
-
-        // Countdown animation
-        for (let i = 5; i >= 1; i--) {
-            setCountdown(i);
-
-            // Pulse animation
-            Animated.sequence([
-                Animated.timing(countdownScale, {
-                    toValue: 1.3,
-                    duration: 150,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(countdownScale, {
-                    toValue: 1,
-                    duration: 150,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-
-        setCountdown(null);
+    // Sesli yönerge + geri sayım bitince oyun başlar (süre buradan sayılır).
+    const handleIntroComplete = () => {
+        setGameReady(true);
         setGameStarted(true);
         setStartTime(new Date());
     };
@@ -228,26 +200,18 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
     const currentColors = ROUND_COLORS[(currentRound - 1) % ROUND_COLORS.length];
 
-    // Countdown Overlay
-    if (countdown !== null) {
-        return (
-            <DynamicBackground onExit={onExit}>
-                <View style={styles.countdownOverlay}>
-                    <View style={styles.countdownCard}>
-                        <Text style={styles.countdownTitle}>🔢 Sayıları Sırala</Text>
-                        <Text style={styles.countdownSubtitle}>Hazır ol!</Text>
-                        <Animated.View style={[styles.countdownCircle, { transform: [{ scale: countdownScale }] }]}>
-                            <Text style={styles.countdownNumber}>{countdown}</Text>
-                        </Animated.View>
-                        <Text style={styles.countdownHint}>1'den 5'e kadar sırala</Text>
-                    </View>
-                </View>
-            </DynamicBackground>
-        );
-    }
-
     return (
         <DynamicBackground onExit={onExit}>
+            {!gameReady && (
+                <CountdownOverlay
+                    message="Sayıları birden beşe kadar sırayla bul ve dokun!"
+                    childName={childName}
+                    countdownSeconds={5}
+                    interaction="tap"
+                    onComplete={handleIntroComplete}
+                />
+            )}
+
             <View style={styles.topBar}>
                 <ProgressBar current={currentRound} total={TOTAL_ROUNDS} />
             </View>
@@ -317,58 +281,6 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 }
 
 const styles = StyleSheet.create({
-    // Countdown Styles
-    countdownOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    countdownCard: {
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        padding: 40,
-        borderRadius: 30,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.25,
-        shadowRadius: 20,
-        elevation: 15,
-    },
-    countdownTitle: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#1565C0',
-        marginBottom: 8,
-    },
-    countdownSubtitle: {
-        fontSize: 20,
-        color: '#757575',
-        marginBottom: 30,
-    },
-    countdownCircle: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: '#FF6B6B',
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowColor: '#FF6B6B',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.4,
-        shadowRadius: 10,
-        elevation: 10,
-    },
-    countdownNumber: {
-        fontSize: 60,
-        fontWeight: 'bold',
-        color: '#FFFFFF',
-    },
-    countdownHint: {
-        fontSize: 16,
-        color: '#9E9E9E',
-        marginTop: 25,
-    },
-
     // Game Styles
     topBar: {
         width: '100%',
