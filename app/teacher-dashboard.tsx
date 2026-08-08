@@ -204,9 +204,10 @@ export default function TeacherDashboardPage() {
         <DynamicBackground>
             <KeyboardAvoidingView
                 style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <ScrollView
+                    keyboardShouldPersistTaps="handled"
                     contentContainerStyle={[
                         styles.content,
                         isLandscape && styles.contentLandscape,

@@ -7,7 +7,7 @@ import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Keyboard, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import {
   createDailyGamePlan,
   GAME_CARD_META,
@@ -260,6 +260,14 @@ export default function App() {
     }
   };
 
+  // Klavye açıkken giriş ekranındaki mutlak konumlu alt butonlar formun üstüne binmesin
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSongIndex] = useState<number>(0);
   const [dailyPlanDate, setDailyPlanDate] = useState<string>('');
@@ -308,7 +316,18 @@ export default function App() {
 
     return (
       <DynamicBackground>
-        <View style={styles.merkezContainer}>
+        {/* Android'de pencere zaten adjustResize ile küçülür; behavior vermek çift kaydırma
+            (zıplama) yapar. keyboardShouldPersistTaps olmadan ilk dokunuş yalnızca klavyeyi
+            kapatır — alanlara yazılamaz. */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          <ScrollView
+            contentContainerStyle={[styles.scrollContainer, { alignItems: 'center' }]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
           <View style={[
             styles.card,
             styles.glassCard,
@@ -395,31 +414,34 @@ export default function App() {
 
             </View>
           </View>
+          </ScrollView>
 
-          {/* Bottom Buttons Container */}
-          <View style={{ position: 'absolute', bottom: 30, flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <TouchableOpacity
-              style={styles.adminButtonBottom}
-              onPress={() => router.push('/admin' as any)}
-            >
-              <Text style={styles.adminButtonText}>🔑 Admin</Text>
-            </TouchableOpacity>
+          {/* Alt butonlar — klavye açıkken gizlenir (yoksa form alanlarının üstüne biner) */}
+          {!keyboardVisible && (
+            <View style={{ position: 'absolute', bottom: 30, alignSelf: 'center', flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <TouchableOpacity
+                style={styles.adminButtonBottom}
+                onPress={() => router.push('/admin' as any)}
+              >
+                <Text style={styles.adminButtonText}>🔑 Admin</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.adminButtonBottom, { backgroundColor: 'rgba(123, 31, 162, 0.25)', borderColor: 'rgba(123, 31, 162, 0.4)' }]}
-              onPress={() => router.push('/veli-dashboard' as any)}
-            >
-              <Text style={[styles.adminButtonText, { color: '#7B1FA2' }]}>👨‍👩‍👧 Veli Paneli</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.adminButtonBottom, { backgroundColor: 'rgba(123, 31, 162, 0.25)', borderColor: 'rgba(123, 31, 162, 0.4)' }]}
+                onPress={() => router.push('/veli-dashboard' as any)}
+              >
+                <Text style={[styles.adminButtonText, { color: '#7B1FA2' }]}>👨‍👩‍👧 Veli Paneli</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.adminButtonBottom, { backgroundColor: 'rgba(255, 152, 0, 0.25)', borderColor: 'rgba(255, 152, 0, 0.4)' }]}
-              onPress={() => router.push('/teacher-dashboard' as any)}
-            >
-              <Text style={[styles.adminButtonText, { color: '#E65100' }]}>👩‍🏫 Öğretmen</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+              <TouchableOpacity
+                style={[styles.adminButtonBottom, { backgroundColor: 'rgba(255, 152, 0, 0.25)', borderColor: 'rgba(255, 152, 0, 0.4)' }]}
+                onPress={() => router.push('/teacher-dashboard' as any)}
+              >
+                <Text style={[styles.adminButtonText, { color: '#E65100' }]}>👩‍🏫 Öğretmen</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </KeyboardAvoidingView>
         <Toast
           visible={toast.visible}
           message={toast.message}
