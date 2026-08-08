@@ -123,6 +123,170 @@ function FloatingDeco({ emoji, style, delay = 0 }: { emoji: string; style?: any;
   );
 }
 
+/**
+ * Giris formu — KENDI yerel state'ini tutar.
+ * Neden: email/password App'te tutulunca her tus vurusu 1400 satirlik App agacini ve
+ * DynamicBackground'daki ~18 animasyonu yeniden render ediyordu; yavas cihazlarda
+ * (ve emulatorde) tus olaylari dusuyor, silme calismiyordu. Burada state yerel oldugu
+ * icin yazarken yalnizca bu kucuk form render edilir.
+ */
+const GirisFormu = React.memo(function GirisFormu({
+  isMobile,
+  isLoggingIn,
+  initialEmail,
+  onLogin,
+  onForgot,
+  onSignup,
+  onAdmin,
+  onVeli,
+  onOgretmen,
+}: {
+  isMobile: boolean;
+  isLoggingIn: boolean;
+  initialEmail: string;
+  onLogin: (email: string, password: string) => void;
+  onForgot: (email: string) => void;
+  onSignup: () => void;
+  onAdmin: () => void;
+  onVeli: () => void;
+  onOgretmen: () => void;
+}) {
+  const [email, setEmail] = useState(initialEmail);
+  const [password, setPassword] = useState('');
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+
+  const submit = () => onLogin(email, password);
+
+  return (
+    // Android'de pencere zaten adjustResize ile kuculur; behavior vermek cift kaydirma
+    // (ziplama) yapar. keyboardShouldPersistTaps olmadan ilk dokunus yalnizca klavyeyi
+    // kapatir — alanlara yazilamaz.
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={[styles.scrollContainer, { alignItems: 'center' }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[
+          styles.card,
+          styles.glassCard,
+          { width: isMobile ? '90%' : undefined, maxWidth: 420 }
+        ]}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.titleEmoji}>🎓</Text>
+            <Text style={styles.girisBaslik}>Okul Öncesi Akademi</Text>
+            <Text style={styles.titleEmoji}>✏️</Text>
+          </View>
+          <Text style={styles.welcomeSubtitle}>Hoş geldin, küçük kaşif! 🌟</Text>
+
+          <View style={[
+            styles.inputContainer,
+            focusedInput === 'email' && styles.inputContainerFocused
+          ]}>
+            <Text style={styles.inputIcon}>✉️</Text>
+            <TextInput
+              style={styles.inputModern}
+              placeholder="E-posta Adresi"
+              placeholderTextColor="#9E9E9E"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="email"
+              onFocus={() => setFocusedInput('email')}
+              onBlur={() => setFocusedInput(null)}
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+            />
+          </View>
+
+          <View style={[
+            styles.inputContainer,
+            focusedInput === 'password' && styles.inputContainerFocused
+          ]}>
+            <Text style={styles.inputIcon}>🔒</Text>
+            <TextInput
+              ref={passwordRef}
+              style={styles.inputModern}
+              placeholder="Şifre"
+              placeholderTextColor="#9E9E9E"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoComplete="password"
+              onFocus={() => setFocusedInput('password')}
+              onBlur={() => setFocusedInput(null)}
+              returnKeyType="go"
+              onSubmitEditing={submit}
+            />
+          </View>
+
+          <TouchableOpacity
+            style={[styles.gradientButton, isLoggingIn && styles.buttonDisabled]}
+            onPress={submit}
+            disabled={isLoggingIn}
+            activeOpacity={0.8}
+          >
+            {isLoggingIn ? (
+              <View style={styles.buttonContent}>
+                <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
+                <Text style={styles.gradientButtonText}>Giriş Yapılıyor...</Text>
+              </View>
+            ) : (
+              <Text style={styles.gradientButtonText}>Giriş Yap 🚀</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.linksContainer}>
+            <TouchableOpacity onPress={() => onForgot(email)}>
+              <Text style={styles.linkText}>Şifremi Unuttum</Text>
+            </TouchableOpacity>
+            <View style={styles.linkDivider} />
+            <TouchableOpacity onPress={onSignup}>
+              <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Alt butonlar — klavye acikken gizlenir (yoksa form alanlarinin ustune biner) */}
+      {!keyboardVisible && (
+        <View style={{ position: 'absolute', bottom: 30, alignSelf: 'center', flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <TouchableOpacity style={styles.adminButtonBottom} onPress={onAdmin}>
+            <Text style={styles.adminButtonText}>🔑 Admin</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.adminButtonBottom, { backgroundColor: 'rgba(123, 31, 162, 0.25)', borderColor: 'rgba(123, 31, 162, 0.4)' }]}
+            onPress={onVeli}
+          >
+            <Text style={[styles.adminButtonText, { color: '#7B1FA2' }]}>👨‍👩‍👧 Veli Paneli</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.adminButtonBottom, { backgroundColor: 'rgba(255, 152, 0, 0.25)', borderColor: 'rgba(255, 152, 0, 0.4)' }]}
+            onPress={onOgretmen}
+          >
+            <Text style={[styles.adminButtonText, { color: '#E65100' }]}>👩‍🏫 Öğretmen</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </KeyboardAvoidingView>
+  );
+});
+
 export default function App() {
   const router = useRouter();
   const { isMuted, toggleMute, resumeAfterInteraction } = useSound();
@@ -138,7 +302,8 @@ export default function App() {
   };
 
   const {
-    password, setPassword, isLoggingIn, focusedInput, setFocusedInput,
+    // password/setPassword artik GirisFormu'nun yerel state'inde
+    isLoggingIn, focusedInput, setFocusedInput,
     girisYap, sifremiUnuttum,
     showRegistration, setShowRegistration,
     regAd, setRegAd, regEmail, setRegEmail,
@@ -173,7 +338,6 @@ export default function App() {
       }
     })();
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const oyunuBaslat = (oyunTipi: string) => {
@@ -260,13 +424,16 @@ export default function App() {
     }
   };
 
-  // Klavye açıkken giriş ekranındaki mutlak konumlu alt butonlar formun üstüne binmesin
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-  useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
-    return () => { show.remove(); hide.remove(); };
-  }, []);
+  // GirisFormu React.memo ile sarili — prop kimlikleri sabit kalsin ki App yeniden
+  // render olsa bile (ör. toast) form yeniden render edilip yazi kaybolmasin.
+  const authActionsRef = useRef({ girisYap, sifremiUnuttum });
+  authActionsRef.current = { girisYap, sifremiUnuttum };
+  const handleLogin = useCallback((mail: string, pass: string) => { authActionsRef.current.girisYap(mail, pass); }, []);
+  const handleForgot = useCallback((mail: string) => { authActionsRef.current.sifremiUnuttum(mail); }, []);
+  const handleSignup = useCallback(() => router.push('/signup' as any), [router]);
+  const handleAdmin = useCallback(() => router.push('/admin' as any), [router]);
+  const handleVeli = useCallback(() => router.push('/veli-dashboard' as any), [router]);
+  const handleOgretmen = useCallback(() => router.push('/teacher-dashboard' as any), [router]);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSongIndex] = useState<number>(0);
@@ -316,132 +483,17 @@ export default function App() {
 
     return (
       <DynamicBackground>
-        {/* Android'de pencere zaten adjustResize ile küçülür; behavior vermek çift kaydırma
-            (zıplama) yapar. keyboardShouldPersistTaps olmadan ilk dokunuş yalnızca klavyeyi
-            kapatır — alanlara yazılamaz. */}
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
-        >
-          <ScrollView
-            contentContainerStyle={[styles.scrollContainer, { alignItems: 'center' }]}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-          <View style={[
-            styles.card,
-            styles.glassCard,
-            { width: isMobile ? '90%' : undefined, maxWidth: 420 }
-          ]}>
-            {/* Title with Icon */}
-            <View style={styles.titleContainer}>
-              <Text style={styles.titleEmoji}>🎓</Text>
-              <Text style={styles.girisBaslik}>Okul Öncesi Akademi</Text>
-              <Text style={styles.titleEmoji}>✏️</Text>
-            </View>
-            <Text style={styles.welcomeSubtitle}>Hoş geldin, küçük kaşif! 🌟</Text>
-
-            {/* Email Input with Icon */}
-            <View style={[
-              styles.inputContainer,
-              focusedInput === 'email' && styles.inputContainerFocused
-            ]}>
-              <Text style={styles.inputIcon}>✉️</Text>
-              <TextInput
-                style={styles.inputModern}
-                placeholder="E-posta Adresi"
-                placeholderTextColor="#9E9E9E"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                onFocus={() => setFocusedInput('email')}
-                onBlur={() => setFocusedInput(null)}
-                returnKeyType="next"
-                onSubmitEditing={() => { }}
-              />
-            </View>
-
-            {/* Password Input with Icon */}
-            <View style={[
-              styles.inputContainer,
-              focusedInput === 'password' && styles.inputContainerFocused
-            ]}>
-              <Text style={styles.inputIcon}>🔒</Text>
-              <TextInput
-                style={styles.inputModern}
-                placeholder="Şifre"
-                placeholderTextColor="#9E9E9E"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                onFocus={() => setFocusedInput('password')}
-                onBlur={() => setFocusedInput(null)}
-                returnKeyType="go"
-                onSubmitEditing={girisYap}
-              />
-            </View>
-
-            {/* Gradient Login Button with Spinner */}
-            <TouchableOpacity
-              style={[
-                styles.gradientButton,
-                isLoggingIn && styles.buttonDisabled
-              ]}
-              onPress={girisYap}
-              disabled={isLoggingIn}
-              activeOpacity={0.8}
-            >
-              {isLoggingIn ? (
-                <View style={styles.buttonContent}>
-                  <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
-                  <Text style={styles.gradientButtonText}>Giriş Yapılıyor...</Text>
-                </View>
-              ) : (
-                <Text style={styles.gradientButtonText}>Giriş Yap 🚀</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* Helper Links */}
-            <View style={styles.linksContainer}>
-              <TouchableOpacity onPress={sifremiUnuttum}>
-                <Text style={styles.linkText}>Şifremi Unuttum</Text>
-              </TouchableOpacity>
-              <View style={styles.linkDivider} />
-              <TouchableOpacity onPress={() => router.push('/signup' as any)}>
-                <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
-              </TouchableOpacity>
-
-            </View>
-          </View>
-          </ScrollView>
-
-          {/* Alt butonlar — klavye açıkken gizlenir (yoksa form alanlarının üstüne biner) */}
-          {!keyboardVisible && (
-            <View style={{ position: 'absolute', bottom: 30, alignSelf: 'center', flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
-              <TouchableOpacity
-                style={styles.adminButtonBottom}
-                onPress={() => router.push('/admin' as any)}
-              >
-                <Text style={styles.adminButtonText}>🔑 Admin</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.adminButtonBottom, { backgroundColor: 'rgba(123, 31, 162, 0.25)', borderColor: 'rgba(123, 31, 162, 0.4)' }]}
-                onPress={() => router.push('/veli-dashboard' as any)}
-              >
-                <Text style={[styles.adminButtonText, { color: '#7B1FA2' }]}>👨‍👩‍👧 Veli Paneli</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.adminButtonBottom, { backgroundColor: 'rgba(255, 152, 0, 0.25)', borderColor: 'rgba(255, 152, 0, 0.4)' }]}
-                onPress={() => router.push('/teacher-dashboard' as any)}
-              >
-                <Text style={[styles.adminButtonText, { color: '#E65100' }]}>👩‍🏫 Öğretmen</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </KeyboardAvoidingView>
+        <GirisFormu
+          isMobile={isMobile}
+          isLoggingIn={isLoggingIn}
+          initialEmail={email}
+          onLogin={handleLogin}
+          onForgot={handleForgot}
+          onSignup={handleSignup}
+          onAdmin={handleAdmin}
+          onVeli={handleVeli}
+          onOgretmen={handleOgretmen}
+        />
         <Toast
           visible={toast.visible}
           message={toast.message}

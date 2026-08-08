@@ -58,8 +58,17 @@ export function useAuth({
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [regTurnstileToken, setRegTurnstileToken] = useState<string | null>(null);
 
-  const girisYap = async () => {
-    if (email.trim() === '' || password.trim() === '') {
+  /**
+   * Giris. Kimlik bilgileri disaridan gelebilir (giris formu kendi yerel state'ini
+   * tutuyor — her tusa basista App agacinin yeniden render edilmemesi icin).
+   * Arg gelmezse hook'un kendi state'ine duser. Not: onPress/onSubmitEditing bir
+   * event objesi gecirebilir; bu yuzden yalnizca string arg kabul edilir.
+   */
+  const girisYap = async (emailArg?: unknown, passwordArg?: unknown) => {
+    const loginEmail = (typeof emailArg === 'string' ? emailArg : email).trim();
+    const loginPassword = typeof passwordArg === 'string' ? passwordArg : password;
+
+    if (loginEmail === '' || loginPassword.trim() === '') {
       showToast('Lütfen e-posta ve şifrenizi giriniz.', 'error');
       return;
     }
@@ -67,8 +76,8 @@ export function useAuth({
     setIsLoggingIn(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password
+        email: loginEmail,
+        password: loginPassword
       });
 
       if (error) {
@@ -81,11 +90,15 @@ export function useAuth({
       }
 
       if (data.user) {
+        // Form kendi state'ini tuttugu icin App'teki email'i burada senkronla
+        // (oyun sonuclari bu email ile kaydediliyor).
+        setEmail(loginEmail);
+
         // Profil bilgisini çek
         const { data: profiles } = await supabase
           .from('profiles')
           .select('child_name, child_age_months')
-          .eq('email', email.trim())
+          .eq('email', loginEmail)
           .single();
 
         if (profiles) {
@@ -104,14 +117,15 @@ export function useAuth({
     }
   };
 
-  const sifremiUnuttum = async () => {
-    if (email.trim() === '') {
+  const sifremiUnuttum = async (emailArg?: unknown) => {
+    const resetEmail = (typeof emailArg === 'string' ? emailArg : email).trim();
+    if (resetEmail === '') {
       showToast('Lütfen şifre sıfırlama bağlantısı için e-postanızı giriniz.', 'error');
       return;
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
       });
       if (error) throw error;
