@@ -7,7 +7,7 @@ import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, Keyboard, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Keyboard, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import {
   createDailyGamePlan,
   GAME_CARD_META,
@@ -124,11 +124,14 @@ function FloatingDeco({ emoji, style, delay = 0 }: { emoji: string; style?: any;
 }
 
 /**
- * Giris formu — KENDI yerel state'ini tutar.
- * Neden: email/password App'te tutulunca her tus vurusu 1400 satirlik App agacini ve
- * DynamicBackground'daki ~18 animasyonu yeniden render ediyordu; yavas cihazlarda
- * (ve emulatorde) tus olaylari dusuyor, silme calismiyordu. Burada state yerel oldugu
- * icin yazarken yalnizca bu kucuk form render edilir.
+ * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
+ *
+ * Android'de `value` + state ile kontrollu TextInput klasik bir hataya yol acar:
+ * her tusta JS'e gidip donen deger native alanin metnini ezer; yavas cihazda
+ * (ve emulatorde) tus olaylari duser, imlec basa/sona atlar ve OZELLIKLE silme
+ * (backspace) calismaz. Cozum: metnin sahibi native alan olsun —
+ * `defaultValue` + ref. Yazarken HIC render olmaz, JS metne karismaz.
+ * Deger yalnizca gonderimde (submit) okunur.
  */
 const GirisFormu = React.memo(function GirisFormu({
   isMobile,
@@ -151,31 +154,42 @@ const GirisFormu = React.memo(function GirisFormu({
   onVeli: () => void;
   onOgretmen: () => void;
 }) {
-  const [email, setEmail] = useState(initialEmail);
-  const [password, setPassword] = useState('');
+  // Metin state'te DEGIL — native alanda. JS yalnizca son degeri saklar.
+  const emailRef = useRef(initialEmail);
+  const passwordRef = useRef('');
+  const passwordInputRef = useRef<TextInput>(null);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const passwordRef = useRef<TextInput>(null);
+  // Klavye yuksekligi: edge-to-edge/Android surumune gore pencere her zaman
+  // yeniden boyutlanmayabiliyor; bosluğu kendimiz birakiyoruz (deterministik).
+  const [kbHeight, setKbHeight] = useState(0);
 
   useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    const show = Keyboard.addListener('keyboardDidShow', (e) => setKbHeight(e.endCoordinates?.height ?? 0));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
     return () => { show.remove(); hide.remove(); };
   }, []);
 
-  const submit = () => onLogin(email, password);
+  const submit = () => onLogin(emailRef.current.trim(), passwordRef.current);
+
+  const keyboardOpen = kbHeight > 0;
 
   return (
-    // Android'de pencere zaten adjustResize ile kuculur; behavior vermek cift kaydirma
-    // (ziplama) yapar. keyboardShouldPersistTaps olmadan ilk dokunus yalnizca klavyeyi
-    // kapatir — alanlara yazilamaz.
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1 }}
-    >
+    // KeyboardAvoidingView KULLANILMIYOR: davranisi platform/edge-to-edge'e gore
+    // degisiyordu. Bunun yerine klavye yuksekligi kadar alt bosluk birakip icerigi
+    // yukari hizaliyoruz — her Android surumunde ayni sonucu verir.
+    // keyboardShouldPersistTaps olmadan ilk dokunus yalnizca klavyeyi kapatir.
+    <View style={{ flex: 1 }}>
       <ScrollView
-        contentContainerStyle={[styles.scrollContainer, { alignItems: 'center' }]}
+        contentContainerStyle={[
+          styles.scrollContainer,
+          {
+            alignItems: 'center',
+            justifyContent: keyboardOpen ? 'flex-start' : 'center',
+            paddingBottom: 24 + kbHeight,
+          },
+        ]}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="none"
         showsVerticalScrollIndicator={false}
       >
         <View style={[
@@ -199,8 +213,8 @@ const GirisFormu = React.memo(function GirisFormu({
               style={styles.inputModern}
               placeholder="E-posta Adresi"
               placeholderTextColor="#9E9E9E"
-              value={email}
-              onChangeText={setEmail}
+              defaultValue={initialEmail}
+              onChangeText={(t) => { emailRef.current = t; }}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -208,7 +222,7 @@ const GirisFormu = React.memo(function GirisFormu({
               onFocus={() => setFocusedInput('email')}
               onBlur={() => setFocusedInput(null)}
               returnKeyType="next"
-              onSubmitEditing={() => passwordRef.current?.focus()}
+              onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
           </View>
 
@@ -218,12 +232,11 @@ const GirisFormu = React.memo(function GirisFormu({
           ]}>
             <Text style={styles.inputIcon}>🔒</Text>
             <TextInput
-              ref={passwordRef}
+              ref={passwordInputRef}
               style={styles.inputModern}
               placeholder="Şifre"
               placeholderTextColor="#9E9E9E"
-              value={password}
-              onChangeText={setPassword}
+              onChangeText={(t) => { passwordRef.current = t; }}
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
@@ -252,7 +265,7 @@ const GirisFormu = React.memo(function GirisFormu({
           </TouchableOpacity>
 
           <View style={styles.linksContainer}>
-            <TouchableOpacity onPress={() => onForgot(email)}>
+            <TouchableOpacity onPress={() => onForgot(emailRef.current.trim())}>
               <Text style={styles.linkText}>Şifremi Unuttum</Text>
             </TouchableOpacity>
             <View style={styles.linkDivider} />
@@ -264,7 +277,7 @@ const GirisFormu = React.memo(function GirisFormu({
       </ScrollView>
 
       {/* Alt butonlar — klavye acikken gizlenir (yoksa form alanlarinin ustune biner) */}
-      {!keyboardVisible && (
+      {!keyboardOpen && (
         <View style={{ position: 'absolute', bottom: 30, alignSelf: 'center', flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
           <TouchableOpacity style={styles.adminButtonBottom} onPress={onAdmin}>
             <Text style={styles.adminButtonText}>🔑 Admin</Text>
@@ -283,7 +296,7 @@ const GirisFormu = React.memo(function GirisFormu({
           </TouchableOpacity>
         </View>
       )}
-    </KeyboardAvoidingView>
+    </View>
   );
 });
 

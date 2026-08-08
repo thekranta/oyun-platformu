@@ -217,7 +217,9 @@ export default function DynamicBackground({ children, onExit }: DynamicBackgroun
             {/* Gradient Background Layer */}
             <View style={styles.gradientBackground} />
 
-            <View style={styles.background}>
+            {/* pointerEvents="none": suzulen dekorlar form alanlarinin uzerinden
+                gectiklerinde dokunuslari CALMAMALI (giris ekraninda odak kaybina yol aciyordu). */}
+            <View style={styles.background} pointerEvents="none">
                 {/* Twinkling Stars */}
                 {stars.map((star) => (
                     <TwinklingStar
