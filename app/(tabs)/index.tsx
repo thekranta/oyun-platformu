@@ -123,6 +123,9 @@ function FloatingDeco({ emoji, style, delay = 0 }: { emoji: string; style?: any;
   );
 }
 
+// Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
+const BUILD_ETIKET = 'b5-tani';
+
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
  *
@@ -137,6 +140,8 @@ const GirisFormu = React.memo(function GirisFormu({
   isMobile,
   isLoggingIn,
   initialEmail,
+  decorAcik,
+  onToggleDecor,
   onLogin,
   onForgot,
   onSignup,
@@ -147,6 +152,8 @@ const GirisFormu = React.memo(function GirisFormu({
   isMobile: boolean;
   isLoggingIn: boolean;
   initialEmail: string;
+  decorAcik: boolean;
+  onToggleDecor: () => void;
   onLogin: (email: string, password: string) => void;
   onForgot: (email: string) => void;
   onSignup: () => void;
@@ -158,20 +165,36 @@ const GirisFormu = React.memo(function GirisFormu({
   const emailRef = useRef(initialEmail);
   const passwordRef = useRef('');
   const passwordInputRef = useRef<TextInput>(null);
+  const scrollRef = useRef<ScrollView>(null);
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   // Klavye yuksekligi: edge-to-edge/Android surumune gore pencere her zaman
   // yeniden boyutlanmayabiliyor; bosluğu kendimiz birakiyoruz (deterministik).
   const [kbHeight, setKbHeight] = useState(0);
 
+  // ---- TANI GOSTERGESI (yalniz bu ic-test surumunde) ----
+  // ONEMLI: tus basina setState YAPILMAZ — olcum sistemi bozmasin diye degerler
+  // ref'te birikir ve saniyede bir ekrana kopyalanir.
+  const hudRef = useRef({ eLen: 0, pLen: 0, lastKey: '-', delta: '-', blur: 0, degisim: 0 });
+  const [hud, setHud] = useState(hudRef.current);
+  const [jsFps, setJsFps] = useState(0);
+  const renderSayaci = useRef(0);
+  renderSayaci.current += 1;
+
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', (e) => setKbHeight(e.endCoordinates?.height ?? 0));
     const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
-    return () => { show.remove(); hide.remove(); };
+    // JS thread canliligi: saniyedeki kare sayisi. Dekor acik/kapali farki
+    // burada gorunur — kok neden animasyon yuku ise bu sayi dramatik degisir.
+    let kare = 0;
+    let raf = requestAnimationFrame(function tick() { kare += 1; raf = requestAnimationFrame(tick); });
+    const iv = setInterval(() => { setJsFps(kare); kare = 0; setHud({ ...hudRef.current }); }, 1000);
+    return () => { show.remove(); hide.remove(); cancelAnimationFrame(raf); clearInterval(iv); };
   }, []);
 
   const submit = () => onLogin(emailRef.current.trim(), passwordRef.current);
 
   const keyboardOpen = kbHeight > 0;
+  const win = Dimensions.get('window');
 
   return (
     // KeyboardAvoidingView KULLANILMIYOR: davranisi platform/edge-to-edge'e gore
@@ -180,11 +203,15 @@ const GirisFormu = React.memo(function GirisFormu({
     // keyboardShouldPersistTaps olmadan ilk dokunus yalnizca klavyeyi kapatir.
     <View style={{ flex: 1 }}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={[
           styles.scrollContainer,
           {
             alignItems: 'center',
-            justifyContent: keyboardOpen ? 'flex-start' : 'center',
+            // SABIT hizalama: klavye acilinca 'center'->'flex-start' atlamasi
+            // gorsel sicramaya yol aciyordu. Denge padding ile kuruluyor.
+            justifyContent: 'flex-start',
+            paddingTop: keyboardOpen ? 8 : 36,
             paddingBottom: 24 + kbHeight,
           },
         ]}
@@ -200,7 +227,9 @@ const GirisFormu = React.memo(function GirisFormu({
           <View style={styles.titleContainer}>
             <Text style={styles.titleEmoji}>🎓</Text>
             <Text style={styles.girisBaslik}>Okul Öncesi Akademi</Text>
-            <Text style={styles.titleEmoji}>✏️</Text>
+            {/* A/B ANAHTARI: kalemE dokunmak arka plan animasyonlarini acip kapatir.
+                Kapatinca yazma/silme duzeliyorsa kok neden kesinlesir. */}
+            <Text style={styles.titleEmoji} onPress={onToggleDecor} suppressHighlighting>✏️</Text>
           </View>
           <Text style={styles.welcomeSubtitle}>Hoş geldin, küçük kaşif! 🌟</Text>
 
@@ -214,13 +243,28 @@ const GirisFormu = React.memo(function GirisFormu({
               placeholder="E-posta Adresi"
               placeholderTextColor="#9E9E9E"
               defaultValue={initialEmail}
-              onChangeText={(t) => { emailRef.current = t; }}
+              onChangeText={(t) => {
+                const d = t.length - emailRef.current.length;
+                emailRef.current = t;
+                hudRef.current.eLen = t.length;
+                hudRef.current.delta = d > 0 ? `+${d}` : String(d);
+                hudRef.current.degisim += 1;
+              }}
+              onKeyPress={(e) => { hudRef.current.lastKey = e.nativeEvent.key; }}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
-              autoComplete="email"
-              onFocus={() => setFocusedInput('email')}
-              onBlur={() => setFocusedInput(null)}
+              // Autofill balonu olcumu kirletmesin (bu ic-test surumunde kapali)
+              autoComplete="off"
+              importantForAutofill="no"
+              // BlueStacks/kisa pencerede IME kendi tam-ekran metin kutusunu aciyordu
+              // ("hizli bir gecis" tarifine birebir uyar) — kapatiliyor.
+              disableFullscreenUI
+              onFocus={() => {
+                setFocusedInput('email');
+                requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
+              }}
+              onBlur={() => { setFocusedInput(null); hudRef.current.blur += 1; }}
               returnKeyType="next"
               onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
@@ -236,13 +280,23 @@ const GirisFormu = React.memo(function GirisFormu({
               style={styles.inputModern}
               placeholder="Şifre"
               placeholderTextColor="#9E9E9E"
-              onChangeText={(t) => { passwordRef.current = t; }}
+              onChangeText={(t) => {
+                passwordRef.current = t;
+                hudRef.current.pLen = t.length;
+                hudRef.current.degisim += 1;
+              }}
+              onKeyPress={(e) => { hudRef.current.lastKey = e.nativeEvent.key; }}
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
-              autoComplete="password"
-              onFocus={() => setFocusedInput('password')}
-              onBlur={() => setFocusedInput(null)}
+              autoComplete="off"
+              importantForAutofill="no"
+              disableFullscreenUI
+              onFocus={() => {
+                setFocusedInput('password');
+                requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 70, animated: true }));
+              }}
+              onBlur={() => { setFocusedInput(null); hudRef.current.blur += 1; }}
               returnKeyType="go"
               onSubmitEditing={submit}
             />
@@ -273,12 +327,21 @@ const GirisFormu = React.memo(function GirisFormu({
               <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
 
-      {/* Alt butonlar — klavye acikken gizlenir (yoksa form alanlarinin ustune biner) */}
-      {!keyboardOpen && (
-        <View style={{ position: 'absolute', bottom: 30, alignSelf: 'center', flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {/* ---- TANI GOSTERGESI (ic-test surumu) ----
+              Kalem emojisine dokunarak dekoru ac/kapa; asagidaki sayilar degisiyor mu bak. */}
+          <Text style={styles.taniHud}>
+            {`odak:${focusedInput ?? 'YOK'}  e:${hud.eLen}  s:${hud.pLen}  Δ:${hud.delta}  tus:${hud.lastKey}`}
+            {'\n'}
+            {`kb:${kbHeight}  pencere:${Math.round(win.width)}x${Math.round(win.height)}  blur:${hud.blur}  degisim:${hud.degisim}`}
+            {'\n'}
+            {`render:${renderSayaci.current}  jsFPS:${jsFps}  DEKOR:${decorAcik ? 'ACIK' : 'KAPALI'}  ${BUILD_ETIKET}`}
+          </Text>
+        </View>
+
+        {/* Alt butonlar artik ScrollView ICINDE ve kosullu KALDIRILMIYOR —
+            klavye acilinca agactan view silinmesi sicramaya yol aciyordu. */}
+        <View style={{ marginTop: 18, marginBottom: 8, flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
           <TouchableOpacity style={styles.adminButtonBottom} onPress={onAdmin}>
             <Text style={styles.adminButtonText}>🔑 Admin</Text>
           </TouchableOpacity>
@@ -295,7 +358,7 @@ const GirisFormu = React.memo(function GirisFormu({
             <Text style={[styles.adminButtonText, { color: '#E65100' }]}>👩‍🏫 Öğretmen</Text>
           </TouchableOpacity>
         </View>
-      )}
+      </ScrollView>
     </View>
   );
 });
@@ -314,16 +377,11 @@ export default function App() {
     setToast({ visible: true, message, type });
   };
 
+  // NOT: password/focus artik GirisFormu'nun yerel state'inde; kayit ve cocuk-secimi
+  // alanlari da kullanilmiyor (o Modal'lar olu koddu, kaldirildi — kayit /signup rotasinda).
   const {
-    // password/setPassword artik GirisFormu'nun yerel state'inde
-    isLoggingIn, focusedInput, setFocusedInput,
+    isLoggingIn,
     girisYap, sifremiUnuttum,
-    showRegistration, setShowRegistration,
-    regAd, setRegAd, regEmail, setRegEmail,
-    regCinsiyet, setRegCinsiyet, yasInputMode, setYasInputMode,
-    dogumTarihi, setDogumTarihi, regYasAy, setRegYasAy, isRegistering,
-    kayitOl,
-    matchingChildren, showChildSelection, setShowChildSelection, selectChild,
   } = useAuth({ email, setEmail, setAd, setYas, setAsama, showToast, resumeAfterInteraction });
 
   // Kalıcı Supabase oturumu varsa yenilemede giriş ekranını atla (sessiz geri yükleme);
@@ -447,6 +505,9 @@ export default function App() {
   const handleAdmin = useCallback(() => router.push('/admin' as any), [router]);
   const handleVeli = useCallback(() => router.push('/veli-dashboard' as any), [router]);
   const handleOgretmen = useCallback(() => router.push('/teacher-dashboard' as any), [router]);
+  // Giris ekraninda arka plan animasyonlarini ac/kapa (Android IME tanisi icin A/B).
+  const [decorAcik, setDecorAcik] = useState(true);
+  const handleToggleDecor = useCallback(() => setDecorAcik((v) => !v), []);
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSongIndex] = useState<number>(0);
@@ -495,11 +556,13 @@ export default function App() {
     const isMobile = windowWidth < 768;
 
     return (
-      <DynamicBackground>
+      <DynamicBackground decor={decorAcik}>
         <GirisFormu
           isMobile={isMobile}
           isLoggingIn={isLoggingIn}
           initialEmail={email}
+          decorAcik={decorAcik}
+          onToggleDecor={handleToggleDecor}
           onLogin={handleLogin}
           onForgot={handleForgot}
           onSignup={handleSignup}
@@ -515,224 +578,10 @@ export default function App() {
         />
 
         {/* Child Selection Modal - for duplicate name+age */}
-        <Modal
-          visible={showChildSelection}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setShowChildSelection(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { width: isMobile ? '95%' : 400 }]}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>👶 Çocuk Seçin</Text>
-                <TouchableOpacity onPress={() => setShowChildSelection(false)} style={styles.modalCloseBtn}>
-                  <Text style={styles.modalCloseText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              <Text style={{ textAlign: 'center', marginBottom: 15, color: '#666', fontSize: 14 }}>
-                Aynı isim ve yaşta birden fazla çocuk bulundu. Lütfen seçin:
-              </Text>
-
-              <ScrollView style={{ maxHeight: 300 }}>
-                {matchingChildren.map((child, index) => (
-                  <TouchableOpacity
-                    key={child.id || index}
-                    style={{
-                      backgroundColor: '#f5f5f5',
-                      padding: 15,
-                      borderRadius: 12,
-                      marginBottom: 10,
-                      borderWidth: 1,
-                      borderColor: '#e0e0e0',
-                    }}
-                    onPress={() => selectChild(child)}
-                  >
-                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#333' }}>
-                      {child.child_name} ({child.child_age_months} ay)
-                    </Text>
-                    <Text style={{ fontSize: 13, color: '#666', marginTop: 4 }}>
-                      📧 {child.email}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-
-        {/* Registration Modal */}
-        <Modal
-          visible={showRegistration}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowRegistration(false)}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={[styles.modalContent, { width: isMobile ? '95%' : 420 }]}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>🌟 Kayıt Ol</Text>
-                <TouchableOpacity onPress={() => setShowRegistration(false)} style={styles.modalCloseBtn}>
-                  <Text style={styles.modalCloseText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Child Name */}
-              <View style={[
-                styles.inputContainer,
-                focusedInput === 'regAd' && styles.inputContainerFocused
-              ]}>
-                <Text style={styles.inputIcon}>👶</Text>
-                <TextInput
-                  style={styles.inputModern}
-                  placeholder="Çocuğun Adı *"
-                  placeholderTextColor="#9E9E9E"
-                  value={regAd}
-                  onChangeText={setRegAd}
-                  onFocus={() => setFocusedInput('regAd')}
-                  onBlur={() => setFocusedInput(null)}
-                />
-              </View>
-
-              {/* Email - Required */}
-              <View style={[
-                styles.inputContainer,
-                focusedInput === 'regEmail' && styles.inputContainerFocused
-              ]}>
-                <Text style={styles.inputIcon}>✉️</Text>
-                <TextInput
-                  style={styles.inputModern}
-                  placeholder="Ebeveyn E-posta *"
-                  placeholderTextColor="#9E9E9E"
-                  value={regEmail}
-                  onChangeText={setRegEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  onFocus={() => setFocusedInput('regEmail')}
-                  onBlur={() => setFocusedInput(null)}
-                />
-              </View>
-
-              {/* Gender Selection - Required */}
-              <Text style={styles.fieldLabel}>Cinsiyet *</Text>
-              <View style={styles.genderContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.genderButton,
-                    regCinsiyet === 'erkek' && styles.genderButtonSelected
-                  ]}
-                  onPress={() => setRegCinsiyet('erkek')}
-                >
-                  <Text style={styles.genderEmoji}>👦</Text>
-                  <Text style={[
-                    styles.genderText,
-                    regCinsiyet === 'erkek' && styles.genderTextSelected
-                  ]}>Erkek</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.genderButton,
-                    regCinsiyet === 'kiz' && styles.genderButtonSelected
-                  ]}
-                  onPress={() => setRegCinsiyet('kiz')}
-                >
-                  <Text style={styles.genderEmoji}>👧</Text>
-                  <Text style={[
-                    styles.genderText,
-                    regCinsiyet === 'kiz' && styles.genderTextSelected
-                  ]}>Kız</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Age Input Mode Toggle */}
-              <Text style={styles.fieldLabel}>Yaş Bilgisi *</Text>
-              <View style={styles.ageModeContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.ageModeButton,
-                    yasInputMode === 'ay' && styles.ageModeButtonSelected
-                  ]}
-                  onPress={() => setYasInputMode('ay')}
-                >
-                  <Text style={[
-                    styles.ageModeText,
-                    yasInputMode === 'ay' && styles.ageModeTextSelected
-                  ]}>Ay Olarak</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.ageModeButton,
-                    yasInputMode === 'tarih' && styles.ageModeButtonSelected
-                  ]}
-                  onPress={() => setYasInputMode('tarih')}
-                >
-                  <Text style={[
-                    styles.ageModeText,
-                    yasInputMode === 'tarih' && styles.ageModeTextSelected
-                  ]}>Doğum Tarihi</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Age Input based on mode */}
-              {yasInputMode === 'ay' ? (
-                <View style={[
-                  styles.inputContainer,
-                  focusedInput === 'regYas' && styles.inputContainerFocused
-                ]}>
-                  <Text style={styles.inputIcon}>📅</Text>
-                  <TextInput
-                    style={styles.inputModern}
-                    placeholder="Yaş (24-75 ay)"
-                    placeholderTextColor="#9E9E9E"
-                    value={regYasAy}
-                    onChangeText={setRegYasAy}
-                    keyboardType="numeric"
-                    onFocus={() => setFocusedInput('regYas')}
-                    onBlur={() => setFocusedInput(null)}
-                  />
-                </View>
-              ) : (
-                <View style={[
-                  styles.inputContainer,
-                  focusedInput === 'regTarih' && styles.inputContainerFocused
-                ]}>
-                  <Text style={styles.inputIcon}>🎂</Text>
-                  <TextInput
-                    style={styles.inputModern}
-                    placeholder="Doğum Tarihi (GG/AA/YYYY)"
-                    placeholderTextColor="#9E9E9E"
-                    value={dogumTarihi}
-                    onChangeText={setDogumTarihi}
-                    onFocus={() => setFocusedInput('regTarih')}
-                    onBlur={() => setFocusedInput(null)}
-                  />
-                </View>
-              )}
-
-              {/* Register Button */}
-              <TouchableOpacity
-                style={[
-                  styles.gradientButton,
-                  { marginTop: 20 },
-                  isRegistering && styles.buttonDisabled
-                ]}
-                onPress={kayitOl}
-                disabled={isRegistering}
-              >
-                {isRegistering ? (
-                  <View style={styles.buttonContent}>
-                    <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
-                    <Text style={styles.gradientButtonText}>Kayıt Yapılıyor...</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.gradientButtonText}>Kayıt Ol ✨</Text>
-                )}
-              </TouchableOpacity>
-
-              <Text style={styles.requiredNote}>* Zorunlu alanlar</Text>
-            </View>
-          </View>
-        </Modal>
+        {/* NOT: Cocuk secimi ve kayit Modal'lari KALDIRILDI — setShowChildSelection(true)/
+            setShowRegistration(true) kod tabaninda hic cagrilmiyordu (olu kod). Kayit akisi
+            router.push('/signup') uzerinden yurur. Android'de Modal ayri bir pencere actigi
+            icin agacta durmalari IME davranisi acisindan da gereksiz bir degiskendi. */}
       </DynamicBackground>
     );
   }
@@ -993,6 +842,15 @@ const styles = StyleSheet.create({
   inputIcon: {
     fontSize: 20,
     marginRight: 12,
+  },
+  // Tani gostergesi — yalniz ic-test surumunde gorunur, kucuk ve dikkat cekmeyen.
+  taniHud: {
+    marginTop: 10,
+    fontSize: 10,
+    lineHeight: 14,
+    color: '#B71C1C',
+    textAlign: 'center',
+    fontVariant: ['tabular-nums'],
   },
   inputModern: {
     flex: 1,

@@ -198,11 +198,20 @@ const TwinklingStar = ({ x, y, size, delay }: any) => {
 interface DynamicBackgroundProps {
     children: React.ReactNode;
     onExit?: () => void;
+    /**
+     * Dekoratif animasyon katmani (yildiz/bulut/suzulen ikonlar).
+     * Android'de IME (klavye), dokunma dagitimi ve TextInput'un InputConnection'i
+     * UI THREAD'de calisir; native-driver animasyonlari da AYNI thread'de her karede
+     * transform/alpha yazip invalidate tetikler. Metin girisi olan ekranlarda bu
+     * katmani kapatmak IME'ye nefes aldirir. Oyun ekranlarinda varsayilan acik.
+     */
+    decor?: boolean;
 }
 
-export default function DynamicBackground({ children, onExit }: DynamicBackgroundProps) {
+export default function DynamicBackground({ children, onExit, decor = true }: DynamicBackgroundProps) {
     // Generate random star positions
     const stars = React.useMemo(() => {
+        if (!decor) return [];
         return Array.from({ length: 8 }, (_, i) => ({
             id: i,
             x: Math.random() * width * 0.9,
@@ -210,7 +219,7 @@ export default function DynamicBackground({ children, onExit }: DynamicBackgroun
             size: 16 + Math.random() * 14,
             delay: Math.random() * 2000,
         }));
-    }, []);
+    }, [decor]);
 
     return (
         <View style={styles.container}>
@@ -218,45 +227,48 @@ export default function DynamicBackground({ children, onExit }: DynamicBackgroun
             <View style={styles.gradientBackground} />
 
             {/* pointerEvents="none": suzulen dekorlar form alanlarinin uzerinden
-                gectiklerinde dokunuslari CALMAMALI (giris ekraninda odak kaybina yol aciyordu). */}
-            <View style={styles.background} pointerEvents="none">
-                {/* Twinkling Stars */}
-                {stars.map((star) => (
-                    <TwinklingStar
-                        key={star.id}
-                        x={star.x}
-                        y={star.y}
-                        size={star.size}
-                        delay={star.delay}
-                    />
-                ))}
+                gectiklerinde dokunuslari CALMAMALI (giris ekraninda odak kaybina yol aciyordu).
+                decor=false iken katman HIC MOUNT EDILMEZ → ~40 surekli animasyon durur. */}
+            {decor && (
+                <View style={styles.background} pointerEvents="none">
+                    {/* Twinkling Stars */}
+                    {stars.map((star) => (
+                        <TwinklingStar
+                            key={star.id}
+                            x={star.x}
+                            y={star.y}
+                            size={star.size}
+                            delay={star.delay}
+                        />
+                    ))}
 
-                {/* Drifting Clouds */}
-                <DriftingCloud delay={0} startX={-50} startY={height * 0.1} size={60} />
-                <DriftingCloud delay={8000} startX={-100} startY={height * 0.3} size={80} />
-                <DriftingCloud delay={15000} startX={-80} startY={height * 0.6} size={50} />
-                <DriftingCloud delay={22000} startX={-60} startY={height * 0.2} size={70} />
+                    {/* Drifting Clouds */}
+                    <DriftingCloud delay={0} startX={-50} startY={height * 0.1} size={60} />
+                    <DriftingCloud delay={8000} startX={-100} startY={height * 0.3} size={80} />
+                    <DriftingCloud delay={15000} startX={-80} startY={height * 0.6} size={50} />
+                    <DriftingCloud delay={22000} startX={-60} startY={height * 0.2} size={70} />
 
-                {/* Floating Icons - Slower, dreamier */}
-                <FloatingItem delay={0} duration={25000} startX={width * 0.1} size={50} floatRange={15}>
-                    <Ionicons name="star" size={40} color="#FFD700" />
-                </FloatingItem>
-                <FloatingItem delay={3000} duration={30000} startX={width * 0.85} size={70} floatRange={20}>
-                    <Ionicons name="cloud" size={60} color="#FFFFFF" />
-                </FloatingItem>
-                <FloatingItem delay={7000} duration={28000} startX={width * 0.5} size={55} floatRange={18}>
-                    <Ionicons name="heart" size={45} color="#FFB6C1" />
-                </FloatingItem>
-                <FloatingItem delay={2000} duration={22000} startX={width * 0.7} size={40} floatRange={12}>
-                    <Ionicons name="musical-note" size={35} color="#DDA0DD" />
-                </FloatingItem>
-                <FloatingItem delay={10000} duration={32000} startX={width * 0.25} size={65} floatRange={25}>
-                    <Ionicons name="sunny" size={55} color="#FFE082" />
-                </FloatingItem>
-                <FloatingItem delay={15000} duration={27000} startX={width * 0.9} size={45} floatRange={14}>
-                    <Ionicons name="planet" size={40} color="#B39DDB" />
-                </FloatingItem>
-            </View>
+                    {/* Floating Icons - Slower, dreamier */}
+                    <FloatingItem delay={0} duration={25000} startX={width * 0.1} size={50} floatRange={15}>
+                        <Ionicons name="star" size={40} color="#FFD700" />
+                    </FloatingItem>
+                    <FloatingItem delay={3000} duration={30000} startX={width * 0.85} size={70} floatRange={20}>
+                        <Ionicons name="cloud" size={60} color="#FFFFFF" />
+                    </FloatingItem>
+                    <FloatingItem delay={7000} duration={28000} startX={width * 0.5} size={55} floatRange={18}>
+                        <Ionicons name="heart" size={45} color="#FFB6C1" />
+                    </FloatingItem>
+                    <FloatingItem delay={2000} duration={22000} startX={width * 0.7} size={40} floatRange={12}>
+                        <Ionicons name="musical-note" size={35} color="#DDA0DD" />
+                    </FloatingItem>
+                    <FloatingItem delay={10000} duration={32000} startX={width * 0.25} size={65} floatRange={25}>
+                        <Ionicons name="sunny" size={55} color="#FFE082" />
+                    </FloatingItem>
+                    <FloatingItem delay={15000} duration={27000} startX={width * 0.9} size={45} floatRange={14}>
+                        <Ionicons name="planet" size={40} color="#B39DDB" />
+                    </FloatingItem>
+                </View>
+            )}
 
             {/* Global Music Button */}
             <MusicButton />
