@@ -52,6 +52,7 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
+    "@breezystack/lamejs": "^1.2.7",
     "@types/react": "~19.1.0",
     "@vercel/node": "^5.5.10",
     "eslint": "^9.25.0",
