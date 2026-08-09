@@ -1,0 +1,726 @@
+[
+  {
+    "text": "Olsun! Resme bir daha bak ve tekrar dene.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Bu resimdeki çizgiler nasıl?",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Aferin! Bunlar dalgalı çizgi. Dalgalı çizgiler deniz dalgası gibi yumuşak yumuşak kıvrılır.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Peki bu çizgiler nasıl?",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Doğru! Bunlar zikzak çizgi. Zikzak çizgiler şimşek gibi keskin keskin kırılır.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Bu resim hangi şekillerden yapılmış?",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Aferin! Bu resim üçgenlerden yapılmış. Üçgenin üç kenarı ve üç sivri köşesi vardır.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Bu resim sıcak renklerle mi, soğuk renklerle mi yapılmış?",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Evet! Kırmızı, turuncu ve sarı sıcak renklerdir. Güneşi ve ateşi hatırlatırlar.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Peki bu resim sıcak renklerle mi, soğuk renklerle mi yapılmış?",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Doğru! Mavi, turkuaz ve mor soğuk renklerdir. Denizi ve buzu hatırlatırlar.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Bu resmin renkleri açık mı, koyu mu?",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Aferin! Bu resmin renkleri koyu. Koyu renklere biraz siyah karışmıştır, geceyi ve gölgeyi hatırlatırlar.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Bu resimdeki şekiller nasıl dizilmiş?",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Süper! Bu bir desen. Aynı şekiller sırayla tekrar tekrar geliyor, buna desen deriz.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Bu hangi sanat? Resim mi, heykel mi?",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Aferin! Bu bir heykel. Heykele her yönden bakabilirsin, çünkü resim gibi düz değil, kabarıktır.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Sanat gözlüğünü tak! Resme iyi bak, sonra doğru kelimeyi seç.",
+    "game": "SanatGozlugu"
+  },
+  {
+    "text": "Bu tabloda en çok hangi renk var?",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Aferin! En çok kırmızı var. Birlikte sayalım: bir, iki, üç, dört, beş kırmızı kutu.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Bu tabloda hangi şekil YOK?",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Doğru! Bu tabloda hiç daire yok. Ressam sadece köşeli şekiller kullanmış.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Bu tabloda kaç tane büyük daire var?",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Aferin! Üç tane büyük daire var. Birlikte sayalım: bir, iki, üç.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "En büyük daire hangi renkte?",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Doğru! En büyük daire mor. Bütün daireleri karşılaştırıp en büyüğünü buldun.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Tabloda en ÖNDE ne var?",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Aferin! Ev en önde. Önde olan şeyler daha büyük görünür, arkadakiler küçücük kalır.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Bu tabloda kaç tane ağaç var?",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Aferin! Dört tane ağaç var. Birlikte sayalım: bir, iki, üç, dört.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Tabakta kaç tane meyve var?",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Aferin! Tabakta beş meyve var. Birlikte sayalım: bir, iki, üç, dört, beş.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Bu tabloda hangi meyve YOK?",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Doğru! Bu tabloda hiç muz yok. Ressam elma, portakal ve erik çizmiş.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Tabloya bir daha bak. Acele etme, tekrar dene.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Şimdi tablolara bakacağız! Soruyu iyi dinle, tabloyu incele ve doğru cevaba dokun.",
+    "game": "TablodaNeVar"
+  },
+  {
+    "text": "Kırmızı! Kırmızı canlı ve heyecanlı bir renktir.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Turuncu! Turuncu portakal gibi sıcacık bir renktir.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Sarı! Sarı, güneş gibi neşeli bir renktir.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Yeşil! Yeşil, çimen gibi taze ve huzurlu bir renktir.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Mavi! Mavi, deniz gibi sakin ve serin bir renktir.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Mor! Mor, masal gibi gizemli bir renktir.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Dört kedi, dört farklı renk!",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Dört çiçek, dört farklı renk!",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Dört kelebek, dört farklı renk!",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Şekilleri tıpatıp aynı ama hiçbiri diğerine benzemiyor. Rengi değiştirince resmin duygusu da değişiyor.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Hangisi sana en neşeli geldi?",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Bu rengi başka bir resimde kullandın. Her resim başka renk olsun, başka bir renk seç.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Bir resim bitti! Şimdi başka bir resmi bambaşka bir renkle boya.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Yeni bir poster! Aynı resmi yine dört kere, her birini başka renkle boyayalım.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Ne güzel bir poster oldu! Aferin.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Aynı resmi dört kere boyayacağız, ama her birini başka renkle!",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Bir renk seç ve resme dokun. Birinci resmi sarı ile boyayabilirsin.",
+    "game": "RenkAtolyesi"
+  },
+  {
+    "text": "Aferin! Bu davul. Davul büyük ve içi boş olduğu için sesi KALIN ve derin çıkar.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Doğru! Bu zil. Zil metalden yapıldığı için sesi İNCE ve uzun uzun çınlar.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Aferin! Bu marakas. Marakasın içinde küçücük taneler var, sallanınca hışır hışır ses çıkarır.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Doğru! Bu tahta blok. Tahta sert ve içi dolu olduğu için sesi çok kısa, tak diye biter.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Süper! Yine marakas. Marakasın hışırtısı biraz uzun sürer, tahta blok ise tek bir tak der.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Harika! Yine zil. Zile vurunca ses hemen bitmez, uzun uzun çınlamaya devam eder.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Süper! Önce tahta blok tak dedi, sonra davul dum dedi. Sırayı doğru hatırladın.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Harika! Önce zil çınladı, sonra marakas hışırdadı. İki sesi de sırasıyla buldun.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Şimdi arka arkaya iki ses çalacak. Dinle, sonra iki çalgıyı sırasıyla göster.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "DİNLE düğmesine bas ve sesi dinle.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Önce DİNLE düğmesine bas, sesi dinle.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Evet, ilki buydu! Şimdi ikinci sesi göster.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Olmadı. İki sesi baştan dinle ve sırasıyla göster.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Olmadı. Sesi tekrar dinle ve hangi çalgı olduğunu bul.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Kulağını aç! DİNLE düğmesine bas, sesi dinle. Sonra o sesi çıkaran çalgının kartına dokun.",
+    "game": "HangiCalgiCaldi"
+  },
+  {
+    "text": "Bu müzik nasıl? Hızlı mı, yavaş mı?",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Bu ses nasıl? Yüksek sesli mi, kısık mı?",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Bu ses nasıl? Kalın mı, ince mi?",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Sesler yukarı mı çıkıyor, aşağı mı iniyor?",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Olmadı. Müziği bir daha dinle, sonra öbür karta dokun.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Aferin! Bu müzik yavaş. Notalar birbirinden uzak uzak geliyor, top da ağır ağır zıplıyor.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Aferin! Bu müzik hızlı. Notalar peş peşe koşuyor, top da hop hop zıplıyor.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Doğru! Bu ses kısık. Fısıltı gibi minicik, bak ses dalgası da küçücük.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Doğru! Bu ses yüksek. Bağırmak gibi kocaman, bak ses dalgası da koca koca kabarıyor.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Aferin! Bu ses kalın. Kalın teller ayı sesi gibi ağır ağır titrer.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Aferin! Bu ses ince. İnce teller kuş sesi gibi hızlı hızlı titrer.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Aferin! Sesler yukarı çıkıyor. Merdiven çıkar gibi her nota bir öncekinden daha ince.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Aferin! Sesler aşağı iniyor. Merdiven iner gibi her nota bir öncekinden daha kalın.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Kulağını aç! Müziği dinle ve nasıl olduğunu bul. İki karttan doğru olana dokun.",
+    "game": "SesNasil"
+  },
+  {
+    "text": "Kulağını aç! Önce ben davulu çalacağım, sonra sen aynısını çalacaksın.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Aferin! İki vuruş çaldın. Dum, dum!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Şimdi biraz daha uzun bir ritim geliyor. İyi dinle!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Harika! Üç vuruş çaldın. Dum, dum, dum!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Şimdi iki davul var. Büyük davul kuvvetli, küçük davul hafif çalar. Dinle!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Süper! Önce kuvvetli, sonra hafif. Büyük davul gür ses verir, küçük davul yumuşak.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Bu sefer bir kuvvetli, iki hafif var. Sen de öyle çal!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Harika! Bir kuvvetli, iki hafif. Kuvvetli, hafif, hafif!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Dört vuruş geliyor. Kuvvetli mi hafif mi, kulağınla yakala!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Aferin! Önce iki kuvvetli, sonra iki hafif. Sırayı kulağınla yakaladın.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Bu ritimde kuvvetli ve hafif sırayla geliyor. Dikkatlice dinle!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Süper! Kuvvetli, hafif, kuvvetli, hafif. Ritim sırayla değişiyordu, sen de öyle çaldın.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Bu ritimde ortada küçük bir bekleme var. İyi dinle!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Harika! Ortadaki küçük beklemeyi de duydun. Müzikte susmak da ritmin bir parçasıdır.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Son ritim! Beş vuruş var. Hazır mısın? Dinle!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Bravo! Beş vuruşu sırasıyla çaldın. Kulağın ritmi yakaladı, artık gerçek bir davul ustasısın!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Şimdi sen çal! Duyduğun ritmi pede vur.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Sıra sende! Pede dokun ve duyduğun ritmi çal.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Çok güzel denedin! Şimdi yeni bir ritme geçelim.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Vuruş sayısı doğru! Şimdi kuvvetli ve hafifin sırasına dikkat et. Tekrar dinle.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Az kaldı! Vuruş sayısına dikkat et. Ritmi tekrar dinle.",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Tamam, ritmi bir daha çalıyorum. İyi dinle!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Önce ben davulla bir ritim çalacağım, sen sadece dinle. Yeşil halka açılınca aynı ritmi sen çal!",
+    "game": "DavulUstasi"
+  },
+  {
+    "text": "Oda krokini bitirdin! Şimdi bir de park krokisi yapalım.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Yatağı pencerenin yanına koy.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Aferin! Yatak pencerenin yanında. Sabah güneş yatağına vuracak.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Pencere sol duvarda. Yatağı pencerenin hemen yanındaki kareye koyalım.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Halıyı odanın tam ortasına koy.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Harika! Halı tam ortada. Odanın ortası oyun oynamak için en güzel yerdir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Odanın tam ortası, ortadaki karedir. Halıyı oraya koyalım.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Oyuncak kutusunu kapının tam karşısına koy.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Süper! Oyuncak kutusu kapının tam karşısında. Kapıdan girince onu hemen görürsün.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kapı aşağıda. Kapının tam karşısı, en yukarıdaki orta karedir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Masayı odanın sağ alt köşesine koy.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Aferin! Masa sağ alt köşede. Köşe, iki duvarın birleştiği yerdir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Sağ alt köşe, en aşağıdaki sıranın en sağındaki karedir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kitaplığı yatağın arkasına koy. Arka taraf, kapıdan uzak olan yukarı taraftır.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Harika! Kitaplık yatağın arkasında. Krokide arka taraf yukarısıdır.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Yatak pencerenin yanında. Yatağın bir üstündeki kare, yatağın arkasıdır.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Şimdi kendi krokini oku. Halı nerede? Halının olduğu kareye dokun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Doğru! Halıyı oraya sen koymuştun. Bu senin krokin, odanı yukarıdan gösteren küçük haritan.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Halı yuvarlak bir kilimdir. Krokide onu bul ve üstüne dokun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kapıdan odaya girdin. Tam karşında ne var? Krokide ona dokun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Aferin! Kapının tam karşısında oyuncak kutusu var. Krokini gerçekten okuyabiliyorsun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kapı krokinin altında. Tam karşısı, en yukarıdaki orta karedir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Park krokini de bitirdin! Artık kendi krokini yapabiliyorsun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Ağacı göletin yanına koy.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Aferin! Ağaç göletin yanında. Kuşlar suya yakın ağaçları çok sever.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Gölet sağ tarafta. Ağacı göletin hemen yanındaki kareye koyalım.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kum havuzunu parkın tam ortasına koy.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Harika! Kum havuzu tam ortada. Ortadaki kum havuzunu parkın her yerinden görürsün.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Parkın tam ortası, ortadaki karedir. Kum havuzunu oraya koyalım.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kaydırağı parkın sol üst köşesine koy.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Süper! Kaydırak sol üst köşede. Köşeler krokinin en uç yerleridir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Sol üst köşe, en yukarıdaki sıranın en solundaki karedir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Bankı giriş kapısının tam karşısına koy.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Aferin! Bank giriş kapısının tam karşısında. Banka oturunca bütün parkı görürsün.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Giriş kapısı aşağıda. Tam karşısı, en yukarıdaki orta karedir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Salıncağı kum havuzunun önüne koy. Ön taraf, giriş kapısına yakın olan aşağı taraftır.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Harika! Salıncak kum havuzunun önünde. Krokide ön taraf aşağısıdır.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kum havuzu tam ortada. Kum havuzunun bir altındaki kare, onun önüdür.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Şimdi kendi park krokini oku. Kaydırak nerede? Kaydırağın olduğu kareye dokun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Doğru! Kaydırağı sol üst köşeye sen koymuştun. Bu senin park krokin.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kaydırak uzun ve eğik bir kayma yoludur. Krokide onu bul ve üstüne dokun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Giriş kapısından parka girdin. Tam karşında ne var? Krokide ona dokun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Aferin! Giriş kapısının tam karşısında bank var. Kendi krokini çok güzel okudun.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Giriş kapısı krokinin altında. Tam karşısı, en yukarıdaki orta karedir.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Kendi krokini yapacaksın! Önce alttan eşyayı seç, sonra krokide yerini göster.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Önce alttan bir eşya seç, sonra krokide yerini göster.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Şimdi bu eşyanın sırası değil. Yönergede söylediğim eşyayı bul.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Güzel! Şimdi krokide yerini göster.",
+    "game": "OdaminKrokisi"
+  },
+  {
+    "text": "Hangisi zıplayarak gider: kurbağa mı, yılan mı?",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Aferin! Kurbağa zıplayarak gider. Şimdi ayağa kalk, kurbağa gibi çömel ve olduğun yerde zıpla!",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Yılan yerde sürünerek ilerler. Zıplayarak giden hayvan kurbağadır.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Harika zıpladın! Zıplamak bacaklarını güçlendirir.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Hangisi ağır ağır, büyük adımlarla yürür: fil mi, fare mi?",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Doğru! Fil ağır ağır, büyük adımlarla yürür. Şimdi sen de fil gibi yavaş yürü ve kollarını hortum gibi salla!",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Fare küçücüktür, hızlı hızlı koşturur. Ağır ağır yürüyen hayvan fildir.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Çok güçlü yürüdün! Ağır adımlar bacak kaslarını çalıştırır.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Hangisi tek ayak üstünde durur: flamingo mu, ayı mı?",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Aferin! Flamingo tek ayak üstünde durur. Şimdi sen de bir ayağını kaldır ve dengede kalmaya çalış!",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Ayı dört ayağının üstünde ağır ağır yürür. Tek ayak üstünde duran kuş flamingodur.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Dengeni korudun, bravo! Tek ayakta durmak dengeni güçlendirir.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Hangisi yan yan yürür: yengeç mi, kaplumbağa mı?",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Doğru! Yengeç yan yan yürür. Şimdi sen de biraz çömel ve yengeç gibi yana doğru adım at!",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Kaplumbağa yavaş yavaş ileri yürür. Yan yan yürüyen hayvan yengeçtir.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Süper yan yürüdün! Yana adım atmak vücudunu daha çevik yapar.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Hangisi kanatlarını açıp gökyüzünde süzülür: kartal mı, penguen mi?",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Aferin! Kartal kanatlarını açıp gökyüzünde süzülür. Şimdi sen de kollarını kanat gibi aç ve yavaşça kendi etrafında dön!",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Penguen uçamaz, karda paytak paytak yürür. Gökyüzünde süzülen kuş kartaldır.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Çok güzel süzüldün! Dönmek vücudunun dengesini geliştirir.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Hangisi uyandığında gerinip esner: kedi mi, balık mı?",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Doğru! Kedi uyandığında gerinip esner. Şimdi sen de yavaşça kollarını yukarı uzat, derin bir nefes al ve gerin!",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Balık suda yüzer, gerinmez. Uyandığında gerinen hayvan kedidir.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Çok güzel gerindin! Şimdi nefesin sakinleşti, jimnastiğimiz bitti.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Yaptım düğmesine bas, seni bekliyorum!",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Hadi başla!",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Süre doldu! Yaptım düğmesine bas.",
+    "game": "HayvanJimnastigi"
+  },
+  {
+    "text": "Hayvan jimnastiği zamanı! Önce ayağa kalk ve etrafında yer aç, eşyalara çarpma. Sonra hayvanı seç ve onun gibi hareket et.",
+    "game": "HayvanJimnastigi"
+  }
+]

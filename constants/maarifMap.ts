@@ -192,6 +192,18 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'muzik-durunca-don': { displayName: 'Müzik Durunca Don', alan: 'Müzik', surec: 'Müzik ve Hareket', cikti: 'MHB.3', ciktiAciklama: 'Müzik ve ritimlerle hareket ve dans edebilme; müzik durunca hareketini durdurur (dur/başla öz-düzenleme)' },
   'sakinlesme-bahcesi': { displayName: 'Sakinleşme Bahçesi', alan: 'Türkçe', surec: 'Dinleme/İzleme', cikti: 'TADB.2', ciktiAciklama: 'Dinledikleri/izledikleri durumlarla ilgili yeni anlamlar oluşturabilme; büyük duyguları tanıyıp uygun sakinleşme stratejisini (derin nefes/say/sarıl/yardım iste) seçer (öz düzenleme)', deger: 'Öz Düzenleme', badgeAlan: 'Sosyal-Duygusal' },
   'kucuk-anlatici': { displayName: 'Küçük Anlatıcı', alan: 'Türkçe', surec: 'Konuşma / Süreç Yönetimi', cikti: 'TAKB.1', ciktiAciklama: 'Konuşma sürecini yönetebilme; olayları önce-sonra sırasına dizip kendi cümleleriyle anlatır (sözlü anlatım)', badgeAlan: 'Dil (Anlatım)' },
+
+  // ---------- Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap) ----------
+  // Ölçülen Maarif boşluklarını kapatır: Sanat alanında (SNAB) hiç oyun yoktu,
+  // Müzik alanında 16 koddan yalnızca MHB.3 kapalıydı.
+  'sanat-gozlugu': { displayName: 'Sanat Gözlüğü', alan: 'Sanat', surec: 'Sanat Alanına Özgü Kavramlar', cikti: 'SNAB.1', ciktiAciklama: 'Temel sanat kavramlarını ve türlerini anlayabilme; çizgi, şekil ve sıcak/soğuk renk gibi görsel ögeleri eserde fark edip adlandırır', badgeAlan: 'Sanat' },
+  'tabloda-ne-var': { displayName: 'Tabloda Ne Var?', alan: 'Sanat', surec: 'Sanat Eseri İnceleme', cikti: 'SNAB.2', ciktiAciklama: 'Sanat eseri inceleyebilme; tablodaki renk, şekil ve sayı ayrıntılarını gözlemleyip esere ilişkin soruları yanıtlar', badgeAlan: 'Sanat' },
+  'renk-atolyesi': { displayName: 'Renk Atölyesi', alan: 'Sanat', surec: 'Sanat Etkinliği Uygulama', cikti: 'SNAB.4', ciktiAciklama: 'Sanat etkinliği uygulayabilme; motifleri tekrar ve varyasyonla renklendirerek kendi kompozisyonunu oluşturur', badgeAlan: 'Sanat' },
+  'hangi-calgi-caldi': { displayName: 'Hangi Çalgı Çaldı?', alan: 'Müzik', surec: 'Müzik Dinleme', cikti: 'MDB.3', ciktiAciklama: 'Duyduğu seslerin kaynağını anlayabilme; çalgı seslerini tınısından ayırt edip sesi çıkaran çalgıyı gösterir', badgeAlan: 'Müzik' },
+  'ses-nasil': { displayName: 'Ses Nasıl?', alan: 'Müzik', surec: 'Müzik Dinleme', cikti: 'MDB.4', ciktiAciklama: 'Dinlediği sözlü/sözsüz müzik eserlerindeki/çocuk şarkılarındaki özellikleri fark edebilme; tempo, gürlük, ses kalınlığı ve ezgi yönünü ayırt eder', badgeAlan: 'Müzik' },
+  'davul-ustasi': { displayName: 'Davul Ustası', alan: 'Müzik', surec: 'Müziksel Çalma', cikti: 'MÇB.4', ciktiAciklama: 'Müziksel çalma becerilerini sergileyebilme; duyduğu ritim kalıbını pede vurarak aynı sırayla tekrarlar', badgeAlan: 'Müzik' },
+  'odamin-krokisi': { displayName: 'Odamın Krokisi', alan: 'Sosyal', surec: 'Sosyal Alan / Mekânsal Düşünme (Kroki)', cikti: 'SAB.17', ciktiAciklama: 'Yakın çevresinde bulunan belirli bir kişi/nesne/mekânın konumunu gösteren kendi krokisini oluşturabilme; odasının planına eşyaları yönergeye göre yerleştirir', badgeAlan: 'Kavram (Konum)' },
+  'hayvan-jimnastigi': { displayName: 'Hayvan Jimnastiği', alan: 'Hareket ve Sağlık', surec: 'Hareket Becerileri', cikti: 'HSAB.1', ciktiAciklama: 'Farklı çevre ve fiziksel etkinliklerde büyük kas becerilerini etkin bir şekilde uygulayabilme; hayvan hareketlerini (zıplama, ağır adım, tek ayakta denge, yan yürüme) tanıyıp taklit eder', badgeAlan: 'Sağlık' },
 };
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */

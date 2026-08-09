@@ -122,6 +122,9 @@ async function main() {
     // Serbest/cizim oyunlarina sonradan eklenen giris yonergeleri
     const INTRO2 = join(__dirname, 'tts-phrases-intro2.json');
     if (existsSync(INTRO2)) phrases = phrases.concat(JSON.parse(readFileSync(INTRO2, 'utf8')));
+    // Maarif bosluk oyunlari (Sanat / Muzik / kroki / jimnastik)
+    const NG5 = join(__dirname, 'tts-phrases-newgames5.json');
+    if (existsSync(NG5)) phrases = phrases.concat(JSON.parse(readFileSync(NG5, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }
@@ -142,14 +145,24 @@ async function main() {
       skip++; continue;
     }
     const ct = Date.now();
-    try {
-      const buf = await generateOne(profile, p.text);
-      writeFileSync(out, buf);
-      console.log(`${tag} — ✅ ${(buf.length / 1024).toFixed(0)}KB (${((Date.now() - ct) / 1000).toFixed(0)}s)  "${p.text}"`);
-      done++;
-    } catch (e) {
-      console.log(`${tag} — ❌ ${e.message}`);
-      fail++;
+    // VoiceBox geçici olarak yanıt vermeyi kesebiliyor ("fetch failed"); tek bir
+    // hıçkırık kalan yüzlerce klibi düşürmesin diye artan beklemeyle 3 deneme.
+    let saved = false;
+    for (let attempt = 1; attempt <= 3 && !saved; attempt++) {
+      try {
+        const buf = await generateOne(profile, p.text);
+        writeFileSync(out, buf);
+        console.log(`${tag} — ✅ ${(buf.length / 1024).toFixed(0)}KB (${((Date.now() - ct) / 1000).toFixed(0)}s)  "${p.text}"`);
+        done++; saved = true;
+      } catch (e) {
+        if (attempt === 3) {
+          console.log(`${tag} — ❌ ${e.message} (3 denemede olmadı)`);
+          fail++;
+        } else {
+          console.log(`${tag} — ⚠️ ${e.message} — ${attempt * 15}s sonra tekrar denenecek`);
+          await sleep(attempt * 15000);
+        }
+      }
     }
     await sleep(400);
   }

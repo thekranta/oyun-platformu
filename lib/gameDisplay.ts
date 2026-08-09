@@ -62,6 +62,10 @@ const GAME_EMOJI: Record<string, string> = {
     'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
     // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
     'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖',
+    // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)
+    'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'renk-atolyesi': '🎨',
+    'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁',
+    'odamin-krokisi': '📍', 'hayvan-jimnastigi': '🦘',
 };
 
 export interface GameDisplay {

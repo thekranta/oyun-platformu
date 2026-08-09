@@ -129,6 +129,14 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'muzik-durunca-don': { color: '#F158B7', icon: 'musical-notes', displayTitle: 'Müzik Durunca Don', subtitle: 'Dur ve don!' },
   'sakinlesme-bahcesi': { color: '#4DB6AC', icon: 'flower-outline', displayTitle: 'Sakinleşme Bahçesi', subtitle: 'Sakinleşmeyi öğren' },
   'kucuk-anlatici': { color: '#5C6BC0', icon: 'book-outline', displayTitle: 'Küçük Anlatıcı', subtitle: 'Sırala ve anlat' },
+  'sanat-gozlugu': { color: '#7E57C2', icon: 'glasses', displayTitle: 'Sanat Gözlüğü', subtitle: 'Çizgi, şekil, renk' },
+  'tabloda-ne-var': { color: '#5E35B1', icon: 'image', displayTitle: 'Tabloda Ne Var?', subtitle: 'Tabloyu incele' },
+  'renk-atolyesi': { color: '#EC407A', icon: 'color-palette', displayTitle: 'Renk Atölyesi', subtitle: 'Motifini renklendir' },
+  'hangi-calgi-caldi': { color: '#F158B7', icon: 'musical-note', displayTitle: 'Hangi Çalgı Çaldı?', subtitle: 'Sesi tanı' },
+  'ses-nasil': { color: '#E0359A', icon: 'ear', displayTitle: 'Ses Nasıl?', subtitle: 'Hızlı mı yavaş mı?' },
+  'davul-ustasi': { color: '#C2185B', icon: 'musical-notes', displayTitle: 'Davul Ustası', subtitle: 'Ritmi tekrarla' },
+  'odamin-krokisi': { color: '#00897B', icon: 'location', displayTitle: 'Odamın Krokisi', subtitle: 'Kendi krokini yap' },
+  'hayvan-jimnastigi': { color: '#EF5350', icon: 'fitness', displayTitle: 'Hayvan Jimnastiği', subtitle: 'Hayvan gibi hareket et' },
   'yaratici-cizim': { color: '#ff9f1c', icon: 'brush', displayTitle: 'Hayal Defteri', subtitle: 'Yaratıcı ifade' },
   'muzik-calar': { color: '#EC407A', icon: 'musical-notes-outline', displayTitle: 'Müzik Kutusu', subtitle: 'Şarkı ve ritim' },
 };
@@ -174,6 +182,10 @@ export const GAME_EMOJI: Record<string, string> = {
   'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
   // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
   'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖',
+  // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)
+  'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'renk-atolyesi': '🎨',
+  'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁',
+  'odamin-krokisi': '📍', 'hayvan-jimnastigi': '🦘',
 };
 
 export const getCatalogGames = (status: GameCatalogStatus) => GAME_CATALOG.filter((game) => game.status === status);

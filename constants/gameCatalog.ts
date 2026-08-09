@@ -162,6 +162,19 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'sakinlesme-bahcesi', title: 'Sakinlesme Bahcesi', status: 'secondary', domain: 'Sosyal-duygusal', skillFocus: 'Oz duzenleme / sakinlesme stratejisi', routeKey: 'sakinlesme-bahcesi' },
   { id: 'kucuk-anlatici', title: 'Kucuk Anlatici', status: 'secondary', domain: 'Dil', skillFocus: 'Sozlu anlatim / oyku siralama', routeKey: 'kucuk-anlatici' },
 
+  // ---------- Yeni oyunlar (Sanat / Muzik / Sosyal / Hareket ve Saglik - tap) ----------
+  // Maarif bosluklarini kapatir: Sanat alaninda hic oyun yoktu, Muzik'te 16 koddan yalnizca 1 kapaliydi.
+  // Menu domaini platform desenine gore Sanat/Muzik/Kavram/Saglik
+  // (bkz. cizim oyunlari=Sanat, muzik-durunca-don=Muzik, neredeyim=konum->Kavram, vucudum=Saglik)
+  { id: 'sanat-gozlugu', title: 'Sanat Gozlugu', status: 'secondary', domain: 'Sanat', skillFocus: 'Temel sanat kavramlari (cizgi/sekil/renk)', routeKey: 'sanat-gozlugu' },
+  { id: 'tabloda-ne-var', title: 'Tabloda Ne Var?', status: 'secondary', domain: 'Sanat', skillFocus: 'Sanat eseri inceleme / gorsel cozumleme', routeKey: 'tabloda-ne-var' },
+  { id: 'renk-atolyesi', title: 'Renk Atolyesi', status: 'creative', domain: 'Sanat', skillFocus: 'Sanat etkinligi / motif ve renk uygulama', routeKey: 'renk-atolyesi' },
+  { id: 'hangi-calgi-caldi', title: 'Hangi Calgi Caldi?', status: 'secondary', domain: 'Muzik', skillFocus: 'Ses kaynagini ayirt etme (tini)', routeKey: 'hangi-calgi-caldi' },
+  { id: 'ses-nasil', title: 'Ses Nasil?', status: 'secondary', domain: 'Muzik', skillFocus: 'Muziksel ozellikler (tempo/gurluk/ton)', routeKey: 'ses-nasil' },
+  { id: 'davul-ustasi', title: 'Davul Ustasi', status: 'secondary', domain: 'Muzik', skillFocus: 'Ritim tekrari / muziksel calma', routeKey: 'davul-ustasi' },
+  { id: 'odamin-krokisi', title: 'Odamin Krokisi', status: 'secondary', domain: 'Kavram', skillFocus: 'Kendi krokisini olusturma / mekansal temsil', routeKey: 'odamin-krokisi' },
+  { id: 'hayvan-jimnastigi', title: 'Hayvan Jimnastigi', status: 'secondary', domain: 'Saglik', skillFocus: 'Buyuk kas becerileri / hareket taklidi', routeKey: 'hayvan-jimnastigi' },
+
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar' },
 ];

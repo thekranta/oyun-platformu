@@ -123,6 +123,14 @@ import ManzaraKasifi from './ManzaraKasifi';
 import MuzikDuruncaDon from './MuzikDuruncaDon';
 import SakinlesmeBahcesi from './SakinlesmeBahcesi';
 import KucukAnlatici from './KucukAnlatici';
+import SanatGozlugu from './SanatGozlugu';
+import TablodaNeVar from './TablodaNeVar';
+import RenkAtolyesi from './RenkAtolyesi';
+import HangiCalgiCaldi from './HangiCalgiCaldi';
+import SesNasil from './SesNasil';
+import DavulUstasi from './DavulUstasi';
+import OdaminKrokisi from './OdaminKrokisi';
+import HayvanJimnastigi from './HayvanJimnastigi';
 
 /**
  * Oyun sonucu bildirimi. index.tsx'teki oyunuBitir ile ayni imza.
@@ -389,4 +397,12 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'muzik-durunca-don': (c) => <MuzikDuruncaDon onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'sakinlesme-bahcesi': (c) => <SakinlesmeBahcesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'kucuk-anlatici': (c) => <KucukAnlatici onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'sanat-gozlugu': (c) => <SanatGozlugu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'tabloda-ne-var': (c) => <TablodaNeVar onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'renk-atolyesi': (c) => <RenkAtolyesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'hangi-calgi-caldi': (c) => <HangiCalgiCaldi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'ses-nasil': (c) => <SesNasil onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'davul-ustasi': (c) => <DavulUstasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'odamin-krokisi': (c) => <OdaminKrokisi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'hayvan-jimnastigi': (c) => <HayvanJimnastigi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };
