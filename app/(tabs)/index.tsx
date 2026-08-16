@@ -328,15 +328,18 @@ const GirisFormu = React.memo(function GirisFormu({
             </TouchableOpacity>
           </View>
 
-          {/* ---- TANI GOSTERGESI (ic-test surumu) ----
-              Kalem emojisine dokunarak dekoru ac/kapa; asagidaki sayilar degisiyor mu bak. */}
-          <Text style={styles.taniHud}>
-            {`odak:${focusedInput ?? 'YOK'}  e:${hud.eLen}  s:${hud.pLen}  Δ:${hud.delta}  tus:${hud.lastKey}`}
-            {'\n'}
-            {`kb:${kbHeight}  pencere:${Math.round(win.width)}x${Math.round(win.height)}  blur:${hud.blur}  degisim:${hud.degisim}`}
-            {'\n'}
-            {`render:${renderSayaci.current}  jsFPS:${jsFps}  DEKOR:${decorAcik ? 'ACIK' : 'KAPALI'}  ${BUILD_ETIKET}`}
-          </Text>
+          {/* ---- TANI GOSTERGESI ----
+              YALNIZCA native (Android tani APK'si) icin. Web'de gosterilmez:
+              hata Android'e ozgu ve canli sitede kirmizi olcum satiri rahatsiz edici. */}
+          {Platform.OS !== 'web' && (
+            <Text style={styles.taniHud}>
+              {`odak:${focusedInput ?? 'YOK'}  e:${hud.eLen}  s:${hud.pLen}  Δ:${hud.delta}  tus:${hud.lastKey}`}
+              {'\n'}
+              {`kb:${kbHeight}  pencere:${Math.round(win.width)}x${Math.round(win.height)}  blur:${hud.blur}  degisim:${hud.degisim}`}
+              {'\n'}
+              {`render:${renderSayaci.current}  jsFPS:${jsFps}  DEKOR:${decorAcik ? 'ACIK' : 'KAPALI'}  ${BUILD_ETIKET}`}
+            </Text>
+          )}
         </View>
 
         {/* Alt butonlar artik ScrollView ICINDE ve kosullu KALDIRILMIYOR —

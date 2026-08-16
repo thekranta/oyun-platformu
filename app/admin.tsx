@@ -175,18 +175,45 @@ export default function AdminPanel() {
             });
 
             if (error || !data.user) {
-                alert('Hatalı e-posta veya şifre!');
+                // Girisin NEDEN basarisiz oldugunu ayirt et (once hepsi tek mesaja dusuyordu).
+                const m = error?.message || '';
+                if (m.includes('Email not confirmed')) {
+                    alert('E-posta adresin henüz doğrulanmamış. Gelen kutundaki doğrulama bağlantısına tıkla.');
+                } else if (m.includes('Invalid login credentials')) {
+                    alert('Hatalı e-posta veya şifre.');
+                } else {
+                    alert(`Giriş yapılamadı: ${m || 'bilinmeyen hata'}`);
+                }
                 return;
             }
 
+            // .single() sifir satirda HATA firlatir; .maybeSingle() ayrimi yapabilmemizi saglar:
+            // tablo/politika sorunu mu, yoksa gercekten yetki yoklugu mu?
             const { data: adminRow, error: adminError } = await supabase
                 .from('admins')
                 .select('display_name')
                 .eq('user_id', data.user.id)
-                .single();
+                .maybeSingle();
 
-            if (adminError || !adminRow) {
-                alert('Bu hesabın admin paneline erişim yetkisi yok.');
+            if (adminError) {
+                // Tablo yok, RLS okuma politikasi yok, vb. — kurulum eksigi.
+                alert(
+                    'Admin yetkisi kontrol edilemedi (kurulum eksik olabilir).\n\n' +
+                    `Teknik detay: ${adminError.message}\n\n` +
+                    'Çözüm: supabase_migrations/fix_rls_and_admins.sql ve grant_admin.sql ' +
+                    'dosyalarını Supabase SQL Editor\'da çalıştır.'
+                );
+                await supabase.auth.signOut();
+                return;
+            }
+
+            if (!adminRow) {
+                alert(
+                    'Bu hesap geçerli ama admin yetkisi yok.\n\n' +
+                    `Hesap: ${data.user.email}\n\n` +
+                    'Çözüm: supabase_migrations/grant_admin.sql dosyasını (içindeki e-posta ' +
+                    'bu hesabınkiyle aynı olacak şekilde) Supabase SQL Editor\'da çalıştır.'
+                );
                 await supabase.auth.signOut();
                 return;
             }
