@@ -4,32 +4,34 @@
 -- Admin paneline (/admin) giris IKI sey ister:
 --   1) Gecerli bir Supabase Auth hesabi (e-posta + sifre)
 --   2) O hesabin `admins` tablosunda bir satiri
--- Bu dosya once DURUMU gosterir, sonra eksigi tamamlar.
 --
--- KULLANIM: Supabase > SQL Editor. E-postayi kendi adresinle degistir
--- (asagida 3 yerde geciyor).
+-- KULLANIM: Supabase > SQL Editor > tumunu secip Run.
+-- E-postayi SADECE asagidaki TEK satirda degistir.
+-- Tekrar calistirmak guvenlidir.
 -- ============================================================
+
+-- >>>>>>>>>>>>>>  BURAYI DEGISTIR (tek yer)  <<<<<<<<<<<<<<
+drop table if exists _hedef;
+create temp table _hedef(email text);
+insert into _hedef values ('unal.muhammed@outlook.com');
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 
 -- ---------- 1) TESHIS: hangi adim eksik? ----------
 select
-  (select count(*) from auth.users where email = 'muhammed.28unal@gmail.com')            as auth_hesabi_var_mi,
-  (select to_regclass('public.admins') is not null)                                       as admins_tablosu_var_mi,
-  (select count(*) from admins a join auth.users u on u.id = a.user_id
-     where u.email = 'muhammed.28unal@gmail.com')                                         as admin_satiri_var_mi,
-  (select email_confirmed_at is not null from auth.users
-     where email = 'muhammed.28unal@gmail.com' limit 1)                                    as eposta_dogrulanmis_mi;
+  (select count(*) from auth.users u, _hedef h where u.email = h.email)          as auth_hesabi_var_mi,
+  (select to_regclass('public.admins') is not null)                              as admins_tablosu_var_mi,
+  (select count(*) from admins a join auth.users u on u.id = a.user_id, _hedef h
+     where u.email = h.email)                                                    as admin_satiri_var_mi,
+  (select u.email_confirmed_at is not null from auth.users u, _hedef h
+     where u.email = h.email limit 1)                                            as eposta_dogrulanmis_mi;
 
--- Beklenen: hepsi 1 / true.
---   auth_hesabi_var_mi = 0  -> once uygulamadan bu e-posta ile KAYIT OL
---   admins_tablosu_var_mi = false -> asagidaki 2. adimi calistir
---   admin_satiri_var_mi = 0 -> asagidaki 3. adimi calistir
---   eposta_dogrulanmis_mi = false -> gelen kutusundaki dogrulama baglantisina tikla
---                                    (ya da Supabase > Authentication > Users > kullaniciyi
---                                     ac > "Confirm email")
+-- Beklenen: auth_hesabi=1, admins_tablosu=true, admin_satiri=1, dogrulanmis=true
+--   auth_hesabi_var_mi = 0 -> bu e-posta ile Supabase'de hesap YOK; once uygulamadan kayit ol
+--   admin_satiri_var_mi = 0 -> asagidaki 3. adim bunu duzeltir
 
 
 -- ---------- 2) ONARIM: admins tablosu + okuma politikasi ----------
--- (fix_rls_and_admins.sql calistirilmadiysa gerekir; tekrar calistirmak guvenli)
 create table if not exists admins (
   user_id uuid primary key references auth.users(id) on delete cascade,
   display_name text not null,
@@ -49,13 +51,14 @@ create policy "self_read_admin_row" on admins
 -- ---------- 3) ONARIM: bu e-postaya admin yetkisi ver ----------
 insert into admins (user_id, display_name)
 select u.id, 'Yönetici'
-from auth.users u
-where u.email = 'muhammed.28unal@gmail.com'
+from auth.users u, _hedef h
+where u.email = h.email
   and not exists (select 1 from admins a where a.user_id = u.id);
 
 
--- ---------- 4) DOGRULAMA: artik admin misin? ----------
+-- ---------- 4) DOGRULAMA ----------
+-- Bu sorgu senin e-postani donduruyorsa admin panelinden girebilirsin.
 select a.display_name, u.email, u.email_confirmed_at is not null as dogrulanmis
 from admins a
-join auth.users u on u.id = a.user_id;
--- Bu sorgu senin e-postani donduruyorsa admin panelinden girebilirsin.
+join auth.users u on u.id = a.user_id
+order by u.email;

@@ -200,8 +200,8 @@ export default function AdminPanel() {
                 alert(
                     'Admin yetkisi kontrol edilemedi (kurulum eksik olabilir).\n\n' +
                     `Teknik detay: ${adminError.message}\n\n` +
-                    'Çözüm: supabase_migrations/fix_rls_and_admins.sql ve grant_admin.sql ' +
-                    'dosyalarını Supabase SQL Editor\'da çalıştır.'
+                    'Çözüm: supabase_migrations/admin_teshis.sql dosyasını Supabase SQL ' +
+                    'Editor\'da çalıştır — eksik tabloyu ve okuma politikasını da onarır.'
                 );
                 await supabase.auth.signOut();
                 return;
@@ -211,8 +211,8 @@ export default function AdminPanel() {
                 alert(
                     'Bu hesap geçerli ama admin yetkisi yok.\n\n' +
                     `Hesap: ${data.user.email}\n\n` +
-                    'Çözüm: supabase_migrations/grant_admin.sql dosyasını (içindeki e-posta ' +
-                    'bu hesabınkiyle aynı olacak şekilde) Supabase SQL Editor\'da çalıştır.'
+                    'Çözüm: supabase_migrations/admin_teshis.sql dosyasını aç, en üstteki TEK ' +
+                    'e-posta satırını yukarıdaki hesapla değiştir, Supabase SQL Editor\'da çalıştır.'
                 );
                 await supabase.auth.signOut();
                 return;
