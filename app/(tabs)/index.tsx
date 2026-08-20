@@ -124,7 +124,7 @@ function FloatingDeco({ emoji, style, delay = 0 }: { emoji: string; style?: any;
 }
 
 // Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
-const BUILD_ETIKET = 'b5-tani';
+const BUILD_ETIKET = 'b6-tani';
 
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
@@ -174,9 +174,17 @@ const GirisFormu = React.memo(function GirisFormu({
   // ---- TANI GOSTERGESI (yalniz bu ic-test surumunde) ----
   // ONEMLI: tus basina setState YAPILMAZ — olcum sistemi bozmasin diye degerler
   // ref'te birikir ve saniyede bir ekrana kopyalanir.
-  const hudRef = useRef({ eLen: 0, pLen: 0, lastKey: '-', delta: '-', blur: 0, degisim: 0 });
+  //
+  // KRITIK DUZELTME: bu zamanlayici DAHA ONCE odak varken bile her saniye
+  // setState cagirip GirisFormu'yu (TextInput'larin da icinde oldugu bilesen)
+  // yeniden render ediyordu. Ilk tani turunda blur:39 / degisim:0 / e:0 gozlendi
+  // — yani alan odaga girip 39 kez odagi kaybetmis ama TEK KARAKTER bile
+  // girmemis. Bu, tanı aracının olcmeye calistigi sorunu kendisinin yaratma/
+  // agirlastirma ihtimalini gosteriyor. Simdi zamanlayici ODAKLIYKEN durur,
+  // blur oldugu AN anlik yenilenir (boylece test sonrasi sayilar yine gorunur).
+  const hudRef = useRef({ eLen: 0, pLen: 0, lastKey: '-', delta: '-', blur: 0, degisim: 0, jsFps: 0 });
   const [hud, setHud] = useState(hudRef.current);
-  const [jsFps, setJsFps] = useState(0);
+  const focusedRef = useRef(false);
   const renderSayaci = useRef(0);
   renderSayaci.current += 1;
 
@@ -187,7 +195,12 @@ const GirisFormu = React.memo(function GirisFormu({
     // burada gorunur — kok neden animasyon yuku ise bu sayi dramatik degisir.
     let kare = 0;
     let raf = requestAnimationFrame(function tick() { kare += 1; raf = requestAnimationFrame(tick); });
-    const iv = setInterval(() => { setJsFps(kare); kare = 0; setHud({ ...hudRef.current }); }, 1000);
+    const iv = setInterval(() => {
+      hudRef.current.jsFps = kare; kare = 0;
+      // ODAKLIYKEN setState YOK: input'un ustundeki bileseni saniyede bir
+      // yeniden render etmek odak/klavye ile catisiyor olabilir.
+      if (!focusedRef.current) setHud({ ...hudRef.current });
+    }, 1000);
     return () => { show.remove(); hide.remove(); cancelAnimationFrame(raf); clearInterval(iv); };
   }, []);
 
@@ -261,10 +274,16 @@ const GirisFormu = React.memo(function GirisFormu({
               // ("hizli bir gecis" tarifine birebir uyar) — kapatiliyor.
               disableFullscreenUI
               onFocus={() => {
+                focusedRef.current = true;
                 setFocusedInput('email');
                 requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
               }}
-              onBlur={() => { setFocusedInput(null); hudRef.current.blur += 1; }}
+              onBlur={() => {
+                focusedRef.current = false;
+                setFocusedInput(null);
+                hudRef.current.blur += 1;
+                setHud({ ...hudRef.current }); // aninda yenile — test sonrasi sayilar hemen gorunsun
+              }}
               returnKeyType="next"
               onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
@@ -293,10 +312,16 @@ const GirisFormu = React.memo(function GirisFormu({
               importantForAutofill="no"
               disableFullscreenUI
               onFocus={() => {
+                focusedRef.current = true;
                 setFocusedInput('password');
                 requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 70, animated: true }));
               }}
-              onBlur={() => { setFocusedInput(null); hudRef.current.blur += 1; }}
+              onBlur={() => {
+                focusedRef.current = false;
+                setFocusedInput(null);
+                hudRef.current.blur += 1;
+                setHud({ ...hudRef.current });
+              }}
               returnKeyType="go"
               onSubmitEditing={submit}
             />
@@ -337,7 +362,7 @@ const GirisFormu = React.memo(function GirisFormu({
               {'\n'}
               {`kb:${kbHeight}  pencere:${Math.round(win.width)}x${Math.round(win.height)}  blur:${hud.blur}  degisim:${hud.degisim}`}
               {'\n'}
-              {`render:${renderSayaci.current}  jsFPS:${jsFps}  DEKOR:${decorAcik ? 'ACIK' : 'KAPALI'}  ${BUILD_ETIKET}`}
+              {`render:${renderSayaci.current}  jsFPS:${hud.jsFps}  DEKOR:${decorAcik ? 'ACIK' : 'KAPALI'}  ${BUILD_ETIKET}`}
             </Text>
           )}
         </View>
