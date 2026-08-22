@@ -40,7 +40,7 @@ export default function FlagStrip({ bayraklar, onBayrakPress }: Props) {
 }
 
 const st = StyleSheet.create({
-  wrap: { height: 40, borderBottomWidth: 1, borderBottomColor: C.line },
+  wrap: { height: 40, flexGrow: 0, flexShrink: 0, borderBottomWidth: 1, borderBottomColor: C.line },
   inner: { alignItems: 'center', paddingHorizontal: S.lg, gap: S.sm },
   chip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 100, borderWidth: 1, backgroundColor: '#fff' },
 });

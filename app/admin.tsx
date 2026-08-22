@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
 import StudentStatsModal from '../components/StudentStatsModal';
 import BucketTabs from '../components/admin/BucketTabs';
@@ -64,7 +64,7 @@ export default function AdminPanel() {
       const { data: adminRow, error: adminError } = await supabase.from('admins').select('display_name').eq('user_id', data.user.id).maybeSingle();
       if (adminError) {
         alert(
-          'Admin yetkisi kontrol edilemedi (kurulum eksik olabilir).\n\n' +
+          'Uzman yetkisi kontrol edilemedi (kurulum eksik olabilir).\n\n' +
           `Teknik detay: ${adminError.message}\n\n` +
           'Çözüm: supabase_migrations/admin_teshis.sql dosyasını Supabase SQL Editor\'da çalıştır.'
         );
@@ -73,7 +73,7 @@ export default function AdminPanel() {
       }
       if (!adminRow) {
         alert(
-          'Bu hesap geçerli ama admin yetkisi yok.\n\n' +
+          'Bu hesap geçerli ama uzman yetkisi yok.\n\n' +
           `Hesap: ${data.user.email}\n\n` +
           'Çözüm: supabase_migrations/admin_teshis.sql dosyasını aç, en üstteki TEK ' +
           'e-posta satırını yukarıdaki hesapla değiştir, Supabase SQL Editor\'da çalıştır.'
@@ -680,7 +680,7 @@ ChildhoodTech Ekibi
       <DynamicBackground>
         <View style={st.centerContainer}>
           <View style={st.loginBox}>
-            <Text style={st.loginTitle}>Admin Girişi 🔒</Text>
+            <Text style={st.loginTitle}>Uzman Girişi 🔒</Text>
             <TextInput style={st.input} placeholder="E-posta" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholderTextColor={C.inkLight} />
             <TextInput style={st.input} placeholder="Şifre" value={password} onChangeText={setPassword} secureTextEntry placeholderTextColor={C.inkLight} />
             <TouchableOpacity style={st.loginButton} onPress={handleLogin} disabled={isLoggingIn}>
@@ -728,7 +728,7 @@ ChildhoodTech Ekibi
                 sort={sort}
                 onSort={(s) => { setSort(s); setOffset(0); }}
               />
-              <View style={{ flex: 1 }}>
+              <ScrollView style={{ flex: 1 }}>
                 {loading ? (
                   <ActivityIndicator style={{ marginTop: 30 }} color={C.accent} />
                 ) : kayitlar.length === 0 ? (
@@ -738,7 +738,7 @@ ChildhoodTech Ekibi
                     <QueueRow key={k.id} kayit={k} secili={i === selectedIdx} benimAdim={loggedInUser} onPress={() => setSelectedIdx(i)} />
                   ))
                 )}
-              </View>
+              </ScrollView>
               <View style={st.railFoot}>
                 <Text style={st.pg}>{toplam === 0 ? '0' : `${offset + 1}–${Math.min(offset + PAGE_SIZE, toplam)}`} / {toplam}</Text>
                 <View style={{ flexDirection: 'row', gap: 8 }}>

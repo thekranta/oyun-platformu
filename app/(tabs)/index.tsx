@@ -371,7 +371,7 @@ const GirisFormu = React.memo(function GirisFormu({
             klavye acilinca agactan view silinmesi sicramaya yol aciyordu. */}
         <View style={{ marginTop: 18, marginBottom: 8, flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
           <TouchableOpacity style={styles.adminButtonBottom} onPress={onAdmin}>
-            <Text style={styles.adminButtonText}>🔑 Admin</Text>
+            <Text style={styles.adminButtonText}>🔑 Uzman</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.adminButtonBottom, { backgroundColor: 'rgba(123, 31, 162, 0.25)', borderColor: 'rgba(123, 31, 162, 0.4)' }]}
