@@ -117,6 +117,19 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
   const confettiRef = useRef<ConfettiCannon>(null);
   const correctScale = useRef(new Animated.Value(1)).current;
   const wrongShake = useRef(new Animated.Value(0)).current;
+  // Bos kutunun (?) goze carpmasi icin surekli nefes alma animasyonu — cocuklar
+  // hareket eden seyleri sabit duran bir isaretten cok daha kolay fark ediyor.
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseScale, { toValue: 1.08, duration: 650, useNativeDriver: true }),
+        Animated.timing(pulseScale, { toValue: 1, duration: 650, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulseScale]);
   const startTimeRef = useRef(Date.now());
   const dropZoneRef = useRef<View>(null);
   // Asama-gecis/oyun-bitis setTimeout'lari; unmount'ta temizlenmezse cocuk cikis
@@ -246,7 +259,7 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
                     styles.missingCard,
                     feedback === 'correct' && styles.missingCorrect,
                     feedback === 'wrong' && styles.missingWrong,
-                    { transform: [{ scale: correctScale }, { translateX: wrongShake }] },
+                    { transform: [{ scale: correctScale }, { scale: pulseScale }, { translateX: wrongShake }] },
                   ]}
                 >
                   <Text style={styles.missingText} selectable={false}>
@@ -386,14 +399,20 @@ const styles = StyleSheet.create({
     userSelect: 'none',
   },
   missingCard: {
+    borderWidth: 4,
     borderStyle: 'dashed',
-    borderColor: '#ff7043',
-    backgroundColor: '#ffe0b2',
+    borderColor: '#FF5252',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#FF5252',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
   },
   missingText: {
-    fontSize: 36,
+    fontSize: 42,
     fontWeight: '900',
-    color: '#5d4037',
+    color: '#FF5252',
     userSelect: 'none',
   },
   missingCorrect: {
