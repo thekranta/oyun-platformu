@@ -124,7 +124,7 @@ function FloatingDeco({ emoji, style, delay = 0 }: { emoji: string; style?: any;
 }
 
 // Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
-const BUILD_ETIKET = 'b6-tani';
+const BUILD_ETIKET = 'b7-tani';
 
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
