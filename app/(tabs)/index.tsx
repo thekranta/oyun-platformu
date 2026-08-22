@@ -7,7 +7,7 @@ import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, Keyboard, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Animated, Dimensions, Image, Keyboard, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import {
   createDailyGamePlan,
   GAME_CARD_META,
@@ -17,6 +17,7 @@ import {
   MENU_CATEGORIES,
 } from '../../lib/menuHelpers';
 import { useAuth } from '../../hooks/useAuth';
+import { asset } from '../../lib/assetMap';
 import { supabase } from '../../lib/supabase';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
@@ -238,7 +239,7 @@ const GirisFormu = React.memo(function GirisFormu({
           { width: isMobile ? '90%' : undefined, maxWidth: 420 }
         ]}>
           <View style={styles.titleContainer}>
-            <Text style={styles.titleEmoji}>🎓</Text>
+            <Image source={asset('/images/icon.png')} style={styles.logoImage} />
             <Text style={styles.girisBaslik}>Okul Öncesi Akademi</Text>
             {/* A/B ANAHTARI: kalemE dokunmak arka plan animasyonlarini acip kapatir.
                 Kapatinca yazma/silme duzeliyorsa kok neden kesinlesir. */}
@@ -829,6 +830,12 @@ const styles = StyleSheet.create({
   },
   titleEmoji: {
     fontSize: 32,
+    marginHorizontal: 8,
+  },
+  logoImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
     marginHorizontal: 8,
   },
   girisBaslik: {
