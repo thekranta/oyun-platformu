@@ -5,6 +5,7 @@ import {
     Alert,
     Animated,
     Dimensions,
+    Image,
     Platform,
     ScrollView,
     StyleSheet,
@@ -18,6 +19,7 @@ import { ReportEngine } from '../services/ReportEngine';
 import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyReport';
 import { getGameDisplay } from '../lib/gameDisplay';
 import { supabase } from '../lib/supabase';
+import { asset } from '../lib/assetMap';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -766,7 +768,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             <DynamicBackground>
                 <View style={styles.loadingContainer}>
                     <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                        <Text style={styles.loadingEmoji}>🎓</Text>
+                        <Image source={asset('/images/icon.png')} style={styles.loadingLogo} resizeMode="contain" />
                     </Animated.View>
                     <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 16 }} />
                     <Text style={styles.loadingText}>Veriler yükleniyor...</Text>
@@ -1597,7 +1599,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
                     {/* Footer */}
                     <View style={styles.footer}>
-                        <Text style={styles.footerEmoji}>🎓</Text>
+                        <Image source={asset('/images/icon.png')} style={styles.footerLogo} resizeMode="contain" />
                         <Text style={styles.footerText}>ChildhoodTech Akademi</Text>
                         <Text style={styles.footerSubtext}>Çocuğunuzun gelişimini birlikte takip ediyoruz 💜</Text>
                     </View>
@@ -1626,6 +1628,11 @@ const styles = StyleSheet.create({
     },
     loadingEmoji: {
         fontSize: 60,
+    },
+    loadingLogo: {
+        width: 72,
+        height: 72,
+        borderRadius: 16,
     },
     loadingText: {
         marginTop: 16,
@@ -2044,6 +2051,11 @@ const styles = StyleSheet.create({
     },
     footerEmoji: {
         fontSize: 32,
+    },
+    footerLogo: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
     },
     footerText: {
         fontSize: 16,

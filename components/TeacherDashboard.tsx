@@ -4,6 +4,7 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    Image,
     Modal,
     Platform,
     ScrollView,
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { requestGeminiAnalysis } from '../services/geminiClient';
+import { asset } from '../lib/assetMap';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -466,7 +468,7 @@ export default function TeacherDashboard({
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <Text style={styles.loadingEmoji}>🎓</Text>
+                <Image source={asset('/images/icon.png')} style={styles.loadingLogo} resizeMode="contain" />
                 <ActivityIndicator size="large" color="#FF6B6B" />
                 <Text style={styles.loadingText}>Yükleniyor...</Text>
             </View>
@@ -866,6 +868,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFF9F0' },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF9F0' },
     loadingEmoji: { fontSize: 64, marginBottom: 20 },
+    loadingLogo: { width: 80, height: 80, borderRadius: 18, marginBottom: 20 },
     loadingText: { marginTop: 16, fontSize: 18, color: '#666', fontWeight: '500' },
 
     // Header

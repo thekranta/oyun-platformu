@@ -1,7 +1,8 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
+import { asset } from '../lib/assetMap';
 import StudentStatsModal from '../components/StudentStatsModal';
 import BucketTabs from '../components/admin/BucketTabs';
 import ClaimColumn from '../components/admin/ClaimColumn';
@@ -680,6 +681,7 @@ ChildhoodTech Ekibi
       <DynamicBackground>
         <View style={st.centerContainer}>
           <View style={st.loginBox}>
+            <Image source={asset('/images/icon.png')} style={st.loginLogo} resizeMode="contain" />
             <Text style={st.loginTitle}>Uzman Girişi 🔒</Text>
             <TextInput style={st.input} placeholder="E-posta" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholderTextColor={C.inkLight} />
             <TextInput style={st.input} placeholder="Şifre" value={password} onChangeText={setPassword} secureTextEntry placeholderTextColor={C.inkLight} />
@@ -846,6 +848,7 @@ const st = StyleSheet.create({
   app: { flex: 1, backgroundColor: C.bg },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   loginBox: { backgroundColor: '#fff', borderRadius: 20, padding: 28, width: '100%', maxWidth: 360, gap: 12 },
+  loginLogo: { width: 56, height: 56, borderRadius: 14, alignSelf: 'center', marginBottom: 10 },
   loginTitle: { fontSize: F.screen, fontWeight: '700', color: C.ink, textAlign: 'center', marginBottom: 8 },
   input: { borderWidth: 1, borderColor: C.line, borderRadius: 10, padding: 12, fontSize: F.small + 1, color: C.ink },
   loginButton: { backgroundColor: C.accent, borderRadius: 10, padding: 13, alignItems: 'center', marginTop: 4 },
