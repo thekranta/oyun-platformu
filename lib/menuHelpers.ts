@@ -214,6 +214,10 @@ export const MENU_CATEGORIES: MenuCategory[] = [
 
 export const getGamesByDomain = (domain: string) => GAME_CATALOG.filter((game) => game.domain === domain);
 
+// Keşif Ormanı: kategori kimliğine göre oyunlar (bkz. constants/discoveryForestCategories.ts).
+export const getGamesByForestCategory = (categoryId: string) =>
+  GAME_CATALOG.filter((game) => game.forestCategory === categoryId);
+
 export const getTodayKey = () => {
   const now = new Date();
   const year = now.getFullYear();

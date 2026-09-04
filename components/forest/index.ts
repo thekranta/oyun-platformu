@@ -1,0 +1,1 @@
+export { ForestCategoryCard } from './ForestCategoryCard';

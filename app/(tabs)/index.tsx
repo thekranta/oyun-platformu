@@ -1,7 +1,6 @@
 import DynamicBackground from '@/components/DynamicBackground';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import GameErrorBoundary from '@/components/GameErrorBoundary';
-import { SONGS } from '@/components/MuzikCalar';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,14 +11,15 @@ import {
   createDailyGamePlan,
   GAME_CARD_META,
   GAME_EMOJI,
-  getGamesByDomain,
+  getGamesByForestCategory,
   getTodayKey,
-  MENU_CATEGORIES,
 } from '../../lib/menuHelpers';
 import { useAuth } from '../../hooks/useAuth';
 import { asset } from '../../lib/assetMap';
 import { supabase } from '../../lib/supabase';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
+import { DISCOVERY_FOREST_CATEGORIES } from '../../constants/discoveryForestCategories';
+import { ForestCategoryCard } from '../../components/forest';
 
 // Cloudflare Turnstile Sitekey
 const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
@@ -616,8 +616,8 @@ export default function App() {
   }
 
   if (asama === 'menu') {
-    const activeCategory = selectedCategory ? MENU_CATEGORIES.find((c) => c.domain === selectedCategory) : null;
-    const categoryGames = selectedCategory ? getGamesByDomain(selectedCategory) : [];
+    const activeCategory = selectedCategory ? DISCOVERY_FOREST_CATEGORIES.find((c) => c.id === selectedCategory) : null;
+    const categoryGames = selectedCategory ? getGamesByForestCategory(selectedCategory) : [];
 
     return (
       <DynamicBackground>
@@ -654,26 +654,48 @@ export default function App() {
             </WiggleButton>
           </View>
 
-          {/* Kategori kartları */}
-          <View style={styles.catGrid}>
-            {MENU_CATEGORIES.map((cat, i) => {
-              const count = getGamesByDomain(cat.domain).length;
-              if (count === 0) return null;
-              return (
-                <BouncyCard
-                  key={cat.domain}
-                  delay={i * 80}
-                  onPress={() => setSelectedCategory(cat.domain)}
-                  style={[styles.catCard, gradientStyle(cat.gradient[0], cat.gradient[1], cat.color), { shadowColor: cat.shadow }]}
-                >
-                  <BobbingEmoji emoji={cat.emoji} size={46} delay={i * 100} style={styles.catEmoji} />
-                  <Text style={styles.catLabel} numberOfLines={1}>{cat.label}</Text>
-                  <View style={styles.catCountPill}>
-                    <Text style={styles.catCountText}>{cat.domain === 'Muzik' ? `${SONGS.length} şarkı` : `${count} oyun`}</Text>
-                  </View>
-                </BouncyCard>
-              );
-            })}
+          {/* Keşif Ormanı — grid değil, kıvrılan bir patika: sola/ortaya/sağa kayan
+              düğümler + aralarında iz noktaları + hafif eğim, "macera haritası" hissi versin. */}
+          <View style={styles.forestHeader}>
+            <Text style={styles.forestTitle}>🌲 Keşif Ormanı</Text>
+            <Text style={styles.forestSubtitle}>Bugün hangi patikaya gidelim?</Text>
+          </View>
+          <View style={styles.pathWrap}>
+            {(() => {
+              const ALIGN: ('flex-start' | 'center' | 'flex-end')[] = ['center', 'flex-end', 'center', 'flex-start'];
+              const ROT = [-3, 2, -2, 3, -1.5, 2.5];
+              let nodeIndex = 0;
+              return DISCOVERY_FOREST_CATEGORIES.map((cat, i) => {
+                const count = getGamesByForestCategory(cat.id).length;
+                if (count === 0) return null;
+                const n = nodeIndex++;
+                const align = ALIGN[n % ALIGN.length];
+                const rotate = `${ROT[n % ROT.length]}deg`;
+                const big = count >= 15;
+                return (
+                  <React.Fragment key={cat.id}>
+                    {n > 0 && (
+                      <View style={styles.pathConnector}>
+                        <View style={styles.pathDot} />
+                        <View style={styles.pathDot} />
+                        <View style={styles.pathDot} />
+                      </View>
+                    )}
+                    <View style={[styles.pathRow, { justifyContent: align }]}>
+                      <View style={{ transform: [{ rotate }] }}>
+                        <ForestCategoryCard
+                          category={cat}
+                          delay={n * 90}
+                          gameCount={count}
+                          size={big ? 172 : 140}
+                          onPress={() => setSelectedCategory(cat.id)}
+                        />
+                      </View>
+                    </View>
+                  </React.Fragment>
+                );
+              });
+            })()}
           </View>
 
           <TouchableOpacity style={styles.logoutBtn} onPress={cikisYap} activeOpacity={0.85}>
@@ -691,10 +713,13 @@ export default function App() {
           <View style={styles.sheetOverlay}>
             <TouchableOpacity style={styles.sheetBackdrop} activeOpacity={1} onPress={() => setSelectedCategory(null)} />
             <View style={styles.sheet}>
-              <View style={[styles.sheetHeader, gradientStyle(activeCategory?.gradient[0] || '#7E57C2', activeCategory?.gradient[1] || '#5A1BA8', activeCategory?.color || '#7E57C2')]}>
-                <Text style={styles.sheetTitle}>{activeCategory?.emoji} {activeCategory?.label}</Text>
+              <View style={[styles.sheetHeader, { backgroundColor: activeCategory?.accentColor || '#7E57C2' }]}>
+                <View>
+                  <Text style={styles.sheetTitle}>{activeCategory?.forestName}</Text>
+                  <Text style={styles.sheetSubtitle}>{activeCategory?.maarifArea}</Text>
+                </View>
                 <TouchableOpacity style={styles.sheetClose} onPress={() => setSelectedCategory(null)} activeOpacity={0.7}>
-                  <Ionicons name="close" size={26} color="#fff" />
+                  <Ionicons name="close" size={26} color="#2D3142" />
                 </TouchableOpacity>
               </View>
               {categoryGames.some(g => g.adaptive) && (
@@ -990,12 +1015,13 @@ const styles = StyleSheet.create({
   adventureBtn: { backgroundColor: '#fff', borderRadius: 18, paddingVertical: 14, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 4 },
   adventureBtnText: { color: '#FF3D81', fontSize: 20, fontWeight: '900' },
 
-  catGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, maxWidth: 560, marginBottom: 4 },
-  catCard: { width: 158, minHeight: 176, borderRadius: 26, paddingVertical: 18, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#4FACFE', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.35, shadowRadius: 1, elevation: 8 },
-  catEmoji: { textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 4 },
-  catLabel: { color: '#fff', fontSize: 17, lineHeight: 22, fontWeight: '900', marginTop: 6, textAlign: 'center', textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
-  catCountPill: { marginTop: 8, backgroundColor: 'rgba(255,255,255,0.28)', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999 },
-  catCountText: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  forestHeader: { alignItems: 'center', marginBottom: 14 },
+  forestTitle: { fontSize: 20, fontWeight: '900', color: '#1B5E20', textAlign: 'center' },
+  forestSubtitle: { fontSize: 13, fontWeight: '600', color: '#0B3D66', opacity: 0.7, marginTop: 2, textAlign: 'center' },
+  pathWrap: { width: '100%', maxWidth: 440, marginBottom: 4 },
+  pathRow: { flexDirection: 'row', width: '100%' },
+  pathConnector: { alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6 },
+  pathDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(11,61,102,0.28)' },
 
   logoutBtn: { marginTop: 26, backgroundColor: 'rgba(255,82,82,0.92)', paddingVertical: 12, paddingHorizontal: 28, borderRadius: 22, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
   logoutText: { color: '#fff', fontSize: 16, fontWeight: '800' },
@@ -1005,8 +1031,9 @@ const styles = StyleSheet.create({
   sheetBackdrop: { ...StyleSheet.absoluteFillObject },
   sheet: { backgroundColor: '#F5F7FF', borderTopLeftRadius: 30, borderTopRightRadius: 30, maxHeight: '86%', overflow: 'hidden' },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 18, paddingHorizontal: 22, backgroundColor: '#7E57C2' },
-  sheetTitle: { color: '#fff', fontSize: 22, fontWeight: '900', textShadowColor: 'rgba(0,0,0,0.18)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
-  sheetClose: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.25)', alignItems: 'center', justifyContent: 'center' },
+  sheetTitle: { color: '#2D3142', fontSize: 22, fontWeight: '900' },
+  sheetSubtitle: { color: '#2D3142', opacity: 0.7, fontSize: 13, fontWeight: '700', marginTop: 2 },
+  sheetClose: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.55)', alignItems: 'center', justifyContent: 'center' },
   sheetGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, padding: 20, paddingBottom: 40 },
   gameCard: { width: 150, height: 158, borderRadius: 26, padding: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: '#607D8B', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.22, shadowRadius: 4, elevation: 5 },
   gameEmojiBadge: { width: 82, height: 82, borderRadius: 41, backgroundColor: 'rgba(255,255,255,0.92)', alignItems: 'center', justifyContent: 'center', marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 2 },
