@@ -24,8 +24,10 @@ export function hesaplaBayraklar(params: {
   analiz: AyrisikAnaliz | null;
   beklenenKod: string;
   gelisimGecmisiVarMi: boolean;
+  /** Kayıttaki gerçek süre (sn) — metindeki "X saniye" iddiasını doğrulamak için. */
+  gercekSure?: number | null;
 }): Bayrak[] {
-  const { analiz, beklenenKod, gelisimGecmisiVarMi } = params;
+  const { analiz, beklenenKod, gelisimGecmisiVarMi, gercekSure } = params;
   const bayraklar: Bayrak[] = [];
 
   if (!analiz) return bayraklar;
@@ -68,6 +70,25 @@ export function hesaplaBayraklar(params: {
       metin: '🚩 Dayanaksız seyir: geçmiş veri metinde yok',
       hedefBolum: seyirBolumu.baslik,
     });
+  }
+
+  // 5) Dayanaksız süre iddiası — metin "X saniye" gibi somut bir süre söylüyor ama
+  //    kayıtta süre yok (0/null) ya da metnin söylediği sayı gerçek süreden çok
+  //    farklı: AI'nin kendisine verilmeyen bir veriyi uydurduğunun işareti.
+  const sureEslesme = analiz.ham.match(/(\d+)\s*saniye/i);
+  if (sureEslesme) {
+    const iddiaEdilenSure = parseInt(sureEslesme[1], 10);
+    const sureYok = !gercekSure || gercekSure <= 0;
+    const farkliSure = !sureYok && gercekSure != null && Math.abs(iddiaEdilenSure - gercekSure) > Math.max(5, gercekSure * 0.25);
+    if (sureYok || farkliSure) {
+      bayraklar.push({
+        id: 'dayanaksiz-sure',
+        seviye: 'hata',
+        metin: sureYok
+          ? `🚩 Dayanaksız süre: metin "${iddiaEdilenSure} saniye" diyor ama kayıtlı süre yok`
+          : `🚩 Süre uyuşmazlığı: metin "${iddiaEdilenSure} saniye" diyor, kayıtlı süre ${gercekSure} sn`,
+      });
+    }
   }
 
   return bayraklar;

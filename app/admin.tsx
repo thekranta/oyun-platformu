@@ -160,8 +160,8 @@ export default function AdminPanel() {
   const analiz = useMemo(() => ayristirAnaliz(secili?.yapay_zeka_yorumu), [secili?.yapay_zeka_yorumu]);
   const bayraklar = useMemo(() => {
     if (!maarif) return [];
-    return hesaplaBayraklar({ analiz, beklenenKod: maarif.cikti, gelisimGecmisiVarMi: sonUcKiyas.length > 0 });
-  }, [analiz, maarif, sonUcKiyas.length]);
+    return hesaplaBayraklar({ analiz, beklenenKod: maarif.cikti, gelisimGecmisiVarMi: sonUcKiyas.length > 0, gercekSure: secili?.sure });
+  }, [analiz, maarif, sonUcKiyas.length, secili?.sure]);
 
   // ---- Seçili kaydı yerel state'te güncelle (yeniden çekmeden) ----
   const guncelleYerel = (id: number, patch: Partial<KuyrukKaydi>) => {
@@ -815,6 +815,9 @@ ChildhoodTech Ekibi
                     vurgulananBolum={vurgulananBolum}
                     scrollRef={claimScrollRef}
                     bolumRefs={bolumYRef}
+                    sure={secili.sure}
+                    hamleSayisi={secili.hamle_sayisi}
+                    hataSayisi={secili.hata_sayisi}
                   />
                 </View>
               )}

@@ -173,7 +173,7 @@ export default function EvidenceColumn({ kayit, analiz, sonUcKiyas, ayniHesap, a
 }
 
 const st = StyleSheet.create({
-  col: { width: 400, flexShrink: 0, borderRightWidth: 1, borderRightColor: C.line },
+  col: { width: 300, flexShrink: 0, borderRightWidth: 1, borderRightColor: C.line },
   colHead: { fontSize: F.meta, fontWeight: '700', letterSpacing: 0.6, color: C.inkLight, paddingHorizontal: S.xl, paddingTop: S.lg, paddingBottom: S.sm },
   block: { marginHorizontal: S.lg, marginBottom: S.md, padding: 14, backgroundColor: C.panel, borderWidth: 1, borderColor: C.line, borderRadius: R.card },
   bh: { fontSize: F.meta - 0.5, fontWeight: '700', color: C.inkLight, marginBottom: 6, letterSpacing: 0.3 },

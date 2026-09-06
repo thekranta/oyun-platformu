@@ -12,6 +12,29 @@ interface Props {
   vurgulananBolum?: string | null;
   scrollRef?: React.RefObject<ScrollView>;
   bolumRefs?: React.MutableRefObject<Record<string, number>>;
+  /** Yorumu okurken göz gezdirmeden kontrol edebilmek için üstte sabit rakamlar. */
+  sure?: number;
+  hamleSayisi?: number;
+  hataSayisi?: number;
+}
+
+function HizliRakamlar({ sure, hamleSayisi, hataSayisi }: { sure?: number; hamleSayisi?: number; hataSayisi?: number }) {
+  return (
+    <View style={st.hizliRow}>
+      <View style={st.hizliChip}>
+        <Text style={st.hizliLabel}>süre</Text>
+        <Text style={st.hizliVal}>{sure ?? '—'} sn</Text>
+      </View>
+      <View style={st.hizliChip}>
+        <Text style={st.hizliLabel}>hamle</Text>
+        <Text style={st.hizliVal}>{hamleSayisi ?? '—'}</Text>
+      </View>
+      <View style={st.hizliChip}>
+        <Text style={st.hizliLabel}>hata</Text>
+        <Text style={st.hizliVal}>{hataSayisi ?? '—'}</Text>
+      </View>
+    </View>
+  );
 }
 
 function ZenginMetin({ text }: { text: string }) {
@@ -24,11 +47,11 @@ function ZenginMetin({ text }: { text: string }) {
   );
 }
 
-export default function ClaimColumn({ analiz, bayraklar, maarifKod, onFlagSection, vurgulananBolum, scrollRef, bolumRefs }: Props) {
+export default function ClaimColumn({ analiz, bayraklar, maarifKod, onFlagSection, vurgulananBolum, scrollRef, bolumRefs, sure, hamleSayisi, hataSayisi }: Props) {
   if (!analiz) {
     return (
       <ScrollView style={st.col} contentContainerStyle={{ padding: S.xl }}>
-        <Text style={st.colHead}>İDDİA</Text>
+        <Text style={st.colHead}>AI ANALİZİ</Text>
         <Text style={st.muted}>Bu kayıt için henüz AI analizi üretilmemiş.</Text>
       </ScrollView>
     );
@@ -39,7 +62,8 @@ export default function ClaimColumn({ analiz, bayraklar, maarifKod, onFlagSectio
   if (!analiz.bicimTam) {
     return (
       <ScrollView style={st.col} contentContainerStyle={{ padding: S.xl }}>
-        <Text style={st.colHead}>İDDİA</Text>
+        <Text style={st.colHead}>AI ANALİZİ</Text>
+        <HizliRakamlar sure={sure} hamleSayisi={hamleSayisi} hataSayisi={hataSayisi} />
         <View style={[st.section, { borderLeftColor: C.bayrak, backgroundColor: C.bayrakBg, padding: 14, borderRadius: R.card }]}>
           <Text style={[st.sh, { color: C.bayrak }]}>🚩 Biçim ihlali — ham metin</Text>
           <Text style={st.p}>{analiz.ham}</Text>
@@ -50,7 +74,8 @@ export default function ClaimColumn({ analiz, bayraklar, maarifKod, onFlagSectio
 
   return (
     <ScrollView ref={scrollRef} style={st.col} contentContainerStyle={{ paddingBottom: S.xl }}>
-      <Text style={st.colHead}>İDDİA</Text>
+      <Text style={st.colHead}>AI ANALİZİ</Text>
+      <HizliRakamlar sure={sure} hamleSayisi={hamleSayisi} hataSayisi={hataSayisi} />
 
       {analiz.bolumler.map((b, i) => {
         const flagli = bayrakliBasliklar.has(b.baslik);
@@ -89,8 +114,12 @@ export default function ClaimColumn({ analiz, bayraklar, maarifKod, onFlagSectio
 
 const st = StyleSheet.create({
   col: { flex: 1, minWidth: 0 },
-  colHead: { fontSize: F.meta, fontWeight: '700', letterSpacing: 0.6, color: C.inkLight, paddingHorizontal: S.xl, paddingTop: S.lg, paddingBottom: S.sm },
+  colHead: { fontSize: F.small, fontWeight: '800', letterSpacing: 0.6, color: C.accent, paddingHorizontal: S.xl, paddingTop: S.lg, paddingBottom: S.sm },
   muted: { fontSize: F.small, color: C.inkLight, fontStyle: 'italic', paddingHorizontal: S.xl },
+  hizliRow: { flexDirection: 'row', gap: S.sm, paddingHorizontal: S.xl, marginBottom: S.md },
+  hizliChip: { flexDirection: 'row', alignItems: 'baseline', gap: 4, backgroundColor: C.panelAlt, borderWidth: 1, borderColor: C.line, borderRadius: R.chip, paddingHorizontal: 10, paddingVertical: 5 },
+  hizliLabel: { fontSize: F.meta - 0.5, color: C.inkMid, fontWeight: '600' },
+  hizliVal: { fontSize: F.small, color: C.ink, fontWeight: '800' },
   section: { marginHorizontal: S.xl, marginBottom: S.lg, paddingLeft: 14, borderLeftWidth: 3, borderLeftColor: C.line },
   sectionFlagged: { backgroundColor: C.bayrakBg, borderRadius: 8, paddingVertical: 10, paddingRight: 14, marginRight: S.md, marginLeft: S.md + 6 },
   sectionVurgulu: { borderLeftColor: C.bayrak },
