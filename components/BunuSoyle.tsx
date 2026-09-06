@@ -157,7 +157,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             }
 
             if (permissionResponse?.status !== 'granted') {
-                console.log('❌ Mikrofon izni yok, izin isteniyor...');
+                console.log('⚠️ Mikrofon izni yok, izin isteniyor...');
                 const newPermission = await requestPermission();
                 console.log('Yeni izin durumu:', newPermission?.status);
                 if (newPermission?.status !== 'granted') {
@@ -218,7 +218,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 stopRecording(true);
             }
         } catch (err) {
-            console.error('❌ Kayıt başlatılamadı:', err);
+            console.error('⚠️ Kayıt başlatılamadı:', err);
             // Hata olsa bile kullanıcıya tekrar deneme şansı ver
             startingRef.current = false;
             pendingStopRef.current = false;
@@ -414,7 +414,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 } else {
                     // Yanlış cevap - hata kaydet ve yine de devam et
                     errorsRef.current += 1; setErrors(e => e + 1);
-                    setRecordingStatus(`"${transcript}" ❌`);
+                    setRecordingStatus(`"${transcript}" 😊`);
                     // Otomatik olarak bir sonraki aşamaya geç
                     setTimeout(() => handleNextStage(updatedResults), 2000);
                 }
@@ -426,7 +426,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 throw fetchError;
             }
         } catch (error) {
-            console.error('❌ Whisper API hatası:', error);
+            console.error('⚠️ Whisper API hatası:', error);
             // Hata durumunda bile kaydet ve devam et
             setAllTranscripts(prev => [...prev, '(API Hatası)']);
 
@@ -542,7 +542,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                         isRecording && styles.statusRecording,
                         recordingStatus === 'Analiz Ediliyor...' && styles.statusProcessing,
                         recordingStatus === 'Harika! 🎉' && styles.statusSuccess,
-                        recordingStatus === 'Tekrar Dene ❌' && styles.statusError,
+                        recordingStatus === 'Tekrar Dene 😊' && styles.statusError,
                         recordingStatus === 'Ses Algılanmadı 🔇' && styles.statusError
                     ]}>
                         {recordingStatus}

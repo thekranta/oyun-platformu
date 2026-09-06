@@ -84,7 +84,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
             backgroundSoundRef.current = sound;
             console.log("✅ Background sound loaded (waiting for user interaction)");
         } catch (error) {
-            console.log("❌ Error loading background sound:", error);
+            console.log("⚠️ Error loading background sound:", error);
         }
     };
 
