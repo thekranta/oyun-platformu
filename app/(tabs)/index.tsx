@@ -676,9 +676,9 @@ export default function App() {
                   <React.Fragment key={cat.id}>
                     {n > 0 && (
                       <View style={styles.pathConnector}>
-                        <View style={styles.pathDot} />
-                        <View style={styles.pathDot} />
-                        <View style={styles.pathDot} />
+                        {Array.from({ length: 7 }).map((_, d) => (
+                          <View key={d} style={styles.pathDash} />
+                        ))}
                       </View>
                     )}
                     <View style={[styles.pathRow, { justifyContent: align }]}>
@@ -1019,9 +1019,9 @@ const styles = StyleSheet.create({
   forestTitle: { fontSize: 20, fontWeight: '900', color: '#1B5E20', textAlign: 'center' },
   forestSubtitle: { fontSize: 13, fontWeight: '600', color: '#0B3D66', opacity: 0.7, marginTop: 2, textAlign: 'center' },
   pathWrap: { width: '100%', maxWidth: 440, marginBottom: 4 },
-  pathRow: { flexDirection: 'row', width: '100%' },
-  pathConnector: { alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6 },
-  pathDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(11,61,102,0.28)' },
+  pathRow: { flexDirection: 'row', width: '100%', marginVertical: -6 },
+  pathConnector: { alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 2 },
+  pathDash: { width: 6, height: 11, borderRadius: 3, backgroundColor: '#C99A5B', opacity: 0.55 },
 
   logoutBtn: { marginTop: 26, backgroundColor: 'rgba(255,82,82,0.92)', paddingVertical: 12, paddingHorizontal: 28, borderRadius: 22, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 4, elevation: 4 },
   logoutText: { color: '#fff', fontSize: 16, fontWeight: '800' },
