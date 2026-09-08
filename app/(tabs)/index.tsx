@@ -771,14 +771,22 @@ export default function App() {
     // çocuk "Menüye Dön" ile devam eder. key={asama} => her oyuna taze sınır.
     return (
       <GameErrorBoundary key={asama} gameName={asama} onExit={() => setAsama('menu')}>
-        {gameRenderer({
-          onGameEnd: oyunuBitir,
-          onExit: () => setAsama('menu'),
-          ad,
-          yas,
-          email,
-          selectedSongIndex,
-        })}
+        <React.Suspense
+          fallback={
+            <View style={styles.merkezContainer}>
+              <ActivityIndicator size="large" color="#5B4B8A" />
+            </View>
+          }
+        >
+          {gameRenderer({
+            onGameEnd: oyunuBitir,
+            onExit: () => setAsama('menu'),
+            ad,
+            yas,
+            email,
+            selectedSongIndex,
+          })}
+        </React.Suspense>
       </GameErrorBoundary>
     );
   }
