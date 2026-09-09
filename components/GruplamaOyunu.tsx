@@ -3,7 +3,7 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
-import ProgressBar from './ProgressBar';
+import JuicyProgressBar from './JuicyProgressBar';
 
 const GRUPLAMA_SORULARI = [
     { nesne: '🍎', kategori: 'Meyve' },
@@ -108,7 +108,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
     return (
         <DynamicBackground onExit={onExit}>
             <View style={styles.topBar}>
-                <ProgressBar current={suankiSoruIndex + 1} total={sorular.length} />
+                <JuicyProgressBar current={suankiSoruIndex + 1} total={sorular.length} />
             </View>
 
             <View style={styles.merkezContainer}>

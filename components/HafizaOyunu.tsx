@@ -3,7 +3,7 @@ import { Animated, Dimensions, Image, ImageBackground, Platform, ScrollView, Sty
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
-import ProgressBar from './ProgressBar';
+import JuicyProgressBar from './JuicyProgressBar';
 import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
@@ -368,7 +368,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 />
             )}
             <View style={styles.topBar}>
-                <ProgressBar current={currentStageIndex + 1} total={stages.length} />
+                <JuicyProgressBar current={currentStageIndex + 1} total={stages.length} />
             </View>
 
             <ScrollView contentContainerStyle={styles.gameContainer}>

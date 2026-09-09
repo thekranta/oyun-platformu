@@ -4,7 +4,7 @@ import * as FileSystem from 'expo-file-system';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
-import ProgressBar from './ProgressBar';
+import JuicyProgressBar from './JuicyProgressBar';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 
@@ -487,7 +487,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 <Ionicons name="arrow-back" size={28} color="#333" />
             </TouchableOpacity>
             <View style={styles.topBar}>
-                <ProgressBar current={currentStage + 1} total={STAGES.length} />
+                <JuicyProgressBar current={currentStage + 1} total={STAGES.length} />
             </View>
 
             <View style={styles.container}>

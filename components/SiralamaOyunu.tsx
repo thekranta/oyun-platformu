@@ -4,7 +4,7 @@ import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from '
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
-import ProgressBar from './ProgressBar';
+import JuicyProgressBar from './JuicyProgressBar';
 
 const SIRALAMA_SAYILARI = [1, 2, 3, 4, 5];
 const TOTAL_ROUNDS = 4;
@@ -213,7 +213,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
             )}
 
             <View style={styles.topBar}>
-                <ProgressBar current={currentRound} total={TOTAL_ROUNDS} />
+                <JuicyProgressBar current={currentRound} total={TOTAL_ROUNDS} />
             </View>
 
             <View style={styles.headerContainer}>

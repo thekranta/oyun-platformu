@@ -3,7 +3,7 @@ import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, View } fro
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
-import ProgressBar from './ProgressBar';
+import JuicyProgressBar from './JuicyProgressBar';
 import { asset } from '../lib/assetMap';
 
 interface EksikSayiBulProps {
@@ -229,7 +229,7 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
         </View>
 
         <View style={styles.progressRow}>
-          <ProgressBar current={currentStage + 1} total={TOTAL_STAGES} />
+          <JuicyProgressBar current={currentStage + 1} total={TOTAL_STAGES} />
           <View style={styles.roundBadge}>
             <Text style={styles.roundBadgeText}>{currentStage + 1}. Aşama</Text>
           </View>
