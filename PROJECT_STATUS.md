@@ -1,5 +1,15 @@
 # Oyun Platformu Durum ve Yol Haritasi
 
+## Planlanan: Oyuncak odası kişiselleştirmesi (2026-09-12)
+
+Kullanıcı bu geliştirmeyi sonraki aşamaya erteledi; henüz uygulanmadı.
+
+- Her çocuğu ayrı kimlikle ilişkilendirerek kardeşlerin oyun geçmişini ayırmak.
+- Oyunlara içerik değerlendirmesiyle uygun yaş aralıkları eklemek.
+- Yaş, yakın oyun geçmişi ve alan çeşitliliğine göre beş oyun sunmak; çocuğun serbest seçimini korumak.
+- Başarıya göre önerileri, sonuç ölçümleri standartlaştırılan oyunlarda aşamalı eklemek.
+- Mevcut oda sabit başlangıç ve kategori listelerinde sıralı dolaşım kullanıyor; kişiselleştirilmiş öneri motoru değil.
+
 Son guncelleme: 2026-06-20
 
 ## Koruma Ilkesi

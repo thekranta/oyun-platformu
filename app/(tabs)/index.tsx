@@ -1,128 +1,20 @@
+import ToyRoom from '@/components/ToyRoom';
 import DynamicBackground from '@/components/DynamicBackground';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import GameErrorBoundary from '@/components/GameErrorBoundary';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Dimensions, Image, Keyboard, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Image, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import {
   createDailyGamePlan,
-  GAME_CARD_META,
-  GAME_EMOJI,
-  getGamesByForestCategory,
   getTodayKey,
 } from '../../lib/menuHelpers';
 import { useAuth } from '../../hooks/useAuth';
 import { asset } from '../../lib/assetMap';
 import { supabase } from '../../lib/supabase';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
-import { DISCOVERY_FOREST_CATEGORIES } from '../../constants/discoveryForestCategories';
-import { ForestCategoryCard } from '../../components/forest';
-
-// Cloudflare Turnstile Sitekey
-const TURNSTILE_SITE_KEY = '0x4AAAAAACKOXlQA9AJnb7EV';
-
-const USE_NATIVE = Platform.OS !== 'web';
-
-// Web'de CSS gradient, native'de duz renk (RN gradient'i CSS gibi desteklemez).
-const gradientStyle = (from: string, to: string, fallback: string): any =>
-  Platform.OS === 'web'
-    ? { background: `linear-gradient(135deg, ${from} 0%, ${to} 100%)` }
-    : { backgroundColor: fallback };
-
-// Acilista tek tek "pop" ile giren, basinca hafif kuculen oyuncakli kart.
-function BouncyCard({
-  delay = 0,
-  onPress,
-  style,
-  children,
-}: {
-  delay?: number;
-  onPress: () => void;
-  style?: any;
-  children: React.ReactNode;
-}) {
-  const anim = useRef(new Animated.Value(0)).current;
-  const press = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.spring(anim, { toValue: 1, friction: 6, tension: 70, delay, useNativeDriver: USE_NATIVE }).start();
-  }, [anim, delay]);
-
-  const scale = Animated.multiply(anim.interpolate({ inputRange: [0, 1], outputRange: [0.7, 1] }), press);
-
-  return (
-    <Animated.View style={{ opacity: anim, transform: [{ scale }] }}>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={onPress}
-        onPressIn={() => Animated.spring(press, { toValue: 0.93, useNativeDriver: USE_NATIVE }).start()}
-        onPressOut={() => Animated.spring(press, { toValue: 1, friction: 4, useNativeDriver: USE_NATIVE }).start()}
-        style={style}
-      >
-        {children}
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
-
-// Hafifce sallanan buton (gunluk macera "Basla").
-function WiggleButton({ onPress, style, children }: { onPress: () => void; style?: any; children: React.ReactNode }) {
-  const rot = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(rot, { toValue: 1, duration: 900, useNativeDriver: USE_NATIVE }),
-        Animated.timing(rot, { toValue: -1, duration: 900, useNativeDriver: USE_NATIVE }),
-        Animated.timing(rot, { toValue: 0, duration: 900, useNativeDriver: USE_NATIVE }),
-      ]),
-    ).start();
-  }, [rot]);
-  const rotate = rot.interpolate({ inputRange: [-1, 1], outputRange: ['-2.5deg', '2.5deg'] });
-  return (
-    <Animated.View style={{ transform: [{ rotate }] }}>
-      <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={style}>
-        {children}
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
-
-// Surekli hafifce zıplayan emoji (oyun/kategori kartlarindaki canli gorsel).
-function BobbingEmoji({ emoji, delay = 0, size = 44, style }: { emoji: string; delay?: number; size?: number; style?: any }) {
-  const y = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(y, { toValue: 1, duration: 1150, delay, useNativeDriver: USE_NATIVE }),
-        Animated.timing(y, { toValue: 0, duration: 1150, useNativeDriver: USE_NATIVE }),
-      ]),
-    ).start();
-  }, [y, delay]);
-  const translateY = y.interpolate({ inputRange: [0, 1], outputRange: [0, -7] });
-  return <Animated.Text style={[{ fontSize: size }, style, { transform: [{ translateY }] }]}>{emoji}</Animated.Text>;
-}
-
-// Yumusakca yukari-asagi suzulen dekoratif emoji.
-function FloatingDeco({ emoji, style, delay = 0 }: { emoji: string; style?: any; delay?: number }) {
-  const y = useRef(new Animated.Value(0)).current;
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(y, { toValue: 1, duration: 2600, delay, useNativeDriver: USE_NATIVE }),
-        Animated.timing(y, { toValue: 0, duration: 2600, useNativeDriver: USE_NATIVE }),
-      ]),
-    ).start();
-  }, [y, delay]);
-  const translateY = y.interpolate({ inputRange: [0, 1], outputRange: [0, -14] });
-  return (
-    <Animated.Text style={[style, { position: 'absolute', transform: [{ translateY }] }]} pointerEvents="none">
-      {emoji}
-    </Animated.Text>
-  );
-}
 
 // Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
 const BUILD_ETIKET = 'b7-tani';
@@ -396,6 +288,7 @@ export default function App() {
   const router = useRouter();
   const { isMuted, toggleMute, resumeAfterInteraction } = useSound();
   const [asama, setAsama] = useState('giris');
+  const [toyRound, setToyRound] = useState(0);
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
   const [email, setEmail] = useState('');
@@ -494,7 +387,6 @@ export default function App() {
     setDailyCompletedRoutes([]);
     setDailyPlanRoutes([]);
     setDailyPlanDate('');
-    setSelectedCategory(null);
     setAsama('giris');
   };
 
@@ -538,7 +430,6 @@ export default function App() {
   const [decorAcik, setDecorAcik] = useState(true);
   const handleToggleDecor = useCallback(() => setDecorAcik((v) => !v), []);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSongIndex] = useState<number>(0);
   const [dailyPlanDate, setDailyPlanDate] = useState<string>('');
   const [dailyPlanRoutes, setDailyPlanRoutes] = useState<string[]>([]);
@@ -547,7 +438,6 @@ export default function App() {
 
   const parsedAgeMonths = parseInt(yas, 10) || 48;
   const nextDailyRoute = dailyPlanRoutes.find((route) => !dailyCompletedRoutes.includes(route)) || null;
-  const isDailyPlanComplete = dailyPlanRoutes.length > 0 && dailyCompletedRoutes.length >= dailyPlanRoutes.length;
 
 
   const ensureDailyPlan = useCallback(() => {
@@ -561,17 +451,7 @@ export default function App() {
     setActiveDailyRoute(null);
   }, [dailyPlanDate, dailyPlanRoutes.length, parsedAgeMonths]);
 
-  const startDailyFlow = () => {
-    ensureDailyPlan();
-    const nextRoute = (dailyPlanDate === getTodayKey() && dailyPlanRoutes.length > 0)
-      ? (dailyPlanRoutes.find((route) => !dailyCompletedRoutes.includes(route)) || dailyPlanRoutes[0])
-      : createDailyGamePlan(parsedAgeMonths, getTodayKey())[0];
 
-    if (nextRoute) {
-      setActiveDailyRoute(nextRoute);
-      oyunuBaslat(nextRoute);
-    }
-  };
 
   useEffect(() => {
     if (asama === 'menu') {
@@ -616,151 +496,15 @@ export default function App() {
   }
 
   if (asama === 'menu') {
-    const activeCategory = selectedCategory ? DISCOVERY_FOREST_CATEGORIES.find((c) => c.id === selectedCategory) : null;
-    const categoryGames = selectedCategory ? getGamesByForestCategory(selectedCategory) : [];
-
-    return (
-      <DynamicBackground>
-        {/* Uçuşan dekorlar */}
-        <FloatingDeco emoji="☁️" style={styles.decoCloud} />
-        <FloatingDeco emoji="⭐" style={styles.decoStar} delay={800} />
-        <FloatingDeco emoji="🌈" style={styles.decoRainbow} delay={400} />
-        <FloatingDeco emoji="✨" style={styles.decoSparkle} delay={1200} />
-
-        <ScrollView contentContainerStyle={styles.menuScroll}>
-          <View style={styles.menuHeader}>
-            <Text style={styles.greetBig}>Merhaba {ad || 'küçük kaşif'}! 👋</Text>
-            <Text style={styles.greetSub}>Bugün hangi maceraya atılalım?</Text>
-          </View>
-
-          {/* Bugünün Macerası */}
-          <View style={[styles.adventureCard, gradientStyle('#FF9A3C', '#FF3D81', '#FF5E7E')]}>
-            <Text style={styles.adventureTitle}>🚀 Bugünün Macerası</Text>
-            <View style={styles.adventureStars}>
-              {[0, 1, 2].map((i) => {
-                const route = dailyPlanRoutes[i];
-                const done = route ? dailyCompletedRoutes.includes(route) : false;
-                return (
-                  <View key={i} style={[styles.advStar, done && styles.advStarDone]}>
-                    <Text style={styles.advStarText}>{done ? '⭐' : '🎯'}</Text>
-                  </View>
-                );
-              })}
-            </View>
-            <WiggleButton onPress={startDailyFlow} style={styles.adventureBtn}>
-              <Text style={styles.adventureBtnText}>
-                {isDailyPlanComplete ? 'Tekrar Oyna 🔁' : dailyCompletedRoutes.length > 0 ? 'Devam Et ▶️' : 'Hadi Başla! ▶️'}
-              </Text>
-            </WiggleButton>
-          </View>
-
-          {/* Keşif Ormanı — grid değil, kıvrılan bir patika: sola/ortaya/sağa kayan
-              düğümler + aralarında iz noktaları + hafif eğim, "macera haritası" hissi versin. */}
-          <View style={styles.forestHeader}>
-            <Text style={styles.forestTitle}>🌲 Keşif Ormanı</Text>
-            <Text style={styles.forestSubtitle}>Bugün hangi patikaya gidelim?</Text>
-          </View>
-          <View style={styles.pathWrap}>
-            {(() => {
-              const ALIGN: ('flex-start' | 'center' | 'flex-end')[] = ['center', 'flex-end', 'center', 'flex-start'];
-              const ROT = [-3, 2, -2, 3, -1.5, 2.5];
-              let nodeIndex = 0;
-              return DISCOVERY_FOREST_CATEGORIES.map((cat, i) => {
-                const count = getGamesByForestCategory(cat.id).length;
-                if (count === 0) return null;
-                const n = nodeIndex++;
-                const align = ALIGN[n % ALIGN.length];
-                const rotate = `${ROT[n % ROT.length]}deg`;
-                const big = count >= 15;
-                return (
-                  <React.Fragment key={cat.id}>
-                    {n > 0 && (
-                      <View style={styles.pathConnector}>
-                        {Array.from({ length: 7 }).map((_, d) => (
-                          <View key={d} style={styles.pathDash} />
-                        ))}
-                      </View>
-                    )}
-                    <View style={[styles.pathRow, { justifyContent: align }]}>
-                      <View style={{ transform: [{ rotate }] }}>
-                        <ForestCategoryCard
-                          category={cat}
-                          delay={n * 90}
-                          gameCount={count}
-                          size={big ? 172 : 140}
-                          onPress={() => setSelectedCategory(cat.id)}
-                        />
-                      </View>
-                    </View>
-                  </React.Fragment>
-                );
-              });
-            })()}
-          </View>
-
-          <TouchableOpacity style={styles.logoutBtn} onPress={cikisYap} activeOpacity={0.85}>
-            <Text style={styles.logoutText}>Çıkış Yap 🚪</Text>
-          </TouchableOpacity>
-        </ScrollView>
-
-        {/* Kategori oyunları - modal sheet */}
-        <Modal
-          visible={!!selectedCategory}
-          transparent
-          animationType="slide"
-          onRequestClose={() => setSelectedCategory(null)}
-        >
-          <View style={styles.sheetOverlay}>
-            <TouchableOpacity style={styles.sheetBackdrop} activeOpacity={1} onPress={() => setSelectedCategory(null)} />
-            <View style={styles.sheet}>
-              <View style={[styles.sheetHeader, { backgroundColor: activeCategory?.accentColor || '#7E57C2' }]}>
-                <View>
-                  <Text style={styles.sheetTitle}>{activeCategory?.forestName}</Text>
-                  <Text style={styles.sheetSubtitle}>{activeCategory?.maarifArea}</Text>
-                </View>
-                <TouchableOpacity style={styles.sheetClose} onPress={() => setSelectedCategory(null)} activeOpacity={0.7}>
-                  <Ionicons name="close" size={26} color="#2D3142" />
-                </TouchableOpacity>
-              </View>
-              {categoryGames.some(g => g.adaptive) && (
-                <View style={styles.adaptiveLegend}>
-                  <Text style={styles.adaptiveBadgeText}>📈</Text>
-                  <Text style={styles.adaptiveLegendText}>= Akıllı zorluk: çocuğa göre uyarlanır</Text>
-                </View>
-              )}
-              <ScrollView contentContainerStyle={styles.sheetGrid}>
-                {categoryGames.map((game, i) => {
-                  const meta = GAME_CARD_META[game.id] || {
-                    color: '#607D8B',
-                    icon: 'game-controller-outline' as keyof typeof Ionicons.glyphMap,
-                    displayTitle: game.title,
-                    subtitle: game.skillFocus,
-                  };
-                  return (
-                    <BouncyCard
-                      key={game.id}
-                      delay={i * 45}
-                      onPress={() => { const rk = game.routeKey; setSelectedCategory(null); oyunuBaslat(rk); }}
-                      style={[styles.gameCard, { backgroundColor: meta.color }]}
-                    >
-                      {game.adaptive && (
-                        <View style={styles.adaptiveBadge}>
-                          <Text style={styles.adaptiveBadgeText}>📈</Text>
-                        </View>
-                      )}
-                      <View style={styles.gameEmojiBadge}>
-                        <BobbingEmoji emoji={GAME_EMOJI[game.id] || '🎮'} size={46} delay={i * 120} />
-                      </View>
-                      <Text style={styles.gameCardTitle} numberOfLines={2}>{meta.displayTitle || game.title}</Text>
-                    </BouncyCard>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-      </DynamicBackground>
-    );
+    return <ToyRoom
+      name={ad}
+      round={toyRound}
+      onShuffle={() => setToyRound(r => r + 1)}
+      muted={isMuted}
+      onMute={toggleMute}
+      onGame={oyunuBaslat}
+      onLogout={cikisYap}
+    />;
   }
 
   // Oyun ekranlari: routeKey -> bilesen eslesmesi components/gameRegistry.tsx'te.
@@ -1453,6 +1197,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-
-
