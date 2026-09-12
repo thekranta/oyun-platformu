@@ -7,6 +7,7 @@ import CountdownOverlay from './CountdownOverlay';
 import JuicyProgressBar from './JuicyProgressBar';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
+import { supabase } from '../lib/supabase';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/bunu_soyle_bg.webp');
@@ -311,57 +312,52 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         }
 
         try {
-            // Platform-specific audio blob handling
-            let audioBlob: Blob;
+            // Platform-specific audio -> base64 (sunucu-tarafi /api/transcribe'a gonderilecek)
+            let base64Audio: string;
 
             if (Platform.OS === 'web') {
-                // WEB: fetch ile blob al
+                // WEB: fetch ile blob al, FileReader ile base64'e cevir
                 console.log('🌐 Web platformu tespit edildi, fetch kullanılıyor...');
                 const response = await fetch(audioUri);
-                audioBlob = await response.blob();
+                const audioBlob = await response.blob();
+                base64Audio = await new Promise<string>((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const result = reader.result as string;
+                        resolve(result.split(',')[1] || '');
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(audioBlob);
+                });
             } else {
-                // MOBILE: expo-file-system ile base64 oku ve blob'a çevir
+                // MOBILE: expo-file-system ile dogrudan base64 oku
                 console.log('📱 Mobil platform tespit edildi, FileSystem kullanılıyor...');
-                const base64Audio = await FileSystem.readAsStringAsync(audioUri, {
+                base64Audio = await FileSystem.readAsStringAsync(audioUri, {
                     encoding: 'base64',
                 });
-                // Base64'ü Blob'a çevir
-                const byteCharacters = atob(base64Audio);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                audioBlob = new Blob([byteArray], { type: 'audio/webm' });
             }
 
-            // OpenAI Whisper API çağrısı
-            const apiKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
-            if (!apiKey) {
-                throw new Error('OpenAI API key bulunamadı. Lütfen .env dosyasına EXPO_PUBLIC_OPENAI_API_KEY ekleyin.');
+            console.log('🎤 Sunucu-tarafi transkripsiyon API\'si çağrılıyor...');
+
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+                throw new Error('Oturum bulunamadı, lütfen tekrar giriş yapın.');
             }
-
-            console.log('🎤 OpenAI Whisper API çağrılıyor...');
-
-            // FormData oluştur
-            const formData = new FormData();
-            formData.append('file', audioBlob, 'audio.webm');
-            formData.append('model', 'whisper-1');
-            formData.append('language', 'tr');
 
             // API çağrısı için AbortController ile timeout ekle
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 saniye timeout
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 saniye timeout
 
             try {
                 const response = await fetch(
-                    'https://api.openai.com/v1/audio/transcriptions',
+                    '/api/transcribe',
                     {
                         method: 'POST',
                         headers: {
-                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`,
                         },
-                        body: formData,
+                        body: JSON.stringify({ audioBase64: base64Audio, mimeType: 'audio/webm' }),
                         signal: controller.signal
                     }
                 );
@@ -369,12 +365,12 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error('Whisper API Hata Yanıtı:', errorText);
-                    throw new Error(`Whisper API hatası: ${response.status}`);
+                    console.error('Transkripsiyon API Hata Yanıtı:', errorText);
+                    throw new Error(`Transkripsiyon API hatası: ${response.status}`);
                 }
 
                 const data = await response.json();
-                console.log('📥 Whisper API Yanıtı:', data);
+                console.log('📥 Transkripsiyon API Yanıtı:', data);
 
                 // Transcript'i çıkar
                 let transcript = data.text || '';

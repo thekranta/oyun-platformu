@@ -5,6 +5,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireUser } from './_lib/auth';
 
 // OpenAI API key (server-side). Sunucu env'i EXPO_PUBLIC degiskenlerini de okuyabilir;
 // Vercel'de yalnizca EXPO_PUBLIC_OPENAI_API_KEY/SPEECH_API_KEY tanimliysa da TTS calissin
@@ -26,6 +27,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
+
+    const authed = await requireUser(req, res);
+    if (!authed) return;
 
     const {
         text,

@@ -632,9 +632,13 @@ ChildhoodTech Ekibi
     if (!score.email) return;
     try {
       const oyunAdiTR = getGameDisplay(score.oyun_turu).name;
+      const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           email: score.email,
           subject: `🎮 ${score.ogrenci_adi} - ${oyunAdiTR} Raporu`,

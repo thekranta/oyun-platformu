@@ -208,9 +208,19 @@ export default function TeacherDashboard({
         }
         setSearchingStudent(true);
         try {
+            // Dogrudan tablo sorgusu yerine dar kapsamli RPC: tek e-posta, yalnizca
+            // 3 alan doner (bkz. supabase_migrations/fix_teacher_profiles_pii_exposure.sql).
             const response = await fetch(
-                `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}`,
-                { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
+                `${SUPABASE_URL}/rest/v1/rpc/teacher_search_child_by_email`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY!,
+                        'Authorization': `Bearer ${await getSessionToken()}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ p_email: email }),
+                }
             );
             const data = await response.json();
             if (Array.isArray(data) && data.length > 0) {

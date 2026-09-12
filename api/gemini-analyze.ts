@@ -1,8 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireUser } from './_lib/auth';
 
 // Gemini metin uretimi icin sunucu-tarafi proxy.
 // Anahtar yalnizca sunucuda okunur (GEMINI_API_KEY); istemci bundle'ina hic gitmez.
 // Istemci /api/gemini-analyze'a { prompt, generationConfig? } gonderir, { text } alir.
+// Kimliksiz internetten maliyet-DoS'u onlemek icin gecerli bir Supabase oturumu sart.
 
 const MODELS = [
   { name: 'gemini-2.0-flash', version: 'v1' },
@@ -18,6 +20,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const authed = await requireUser(req, res);
+  if (!authed) return;
 
   const { prompt, generationConfig } = req.body || {};
   if (!prompt) return res.status(400).json({ error: 'prompt is required' });
