@@ -207,7 +207,10 @@ export function buildWeeklyReport(
     });
 
     // ReportEngine: gelişim profili + güçlü yönler + evde aktiviteler
-    const pr = ReportEngine.generateParentReport(childName, source as any);
+    const pr = ReportEngine.generateParentReport(
+        childName,
+        source.map(g => ({ ...g, hata_sayisi: g.hata_sayisi ?? 0, sure: g.sure ?? 0 })),
+    );
     const dimensions: WeeklyDimension[] = pr.radarChartData.map(d => ({ label: d.label, value: d.value }));
     const homeActivities: WeeklyHomeActivity[] = pr.homeActivities;
     const strengths = pr.strengths.length > 0

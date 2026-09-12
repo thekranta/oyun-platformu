@@ -39,8 +39,10 @@ const BRUSH_SIZES = [4, 8, 14, 22];
 // Shape sizes - visual only
 const SHAPE_SIZES = [30, 50, 80, 120];
 
+type IoniconName = React.ComponentProps<typeof Ionicons>['name'];
+
 // Geometric shapes
-const SHAPES: { type: ShapeType; icon: string }[] = [
+const SHAPES: { type: ShapeType; icon: IoniconName }[] = [
   { type: 'circle', icon: 'ellipse' },
   { type: 'square', icon: 'square' },
   { type: 'triangle', icon: 'triangle' },
@@ -49,9 +51,9 @@ const SHAPES: { type: ShapeType; icon: string }[] = [
 ];
 
 // Brush modes
-const BRUSH_MODES: { mode: BrushMode; icon: string; label: string }[] = [
+const BRUSH_MODES: { mode: BrushMode; icon: IoniconName; label: string }[] = [
   { mode: 'pen', icon: 'pencil', label: 'Kalem' },
-  { mode: 'marker', icon: 'create', label: 'Ke�eli' },
+  { mode: 'marker', icon: 'create', label: 'Keçeli' },
   { mode: 'spray', icon: 'color-fill', label: 'Sprey' },
   { mode: 'glow', icon: 'sunny', label: 'Parlak' },
 ];
@@ -435,7 +437,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
             style={[styles.toolBtn, !isEraser && !selectedShape && styles.toolBtnActive]}
             onPress={() => togglePicker('brush')}
           >
-            <Ionicons name={currentBrushIcon as any} size={20} color={!isEraser && !selectedShape ? '#4CAF50' : '#666'} />
+            <Ionicons name={currentBrushIcon} size={20} color={!isEraser && !selectedShape ? '#4CAF50' : '#666'} />
           </TouchableOpacity>
 
           {/* Color */}
@@ -463,7 +465,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           {/* Shape Size - shows visual shape preview */}
           {selectedShape && (
             <TouchableOpacity style={styles.shapeSizeBtn} onPress={() => togglePicker('shapeSize')}>
-              <Ionicons name={SHAPES.find(s => s.type === selectedShape)?.icon as any} size={Math.min(shapeSize / 4, 20)} color="#9C27B0" />
+              <Ionicons name={SHAPES.find(s => s.type === selectedShape)?.icon ?? 'ellipse'} size={Math.min(shapeSize / 4, 20)} color="#9C27B0" />
             </TouchableOpacity>
           )}
 
@@ -540,7 +542,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
                 style={[styles.shapeOption, selectedShape === shape.type && styles.shapeOptionActive]}
                 onPress={() => selectShape(shape.type)}
               >
-                <Ionicons name={shape.icon as any} size={24} color={selectedShape === shape.type ? '#fff' : selectedColor} />
+                <Ionicons name={shape.icon} size={24} color={selectedShape === shape.type ? '#fff' : selectedColor} />
               </TouchableOpacity>
             ))}
           </>
@@ -555,7 +557,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
               onPress={() => selectShapeSize(size)}
             >
               <Ionicons
-                name={selectedShape ? (SHAPES.find(s => s.type === selectedShape)?.icon as any) : 'ellipse'}
+                name={selectedShape ? (SHAPES.find(s => s.type === selectedShape)?.icon ?? 'ellipse') : 'ellipse'}
                 size={Math.min(size / 3, 28)}
                 color={selectedColor}
               />
@@ -571,7 +573,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
               style={[styles.brushOption, brushMode === b.mode && styles.optionSelected]}
               onPress={() => selectBrushMode(b.mode)}
             >
-              <Ionicons name={b.icon as any} size={22} color={brushMode === b.mode ? '#4CAF50' : '#666'} />
+              <Ionicons name={b.icon} size={22} color={brushMode === b.mode ? '#4CAF50' : '#666'} />
               <Text style={[styles.brushLabel, brushMode === b.mode && styles.optionLabelActive]}>{b.label}</Text>
             </TouchableOpacity>
           ))
@@ -581,7 +583,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
         {(selectedShape || brushMode !== 'pen') && (
           <View style={[styles.modeIndicator, selectedShape ? styles.shapeModeIndicator : styles.brushModeIndicator]}>
             <Ionicons
-              name={(selectedShape ? SHAPES.find(s => s.type === selectedShape)?.icon : currentBrushIcon) as any}
+              name={(selectedShape ? SHAPES.find(s => s.type === selectedShape)?.icon : currentBrushIcon) ?? 'ellipse'}
               size={14}
               color="#fff"
             />

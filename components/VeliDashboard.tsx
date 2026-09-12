@@ -1222,7 +1222,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
                                     {(() => {
                                         // ReportEngine'den radar verisi al
-                                        const report = ReportEngine.generateParentReport(childName, scores as any);
+                                        const report = ReportEngine.generateParentReport(childName, scores);
                                         const radarData = report.radarChartData;
 
                                         if (radarData.length === 0) return null;
@@ -1347,7 +1347,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     </View>
 
                                     {(() => {
-                                        const report = ReportEngine.generateParentReport(childName, scores as any);
+                                        const report = ReportEngine.generateParentReport(childName, scores);
                                         const activities = report.homeActivities;
 
                                         return (

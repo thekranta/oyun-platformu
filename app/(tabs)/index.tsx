@@ -422,10 +422,10 @@ export default function App() {
   authActionsRef.current = { girisYap, sifremiUnuttum };
   const handleLogin = useCallback((mail: string, pass: string) => { authActionsRef.current.girisYap(mail, pass); }, []);
   const handleForgot = useCallback((mail: string) => { authActionsRef.current.sifremiUnuttum(mail); }, []);
-  const handleSignup = useCallback(() => router.push('/signup' as any), [router]);
-  const handleAdmin = useCallback(() => router.push('/admin' as any), [router]);
-  const handleVeli = useCallback(() => router.push('/veli-dashboard' as any), [router]);
-  const handleOgretmen = useCallback(() => router.push('/teacher-dashboard' as any), [router]);
+  const handleSignup = useCallback(() => router.push('/signup'), [router]);
+  const handleAdmin = useCallback(() => router.push('/admin'), [router]);
+  const handleVeli = useCallback(() => router.push('/veli-dashboard'), [router]);
+  const handleOgretmen = useCallback(() => router.push('/teacher-dashboard'), [router]);
   // Giris ekraninda arka plan animasyonlarini ac/kapa (Android IME tanisi icin A/B).
   const [decorAcik, setDecorAcik] = useState(true);
   const handleToggleDecor = useCallback(() => setDecorAcik((v) => !v), []);

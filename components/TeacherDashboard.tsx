@@ -29,7 +29,7 @@ const getSessionToken = async () => {
 };
 
 // Web-compatible alert
-const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: string }>) => {
+const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: 'default' | 'cancel' | 'destructive' }>) => {
     if (Platform.OS === 'web') {
         if (buttons && buttons.length > 1) {
             const result = window.confirm(`${title}\n\n${message}`);
@@ -41,7 +41,7 @@ const showAlert = (title: string, message: string, buttons?: Array<{ text: strin
             window.alert(`${title}\n\n${message}`);
         }
     } else {
-        Alert.alert(title, message, buttons as any);
+        Alert.alert(title, message, buttons);
     }
 };
 

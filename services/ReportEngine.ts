@@ -13,16 +13,16 @@ import { getMaarif } from '../constants/maarifMap';
 
 // ============== TYPES ==============
 export interface GameData {
-    id: number;
+    id?: number;                        // generateParentReport/calculateRadarData bunu kullanmaz
     created_at: string;
     oyun_turu: string;
-    correct_answers?: number;
+    correct_answers?: number | null;    // Supabase sutunlari nullable donebilir
     hata_sayisi: number;
     sure: number;                       // Duration in seconds
-    response_time?: number;             // Average response time in ms
-    visual_attention_score?: number;
-    cognitive_speed_score?: number;
-    distance_effect?: number;
+    response_time?: number | null;      // Average response time in ms
+    visual_attention_score?: number | null;
+    cognitive_speed_score?: number | null;
+    distance_effect?: number | null;
     seviye?: number;
     round_history?: any[];
 }
@@ -508,7 +508,7 @@ export class ReportEngine {
         const hesitationAnalysis: HesitationData[] = games
             .filter(g => g.response_time !== undefined)
             .map(g => ({
-                gameId: g.id,
+                gameId: g.id ?? 0,
                 hesitationMs: g.response_time!,
                 category: g.response_time! < 1500 ? 'fast' as const :
                     g.response_time! < 4000 ? 'normal' as const : 'slow' as const,

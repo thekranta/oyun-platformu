@@ -10,6 +10,13 @@
 
 import { Animated, Platform, Vibration } from 'react-native';
 
+// Safari'nin standart-oncesi onekli adi; lib.dom.d.ts'te tanimli degil.
+declare global {
+    interface Window {
+        webkitAudioContext?: typeof AudioContext;
+    }
+}
+
 // ============== TYPES ==============
 export interface FeedbackOptions {
     haptic?: boolean;      // Titreşim (mobil)
@@ -196,7 +203,7 @@ export class FeedbackService {
      */
     private static playUhOhSound(): void {
         try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
             // Create a simple "u-oh" sound using oscillators
             const oscillator1 = audioContext.createOscillator();
@@ -238,7 +245,7 @@ export class FeedbackService {
         if (Platform.OS !== 'web') return;
 
         try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
 

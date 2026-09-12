@@ -224,7 +224,7 @@ export default function AdminPanel() {
       headers: { apikey: SUPABASE_KEY || '', Authorization: `Bearer ${await getAuthToken()}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ uzman_oylamalari: oncekiOylar, onay_durumu: 'beklemede', uzman_onayi: false }),
     });
-    guncelleYerel(id, { uzman_oylamalari: oncekiOylar as any, onay_durumu: 'beklemede' });
+    guncelleYerel(id, { uzman_oylamalari: oncekiOylar, onay_durumu: 'beklemede' });
     setUndoMesaj(null);
   };
 
