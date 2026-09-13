@@ -130,6 +130,9 @@ const GirisFormu = React.memo(function GirisFormu({
           styles.glassCard,
           { width: isMobile ? '90%' : undefined, maxWidth: 420 }
         ]}>
+          {!keyboardOpen && (
+            <Image source={asset('/branding/mascot/el-sallar.webp')} style={styles.mascotWelcome} />
+          )}
           <View style={styles.titleContainer}>
             <Image source={asset('/images/icon.png')} style={styles.logoImage} />
             <Text style={styles.girisBaslik}>Okul Öncesi Akademi</Text>
@@ -598,6 +601,13 @@ const styles = StyleSheet.create({
   },
 
   // Title Styles
+  mascotWelcome: {
+    width: 88,
+    height: 88,
+    alignSelf: 'center',
+    marginBottom: 4,
+    resizeMode: 'contain',
+  },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -471,14 +471,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
     // Best achievement detection
     const getBestAchievement = () => {
-        if (scores.length === 0) return { title: 'Başlangıç Yolcusu', emoji: '🚀', description: 'İlk oyununu oynamaya hazır!' };
+        if (scores.length === 0) return { title: 'Başlangıç Yolcusu', emoji: '🚀', description: 'İlk oyununu oynamaya hazır!', celebrate: false };
 
-        if (avgCorrectAnswers >= 9) return { title: 'Bilgi Şampiyonu', emoji: '🏆', description: 'Neredeyse hatasız performans!' };
-        if (avgCognitiveSpeed >= 80) return { title: 'Hız Ustası', emoji: '⚡', description: 'Çok hızlı düşünme yeteneği!' };
-        if (successRate >= 80) return { title: 'Yıldız Öğrenci', emoji: '🌟', description: 'Harika bir başarı oranı!' };
-        if (scores.length >= 10) return { title: 'Azimli Kaşif', emoji: '🎯', description: 'Düzenli pratik yapıyor!' };
+        if (avgCorrectAnswers >= 9) return { title: 'Bilgi Şampiyonu', emoji: '🏆', description: 'Neredeyse hatasız performans!', celebrate: true };
+        if (avgCognitiveSpeed >= 80) return { title: 'Hız Ustası', emoji: '⚡', description: 'Çok hızlı düşünme yeteneği!', celebrate: true };
+        if (successRate >= 80) return { title: 'Yıldız Öğrenci', emoji: '🌟', description: 'Harika bir başarı oranı!', celebrate: true };
+        if (scores.length >= 10) return { title: 'Azimli Kaşif', emoji: '🎯', description: 'Düzenli pratik yapıyor!', celebrate: false };
 
-        return { title: 'Gelişen Yetenek', emoji: '🌱', description: 'Her gün biraz daha iyi!' };
+        return { title: 'Gelişen Yetenek', emoji: '🌱', description: 'Her gün biraz daha iyi!', celebrate: false };
     };
 
     const bestAchievement = getBestAchievement();
@@ -859,9 +859,12 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 </View>
 
                                 {weekly.gamesCount === 0 && (
-                                    <Text style={styles.weeklyEmptyText}>
-                                        Bu hafta henüz oyun oynanmadı. Rapor, en son oynanan oyunlardan derlenmiş bir gelişim özeti sunar.
-                                    </Text>
+                                    <View style={styles.weeklyEmptyRow}>
+                                        <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.weeklyEmptyMascot} />
+                                        <Text style={[styles.weeklyEmptyText, { flex: 1, marginBottom: 0 }]}>
+                                            Bu hafta henüz oyun oynanmadı. Rapor, en son oynanan oyunlardan derlenmiş bir gelişim özeti sunar.
+                                        </Text>
+                                    </View>
                                 )}
 
                                 {/* Özet istatistik kutucukları */}
@@ -937,6 +940,9 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
                             {/* Best Achievement Badge */}
                             <View style={styles.achievementCard}>
+                                {bestAchievement.celebrate && (
+                                    <Image source={asset('/branding/mascot/kutluyor.webp')} style={styles.achievementMascot} />
+                                )}
                                 <Text style={styles.achievementEmoji}>{bestAchievement.emoji}</Text>
                                 <Text style={styles.achievementTitle}>{bestAchievement.title}</Text>
                                 <Text style={styles.achievementDescription}>{bestAchievement.description}</Text>
@@ -2558,6 +2564,12 @@ const styles = StyleSheet.create({
         fontSize: 48,
         marginBottom: 12,
     },
+    achievementMascot: {
+        width: 80,
+        height: 80,
+        resizeMode: 'contain',
+        marginBottom: 4,
+    },
     achievementTitle: {
         fontSize: 20,
         fontWeight: 'bold',
@@ -2676,13 +2688,23 @@ const styles = StyleSheet.create({
         marginTop: 2,
         fontWeight: '600',
     },
+    weeklyEmptyRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#FFF3E0',
+        borderRadius: 10,
+        padding: 8,
+        marginBottom: 12,
+    },
+    weeklyEmptyMascot: {
+        width: 48,
+        height: 48,
+        resizeMode: 'contain',
+    },
     weeklyEmptyText: {
         fontSize: 12.5,
         color: '#8D5A00',
-        backgroundColor: '#FFF3E0',
-        borderRadius: 10,
-        padding: 10,
-        marginBottom: 12,
         lineHeight: 18,
     },
     weeklyStatRow: {

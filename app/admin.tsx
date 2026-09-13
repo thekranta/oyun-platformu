@@ -738,7 +738,10 @@ ChildhoodTech Ekibi
                 {loading ? (
                   <ActivityIndicator style={{ marginTop: 30 }} color={C.accent} />
                 ) : kayitlar.length === 0 ? (
-                  <Text style={st.emptyText}>Bu kovada kayıt yok.</Text>
+                  <View style={{ alignItems: 'center' }}>
+                    <Image source={asset('/branding/mascot/uyuyor.webp')} style={st.mascotEmpty} />
+                    <Text style={st.emptyText}>Bu kovada kayıt yok.</Text>
+                  </View>
                 ) : (
                   kayitlar.map((k, i) => (
                     <QueueRow key={k.id} kayit={k} secili={i === selectedIdx} benimAdim={loggedInUser} onPress={() => setSelectedIdx(i)} />
@@ -761,7 +764,10 @@ ChildhoodTech Ekibi
 
         <View style={st.desk}>
           {!secili ? (
-            <View style={st.centerContainer}><Text style={st.emptyText}>{loading ? '' : 'Gösterilecek kayıt yok.'}</Text></View>
+            <View style={st.centerContainer}>
+              {!loading && <Image source={asset('/branding/mascot/uyuyor.webp')} style={st.mascotEmpty} />}
+              <Text style={st.emptyText}>{loading ? '' : 'Gösterilecek kayıt yok.'}</Text>
+            </View>
           ) : bucket === 'deneme' ? (
             // Basitleştirilmiş görünüm — AI metni hiç render edilmez (D3).
             <View style={{ padding: S.xl, gap: S.md }}>
@@ -797,6 +803,9 @@ ChildhoodTech Ekibi
 
               {!secili.yapay_zeka_yorumu ? (
                 <View style={st.centerContainer}>
+                  {analizIsleniyor && (
+                    <Image source={asset('/branding/mascot/dusunuyor.webp')} style={st.mascotThinking} />
+                  )}
                   <TouchableOpacity style={[st.dbtnLike, { backgroundColor: C.accent }]} onPress={() => analyzeGame({ ...secili, algilanan_kelime: agirAlanlar?.algilanan_kelime })} disabled={analizIsleniyor}>
                     {analizIsleniyor ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '700' }}>🤖 Analiz Et</Text>}
                   </TouchableOpacity>
@@ -854,6 +863,8 @@ ChildhoodTech Ekibi
 const st = StyleSheet.create({
   app: { flex: 1, backgroundColor: C.bg },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  mascotThinking: { width: 96, height: 96, resizeMode: 'contain', marginBottom: 16 },
+  mascotEmpty: { width: 96, height: 96, resizeMode: 'contain', marginBottom: 12, opacity: 0.85 },
   loginBox: { backgroundColor: '#fff', borderRadius: 20, padding: 28, width: '100%', maxWidth: 360, gap: 12 },
   loginLogo: { width: 56, height: 56, borderRadius: 14, alignSelf: 'center', marginBottom: 10 },
   loginTitle: { fontSize: F.screen, fontWeight: '700', color: C.ink, textAlign: 'center', marginBottom: 8 },

@@ -538,7 +538,7 @@ export default function TeacherDashboard({
 
                     {classes.length === 0 ? (
                         <View style={styles.emptyCard}>
-                            <Text style={styles.emptyEmoji}>🏫</Text>
+                            <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
                             <Text style={styles.emptyTitle}>Henüz sınıf yok</Text>
                             <Text style={styles.emptyText}>İlk sınıfınızı oluşturun!</Text>
                         </View>
@@ -580,7 +580,7 @@ export default function TeacherDashboard({
 
                         {students.length === 0 ? (
                             <View style={styles.emptyCard}>
-                                <Text style={styles.emptyEmoji}>👦</Text>
+                                <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
                                 <Text style={styles.emptyTitle}>Henüz öğrenci yok</Text>
                                 <Text style={styles.emptyText}>Sınıfa öğrenci ekleyin!</Text>
                             </View>
@@ -632,7 +632,7 @@ export default function TeacherDashboard({
 
                         {studentScores.length === 0 ? (
                             <View style={styles.emptyCard}>
-                                <Text style={styles.emptyEmoji}>🎮</Text>
+                                <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
                                 <Text style={styles.emptyText}>Henüz oyun kaydı yok</Text>
                             </View>
                         ) : (
@@ -955,7 +955,7 @@ const styles = StyleSheet.create({
 
     // Empty
     emptyCard: { backgroundColor: '#fff', padding: 32, borderRadius: 24, alignItems: 'center', borderWidth: 2, borderColor: '#F0F0F0', borderStyle: 'dashed' },
-    emptyEmoji: { fontSize: 48, marginBottom: 12 },
+    emptyMascot: { width: 72, height: 72, resizeMode: 'contain', marginBottom: 12 },
     emptyTitle: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 4 },
     emptyText: { fontSize: 14, color: '#888' },
 
