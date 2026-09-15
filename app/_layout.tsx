@@ -31,6 +31,7 @@ export default function RootLayout() {
           <Stack.Screen name="admin" options={{ headerShown: false }} />
           <Stack.Screen name="veli-dashboard" options={{ headerShown: false }} />
           <Stack.Screen name="teacher-dashboard" options={{ headerShown: false }} />
+          <Stack.Screen name="owner-dashboard" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </SoundProvider>
