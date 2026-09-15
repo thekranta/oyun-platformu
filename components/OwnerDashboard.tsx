@@ -14,6 +14,7 @@ import ActivityRow from './owner/ActivityRow';
 import PackageAssignForm from './owner/PackageAssignForm';
 import RoleFilterBar from './owner/RoleFilterBar';
 import SummaryStrip from './owner/SummaryStrip';
+import TeamAddForm from './owner/TeamAddForm';
 import { C, F, S } from './owner/ownerTheme';
 
 interface Props {
@@ -72,6 +73,7 @@ export default function OwnerDashboard({ displayName }: Props) {
         <ScrollView>
           <SummaryStrip totals={totals} active7d={active7d} />
           <PackageAssignForm />
+          <TeamAddForm />
           <RoleFilterBar aktif={aktifRol} onSec={setAktifRol} search={search} onSearch={setSearch} />
           <View style={st.list}>
             {filtered.length === 0 && <Text style={st.empty}>Bu filtreyle etkinlik bulunamadı.</Text>}
