@@ -1,0 +1,20 @@
+{
+  "login": {
+    "title": "Preschool Academy",
+    "welcome": "Welcome, little explorer! 🌟",
+    "emailPlaceholder": "Email Address",
+    "passwordPlaceholder": "Password",
+    "loggingIn": "Signing In...",
+    "submit": "Sign In 🚀",
+    "forgotPassword": "Forgot Password",
+    "signupPrompt": "Don't have an account yet? ",
+    "signupLink": "Sign Up",
+    "adminButton": "🔑 Expert",
+    "parentButton": "👨‍👩‍👧 Parent Panel",
+    "teacherButton": "👩‍🏫 Teacher"
+  },
+  "language": {
+    "tr": "TR",
+    "en": "EN"
+  }
+}

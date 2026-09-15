@@ -52,7 +52,8 @@
         {
           "microphonePermission": "Uygulama, çocuğun sesli yanıtlarını değerlendirmek için mikrofonu kullanır."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,

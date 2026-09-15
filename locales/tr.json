@@ -1,0 +1,20 @@
+{
+  "login": {
+    "title": "Okul Öncesi Akademi",
+    "welcome": "Hoş geldin, küçük kaşif! 🌟",
+    "emailPlaceholder": "E-posta Adresi",
+    "passwordPlaceholder": "Şifre",
+    "loggingIn": "Giriş Yapılıyor...",
+    "submit": "Giriş Yap 🚀",
+    "forgotPassword": "Şifremi Unuttum",
+    "signupPrompt": "Henüz üye değil misin? ",
+    "signupLink": "Kayıt Ol",
+    "adminButton": "🔑 Uzman",
+    "parentButton": "👨‍👩‍👧 Veli Paneli",
+    "teacherButton": "👩‍🏫 Öğretmen"
+  },
+  "language": {
+    "tr": "TR",
+    "en": "EN"
+  }
+}

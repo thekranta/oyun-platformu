@@ -6,6 +6,7 @@ import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Dimensions, Image, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import {
   createDailyGamePlan,
@@ -13,6 +14,7 @@ import {
 } from '../../lib/menuHelpers';
 import { useAuth } from '../../hooks/useAuth';
 import { asset } from '../../lib/assetMap';
+import { changeLanguage, SupportedLanguage } from '../../lib/i18n';
 import { supabase } from '../../lib/supabase';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
@@ -54,6 +56,7 @@ const GirisFormu = React.memo(function GirisFormu({
   onVeli: () => void;
   onOgretmen: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   // Metin state'te DEGIL — native alanda. JS yalnizca son degeri saklar.
   const emailRef = useRef(initialEmail);
   const passwordRef = useRef('');
@@ -130,17 +133,30 @@ const GirisFormu = React.memo(function GirisFormu({
           styles.glassCard,
           { width: isMobile ? '90%' : undefined, maxWidth: 420 }
         ]}>
+          <View style={styles.languageSwitcher}>
+            <TouchableOpacity onPress={() => changeLanguage('tr' as SupportedLanguage)} hitSlop={8}>
+              <Text style={[styles.languageOption, i18n.language === 'tr' && styles.languageOptionActive]}>
+                {t('language.tr')}
+              </Text>
+            </TouchableOpacity>
+            <Text style={styles.languageDivider}>|</Text>
+            <TouchableOpacity onPress={() => changeLanguage('en' as SupportedLanguage)} hitSlop={8}>
+              <Text style={[styles.languageOption, i18n.language === 'en' && styles.languageOptionActive]}>
+                {t('language.en')}
+              </Text>
+            </TouchableOpacity>
+          </View>
           {!keyboardOpen && (
             <Image source={asset('/branding/mascot/el-sallar.webp')} style={styles.mascotWelcome} />
           )}
           <View style={styles.titleContainer}>
             <Image source={asset('/images/icon.png')} style={styles.logoImage} />
-            <Text style={styles.girisBaslik}>Okul Öncesi Akademi</Text>
+            <Text style={styles.girisBaslik}>{t('login.title')}</Text>
             {/* A/B ANAHTARI: kalemE dokunmak arka plan animasyonlarini acip kapatir.
                 Kapatinca yazma/silme duzeliyorsa kok neden kesinlesir. */}
             <Text style={styles.titleEmoji} onPress={onToggleDecor} suppressHighlighting>✏️</Text>
           </View>
-          <Text style={styles.welcomeSubtitle}>Hoş geldin, küçük kaşif! 🌟</Text>
+          <Text style={styles.welcomeSubtitle}>{t('login.welcome')}</Text>
 
           <View style={[
             styles.inputContainer,
@@ -149,7 +165,7 @@ const GirisFormu = React.memo(function GirisFormu({
             <Text style={styles.inputIcon}>✉️</Text>
             <TextInput
               style={styles.inputModern}
-              placeholder="E-posta Adresi"
+              placeholder={t('login.emailPlaceholder')}
               placeholderTextColor="#9E9E9E"
               defaultValue={initialEmail}
               onChangeText={(t) => {
@@ -193,7 +209,7 @@ const GirisFormu = React.memo(function GirisFormu({
             <TextInput
               ref={passwordInputRef}
               style={styles.inputModern}
-              placeholder="Şifre"
+              placeholder={t('login.passwordPlaceholder')}
               placeholderTextColor="#9E9E9E"
               onChangeText={(t) => {
                 passwordRef.current = t;
@@ -232,20 +248,20 @@ const GirisFormu = React.memo(function GirisFormu({
             {isLoggingIn ? (
               <View style={styles.buttonContent}>
                 <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
-                <Text style={styles.gradientButtonText}>Giriş Yapılıyor...</Text>
+                <Text style={styles.gradientButtonText}>{t('login.loggingIn')}</Text>
               </View>
             ) : (
-              <Text style={styles.gradientButtonText}>Giriş Yap 🚀</Text>
+              <Text style={styles.gradientButtonText}>{t('login.submit')}</Text>
             )}
           </TouchableOpacity>
 
           <View style={styles.linksContainer}>
             <TouchableOpacity onPress={() => onForgot(emailRef.current.trim())}>
-              <Text style={styles.linkText}>Şifremi Unuttum</Text>
+              <Text style={styles.linkText}>{t('login.forgotPassword')}</Text>
             </TouchableOpacity>
             <View style={styles.linkDivider} />
             <TouchableOpacity onPress={onSignup}>
-              <Text style={styles.linkText}>Henüz üye değil misin? <Text style={styles.linkBold}>Kayıt Ol</Text></Text>
+              <Text style={styles.linkText}>{t('login.signupPrompt')}<Text style={styles.linkBold}>{t('login.signupLink')}</Text></Text>
             </TouchableOpacity>
           </View>
 
@@ -267,19 +283,19 @@ const GirisFormu = React.memo(function GirisFormu({
             klavye acilinca agactan view silinmesi sicramaya yol aciyordu. */}
         <View style={{ marginTop: 18, marginBottom: 8, flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
           <TouchableOpacity style={styles.adminButtonBottom} onPress={onAdmin}>
-            <Text style={styles.adminButtonText}>🔑 Uzman</Text>
+            <Text style={styles.adminButtonText}>{t('login.adminButton')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.adminButtonBottom, { backgroundColor: 'rgba(123, 31, 162, 0.25)', borderColor: 'rgba(123, 31, 162, 0.4)' }]}
             onPress={onVeli}
           >
-            <Text style={[styles.adminButtonText, { color: '#7B1FA2' }]}>👨‍👩‍👧 Veli Paneli</Text>
+            <Text style={[styles.adminButtonText, { color: '#7B1FA2' }]}>{t('login.parentButton')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.adminButtonBottom, { backgroundColor: 'rgba(255, 152, 0, 0.25)', borderColor: 'rgba(255, 152, 0, 0.4)' }]}
             onPress={onOgretmen}
           >
-            <Text style={[styles.adminButtonText, { color: '#E65100' }]}>👩‍🏫 Öğretmen</Text>
+            <Text style={[styles.adminButtonText, { color: '#E65100' }]}>{t('login.teacherButton')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -598,6 +614,30 @@ const styles = StyleSheet.create({
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
     } : {}),
+  },
+
+  // Language Switcher
+  languageSwitcher: {
+    position: 'absolute',
+    top: 14,
+    right: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    zIndex: 1,
+  },
+  languageOption: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#B0BEC5',
+    paddingHorizontal: 2,
+  },
+  languageOptionActive: {
+    color: '#1565C0',
+  },
+  languageDivider: {
+    fontSize: 12,
+    color: '#CFD8DC',
   },
 
   // Title Styles
