@@ -11,6 +11,7 @@ import {
 } from '../lib/owner/activityFeed';
 import ActivityDetailModal from './owner/ActivityDetailModal';
 import ActivityRow from './owner/ActivityRow';
+import GrowthPanel from './owner/GrowthPanel';
 import PackageAssignForm from './owner/PackageAssignForm';
 import RoleFilterBar from './owner/RoleFilterBar';
 import SummaryStrip from './owner/SummaryStrip';
@@ -72,6 +73,7 @@ export default function OwnerDashboard({ displayName }: Props) {
       ) : (
         <ScrollView>
           <SummaryStrip totals={totals} active7d={active7d} />
+          <GrowthPanel />
           <PackageAssignForm />
           <TeamAddForm />
           <RoleFilterBar aktif={aktifRol} onSec={setAktifRol} search={search} onSearch={setSearch} />
