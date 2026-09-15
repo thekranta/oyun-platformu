@@ -181,6 +181,22 @@ export default function TeacherDashboardPage() {
         }
     };
 
+    const handleForgotPassword = async () => {
+        if (!email.trim()) {
+            showAlert('Hata', 'Şifre sıfırlama bağlantısı için önce e-postanızı girin');
+            return;
+        }
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+            });
+            if (error) throw error;
+            showAlert('Gönderildi', 'Şifre sıfırlama bağlantısı e-postanıza gönderildi.');
+        } catch (error: any) {
+            showAlert('Hata', error.message || 'Bağlantı gönderilemedi.');
+        }
+    };
+
     // Show dashboard if profile is loaded
     if (profile) {
         return (
@@ -296,6 +312,10 @@ export default function TeacherDashboardPage() {
                                 <Text style={styles.demoButtonText}>Demo</Text>
                             </TouchableOpacity>
                         </View>
+
+                        <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotLink}>
+                            <Text style={styles.forgotLinkText}>Şifremi unuttum</Text>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Info */}
@@ -540,6 +560,16 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
         color: '#FF9800',
+    },
+    forgotLink: {
+        alignSelf: 'center',
+        marginTop: 14,
+        padding: 4,
+    },
+    forgotLinkText: {
+        fontSize: 13,
+        color: '#1E88E5',
+        textDecorationLine: 'underline',
     },
     info: {
         flexDirection: 'row',

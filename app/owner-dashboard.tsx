@@ -61,6 +61,22 @@ export default function OwnerDashboardRoute() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      alert('Şifre sıfırlama bağlantısı için önce e-postanızı girin.');
+      return;
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+      });
+      if (error) throw error;
+      alert('Şifre sıfırlama bağlantısı e-postanıza gönderildi.');
+    } catch (error: any) {
+      alert(error.message || 'Bağlantı gönderilemedi.');
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <DynamicBackground>
@@ -73,7 +89,10 @@ export default function OwnerDashboardRoute() {
             <TouchableOpacity style={st.loginButton} onPress={handleLogin} disabled={isLoggingIn}>
               {isLoggingIn ? <ActivityIndicator size="small" color="white" /> : <Text style={st.loginButtonText}>Giriş Yap</Text>}
             </TouchableOpacity>
-            <TouchableOpacity style={{ marginTop: 14, alignItems: 'center' }} onPress={() => router.back()}>
+            <TouchableOpacity style={{ marginTop: 10, alignItems: 'center' }} onPress={handleForgotPassword}>
+              <Text style={{ color: C.accent, textDecorationLine: 'underline', fontSize: F.small }}>Şifremi unuttum</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={{ marginTop: 8, alignItems: 'center' }} onPress={() => router.back()}>
               <Text style={{ color: C.inkMid }}>Geri Dön</Text>
             </TouchableOpacity>
           </View>
