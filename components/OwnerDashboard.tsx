@@ -11,6 +11,7 @@ import {
 } from '../lib/owner/activityFeed';
 import ActivityDetailModal from './owner/ActivityDetailModal';
 import ActivityRow from './owner/ActivityRow';
+import PackageAssignForm from './owner/PackageAssignForm';
 import RoleFilterBar from './owner/RoleFilterBar';
 import SummaryStrip from './owner/SummaryStrip';
 import { C, F, S } from './owner/ownerTheme';
@@ -70,6 +71,7 @@ export default function OwnerDashboard({ displayName }: Props) {
       ) : (
         <ScrollView>
           <SummaryStrip totals={totals} active7d={active7d} />
+          <PackageAssignForm />
           <RoleFilterBar aktif={aktifRol} onSec={setAktifRol} search={search} onSearch={setSearch} />
           <View style={st.list}>
             {filtered.length === 0 && <Text style={st.empty}>Bu filtreyle etkinlik bulunamadı.</Text>}
