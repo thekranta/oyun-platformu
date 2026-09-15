@@ -21,6 +21,7 @@ import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyRepo
 import { getGameDisplay } from '../lib/gameDisplay';
 import { supabase } from '../lib/supabase';
 import { asset } from '../lib/assetMap';
+import { getEffectiveVeliTier, getVeliFlags, VeliTier } from '../lib/subscriptionTiers';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -120,7 +121,8 @@ interface VeliDashboardProps {
     childName: string;
     childAge: number;
     email: string;
-    subscriptionTier?: 'free' | 'standard' | 'premium';
+    subscriptionTier?: VeliTier;
+    packageExpiresAt?: string | null;
     onClose: () => void;
 }
 
@@ -201,7 +203,7 @@ const calculateCognitiveSpeed = (correctAnswers: number, responseTimeMs: number,
     return Math.round(Math.min(100, score)); // Cap at 100
 };
 
-export default function VeliDashboard({ childName, childAge, email, subscriptionTier: initialTier, onClose }: VeliDashboardProps) {
+export default function VeliDashboard({ childName, childAge, email, subscriptionTier: initialTier, packageExpiresAt: initialExpiresAt, onClose }: VeliDashboardProps) {
     const { t } = useTranslation();
     const { width, height } = Dimensions.get('window');
     const isTablet = width >= 768;
@@ -211,7 +213,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const [loading, setLoading] = useState(true);
     const [scores, setScores] = useState<GameScore[]>([]);
     const [activeTab, setActiveTab] = useState<'ozet' | 'gelisim' | 'gecmis'>('ozet');
-    const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'standard' | 'premium'>(initialTier || 'free');
+    const [subscriptionTier, setSubscriptionTier] = useState<VeliTier>(initialTier || 'free');
+    const [packageExpiresAt, setPackageExpiresAt] = useState<string | null>(initialExpiresAt || null);
     const [generatingPDF, setGeneratingPDF] = useState(false);
     const [aiReportExpanded, setAiReportExpanded] = useState(false);
     const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
@@ -340,13 +343,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             }
 
             const profileResponse = await fetch(
-                `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=subscription_tier`,
+                `${SUPABASE_URL}/rest/v1/profiles?email=eq.${encodeURIComponent(email)}&select=subscription_tier,package_expires_at`,
                 { headers: await getAuthHeaders() }
             );
             const profileData = await profileResponse.json();
             // Only update if we got data AND we didn't receive a prop value
             if (profileData && profileData.length > 0 && !initialTier) {
                 setSubscriptionTier(profileData[0].subscription_tier || 'free');
+                setPackageExpiresAt(profileData[0].package_expires_at || null);
             }
         } catch (error) {
             console.error('❌ Dashboard veri çekme hatası:', error);
@@ -419,7 +423,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     // For unapproved AI comments, show pending message
     const hasPendingReports = scores.some(s => s.yapay_zeka_yorumu && s.onay_durumu !== 'onaylandi');
 
-    const isPremium = subscriptionTier === 'premium';
+    const effectiveTier = getEffectiveVeliTier(subscriptionTier, packageExpiresAt);
+    const flags = getVeliFlags(effectiveTier);
     const successRate = avgCorrectAnswers * 10;
 
     // Selected game's AI comment for timeline - only if approved
@@ -510,7 +515,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         }
         setGeneratingPDF(true);
         try {
-            const html = buildWeeklyReportHTML(weekly, isPremium);
+            const html = buildWeeklyReportHTML(weekly, flags.canDownloadDetailedPdf);
             const win = window.open('', '_blank', 'width=920,height=1000');
             if (!win) {
                 Alert.alert(t('veli.popupBlockedTitle'), t('veli.popupBlockedMessage'));
@@ -811,7 +816,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             {/* Premium Badge - Prominent Position */}
                             <View style={styles.heroPremiumBadge}>
                                 <Text style={styles.heroPremiumBadgeText}>
-                                    {isPremium ? '👑 Premium' : subscriptionTier === 'standard' ? '⭐ Standard' : '🆓 Free'}
+                                    {t(`veli.tier.${effectiveTier}`)}
                                 </Text>
                             </View>
                             <Text style={styles.heroName}>{childName}</Text>
@@ -886,7 +891,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 </View>
 
                                 {/* Premium: çalışılan gelişim alanları (Maarif) */}
-                                {isPremium && weekly.skillAreas.length > 0 && (
+                                {flags.canSeeAiAnalysis && weekly.skillAreas.length > 0 && (
                                     <View style={{ marginTop: 14 }}>
                                         <Text style={styles.weeklySubTitle}>{t('veli.skillAreasTitle')}</Text>
                                         <View style={styles.skillChipWrap}>
@@ -903,7 +908,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 )}
 
                                 {/* Ücretsiz: kilitli premium ipucu */}
-                                {!isPremium && (
+                                {!flags.canSeeAiAnalysis && (
                                     <View style={styles.weeklyLockBox}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                                             <Ionicons name="lock-closed" size={15} color="#A07D2F" />
@@ -928,7 +933,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                         <>
                                             <Ionicons name="document-text" size={20} color="#fff" />
                                             <Text style={styles.weeklyDownloadBtnText}>
-                                                {isPremium ? t('veli.downloadDetailedPdf') : t('veli.downloadSummaryPdf')}
+                                                {flags.canDownloadDetailedPdf ? t('veli.downloadDetailedPdf') : t('veli.downloadSummaryPdf')}
                                             </Text>
                                         </>
                                     )}
@@ -1139,20 +1144,20 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     })()}
                                 </View>
                             )}
-                            {/* CUMULATIVE AI ANALYSIS - Main Feature (Premium/Standard only) */}
-                            <View style={[styles.chartCard, { marginBottom: 20, borderWidth: 2, borderColor: subscriptionTier === 'free' ? '#E0E0E0' : COLORS.premium }]}>
+                            {/* CUMULATIVE AI ANALYSIS - Main Feature (Filiz ve üzeri) */}
+                            <View style={[styles.chartCard, { marginBottom: 20, borderWidth: 2, borderColor: !flags.canSeeAiAnalysis ? '#E0E0E0' : COLORS.premium }]}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                                     <Text style={{ fontSize: 24, marginRight: 10 }}>🧠</Text>
                                     <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('veli.cumulativeAiAnalysis')}</Text>
-                                    {subscriptionTier === 'free' && (
+                                    {!flags.canSeeAiAnalysis && (
                                         <View style={{ marginLeft: 8, backgroundColor: '#FFE082', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
                                             <Text style={{ fontSize: 10, color: '#F57C00', fontWeight: 'bold' }}>{t('veli.premiumBadge')}</Text>
                                         </View>
                                     )}
                                 </View>
 
-                                {subscriptionTier === 'free' ? (
-                                    /* FREE TIER - Show locked message */
+                                {!flags.canSeeAiAnalysis ? (
+                                    /* FREE/TOHUM TIER - Show locked message */
                                     <View style={{ alignItems: 'center', paddingVertical: 20 }}>
                                         <Text style={{ fontSize: 40, marginBottom: 12 }}>🔒</Text>
                                         <Text style={{ color: COLORS.text, fontSize: 15, fontWeight: '600', marginBottom: 8, textAlign: 'center' }}>
@@ -1170,7 +1175,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                         </TouchableOpacity>
                                     </View>
                                 ) : (
-                                    /* PREMIUM/STANDARD TIER - Show AI analysis */
+                                    /* FILIZ+ TIER - Show AI analysis */
                                     <>
                                         <Text style={{ color: COLORS.textLight, fontSize: 13, marginBottom: 12 }}>
                                             {t('veli.aiAnalyzedNote')}
@@ -1411,7 +1416,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             )}
 
                             {/* FREE TIER BANNER */}
-                            {!isPremium && (
+                            {!flags.canSeeAiAnalysis && (
                                 <View style={styles.freeBanner}>
                                     <View style={styles.freeBannerContent}>
                                         <Text style={styles.freeBannerEmoji}>🆓</Text>
@@ -1463,23 +1468,23 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             </Text>
                                         </View>
                                     )}
-                                    {!isPremium && (
+                                    {!flags.canSeePastGameAiComment && (
                                         <View style={styles.lockIcon}>
                                             <Ionicons name="lock-closed" size={16} color="#fff" />
                                         </View>
                                     )}
                                 </View>
                                 <TouchableOpacity
-                                    style={[styles.aiCard, !isPremium && styles.aiCardBlurred]}
-                                    onPress={() => isPremium && selectedGameAIComment && setAiReportExpanded(!aiReportExpanded)}
-                                    activeOpacity={isPremium && selectedGameAIComment ? 0.7 : 1}
+                                    style={[styles.aiCard, !flags.canSeePastGameAiComment && styles.aiCardBlurred]}
+                                    onPress={() => flags.canSeePastGameAiComment && selectedGameAIComment && setAiReportExpanded(!aiReportExpanded)}
+                                    activeOpacity={flags.canSeePastGameAiComment && selectedGameAIComment ? 0.7 : 1}
                                 >
                                     {selectedGameAIComment ? (
                                         <>
                                             <Text style={styles.aiText}>
                                                 {aiReportExpanded ? selectedGameAIComment : selectedGameAIComment.substring(0, 300) + (selectedGameAIComment.length > 300 ? '...' : '')}
                                             </Text>
-                                            {isPremium && selectedGameAIComment.length > 300 && (
+                                            {flags.canSeePastGameAiComment && selectedGameAIComment.length > 300 && (
                                                 <View style={styles.aiExpandButton}>
                                                     <Ionicons
                                                         name={aiReportExpanded ? "chevron-up" : "chevron-down"}
@@ -1499,7 +1504,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                                     ? t('veli.aiEmptySelected')
                                                     : t('veli.aiEmptyNoneSelected')}
                                             </Text>
-                                            {isPremium && selectedGameIndex !== null && !scores[selectedGameIndex]?.yapay_zeka_yorumu && (
+                                            {flags.canSeePastGameAiComment && selectedGameIndex !== null && !scores[selectedGameIndex]?.yapay_zeka_yorumu && (
                                                 <TouchableOpacity
                                                     style={styles.analyzeButton}
                                                     onPress={() => {
@@ -1590,7 +1595,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         </TouchableOpacity>
 
                         {/* Share Image Button - Instagram Ready */}
-                        {isPremium && Platform.OS === 'web' && (
+                        {flags.canShareCard && Platform.OS === 'web' && (
                             <TouchableOpacity
                                 style={styles.shareImageButton}
                                 onPress={handleGenerateShareImage}

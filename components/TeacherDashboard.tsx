@@ -18,6 +18,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { requestGeminiAnalysis } from '../services/geminiClient';
 import { asset } from '../lib/assetMap';
+import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -51,7 +52,8 @@ interface TeacherDashboardProps {
     teacherName: string;
     teacherEmail: string;
     schoolName?: string;
-    subscriptionTier: 'free' | 'premium';
+    subscriptionTier: OgretmenTier;
+    packageExpiresAt?: string | null;
     onClose: () => void;
 }
 
@@ -94,6 +96,7 @@ export default function TeacherDashboard({
     teacherEmail,
     schoolName,
     subscriptionTier,
+    packageExpiresAt,
     onClose,
 }: TeacherDashboardProps) {
     const { t } = useTranslation();
@@ -114,7 +117,8 @@ export default function TeacherDashboard({
     const [searchingStudent, setSearchingStudent] = useState(false);
     const [analyzingId, setAnalyzingId] = useState<number | null>(null);
 
-    const isPremium = subscriptionTier === 'premium';
+    const effectiveTier = getEffectiveOgretmenTier(subscriptionTier, packageExpiresAt);
+    const flags = getOgretmenFlags(effectiveTier);
     const totalStudents = classes.reduce((sum, c) => sum + c.studentCount, 0);
 
     useEffect(() => {
@@ -276,7 +280,7 @@ export default function TeacherDashboard({
 
     const handleAddClass = async () => {
         if (!newClassName.trim()) return;
-        if (!isPremium && classes.length >= 1) {
+        if (classes.length >= flags.maxClasses) {
             showAlert(t('teacher.premiumRequiredTitle'), t('teacher.classLimitMessage'));
             return;
         }
@@ -360,7 +364,7 @@ export default function TeacherDashboard({
             showAlert(t('teacher.errorTitle'), t('teacher.studentNotFoundMessage'));
             return;
         }
-        if (!isPremium && students.length >= 10) {
+        if (students.length >= flags.maxStudentsPerClass) {
             showAlert(t('teacher.premiumRequiredTitle'), t('teacher.studentLimitMessage'));
             return;
         }
@@ -444,7 +448,7 @@ export default function TeacherDashboard({
     };
 
     const analyzeScore = async (score: GameScore) => {
-        if (!isPremium) {
+        if (!flags.canSeeAiAnalysis) {
             showAlert(t('teacher.premiumFeatureTitle'), t('teacher.aiPremiumOnlyMessage'));
             return;
         }
@@ -501,10 +505,9 @@ export default function TeacherDashboard({
                         <Text style={styles.headerSchool}>{schoolName || t('teacher.defaultPanelName')}</Text>
                     </View>
                 </View>
-                <View style={[styles.tierBadge, isPremium && styles.tierBadgePremium]}>
-                    <Text style={styles.tierEmoji}>{isPremium ? '⭐' : '🆓'}</Text>
-                    <Text style={[styles.tierText, isPremium && styles.tierTextPremium]}>
-                        {isPremium ? t('teacher.tierPremium') : t('teacher.tierFree')}
+                <View style={[styles.tierBadge, flags.canSeeAiAnalysis && styles.tierBadgePremium]}>
+                    <Text style={[styles.tierText, flags.canSeeAiAnalysis && styles.tierTextPremium]}>
+                        {t(`teacher.tier.${effectiveTier}`)}
                     </Text>
                 </View>
             </View>
@@ -625,7 +628,7 @@ export default function TeacherDashboard({
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>{t('teacher.studentHistoryTitle', { name: selectedStudent.child_name })}</Text>
 
-                        {!isPremium && (
+                        {!flags.canSeeAiAnalysis && (
                             <View style={styles.premiumBanner}>
                                 <Text style={styles.premiumBannerEmoji}>🔒</Text>
                                 <Text style={styles.premiumBannerText}>{t('teacher.upgradeForAiMessage')}</Text>
@@ -662,7 +665,7 @@ export default function TeacherDashboard({
                                             </Text>
                                         </View>
                                     </View>
-                                    {isPremium && (
+                                    {flags.canSeeAiAnalysis && (
                                         <TouchableOpacity
                                             style={styles.analyzeBtn}
                                             onPress={() => analyzeScore(score)}

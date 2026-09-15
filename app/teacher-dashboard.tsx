@@ -18,6 +18,7 @@ import {
 import DynamicBackground from '../components/DynamicBackground';
 import TeacherDashboard from '../components/TeacherDashboard';
 import { supabase } from '../lib/supabase';
+import { OgretmenTier } from '../lib/subscriptionTiers';
 
 // Web-compatible alert function
 const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: 'cancel' | 'default' | 'destructive' }>) => {
@@ -42,7 +43,8 @@ interface TeacherProfile {
     email: string;
     name: string;
     school_name?: string;
-    subscription_tier: 'free' | 'premium';
+    subscription_tier: OgretmenTier;
+    package_expires_at: string | null;
 }
 
 export default function TeacherDashboardPage() {
@@ -67,7 +69,8 @@ export default function TeacherDashboardPage() {
             email: 'demo@okul.com',
             name: 'Demo Öğretmen',
             school_name: 'Demo Anaokulu',
-            subscription_tier: 'premium',
+            subscription_tier: 'mese',
+            package_expires_at: null,
         });
     };
 
@@ -155,7 +158,7 @@ export default function TeacherDashboardPage() {
             // 2. teachers tablosundan profil bilgilerini cek (user_id = auth.uid())
             const { data: teacherRow, error: teacherError } = await supabase
                 .from('teachers')
-                .select('name, email, school_name, subscription_tier')
+                .select('name, email, school_name, subscription_tier, package_expires_at')
                 .eq('user_id', authData.user.id)
                 .single();
 
@@ -172,6 +175,7 @@ export default function TeacherDashboardPage() {
                 name: teacherRow.name,
                 school_name: teacherRow.school_name,
                 subscription_tier: teacherRow.subscription_tier,
+                package_expires_at: teacherRow.package_expires_at,
             });
         } catch (error) {
             console.error('Giriş hatası:', error);
@@ -206,6 +210,7 @@ export default function TeacherDashboardPage() {
                 teacherEmail={profile.email}
                 schoolName={profile.school_name}
                 subscriptionTier={profile.subscription_tier}
+                packageExpiresAt={profile.package_expires_at}
                 onClose={() => setProfile(null)}
             />
         );

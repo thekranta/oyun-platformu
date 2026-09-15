@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { VeliTier } from '../lib/subscriptionTiers';
 import {
     ActivityIndicator,
     Alert,
@@ -45,7 +46,8 @@ interface ProfileData {
     parent_name: string;
     child_name: string;
     child_age_months: number;
-    subscription_tier: 'free' | 'standard' | 'premium';
+    subscription_tier: VeliTier;
+    package_expires_at: string | null;
 }
 
 export default function VeliDashboardPage() {
@@ -62,7 +64,8 @@ export default function VeliDashboardPage() {
             parent_name: 'Demo Veli',
             child_name: 'Demo Çocuk',
             child_age_months: 60,
-            subscription_tier: 'premium',
+            subscription_tier: 'orman',
+            package_expires_at: null,
         });
     };
 
@@ -70,7 +73,7 @@ export default function VeliDashboardPage() {
     const loadProfile = async (emailValue: string): Promise<boolean> => {
         const { data, error } = await supabase
             .from('profiles')
-            .select('email, parent_name, child_name, child_age_months, subscription_tier')
+            .select('email, parent_name, child_name, child_age_months, subscription_tier, package_expires_at')
             .eq('email', emailValue)
             .limit(1);
         if (error) {
@@ -159,6 +162,7 @@ export default function VeliDashboardPage() {
                 childAge={profile.child_age_months}
                 email={profile.email}
                 subscriptionTier={profile.subscription_tier}
+                packageExpiresAt={profile.package_expires_at}
                 onClose={() => router.back()}
             />
         );
