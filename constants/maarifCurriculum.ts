@@ -1,13 +1,25 @@
 /**
- * maarifCurriculum.ts — KANONİK Maarif çıktı kodları (tek doğruluk kaynağı)
+ * ⚠️ KULLANIM DIŞI (2026 program güncellemesiyle) — sadece ARŞİV/tarihsel referans.
+ * ------------------------------------------------------------
+ * Bu dosya artık `constants/maarifMap.ts` tarafından KULLANILMIYOR — canlı kaynak
+ * `constants/maarifCurriculum2026.ts`. 2026 "Türkiye Yüzyılı Maarif Modeli" güncel
+ * programıyla neredeyse her kod yeniden numaralandırıldı/anlamı değişti (bkz.
+ * maarifCurriculum2026.ts'in başındaki karşılaştırma tablosu).
+ *
+ * Bu dosya SİLİNMEDİ çünkü: migration öncesi üretilmiş bazı AI analiz metinleri
+ * (`oyun_skorlari.yapay_zeka_yorumu`/`kumulatif_ai_yorumu`) hâlâ bu ESKİ kodlara
+ * atıfta bulunuyor olabilir — geçmiş bir raporu yorumlarken hangi kodun ne anlama
+ * geldiğini görmek için bu dosyaya bakılabilir. Yeni kod için KULLANMAYIN.
+ * ------------------------------------------------------------
+ * maarifCurriculum.ts — 2024 dönemi KANONİK Maarif çıktı kodları (eski tek doğruluk kaynağı)
  * ------------------------------------------------------------
  * Bu dosya, `raw_curriculum.txt` (Türkiye Yüzyılı Maarif Modeli okul öncesi
- * programı) belgesinden LİTERAL olarak çıkarılmış TÜM Öğrenme Çıktısı kodlarını
- * ve resmi açıklamalarını içerir. Amaç: Maarif'e yönelik UYDURMALARI önlemek.
+ * programı, 2024 dönemi baskısı) belgesinden LİTERAL olarak çıkarılmış TÜM
+ * Öğrenme Çıktısı kodlarını ve resmi açıklamalarını içerir.
  *
- * Kural: `constants/maarifMap.ts` içindeki her oyunun `cikti` kodu BURADA
- * bulunmalıdır. `isValidCikti(code)` ile doğrulanabilir. Burada olmayan bir kod
- * = uydurma; kullanılamaz.
+ * Kural (ESKİ, artık geçerli değil): `constants/maarifMap.ts` içindeki her oyunun
+ * `cikti` kodu BURADA bulunmalıydı. `isValidCikti(code)` ile doğrulanabilir. Burada
+ * olmayan bir kod = uydurma; kullanılamaz.
  *
  * ⚠️ Yaşa göre değişen kodlar: Belgede bazı kodlar (HSAB.6–12, MAB.3–6/11–13,
  * MÇB.1–3, SAB.1–7) farklı yaş bantlarında FARKLI çıktıya karşılık gelir.

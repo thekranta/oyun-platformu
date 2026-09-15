@@ -1,4 +1,4 @@
-import { isValidCikti } from '../../constants/maarifCurriculum';
+import { isValidCikti2026 as isValidCikti } from '../../constants/maarifCurriculum2026';
 import { AyrisikAnaliz } from './parseAnalysis';
 
 export type BayrakSeviye = 'hata' | 'danisma';
@@ -16,9 +16,9 @@ export interface Bayrak {
  * eşikler kasıtlı gevşek: yanlış pozitifin maliyeti düşük, yanlış negatifin maliyeti
  * (uzmanın gerçek bir hatayı atlaması) yüksek.
  *
- * ÖNEMLİ (R3): AI'nin farklı ama yaşa uygun bir kod seçmesi meşru olabilir (kodlar yaş
- * bandına göre değişebilir — bkz. constants/maarifCurriculum.ts yasaGoreDegisir).
- * Bu yüzden "AI'nin yazdığı kod ≠ beklenen kod" HATA değil, turuncu DANIŞMA'dır.
+ * ÖNEMLİ (R3): Bir oyun birden fazla kazanıma dokunabilir; AI'nin atanan koddan farklı
+ * ama yine de müfredatta var olan makul bir kod seçmesi meşru olabilir. Bu yüzden
+ * "AI'nin yazdığı kod ≠ beklenen kod" HATA değil, turuncu DANIŞMA'dır.
  */
 export function hesaplaBayraklar(params: {
   analiz: AyrisikAnaliz | null;

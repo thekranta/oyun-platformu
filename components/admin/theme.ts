@@ -12,7 +12,7 @@ export const C = {
   bayrak: '#B71C1C', bayrakBg: '#FFF5F5',
   danisma: '#B15B00', danismaBg: '#FFF3E0',
   bekle: '#8FA0B0', veliBg: '#FFF9E6', veliLine: '#EBC369', veliInk: '#6B5217',
-  mab: '#1976D2', fab: '#388E3C', dil: '#D32F2F', hareket: '#FF7043', sosyal: '#8E24AA', muzik: '#00897B', varsayilan: '#607D8B',
+  mab: '#1976D2', fab: '#388E3C', dil: '#D32F2F', hareket: '#FF7043', sosyal: '#8E24AA', muzik: '#00897B', sosyalDuygusal: '#EC407A', varsayilan: '#607D8B',
 } as const;
 
 export const S = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 };
@@ -29,5 +29,6 @@ export function codeColor(code: string): string {
   if (code.startsWith('SAB')) return C.sosyal;
   if (code.startsWith('MDB') || code.startsWith('MSB') || code.startsWith('MÇB') || code.startsWith('MHB') || code.startsWith('MYB')) return C.muzik;
   if (code.startsWith('SNAB')) return C.sosyal;
+  if (code.startsWith('SDB')) return C.sosyalDuygusal;
   return C.varsayilan;
 }
