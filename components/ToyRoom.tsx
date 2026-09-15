@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Animated, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
@@ -176,6 +177,7 @@ function Plaything({ kind, label, onPress, moving, size, color, replacement }: {
 }
 
 export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame, onLogout }: Props) {
+  const { t } = useTranslation();
   const [bounds, setBounds] = useState({ width: 0, height: 0 });
   const [adult, setAdult] = useState(false);
   const [query, setQuery] = useState('');
@@ -219,29 +221,29 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
         {!portrait && <G transform="translate(802 65)"><Path d="M0 0V85M78 0V65" stroke="#DCCCB5" strokeWidth="2"/><Path d="M0 67L6 79L19 82L8 91L10 105L0 98L-12 104L-9 90L-20 81L-6 78Z" fill="#E5BA65"/><Circle cx="78" cy="73" r="14" fill="#B6A6C9"/></G>}
       </Svg>
       <View style={[styles.heading, { top: portrait ? 62 : 21, left: portrait ? 20 : 265, right: portrait ? 20 : 265 }]}>
-        <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.eyebrow, { fontSize: portrait ? 17 : 20, letterSpacing: name.trim() ? 0.5 : 3 }]}>{name.trim() ? `Merhaba ${name.trim()}!` : 'MİNİK DÜNYAM'}</Text>
-        <Text style={[styles.headline, { fontSize: portrait ? 29 : 38 }]}>Bugün ne oynayalım?</Text>
-        <Text style={styles.greeting}>İstediğin oyuncağa dokun.</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit style={[styles.eyebrow, { fontSize: portrait ? 17 : 20, letterSpacing: name.trim() ? 0.5 : 3 }]}>{name.trim() ? t('toyRoom.greetingWithName', { name: name.trim() }) : t('toyRoom.greetingDefault')}</Text>
+        <Text style={[styles.headline, { fontSize: portrait ? 29 : 38 }]}>{t('toyRoom.headline')}</Text>
+        <Text style={styles.greeting}>{t('toyRoom.subtitle')}</Text>
       </View>
       {games.map((game, i) => <View key={`${round}-${i}`} style={{ position: 'absolute', left: positions[i].x, top: positions[i].y }}>
         <Plaything kind={(round % 2 === 0 ? kinds : alternateKinds)[i]} label={title(game)} color={colors[i]} size={toySize} moving={moving} onPress={() => onGame(game.routeKey)} replacement={round > 0 ? GAME_EMOJI[game.id] || '🧸' : undefined}/>
       </View>)}
       <View pointerEvents="none" style={{ position: 'absolute', left: portrait ? 148 : 425, top: portrait ? 380 : 329, width: portrait ? 104 : 155, height: portrait ? 100 : 155 }}><ToyArt kind="bear"/></View>
       <View style={{ position: 'absolute', left: portrait ? 238 : 825, top: portrait ? 530 : 415 }}>
-        <Plaything kind="gift" label="Başka oyuncaklar" color="#9A5B4B" moving={moving} size={portrait ? 132 : 140} onPress={onShuffle}/>
+        <Plaything kind="gift" label={t('toyRoom.moreToys')} color="#9A5B4B" moving={moving} size={portrait ? 132 : 140} onPress={onShuffle}/>
       </View>
     </View>}
     <View style={styles.controls}>
-      <Pressable accessibilityRole="button" accessibilityLabel={muted ? 'Sesi aç' : 'Sesi kapat'} onPress={onMute} style={styles.control}><Text style={styles.controlText}>{muted ? '🔇' : '🔊'}</Text></Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel="Yetişkin menüsü; açmak için basılı tutun" delayLongPress={1200} onLongPress={() => setAdult(true)} style={styles.control}><Text style={styles.controlText}>⚙</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={muted ? t('toyRoom.muteOn') : t('toyRoom.muteOff')} onPress={onMute} style={styles.control}><Text style={styles.controlText}>{muted ? '🔇' : '🔊'}</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.adultMenuLabel')} delayLongPress={1200} onLongPress={() => setAdult(true)} style={styles.control}><Text style={styles.controlText}>⚙</Text></Pressable>
     </View>
     <Modal visible={adult} transparent animationType="fade" onRequestClose={() => setAdult(false)}>
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
-        <View style={styles.adultHeader}><Text style={styles.adultTitle}>Yetişkinler için</Text><Pressable accessibilityRole="button" accessibilityLabel="Odaya dön" onPress={() => setAdult(false)} style={styles.control}><Text style={styles.controlText}>✕</Text></Pressable></View>
-        <Text style={styles.adultNote}>Çocuk odasında her oyuncak doğrudan bir oyun açar. Buradan bütün oyunlara erişebilirsiniz.</Text>
-        <View style={styles.adultActions}><Pressable onPress={() => setCalm(v => !v)} accessibilityRole="button" style={styles.adultButton}><Text>{calm ? 'Animasyonları aç' : 'Hareketi azalt'}</Text></Pressable><Pressable accessibilityRole="button" onPress={onLogout} style={styles.adultButton}><Text>Oturumu kapat</Text></Pressable></View>
-        <TextInput accessibilityLabel="Oyun ara" placeholder="Oyun ara…" value={query} onChangeText={setQuery} style={styles.search}/>
-        <ScrollView keyboardShouldPersistTaps="handled">{filtered.map(g => <Pressable key={g.id} accessibilityRole="button" onPress={() => { setAdult(false); onGame(g.routeKey); }} style={styles.gameRow}><Text style={styles.gameText}>{GAME_EMOJI[g.id] || '🧩'}  {title(g)}</Text><Text>▶</Text></Pressable>)}{!filtered.length && <Text style={styles.adultNote}>Bu isimde bir oyun bulunamadı.</Text>}</ScrollView>
+        <View style={styles.adultHeader}><Text style={styles.adultTitle}>{t('toyRoom.adultTitle')}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} onPress={() => setAdult(false)} style={styles.control}><Text style={styles.controlText}>✕</Text></Pressable></View>
+        <Text style={styles.adultNote}>{t('toyRoom.adultNote')}</Text>
+        <View style={styles.adultActions}><Pressable onPress={() => setCalm(v => !v)} accessibilityRole="button" style={styles.adultButton}><Text>{calm ? t('toyRoom.animationsOn') : t('toyRoom.reduceMotion')}</Text></Pressable><Pressable accessibilityRole="button" onPress={onLogout} style={styles.adultButton}><Text>{t('toyRoom.logout')}</Text></Pressable></View>
+        <TextInput accessibilityLabel={t('toyRoom.searchLabel')} placeholder={t('toyRoom.searchPlaceholder')} value={query} onChangeText={setQuery} style={styles.search}/>
+        <ScrollView keyboardShouldPersistTaps="handled">{filtered.map(g => <Pressable key={g.id} accessibilityRole="button" onPress={() => { setAdult(false); onGame(g.routeKey); }} style={styles.gameRow}><Text style={styles.gameText}>{GAME_EMOJI[g.id] || '🧩'}  {title(g)}</Text><Text>▶</Text></Pressable>)}{!filtered.length && <Text style={styles.adultNote}>{t('toyRoom.noGamesFound')}</Text>}</ScrollView>
       </View></View>
     </Modal>
   </View>;

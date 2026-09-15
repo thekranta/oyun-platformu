@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
@@ -201,6 +202,7 @@ const calculateCognitiveSpeed = (correctAnswers: number, responseTimeMs: number,
 };
 
 export default function VeliDashboard({ childName, childAge, email, subscriptionTier: initialTier, onClose }: VeliDashboardProps) {
+    const { t } = useTranslation();
     const { width, height } = Dimensions.get('window');
     const isTablet = width >= 768;
     const isLandscape = width > height;
@@ -250,13 +252,13 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     }
                 }
 
-                Alert.alert('✅ Analiz Tamamlandı', 'Kümülatif AI raporu oluşturuldu ve kaydedildi!');
+                Alert.alert(t('veli.analysisCompleteTitle'), t('veli.analysisCompleteMessage'));
             } else {
-                Alert.alert('⚠️ Hata', 'Analiz oluşturulamadı. Lütfen tekrar deneyin.');
+                Alert.alert(t('veli.analysisFailedTitle'), t('veli.analysisFailedMessage'));
             }
         } catch (error) {
             console.error('Cumulative analysis error:', error);
-            Alert.alert('❌ Hata', 'Bir sorun oluştu.');
+            Alert.alert(t('veli.errorTitle'), t('veli.errorGeneric'));
         } finally {
             setIsAnalyzing(false);
         }
@@ -471,14 +473,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
     // Best achievement detection
     const getBestAchievement = () => {
-        if (scores.length === 0) return { title: 'Başlangıç Yolcusu', emoji: '🚀', description: 'İlk oyununu oynamaya hazır!', celebrate: false };
+        if (scores.length === 0) return { title: t('veli.achievement.starterTitle'), emoji: '🚀', description: t('veli.achievement.starterDescription'), celebrate: false };
 
-        if (avgCorrectAnswers >= 9) return { title: 'Bilgi Şampiyonu', emoji: '🏆', description: 'Neredeyse hatasız performans!', celebrate: true };
-        if (avgCognitiveSpeed >= 80) return { title: 'Hız Ustası', emoji: '⚡', description: 'Çok hızlı düşünme yeteneği!', celebrate: true };
-        if (successRate >= 80) return { title: 'Yıldız Öğrenci', emoji: '🌟', description: 'Harika bir başarı oranı!', celebrate: true };
-        if (scores.length >= 10) return { title: 'Azimli Kaşif', emoji: '🎯', description: 'Düzenli pratik yapıyor!', celebrate: false };
+        if (avgCorrectAnswers >= 9) return { title: t('veli.achievement.championTitle'), emoji: '🏆', description: t('veli.achievement.championDescription'), celebrate: true };
+        if (avgCognitiveSpeed >= 80) return { title: t('veli.achievement.speedsterTitle'), emoji: '⚡', description: t('veli.achievement.speedsterDescription'), celebrate: true };
+        if (successRate >= 80) return { title: t('veli.achievement.starTitle'), emoji: '🌟', description: t('veli.achievement.starDescription'), celebrate: true };
+        if (scores.length >= 10) return { title: t('veli.achievement.explorerTitle'), emoji: '🎯', description: t('veli.achievement.explorerDescription'), celebrate: false };
 
-        return { title: 'Gelişen Yetenek', emoji: '🌱', description: 'Her gün biraz daha iyi!', celebrate: false };
+        return { title: t('veli.achievement.growingTitle'), emoji: '🌱', description: t('veli.achievement.growingDescription'), celebrate: false };
     };
 
     const bestAchievement = getBestAchievement();
@@ -499,11 +501,11 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     // kusursuz, çevrimdışı çalışır, "PDF olarak kaydet" ile indirilir.
     const handleDownloadPDF = async () => {
         if (Platform.OS !== 'web') {
-            Alert.alert('Bilgi', 'Rapor çıktısı/PDF web sürümünde kullanılabilir. Mobil cihazda gelişimi panelden takip edebilirsiniz.');
+            Alert.alert(t('veli.infoTitle'), t('veli.pdfWebOnlyMessage'));
             return;
         }
         if (scores.length === 0) {
-            Alert.alert('Bilgi', 'Rapor oluşturmak için önce birkaç oyun oynanmalıdır.');
+            Alert.alert(t('veli.infoTitle'), t('veli.pdfNeedsGamesMessage'));
             return;
         }
         setGeneratingPDF(true);
@@ -511,7 +513,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             const html = buildWeeklyReportHTML(weekly, isPremium);
             const win = window.open('', '_blank', 'width=920,height=1000');
             if (!win) {
-                Alert.alert('Açılır Pencere Engellendi', 'Raporu görüntülemek için tarayıcınızda açılır pencerelere (popup) izin verin, sonra tekrar deneyin.');
+                Alert.alert(t('veli.popupBlockedTitle'), t('veli.popupBlockedMessage'));
                 return;
             }
             win.document.open();
@@ -519,7 +521,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             win.document.close();
         } catch (error) {
             console.error('Rapor oluşturma hatası:', error);
-            Alert.alert('Hata', 'Rapor oluşturulurken bir sorun oluştu. Lütfen tekrar deneyin.');
+            Alert.alert(t('veli.pdfGenericErrorTitle'), t('veli.pdfGenericErrorMessage'));
         } finally {
             setGeneratingPDF(false);
         }
@@ -771,7 +773,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         <Image source={asset('/images/icon.png')} style={styles.loadingLogo} resizeMode="contain" />
                     </Animated.View>
                     <ActivityIndicator size="large" color={COLORS.primary} style={{ marginTop: 16 }} />
-                    <Text style={styles.loadingText}>Veriler yükleniyor...</Text>
+                    <Text style={styles.loadingText}>{t('veli.loading')}</Text>
                 </View>
             </DynamicBackground>
         );
@@ -792,7 +794,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         <TouchableOpacity onPress={onClose} style={styles.backButton}>
                             <Ionicons name="arrow-back" size={24} color={COLORS.primary} />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>📊 Veli Paneli</Text>
+                        <Text style={styles.headerTitle}>{t('veli.headerTitle')}</Text>
                         <View style={{ width: 44 }} />
                     </View>
 
@@ -813,21 +815,21 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 </Text>
                             </View>
                             <Text style={styles.heroName}>{childName}</Text>
-                            <Text style={styles.heroAge}>{childAge} Aylık • Küçük Kaşif 🔍</Text>
+                            <Text style={styles.heroAge}>{t('veli.heroAge', { age: childAge })}</Text>
                             <View style={styles.heroStats}>
                                 <View style={styles.heroStatItem}>
                                     <Text style={styles.heroStatValue}>{scores.length}</Text>
-                                    <Text style={styles.heroStatLabel}>Oyun</Text>
+                                    <Text style={styles.heroStatLabel}>{t('veli.statGames')}</Text>
                                 </View>
                                 <View style={styles.heroStatDivider} />
                                 <View style={styles.heroStatItem}>
                                     <Text style={styles.heroStatValue}>{getPerformanceEmoji()}</Text>
-                                    <Text style={styles.heroStatLabel}>Seviye</Text>
+                                    <Text style={styles.heroStatLabel}>{t('veli.statLevel')}</Text>
                                 </View>
                                 <View style={styles.heroStatDivider} />
                                 <View style={styles.heroStatItem}>
                                     <Text style={styles.heroStatValue}>{successRate}%</Text>
-                                    <Text style={styles.heroStatLabel}>Başarı</Text>
+                                    <Text style={styles.heroStatLabel}>{t('veli.statSuccess')}</Text>
                                 </View>
                             </View>
                         </View>
@@ -837,11 +839,11 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     <View style={styles.tabContainer}>
                         <TouchableOpacity style={[styles.tabButton, activeTab === 'ozet' && styles.tabButtonActive]} onPress={() => setActiveTab('ozet')}>
                             <Ionicons name="home-outline" size={18} color={activeTab === 'ozet' ? '#fff' : COLORS.textLight} />
-                            <Text style={[styles.tabText, activeTab === 'ozet' && styles.tabTextActive]}>Özet</Text>
+                            <Text style={[styles.tabText, activeTab === 'ozet' && styles.tabTextActive]}>{t('veli.tabSummary')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.tabButton, activeTab === 'gecmis' && styles.tabButtonActive]} onPress={() => setActiveTab('gecmis')}>
                             <Ionicons name="folder-outline" size={18} color={activeTab === 'gecmis' ? '#fff' : COLORS.textLight} />
-                            <Text style={[styles.tabText, activeTab === 'gecmis' && styles.tabTextActive]}>Arşiv</Text>
+                            <Text style={[styles.tabText, activeTab === 'gecmis' && styles.tabTextActive]}>{t('veli.tabArchive')}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -853,7 +855,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 <View style={styles.weeklyReportHeader}>
                                     <Text style={{ fontSize: 26, marginRight: 10 }}>🗂️</Text>
                                     <View style={{ flex: 1 }}>
-                                        <Text style={styles.weeklyReportTitle}>Haftalık Gelişim Raporu</Text>
+                                        <Text style={styles.weeklyReportTitle}>{t('veli.weeklyReportTitle')}</Text>
                                         <Text style={styles.weeklyReportRange}>{weekly.rangeLabel}</Text>
                                     </View>
                                 </View>
@@ -862,7 +864,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     <View style={styles.weeklyEmptyRow}>
                                         <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.weeklyEmptyMascot} />
                                         <Text style={[styles.weeklyEmptyText, { flex: 1, marginBottom: 0 }]}>
-                                            Bu hafta henüz oyun oynanmadı. Rapor, en son oynanan oyunlardan derlenmiş bir gelişim özeti sunar.
+                                            {t('veli.weeklyEmptyText')}
                                         </Text>
                                     </View>
                                 )}
@@ -870,10 +872,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 {/* Özet istatistik kutucukları */}
                                 <View style={styles.weeklyStatRow}>
                                     {[
-                                        { e: '🎮', v: `${weekly.gamesCount}`, l: weekly.hasWeekData ? 'Oyun' : 'Son Oyun', c: COLORS.primary },
-                                        { e: '📅', v: `${weekly.activeDays}/7`, l: 'Aktif Gün', c: COLORS.accent },
-                                        { e: '⏱️', v: `${weekly.totalMinutes}dk`, l: 'Süre', c: COLORS.orange },
-                                        { e: '⭐', v: `%${weekly.avgSuccess}`, l: 'Başarı', c: COLORS.secondary },
+                                        { e: '🎮', v: `${weekly.gamesCount}`, l: weekly.hasWeekData ? t('veli.statGames') : t('veli.weeklyStatLastGame'), c: COLORS.primary },
+                                        { e: '📅', v: `${weekly.activeDays}/7`, l: t('veli.activeDays'), c: COLORS.accent },
+                                        { e: '⏱️', v: `${weekly.totalMinutes}dk`, l: t('veli.duration'), c: COLORS.orange },
+                                        { e: '⭐', v: `%${weekly.avgSuccess}`, l: t('veli.statSuccess'), c: COLORS.secondary },
                                     ].map((t, i) => (
                                         <View key={i} style={styles.weeklyStatTile}>
                                             <Text style={{ fontSize: 20 }}>{t.e}</Text>
@@ -886,7 +888,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 {/* Premium: çalışılan gelişim alanları (Maarif) */}
                                 {isPremium && weekly.skillAreas.length > 0 && (
                                     <View style={{ marginTop: 14 }}>
-                                        <Text style={styles.weeklySubTitle}>📚 Çalışılan Gelişim Alanları</Text>
+                                        <Text style={styles.weeklySubTitle}>{t('veli.skillAreasTitle')}</Text>
                                         <View style={styles.skillChipWrap}>
                                             {weekly.skillAreas.slice(0, 6).map((a, i) => (
                                                 <View key={i} style={styles.skillChip}>
@@ -905,10 +907,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     <View style={styles.weeklyLockBox}>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
                                             <Ionicons name="lock-closed" size={15} color="#A07D2F" />
-                                            <Text style={styles.weeklyLockTitle}>Premium raporda ayrıca</Text>
+                                            <Text style={styles.weeklyLockTitle}>{t('veli.premiumAlsoIncludes')}</Text>
                                         </View>
                                         <Text style={styles.weeklyLockText}>
-                                            Maarif kazanım analizi · gelişim profili · en çok oynanan oyunlar · güçlü yönler · eve özel etkinlik önerileri · uzman notu
+                                            {t('veli.premiumFeaturesList')}
                                         </Text>
                                     </View>
                                 )}
@@ -926,14 +928,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                         <>
                                             <Ionicons name="document-text" size={20} color="#fff" />
                                             <Text style={styles.weeklyDownloadBtnText}>
-                                                {isPremium ? 'Detaylı Raporu İndir (PDF)' : 'Özet Raporu İndir (PDF)'}
+                                                {isPremium ? t('veli.downloadDetailedPdf') : t('veli.downloadSummaryPdf')}
                                             </Text>
                                         </>
                                     )}
                                 </TouchableOpacity>
                                 {Platform.OS === 'web' && (
                                     <Text style={styles.weeklyHint}>
-                                        Açılan pencerede “Hedef → PDF olarak kaydet” seçerek cihazınıza indirebilirsiniz.
+                                        {t('veli.pdfSaveHint')}
                                     </Text>
                                 )}
                             </View>
@@ -954,29 +956,29 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             </View>
 
                             {/* Metrics Grid */}
-                            <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>🎯 Performans Metrikleri</Text>
+                            <Text style={[styles.sectionTitle, isCompact && styles.sectionTitleCompact]}>{t('veli.metricsTitle')}</Text>
                             <View style={[styles.metricsGrid, isTablet && styles.metricsGridTablet, isCompact && styles.metricsGridCompact]}>
                                 <MetricCard
                                     emoji="✅"
-                                    title="Doğru Cevaplar"
+                                    title={t('veli.correctAnswers')}
                                     value={`${avgCorrectAnswers}/10`}
-                                    subtitle="Genel Ort."
+                                    subtitle={t('veli.overallAvg')}
                                     color={COLORS.accent}
                                     delay={100}
                                 />
                                 <MetricCard
                                     emoji="⚡"
-                                    title="Bilişsel Hız"
-                                    value={recalculatedCognitiveSpeed > 0 ? recalculatedCognitiveSpeed : 'Analiz Ediliyor...'}
-                                    subtitle="Puan"
+                                    title={t('veli.cognitiveSpeed')}
+                                    value={recalculatedCognitiveSpeed > 0 ? recalculatedCognitiveSpeed : t('veli.analyzing')}
+                                    subtitle={t('veli.points')}
                                     color={COLORS.secondary}
                                     delay={200}
                                 />
                                 <MetricCard
                                     emoji="⏱️"
-                                    title="Tepki Süresi"
+                                    title={t('veli.reactionTime')}
                                     value={formatTime(avgResponseTime)}
-                                    subtitle="Ortalama"
+                                    subtitle={t('veli.average')}
                                     color={COLORS.orange}
                                     delay={400}
                                 />
@@ -984,7 +986,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
                             {/* GAME DISTRIBUTION CHART */}
                             <View style={styles.chartSection}>
-                                <Text style={styles.sectionTitle}>🎮 Oyun Dağılımı</Text>
+                                <Text style={styles.sectionTitle}>{t('veli.gameDistribution')}</Text>
                                 <View style={styles.chartCard}>
                                     {(() => {
                                         const gameTypes = scores.reduce((acc: Record<string, number>, s) => {
@@ -1018,11 +1020,11 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
                             {/* WEEKLY ACTIVITY CHART */}
                             <View style={styles.chartSection}>
-                                <Text style={styles.sectionTitle}>📅 Son 7 Gün Aktivite</Text>
+                                <Text style={styles.sectionTitle}>{t('veli.last7DaysActivity')}</Text>
                                 <View style={styles.chartCard}>
                                     <View style={styles.weeklyChart}>
                                         {(() => {
-                                            const days = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+                                            const days = t('veli.days', { returnObjects: true }) as string[];
                                             const today = new Date();
                                             const last7Days = Array.from({ length: 7 }, (_, i) => {
                                                 const d = new Date(today);
@@ -1053,7 +1055,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             });
                                         })()}
                                     </View>
-                                    <Text style={styles.chartHint}>Son 7 gündeki oyun aktivitesi</Text>
+                                    <Text style={styles.chartHint}>{t('veli.last7DaysHint')}</Text>
                                 </View>
                             </View>
 
@@ -1062,7 +1064,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 <View style={[styles.chartCard, { marginBottom: 20 }]}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
                                         <Text style={{ fontSize: 20, marginRight: 10 }}>👁️</Text>
-                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Görsel Dikkat Trendi</Text>
+                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('veli.visualAttentionTrend')}</Text>
                                     </View>
 
                                     {(() => {
@@ -1141,10 +1143,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             <View style={[styles.chartCard, { marginBottom: 20, borderWidth: 2, borderColor: subscriptionTier === 'free' ? '#E0E0E0' : COLORS.premium }]}>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                                     <Text style={{ fontSize: 24, marginRight: 10 }}>🧠</Text>
-                                    <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Kümülatif AI Analizi</Text>
+                                    <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('veli.cumulativeAiAnalysis')}</Text>
                                     {subscriptionTier === 'free' && (
                                         <View style={{ marginLeft: 8, backgroundColor: '#FFE082', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 }}>
-                                            <Text style={{ fontSize: 10, color: '#F57C00', fontWeight: 'bold' }}>PREMIUM</Text>
+                                            <Text style={{ fontSize: 10, color: '#F57C00', fontWeight: 'bold' }}>{t('veli.premiumBadge')}</Text>
                                         </View>
                                     )}
                                 </View>
@@ -1154,25 +1156,24 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     <View style={{ alignItems: 'center', paddingVertical: 20 }}>
                                         <Text style={{ fontSize: 40, marginBottom: 12 }}>🔒</Text>
                                         <Text style={{ color: COLORS.text, fontSize: 15, fontWeight: '600', marginBottom: 8, textAlign: 'center' }}>
-                                            AI Gelişim Analizi Premium Özelliğidir
+                                            {t('veli.aiPremiumLockTitle')}
                                         </Text>
                                         <Text style={{ color: COLORS.textLight, fontSize: 13, textAlign: 'center', lineHeight: 20, marginBottom: 16 }}>
-                                            Gemini AI ile çocuğunuzun tüm oyun verilerinin kümülatif analizini alın,
-                                            gelişim trendlerini görün ve kişiselleştirilmiş öneriler alın.
+                                            {t('veli.aiPremiumLockText')}
                                         </Text>
                                         <TouchableOpacity
                                             style={[styles.analyzeButton, { backgroundColor: COLORS.premium }]}
-                                            onPress={() => Alert.alert('🚀 Premium\'a Yükselt', 'Premium üyelik ile AI analizi ve PDF rapor özelliklerine erişin!')}
+                                            onPress={() => Alert.alert(t('veli.upgradeAlertTitle'), t('veli.upgradeAlertMessage'))}
                                         >
                                             <Ionicons name="diamond" size={18} color="#fff" />
-                                            <Text style={styles.analyzeButtonText}>Premium'a Yükselt</Text>
+                                            <Text style={styles.analyzeButtonText}>{t('veli.upgradeButton')}</Text>
                                         </TouchableOpacity>
                                     </View>
                                 ) : (
                                     /* PREMIUM/STANDARD TIER - Show AI analysis */
                                     <>
                                         <Text style={{ color: COLORS.textLight, fontSize: 13, marginBottom: 12 }}>
-                                            Tüm oyun verileri Gemini AI tarafından analiz edilir.
+                                            {t('veli.aiAnalyzedNote')}
                                         </Text>
 
                                         {cumulativeReport ? (
@@ -1181,7 +1182,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                                     {cumulativeReport}
                                                 </Text>
                                                 <Text style={{ color: COLORS.textLight, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
-                                                    ℹ️ Yeni oyun oynanırsa analiz otomatik güncellenir.
+                                                    {t('veli.aiAutoUpdateNote')}
                                                 </Text>
                                                 {Platform.OS === 'web' && (
                                                     <TouchableOpacity
@@ -1189,7 +1190,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                                         onPress={handleDownloadPDF}
                                                     >
                                                         <Ionicons name="document-text" size={16} color="#fff" />
-                                                        <Text style={styles.analyzeButtonText}>PDF İndir</Text>
+                                                        <Text style={styles.analyzeButtonText}>{t('veli.downloadPdfShort')}</Text>
                                                     </TouchableOpacity>
                                                 )}
                                             </View>
@@ -1205,7 +1206,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                                     <>
                                                         <Ionicons name="sparkles" size={18} color="#fff" />
                                                         <Text style={styles.analyzeButtonText}>
-                                                            {scores.length === 0 ? 'Veri Bekleniyor...' : 'AI Analiz Yap'}
+                                                            {scores.length === 0 ? t('veli.waitingForData') : t('veli.runAiAnalysis')}
                                                         </Text>
                                                     </>
                                                 )}
@@ -1223,7 +1224,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 <View style={styles.chartCard}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
                                         <Text style={{ fontSize: 22, marginRight: 10 }}>🎯</Text>
-                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Gelişim Radar Grafiği</Text>
+                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('veli.radarChartTitle')}</Text>
                                     </View>
 
                                     {(() => {
@@ -1349,7 +1350,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 <View style={[styles.chartCard, { borderLeftWidth: 4, borderLeftColor: COLORS.accent }]}>
                                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
                                         <Text style={{ fontSize: 22, marginRight: 10 }}>🏠</Text>
-                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Evde Ne Yapmalı?</Text>
+                                        <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>{t('veli.homeActivitiesTitle')}</Text>
                                     </View>
 
                                     {(() => {
@@ -1415,12 +1416,12 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                     <View style={styles.freeBannerContent}>
                                         <Text style={styles.freeBannerEmoji}>🆓</Text>
                                         <View style={styles.freeBannerText}>
-                                            <Text style={styles.freeBannerTitle}>Ücretsiz Plan</Text>
-                                            <Text style={styles.freeBannerSubtitle}>Premium ile tüm özelliklere erişin!</Text>
+                                            <Text style={styles.freeBannerTitle}>{t('veli.freePlanTitle')}</Text>
+                                            <Text style={styles.freeBannerSubtitle}>{t('veli.freePlanSubtitle')}</Text>
                                         </View>
                                     </View>
                                     <TouchableOpacity style={styles.freeBannerButton}>
-                                        <Text style={styles.freeBannerButtonText}>Yükselt 🚀</Text>
+                                        <Text style={styles.freeBannerButtonText}>{t('veli.upgradeShort')}</Text>
                                     </TouchableOpacity>
                                 </View>
                             )}
@@ -1434,9 +1435,9 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             {/* Game History Timeline */}
                             {scores.length > 0 && (
                                 <View style={styles.timelineSidebar}>
-                                    <Text style={styles.timelineSidebarTitle}>📅 Oyun Geçmişi</Text>
+                                    <Text style={styles.timelineSidebarTitle}>{t('veli.gameHistoryTitle')}</Text>
                                     <Text style={{ fontSize: 12, color: COLORS.textLight, marginBottom: 12, paddingHorizontal: 4 }}>
-                                        Detaylı analiz ve grafik filtrelemek için bir oyuna dokunun 👇
+                                        {t('veli.gameHistoryHint')}
                                     </Text>
                                     {scores.slice(0, 50).map((score, index) => (
                                         <TimelineItem
@@ -1453,7 +1454,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             <View style={styles.aiSection}>
                                 <View style={styles.sectionHeader}>
                                     <Text style={styles.sectionTitle}>
-                                        🤖 AI Analiz Raporu
+                                        {t('veli.aiReportTitle')}
                                     </Text>
                                     {selectedGameIndex !== null && scores[selectedGameIndex] && (
                                         <View style={{ backgroundColor: COLORS.primary, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 12, marginLeft: 8 }}>
@@ -1486,7 +1487,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                                         color={COLORS.primary}
                                                     />
                                                     <Text style={styles.aiExpandText}>
-                                                        {aiReportExpanded ? 'Küçült' : 'Tamamını Göster'}
+                                                        {aiReportExpanded ? t('veli.collapse') : t('veli.showFull')}
                                                     </Text>
                                                 </View>
                                             )}
@@ -1495,18 +1496,18 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                         <View style={{ alignItems: 'center' }}>
                                             <Text style={styles.aiPlaceholder}>
                                                 {selectedGameIndex !== null
-                                                    ? 'Bu oyun için henüz AI analizi bulunmuyor veya analiz devam ediyor.'
-                                                    : 'Lütfen analizini görmek istediğiniz oyunu yukarıdaki listeden seçin.'}
+                                                    ? t('veli.aiEmptySelected')
+                                                    : t('veli.aiEmptyNoneSelected')}
                                             </Text>
                                             {isPremium && selectedGameIndex !== null && !scores[selectedGameIndex]?.yapay_zeka_yorumu && (
                                                 <TouchableOpacity
                                                     style={styles.analyzeButton}
                                                     onPress={() => {
-                                                        Alert.alert('Analiz', 'Talep alındı! AI asistanımız bu oyun için analiz hazırlıyor.');
+                                                        Alert.alert(t('veli.analysisRequestedTitle'), t('veli.analysisRequestedMessage'));
                                                     }}
                                                 >
                                                     <Ionicons name="sparkles" size={16} color="#fff" />
-                                                    <Text style={styles.analyzeButtonText}>Şimdi Analiz Et</Text>
+                                                    <Text style={styles.analyzeButtonText}>{t('veli.analyzeNow')}</Text>
                                                 </TouchableOpacity>
                                             )}
                                         </View>
@@ -1516,14 +1517,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
                             {/* GAME HISTORY TABLE */}
                             <View style={styles.historySection}>
-                                <Text style={styles.sectionTitle}>📋 Detaylı Liste</Text>
+                                <Text style={styles.sectionTitle}>{t('veli.detailedListTitle')}</Text>
                                 <View style={styles.historyCard}>
                                     {/* Header Row */}
                                     <View style={styles.historyHeader}>
-                                        <Text style={[styles.historyHeaderText, { flex: 2 }]}>Oyun</Text>
-                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>Tarih</Text>
-                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>Skor</Text>
-                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>Süre</Text>
+                                        <Text style={[styles.historyHeaderText, { flex: 2 }]}>{t('veli.historyGame')}</Text>
+                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>{t('veli.historyDate')}</Text>
+                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>{t('veli.historyScore')}</Text>
+                                        <Text style={[styles.historyHeaderText, { flex: 1 }]}>{t('veli.historyDuration')}</Text>
                                     </View>
                                     {/* Game Rows */}
                                     {scores.slice(0, 20).map((score, index) => {
@@ -1572,15 +1573,15 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             <Ionicons name="document-text" size={32} color="#fff" />
                                         </View>
                                         <Text style={styles.pdfCardTitle}>
-                                            📄 Haftalık Gelişim Raporu
+                                            {t('veli.pdfCardTitle')}
                                         </Text>
                                         <Text style={styles.pdfCardSubtitle}>
-                                            Çocuğunuzun bu haftaki gelişimini profesyonel bir raporla PDF olarak kaydedin veya yazdırın
+                                            {t('veli.pdfCardSubtitle')}
                                         </Text>
                                         <View style={styles.pdfCardButton}>
                                             <Ionicons name="download" size={20} color={COLORS.primary} />
                                             <Text style={styles.pdfCardButtonText}>
-                                                PDF İndir / Yazdır
+                                                {t('veli.pdfCardButton')}
                                             </Text>
                                         </View>
                                     </>
@@ -1596,8 +1597,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             >
                                 <View style={styles.shareImageGradient}>
                                     <Ionicons name="share-social" size={24} color="#fff" />
-                                    <Text style={styles.shareImageText}>📸 Başarı Kartı Oluştur</Text>
-                                    <Text style={styles.shareImageSubtext}>Instagram'da paylaş!</Text>
+                                    <Text style={styles.shareImageText}>{t('veli.shareCardTitle')}</Text>
+                                    <Text style={styles.shareImageSubtext}>{t('veli.shareCardSubtitle')}</Text>
                                 </View>
                             </TouchableOpacity>
                         )}
@@ -1607,7 +1608,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     <View style={styles.footer}>
                         <Image source={asset('/images/icon.png')} style={styles.footerLogo} resizeMode="contain" />
                         <Text style={styles.footerText}>ChildhoodTech Akademi</Text>
-                        <Text style={styles.footerSubtext}>Çocuğunuzun gelişimini birlikte takip ediyoruz 💜</Text>
+                        <Text style={styles.footerSubtext}>{t('veli.footerSubtext')}</Text>
                     </View>
                 </ScrollView>
             </Animated.View >
