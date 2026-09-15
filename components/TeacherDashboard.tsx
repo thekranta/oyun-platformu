@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Alert,
@@ -95,6 +96,7 @@ export default function TeacherDashboard({
     subscriptionTier,
     onClose,
 }: TeacherDashboardProps) {
+    const { t } = useTranslation();
     const { width } = Dimensions.get('window');
     const isMobile = width < 768;
 
@@ -275,7 +277,7 @@ export default function TeacherDashboard({
     const handleAddClass = async () => {
         if (!newClassName.trim()) return;
         if (!isPremium && classes.length >= 1) {
-            showAlert('Premium Gerekli', 'Free hesapla sadece 1 sınıf oluşturabilirsiniz.');
+            showAlert(t('teacher.premiumRequiredTitle'), t('teacher.classLimitMessage'));
             return;
         }
 
@@ -316,12 +318,12 @@ export default function TeacherDashboard({
 
     const handleDeleteClass = (classData: ClassData) => {
         showAlert(
-            'Sınıfı Sil',
-            `"${classData.name}" sınıfını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`,
+            t('teacher.deleteClassTitle'),
+            t('teacher.deleteClassMessage', { name: classData.name }),
             [
-                { text: 'İptal', style: 'cancel' },
+                { text: t('teacher.cancel'), style: 'cancel' },
                 {
-                    text: 'Sil',
+                    text: t('teacher.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         if (teacherId === 'demo-teacher') {
@@ -355,11 +357,11 @@ export default function TeacherDashboard({
     const handleAddStudent = async () => {
         if (!newStudentEmail.trim() || !selectedClass) return;
         if (!studentPreview) {
-            showAlert('Hata', 'Bu email ile kayıtlı öğrenci bulunamadı.');
+            showAlert(t('teacher.errorTitle'), t('teacher.studentNotFoundMessage'));
             return;
         }
         if (!isPremium && students.length >= 10) {
-            showAlert('Premium Gerekli', 'Free hesapla sınıfa en fazla 10 öğrenci ekleyebilirsiniz.');
+            showAlert(t('teacher.premiumRequiredTitle'), t('teacher.studentLimitMessage'));
             return;
         }
 
@@ -402,12 +404,12 @@ export default function TeacherDashboard({
 
     const handleRemoveStudent = (student: StudentData) => {
         showAlert(
-            'Öğrenciyi Çıkar',
-            `"${student.child_name}" adlı öğrenciyi sınıftan çıkarmak istediğinize emin misiniz?`,
+            t('teacher.removeStudentTitle'),
+            t('teacher.removeStudentMessage', { name: student.child_name }),
             [
-                { text: 'İptal', style: 'cancel' },
+                { text: t('teacher.cancel'), style: 'cancel' },
                 {
-                    text: 'Çıkar',
+                    text: t('teacher.remove'),
                     style: 'destructive',
                     onPress: async () => {
                         if (teacherId === 'demo-teacher') {
@@ -443,14 +445,14 @@ export default function TeacherDashboard({
 
     const analyzeScore = async (score: GameScore) => {
         if (!isPremium) {
-            showAlert('Premium Özellik', 'AI Analizi sadece Premium hesaplar için kullanılabilir.');
+            showAlert(t('teacher.premiumFeatureTitle'), t('teacher.aiPremiumOnlyMessage'));
             return;
         }
         setAnalyzingId(score.id);
         try {
             const prompt = `Sen okul öncesi eğitim uzmanısın. Öğrenci: ${selectedStudent?.child_name} (${selectedStudent?.child_age_months} ay). Oyun: ${score.oyun_turu}, Süre: ${score.sure}sn, Hamle: ${score.hamle_sayisi}, Hata: ${score.hata_sayisi}. Kısa pedagojik analiz yap (3-4 cümle).`;
             const text = await requestGeminiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 256 })
-                .catch(() => 'Analiz yapılamadı.');
+                .catch(() => t('teacher.analysisFailedFallback'));
             setStudentScores(prev => prev.map(s => s.id === score.id ? { ...s, yapay_zeka_yorumu: text } : s));
         } catch (error) {
             console.error('AI hatası:', error);
@@ -461,10 +463,10 @@ export default function TeacherDashboard({
 
     const getOyunAdi = (turu: string): string => {
         const map: Record<string, string> = {
-            'hafiza': '🧠 Çiftini Bul', 'siralama': '🔢 Sıralama', 'gruplama': '📦 Gruplama',
-            'kodlama': '🚀 Minik Kaşif', 'yapboz': '🧩 Yapboz', 'bunu-soyle': '🎤 Bunu Söyle',
-            'golge-dedektifi': '🔍 Gölge Dedektifi', 'sihirli-tuval': '🎨 Sihirli Tuval',
-            'uzay-bloklari': '🌟 Uzay Blokları',
+            'hafiza': t('teacher.games.hafiza'), 'siralama': t('teacher.games.siralama'), 'gruplama': t('teacher.games.gruplama'),
+            'kodlama': t('teacher.games.kodlama'), 'yapboz': t('teacher.games.yapboz'), 'bunu-soyle': t('teacher.games.bunuSoyle'),
+            'golge-dedektifi': t('teacher.games.golgeDedektifi'), 'sihirli-tuval': t('teacher.games.sihirliTuval'),
+            'uzay-bloklari': t('teacher.games.uzayBloklari'),
         };
         return map[turu] || turu;
     };
@@ -472,7 +474,7 @@ export default function TeacherDashboard({
     const getAgeText = (months: number) => {
         const years = Math.floor(months / 12);
         const m = months % 12;
-        return m > 0 ? `${years} yaş ${m} ay` : `${years} yaş`;
+        return m > 0 ? t('teacher.ageYearsMonths', { years, months: m }) : t('teacher.ageYearsOnly', { years });
     };
 
     if (loading) {
@@ -480,7 +482,7 @@ export default function TeacherDashboard({
             <View style={styles.loadingContainer}>
                 <Image source={asset('/images/icon.png')} style={styles.loadingLogo} resizeMode="contain" />
                 <ActivityIndicator size="large" color="#FF6B6B" />
-                <Text style={styles.loadingText}>Yükleniyor...</Text>
+                <Text style={styles.loadingText}>{t('teacher.loading')}</Text>
             </View>
         );
     }
@@ -495,14 +497,14 @@ export default function TeacherDashboard({
                 <View style={styles.headerInfo}>
                     <Text style={styles.headerEmoji}>👩‍🏫</Text>
                     <View>
-                        <Text style={styles.headerName}>Merhaba, {teacherName.split(' ')[0]}!</Text>
-                        <Text style={styles.headerSchool}>{schoolName || 'Öğretmen Paneli'}</Text>
+                        <Text style={styles.headerName}>{t('teacher.greeting', { name: teacherName.split(' ')[0] })}</Text>
+                        <Text style={styles.headerSchool}>{schoolName || t('teacher.defaultPanelName')}</Text>
                     </View>
                 </View>
                 <View style={[styles.tierBadge, isPremium && styles.tierBadgePremium]}>
                     <Text style={styles.tierEmoji}>{isPremium ? '⭐' : '🆓'}</Text>
                     <Text style={[styles.tierText, isPremium && styles.tierTextPremium]}>
-                        {isPremium ? 'Premium' : 'Free'}
+                        {isPremium ? t('teacher.tierPremium') : t('teacher.tierFree')}
                     </Text>
                 </View>
             </View>
@@ -513,24 +515,24 @@ export default function TeacherDashboard({
                     <View style={[styles.statCard, styles.statCardPink]}>
                         <Text style={styles.statEmoji}>🏫</Text>
                         <Text style={styles.statValue}>{classes.length}</Text>
-                        <Text style={styles.statLabel}>Sınıf</Text>
+                        <Text style={styles.statLabel}>{t('teacher.statClasses')}</Text>
                     </View>
                     <View style={[styles.statCard, styles.statCardBlue]}>
                         <Text style={styles.statEmoji}>👦</Text>
                         <Text style={styles.statValue}>{totalStudents}</Text>
-                        <Text style={styles.statLabel}>Öğrenci</Text>
+                        <Text style={styles.statLabel}>{t('teacher.statStudents')}</Text>
                     </View>
                     <View style={[styles.statCard, styles.statCardGreen]}>
                         <Text style={styles.statEmoji}>🎮</Text>
                         <Text style={styles.statValue}>{students.reduce((s, st) => s + st.gameCount, 0)}</Text>
-                        <Text style={styles.statLabel}>Oyun</Text>
+                        <Text style={styles.statLabel}>{t('teacher.statGames')}</Text>
                     </View>
                 </View>
 
                 {/* Classes Section */}
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>🌈 Sınıflarım</Text>
+                        <Text style={styles.sectionTitle}>{t('teacher.myClassesTitle')}</Text>
                         <TouchableOpacity style={styles.addClassBtn} onPress={() => setShowAddClassModal(true)}>
                             <Ionicons name="add-circle" size={32} color="#FF6B6B" />
                         </TouchableOpacity>
@@ -539,8 +541,8 @@ export default function TeacherDashboard({
                     {classes.length === 0 ? (
                         <View style={styles.emptyCard}>
                             <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
-                            <Text style={styles.emptyTitle}>Henüz sınıf yok</Text>
-                            <Text style={styles.emptyText}>İlk sınıfınızı oluşturun!</Text>
+                            <Text style={styles.emptyTitle}>{t('teacher.noClassesTitle')}</Text>
+                            <Text style={styles.emptyText}>{t('teacher.noClassesText')}</Text>
                         </View>
                     ) : (
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.classesScroll}>
@@ -552,7 +554,7 @@ export default function TeacherDashboard({
                                     >
                                         <Text style={styles.classEmoji}>{c.emoji}</Text>
                                         <Text style={styles.className}>{c.name}</Text>
-                                        <Text style={styles.classCount}>{c.studentCount} çocuk</Text>
+                                        <Text style={styles.classCount}>{t('teacher.childrenCount', { count: c.studentCount })}</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={styles.deleteClassBtn}
@@ -571,7 +573,7 @@ export default function TeacherDashboard({
                     <View style={styles.section}>
                         <View style={styles.sectionHeader}>
                             <Text style={styles.sectionTitle}>
-                                {selectedClass.emoji} {selectedClass.name} Öğrencileri
+                                {t('teacher.classStudentsTitle', { emoji: selectedClass.emoji, name: selectedClass.name })}
                             </Text>
                             <TouchableOpacity style={styles.addStudentBtn} onPress={() => setShowAddStudentModal(true)}>
                                 <Ionicons name="person-add" size={24} color="#4ECDC4" />
@@ -581,8 +583,8 @@ export default function TeacherDashboard({
                         {students.length === 0 ? (
                             <View style={styles.emptyCard}>
                                 <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
-                                <Text style={styles.emptyTitle}>Henüz öğrenci yok</Text>
-                                <Text style={styles.emptyText}>Sınıfa öğrenci ekleyin!</Text>
+                                <Text style={styles.emptyTitle}>{t('teacher.noStudentsTitle')}</Text>
+                                <Text style={styles.emptyText}>{t('teacher.noStudentsText')}</Text>
                             </View>
                         ) : (
                             <View style={styles.studentsList}>
@@ -621,19 +623,19 @@ export default function TeacherDashboard({
                 {/* Student Details */}
                 {selectedStudent && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>📊 {selectedStudent.child_name} - Oyun Geçmişi</Text>
+                        <Text style={styles.sectionTitle}>{t('teacher.studentHistoryTitle', { name: selectedStudent.child_name })}</Text>
 
                         {!isPremium && (
                             <View style={styles.premiumBanner}>
                                 <Text style={styles.premiumBannerEmoji}>🔒</Text>
-                                <Text style={styles.premiumBannerText}>AI Analizi için Premium'a yükseltin!</Text>
+                                <Text style={styles.premiumBannerText}>{t('teacher.upgradeForAiMessage')}</Text>
                             </View>
                         )}
 
                         {studentScores.length === 0 ? (
                             <View style={styles.emptyCard}>
                                 <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
-                                <Text style={styles.emptyText}>Henüz oyun kaydı yok</Text>
+                                <Text style={styles.emptyText}>{t('teacher.noGameRecordsText')}</Text>
                             </View>
                         ) : (
                             studentScores.map((score) => (
@@ -671,14 +673,14 @@ export default function TeacherDashboard({
                                             ) : (
                                                 <>
                                                     <Text style={styles.analyzeBtnEmoji}>✨</Text>
-                                                    <Text style={styles.analyzeBtnText}>AI Analiz</Text>
+                                                    <Text style={styles.analyzeBtnText}>{t('teacher.aiAnalyzeButton')}</Text>
                                                 </>
                                             )}
                                         </TouchableOpacity>
                                     )}
                                     {score.yapay_zeka_yorumu && (
                                         <View style={styles.aiResult}>
-                                            <Text style={styles.aiResultTitle}>🎓 Pedagojik Analiz</Text>
+                                            <Text style={styles.aiResultTitle}>{t('teacher.pedagogicalAnalysisTitle')}</Text>
                                             <Text style={styles.aiResultText}>{score.yapay_zeka_yorumu}</Text>
                                         </View>
                                     )}
@@ -691,7 +693,7 @@ export default function TeacherDashboard({
                 {/* ================== ERROR DISTRIBUTION CHART ================== */}
                 {selectedStudent && studentScores.length >= 3 && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>📊 Hata Dağılımı Analizi</Text>
+                        <Text style={styles.sectionTitle}>{t('teacher.errorDistributionTitle')}</Text>
 
                         {(() => {
                             // Calculate error distribution per game type
@@ -729,7 +731,7 @@ export default function TeacherDashboard({
                                             <View key={entry.game} style={styles.errorBarRow}>
                                                 <View style={styles.errorBarLabel}>
                                                     <Text style={styles.errorBarGame}>{gameName}</Text>
-                                                    <Text style={styles.errorBarCount}>({entry.count} oyun)</Text>
+                                                    <Text style={styles.errorBarCount}>{t('teacher.gamesCountParen', { count: entry.count })}</Text>
                                                 </View>
                                                 <View style={styles.errorBarContainer}>
                                                     <View style={[
@@ -756,15 +758,15 @@ export default function TeacherDashboard({
                                     <View style={styles.errorLegend}>
                                         <View style={styles.legendItem}>
                                             <View style={[styles.legendDot, { backgroundColor: '#4ECDC4' }]} />
-                                            <Text style={styles.legendText}>Düşük (0-15%)</Text>
+                                            <Text style={styles.legendText}>{t('teacher.legendLow')}</Text>
                                         </View>
                                         <View style={styles.legendItem}>
                                             <View style={[styles.legendDot, { backgroundColor: '#F7B731' }]} />
-                                            <Text style={styles.legendText}>Orta (15-30%)</Text>
+                                            <Text style={styles.legendText}>{t('teacher.legendMedium')}</Text>
                                         </View>
                                         <View style={styles.legendItem}>
                                             <View style={[styles.legendDot, { backgroundColor: '#FF6B6B' }]} />
-                                            <Text style={styles.legendText}>Yüksek (30%+)</Text>
+                                            <Text style={styles.legendText}>{t('teacher.legendHigh')}</Text>
                                         </View>
                                     </View>
 
@@ -773,7 +775,7 @@ export default function TeacherDashboard({
                                         <View style={styles.interventionHint}>
                                             <Text style={styles.interventionEmoji}>💡</Text>
                                             <Text style={styles.interventionText}>
-                                                Yüksek hata oranı, zorluk seviyesi ayarı veya ek destek gerektirebilir.
+                                                {t('teacher.interventionHint')}
                                             </Text>
                                         </View>
                                     )}
@@ -791,20 +793,20 @@ export default function TeacherDashboard({
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalEmoji}>🏫</Text>
-                        <Text style={styles.modalTitle}>Yeni Sınıf Oluştur</Text>
+                        <Text style={styles.modalTitle}>{t('teacher.createClassTitle')}</Text>
                         <TextInput
                             style={styles.modalInput}
-                            placeholder="Sınıf adı (ör: Kelebekler)"
+                            placeholder={t('teacher.classNamePlaceholder')}
                             placeholderTextColor="#999"
                             value={newClassName}
                             onChangeText={setNewClassName}
                         />
                         <View style={styles.modalBtnRow}>
                             <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowAddClassModal(false)}>
-                                <Text style={styles.modalCancelText}>İptal</Text>
+                                <Text style={styles.modalCancelText}>{t('teacher.cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.modalConfirmBtn} onPress={handleAddClass}>
-                                <Text style={styles.modalConfirmText}>✨ Oluştur</Text>
+                                <Text style={styles.modalConfirmText}>{t('teacher.createButton')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -816,8 +818,8 @@ export default function TeacherDashboard({
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalEmoji}>👦</Text>
-                        <Text style={styles.modalTitle}>Öğrenci Ekle</Text>
-                        <Text style={styles.modalSubtitle}>Velinin sisteme kayıt olduğu email</Text>
+                        <Text style={styles.modalTitle}>{t('teacher.addStudentTitle')}</Text>
+                        <Text style={styles.modalSubtitle}>{t('teacher.parentEmailHint')}</Text>
                         <TextInput
                             style={styles.modalInput}
                             placeholder="ornek@email.com"
@@ -834,7 +836,7 @@ export default function TeacherDashboard({
                         {searchingStudent && (
                             <View style={styles.searchingRow}>
                                 <ActivityIndicator size="small" color="#4ECDC4" />
-                                <Text style={styles.searchingText}>Aranıyor...</Text>
+                                <Text style={styles.searchingText}>{t('teacher.searching')}</Text>
                             </View>
                         )}
                         {studentPreview && (
@@ -849,7 +851,7 @@ export default function TeacherDashboard({
                         {newStudentEmail.includes('@') && !searchingStudent && !studentPreview && newStudentEmail.length > 5 && (
                             <View style={styles.notFoundCard}>
                                 <Text style={styles.notFoundEmoji}>❌</Text>
-                                <Text style={styles.notFoundText}>Kayıtlı öğrenci bulunamadı</Text>
+                                <Text style={styles.notFoundText}>{t('teacher.noRegisteredStudent')}</Text>
                             </View>
                         )}
                         <View style={styles.modalBtnRow}>
@@ -857,14 +859,14 @@ export default function TeacherDashboard({
                                 style={styles.modalCancelBtn}
                                 onPress={() => { setShowAddStudentModal(false); setStudentPreview(null); setNewStudentEmail(''); }}
                             >
-                                <Text style={styles.modalCancelText}>İptal</Text>
+                                <Text style={styles.modalCancelText}>{t('teacher.cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalConfirmBtn, !studentPreview && styles.modalConfirmBtnDisabled]}
                                 onPress={handleAddStudent}
                                 disabled={!studentPreview}
                             >
-                                <Text style={styles.modalConfirmText}>➕ Ekle</Text>
+                                <Text style={styles.modalConfirmText}>{t('teacher.addButton')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
