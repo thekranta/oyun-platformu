@@ -14,10 +14,12 @@ import ActivityRow from './owner/ActivityRow';
 import AiMaliyetPanel from './owner/AiMaliyetPanel';
 import CurriculumHealthPanel from './owner/CurriculumHealthPanel';
 import GrowthPanel from './owner/GrowthPanel';
+import OwnerTabBar, { OwnerTab } from './owner/OwnerTabBar';
 import PackageAssignForm from './owner/PackageAssignForm';
 import RoleFilterBar from './owner/RoleFilterBar';
 import SummaryStrip from './owner/SummaryStrip';
 import TeamAddForm from './owner/TeamAddForm';
+import TeamPerformancePanel from './owner/TeamPerformancePanel';
 import { C, F, S } from './owner/ownerTheme';
 
 interface Props {
@@ -32,6 +34,7 @@ export default function OwnerDashboard({ displayName }: Props) {
   const [aktifRol, setAktifRol] = useState<ActivityRole | 'tumu'>('tumu');
   const [search, setSearch] = useState('');
   const [secili, setSecili] = useState<ActivityEvent | null>(null);
+  const [tab, setTab] = useState<OwnerTab>('genel');
 
   const yukle = async () => {
     setLoading(true);
@@ -70,23 +73,38 @@ export default function OwnerDashboard({ displayName }: Props) {
         </View>
       </View>
 
+      {!loading && <OwnerTabBar aktif={tab} onSec={setTab} />}
+
       {loading ? (
         <View style={st.center}><ActivityIndicator color={C.accent} size="large" /></View>
       ) : (
         <ScrollView>
-          <SummaryStrip totals={totals} active7d={active7d} />
-          <GrowthPanel />
-          <AiMaliyetPanel />
-          <CurriculumHealthPanel />
-          <PackageAssignForm />
-          <TeamAddForm />
-          <RoleFilterBar aktif={aktifRol} onSec={setAktifRol} search={search} onSearch={setSearch} />
-          <View style={st.list}>
-            {filtered.length === 0 && <Text style={st.empty}>Bu filtreyle etkinlik bulunamadı.</Text>}
-            {filtered.map((e) => (
-              <ActivityRow key={e.id} event={e} onPress={() => setSecili(e)} />
-            ))}
-          </View>
+          {tab === 'genel' && (
+            <>
+              <SummaryStrip totals={totals} active7d={active7d} />
+              <RoleFilterBar aktif={aktifRol} onSec={setAktifRol} search={search} onSearch={setSearch} />
+              <View style={st.list}>
+                {filtered.length === 0 && <Text style={st.empty}>Bu filtreyle etkinlik bulunamadı.</Text>}
+                {filtered.map((e) => (
+                  <ActivityRow key={e.id} event={e} onPress={() => setSecili(e)} />
+                ))}
+              </View>
+            </>
+          )}
+          {tab === 'buyume' && (
+            <>
+              <GrowthPanel />
+              <AiMaliyetPanel />
+            </>
+          )}
+          {tab === 'mufredat' && <CurriculumHealthPanel />}
+          {tab === 'ekip' && <TeamPerformancePanel />}
+          {tab === 'yonetim' && (
+            <>
+              <PackageAssignForm />
+              <TeamAddForm />
+            </>
+          )}
         </ScrollView>
       )}
 
