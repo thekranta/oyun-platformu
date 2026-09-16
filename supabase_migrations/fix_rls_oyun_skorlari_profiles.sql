@@ -6,6 +6,7 @@ ALTER TABLE oyun_skorlari ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- oyun_skorlari: veli kendi cocugunun skorlarini görebilir/ekleyebilir; admin hepsini görebilir/güncelleyebilir
+DROP POLICY IF EXISTS "own_or_admin_select_scores" ON oyun_skorlari;
 CREATE POLICY "own_or_admin_select_scores" ON oyun_skorlari
   FOR SELECT
   USING (
@@ -13,16 +14,19 @@ CREATE POLICY "own_or_admin_select_scores" ON oyun_skorlari
     OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid())
   );
 
+DROP POLICY IF EXISTS "own_insert_scores" ON oyun_skorlari;
 CREATE POLICY "own_insert_scores" ON oyun_skorlari
   FOR INSERT
   WITH CHECK (email = auth.email());
 
+DROP POLICY IF EXISTS "admin_update_scores" ON oyun_skorlari;
 CREATE POLICY "admin_update_scores" ON oyun_skorlari
   FOR UPDATE
   USING (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()))
   WITH CHECK (EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid()));
 
 -- profiles: veli kendi profilini görebilir/düzenleyebilir; admin hepsini görebilir
+DROP POLICY IF EXISTS "own_or_admin_select_profiles" ON profiles;
 CREATE POLICY "own_or_admin_select_profiles" ON profiles
   FOR SELECT
   USING (
@@ -30,10 +34,12 @@ CREATE POLICY "own_or_admin_select_profiles" ON profiles
     OR EXISTS (SELECT 1 FROM admins WHERE user_id = auth.uid())
   );
 
+DROP POLICY IF EXISTS "own_insert_profiles" ON profiles;
 CREATE POLICY "own_insert_profiles" ON profiles
   FOR INSERT
   WITH CHECK (email = auth.email());
 
+DROP POLICY IF EXISTS "own_update_profiles" ON profiles;
 CREATE POLICY "own_update_profiles" ON profiles
   FOR UPDATE
   USING (email = auth.email())
