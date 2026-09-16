@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
   activeActorCount,
   ActivityEvent,
@@ -78,7 +78,7 @@ export default function OwnerDashboard({ displayName }: Props) {
       {loading ? (
         <View style={st.center}><ActivityIndicator color={C.accent} size="large" /></View>
       ) : (
-        <ScrollView>
+        <ScrollView style={st.scroll}>
           {tab === 'genel' && (
             <>
               <SummaryStrip totals={totals} active7d={active7d} />
@@ -114,7 +114,16 @@ export default function OwnerDashboard({ displayName }: Props) {
 }
 
 const st = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg },
+  root: {
+    flex: 1,
+    backgroundColor: C.bg,
+    // Web'de html/body/#root zincirinde yükseklik cascade'i yok (Expo Web varsayılanı) --
+    // flex:1 tek başına ScrollView'i viewport'a sınırlayamıyor, bu yüzden koca sayfa
+    // (belge) kayıyor ve topbar/sekme çubuğu içerik miktarına göre görünüp kayboluyordu.
+    // 100vh, ata zincirinden bağımsız gerçek viewport yüksekliği verir.
+    ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}),
+  },
+  scroll: { flex: 1 },
   topbar: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: S.lg, paddingVertical: S.md, backgroundColor: C.panel,
