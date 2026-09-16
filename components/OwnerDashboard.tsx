@@ -12,6 +12,7 @@ import {
 import ActivityDetailModal from './owner/ActivityDetailModal';
 import ActivityRow from './owner/ActivityRow';
 import AiMaliyetPanel from './owner/AiMaliyetPanel';
+import CurriculumHealthPanel from './owner/CurriculumHealthPanel';
 import GrowthPanel from './owner/GrowthPanel';
 import PackageAssignForm from './owner/PackageAssignForm';
 import RoleFilterBar from './owner/RoleFilterBar';
@@ -76,6 +77,7 @@ export default function OwnerDashboard({ displayName }: Props) {
           <SummaryStrip totals={totals} active7d={active7d} />
           <GrowthPanel />
           <AiMaliyetPanel />
+          <CurriculumHealthPanel />
           <PackageAssignForm />
           <TeamAddForm />
           <RoleFilterBar aktif={aktifRol} onSec={setAktifRol} search={search} onSearch={setSearch} />
