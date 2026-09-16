@@ -110,7 +110,7 @@ ChildhoodTech Ekibi
 ÖNEMLİ: Raporu Türkçe yaz. Giriş cümlesi kullanma, doğrudan içerikle başla.`;
 
     try {
-        return await requestGeminiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 2048 });
+        return await requestGeminiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 2048 }, 'veli_kumulatif_rapor');
     } catch (error) {
         console.error('Gemini analiz hatası:', error);
         return null;

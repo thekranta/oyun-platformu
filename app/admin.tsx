@@ -615,7 +615,7 @@ ChildhoodTech Ekibi
 
       let aiComment: string;
       try {
-        aiComment = await requestGeminiAnalysis(prompt);
+        aiComment = await requestGeminiAnalysis(prompt, undefined, 'admin_oyun_analizi');
       } catch (e: any) {
         alert(`API Hatası: ${e.message}`);
         return;

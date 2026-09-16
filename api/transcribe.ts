@@ -6,6 +6,8 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireUser } from './_lib/auth';
+import { logAiUsage } from './_lib/aiUsageLog';
+import { estimateWhisperCostUsd } from '../lib/aiPricing';
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
   || process.env.EXPO_PUBLIC_OPENAI_API_KEY
@@ -44,6 +46,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     formData.append('file', new Blob([audioBuffer], { type }), 'audio.webm');
     formData.append('model', 'whisper-1');
     formData.append('language', 'tr');
+    // verbose_json 'duration' alani da doner (dakika-basi ucretlenen Whisper icin
+    // maliyet tahmininde kullanilir) -- istemciye giden {text} yaniti degismez.
+    formData.append('response_format', 'verbose_json');
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -64,6 +69,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       const data = await response.json();
+      const duration = typeof data.duration === 'number' ? data.duration : 0;
+      await logAiUsage(authed.supabase, {
+        userId: authed.user.id,
+        servis: 'openai_whisper',
+        model: 'whisper-1',
+        ozellik: 'bunusoyle_transkript',
+        girdiMiktar: duration,
+        birim: 'saniye',
+        maliyetUsd: estimateWhisperCostUsd(duration),
+      });
       return res.status(200).json({ text: data.text || '' });
     } catch (e: any) {
       clearTimeout(timeoutId);

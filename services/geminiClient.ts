@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 export async function requestGeminiAnalysis(
   prompt: string,
   generationConfig?: Record<string, unknown>,
+  feature?: string,
 ): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Oturum bulunamadı, lütfen tekrar giriş yapın.');
@@ -15,7 +16,7 @@ export async function requestGeminiAnalysis(
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify({ prompt, generationConfig }),
+    body: JSON.stringify({ prompt, generationConfig, feature }),
   });
 
   const data = await response.json().catch(() => ({} as { text?: string; error?: string }));

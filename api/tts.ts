@@ -6,6 +6,8 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireUser } from './_lib/auth';
+import { logAiUsage } from './_lib/aiUsageLog';
+import { estimateTtsCostUsd } from '../lib/aiPricing';
 
 // OpenAI API key (server-side). Sunucu env'i EXPO_PUBLIC degiskenlerini de okuyabilir;
 // Vercel'de yalnizca EXPO_PUBLIC_OPENAI_API_KEY/SPEECH_API_KEY tanimliysa da TTS calissin
@@ -90,6 +92,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (response.ok) {
                 const audioBuffer = await response.arrayBuffer();
                 const base64Audio = Buffer.from(audioBuffer).toString('base64');
+                await logAiUsage(authed.supabase, {
+                    userId: authed.user.id,
+                    servis: 'openai_tts',
+                    model: attempt.model,
+                    ozellik: 'tts_dinamik',
+                    girdiMiktar: text.length,
+                    birim: 'karakter',
+                    maliyetUsd: estimateTtsCostUsd(attempt.model, text.length),
+                });
                 res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
                 return res.status(200).json({ audioContent: base64Audio, format: 'mp3', model: attempt.model });
             }

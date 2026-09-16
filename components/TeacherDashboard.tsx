@@ -455,7 +455,7 @@ export default function TeacherDashboard({
         setAnalyzingId(score.id);
         try {
             const prompt = `Sen okul öncesi eğitim uzmanısın. Öğrenci: ${selectedStudent?.child_name} (${selectedStudent?.child_age_months} ay). Oyun: ${score.oyun_turu}, Süre: ${score.sure}sn, Hamle: ${score.hamle_sayisi}, Hata: ${score.hata_sayisi}. Kısa pedagojik analiz yap (3-4 cümle).`;
-            const text = await requestGeminiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 256 })
+            const text = await requestGeminiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 256 }, 'ogretmen_skor_analizi')
                 .catch(() => t('teacher.analysisFailedFallback'));
             setStudentScores(prev => prev.map(s => s.id === score.id ? { ...s, yapay_zeka_yorumu: text } : s));
         } catch (error) {

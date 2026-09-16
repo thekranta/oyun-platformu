@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireUser } from './_lib/auth';
+import { logAiUsage } from './_lib/aiUsageLog';
+import { estimateGeminiCostUsd } from '../lib/aiPricing';
 
 // Gemini metin uretimi icin sunucu-tarafi proxy.
 // Anahtar yalnizca sunucuda okunur (GEMINI_API_KEY); istemci bundle'ina hic gitmez.
@@ -24,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const authed = await requireUser(req, res);
   if (!authed) return;
 
-  const { prompt, generationConfig } = req.body || {};
+  const { prompt, generationConfig, feature } = req.body || {};
   if (!prompt) return res.status(400).json({ error: 'prompt is required' });
 
   // Sunucu-tarafi anahtar tercih edilir; eski EXPO_PUBLIC degiskeni yalnizca gecis
@@ -51,7 +53,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (response.ok) {
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text) return res.status(200).json({ text, model: model.name });
+        if (text) {
+          const promptTokens = data?.usageMetadata?.promptTokenCount || 0;
+          const candidateTokens = data?.usageMetadata?.candidatesTokenCount || 0;
+          await logAiUsage(authed.supabase, {
+            userId: authed.user.id,
+            servis: 'gemini',
+            model: model.name,
+            ozellik: typeof feature === 'string' ? feature : 'genel',
+            girdiMiktar: promptTokens,
+            ciktiMiktar: candidateTokens,
+            birim: 'token',
+            maliyetUsd: estimateGeminiCostUsd(model.name, promptTokens, candidateTokens),
+          });
+          return res.status(200).json({ text, model: model.name });
+        }
         lastError = 'Yanitta metin bulunamadi';
         continue;
       }
