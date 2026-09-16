@@ -2,10 +2,11 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { C, F, S } from './ownerTheme';
 
-export type OwnerTab = 'genel' | 'buyume' | 'mufredat' | 'ekip' | 'yonetim';
+export type OwnerTab = 'genel' | 'arama' | 'buyume' | 'mufredat' | 'ekip' | 'yonetim';
 
 const TABS: { key: OwnerTab; label: string }[] = [
   { key: 'genel', label: 'Genel Bakış' },
+  { key: 'arama', label: 'Arama' },
   { key: 'buyume', label: 'Büyüme & Maliyet' },
   { key: 'mufredat', label: 'Müfredat' },
   { key: 'ekip', label: 'Ekip' },

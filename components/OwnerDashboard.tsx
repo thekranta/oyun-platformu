@@ -13,6 +13,7 @@ import ActivityDetailModal from './owner/ActivityDetailModal';
 import ActivityRow from './owner/ActivityRow';
 import AiMaliyetPanel from './owner/AiMaliyetPanel';
 import CurriculumHealthPanel from './owner/CurriculumHealthPanel';
+import DatabaseSearchPanel from './owner/DatabaseSearchPanel';
 import GrowthPanel from './owner/GrowthPanel';
 import OwnerTabBar, { OwnerTab } from './owner/OwnerTabBar';
 import PackageAssignForm from './owner/PackageAssignForm';
@@ -91,6 +92,7 @@ export default function OwnerDashboard({ displayName }: Props) {
               </View>
             </>
           )}
+          {tab === 'arama' && <DatabaseSearchPanel />}
           {tab === 'buyume' && (
             <>
               <GrowthPanel />
