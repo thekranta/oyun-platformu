@@ -30,8 +30,12 @@ export default function OwnerTabBar({ aktif, onSec }: Props) {
 }
 
 const st = StyleSheet.create({
-  wrap: { backgroundColor: C.panel, borderBottomWidth: 1, borderBottomColor: C.line },
-  row: { paddingHorizontal: S.md, gap: S.md },
+  // Sabit yükseklik ŞART: react-native-web'in ScrollView'i, ata zincirinde gerçek
+  // yükseklik (bkz. OwnerDashboard.tsx'teki 100vh düzeltmesi) olduğunda, dahili
+  // kaydırma div'ine kendiliğinden flexGrow:1 uyguluyor -- flex'e bırakılırsa bu
+  // yatay sekme çubuğu dikeyde de büyüyüp asıl içerik alanının yerini çalıyordu.
+  wrap: { height: 48, flexGrow: 0, flexShrink: 0, backgroundColor: C.panel, borderBottomWidth: 1, borderBottomColor: C.line },
+  row: { flexGrow: 1, alignItems: 'center', paddingHorizontal: S.md, gap: S.md },
   tab: { paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
   tabActive: { borderBottomColor: C.accent },
   tabText: { fontSize: F.small, fontWeight: '600', color: C.inkMid },
