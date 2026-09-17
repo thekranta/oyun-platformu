@@ -19,7 +19,9 @@ import { supabase } from '../../lib/supabase';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
 // Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
-const BUILD_ETIKET = 'b9-tani';
+// NOT: b9-tani (newArchEnabled:false denemesi) Gradle hatasiyla hic derlenemedi,
+// bu yuzden atlaniyor -- bu build b8-tani ile AYNI koddur (mimari geri alindi).
+const BUILD_ETIKET = 'b8-tani';
 
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
