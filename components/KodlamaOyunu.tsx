@@ -122,8 +122,8 @@ const getThemeBg = (theme: string) => {
 
 // ============== RESPONSIVE - Büyütülmüş Grid ==============
 const GRID_SIZE = Math.min(width * 0.85, height * 0.45, 340);  // Daha büyük grid
-const BTN_SIZE = Math.min(width * 0.1, 40);
-const DPAD_SIZE = Math.min(width * 0.14, 52);
+const BTN_SIZE = Math.min(width * 0.13, 48);
+const DPAD_SIZE = Math.min(width * 0.18, 68);
 
 // ============== ARKA PLAN MÜZİĞİ ==============
 let bgMusic: HTMLAudioElement | null = null;
@@ -402,9 +402,13 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
         } else if (type === CellType.GOAL) {
           bg = '#FFF9C4';
           content = <Animated.Text style={{ fontSize: CELL * 0.5, transform: [{ scale: bounce }] }}>{icons.goal}</Animated.Text>;
-        } else if (type === CellType.START && mode === GameMode.EDIT) {
+        } else if (type === CellType.START) {
+          // Başlangıç karesi artık PLAY modunda da (tavşan oradan uzaklaşınca bile)
+          // hafif mavi tonla belli oluyor — önceden sadece EDIT modunda görünüyordu.
           bg = '#BBDEFB';
-          content = <Text style={{ fontSize: CELL * 0.45, opacity: 0.5 }}>🐰</Text>;
+          if (mode === GameMode.EDIT) {
+            content = <Text style={{ fontSize: CELL * 0.45, opacity: 0.5 }}>🐰</Text>;
+          }
         }
         cells.push(
           <TouchableOpacity key={`${x}-${y}`} style={[st.cell, { width: CELL, height: CELL, backgroundColor: bg }]} onPress={() => cellClick(x, y)} disabled={mode !== GameMode.EDIT} activeOpacity={0.7}>
@@ -557,7 +561,7 @@ const st = StyleSheet.create({
   // Grid - Büyük
   gridWrap: { borderRadius: 16, padding: 8, position: 'relative' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#E0E0E0' },
+  cell: { borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#90A4AE' },
   player: { position: 'absolute', top: 8, left: 8, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
   winBox: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: 14 },
   winTxt: { fontSize: 50 },
@@ -575,30 +579,30 @@ const st = StyleSheet.create({
   editorActs: { flexDirection: 'row', gap: 8 },
   clearBtn: { width: DPAD_SIZE * 0.85, height: DPAD_SIZE * 0.85, borderRadius: 20, backgroundColor: '#FFCDD2', justifyContent: 'center', alignItems: 'center' },
   playBtn: { paddingHorizontal: 24, height: DPAD_SIZE * 0.85, borderRadius: 20, backgroundColor: '#7B1FA2', justifyContent: 'center', alignItems: 'center' },
-  playTxt: { fontSize: 22 },
+  playTxt: { fontSize: DPAD_SIZE * 0.35 },
 
-  // Cmds - Kompakt
-  cmds: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 6, paddingVertical: 4, borderRadius: 12, minHeight: 38, gap: 3 },
+  // Cmds
+  cmds: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 6, paddingVertical: 4, borderRadius: 12, minHeight: 44, gap: 4 },
   cmdEmpty: { fontSize: 16, color: '#BDBDBD' },
-  cmd: { width: 30, height: 30, borderRadius: 7, justifyContent: 'center', alignItems: 'center' },
+  cmd: { width: 36, height: 36, borderRadius: 9, justifyContent: 'center', alignItems: 'center' },
   cmdOn: { transform: [{ scale: 1.12 }], borderWidth: 2, borderColor: '#FFD700' },
   cmdDone: { opacity: 0.4 },
-  cmdTxt: { fontSize: 14 },
-  undoBtn: { marginLeft: 3, backgroundColor: '#FFCDD2', width: 26, height: 26, borderRadius: 13, justifyContent: 'center', alignItems: 'center' },
-  undoTxt: { fontSize: 12 },
+  cmdTxt: { fontSize: 16 },
+  undoBtn: { marginLeft: 4, backgroundColor: '#FFCDD2', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  undoTxt: { fontSize: 14 },
 
-  // DPad - Kompakt
-  dpad: { gap: 3 },
-  drow: { flexDirection: 'row', gap: 3 },
+  // DPad - net kenarlıklı, ferah aralıklı büyük dokunma hedefleri
+  dpad: { gap: 10 },
+  drow: { flexDirection: 'row', gap: 10 },
   dspace: { width: DPAD_SIZE, height: DPAD_SIZE },
-  dbtn: { width: DPAD_SIZE, height: DPAD_SIZE, borderRadius: 10, justifyContent: 'center', alignItems: 'center', elevation: 3 },
+  dbtn: { width: DPAD_SIZE, height: DPAD_SIZE, borderRadius: 14, justifyContent: 'center', alignItems: 'center', elevation: 3, borderWidth: 3, borderColor: 'rgba(255,255,255,0.6)' },
   dtxt: { fontSize: DPAD_SIZE * 0.5 },
 
-  // Acts - Kompakt
+  // Acts
   acts: { flexDirection: 'row', gap: 8 },
   resetBtn: { width: DPAD_SIZE * 0.85, height: DPAD_SIZE * 0.85, borderRadius: 18, backgroundColor: '#ECEFF1', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#B0BEC5' },
-  actTxt: { fontSize: 20 },
+  actTxt: { fontSize: DPAD_SIZE * 0.35 },
   goBtn: { paddingHorizontal: 28, height: DPAD_SIZE * 0.85, borderRadius: 18, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#2E7D32' },
   goOff: { backgroundColor: '#BDBDBD', borderBottomColor: '#9E9E9E' },
-  goTxt: { fontSize: 22 },
+  goTxt: { fontSize: DPAD_SIZE * 0.35 },
 });

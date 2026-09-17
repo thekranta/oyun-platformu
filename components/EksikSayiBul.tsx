@@ -5,6 +5,14 @@ import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import JuicyProgressBar from './JuicyProgressBar';
 import { asset } from '../lib/assetMap';
+import { speak } from '../services/speechService';
+
+// 10 ('On') VoiceBox'ta çok kısa geldiği için üretilemedi; rakam olarak ("10")
+// üretildi — Türkçe TTS bunu doğru şekilde "on" diye okuyor.
+const NUMBER_WORDS: Record<number, string> = {
+  1: 'Bir', 2: 'İki', 3: 'Üç', 4: 'Dört', 5: 'Beş',
+  6: 'Altı', 7: 'Yedi', 8: 'Sekiz', 9: 'Dokuz', 10: '10',
+};
 
 interface EksikSayiBulProps {
   onGameEnd: (
@@ -172,6 +180,7 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
 
   const handleDrop = (value: number) => {
     if (placedNumber !== null) return;
+    speak(NUMBER_WORDS[value] ?? String(value));
     setMoves(prev => {
       const next = prev + 1;
       movesRef.current = next;
