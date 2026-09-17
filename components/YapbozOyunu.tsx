@@ -448,7 +448,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: { flex: 1, ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(26, 26, 46, 0.7)',

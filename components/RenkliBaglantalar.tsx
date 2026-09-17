@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -381,7 +380,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.exitBtn} onTouchEnd={onExit}>
-                    <Ionicons name="home" size={22} color="#FFF" />
+                    <Text style={styles.exitIcon}>🚪</Text>
                 </View>
 
                 <View style={styles.popCounter}>
@@ -551,12 +550,27 @@ const styles = StyleSheet.create({
         paddingBottom: 10,
     },
     exitBtn: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 100,
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
+    },
+    exitIcon: {
+        fontSize: 30,
+        color: 'white',
     },
     popCounter: {
         flexDirection: 'row',

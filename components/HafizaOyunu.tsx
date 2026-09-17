@@ -329,7 +329,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 {/* Exit Button */}
                 {onExit && (
                     <TouchableOpacity style={styles.exitButton} onPress={onExit}>
-                        <Text style={styles.exitButtonText}>🏠</Text>
+                        <Text style={styles.exitButtonText}>🚪</Text>
                     </TouchableOpacity>
                 )}
                 <View style={styles.centerContainer}>
@@ -356,7 +356,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
             {/* Exit Button */}
             {onExit && (
                 <TouchableOpacity style={styles.exitButton} onPress={onExit}>
-                    <Text style={styles.exitButtonText}>🏠</Text>
+                    <Text style={styles.exitButtonText}>🚪</Text>
                 </TouchableOpacity>
             )}
             {/* Countdown Overlay */}
@@ -441,26 +441,28 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
 }
 
 const styles = StyleSheet.create({
-    background: { flex: 1, width: '100%', height: '100%' },
+    background: { flex: 1, width: '100%', height: '100%', ...(isWeb ? { height: '100vh' as any } : {}) },
     darkOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.25)' },
     exitButton: {
         position: 'absolute',
-        top: Platform.OS === 'ios' ? 50 : 30,
+        bottom: 30,
         left: 20,
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(255, 107, 107, 0.9)',
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 100,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        elevation: 5,
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
     },
-    exitButtonText: { fontSize: 22 },
+    exitButtonText: { fontSize: 30, color: 'white' },
     gameContainer: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', minHeight: height - 100 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },

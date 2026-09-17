@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Animated,
@@ -292,7 +291,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
             {/* Header - Sadece geri butonu ve tur */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
-                    <Ionicons name="home" size={20} color="#fff" />
+                    <Text style={styles.exitIcon}>🚪</Text>
                 </TouchableOpacity>
                 <Text style={styles.roundText}>🔍 Tur {round}/{TOTAL}</Text>
                 <View style={{ width: 36 }} />
@@ -374,6 +373,7 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         height: '100%',
+        ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}),
     },
     bgImage: {
         width: '100%',
@@ -394,7 +394,29 @@ const styles = StyleSheet.create({
         paddingBottom: 8,
         zIndex: 20,
     },
-    exitBtn: { padding: 8, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 15 },
+    exitBtn: {
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
+    },
+    exitIcon: {
+        fontSize: 30,
+        color: 'white',
+    },
     roundText: {
         fontSize: 18,
         fontWeight: 'bold',

@@ -301,7 +301,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
 
             {/* Çıkış Butonu (Sol Alt) */}
             <TouchableOpacity onPress={onLogout} style={styles.logoutButton}>
-                <Ionicons name="home" size={22} color="#fff" />
+                <Text style={styles.logoutIcon}>🚪</Text>
             </TouchableOpacity>
         </View>
     );
@@ -465,17 +465,24 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 30,
         left: 20,
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#E74C3C',
-        elevation: 5,
+        zIndex: 100,
+        elevation: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF',
+    },
+    logoutIcon: {
+        fontSize: 30,
+        color: 'white',
     },
 });
 

@@ -288,7 +288,7 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
 }
 
 const styles = StyleSheet.create({
-    outerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    outerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(206, 147, 216, 0.4)',

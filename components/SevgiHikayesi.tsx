@@ -266,7 +266,7 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
       {showConfetti && <ConfettiCannon count={120} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
 
       <TouchableOpacity style={styles.exitBtn} onPress={onExit} activeOpacity={0.8}>
-        <Ionicons name="close" size={26} color="#fff" />
+        <Text style={styles.exitIcon}>🚪</Text>
       </TouchableOpacity>
 
       <View style={styles.title}>
@@ -328,10 +328,27 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF3F8', alignItems: 'center' },
   exitBtn: {
-    position: 'absolute', top: 44, left: 18, zIndex: 20,
-    width: 44, height: 44, borderRadius: 22, backgroundColor: '#FF6AA9',
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 3, elevation: 4,
+    position: 'absolute',
+    bottom: 30,
+    left: 20,
+    backgroundColor: '#FF5252',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    borderWidth: 3,
+    borderColor: '#FFF'
+  },
+  exitIcon: {
+    fontSize: 30,
+    color: 'white',
   },
   title: { marginTop: 48, marginBottom: 6 },
   titleText: { fontSize: 24, fontWeight: '900', color: '#E0359A', textShadowColor: 'rgba(255,255,255,0.6)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },

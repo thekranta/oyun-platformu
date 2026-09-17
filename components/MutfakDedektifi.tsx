@@ -525,7 +525,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
                             <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                                <Ionicons name="home" size={22} color="#fff" />
+                                <Text style={styles.exitIcon}>🚪</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.repeatBtn} onPress={() => speak(fullIntroMessage)}>
                                 <Ionicons name="volume-high" size={20} color="#fff" />
@@ -630,6 +630,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}),
     },
     background: {
         flex: 1,
@@ -715,14 +716,27 @@ const styles = StyleSheet.create({
         gap: 10,
     },
     exitBtn: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
+        zIndex: 100,
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
+    },
+    exitIcon: {
+        fontSize: 30,
+        color: 'white',
     },
     repeatBtn: {
         width: 40,

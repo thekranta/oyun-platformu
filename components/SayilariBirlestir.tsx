@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Image, PanResponder, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
@@ -273,7 +272,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             <View style={styles.container}>
                 {/* Exit button */}
                 <View style={styles.exitBtn}>
-                    <Ionicons name="close" size={26} color="#d84315" onPress={onExit} />
+                    <Text style={styles.exitIcon} onPress={onExit}>🚪</Text>
                 </View>
 
                 {/* Progress bar */}
@@ -415,16 +414,26 @@ const styles = StyleSheet.create({
     },
     exitBtn: {
         position: 'absolute',
-        top: 45,
-        left: 12,
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: 'rgba(255, 229, 224, 0.95)',
-        alignItems: 'center',
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
-        elevation: 4,
+        alignItems: 'center',
         zIndex: 100,
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
+    },
+    exitIcon: {
+        fontSize: 30,
+        color: 'white',
     },
     progressBarContainer: {
         marginTop: 50,

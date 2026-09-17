@@ -435,7 +435,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
       <View style={st.container}>
         {/* Top */}
         <View style={st.top}>
-          <TouchableOpacity style={st.exitBtn} onPress={() => { stopBgMusic(); stopSpeech(); onExit?.(); }}><Text style={st.exitTxt}>âœ•</Text></TouchableOpacity>
+          <TouchableOpacity style={st.exitBtn} onPress={() => { stopBgMusic(); stopSpeech(); onExit?.(); }}><Text style={st.exitTxt}>ðŸšª</Text></TouchableOpacity>
 
           <View style={st.levels}>
             {LEVELS.map((l, i) => (
@@ -529,7 +529,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
 
 // ============== STYLES ==============
 const st = StyleSheet.create({
-  bgContainer: { flex: 1 },
+  bgContainer: { flex: 1, ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
@@ -538,8 +538,26 @@ const st = StyleSheet.create({
 
   // Top
   top: { flexDirection: 'row', alignItems: 'center', width: '100%', justifyContent: 'space-between' },
-  exitBtn: { width: BTN_SIZE, height: BTN_SIZE, borderRadius: BTN_SIZE / 2, backgroundColor: '#EF5350', justifyContent: 'center', alignItems: 'center' },
-  exitTxt: { color: '#FFF', fontSize: BTN_SIZE * 0.5, fontWeight: 'bold' },
+  exitBtn: {
+    position: 'absolute',
+    bottom: 30,
+    left: 20,
+    backgroundColor: '#FF5252',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    borderWidth: 3,
+    borderColor: '#FFF'
+  },
+  exitTxt: { fontSize: 30, color: 'white' },
   levels: { flexDirection: 'row', gap: 4 },
   lvlBtn: { width: BTN_SIZE, height: BTN_SIZE, borderRadius: BTN_SIZE / 2, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
   lvlActive: { borderColor: '#2196F3', backgroundColor: '#E3F2FD' },

@@ -481,7 +481,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         <ImageBackground source={BACKGROUND_IMAGE} style={styles.bgContainer} resizeMode="cover">
             <View style={styles.darkOverlay} />
             <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                <Ionicons name="arrow-back" size={28} color="#333" />
+                <Text style={styles.exitIcon}>🚪</Text>
             </TouchableOpacity>
             <View style={styles.topBar}>
                 <JuicyProgressBar current={currentStage + 1} total={STAGES.length} />
@@ -559,22 +559,33 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 }
 
 const styles = StyleSheet.create({
-    bgContainer: { flex: 1 },
+    bgContainer: { flex: 1, ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(255, 255, 255, 0.2)',
     },
     exitBtn: {
         position: 'absolute',
-        top: 50,
-        left: 16,
-        zIndex: 100,
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 100,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF',
+    },
+    exitIcon: {
+        fontSize: 30,
+        color: 'white',
     },
     topBar: {
         width: '100%',

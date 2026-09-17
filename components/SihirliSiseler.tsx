@@ -570,7 +570,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
             {/* Header - simplified */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                    <Ionicons name="arrow-back" size={28} color="#fff" />
+                    <Text style={styles.closeIcon}>🚪</Text>
                 </TouchableOpacity>
                 <Text style={styles.title}>🧪 Sihirli Şişeler</Text>
                 <TouchableOpacity onPress={initializeGame} style={styles.restartIconButton}>
@@ -645,6 +645,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}),
     },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
@@ -795,7 +796,27 @@ const styles = StyleSheet.create({
         elevation: 8,
     },
     closeButton: {
-        padding: 8,
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
+    },
+    closeIcon: {
+        fontSize: 30,
+        color: 'white',
     },
     restartIconButton: {
         padding: 8,

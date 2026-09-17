@@ -409,7 +409,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
         )}
 
         <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-          <Ionicons name="close" size={28} color="#d84315" />
+          <Text style={styles.exitIcon}>🚪</Text>
         </TouchableOpacity>
 
         <View ref={canvasRef} style={styles.canvas} {...panResponder.panHandlers}>
@@ -598,16 +598,34 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
 }
 
 const styles = StyleSheet.create({
-  bgContainer: { flex: 1 },
+  bgContainer: { flex: 1, ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   container: { flex: 1 },
   exitBtn: {
-    position: 'absolute', top: 50, left: 16, width: 48, height: 48, borderRadius: 24,
-    backgroundColor: 'rgba(255,229,224,0.95)', alignItems: 'center', justifyContent: 'center',
-    elevation: 4, zIndex: 100,
+    position: 'absolute',
+    bottom: 30,
+    left: 20,
+    backgroundColor: '#FF5252',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    borderWidth: 3,
+    borderColor: '#FFF'
+  },
+  exitIcon: {
+    fontSize: 30,
+    color: 'white',
   },
   canvas: {
     flex: 1, backgroundColor: '#fffef9', marginTop: 10, marginHorizontal: 10, marginBottom: 85,

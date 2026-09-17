@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -481,7 +480,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={handleExit} style={styles.exitBtn}>
-                    <Ionicons name="home" size={22} color="#FFF" />
+                    <Text style={styles.exitIcon}>🚪</Text>
                 </TouchableOpacity>
 
                 <View style={styles.timerContainer}>
@@ -686,11 +685,27 @@ const styles = StyleSheet.create({
         zIndex: 20,
     },
     exitBtn: {
-        padding: 10,
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
+    },
+    exitIcon: {
+        fontSize: 30,
+        color: 'white',
     },
     timerContainer: {
         flexDirection: 'row',

@@ -309,7 +309,7 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
             <View style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                        <Ionicons name="close" size={28} color="#d84315" />
+                        <Text style={styles.exitIcon}>🚪</Text>
                     </TouchableOpacity>
                     <Text style={styles.title}>✏️ Rakam Yazma</Text>
                     <View style={styles.progressBadge}>
@@ -455,13 +455,27 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     exitBtn: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#ffe5e0',
-        alignItems: 'center',
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         justifyContent: 'center',
-        elevation: 2,
+        alignItems: 'center',
+        zIndex: 100,
+        elevation: 8,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF'
+    },
+    exitIcon: {
+        fontSize: 30,
+        color: 'white',
     },
     title: { fontSize: 22, fontWeight: 'bold', color: '#3e2723' },
     progressBadge: {
