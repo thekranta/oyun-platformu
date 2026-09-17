@@ -3,6 +3,9 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { speak } from '../services/speechService';
+
+const speakQuestion = (more: boolean) => speak(more ? 'Hangisinde daha ÇOK var?' : 'Hangisinde daha AZ var?');
 
 // Akıllı Miktar — UYARLANIR (adaptif) zorluk. Maarif: MAB.1
 // (Ritmik ve algısal sayabilme; nicelik karşılaştırma).
@@ -93,7 +96,9 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
         levelStartRef.current = Date.now();
         diffRef.current = nextDiff;
         setRound(r => r + 1);
-        setCurrent(buildRound(nextDiff));
+        const next = buildRound(nextDiff);
+        setCurrent(next);
+        speakQuestion(next.more);
         setSelectedSide(null);
         setFeedback('idle');
         lockRef.current = false;
@@ -182,7 +187,7 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
                     message="Hangi tarafta daha çok (veya az) var? Say ve dokun! Sen başardıkça zorlaşır 📈"
                     childName={childName}
                     countdownSeconds={5}
-                    onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}
+                    onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); speakQuestion(current.more); }}
                 />
             )}
         </DynamicBackground>

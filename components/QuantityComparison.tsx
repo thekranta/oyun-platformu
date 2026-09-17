@@ -12,6 +12,9 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
+import { speak } from '../services/speechService';
+
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 interface QuantityComparisonProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
@@ -19,6 +22,7 @@ interface QuantityComparisonProps {
     childName?: string;
     fruits?: { left: string; right: string };  // temalı varyant için emoji seti
     oyunAdi?: string;                            // varyant oyun kimliği
+    introMessage?: string;                       // temalı varyant için giriş sesi metni
 }
 
 type QuestionType = 'MORE' | 'LESS';
@@ -38,7 +42,7 @@ interface RoundData {
 // Varsayılan tema: elma vs portakal (varyantlar `fruits` prop'u ile override eder)
 const DEFAULT_FRUITS = { left: '🍎', right: '🍊' };
 
-export default function QuantityComparison({ onGameEnd, onExit, childName = 'Çocuk', fruits = DEFAULT_FRUITS, oyunAdi = 'miktar-avcisi' }: QuantityComparisonProps) {
+export default function QuantityComparison({ onGameEnd, onExit, childName = 'Çocuk', fruits = DEFAULT_FRUITS, oyunAdi = 'miktar-avcisi', introMessage = 'Miktar Avcısı oyununa hoş geldin! Hangisi daha çok veya az, bul!' }: QuantityComparisonProps) {
     const { isMuted, toggleMute } = useSound();
     const [gameReady, setGameReady] = useState(false);
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
@@ -114,6 +118,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
         // Random question type: MORE or LESS
         const newQuestionType: QuestionType = Math.random() > 0.5 ? 'MORE' : 'LESS';
         setQuestionType(newQuestionType);
+        speak(newQuestionType === 'MORE' ? 'Hangisi daha ÇOK?' : 'Hangisi daha AZ?');
 
         // Animate question change
         Animated.sequence([
@@ -195,6 +200,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
         if (isCorrect) {
             setFeedback('correct');
             setShowConfetti(true);
+            speak('Aferin!');
             timersRef.current.push(setTimeout(() => {
                 setShowConfetti(false);
                 if (round < 10) setRound(r => r + 1);
@@ -261,7 +267,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
-                    message="Miktar Avcısı oyununa hoş geldin! Hangisi daha çok veya az, bul!"
+                    message={introMessage}
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}
@@ -279,9 +285,6 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
             <View style={[styles.stageContainer, { width: containerWidth, height: containerHeight }]}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={onExit} style={styles.headerBtn}>
-                        <Ionicons name="arrow-back-circle" size={28} color="#5D4037" />
-                    </TouchableOpacity>
                     <View style={styles.roundBadge}>
                         <Text style={styles.roundText}>🎯 Tur {round}/10</Text>
                     </View>
@@ -289,10 +292,21 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
                         <Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={24} color="#5D4037" />
                     </TouchableOpacity>
                 </View>
+                <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
+                    <Text style={styles.exitIcon}>🚪</Text>
+                </TouchableOpacity>
 
                 {/* Dynamic Question */}
                 <Animated.View style={[styles.questionContainer, { transform: [{ scale: questionPulse }] }]}>
                     <Text style={[styles.questionText, { color: questionColor }]}>{questionText}</Text>
+                    <TouchableOpacity
+                        style={styles.listenBtn}
+                        onPress={() => speak(questionText, { instructions: HAPPY_VOICE })}
+                        activeOpacity={0.85}
+                    >
+                        <Ionicons name="volume-high" size={18} color="#fff" />
+                        <Text style={styles.listenText}>Tekrar Dinle</Text>
+                    </TouchableOpacity>
                 </Animated.View>
 
                 {/* Split Comparison Area */}
@@ -395,6 +409,37 @@ const styles = StyleSheet.create({
         borderBottomColor: '#EEEEEE',
     },
     headerBtn: { padding: 4 },
+    exitBtn: {
+        position: 'absolute',
+        bottom: 30,
+        left: 20,
+        backgroundColor: '#FF5252',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4.65,
+        borderWidth: 3,
+        borderColor: '#FFF',
+    },
+    exitIcon: { fontSize: 30, color: 'white' },
+    listenBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: '#42A5F5',
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        borderRadius: 16,
+        marginTop: 10,
+    },
+    listenText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
     roundBadge: {
         backgroundColor: '#FFF',
         paddingHorizontal: 14,

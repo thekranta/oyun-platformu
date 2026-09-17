@@ -15,6 +15,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
+import { speak } from '../services/speechService';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/tarti_dengesi_bg.webp');
@@ -38,10 +39,16 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
     const onDropRef = useRef(onDrop);
     onDropRef.current = onDrop;
 
+    // disabled da ayni sebeple ref uzerinden okunuyor — PanResponder bir kez
+    // olusturuldugu icin ilk render'daki (false) degeri yakalar, sonraki
+    // geri-bildirim penceresinde disabled=true olsa da surukleme kilitlenmezdi.
+    const disabledRef = useRef(disabled);
+    disabledRef.current = disabled;
+
     const panResponder = useRef(
         PanResponder.create({
-            onStartShouldSetPanResponder: () => !disabled,
-            onMoveShouldSetPanResponder: () => !disabled,
+            onStartShouldSetPanResponder: () => !disabledRef.current,
+            onMoveShouldSetPanResponder: () => !disabledRef.current,
             onPanResponderGrant: () => {
                 setIsDragging(true);
                 pan.setOffset({ x: 0, y: 0 });
@@ -81,7 +88,7 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
 }
 
 export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }: TartiDengesiProps) {
-    const { isMuted, toggleMute } = useSound();
+    const { isMuted, toggleMute, playSound } = useSound();
     const [gameReady, setGameReady] = useState(false);
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
@@ -166,6 +173,8 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
             setFeedback('correct');
             setIsBalanced(true);
             setShowConfetti(true);
+            playSound('correct');
+            speak('Aferin!');
             animateBalance(0);
             timersRef.current.push(setTimeout(() => {
                 setShowConfetti(false);
@@ -178,11 +187,13 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
         } else if (val > targetNumber) {
             setFeedback('wrong');
             setMistakes(m => m + 1);
+            playSound('wrong');
             animateBalance(10);
             timersRef.current.push(setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000));
         } else {
             setFeedback('wrong');
             setMistakes(m => m + 1);
+            playSound('wrong');
             animateBalance(-6);
             timersRef.current.push(setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000));
         }
@@ -325,7 +336,7 @@ const styles = StyleSheet.create({
     placeholder: { borderWidth: 2, borderColor: '#BDBDBD', borderStyle: 'dashed', borderRadius: 6, justifyContent: 'center', alignItems: 'center', position: 'absolute', bottom: 4 },
     placeholderText: { fontSize: 16, color: '#9E9E9E' },
     weightText: { color: '#FFF', fontWeight: 'bold' },
-    optionsRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
+    optionsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 8 },
     optionBtn: {
         borderRadius: 100, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center',
         borderWidth: 3, borderColor: '#CE93D8',

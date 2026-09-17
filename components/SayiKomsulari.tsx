@@ -12,6 +12,12 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
+import { speak } from '../services/speechService';
+
+const NUMBER_WORDS: Record<number, string> = {
+    1: 'Bir', 2: 'İki', 3: 'Üç', 4: 'Dört', 5: 'Beş',
+    6: 'Altı', 7: 'Yedi', 8: 'Sekiz', 9: 'Dokuz', 10: '10',
+};
 
 interface SayiKomsulariProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
@@ -106,10 +112,13 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
 
     const handleAnswer = (val: number) => {
         if (feedback) return;
+        speak(NUMBER_WORDS[val] ?? String(val));
         setDroppedAnswer(val);
         if (val === question?.correctAnswer) {
             setFeedback('correct');
             setShowConfetti(true);
+            // Seçilen sayının sesi bitsin diye "Aferin!" bir tık geciktirilir (aksi halde üst üste biner).
+            setTimeout(() => speak('Aferin!'), 700);
             setTimeout(() => {
                 setShowConfetti(false);
                 if (round < 10) setRound(r => r + 1);

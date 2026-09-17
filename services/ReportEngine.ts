@@ -109,6 +109,7 @@ const GAME_NAMES: Record<string, string> = {
     'mutfak-dedektifi': 'Mutfak Dedektifi',
     'uzay-bloklari': 'Uzay Blokları',
     'golge-dedektifi': 'Gölge Dedektifi',
+    'golge-dedektifi-2': 'Gölge Dedektifi: Uzman',
     'hafiza-oyunu': 'Hafıza Oyunu',
     'sihirli-siseler': 'Sihirli Şişeler',
     'renkli-baglantalar': 'Renkli Bağlantılar',

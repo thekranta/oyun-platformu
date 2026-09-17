@@ -4,6 +4,7 @@ import { Animated, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
+import { speak } from '../services/speechService';
 
 interface Props {
     onGameEnd: (
@@ -93,6 +94,9 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         const question = QUESTIONS[questionIndex];
         setUsedQuestions(prev => [...prev, questionIndex]);
         setCurrentQuestion(question);
+        // İlk tur CountdownOverlay'in kendi giriş sesiyle çakışmasın diye onComplete'te
+        // ayrıca söyleniyor — burada sadece sahne DEĞİŞİMLERİNDE (2. turdan itibaren) seslendirilir.
+        if (gameReady) speak(question.question);
 
         const targetBoxIndex = Math.floor(Math.random() * 3);
         setCorrectBoxIndex(targetBoxIndex);
@@ -168,6 +172,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         if (correct) {
             setFoundCorrect(true);
             playSound('correct');
+            speak('Aferin!');
 
             feedbackAnim.setValue(0);
             Animated.spring(feedbackAnim, {
@@ -296,9 +301,9 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                         },
                     ]}
                 >
-                    <Text style={[styles.questionText, isPortrait && styles.questionTextSmall]}>
-                        {currentQuestion?.question}
-                    </Text>
+                    {/* Yönerge artık sesli (speak) veriliyor — okuma bilmeyen çocuk için
+                        yazı yerine sadece aranan büyük emoji gösteriliyor. */}
+                    <Text style={styles.targetEmoji}>{currentQuestion?.target}</Text>
                 </Animated.View>
 
                 {/* Boxes - Triangle/Pyramid layout on portrait */}
@@ -340,9 +345,9 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Doğru kutuyu bul ve dokun!"
+                    message="Sana söylenen şeyi bul ve dokun!"
                     countdownSeconds={5}
-                    onComplete={() => setGameReady(true)}
+                    onComplete={() => { setGameReady(true); if (currentQuestion) speak(currentQuestion.question); }}
                 />
             )}
         </DynamicBackground>
@@ -410,14 +415,10 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         elevation: 4,
     },
-    questionText: {
-        fontSize: 20,
-        fontWeight: 'bold',
+    targetEmoji: {
+        fontSize: 64,
         textAlign: 'center',
-        color: '#333',
-    },
-    questionTextSmall: {
-        fontSize: 16,
+        marginBottom: 4,
     },
     pyramidContainer: {
         flex: 1,

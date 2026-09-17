@@ -275,6 +275,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       fruitWord="yıldız"
       oyunAdi="onluk-cerceve-2"
       targetRange={[6, 10]}
+      introMessage="Söylenen sayı kadar yıldızı çerçeveye koy!"
     />
   ),
   'sayi-komsulari': (c) => <SayiKomsulari onGameEnd={c.onGameEnd} onExit={c.onExit} />,
@@ -286,6 +287,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       onExit={c.onExit}
       fruits={{ left: '🐟', right: '🐙' }}
       oyunAdi="miktar-avcisi-2"
+      introMessage="Deniz Avcısına hoş geldin! Hangisi daha çok veya az, bul!"
     />
   ),
   'ceviz-macera': (c) => <CevizMacera onExit={c.onExit} userId={c.ad} userEmail={c.email} userAge={parseInt(c.yas)} />,

@@ -13,6 +13,14 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
+import { speak } from '../services/speechService';
+
+// EksikSayiBul.tsx'teki NUMBER_WORDS ile aynı desen — bu sayıların ses klipleri
+// (Bir..Dokuz + "10") o oyunun eklendiği turda zaten üretildi.
+const NUMBER_WORDS: Record<number, string> = {
+    1: 'Bir', 2: 'İki', 3: 'Üç', 4: 'Dört', 5: 'Beş',
+    6: 'Altı', 7: 'Yedi', 8: 'Sekiz', 9: 'Dokuz', 10: '10',
+};
 
 interface OnlukCerceveProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
@@ -21,9 +29,10 @@ interface OnlukCerceveProps {
     fruitWord?: string;               // "... topla!" etiketindeki kelime
     oyunAdi?: string;                 // varyant oyun kimliği
     targetRange?: [number, number];   // verilirse tüm turlar bu aralıktan hedef seçer
+    introMessage?: string;            // temalı varyant için giriş sesi metni
 }
 
-export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', fruitWord = 'elma', oyunAdi = 'Onluk Çerçeve', targetRange }: OnlukCerceveProps) {
+export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', fruitWord = 'elma', oyunAdi = 'Onluk Çerçeve', targetRange, introMessage = 'Söylenen sayı kadar meyveyi çerçeveye koy!' }: OnlukCerceveProps) {
     const { isMuted, toggleMute } = useSound();
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
@@ -142,6 +151,7 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
             pan.setValue({ x: 0, y: 0 });
 
             const newCount = currentCount + 1;
+            speak(NUMBER_WORDS[newCount] ?? String(newCount));
             if (newCount === target) {
                 setShowConfetti(true);
                 setShowSuccess(true);
@@ -278,7 +288,7 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
             {!gameReady && (
                 <CountdownOverlay
                     interaction="drag"
-                    message="Söylenen sayı kadar meyveyi çerçeveye koy!"
+                    message={introMessage}
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}
                 />

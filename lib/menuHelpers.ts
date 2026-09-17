@@ -39,7 +39,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'sayilari-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Sayıları Birleştir', subtitle: 'Sayı sırası' },
   'yapboz': { color: '#E91E63', icon: 'apps', displayTitle: 'Yapboz', subtitle: 'Parça-bütün' },
   'golge-dedektifi': { color: '#1565C0', icon: 'eye-outline', displayTitle: 'Gölge Dedektifi', subtitle: 'Eşleştirme' },
-  'golge-dedektifi-2': { color: '#0D47A1', icon: 'eye', displayTitle: 'Gölge: Uzman', subtitle: 'Zor eşleştirme' },
+  'golge-dedektifi-2': { color: '#0D47A1', icon: 'eye', displayTitle: 'Gölge Dedektifi: Uzman', subtitle: 'Zor eşleştirme' },
   'onluk-cerceve': { color: '#FF7043', icon: 'grid-outline', displayTitle: 'Onluk Çerçeve', subtitle: 'Onluk sistem' },
   'onluk-cerceve-2': { color: '#FFB300', icon: 'star', displayTitle: 'Yıldız Çerçevesi', subtitle: '6-10 yıldız' },
   'tarti-dengesi': { color: '#AB47BC', icon: 'color-filter-outline', displayTitle: 'Tartı Dengesi', subtitle: 'Eşitlik' },

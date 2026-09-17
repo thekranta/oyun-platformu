@@ -130,7 +130,17 @@ function DraggableAnimal({ animal, size, isMatched, onDrop }: {
             }}
             {...panResponder.panHandlers}
         >
-            <Image source={animal.source} style={{ width: '100%', height: '100%' }} resizeMode="contain" />
+            {/* Yoğun arka plana karşı okunabilirlik için hayvanın arkasına açık bir kart eklendi */}
+            <View style={{
+                width: '100%',
+                height: '100%',
+                borderRadius: size / 2,
+                backgroundColor: 'rgba(255,255,255,0.85)',
+                justifyContent: 'center',
+                alignItems: 'center',
+            }}>
+                <Image source={animal.source} style={{ width: '82%', height: '82%' }} resizeMode="contain" />
+            </View>
         </Animated.View>
     );
 }
@@ -452,12 +462,12 @@ const styles = StyleSheet.create({
     arrow: { fontSize: 28, color: '#fff', marginHorizontal: 5, textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
 
     shadowSlot: {
-        backgroundColor: 'rgba(0,0,0,0.15)',
+        backgroundColor: 'rgba(255,255,255,0.55)',
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: 'rgba(255,255,255,0.3)',
+        borderColor: 'rgba(255,255,255,0.6)',
         borderStyle: 'dashed',
     },
     shadowMatched: {
@@ -465,7 +475,7 @@ const styles = StyleSheet.create({
         borderColor: '#4CAF50',
         borderStyle: 'solid',
     },
-    shadowImg: { width: '80%', height: '80%', opacity: 0.65 },
+    shadowImg: { width: '80%', height: '80%', opacity: 0.9 },
 
     successBox: {
         position: 'absolute',
