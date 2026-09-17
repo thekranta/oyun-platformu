@@ -4,6 +4,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
 import JuicyProgressBar from './JuicyProgressBar';
+import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
@@ -56,6 +57,9 @@ interface Card {
 }
 
 export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük Kaşif', emojiSet, oyunAdi = 'hafiza', title = '🧠 Çiftini Bul!', introMessage = 'Hafıza Oyununa hoş geldin! Kartların çiftlerini bulmaya çalış!' }: HafizaOyunuProps) {
+    // Bu ekran DynamicBackground kullanmadığı için global ses düğmesini hiç göstermiyordu —
+    // arka plan müziği kapatılamıyordu. Kendi ses aç/kapa butonunu ekliyoruz.
+    const { isMuted, toggleMute } = useSound();
     // Emoji seti verilirse görsel yerine emoji kartlar kullan (temalı varyant)
     const gorseller: { id: number; name: string; source?: any; emoji?: string }[] =
         emojiSet && emojiSet.length >= 5
@@ -332,6 +336,9 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                         <Text style={styles.exitButtonText}>🚪</Text>
                     </TouchableOpacity>
                 )}
+                <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
+                    <Text style={styles.soundButtonText}>{isMuted ? '🔇' : '🔊'}</Text>
+                </TouchableOpacity>
                 <View style={styles.centerContainer}>
                     <Text style={styles.congratsTitle}>🎉 Harika!</Text>
                     <Text style={styles.congratsText}>
@@ -359,6 +366,9 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                     <Text style={styles.exitButtonText}>🚪</Text>
                 </TouchableOpacity>
             )}
+            <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
+                <Text style={styles.soundButtonText}>{isMuted ? '🔇' : '🔊'}</Text>
+            </TouchableOpacity>
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
@@ -463,6 +473,19 @@ const styles = StyleSheet.create({
         borderColor: '#FFF'
     },
     exitButtonText: { fontSize: 30, color: 'white' },
+    soundButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        backgroundColor: 'rgba(255,255,255,0.25)',
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+    },
+    soundButtonText: { fontSize: 24 },
     gameContainer: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', minHeight: height - 100 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
