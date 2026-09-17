@@ -19,7 +19,7 @@ import { supabase } from '../../lib/supabase';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
 // Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
-const BUILD_ETIKET = 'b7-tani';
+const BUILD_ETIKET = 'b8-tani';
 
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
@@ -146,9 +146,15 @@ const GirisFormu = React.memo(function GirisFormu({
               </Text>
             </TouchableOpacity>
           </View>
-          {!keyboardOpen && (
-            <Image source={asset('/branding/mascot/el-sallar.webp')} style={styles.mascotWelcome} />
-          )}
+          {/* Klavye acikken agactan KALDIRILMIYOR (alt butonlarla ayni ders) --
+              odakli TextInput'un yanindaki bir native view'in eklenip/silinmesi
+              Android'de gecici odak kaybina yol acabiliyor (b7-tani sonrasi
+              blur:27/degisim:6 olcumuyle ortaya cikan supheli). Boyutu 0'a
+              indirip gorunmez yapiyoruz, agactan sokmuyoruz. */}
+          <Image
+            source={asset('/branding/mascot/el-sallar.webp')}
+            style={[styles.mascotWelcome, keyboardOpen && styles.mascotWelcomeHidden]}
+          />
           <View style={styles.titleContainer}>
             <Image source={asset('/images/icon.png')} style={styles.logoImage} />
             <Text style={styles.girisBaslik}>{t('login.title')}</Text>
@@ -188,7 +194,6 @@ const GirisFormu = React.memo(function GirisFormu({
               onFocus={() => {
                 focusedRef.current = true;
                 setFocusedInput('email');
-                requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 0, animated: true }));
               }}
               onBlur={() => {
                 focusedRef.current = false;
@@ -226,7 +231,6 @@ const GirisFormu = React.memo(function GirisFormu({
               onFocus={() => {
                 focusedRef.current = true;
                 setFocusedInput('password');
-                requestAnimationFrame(() => scrollRef.current?.scrollTo({ y: 70, animated: true }));
               }}
               onBlur={() => {
                 focusedRef.current = false;
@@ -647,6 +651,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 4,
     resizeMode: 'contain',
+  },
+  mascotWelcomeHidden: {
+    width: 0,
+    height: 0,
+    marginBottom: 0,
+    opacity: 0,
   },
   titleContainer: {
     flexDirection: 'row',
