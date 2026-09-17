@@ -53,6 +53,11 @@ export function ttsSlug(text: string): string {
 // Şu an çalan hazır-MP3 sesi; yenisi gelince durdurulup boşaltılır (üst üste binmesin).
 let currentTtsSound: ExpoAudio.Sound | null = null;
 
+// Şu an çalan canlı-proxy sesi (web, HTMLAudioElement) — hazır-MP3'ten AYRI bir oynatma
+// yolu olduğu için currentTtsSound'a dahil değildi; stopSpeech() bunu da durdurabilsin
+// ve üst üste binmesin diye ayrıca izleniyor.
+let currentLiveAudio: HTMLAudioElement | null = null;
+
 /**
  * Paketli (bundled) bir MP3 modülünü expo-av ile çalar. Hikaye anlatımlarındaki
  * (CevizMacera vb.) desenle birebir aynıdır: öncekini boşalt → oynat → bitince boşalt.
@@ -189,17 +194,28 @@ export async function speak(
     const result = await generateSpeech(text, options);
 
     if (result.success && result.audioUrl) {
+        // Önceki canlı-proxy sesi hâlâ çalıyorsa durdur (üst üste binmesin).
+        if (currentLiveAudio) {
+            currentLiveAudio.pause();
+            currentLiveAudio = null;
+        }
         return new Promise((resolve) => {
             // NOT: expo-av 'Audio' takma adla (ExpoAudio) import edildi; buradaki 'Audio'
             // tarayıcının global HTMLAudioElement'idir (bu yol yalnızca web'de çalışır).
             const audio = new Audio(result.audioUrl);
-            audio.onended = () => resolve();
+            currentLiveAudio = audio;
+            const clear = () => {
+                if (currentLiveAudio === audio) currentLiveAudio = null;
+            };
+            audio.onended = () => { clear(); resolve(); };
             audio.onerror = () => {
                 console.warn('🔊 TTS: Audio oynatma hatasi (sessiz gecildi)');
+                clear();
                 resolve();
             };
             audio.play().catch(() => {
                 console.warn('🔊 TTS: Audio play basarisiz (sessiz gecildi)');
+                clear();
                 resolve();
             });
         });
@@ -231,6 +247,10 @@ export function stopSpeech(): void {
         currentTtsSound = null;
         s.stopAsync().catch(() => { });
         s.unloadAsync().catch(() => { });
+    }
+    if (currentLiveAudio) {
+        currentLiveAudio.pause();
+        currentLiveAudio = null;
     }
     if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();

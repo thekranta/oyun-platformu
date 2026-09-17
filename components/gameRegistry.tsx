@@ -174,6 +174,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       emojiSet={['🐶', '🐱', '🐭', '🐰', '🦊', '🐻', '🐼', '🐨']}
       oyunAdi="hafiza-2"
       title="🐾 Hayvan Çiftleri"
+      introMessage="Hayvan Çiftlerine hoş geldin! Kartların çiftlerini bulmaya çalış!"
     />
   ),
   siralama: (c) => <SiralamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
@@ -221,6 +222,9 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       oyunAdi="diziyi-tamamla-2"
       title="Örüntü Ustası 🌟"
       patterns={[
+        // Basit giriş sahneleri: yalnızca 2 şekil, düz "ABAB" tekrarı — zorluk buradan kademeli artar.
+        { sequence: ['kare', 'ucgen', 'kare', 'ucgen', 'kare'], answer: 'ucgen', options: ['ucgen', 'kare', 'daire', 'yildiz'] },
+        { sequence: ['daire', 'yildiz', 'daire', 'yildiz', 'daire'], answer: 'yildiz', options: ['yildiz', 'daire', 'kare', 'ucgen'] },
         { sequence: ['yildiz', 'daire', 'yildiz', 'daire', 'yildiz'], answer: 'daire', options: ['daire', 'yildiz', 'kare', 'ucgen'] },
         { sequence: ['kare', 'ucgen', 'yildiz', 'kare', 'ucgen'], answer: 'yildiz', options: ['yildiz', 'kare', 'ucgen', 'daire'] },
         { sequence: ['daire', 'daire', 'ucgen', 'daire', 'daire'], answer: 'ucgen', options: ['ucgen', 'daire', 'yildiz', 'kare'] },

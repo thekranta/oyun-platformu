@@ -16,6 +16,7 @@ import {
 import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
+import { speak } from '../services/speechService';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/yapboz_bg.webp');
@@ -119,6 +120,12 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         Array.from({ length: TOTAL_TILES }, () => new Animated.ValueXY({ x: 0, y: 0 }))
     ).current;
 
+    // Her parçanın tepsideki "ev" konumu — yanlış bırakılınca buraya geri döner
+    // (ekran dışına sürüklenip kaybolmasını ve başka bir parçanın üstüne binmesini engeller)
+    const homePositions = useRef<{ x: number; y: number }[]>(
+        Array.from({ length: TOTAL_TILES }, () => ({ x: 0, y: 0 }))
+    ).current;
+
     // Grid position ref (center of screen)
     const gridLeft = (screenW - puzzleSize) / 2;
     const gridTop = isSmallScreen ? 60 : 80;
@@ -156,10 +163,10 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 const shuffleIdx = SHUFFLE_ORDER.indexOf(i);
                 const row = Math.floor(shuffleIdx / 3);
                 const col = shuffleIdx % 3;
-                panRefs[i].setValue({
-                    x: pieceAreaLeft + col * pieceSpacing,
-                    y: pieceAreaTop + row * pieceSpacing,
-                });
+                const homeX = pieceAreaLeft + col * pieceSpacing;
+                const homeY = pieceAreaTop + row * pieceSpacing;
+                homePositions[i] = { x: homeX, y: homeY };
+                panRefs[i].setValue({ x: homeX, y: homeY });
             }
         }
     }, [gameStarted, showPreview]);
@@ -169,6 +176,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             const next = new Set(prev).add(id);
             if (next.size === TOTAL_TILES) {
                 setIsComplete(true);
+                speak('Aferin!');
                 setTimeout(() => {
                     const dur = Math.floor((Date.now() - startTime) / 1000);
                     const puzzleName = currentPuzzle?.name || 'Yapboz';
@@ -200,6 +208,8 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         setLockedPieces(new Set());
         setMoves(0);
         setErrors(0);
+        // Sonraki yapboz seçildiğinde giriş yönergesi yeniden çalsın
+        setGameReady(false);
     };
 
     const createPanResponder = (pieceId: number, targetRow: number, targetCol: number) => {
@@ -248,8 +258,17 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                         handleLock(pieceId);
                     });
                 } else {
-                    // Yanlış yere bırakıldı - hata say
+                    // Yanlış yere bırakıldı - hata say ve tepsideki evine geri döndür
+                    // (aksi halde parça ekran dışında kaybolabilir ya da başka bir
+                    // parçanın üstüne binip görünmez olabilir)
                     setErrors(e => e + 1);
+                    const home = homePositions[pieceId];
+                    Animated.spring(pan, {
+                        toValue: { x: home.x, y: home.y },
+                        useNativeDriver: false,
+                        speed: 20,
+                        bounciness: 0,
+                    }).start();
                 }
             },
         });

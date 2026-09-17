@@ -422,7 +422,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
       {/* Countdown Overlay */}
       {!gameReady && (
         <CountdownOverlay
-          message="Kodlama Oyununa hoş geldin! Robotu hedefe götür!"
+          message="Minik Kaşif'e hoş geldin! Robotu hedefe götür!"
           childName={childName}
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}
@@ -431,7 +431,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
       <View style={st.container}>
         {/* Top */}
         <View style={st.top}>
-          <TouchableOpacity style={st.exitBtn} onPress={() => { stopBgMusic(); onExit?.(); }}><Text style={st.exitTxt}>✕</Text></TouchableOpacity>
+          <TouchableOpacity style={st.exitBtn} onPress={() => { stopBgMusic(); stopSpeech(); onExit?.(); }}><Text style={st.exitTxt}>✕</Text></TouchableOpacity>
 
           <View style={st.levels}>
             {LEVELS.map((l, i) => (

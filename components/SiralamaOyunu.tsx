@@ -78,6 +78,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
     // UI State
     const [containerSize, setContainerSize] = useState({ width: 300, height: 400 });
     const [showError, setShowError] = useState<number | null>(null);
+    const [showHint, setShowHint] = useState(false);
 
     // Confetti Ref
     const confettiRef = useRef<ConfettiCannon>(null);
@@ -99,6 +100,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
             .map((sayi, index) => ({ id: index, sayi, tiklandi: false }));
         setKarisikSayilar(karisik);
         setBeklenenSayi(1);
+        setShowHint(false);
     };
 
     // Sesli yönerge + geri sayım bitince oyun başlar (süre buradan sayılır).
@@ -113,6 +115,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
             .map((sayi, index) => ({ id: index, sayi, tiklandi: false }));
         setKarisikSayilar(karisik);
         setBeklenenSayi(1);
+        setShowHint(false);
 
         // Generate new random positions
         const newPositions = generateRandomPositions(
@@ -170,10 +173,12 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
                 }
             } else {
                 setBeklenenSayi(b => b + 1);
+                setShowHint(false);
             }
         } else {
             setTotalHata(h => h + 1);
             setShowError(index);
+            setShowHint(true);
 
             // Error feedback
             if (Platform.OS === 'web') {
@@ -218,9 +223,11 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
             <View style={styles.headerContainer}>
                 <Text style={styles.baslik}>🔢 Sayıları Sırala</Text>
-                <Text style={styles.bilgi}>
-                    Sıradaki sayı: <Text style={[styles.bilgiVurgulu, { color: currentColors.bg }]}>{beklenenSayi}</Text>
-                </Text>
+                {showHint && (
+                    <Text style={styles.bilgi}>
+                        Sıradaki sayı: <Text style={[styles.bilgiVurgulu, { color: currentColors.bg }]}>{beklenenSayi}</Text>
+                    </Text>
+                )}
             </View>
 
             <View

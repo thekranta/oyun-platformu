@@ -40,6 +40,7 @@ interface HafizaOyunuProps {
     emojiSet?: string[];   // verilirse görsel yerine emoji kartlar (temalı varyant)
     oyunAdi?: string;      // varyant oyun kimliği
     title?: string;        // başlık metni
+    introMessage?: string; // giriş sesi metni (temalı varyant için)
 }
 
 interface Card {
@@ -54,7 +55,7 @@ interface Card {
     shakeValue: Animated.Value;
 }
 
-export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük Kaşif', emojiSet, oyunAdi = 'hafiza', title = '🧠 Çiftini Bul!' }: HafizaOyunuProps) {
+export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük Kaşif', emojiSet, oyunAdi = 'hafiza', title = '🧠 Çiftini Bul!', introMessage = 'Hafıza Oyununa hoş geldin! Kartların çiftlerini bulmaya çalış!' }: HafizaOyunuProps) {
     // Emoji seti verilirse görsel yerine emoji kartlar kullan (temalı varyant)
     const gorseller: { id: number; name: string; source?: any; emoji?: string }[] =
         emojiSet && emojiSet.length >= 5
@@ -361,7 +362,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
-                    message="Hafıza Oyununa hoş geldin! Kartların çiftlerini bulmaya çalış!"
+                    message={introMessage}
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}

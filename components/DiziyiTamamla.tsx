@@ -5,6 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
+import { speak } from '../services/speechService';
 
 export type ShapeType = 'kare' | 'ucgen' | 'daire' | 'yildiz';
 
@@ -30,6 +31,17 @@ const SHAPES = {
 };
 
 const DEFAULT_PATTERNS: Pattern[] = [
+    // Basit giriş sahneleri: yalnızca 2 şekil, düz "ABAB" tekrarı — zorluk buradan kademeli artar.
+    {
+        sequence: ['yildiz', 'kare', 'yildiz', 'kare', 'yildiz'],
+        answer: 'kare',
+        options: ['kare', 'yildiz', 'ucgen', 'daire']
+    },
+    {
+        sequence: ['daire', 'ucgen', 'daire', 'ucgen', 'daire'],
+        answer: 'ucgen',
+        options: ['ucgen', 'daire', 'kare', 'yildiz']
+    },
     {
         sequence: ['kare', 'daire', 'kare', 'daire', 'kare'],
         answer: 'daire',
@@ -180,6 +192,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
             setIsCorrect(false);
             scaleAnim.setValue(1);
         } else {
+            speak('Aferin!');
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
             onGameEnd(oyunAdi, totalTime, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: currentStage + 1,
@@ -232,18 +245,23 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
             {/* Oyun Alanı */}
             <View style={styles.gameArea}>
                 {/* Dizi Gösterimi */}
-                <View style={styles.sequenceContainer}>
-                    {currentPattern.sequence.map((shape, index) => (
-                        <View key={index} style={styles.sequenceItem}>
-                            <Image source={SHAPES[shape]} style={styles.sequenceImage} />
+                <View style={styles.sequenceArea}>
+                    <Text style={styles.sectionLabel}>Dizi</Text>
+                    <View style={styles.sequenceContainer}>
+                        {currentPattern.sequence.map((shape, index) => (
+                            <View key={index} style={styles.sequenceItem}>
+                                <Image source={SHAPES[shape]} style={styles.sequenceImage} />
+                            </View>
+                        ))}
+                        <View style={[styles.sequenceItem, styles.questionMark]}>
+                            <Text style={styles.questionMarkText}>?</Text>
                         </View>
-                    ))}
-                    <View style={[styles.sequenceItem, styles.questionMark]}>
-                        <Text style={styles.questionMarkText}>?</Text>
                     </View>
                 </View>
 
                 {/* Seçenekler */}
+                <View style={styles.optionsArea}>
+                <Text style={styles.sectionLabel}>Seçenekler</Text>
                 <View style={styles.optionsContainer}>
                     {shuffledOptions.map((option, index) => {
                         const isSelected = selectedOption === option;
@@ -278,12 +296,12 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                         );
                     })}
                 </View>
+                </View>
             </View>
 
             {/* Çıkış Butonu (Sol Alt) */}
             <TouchableOpacity onPress={onLogout} style={styles.logoutButton}>
-                <Ionicons name="log-out-outline" size={28} color="#fff" />
-                <Text style={styles.logoutText}>Çıkış</Text>
+                <Ionicons name="home" size={22} color="#fff" />
             </TouchableOpacity>
         </View>
     );
@@ -344,11 +362,35 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingBottom: 60,
     },
+    sequenceArea: {
+        backgroundColor: '#fff7e0',
+        borderRadius: 22,
+        padding: 16,
+        marginBottom: 20,
+        borderWidth: 2,
+        borderColor: '#ffc88f',
+    },
+    optionsArea: {
+        backgroundColor: '#eef7ff',
+        borderRadius: 24,
+        padding: 16,
+        borderWidth: 2,
+        borderColor: '#42a5f5',
+        borderStyle: 'dashed',
+    },
+    sectionLabel: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#8d6e63',
+        marginBottom: 8,
+        textAlign: 'center',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
     sequenceContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 50,
         flexWrap: 'wrap',
     },
     sequenceItem: {
@@ -423,23 +465,17 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 30,
         left: 20,
-        flexDirection: 'row',
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#E74C3C',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 25,
         elevation: 5,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
-    },
-    logoutText: {
-        color: 'white',
-        fontWeight: 'bold',
-        marginLeft: 8,
-        fontSize: 16,
     },
 });
 

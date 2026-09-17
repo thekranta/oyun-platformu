@@ -28,6 +28,10 @@ const STAGE_FRUITS = [
 type Point = { x: number; y: number };
 type NumberDot = { number: number; x: number; y: number };
 
+// Basit bir tıklamanın (web'de mousedown+mouseup neredeyse aynı noktada) yanlışlıkla
+// bir bağlantı denemesi sayılmaması için gereken en az sürükleme mesafesi.
+const DRAG_THRESHOLD = 12;
+
 const TOTAL_STAGES = 3;
 const NUMBERS_COUNT = 5;
 
@@ -210,8 +214,18 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             const { locationX, locationY } = e.nativeEvent;
             setDrawingPath(prev => [...prev, { x: locationX, y: locationY }]);
         },
-        onPanResponderRelease: (e) => {
+        onPanResponderRelease: (e, gesture) => {
             if (!isDragging || drawingPath.length === 0 || stageComplete) {
+                setDrawingPath([]);
+                setIsDragging(false);
+                return;
+            }
+
+            // Basit bir tıklama (neredeyse hiç sürükleme yok) bir bağlantı denemesi
+            // sayılmasın — aksi halde mevcut sayıya dokunmak "kendine bağlantı" olarak
+            // yanlış sayılıp gereksiz hata sesi çalıyordu.
+            const dragDistance = Math.max(Math.abs(gesture.dx), Math.abs(gesture.dy));
+            if (dragDistance < DRAG_THRESHOLD) {
                 setDrawingPath([]);
                 setIsDragging(false);
                 return;
@@ -384,7 +398,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             {!gameReady && (
                 <CountdownOverlay
                     interaction="draw"
-                    message="Sayıları küçükten büyüğe sırayla birleştir!"
+                    message="Sayıları küçükten büyüğe doğru çizerek birleştir!"
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}
                 />
