@@ -18,7 +18,7 @@ import { getMaarif } from '../constants/maarifMap';
 import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
 import { apiUrl } from '../lib/apiBase';
 import { supabase } from '../lib/supabase';
-import { requestGeminiAnalysis } from '../services/geminiClient';
+import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { ayristirAnaliz } from '../lib/admin/parseAnalysis';
 import { hesaplaBayraklar, normalizeVotes, OySonucu } from '../lib/admin/flags';
 import {
@@ -394,7 +394,7 @@ export default function AdminPanel() {
 ${gelisimGecmisi}
 - Bugün: ${sure} sn, ${hata} hata
 
-Gemini olarak bu verileri kıyasla ve "Gelişim Seyri" analizi yap.
+Yapay zeka olarak bu verileri kıyasla ve "Gelişim Seyri" analizi yap.
 ` : '';
 
       const GECERLI_KODLAR = `
@@ -616,7 +616,7 @@ ChildhoodTech Ekibi
 
       let aiComment: string;
       try {
-        aiComment = await requestGeminiAnalysis(prompt, undefined, 'admin_oyun_analizi');
+        aiComment = await requestAiAnalysis(prompt, undefined, 'admin_oyun_analizi');
       } catch (e: any) {
         alert(`API Hatası: ${e.message}`);
         return;

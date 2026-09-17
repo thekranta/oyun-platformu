@@ -4,7 +4,7 @@ import { AiCostData, fetchAiCostData } from '../../lib/owner/aiCostMetrics';
 import { C, F, S } from './ownerTheme';
 
 const SERVICE_LABELS: Record<string, string> = {
-  gemini: '🧠 Gemini',
+  openai_chat: '🧠 AI Yorum',
   openai_tts: '🔊 TTS',
   openai_whisper: '🎙️ Whisper',
 };

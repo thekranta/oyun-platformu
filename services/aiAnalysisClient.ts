@@ -1,9 +1,9 @@
-// Istemci tarafi Gemini yardimcisi: anahtari ASLA tasimaz, sunucu proxy'sini cagirir.
+// Istemci tarafi AI yardimcisi: anahtari ASLA tasimaz, sunucu proxy'sini cagirir.
 // Basarisizlikta Error firlatir; cagiran taraf kendi hata davranisini secer.
 import { supabase } from '../lib/supabase';
 import { apiUrl } from '../lib/apiBase';
 
-export async function requestGeminiAnalysis(
+export async function requestAiAnalysis(
   prompt: string,
   generationConfig?: Record<string, unknown>,
   feature?: string,
@@ -11,7 +11,7 @@ export async function requestGeminiAnalysis(
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Oturum bulunamadı, lütfen tekrar giriş yapın.');
 
-  const response = await fetch(apiUrl('/api/gemini-analyze'), {
+  const response = await fetch(apiUrl('/api/openai-analyze'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ export async function requestGeminiAnalysis(
   const data = await response.json().catch(() => ({} as { text?: string; error?: string }));
 
   if (!response.ok || !data?.text) {
-    throw new Error(data?.error || `Gemini hatası (${response.status})`);
+    throw new Error(data?.error || `AI analiz hatası (${response.status})`);
   }
 
   return data.text as string;

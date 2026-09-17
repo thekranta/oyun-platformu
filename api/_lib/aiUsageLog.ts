@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-// Ucretli AI cagrilarini (Gemini/TTS/Whisper) ai_kullanim_kayitlari tablosuna loglar.
+// Ucretli AI cagrilarini (OpenAI chat/TTS/Whisper) ai_kullanim_kayitlari tablosuna loglar.
 // requireUser()'in dondurdugu oturum-yetkili istemciyle yazar (RLS own_insert_ai_usage
 // politikasi user_id = auth.uid() bekliyor). Loglama HATASI gercek AI yanitini asla
 // bozmamali -- bu yuzden cagiran taraf sonucu beklemeden/kontrol etmeden cagirir.
@@ -8,7 +8,7 @@ export async function logAiUsage(
   supabase: SupabaseClient,
   params: {
     userId: string;
-    servis: 'gemini' | 'openai_tts' | 'openai_whisper';
+    servis: 'openai_chat' | 'openai_tts' | 'openai_whisper';
     model: string;
     ozellik?: string;
     girdiMiktar: number;

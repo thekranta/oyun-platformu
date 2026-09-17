@@ -64,7 +64,7 @@ export function bucketWeeklyCost(rows: UsageRow[], weeks: number, now: Date = ne
     return buckets;
 }
 
-const SERVICE_ORDER = ['gemini', 'openai_tts', 'openai_whisper'];
+const SERVICE_ORDER = ['openai_chat', 'openai_tts', 'openai_whisper'];
 
 // Bilinen 3 servisi sabit sırada döner (veri olmasa da 0 ile listelenir), tanımadığı
 // bir servis adı gelirse listenin sonuna eklenir (ileride yeni bir sağlayıcı eklenirse

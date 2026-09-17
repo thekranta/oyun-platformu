@@ -93,11 +93,11 @@
       "orman": "🌲 Orman"
     },
     "aiPremiumLockTitle": "AI Development Analysis is a Premium Feature",
-    "aiPremiumLockText": "Get a cumulative analysis of all your child's game data with Gemini AI, see development trends, and get personalized suggestions.",
+    "aiPremiumLockText": "Get a cumulative analysis of all your child's game data with AI, see development trends, and get personalized suggestions.",
     "upgradeAlertTitle": "🚀 Upgrade to Premium",
     "upgradeAlertMessage": "Get access to AI analysis and PDF report features with Premium membership!",
     "upgradeButton": "Upgrade to Premium",
-    "aiAnalyzedNote": "All game data is analyzed by Gemini AI.",
+    "aiAnalyzedNote": "All game data is analyzed by AI.",
     "aiAutoUpdateNote": "ℹ️ The analysis updates automatically when a new game is played.",
     "downloadPdfShort": "Download PDF",
     "waitingForData": "Waiting for Data...",

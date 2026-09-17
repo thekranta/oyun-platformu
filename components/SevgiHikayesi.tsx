@@ -10,7 +10,7 @@ import { speak, stopSpeech } from '../services/speechService';
 // Tema: Sevgi (sevgiyi gösterme yolları)
 // Karakterler: Tavşan Pamuk, Kirpi Diken
 // Tasarım: Hangi seçim yapılırsa yapılsın son AYNI ve olumludur.
-// Her seçim bir TEMSİL'dir; Gemini bunları Maarif SAB bağlamında yorumlar.
+// Her seçim bir TEMSİL'dir; AI bunları Maarif SAB bağlamında yorumlar.
 // =======================================
 
 const { width: SCREEN_W } = Dimensions.get('window');

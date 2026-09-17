@@ -17,7 +17,7 @@ import {
 import Svg, { Circle, Line, Polygon, Polyline } from 'react-native-svg';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { requestGeminiAnalysis } from '../services/geminiClient';
+import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { ReportEngine } from '../services/ReportEngine';
 import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyReport';
 import { getGameDisplay } from '../lib/gameDisplay';
@@ -37,9 +37,9 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
     return { apikey: SUPABASE_KEY || '', Authorization: `Bearer ${token}` };
 };
 
-// Cumulative AI Analysis Function - Sends last 12 games to Gemini for trend analysis
+// Cumulative AI Analysis Function - Sends last 12 games to AI for trend analysis
 // Generates DUAL structure: 1) Teacher/Academic section with Maarif codes, 2) Parent section with scaffolding
-const analyzeWithGemini = async (childName: string, childAge: number, games: GameScore[]): Promise<string | null> => {
+const analyzeWithAI = async (childName: string, childAge: number, games: GameScore[]): Promise<string | null> => {
     if (games.length === 0) return null;
 
     const last12Games = games.slice(0, 12);
@@ -112,9 +112,9 @@ ChildhoodTech Ekibi
 ÖNEMLİ: Raporu Türkçe yaz. Giriş cümlesi kullanma, doğrudan içerikle başla.`;
 
     try {
-        return await requestGeminiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 2048 }, 'veli_kumulatif_rapor');
+        return await requestAiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 2048 }, 'veli_kumulatif_rapor');
     } catch (error) {
-        console.error('Gemini analiz hatası:', error);
+        console.error('AI analiz hatası:', error);
         return null;
     }
 };
@@ -232,7 +232,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         if (isAnalyzing || scores.length === 0) return;
         setIsAnalyzing(true);
         try {
-            const report = await analyzeWithGemini(childName, childAge, scores);
+            const report = await analyzeWithAI(childName, childAge, scores);
             if (report) {
                 setCumulativeReport(report);
 
@@ -1232,7 +1232,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             </TouchableOpacity>
                                         )}
                                         <Text style={{ color: '#888', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
-                                            Gemini 2.0 Flash
+                                            OpenAI GPT-4o mini
                                         </Text>
                                     </>
                                 )}

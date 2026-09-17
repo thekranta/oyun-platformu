@@ -93,11 +93,11 @@
       "orman": "🌲 Orman"
     },
     "aiPremiumLockTitle": "AI Gelişim Analizi Premium Özelliğidir",
-    "aiPremiumLockText": "Gemini AI ile çocuğunuzun tüm oyun verilerinin kümülatif analizini alın, gelişim trendlerini görün ve kişiselleştirilmiş öneriler alın.",
+    "aiPremiumLockText": "Yapay zeka ile çocuğunuzun tüm oyun verilerinin kümülatif analizini alın, gelişim trendlerini görün ve kişiselleştirilmiş öneriler alın.",
     "upgradeAlertTitle": "🚀 Premium'a Yükselt",
     "upgradeAlertMessage": "Premium üyelik ile AI analizi ve PDF rapor özelliklerine erişin!",
     "upgradeButton": "Premium'a Yükselt",
-    "aiAnalyzedNote": "Tüm oyun verileri Gemini AI tarafından analiz edilir.",
+    "aiAnalyzedNote": "Tüm oyun verileri yapay zeka tarafından analiz edilir.",
     "aiAutoUpdateNote": "ℹ️ Yeni oyun oynanırsa analiz otomatik güncellenir.",
     "downloadPdfShort": "PDF İndir",
     "waitingForData": "Veri Bekleniyor...",

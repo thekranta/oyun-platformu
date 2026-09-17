@@ -12,7 +12,7 @@ describe('bucketWeeklyCost', () => {
 
     it('son hafta (bugünü içeren) doğru toplanır ve en sonda yer alır', () => {
         const result = bucketWeeklyCost(
-            [{ created_at: '2026-09-15T10:00:00', servis: 'gemini', tahmini_maliyet_usd: 0.02 }],
+            [{ created_at: '2026-09-15T10:00:00', servis: 'openai_chat', tahmini_maliyet_usd: 0.02 }],
             4,
             now
         );
@@ -23,7 +23,7 @@ describe('bucketWeeklyCost', () => {
     it('aynı haftaya düşen birden fazla satır toplanır', () => {
         const result = bucketWeeklyCost(
             [
-                { created_at: '2026-09-14T08:00:00', servis: 'gemini', tahmini_maliyet_usd: 0.01 },
+                { created_at: '2026-09-14T08:00:00', servis: 'openai_chat', tahmini_maliyet_usd: 0.01 },
                 { created_at: '2026-09-15T09:00:00', servis: 'openai_tts', tahmini_maliyet_usd: 0.005 },
                 { created_at: '2026-09-20T23:00:00', servis: 'openai_whisper', tahmini_maliyet_usd: 0.001 },
             ],
@@ -35,7 +35,7 @@ describe('bucketWeeklyCost', () => {
 
     it('hafta aralığının dışında kalan (çok eski) tarih sayılmaz', () => {
         const result = bucketWeeklyCost(
-            [{ created_at: '2020-01-01T00:00:00', servis: 'gemini', tahmini_maliyet_usd: 5 }],
+            [{ created_at: '2020-01-01T00:00:00', servis: 'openai_chat', tahmini_maliyet_usd: 5 }],
             4,
             now
         );
@@ -44,7 +44,7 @@ describe('bucketWeeklyCost', () => {
 
     it('hafta sınırındaki (Pazartesi 00:00) tarih o haftaya sayılır, önceki haftaya değil', () => {
         const result = bucketWeeklyCost(
-            [{ created_at: '2026-09-14T00:00:00', servis: 'gemini', tahmini_maliyet_usd: 0.03 }],
+            [{ created_at: '2026-09-14T00:00:00', servis: 'openai_chat', tahmini_maliyet_usd: 0.03 }],
             4,
             now
         );
@@ -57,7 +57,7 @@ describe('sumByService', () => {
     it('3 bilinen servisi veri olmasa da 0 ile listeler', () => {
         const result = sumByService([]);
         expect(result).toEqual([
-            { servis: 'gemini', count: 0, totalUsd: 0 },
+            { servis: 'openai_chat', count: 0, totalUsd: 0 },
             { servis: 'openai_tts', count: 0, totalUsd: 0 },
             { servis: 'openai_whisper', count: 0, totalUsd: 0 },
         ]);
@@ -65,13 +65,13 @@ describe('sumByService', () => {
 
     it('karışık servis listesinde her biri doğru toplanır', () => {
         const result = sumByService([
-            { servis: 'gemini', tahmini_maliyet_usd: 0.01 },
-            { servis: 'gemini', tahmini_maliyet_usd: 0.02 },
+            { servis: 'openai_chat', tahmini_maliyet_usd: 0.01 },
+            { servis: 'openai_chat', tahmini_maliyet_usd: 0.02 },
             { servis: 'openai_tts', tahmini_maliyet_usd: 0.005 },
         ]);
         const bySlug = Object.fromEntries(result.map((r) => [r.servis, r]));
-        expect(bySlug.gemini.count).toBe(2);
-        expect(bySlug.gemini.totalUsd).toBeCloseTo(0.03);
+        expect(bySlug.openai_chat.count).toBe(2);
+        expect(bySlug.openai_chat.totalUsd).toBeCloseTo(0.03);
         expect(bySlug.openai_tts.count).toBe(1);
         expect(bySlug.openai_whisper.count).toBe(0);
     });

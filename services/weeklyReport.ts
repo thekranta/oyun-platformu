@@ -2,7 +2,7 @@
  * weeklyReport.ts — Haftalık Gelişim Raporu Motoru
  * ------------------------------------------------------------
  * Ebeveyn paneli için PROFESYONEL, yazdırılabilir (PDF) haftalık
- * gelişim raporu üretir. Tüm hesaplama YERELDİR: Gemini/AI erişimi
+ * gelişim raporu üretir. Tüm hesaplama YERELDİR: AI erişimi
  * olmasa bile rapor eksiksiz üretilir (AI notu varsa eklenir).
  *
  * PDF stratejisi: jsPDF/CDN yerine tarayıcının kendi yazdırma motoru.

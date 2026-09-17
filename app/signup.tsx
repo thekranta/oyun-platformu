@@ -413,7 +413,7 @@ export default function SignUp() {
 
                             <Text style={styles.modalParagraph}>
                                 <Text style={styles.modalBold}>Değerli Ebeveyn,</Text>{"\n\n"}
-                                Bu platform, okul öncesi dönemdeki çocukların bilişsel, matematiksel ve sosyal-duygusal becerilerini oyun temelli bir ortamda analiz etmek amacıyla geliştirilmiş akademik tabanlı bir eğitim teknolojisi projesidir. Çocuğunuzun platform üzerindeki etkileşimleri, bir yapay zeka modeli (Gemini AI) tarafından Milli Eğitim Bakanlığı "Türkiye Yüzyılı Maarif Modeli" göstergeleri doğrultusunda değerlendirilmektedir.
+                                Bu platform, okul öncesi dönemdeki çocukların bilişsel, matematiksel ve sosyal-duygusal becerilerini oyun temelli bir ortamda analiz etmek amacıyla geliştirilmiş akademik tabanlı bir eğitim teknolojisi projesidir. Çocuğunuzun platform üzerindeki etkileşimleri, bir yapay zeka modeli tarafından Milli Eğitim Bakanlığı "Türkiye Yüzyılı Maarif Modeli" göstergeleri doğrultusunda değerlendirilmektedir.
                             </Text>
 
                             <Text style={styles.modalSectionTitle}>📊 Verilerin Kullanım Amacı</Text>
