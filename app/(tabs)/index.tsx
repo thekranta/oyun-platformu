@@ -19,7 +19,7 @@ import { supabase } from '../../lib/supabase';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
 // Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
-const BUILD_ETIKET = 'b8-tani';
+const BUILD_ETIKET = 'b9-tani';
 
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
