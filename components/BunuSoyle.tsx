@@ -7,6 +7,7 @@ import CountdownOverlay from './CountdownOverlay';
 import JuicyProgressBar from './JuicyProgressBar';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
+import { apiUrl } from '../lib/apiBase';
 import { supabase } from '../lib/supabase';
 
 // Arka plan görseli
@@ -350,7 +351,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
             try {
                 const response = await fetch(
-                    '/api/transcribe',
+                    apiUrl('/api/transcribe'),
                     {
                         method: 'POST',
                         headers: {

@@ -15,6 +15,7 @@
 import { Audio as ExpoAudio } from 'expo-av';
 import { TTS } from '../lib/ttsAssets';
 import { supabase } from '../lib/supabase';
+import { apiUrl } from '../lib/apiBase';
 
 // Canlı proxy yolu için blob önbelleği (aynı metni tekrar üretmemek için)
 const audioCache = new Map<string, string>();
@@ -105,7 +106,7 @@ export async function generateSpeech(
         // Call secure server-side API route (OpenAI TTS) — kimliksiz kotu-niyetli
         // trafiği engellemek icin gecerli bir Supabase oturumu gerekiyor.
         const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch('/api/tts', {
+        const response = await fetch(apiUrl('/api/tts'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

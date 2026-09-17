@@ -1,6 +1,7 @@
 // Istemci tarafi Gemini yardimcisi: anahtari ASLA tasimaz, sunucu proxy'sini cagirir.
 // Basarisizlikta Error firlatir; cagiran taraf kendi hata davranisini secer.
 import { supabase } from '../lib/supabase';
+import { apiUrl } from '../lib/apiBase';
 
 export async function requestGeminiAnalysis(
   prompt: string,
@@ -10,7 +11,7 @@ export async function requestGeminiAnalysis(
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Oturum bulunamadı, lütfen tekrar giriş yapın.');
 
-  const response = await fetch('/api/gemini-analyze', {
+  const response = await fetch(apiUrl('/api/gemini-analyze'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

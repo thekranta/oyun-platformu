@@ -16,6 +16,7 @@ import { C, F, S } from '../components/admin/theme';
 import UndoStrip from '../components/admin/UndoStrip';
 import { getMaarif } from '../constants/maarifMap';
 import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
+import { apiUrl } from '../lib/apiBase';
 import { supabase } from '../lib/supabase';
 import { requestGeminiAnalysis } from '../services/geminiClient';
 import { ayristirAnaliz } from '../lib/admin/parseAnalysis';
@@ -649,7 +650,7 @@ ChildhoodTech Ekibi
     try {
       const oyunAdiTR = getGameDisplay(score.oyun_turu).name;
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch('/api/send-email', {
+      const res = await fetch(apiUrl('/api/send-email'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

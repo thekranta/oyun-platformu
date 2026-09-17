@@ -15,6 +15,8 @@ import {
     View,
 } from 'react-native';
 import Svg, { Circle, Line, Polygon, Polyline } from 'react-native-svg';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { requestGeminiAnalysis } from '../services/geminiClient';
 import { ReportEngine } from '../services/ReportEngine';
 import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyReport';
@@ -505,14 +507,26 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     // jsPDF/CDN yerine tarayıcının kendi yazdırma motorunu kullanır: Türkçe + emoji
     // kusursuz, çevrimdışı çalışır, "PDF olarak kaydet" ile indirilir.
     const handleDownloadPDF = async () => {
-        if (Platform.OS !== 'web') {
-            Alert.alert(t('veli.infoTitle'), t('veli.pdfWebOnlyMessage'));
-            return;
-        }
         if (scores.length === 0) {
             Alert.alert(t('veli.infoTitle'), t('veli.pdfNeedsGamesMessage'));
             return;
         }
+
+        if (Platform.OS !== 'web') {
+            setGeneratingPDF(true);
+            try {
+                const html = buildWeeklyReportHTML(weekly, flags.canDownloadDetailedPdf);
+                const { uri } = await Print.printToFileAsync({ html });
+                await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: t('veli.pdfShareDialogTitle') });
+            } catch (error) {
+                console.error('PDF oluşturma hatası (native):', error);
+                Alert.alert(t('veli.pdfGenericErrorTitle'), t('veli.pdfGenericErrorMessage'));
+            } finally {
+                setGeneratingPDF(false);
+            }
+            return;
+        }
+
         setGeneratingPDF(true);
         try {
             const html = buildWeeklyReportHTML(weekly, flags.canDownloadDetailedPdf);

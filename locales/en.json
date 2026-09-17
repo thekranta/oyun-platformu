@@ -140,7 +140,8 @@
     "popupBlockedTitle": "Popup Blocked",
     "popupBlockedMessage": "Please allow popups in your browser to view the report, then try again.",
     "pdfGenericErrorTitle": "Error",
-    "pdfGenericErrorMessage": "Something went wrong while creating the report. Please try again."
+    "pdfGenericErrorMessage": "Something went wrong while creating the report. Please try again.",
+    "pdfShareDialogTitle": "Share Progress Report"
   },
   "teacher": {
     "loading": "Loading...",

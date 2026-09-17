@@ -140,7 +140,8 @@
     "popupBlockedTitle": "Açılır Pencere Engellendi",
     "popupBlockedMessage": "Raporu görüntülemek için tarayıcınızda açılır pencerelere (popup) izin verin, sonra tekrar deneyin.",
     "pdfGenericErrorTitle": "Hata",
-    "pdfGenericErrorMessage": "Rapor oluşturulurken bir sorun oluştu. Lütfen tekrar deneyin."
+    "pdfGenericErrorMessage": "Rapor oluşturulurken bir sorun oluştu. Lütfen tekrar deneyin.",
+    "pdfShareDialogTitle": "Gelişim Raporunu Paylaş"
   },
   "teacher": {
     "loading": "Yükleniyor...",
