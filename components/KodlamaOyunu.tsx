@@ -363,7 +363,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
         if (valid(n)) return n;
         clearInterval(iv);
         setErrors(e => e + 1);
-        timersRef.current.push(setTimeout(() => { setStatus(GameStatus.LOST); if (soundOn) speakTeacher('Oops!'); }, 150));
+        timersRef.current.push(setTimeout(() => { setStatus(GameStatus.LOST); if (soundOn) speakTeacher('Tekrar dene!'); }, 150));
         return prev;
       });
       i++;
