@@ -63,45 +63,58 @@ let currentLiveAudio: HTMLAudioElement | null = null;
  * (CevizMacera vb.) desenle birebir aynıdır: öncekini boşalt → oynat → bitince boşalt.
  */
 async function playBundled(src: number): Promise<void> {
-    try {
-        if (currentTtsSound) {
-            await currentTtsSound.unloadAsync().catch(() => { });
-            currentTtsSound = null;
-        }
-        const { sound } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: true, volume: 1.0 });
-        currentTtsSound = sound;
-        await new Promise<void>((resolve) => {
-            // Tarayıcı otomatik-oynatma engeli, ağ/decode hatası ya da sekme arka
-            // plana alınması gibi nedenlerle "didJustFinish" hiç gelmeyebilir — bu
-            // olay hiç tetiklenmezse önceki kodda bu Promise SONSUZA KADAR bekliyordu,
-            // bu da CountdownOverlay'i (audioDoneRef hiç true olmuyor) kalıcı olarak
-            // kilitleyip çocuğun oyuna asla başlayamamasına yol açıyordu. 8 saniyelik
-            // bir güvenlik zaman aşımı ekleniyor.
-            let done = false;
-            const finish = () => {
-                if (done) return;
-                done = true;
-                resolve();
-            };
-            const timeout = setTimeout(() => {
-                console.warn('🔊 TTS: oynatma 8sn içinde bitmedi, zaman aşımına uğradı (devam ediliyor)');
-                finish();
-            }, 8000);
-            sound.setOnPlaybackStatusUpdate((status) => {
-                if (status.isLoaded && status.didJustFinish) {
-                    clearTimeout(timeout);
-                    sound.unloadAsync().catch(() => { });
-                    if (currentTtsSound === sound) currentTtsSound = null;
-                    finish();
-                } else if (!status.isLoaded && (status as any).error) {
-                    clearTimeout(timeout);
-                    finish();
-                }
+    // Tarayıcı otomatik-oynatma engeli, ağ/decode hatası, sekme arka plana alınması
+    // gibi nedenlerle expo-av'ın ASENKRON ADIMLARINDAN HERHANGİ BİRİ (createAsync'in
+    // kendisi DAHİL — sadece "oynatma bitti" olayı değil) hiç tamamlanmayabilir.
+    // Önceki düzeltme sadece "oynatma bitmesini" beklerken zaman aşımı ekliyordu; ama
+    // canlı sitede createAsync'in KENDİSİ hiç dönmediği (ağ isteği bile atılmadığı)
+    // doğrulandı — bu yüzden TÜM fonksiyon tek bir üst zaman aşımıyla yarışa sokuluyor.
+    // Herhangi bir adımda takılırsa CountdownOverlay yine de devam edebilsin diye.
+    let timedOut = false;
+    const overallTimeout = new Promise<void>((resolve) => {
+        setTimeout(() => {
+            timedOut = true;
+            console.warn('🔊 TTS: 8sn içinde tamamlanmadı (createAsync veya oynatma takıldı), zaman aşımına uğradı');
+            resolve();
+        }, 8000);
+    });
+
+    const actualPlayback = (async () => {
+        try {
+            if (currentTtsSound) {
+                await currentTtsSound.unloadAsync().catch(() => { });
+                currentTtsSound = null;
+            }
+            const { sound } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: true, volume: 1.0 });
+            if (timedOut) {
+                // Üst zaman aşımı zaten devam etmişse, geç gelen bu sesi sessizce boşalt.
+                sound.unloadAsync().catch(() => { });
+                return;
+            }
+            currentTtsSound = sound;
+            await new Promise<void>((resolve) => {
+                let done = false;
+                const finish = () => {
+                    if (done) return;
+                    done = true;
+                    resolve();
+                };
+                sound.setOnPlaybackStatusUpdate((status) => {
+                    if (status.isLoaded && status.didJustFinish) {
+                        sound.unloadAsync().catch(() => { });
+                        if (currentTtsSound === sound) currentTtsSound = null;
+                        finish();
+                    } else if (!status.isLoaded && (status as any).error) {
+                        finish();
+                    }
+                });
             });
-        });
-    } catch (e) {
-        console.warn('🔊 TTS: hazır MP3 çalınamadı (sessiz geçildi):', e);
-    }
+        } catch (e) {
+            console.warn('🔊 TTS: hazır MP3 çalınamadı (sessiz geçildi):', e);
+        }
+    })();
+
+    await Promise.race([overallTimeout, actualPlayback]);
 }
 
 /**
