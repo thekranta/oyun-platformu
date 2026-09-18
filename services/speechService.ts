@@ -71,11 +71,31 @@ async function playBundled(src: number): Promise<void> {
         const { sound } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: true, volume: 1.0 });
         currentTtsSound = sound;
         await new Promise<void>((resolve) => {
+            // Tarayıcı otomatik-oynatma engeli, ağ/decode hatası ya da sekme arka
+            // plana alınması gibi nedenlerle "didJustFinish" hiç gelmeyebilir — bu
+            // olay hiç tetiklenmezse önceki kodda bu Promise SONSUZA KADAR bekliyordu,
+            // bu da CountdownOverlay'i (audioDoneRef hiç true olmuyor) kalıcı olarak
+            // kilitleyip çocuğun oyuna asla başlayamamasına yol açıyordu. 8 saniyelik
+            // bir güvenlik zaman aşımı ekleniyor.
+            let done = false;
+            const finish = () => {
+                if (done) return;
+                done = true;
+                resolve();
+            };
+            const timeout = setTimeout(() => {
+                console.warn('🔊 TTS: oynatma 8sn içinde bitmedi, zaman aşımına uğradı (devam ediliyor)');
+                finish();
+            }, 8000);
             sound.setOnPlaybackStatusUpdate((status) => {
                 if (status.isLoaded && status.didJustFinish) {
+                    clearTimeout(timeout);
                     sound.unloadAsync().catch(() => { });
                     if (currentTtsSound === sound) currentTtsSound = null;
-                    resolve();
+                    finish();
+                } else if (!status.isLoaded && (status as any).error) {
+                    clearTimeout(timeout);
+                    finish();
                 }
             });
         });
