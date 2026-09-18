@@ -29,7 +29,11 @@ export interface OgretmenFeatureFlags {
 
 export const OGRETMEN_TIER_FLAGS: Record<OgretmenTier, OgretmenFeatureFlags> = {
     free: { canSeeAiAnalysis: false, maxClasses: 1, maxStudentsPerClass: 10 },
-    cinar: { canSeeAiAnalysis: true, maxClasses: Infinity, maxStudentsPerClass: 10 },
+    // Çınar = "Sınıf Paketi": childhoodtech.com'da "Tek bir sınıf için, 10 çocuğa
+    // kadar profil" olarak satılıyor — yani sınırsız sınıf değil, TEK sınıf + o
+    // sınıfta 10 öğrenci sınırı. maxClasses:Infinity bu vaadi bozup sınırsız sayıda
+    // 10'luk sınıf açılmasına izin veriyordu.
+    cinar: { canSeeAiAnalysis: true, maxClasses: 1, maxStudentsPerClass: 10 },
     mese: { canSeeAiAnalysis: true, maxClasses: Infinity, maxStudentsPerClass: Infinity },
 };
 
@@ -59,4 +63,24 @@ export function getVeliFlags(tier: VeliTier | null | undefined): VeliFeatureFlag
 
 export function getOgretmenFlags(tier: OgretmenTier | null | undefined): OgretmenFeatureFlags {
     return OGRETMEN_TIER_FLAGS[tier || 'free'];
+}
+
+// --- Oyun erişimi: paket sırası ve oyun kataloğundan asgari paket türetme ---
+// childhoodtech.com paket karşılaştırması: Tohum = 100+ oyuna tam erişim;
+// Filiz = + tüm "Akıllı" (adaptive) oyunlar + tüm etkileşimli değer hikayeleri;
+// Fidan = + 40+ özel beste şarkı; Orman = + erken erişim (henüz kod tarafında
+// karşılığı yok, bu yüzden burada işlenmiyor).
+const VELI_TIER_ORDER: VeliTier[] = ['free', 'tohum', 'filiz', 'fidan', 'orman'];
+
+export function veliTierMeetsMinimum(tier: VeliTier | null | undefined, minimum: VeliTier): boolean {
+    const rank = VELI_TIER_ORDER.indexOf(tier || 'free');
+    const minRank = VELI_TIER_ORDER.indexOf(minimum);
+    return rank >= 0 && rank >= minRank;
+}
+
+/** Bir oyun kaydının (constants/gameCatalog.ts) gerektirdiği asgari veli paketini döndürür. */
+export function requiredVeliTierForGame(game: { adaptive?: boolean; status: string }): VeliTier {
+    if (game.status === 'music') return 'fidan';
+    if (game.adaptive || game.status === 'story') return 'filiz';
+    return 'free';
 }

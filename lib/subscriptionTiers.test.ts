@@ -5,6 +5,8 @@ import {
     getVeliFlags,
     OGRETMEN_TIER_FLAGS,
     VELI_TIER_FLAGS,
+    requiredVeliTierForGame,
+    veliTierMeetsMinimum,
 } from './subscriptionTiers';
 
 describe('getEffectiveVeliTier', () => {
@@ -85,8 +87,8 @@ describe('getOgretmenFlags', () => {
         expect(getOgretmenFlags('free').canSeeAiAnalysis).toBe(false);
     });
 
-    it('çınar sınırsız sınıf ama sınıf başı 10 öğrenci sınırını korur', () => {
-        expect(getOgretmenFlags('cinar').maxClasses).toBe(Infinity);
+    it('çınar tek sınıfla ve sınıf başı 10 öğrenciyle sınırlı (Sınıf Paketi: "tek bir sınıf için")', () => {
+        expect(getOgretmenFlags('cinar').maxClasses).toBe(1);
         expect(getOgretmenFlags('cinar').maxStudentsPerClass).toBe(10);
         expect(getOgretmenFlags('cinar').canSeeAiAnalysis).toBe(true);
     });
@@ -98,5 +100,41 @@ describe('getOgretmenFlags', () => {
 
     it('bilinmeyen/eksik tier free\'ye düşer', () => {
         expect(getOgretmenFlags(null)).toEqual(OGRETMEN_TIER_FLAGS.free);
+    });
+});
+
+describe('requiredVeliTierForGame', () => {
+    it('sıradan (core/secondary/creative) oyunlar free\'ye açık', () => {
+        expect(requiredVeliTierForGame({ status: 'core' })).toBe('free');
+        expect(requiredVeliTierForGame({ status: 'secondary' })).toBe('free');
+        expect(requiredVeliTierForGame({ status: 'creative' })).toBe('free');
+    });
+
+    it('adaptive (Akıllı) oyunlar filiz gerektirir', () => {
+        expect(requiredVeliTierForGame({ status: 'secondary', adaptive: true })).toBe('filiz');
+    });
+
+    it('değer hikayeleri (story) filiz gerektirir', () => {
+        expect(requiredVeliTierForGame({ status: 'story' })).toBe('filiz');
+    });
+
+    it('müzik (music) fidan gerektirir', () => {
+        expect(requiredVeliTierForGame({ status: 'music' })).toBe('fidan');
+    });
+});
+
+describe('veliTierMeetsMinimum', () => {
+    it('tier sıralaması doğru (free < tohum < filiz < fidan < orman)', () => {
+        expect(veliTierMeetsMinimum('free', 'filiz')).toBe(false);
+        expect(veliTierMeetsMinimum('tohum', 'filiz')).toBe(false);
+        expect(veliTierMeetsMinimum('filiz', 'filiz')).toBe(true);
+        expect(veliTierMeetsMinimum('fidan', 'filiz')).toBe(true);
+        expect(veliTierMeetsMinimum('orman', 'fidan')).toBe(true);
+        expect(veliTierMeetsMinimum('fidan', 'orman')).toBe(false);
+    });
+
+    it('tier verilmezse free varsayılır', () => {
+        expect(veliTierMeetsMinimum(null, 'free')).toBe(true);
+        expect(veliTierMeetsMinimum(undefined, 'filiz')).toBe(false);
     });
 });

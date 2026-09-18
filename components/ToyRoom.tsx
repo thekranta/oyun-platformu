@@ -5,11 +5,12 @@ import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
+import { requiredVeliTierForGame, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
 
-type Props = { name: string; muted: boolean; round: number; onShuffle: () => void; onMute: () => void; onGame: (route: string) => void; onLogout: () => void };
+type Props = { name: string; muted: boolean; round: number; onShuffle: () => void; onMute: () => void; onGame: (route: string) => void; onLogout: () => void; subscriptionTier?: VeliTier };
 type ToyKind = 'puzzle' | 'paint' | 'animal' | 'drum' | 'blocks' | 'train' | 'crayons' | 'rabbit' | 'xylophone' | 'rings' | 'gift' | 'bear';
 const native = Platform.OS !== 'web';
-const playable = GAME_CATALOG.filter(g => !!GAME_RENDERERS[g.routeKey]);
+const allPlayable = GAME_CATALOG.filter(g => !!GAME_RENDERERS[g.routeKey]);
 const firstGames = ['yapboz', 'yaratici-cizim', 'hafiza-2', 'davul-ustasi', 'siralama'];
 const groups = [
   ['bulmaca-yolu', 'dikkat-dalgasi', 'ani-kelebegi'],
@@ -176,8 +177,14 @@ function Plaything({ kind, label, onPress, moving, size, color, replacement }: {
   </Animated.View>;
 }
 
-export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame, onLogout }: Props) {
+export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame, onLogout, subscriptionTier }: Props) {
   const { t } = useTranslation();
+  // subscriptionTier verilmezse (ör. tasarım önizlemesi) kısıtlama uygulanmaz;
+  // verildiğinde çocuğun paketinin karşılamadığı oyunlar (Akıllı/hikaye/müzik) hem
+  // odada hem yetişkin aramasında hiç gösterilmez.
+  const playable = subscriptionTier === undefined
+    ? allPlayable
+    : allPlayable.filter(g => veliTierMeetsMinimum(subscriptionTier, requiredVeliTierForGame(g)));
   const [bounds, setBounds] = useState({ width: 0, height: 0 });
   const [adult, setAdult] = useState(false);
   const [query, setQuery] = useState('');

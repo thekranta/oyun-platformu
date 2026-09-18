@@ -16,6 +16,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { asset } from '../../lib/assetMap';
 import { changeLanguage, SupportedLanguage } from '../../lib/i18n';
 import { supabase } from '../../lib/supabase';
+import { getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
 // Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
@@ -317,6 +318,8 @@ export default function App() {
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
   const [email, setEmail] = useState('');
+  const [subscriptionTier, setSubscriptionTier] = useState<VeliTier | null>(null);
+  const [packageExpiresAt, setPackageExpiresAt] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
 
@@ -329,7 +332,7 @@ export default function App() {
   const {
     isLoggingIn,
     girisYap, sifremiUnuttum,
-  } = useAuth({ email, setEmail, setAd, setYas, setAsama, showToast, resumeAfterInteraction });
+  } = useAuth({ email, setEmail, setAd, setYas, setAsama, setSubscriptionTier, setPackageExpiresAt, showToast, resumeAfterInteraction });
 
   // Kalıcı Supabase oturumu varsa yenilemede giriş ekranını atla (sessiz geri yükleme);
   // ayrıca çevrimdışı kalmış oyun sonuçlarını arka planda gönder.
@@ -342,13 +345,15 @@ export default function App() {
         if (!sessionEmail || cancelled) return;
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('child_name, child_age_months')
+          .select('child_name, child_age_months, subscription_tier, package_expires_at')
           .eq('email', sessionEmail)
           .limit(1);
         if (cancelled || !profiles || profiles.length === 0) return;
         setEmail(sessionEmail);
         setAd(profiles[0].child_name);
         setYas(String(profiles[0].child_age_months));
+        setSubscriptionTier((profiles[0].subscription_tier as VeliTier) ?? null);
+        setPackageExpiresAt(profiles[0].package_expires_at ?? null);
         setAsama((prev) => (prev === 'giris' ? 'menu' : prev));
         flushPendingResults();
       } catch {
@@ -408,6 +413,8 @@ export default function App() {
     setAd('');
     setYas('');
     setEmail('');
+    setSubscriptionTier(null);
+    setPackageExpiresAt(null);
     setActiveDailyRoute(null);
     setDailyCompletedRoutes([]);
     setDailyPlanRoutes([]);
@@ -529,6 +536,7 @@ export default function App() {
       onMute={toggleMute}
       onGame={oyunuBaslat}
       onLogout={cikisYap}
+      subscriptionTier={getEffectiveVeliTier(subscriptionTier, packageExpiresAt)}
     />;
   }
 

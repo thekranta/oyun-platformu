@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { calculateAgeInMonths } from '../lib/menuHelpers';
 import { supabase } from '../lib/supabase';
+import { VeliTier } from '../lib/subscriptionTiers';
 
 export interface ChildProfile {
   id: string;
@@ -17,6 +18,8 @@ export interface UseAuthArgs {
   setAd: (value: string) => void;
   setYas: (value: string) => void;
   setAsama: (value: string) => void;
+  setSubscriptionTier: (value: VeliTier | null) => void;
+  setPackageExpiresAt: (value: string | null) => void;
   showToast: (message: string, type?: ToastType) => void;
   resumeAfterInteraction: () => Promise<void> | void;
 }
@@ -32,6 +35,8 @@ export function useAuth({
   setAd,
   setYas,
   setAsama,
+  setSubscriptionTier,
+  setPackageExpiresAt,
   showToast,
   resumeAfterInteraction,
 }: UseAuthArgs) {
@@ -97,13 +102,15 @@ export function useAuth({
         // Profil bilgisini çek
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('child_name, child_age_months')
+          .select('child_name, child_age_months, subscription_tier, package_expires_at')
           .eq('email', loginEmail)
           .single();
 
         if (profiles) {
           setAd(profiles.child_name);
           setYas(profiles.child_age_months.toString());
+          setSubscriptionTier((profiles.subscription_tier as VeliTier) ?? null);
+          setPackageExpiresAt(profiles.package_expires_at ?? null);
         }
 
         await resumeAfterInteraction();
