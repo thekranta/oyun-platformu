@@ -21,6 +21,7 @@ interface DiziyiTamamlaProps {
     patterns?: Pattern[];   // temalı varyant için örüntü seti
     oyunAdi?: string;       // varyant oyun kimliği
     title?: string;         // başlık metni
+    introMessage?: string;  // temalı varyant için giriş sesi metni
 }
 
 const SHAPES = {
@@ -69,7 +70,7 @@ const DEFAULT_PATTERNS: Pattern[] = [
     }
 ];
 
-export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_PATTERNS, oyunAdi = 'diziyi-tamamla', title = 'Diziyi Tamamla 🧩' }: DiziyiTamamlaProps) {
+export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_PATTERNS, oyunAdi = 'diziyi-tamamla', title = 'Diziyi Tamamla 🧩', introMessage = 'Sıraya bak, sıradaki şekil hangisi? Doğru şekle dokun!' }: DiziyiTamamlaProps) {
     const [gameReady, setGameReady] = useState(false);
     const [currentStage, setCurrentStage] = useState(0);
     const [, setTotalMoves] = useState(0);
@@ -205,7 +206,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
         <View style={styles.container}>
             {!gameReady && (
                 <CountdownOverlay
-                    message="Sıraya bak, sıradaki şekil hangisi? Doğru şekle dokun!"
+                    message={introMessage}
                     countdownSeconds={5}
                     interaction="tap"
                     onComplete={() => { setStartTime(Date.now()); setGameReady(true); }}

@@ -31,6 +31,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'sayi-komsulari': { color: '#FFA726', icon: 'train-outline', displayTitle: 'Sayı Komşuları', subtitle: 'Sayı ilişkileri' },
   'diziyi-tamamla': { color: '#BA68C8', icon: 'extension-puzzle', displayTitle: 'Diziyi Tamamla', subtitle: 'Örüntü' },
   'diziyi-tamamla-2': { color: '#9575CD', icon: 'star', displayTitle: 'Örüntü Ustası', subtitle: 'İleri örüntü' },
+  'diziyi-tamamla-3': { color: '#8BC34A', icon: 'shapes-outline', displayTitle: 'İlk Örüntüm', subtitle: 'İlk örüntü' },
   'bunu-soyle': { color: '#F06292', icon: 'mic', displayTitle: 'Bunu Söyle', subtitle: 'Sözlü ifade' },
   'kodlama': { color: '#00ACC1', icon: 'map', displayTitle: 'Minik Kaşif', subtitle: 'Kodlama' },
   'rakam-yazma': { color: '#4DB6AC', icon: 'pencil', displayTitle: 'Rakam Yazma', subtitle: 'Rakam tanıma' },
@@ -165,7 +166,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'sayi-boya': '🔢', 'mandala': '🌀', 'nokta-boyama': '🔵', 'cizimi-canlandir': '💫',
   'yuz-yap': '😀', 'yarisini-tamamla': '🪞', 'kum-boyasi': '🏖️', 'adim-adim': '📝', 'sayi-boya-2': '🖼️',
   // Temalı varyantlar
-  'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
+  'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐', 'diziyi-tamamla-3': '🔰',
   // Adaptif oyunlar
   'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
   'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',

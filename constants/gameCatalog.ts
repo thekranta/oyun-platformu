@@ -44,6 +44,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
 
   { id: 'diziyi-tamamla', title: 'Diziyi Tamamla', status: 'secondary', domain: 'Bilissel', skillFocus: 'Oruntu', routeKey: 'diziyi-tamamla', forestCategory: 'bulmaca-yolu' },
   { id: 'diziyi-tamamla-2', title: 'Oruntu Ustasi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Oruntu (ileri seviye)', routeKey: 'diziyi-tamamla-2', forestCategory: 'bulmaca-yolu' },
+  { id: 'diziyi-tamamla-3', title: 'Ilk Oruntum', status: 'secondary', domain: 'Bilissel', skillFocus: 'Oruntu (giris seviyesi, 2-3 yas)', routeKey: 'diziyi-tamamla-3', forestCategory: 'bulmaca-yolu' },
   { id: 'bunu-soyle', title: 'Bunu Soyle', status: 'secondary', domain: 'Dil', skillFocus: 'Sozlu ifade', routeKey: 'bunu-soyle', forestCategory: 'harf-cicegi' },
   { id: 'kodlama', title: 'Kodlama Oyunu', status: 'secondary', domain: 'Bilissel', skillFocus: 'Algoritmik dusunme', routeKey: 'kodlama', forestCategory: 'bulmaca-yolu' },
   { id: 'rakam-yazma', title: 'Rakam Yazma', status: 'secondary', domain: 'Matematik', skillFocus: 'Rakam tanima ve yazma', routeKey: 'rakam-yazma', forestCategory: 'sayi-agaci' },

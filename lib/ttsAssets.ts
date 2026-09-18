@@ -741,6 +741,7 @@ export const TTS: Record<string, number> = {
   'sinif-daginik-sence-ne-yapmali': require('../assets/sounds/tts/sinif-daginik-sence-ne-yapmali.mp3'),
   'sira-sende-pede-dokun-ve-duydugun-ritmi-cal': require('../assets/sounds/tts/sira-sende-pede-dokun-ve-duydugun-ritmi-cal.mp3'),
   'sirada-hangi-renk-var': require('../assets/sounds/tts/sirada-hangi-renk-var.mp3'),
+  'sirada-hangi-sekil-var-hep-beraber-bulalim': require('../assets/sounds/tts/sirada-hangi-sekil-var-hep-beraber-bulalim.wav'),
   'siradaki-eksik-sayiyi-bul-ve-yerine-koy': require('../assets/sounds/tts/siradaki-eksik-sayiyi-bul-ve-yerine-koy.mp3'),
   'siraya-bak-siradaki-sekil-hangisi-dogru-sekle-dokun': require('../assets/sounds/tts/siraya-bak-siradaki-sekil-hangisi-dogru-sekle-dokun.mp3'),
   'soguk-ile-sicak-zittir-aferin': require('../assets/sounds/tts/soguk-ile-sicak-zittir-aferin.mp3'),

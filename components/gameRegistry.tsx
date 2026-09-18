@@ -233,6 +233,22 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       ]}
     />
   ),
+  'diziyi-tamamla-3': (c) => (
+    <DiziyiTamamla
+      onGameEnd={c.onGameEnd}
+      onLogout={c.onExit}
+      oyunAdi="diziyi-tamamla-3"
+      title="İlk Örüntüm 🔰"
+      introMessage="Sırada hangi şekil var, hep beraber bulalım!"
+      patterns={[
+        { sequence: ['kare', 'daire', 'kare'], answer: 'daire', options: ['daire', 'kare'] },
+        { sequence: ['daire', 'yildiz', 'daire'], answer: 'yildiz', options: ['yildiz', 'daire'] },
+        { sequence: ['yildiz', 'ucgen', 'yildiz'], answer: 'ucgen', options: ['ucgen', 'yildiz'] },
+        { sequence: ['ucgen', 'kare', 'ucgen'], answer: 'kare', options: ['kare', 'ucgen'] },
+        { sequence: ['kare', 'yildiz', 'kare'], answer: 'yildiz', options: ['yildiz', 'kare'] },
+      ]}
+    />
+  ),
   'bunu-soyle': (c) => <BunuSoyle onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   kodlama: (c) => <KodlamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'rakam-yazma': (c) => <RakamYazma onGameEnd={c.onGameEnd} onExit={c.onExit} />,
