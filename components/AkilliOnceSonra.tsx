@@ -145,12 +145,9 @@ export default function AkilliOnceSonra({ onGameEnd, onExit, childName = 'Küç�
     const cellSize = current.len >= 5 ? 66 : current.len === 4 ? 76 : 88;
 
     return (
-        <DynamicBackground>
+        <DynamicBackground onExit={onExit}>
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                        <Text style={styles.exitIcon}>🚪</Text>
-                    </TouchableOpacity>
                     <Text style={styles.title}>📈 Akıllı Önce-Sonra</Text>
                     <View style={styles.roundBadge}>
                         <Text style={styles.roundText}>{round}/{TOTAL_ROUNDS}</Text>
@@ -209,10 +206,8 @@ export default function AkilliOnceSonra({ onGameEnd, onExit, childName = 'Küç�
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16, alignItems: 'center' },
+    container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
     header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-    exitBtn: { position: 'absolute', bottom: 30, left: 20, backgroundColor: '#FF5252', width: 60, height: 60, borderRadius: 30, justifyContent: 'center', alignItems: 'center', zIndex: 100, elevation: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4.65, borderWidth: 3, borderColor: '#FFF' },
-    exitIcon: { fontSize: 30, color: 'white' },
     title: { fontSize: 18, fontWeight: 'bold', color: '#3e2723' },
     roundBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
