@@ -129,6 +129,11 @@ export default function SicakSoguk({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>Sıcak mı, soğuk mu?</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu sıcak mı, soğuk mu?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View style={styles.itemZone}>
         <Animated.Text style={[styles.item, { transform: [{ scale: pop }] }]}>{emoji}</Animated.Text>
       </View>
@@ -158,6 +163,8 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },
 
   prompt: { fontSize: 21, fontWeight: '900', color: '#6A1B9A', marginTop: 10 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#6A1B9A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   itemZone: { height: 150, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
   item: { fontSize: 96 },
 

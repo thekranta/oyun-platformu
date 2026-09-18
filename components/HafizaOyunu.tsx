@@ -6,9 +6,12 @@ import CountdownOverlay from './CountdownOverlay';
 import JuicyProgressBar from './JuicyProgressBar';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
+import { Ionicons } from '@expo/vector-icons';
+import { speak } from '../services/speechService';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/hafiza_bg.webp');
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // Get screen dimensions
 const { width, height } = Dimensions.get('window');
@@ -385,6 +388,10 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
             <ScrollView contentContainerStyle={styles.gameContainer}>
                 <View style={styles.header}>
                     <Text style={styles.title}>{title}</Text>
+                    <TouchableOpacity style={styles.listenBtn} onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                        <Ionicons name="volume-high" size={20} color="#fff" />
+                        <Text style={styles.listenText}>Tekrar Dinle</Text>
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.grid}>
@@ -491,6 +498,8 @@ const styles = StyleSheet.create({
     topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
     header: { marginBottom: 20, alignItems: 'center' },
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#fff', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#2196F3', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 800 },
     cardContainer: {
         // width & height are dynamic now

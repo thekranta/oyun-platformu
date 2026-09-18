@@ -70,6 +70,8 @@ const DEFAULT_PATTERNS: Pattern[] = [
     }
 ];
 
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+
 export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_PATTERNS, oyunAdi = 'diziyi-tamamla', title = 'Diziyi Tamamla 🧩', introMessage = 'Sıraya bak, sıradaki şekil hangisi? Doğru şekle dokun!' }: DiziyiTamamlaProps) {
     const [gameReady, setGameReady] = useState(false);
     const [currentStage, setCurrentStage] = useState(0);
@@ -260,6 +262,11 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                     </View>
                 </View>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 {/* Seçenekler */}
                 <View style={styles.optionsArea}>
                 <Text style={styles.sectionLabel}>Seçenekler</Text>
@@ -370,6 +377,26 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         borderWidth: 2,
         borderColor: '#ffc88f',
+    },
+    listenBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#2ECC71',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 22,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.18,
+        shadowRadius: 1,
+        elevation: 3,
+    },
+    listenText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '800',
     },
     optionsArea: {
         backgroundColor: '#eef7ff',

@@ -9,6 +9,9 @@ import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { apiUrl } from '../lib/apiBase';
 import { supabase } from '../lib/supabase';
+import { speak } from '../services/speechService';
+
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/bunu_soyle_bg.webp');
@@ -491,6 +494,11 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 <Text style={styles.title}>Bunu Söyle! 🎙️</Text>
                 <Text style={styles.subtitle}>Resimdeki nedir?</Text>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Gördüğün resmin adını yüksek sesle söyle!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 <View style={styles.card}>
                     <View style={styles.imageContainer}>
                         <Image source={currentItem.image} style={styles.image} resizeMode="contain" />
@@ -644,6 +652,8 @@ const styles = StyleSheet.create({
         color: '#34495E',
         letterSpacing: 1,
     },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#E74C3C', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     controlsContainer: {
         alignItems: 'center',
         width: '100%',

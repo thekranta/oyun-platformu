@@ -150,6 +150,11 @@ export default function OnceSonra({ onGameEnd, onExit, childName }: Props) {
       <Text style={styles.prompt}>Önce ne olur?</Text>
       <Text style={styles.hint}>Sıradaki: {expected + 1}.</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Önce ne olur? En baştan sırayla dokun!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View style={styles.row}>
         {cards.map((card) => {
           const placed = card.order < expected;
@@ -179,6 +184,8 @@ const styles = StyleSheet.create({
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#00695C', marginTop: 12 },
   hint: { fontSize: 15, fontWeight: '700', color: '#4DB6AC', marginTop: 2, marginBottom: 14 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#26A69A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 0, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 10 },
   card: { width: 100, height: 110, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   cardPlaced: { backgroundColor: '#D8F3EC', opacity: 0.7 },

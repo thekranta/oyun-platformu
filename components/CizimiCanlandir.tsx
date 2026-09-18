@@ -176,6 +176,11 @@ export default function CizimiCanlandir({ onGameEnd, onExit, childName }: Props)
 
       <Text style={styles.hint}>{playing ? 'Çizimin dans ediyor! 💃' : 'Bir şey çiz, sonra "Canlandır"a bas!'}</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Parmağınla bir resim çiz, sonra çizimini canlandır!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View
         ref={canvasRef}
         style={styles.canvas}
@@ -224,6 +229,8 @@ const styles = StyleSheet.create({
   saveBtnSm: { borderWidth: 2, borderColor: '#43A047' },
   savedBtnSm: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
   hint: { fontSize: 15, fontWeight: '700', color: '#C2185B', marginVertical: 6, textAlign: 'center', paddingHorizontal: 16 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EC407A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#F8BBD0', overflow: 'hidden' },
   playBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EC407A', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 26, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 4 },
   playBtnOn: { backgroundColor: '#7E57C2' },

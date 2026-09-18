@@ -46,6 +46,7 @@ const QUESTIONS: { target: string; question: string; category: keyof typeof ITEM
 
 const TOTAL_STAGES = 5;
 const ITEMS_PER_BOX = 4;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 export default function KutuyuBul({ onGameEnd, onExit }: Props) {
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
@@ -306,6 +307,11 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                     <Text style={styles.targetEmoji}>{currentQuestion?.target}</Text>
                 </Animated.View>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => currentQuestion && speak(currentQuestion.question, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 {/* Boxes - Triangle/Pyramid layout on portrait */}
                 {isPortrait ? (
                     <View style={styles.pyramidContainer}>
@@ -419,6 +425,27 @@ const styles = StyleSheet.create({
         fontSize: 64,
         textAlign: 'center',
         marginBottom: 4,
+    },
+    listenBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        backgroundColor: '#4CAF50',
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 22,
+        marginTop: 12,
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.18,
+        shadowRadius: 1,
+        elevation: 3,
+    },
+    listenText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '800',
     },
     pyramidContainer: {
         flex: 1,

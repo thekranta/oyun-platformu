@@ -1,9 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Image, PanResponder, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Image, PanResponder, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
+import { speak } from '../services/speechService';
+
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 interface Props {
     onGameEnd: (
@@ -305,6 +309,11 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
                     </Text>
                 </View>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${currentFruit.plural} 1'den 5'e çizgi çizerek birleştir!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 {/* Canvas */}
                 <View
                     style={styles.canvas}
@@ -481,6 +490,8 @@ const styles = StyleSheet.create({
         color: '#666',
         marginTop: 4,
     },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     canvas: {
         flex: 1,
         backgroundColor: 'rgba(255, 255, 255, 0.5)',

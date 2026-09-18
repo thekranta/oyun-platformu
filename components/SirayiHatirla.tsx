@@ -146,6 +146,11 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>{phase === 'input' ? 'Şimdi sen tekrarla!' : phase === 'showing' ? 'İyi izle...' : 'Aferin!'}</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('İzle ve aynı sırayla tekrarla!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View style={styles.board}>
         {PADS.map((p, i) => {
           const isActive = activePad === i;
@@ -180,6 +185,8 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#4527A0' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#4527A0', marginTop: 12, marginBottom: 16, textAlign: 'center', paddingHorizontal: 20 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7E57C2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   board: { width: 280, height: 280, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'space-between' },
   pad: { width: 132, height: 132, borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 4 },
   padActive: { transform: [{ scale: 1.06 }], shadowOpacity: 0.35 },

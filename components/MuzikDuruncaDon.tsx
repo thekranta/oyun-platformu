@@ -340,6 +340,15 @@ export default function MuzikDuruncaDon({ onGameEnd, onExit, childName }: Props)
         <Text style={styles.songTitle} numberOfLines={1}>{song.title}</Text>
         <Text style={styles.hint}>{hintText}</Text>
 
+        <TouchableOpacity
+          style={styles.listenBtn}
+          onPress={() => speak('Müzik çalınca dans et, müzik durunca hemen DON! Durunca DON düğmesine bas.', { instructions: HAPPY_VOICE })}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
+
         {/* DON düğmesi: 'dancing'te sönük+atıl (basınca "bekle" uyarısı),
             'frozen'da canlı+nabızlı (basınca doğru). 'happy'de gizli. */}
         {!isHappy && (
@@ -388,6 +397,8 @@ const styles = StyleSheet.create({
 
   songTitle: { fontSize: 16, fontWeight: '800', color: '#6A1B9A', marginTop: 6 },
   hint: { fontSize: 17, fontWeight: '700', color: '#7B1FA2', marginTop: 4, marginBottom: 18, textAlign: 'center' },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#6A1B9A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   donBtn: { width: 200, height: 200, borderRadius: 100, alignItems: 'center', justifyContent: 'center', borderWidth: 6, borderColor: '#fff' },
   donBtnActive: { backgroundColor: '#FF3D81', shadowColor: '#FF3D81', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.55, shadowRadius: 22, elevation: 12 },

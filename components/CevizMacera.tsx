@@ -8,6 +8,9 @@ import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { supabase } from '../lib/supabase';
+import { speak } from '../services/speechService';
+
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // STORY DATA - KEsin Yapı
 const storyData = {
@@ -363,6 +366,10 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                         <Ionicons name="volume-high" size={24} color="white" />
                     </View>
                 </View>
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(currentNode.text, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
                 <Animated.View style={[styles.contentContainer, { opacity: fadeAnim }]}>
                     {viewState === 'story' ? (
                         <View style={styles.storyView}>
@@ -437,5 +444,7 @@ const styles = StyleSheet.create({
     resetButton: { position: 'absolute', bottom: 30, backgroundColor: '#FF5722', width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: '#BF360C', elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3, shadowRadius: 5 },
     congratsOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', zIndex: 100 },
     congratsText: { fontSize: 60, fontWeight: 'bold', color: '#FFD700', textShadowColor: 'rgba(0, 0, 0, 0.75)', textShadowOffset: { width: -1, height: 1 }, textShadowRadius: 10, marginBottom: 50 },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#5D4037', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });
 

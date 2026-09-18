@@ -119,6 +119,11 @@ export default function YuzYap({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.hint}>Bir parça seç, kafaya dokunup yerleştir! 👆</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bir parça seç, kafaya dokun ve komik bir yüz yap!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View ref={canvasRef} style={styles.canvas} {...panResponder.panHandlers}>
         <View style={[styles.head, { backgroundColor: head.color }]} pointerEvents="none" />
         {placed.map((p) => (
@@ -161,6 +166,8 @@ const styles = StyleSheet.create({
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },
   savedBtn: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
   hint: { fontSize: 15, fontWeight: '700', color: '#EF6C00', marginVertical: 6 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FB8C00', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: { flex: 1, width: '94%', backgroundColor: '#EAF7FB', borderRadius: 20, borderWidth: 3, borderColor: '#FFCC80', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   head: { width: 220, height: 240, borderRadius: 120, borderWidth: 3, borderColor: 'rgba(0,0,0,0.12)' },
 

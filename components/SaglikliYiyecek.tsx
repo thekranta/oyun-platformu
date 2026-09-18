@@ -126,6 +126,11 @@ export default function SaglikliYiyecek({ onGameEnd, onExit, childName }: Props)
 
       <Text style={styles.prompt}>Hangisi daha sağlıklı?</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Hangisi daha sağlıklı?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View style={styles.cards}>
         {cards.map((card) => {
           const isWrong = wrongId === card.id;
@@ -150,6 +155,8 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#2E7D32' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#2E7D32', marginTop: 14, marginBottom: 6 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#43A047', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   cards: { flexDirection: 'row', justifyContent: 'center', gap: 24, marginTop: 16 },
   card: { width: 150, height: 150, borderRadius: 28, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.16, shadowRadius: 10, elevation: 6 },
   cardWrong: { backgroundColor: '#FFE0E0' },

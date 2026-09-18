@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { speak } from '../services/speechService';
 
 // Akıllı Önce-Sonra — UYARLANIR (adaptif) zorluk. Maarif: SAB.2 (48-60)
 // (Kendisine/ailesine/bir hikâyeye ait görselleri oluş sırasına göre sıralayabilme).
@@ -23,6 +25,8 @@ interface Props {
 
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 10000;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+const INSTRUCTION_TEXT = 'Olayları önceden sonraya doğru sırayla dokun! Sen başardıkça zorlaşır 📈';
 
 // Kronolojik olay dizileri (önce → sonra)
 const SEQ3: string[][] = [
@@ -155,6 +159,11 @@ export default function AkilliOnceSonra({ onGameEnd, onExit, childName = 'Küç�
 
                 <Text style={styles.question}>Önce olandan başla, sırayla dokun ⏳</Text>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 <Animated.View style={[styles.cardsWrap, { transform: [{ translateX: shake }] }]}>
                     {current.cards.map((card) => {
                         const order = orderMap[card.id];
@@ -209,6 +218,9 @@ const styles = StyleSheet.create({
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
     question: { fontSize: 18, fontWeight: '800', color: '#37474F', marginTop: 6, marginBottom: 18, textAlign: 'center' },
+
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#5E35B1', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     cardsWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, maxWidth: 520 },
     card: {

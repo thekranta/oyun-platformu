@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { Flag, FLAGS } from './WorldFlag';
+import { speak } from '../services/speechService';
 
 // Dünya Selamları — MONTESSORI kültürel çalışma. Farklı ülkeler farklı "merhaba"
 // der. Hedefte selam sözü + ülke adı; çocuk o ülkenin bayrağını bulur.
@@ -22,6 +24,7 @@ interface Props {
 }
 
 const BOARD_SIZE = 8;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 const shuffle = <T,>(arr: T[]): T[] => {
     const a = [...arr];
@@ -112,6 +115,14 @@ export default function DunyaSelamlari({ onGameEnd, onExit, childName = 'Küçü
                         <Text style={styles.wave}>👋</Text>
                         <Text style={styles.hello}>“{target.hello}”</Text>
                         <Text style={styles.targetLabel}>{target.name} böyle selam verir — bayrağını bul</Text>
+                        <TouchableOpacity
+                            style={styles.listenBtn}
+                            onPress={() => speak(`${target.hello}. ${target.name} böyle selam verir, bayrağını bul!`, { instructions: HAPPY_VOICE })}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="volume-high" size={20} color="#fff" />
+                            <Text style={styles.listenText}>Tekrar Dinle</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
                 {allDone && (
@@ -200,6 +211,8 @@ const styles = StyleSheet.create({
     hello: { fontSize: 30, fontWeight: '900', color: '#00695C', marginTop: 4 },
     targetLabel: { fontSize: 13, color: '#546E7A', fontWeight: '600', marginTop: 8, textAlign: 'center' },
     doneText: { fontSize: 17, fontWeight: '800', color: '#2E7D32', marginTop: 8, textAlign: 'center' },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00695C', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, maxWidth: 520 },
     slot: {

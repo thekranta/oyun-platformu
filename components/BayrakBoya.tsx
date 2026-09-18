@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import { speak } from '../services/speechService';
 import { Flag, FLAGS, FlagSpec } from './WorldFlag';
 
 // Bayrak Boya — çizim/sanat + kültür. Referans bayrağa bakarak boş şeritleri
@@ -26,6 +27,7 @@ interface Props {
 type StripeFlag = Extract<FlagSpec, { render: 'v' | 'h' }>;
 const STRIPE_FLAGS = FLAGS.filter((f): f is StripeFlag => f.render === 'v' || f.render === 'h');
 const ROUNDS = 6;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const EXTRA_COLORS = ['#000000', '#ffffff', '#0055A4', '#EF4135', '#FCD116', '#009246', '#7E57C2', '#FF9800'];
 
 const shuffle = <T,>(arr: T[]): T[] => {
@@ -129,6 +131,11 @@ export default function BayrakBoya({ onGameEnd, onExit, childName = 'Küçük Ka
                     <Text style={styles.refName}>{spec.name}</Text>
                 </View>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Örnek bayrağa bak, renkleri seçip şeritleri doğru boya! Acele yok.', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 {/* Boyanacak boş bayrak */}
                 <Animated.View style={[styles.canvas, { width: zoneW, height: zoneH, flexDirection: spec.render === 'v' ? 'row' : 'column', transform: [{ scale: bump }] }]}>
                     {spec.colors.map((_, i) => (
@@ -187,6 +194,9 @@ const styles = StyleSheet.create({
     refRow: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(255,255,255,0.9)', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 16, marginBottom: 16 },
     refLabel: { fontSize: 13, color: '#607D8B', fontWeight: '700' },
     refName: { fontSize: 16, fontWeight: '800', color: '#263238' },
+
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00796B', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     canvas: {
         borderRadius: 10, overflow: 'hidden', borderWidth: 2, borderColor: '#B0BEC5', elevation: 4,

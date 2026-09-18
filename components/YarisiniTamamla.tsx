@@ -189,6 +189,10 @@ export default function YarisiniTamamla({ onGameEnd, onExit, childName }: Props)
         ))}
       </View>
       <Text style={styles.hint}>Soldaki yarısı hazır — sen sağ yarısını çiz!</Text>
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Resmin sol yarısı hazır, sen sağ yarısını çiz!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
 
       <View
         ref={canvasRef}
@@ -240,6 +244,8 @@ const styles = StyleSheet.create({
   picActive: { borderColor: '#7E57C2', transform: [{ scale: 1.08 }] },
   picEmoji: { fontSize: 26 },
   hint: { fontSize: 14, fontWeight: '700', color: '#7E57C2', marginVertical: 6 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7E57C2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#D1C4E9', overflow: 'hidden' },
   palette: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 12, maxWidth: 520 },
   swatch: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(0,0,0,0.12)', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 3 },

@@ -153,6 +153,11 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>Sırada ne var?</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Sırada hangi renk var?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       {/* Örüntü şeridi — beyaz tepside, "?" ile biter */}
       <View style={styles.patternTray}>
         {shown.map((col, i) => (
@@ -189,6 +194,8 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#6A1B9A', marginTop: 12, marginBottom: 18 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8E24AA', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   // Örüntü şeridi (beyaz tepsi)
   patternTray: {
     flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10,

@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { speak } from '../services/speechService';
 
 // Akıllı Farklı — UYARLANIR (adaptif) zorluk. Maarif: FAB.2
 // (Nesneleri benzerlik ve farklılıklarına göre sınıflandırabilme; farklı olanı bulma).
@@ -23,6 +25,7 @@ interface Props {
 
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 7000;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 // Renk çemberi (hue sırası) — komşular benzer, karşıttlar çok farklı
 const PALETTE = ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣'];
 
@@ -128,6 +131,11 @@ export default function AkilliFarkli({ onGameEnd, onExit, childName = 'Küçük 
 
                 <Text style={styles.question}>Farklı olanı bul!</Text>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Farklı olanı bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 <Animated.View style={[styles.grid, { maxWidth: current.cols * (cellSize + 12) + 8, transform: [{ translateX: shake }] }]}>
                     {Array.from({ length: current.n }, (_, i) => {
                         const emoji = i === current.oddPos ? current.odd : current.base;
@@ -181,6 +189,9 @@ const styles = StyleSheet.create({
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
     question: { fontSize: 20, fontWeight: '800', color: '#37474F', marginTop: 6, marginBottom: 16, textAlign: 'center' },
+
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1976D2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12 },
     cell: {

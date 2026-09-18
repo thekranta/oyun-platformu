@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import { speak } from '../services/speechService';
 
 type Point = { x: number; y: number };
 type Stroke = { color: string; size: number; points: Point[] };
@@ -21,6 +22,7 @@ interface Props {
 
 const MIN_STEP = 2;
 const SUCCESS_THRESHOLD = 0.9;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // Color palette for pen selection
 const PEN_COLORS = [
@@ -343,6 +345,15 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                     ))}
                 </View>
 
+                <TouchableOpacity
+                    style={styles.listenBtn}
+                    onPress={() => speak(`${currentNumber}. rakamın üzerini çiz!`, { instructions: HAPPY_VOICE })}
+                    activeOpacity={0.85}
+                >
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 <View
                     style={[
                         styles.canvasContainer,
@@ -519,6 +530,9 @@ const styles = StyleSheet.create({
         transform: [{ scale: 1.15 }],
         elevation: 4,
     },
+
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FF7043', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     canvasContainer: {
         backgroundColor: '#FFFEF7',

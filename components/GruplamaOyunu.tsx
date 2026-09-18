@@ -1,9 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import JuicyProgressBar from './JuicyProgressBar';
+import { speak } from '../services/speechService';
+
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 const GRUPLAMA_SORULARI = [
     { nesne: '🍎', kategori: 'Meyve' },
@@ -115,6 +119,11 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                 <View style={styles.header}><Text style={styles.baslik}>🍎 Gruplama</Text></View>
                 <Text style={styles.bilgi}>Bu nesne hangisi?</Text>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu nesne hangisi?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 {/* Ortadaki Nesne */}
                 <Animated.View style={[styles.buyukNesneKutusu, { transform: [{ translateX: shakeAnim }] }]}>
                     <Text style={{ fontSize: 80 }}>{soru.nesne}</Text>
@@ -160,5 +169,7 @@ const styles = StyleSheet.create({
     buyukNesneKutusu: { width: 150, height: 150, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', borderRadius: 20, marginBottom: 40, elevation: 5 },
     secenekContainer: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
     secenekButon: { flex: 0.48, padding: 20, borderRadius: 15, alignItems: 'center', elevation: 3 },
-    secenekYazi: { color: 'white', fontSize: 18, fontWeight: 'bold' }
+    secenekYazi: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8D6E63', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

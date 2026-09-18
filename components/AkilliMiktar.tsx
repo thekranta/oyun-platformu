@@ -1,9 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
 import { speak } from '../services/speechService';
+
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 const speakQuestion = (more: boolean) => speak(more ? 'Hangisinde daha ÇOK var?' : 'Hangisinde daha AZ var?');
 
@@ -165,6 +168,11 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
 
                 <Text style={[styles.question, { color: qColor }]}>{qText}</Text>
 
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(qText, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
+
                 <View style={styles.sidesRow}>
                     {renderSide('left', current.left)}
                     <View style={styles.vs}><Text style={styles.vsText}>?</Text></View>
@@ -204,6 +212,9 @@ const styles = StyleSheet.create({
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
     question: { fontSize: 21, fontWeight: '900', marginTop: 6, marginBottom: 14, textAlign: 'center' },
+
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1976D2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     sidesRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', maxWidth: 500 },
     sideCard: {

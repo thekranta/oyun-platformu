@@ -125,6 +125,15 @@ export default function NoktaBoyama({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.hint}>Dokun ya da sürükle — renkli noktalar bırak! 👆</Text>
 
+      <TouchableOpacity
+        style={styles.listenBtn}
+        onPress={() => speak('Bir renk seç, tuvale dokun ve renkli noktalar bırak!', { instructions: HAPPY_VOICE })}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View
         ref={canvasRef}
         style={styles.canvas}
@@ -164,6 +173,8 @@ const styles = StyleSheet.create({
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },
   savedBtn: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
   hint: { fontSize: 15, fontWeight: '700', color: '#0277BD', marginVertical: 6 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#118ab2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 0, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#B3E5FC', overflow: 'hidden' },
   palette: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 12, maxWidth: 520 },
   swatch: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(0,0,0,0.12)', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 3 },

@@ -19,6 +19,7 @@ import { speak } from '../services/speechService';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/tarti_dengesi_bg.webp');
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 interface TartiDengesiProps {
     onGameEnd: (oyunAdi: string, sure: number, hamle: number, hata: number, algilananKelime?: string, extraData?: any) => void;
@@ -260,6 +261,11 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
                         )}
                     </View>
 
+                    <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Tartı Dengesi oyununa hoş geldin! Teraziyi dengele!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                        <Ionicons name="volume-high" size={20} color="#fff" />
+                        <Text style={styles.listenText}>Tekrar Dinle</Text>
+                    </TouchableOpacity>
+
                     <View style={styles.scaleWrapper}>
                         <View style={[styles.scaleBase, { width: containerWidth * 0.06, height: containerHeight * 0.05 }]} />
                         <View style={[styles.scalePole, { height: containerHeight * 0.3, width: containerWidth * 0.015 }]} />
@@ -338,6 +344,8 @@ const styles = StyleSheet.create({
     hintText: { fontSize: 12, color: '#6D4C41' },
     highlight: { fontSize: 16, fontWeight: 'bold', color: '#D32F2F' },
     balancedText: { fontSize: 16, fontWeight: 'bold', color: '#4CAF50' },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#9C27B0', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     scaleWrapper: { alignItems: 'center', justifyContent: 'flex-end', height: '50%', position: 'relative', width: '100%' },
     scaleBase: { backgroundColor: '#5D4037', borderTopLeftRadius: 6, borderTopRightRadius: 6, zIndex: 2 },
     scalePole: { position: 'absolute', bottom: 0, backgroundColor: '#795548', zIndex: 1 },

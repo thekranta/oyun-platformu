@@ -136,6 +136,11 @@ export default function HangisiFarkli({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>Hangisi farklı?</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Hangisi farklı? Ötekilere benzemeyeni bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View style={styles.grid}>
         {cells.map((cell) => {
           const isWrong = wrongId === cell.id;
@@ -164,4 +169,6 @@ const styles = StyleSheet.create({
   cell: { width: 104, height: 104, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   cellWrong: { backgroundColor: '#FFE0E0' },
   cellEmoji: { fontSize: 58 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00838F', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

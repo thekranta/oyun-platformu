@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { speak } from '../services/speechService';
 
 // Akıllı Harf — UYARLANIR (adaptif) zorluk. Maarif: TAEOB.1
 // (Yazı farkındalığına ilişkin becerileri gösterebilme; harf biçimi ayırt etme).
@@ -22,6 +24,7 @@ interface Props {
     childName?: string;
 }
 
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 6000;
 
@@ -144,7 +147,7 @@ export default function AkilliHarf({ onGameEnd, onExit, childName = 'Küçük Ka
                 Animated.timing(shake, { toValue: -8, duration: 60, useNativeDriver: true }),
                 Animated.timing(shake, { toValue: 0, duration: 60, useNativeDriver: true }),
             ]).start();
-            startTimer(setTimeout(() => { setFeedback('idle'); setSelected(null); }, 550));
+            startTimer(setTimeout(() => { if (!lockRef.current) { setFeedback('idle'); setSelected(null); } }, 550));
         }
     };
 
@@ -162,6 +165,11 @@ export default function AkilliHarf({ onGameEnd, onExit, childName = 'Küçük Ka
                 </View>
 
                 <Text style={styles.question}>Aynı harfi bul</Text>
+
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Aynı harfi bul', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
 
                 {/* Hedef harf */}
                 <Animated.View style={[styles.targetCard, { transform: [{ scale: bump }, { translateX: shake }] }]}>
@@ -221,6 +229,9 @@ const styles = StyleSheet.create({
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
     question: { fontSize: 20, fontWeight: '800', color: '#37474F', marginTop: 6, marginBottom: 14, textAlign: 'center' },
+
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#C2185B', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     targetCard: {
         width: 130, height: 130, borderRadius: 28, backgroundColor: '#FFFDF5', borderWidth: 4, borderColor: '#F06292',

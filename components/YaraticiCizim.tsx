@@ -4,6 +4,7 @@ import { Animated, ImageBackground, PanResponder, Platform, StyleSheet, Text, To
 import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
+import { speak } from '../services/speechService';
 import { asset } from '../lib/assetMap';
 
 // Arka plan g�rseli
@@ -59,6 +60,7 @@ const BRUSH_MODES: { mode: BrushMode; icon: IoniconName; label: string }[] = [
 ];
 
 const MIN_STEP = 2;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [gameReady, setGameReady] = useState(false);
@@ -412,6 +414,15 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           <Text style={styles.exitIcon}>🚪</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.listenBtn}
+          onPress={() => speak('Parmağınla istediğin resmi çiz, renkleri ve fırçaları dene!', { instructions: HAPPY_VOICE })}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
+
         <View ref={canvasRef} style={styles.canvas} {...panResponder.panHandlers}>
           <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
             {safeStrokes.map((s, i) => (
@@ -627,6 +638,8 @@ const styles = StyleSheet.create({
     fontSize: 30,
     color: 'white',
   },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: {
     flex: 1, backgroundColor: '#fffef9', marginTop: 10, marginHorizontal: 10, marginBottom: 85,
     borderRadius: 20, borderWidth: 3, borderColor: '#f2e4cf', overflow: 'hidden', elevation: 4,

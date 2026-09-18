@@ -12,8 +12,10 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
+import { speak } from '../services/speechService';
 
 // ============= CONFIG =============
 export interface ShadowDetectiveConfig {
@@ -85,6 +87,8 @@ const MOTIVATION = [
     { round: 6, emoji: '⚡', text: 'Süper Hızlı!' },
     { round: 9, emoji: '🏆', text: 'Şampiyon!' },
 ];
+
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // ============= DRAGGABLE =============
 function DraggableAnimal({ animal, size, isMatched, onDrop }: {
@@ -316,6 +320,11 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
                 <View style={{ width: 36 }} />
             </View>
 
+            <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Gölge Dedektifi oyununa hoş geldin! Hayvanları gölgeleriyle eşleştir!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                <Ionicons name="volume-high" size={20} color="#fff" />
+                <Text style={styles.listenText}>Tekrar Dinle</Text>
+            </TouchableOpacity>
+
             {/* Progress */}
             <View style={styles.progressBar}>
                 <View style={[styles.progressFill, { width: `${(round / TOTAL) * 100}%` }]} />
@@ -448,6 +457,9 @@ const styles = StyleSheet.create({
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 3,
     },
+
+    listenBtn: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: 8, backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     progressBar: { height: 4, backgroundColor: 'rgba(0,0,0,0.2)', marginHorizontal: 15, borderRadius: 2 },
     progressFill: { height: '100%', backgroundColor: '#4CAF50', borderRadius: 2 },

@@ -174,6 +174,11 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.stepText}>Adım {cur + 1}/{pic.steps.length}: {pic.steps[cur].text}</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(pic.steps[cur].text, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View
         ref={canvasRef}
         style={styles.canvas}
@@ -232,6 +237,8 @@ const styles = StyleSheet.create({
   picActive: { borderColor: '#00ACC1', transform: [{ scale: 1.08 }] },
   picEmoji: { fontSize: 26 },
   stepText: { fontSize: 15, fontWeight: '800', color: '#00695C', marginVertical: 6, textAlign: 'center', paddingHorizontal: 16 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00ACC1', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#B2EBF2', overflow: 'hidden' },
   nextBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00ACC1', paddingVertical: 11, paddingHorizontal: 26, borderRadius: 24, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 4 },
   doneBtn: { backgroundColor: '#43A047' },

@@ -14,11 +14,13 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { FeedbackService } from '../services/FeedbackService';
+import { speak } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/uzay_bg.webp');
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // ============= TYPES =============
 interface UzayBloklariProps {
@@ -449,6 +451,17 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
+                <View style={styles.listenBtnRow}>
+                    <TouchableOpacity
+                        style={styles.listenBtn}
+                        onPress={() => speak('Uzay Blokları oyununa hoş geldin! Blokları yerleştirmeme yardım eder misin?', { instructions: HAPPY_VOICE })}
+                        activeOpacity={0.85}
+                    >
+                        <Ionicons name="volume-high" size={20} color="#fff" />
+                        <Text style={styles.listenText}>Tekrar Dinle</Text>
+                    </TouchableOpacity>
+                </View>
+
                 {/* Instruction for tap-to-place */}
                 {selectedBlock && (
                     <View style={styles.instructionBanner}>
@@ -945,5 +958,11 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(57, 255, 20, 0.3)',
         transform: [{ scale: 1.1 }],
     },
+    listenBtnRow: {
+        alignItems: 'center',
+        paddingTop: 4,
+    },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#BF40BF', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });
 

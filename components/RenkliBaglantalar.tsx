@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -6,11 +7,13 @@ import {
     Platform,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import Svg, { Line } from 'react-native-svg';
 import CountdownOverlay from './CountdownOverlay';
+import { speak } from '../services/speechService';
 
 // ============= TYPES =============
 interface RenkliBaglantalarProps {
@@ -44,6 +47,7 @@ const MAX_POPS = 6;
 
 // Modern, vibrant colors
 const BALL_COLORS = ['#FF6B9D', '#4ECDC4']; // Pink & Teal
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // ============= MAIN COMPONENT =============
 export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna' }: RenkliBaglantalarProps) {
@@ -409,6 +413,10 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                 <Text style={styles.instructionText}>
                     3+ aynı renk topu sürükle ve bağla! 🎯
                 </Text>
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Aynı renk topları birbirine bağla ve patlat!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
             </View>
 
             {/* Game Grid */}
@@ -624,6 +632,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         opacity: 0.9,
     },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FF6B9D', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     gameArea: {
         flex: 1,
         alignItems: 'center',

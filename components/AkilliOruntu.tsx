@@ -1,8 +1,10 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { speak } from '../services/speechService';
 
 // Akıllı Örüntü — UYARLANIR (adaptif) zorluk. Maarif: MAB.3
 // (Matematiksel olgu/olay/nesnelere ilişkin çıkarım — örüntüyü sürdürme).
@@ -23,6 +25,8 @@ interface Props {
 
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 9000;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+const INSTRUCTION_TEXT = 'Renk örüntüsünü çöz ve sıradakini bul! Sen başardıkça zorlaşır 📈';
 const PALETTE = ['🔴', '🔵', '🟡', '🟢', '🟣', '🟠'];
 
 const shuffle = <T,>(arr: T[]): T[] => {
@@ -126,7 +130,7 @@ export default function AkilliOruntu({ onGameEnd, onExit, childName = 'Küçük 
                 Animated.timing(shake, { toValue: -8, duration: 60, useNativeDriver: true }),
                 Animated.timing(shake, { toValue: 0, duration: 60, useNativeDriver: true }),
             ]).start();
-            startTimer(setTimeout(() => { setFeedback('idle'); setSelected(null); }, 550));
+            startTimer(setTimeout(() => { if (!lockRef.current) { setFeedback('idle'); setSelected(null); } }, 550));
         }
     };
 
@@ -144,6 +148,11 @@ export default function AkilliOruntu({ onGameEnd, onExit, childName = 'Küçük 
                 </View>
 
                 <Text style={styles.question}>Sırada hangisi gelmeli?</Text>
+
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                    <Ionicons name="volume-high" size={20} color="#fff" />
+                    <Text style={styles.listenText}>Tekrar Dinle</Text>
+                </TouchableOpacity>
 
                 {/* Örüntü dizisi */}
                 <Animated.View style={[styles.seqCard, { transform: [{ scale: bump }, { translateX: shake }] }]}>
@@ -208,6 +217,9 @@ const styles = StyleSheet.create({
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
     question: { fontSize: 20, fontWeight: '800', color: '#37474F', marginTop: 6, marginBottom: 12, textAlign: 'center' },
+
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FF8C00', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     seqCard: {
         backgroundColor: '#FFFDF5', borderRadius: 24, borderWidth: 3, borderColor: '#FFE0B2',

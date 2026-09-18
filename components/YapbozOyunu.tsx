@@ -28,6 +28,7 @@ interface YapbozOyunuProps {
 
 const GRID_SIZE = 3;
 const TOTAL_TILES = GRID_SIZE * GRID_SIZE;
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // 10 farklı yapboz tanımı
 const PUZZLES = [
@@ -337,6 +338,15 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             <Text style={styles.selectionTitle}>🧩 Bir Yapboz Seç!</Text>
             <Text style={styles.selectionSubtitle}>Hangi resmi tamamlamak istersin?</Text>
 
+            <TouchableOpacity
+                style={styles.listenBtn}
+                onPress={() => speak('Bir yapboz seç, parçaları sürükleyip resmi tamamla!', { instructions: HAPPY_VOICE })}
+                activeOpacity={0.85}
+            >
+                <Ionicons name="volume-high" size={20} color="#fff" />
+                <Text style={styles.listenText}>Tekrar Dinle</Text>
+            </TouchableOpacity>
+
             <ScrollView
                 contentContainerStyle={styles.puzzleGrid}
                 showsVerticalScrollIndicator={false}
@@ -534,6 +544,8 @@ const styles = StyleSheet.create({
         color: '#fff',
         textAlign: 'center',
     },
+    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4ECDC4', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     // Preview Screen
     previewContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },

@@ -144,6 +144,11 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
         </View>
       </View>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bir renk seç, resmin bölümlerine dokunarak boya!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       {/* Resim seçici */}
       <View style={styles.picRow}>
         {PICTURES.map((p, i) => (
@@ -176,6 +181,9 @@ const styles = StyleSheet.create({
   iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   title: { fontSize: 19, fontWeight: '900', color: '#6A1B9A' },
   headerActions: { flexDirection: 'row', gap: 8 },
+
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8E24AA', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },
   savedBtn: { backgroundColor: '#43A047', borderColor: '#2E7D32' },

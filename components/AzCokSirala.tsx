@@ -134,6 +134,11 @@ export default function AzCokSirala({ onGameEnd, onExit, childName }: Props) {
       <Text style={styles.prompt}>En azdan en çoğa!</Text>
       <Text style={styles.hint}>Sıradaki: {expected + 1}. (en az kalan)</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('En azdan en çoğa doğru sırala!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       <View style={styles.row}>
         {cards.map((card) => {
           const placed = card.rank < expected;
@@ -165,6 +170,8 @@ const styles = StyleSheet.create({
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#2E7D32', marginTop: 10 },
   hint: { fontSize: 14, fontWeight: '700', color: '#66BB6A', marginTop: 4, marginBottom: 14 },
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#43A047', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 14, paddingHorizontal: 10 },
   card: { width: 100, height: 120, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', padding: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   cardPlaced: { backgroundColor: '#E8F5E9', opacity: 0.7 },

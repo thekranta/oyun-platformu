@@ -154,6 +154,11 @@ export default function RenkSepetleri({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>Bu topu doğru sepete koy!</Text>
 
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${ballColor.name}!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+        <Ionicons name="volume-high" size={20} color="#fff" />
+        <Text style={styles.listenText}>Tekrar Dinle</Text>
+      </TouchableOpacity>
+
       {/* Top */}
       <View style={styles.ballZone}>
         <Animated.View
@@ -196,6 +201,9 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 20, fontWeight: '800', color: '#2E7D5B', marginTop: 10 },
   ballZone: { height: 150, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
   ball: { width: 96, height: 96, borderRadius: 48, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 1, elevation: 8 },
+
+  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#2E7D5B', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
+  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   baskets: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, marginTop: 10, maxWidth: 480, paddingHorizontal: 12 },
   basket: { width: 104, height: 104, borderRadius: 24, borderWidth: 3, alignItems: 'center', justifyContent: 'center', gap: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 5 },
