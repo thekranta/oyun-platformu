@@ -34,7 +34,10 @@
     "logout": "Log out",
     "searchLabel": "Search games",
     "searchPlaceholder": "Search games…",
-    "noGamesFound": "No game found with that name."
+    "noGamesFound": "No game found with that name.",
+    "lockedHint": "Unlocks with {{tier}}",
+    "lockedAlertTitle": "This game is locked 🔒",
+    "lockedAlertMessage": "\"{{game}}\" unlocks with the {{tier}} plan. You can review current plans at childhoodtech.com."
   },
   "veli": {
     "loading": "Loading data...",

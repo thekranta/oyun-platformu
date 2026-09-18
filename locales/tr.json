@@ -34,7 +34,10 @@
     "logout": "Oturumu kapat",
     "searchLabel": "Oyun ara",
     "searchPlaceholder": "Oyun ara…",
-    "noGamesFound": "Bu isimde bir oyun bulunamadı."
+    "noGamesFound": "Bu isimde bir oyun bulunamadı.",
+    "lockedHint": "{{tier}} ile açılır",
+    "lockedAlertTitle": "Bu oyun kilitli 🔒",
+    "lockedAlertMessage": "\"{{game}}\" {{tier}} paketiyle açılıyor. Güncel paketleri childhoodtech.com adresinden inceleyebilirsiniz."
   },
   "veli": {
     "loading": "Veriler yükleniyor...",

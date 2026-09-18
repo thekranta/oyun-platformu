@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, Animated, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Alert, Animated, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
@@ -19,6 +19,12 @@ const groups = [
   ['ritim-kelebegi', 'kosu-kirazi', 'denge-dalgasi', 'can-elmasi'],
   ['sayi-agaci'],
 ];
+const TIER_LABELS: Record<VeliTier, string> = { free: 'Ücretsiz', tohum: 'Tohum', filiz: 'Filiz', fidan: 'Fidan', orman: 'Orman' };
+// PackageAssignForm.tsx/TeacherDashboard.tsx'teki aynı platform-farkındalıklı alert deseni.
+const showAlert = (title: string, message: string) => {
+  if (Platform.OS === 'web') { window.alert(`${title}\n\n${message}`); return; }
+  Alert.alert(title, message);
+};
 const kinds: ToyKind[] = ['puzzle', 'paint', 'animal', 'drum', 'blocks'];
 // Keep the original set on opening; the gift alternates illustrated toy sets.
 const alternateKinds: ToyKind[] = ['train', 'crayons', 'rabbit', 'xylophone', 'rings'];
@@ -209,7 +215,10 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
     : [{ x: 95, y: 145 }, { x: 413, y: 112 }, { x: 725, y: 145 }, { x: 195, y: 350 }, { x: 620, y: 350 }];
   const moving = !calm && !reduceMotion && !adult;
   const toySize = portrait ? 140 : 175;
-  const filtered = playable.filter(g => title(g).toLocaleLowerCase('tr').includes(query.toLocaleLowerCase('tr')));
+  // Yetişkin arama TÜM kataloğu gösterir (tier'a göre gizlemez) — kilitli oyunlar
+  // 🔒 ile işaretlenip hangi paketle açıldığı söylenir, böylece veli neyin kilitli
+  // olduğunu görüp paket yükseltmeyi değerlendirebilir.
+  const filtered = allPlayable.filter(g => title(g).toLocaleLowerCase('tr').includes(query.toLocaleLowerCase('tr')));
   return <View style={styles.root} onLayout={e => setBounds(e.nativeEvent.layout)}>
     {bounds.width > 0 && <View style={{ position: 'absolute', width: sceneWidth, height: sceneHeight, left: (bounds.width - sceneWidth) / 2, top: (bounds.height - sceneHeight) / 2, transform: [{ scale }] }}>
       <Svg width={sceneWidth} height={sceneHeight} style={StyleSheet.absoluteFill} viewBox={`0 0 ${sceneWidth} ${sceneHeight}`} pointerEvents="none">
@@ -250,7 +259,17 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
         <Text style={styles.adultNote}>{t('toyRoom.adultNote')}</Text>
         <View style={styles.adultActions}><Pressable onPress={() => setCalm(v => !v)} accessibilityRole="button" style={styles.adultButton}><Text>{calm ? t('toyRoom.animationsOn') : t('toyRoom.reduceMotion')}</Text></Pressable><Pressable accessibilityRole="button" onPress={onLogout} style={styles.adultButton}><Text>{t('toyRoom.logout')}</Text></Pressable></View>
         <TextInput accessibilityLabel={t('toyRoom.searchLabel')} placeholder={t('toyRoom.searchPlaceholder')} value={query} onChangeText={setQuery} style={styles.search}/>
-        <ScrollView keyboardShouldPersistTaps="handled">{filtered.map(g => <Pressable key={g.id} accessibilityRole="button" onPress={() => { setAdult(false); onGame(g.routeKey); }} style={styles.gameRow}><Text style={styles.gameText}>{GAME_EMOJI[g.id] || '🧩'}  {title(g)}</Text><Text>▶</Text></Pressable>)}{!filtered.length && <Text style={styles.adultNote}>{t('toyRoom.noGamesFound')}</Text>}</ScrollView>
+        <ScrollView keyboardShouldPersistTaps="handled">{filtered.map(g => {
+          const required = requiredVeliTierForGame(g);
+          const locked = subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, required);
+          return <Pressable key={g.id} accessibilityRole="button" onPress={() => {
+            if (locked) { showAlert(t('toyRoom.lockedAlertTitle'), t('toyRoom.lockedAlertMessage', { game: title(g), tier: TIER_LABELS[required] })); return; }
+            setAdult(false); onGame(g.routeKey);
+          }} style={[styles.gameRow, locked && styles.gameRowLocked]}>
+            <Text style={[styles.gameText, locked && styles.gameTextLocked]}>{locked ? '🔒' : (GAME_EMOJI[g.id] || '🧩')}  {title(g)}</Text>
+            <Text style={locked ? styles.lockedHint : undefined}>{locked ? t('toyRoom.lockedHint', { tier: TIER_LABELS[required] }) : '▶'}</Text>
+          </Pressable>;
+        })}{!filtered.length && <Text style={styles.adultNote}>{t('toyRoom.noGamesFound')}</Text>}</ScrollView>
       </View></View>
     </Modal>
   </View>;
@@ -262,4 +281,5 @@ const styles = StyleSheet.create({
   toy: { alignItems: 'center' }, toyLabel: { fontWeight: '800', textAlign: 'center', paddingHorizontal: 5, lineHeight: 20 }, replacement: { position: 'absolute', right: 0, bottom: 0, borderRadius: 40, backgroundColor: '#FFF5DD', alignItems: 'center', justifyContent: 'center' },
   controls: { position: 'absolute', right: 10, top: 10, flexDirection: 'row', gap: 6 }, control: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFFCC', borderRadius: 22 }, controlText: { fontSize: 21, color: '#706452' },
   overlay: { flex: 1, backgroundColor: '#40372999', justifyContent: 'center', alignItems: 'center', padding: 20 }, adult: { backgroundColor: '#FFFCF5', borderRadius: 26, padding: 22, width: '100%', maxWidth: 590, maxHeight: '90%' }, adultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, adultTitle: { fontSize: 23, fontWeight: '800', color: '#584B40' }, adultNote: { fontSize: 14, color: '#756753', lineHeight: 22, marginVertical: 14 }, adultActions: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' }, adultButton: { backgroundColor: '#EFE7D9', padding: 14, borderRadius: 15 }, search: { padding: 14, borderWidth: 1, borderColor: '#D7CBBA', borderRadius: 14, marginVertical: 16, fontSize: 16 }, gameRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderColor: '#EEE6D9', gap: 8 }, gameText: { fontSize: 15, color: '#584B40', flexShrink: 1 },
+  gameRowLocked: { opacity: 0.55 }, gameTextLocked: { color: '#8A7A63' }, lockedHint: { fontSize: 12, color: '#A07D2F', fontWeight: '700' },
 });
