@@ -172,10 +172,20 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
     const handleFruitDropRef = useRef(handleFruitDrop);
     useEffect(() => { handleFruitDropRef.current = handleFruitDrop; }, [handleFruitDrop]);
 
+    // Yanit zorla calinirsa (baska bir view "calarsa") meyve havada asili kalmasin
+    // diye release'in basarisiz-birakma dalindaki gorsel sifirlama burada tekrar kullanilir.
+    const resetVisual = () => {
+        pan.flattenOffset();
+        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: false }).start();
+        Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+    };
+
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onMoveShouldSetPanResponder: () => true,
+            // Tek suruklenebilir meyve (kardesi yok) ama savunma amacli: yaniti birakmaz.
+            onPanResponderTerminationRequest: () => false,
             onPanResponderGrant: () => {
                 pan.setOffset({ x: 0, y: 0 });
                 pan.setValue({ x: 0, y: 0 });
@@ -189,7 +199,8 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
                 Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: false }).start();
                 if (Math.sqrt(g.dx ** 2 + g.dy ** 2) > 25) handleFruitDropRef.current();
                 else Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
-            }
+            },
+            onPanResponderTerminate: resetVisual,
         })
     ).current;
 

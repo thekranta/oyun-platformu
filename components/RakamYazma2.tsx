@@ -244,6 +244,13 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
                     if (showSuccess) return;
                     finishStroke(targetPoints);
                 },
+                // Tek tuval PanResponder'i (kardesi yok) ama savunma amacli: yaniti
+                // birakmaz; zorla calinirsa release'deki gibi kapsama kontrolunu calistirir.
+                onPanResponderTerminationRequest: () => false,
+                onPanResponderTerminate: () => {
+                    if (showSuccess) return;
+                    finishStroke(targetPoints);
+                },
             }),
         [targetPoints, hitRadius, selectedColor, addPoint, finishStroke, showSuccess],
     );

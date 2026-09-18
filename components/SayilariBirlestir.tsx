@@ -194,6 +194,8 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
     const panResponder = useMemo(() => PanResponder.create({
         onStartShouldSetPanResponder: () => true,
         onMoveShouldSetPanResponder: () => true,
+        // Tek tuval PanResponder'i (kardesi yok) ama savunma amacli: yaniti birakmaz.
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (e) => {
             if (stageComplete) return;
 

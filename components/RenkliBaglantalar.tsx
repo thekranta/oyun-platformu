@@ -262,6 +262,8 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
         PanResponder.create({
             onStartShouldSetPanResponder: () => true,
             onMoveShouldSetPanResponder: () => true,
+            // Tek grid PanResponder'i (kardesi yok) ama savunma amacli: yaniti birakmaz.
+            onPanResponderTerminationRequest: () => false,
             onPanResponderGrant: (evt) => {
                 const touch = evt.nativeEvent;
                 // Use page coordinates and subtract grid offset for reliability
@@ -323,6 +325,15 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                 } else if (selected.length > 0) {
                     setErrors(prev => prev + 1);
                 }
+                stateRef.current.isDragging = false;
+                stateRef.current.selectedBalls = [];
+                setIsDragging(false);
+                setSelectedBalls([]);
+                setCurrentPath([]);
+            },
+            // Yanit zorla calinirsa secili toplar/cizgi ekranda asili kalmasin diye
+            // release'deki temizleme mantigi burada da calisir (patlatma tetiklenmez).
+            onPanResponderTerminate: () => {
                 stateRef.current.isDragging = false;
                 stateRef.current.selectedBalls = [];
                 setIsDragging(false);

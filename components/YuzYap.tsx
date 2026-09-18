@@ -52,6 +52,8 @@ export default function YuzYap({ onGameEnd, onExit, childName }: Props) {
   };
   const panResponder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
+    // Tek tuval PanResponder'i (kardesi yok) ama savunma amacli: yaniti birakmaz.
+    onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: (e) => place(e.nativeEvent.locationX, e.nativeEvent.locationY),
   }), []);
 

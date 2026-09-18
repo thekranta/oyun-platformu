@@ -57,6 +57,8 @@ export default function NoktaBoyama({ onGameEnd, onExit, childName }: Props) {
   const panResponder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
+    // Tek tuval PanResponder'i (kardesi yok) ama savunma amacli: yaniti birakmaz.
+    onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: (e) => { lastRef.current = null; addDot(e.nativeEvent.locationX, e.nativeEvent.locationY, true); },
     onPanResponderMove: (e) => addDot(e.nativeEvent.locationX, e.nativeEvent.locationY),
   }), []);

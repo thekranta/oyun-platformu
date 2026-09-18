@@ -95,6 +95,8 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
   const panResponder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
+    // Tek tuval PanResponder'i (kardesi yok) ama savunma amacli: yaniti birakmaz.
+    onPanResponderTerminationRequest: () => false,
     onPanResponderGrant: (e) => addPoint(e.nativeEvent.locationX, e.nativeEvent.locationY),
     onPanResponderMove: (e) => addPoint(e.nativeEvent.locationX, e.nativeEvent.locationY),
     onPanResponderRelease: (e) => { addPoint(e.nativeEvent.locationX, e.nativeEvent.locationY); finishStroke(); },
