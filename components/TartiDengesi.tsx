@@ -45,10 +45,26 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
     const disabledRef = useRef(disabled);
     disabledRef.current = disabled;
 
+    // Bırakınca (veya iptal olunca) parçayı görsel olarak eski haline döndürür —
+    // hem gerçek bırakmada hem de yanıtlayıcının çalınması durumunda kullanılır.
+    const resetVisual = () => {
+        pan.flattenOffset();
+        Animated.spring(scale, { toValue: 1, useNativeDriver: false }).start();
+        setIsDragging(false);
+        Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
+    };
+
     const panResponder = useRef(
         PanResponder.create({
             onStartShouldSetPanResponder: () => !disabledRef.current,
             onMoveShouldSetPanResponder: () => !disabledRef.current,
+            // Yanıtlayıcı rolünü bir kez alınca asla bırakma — aksi halde 3 kardeş
+            // DraggableOption'dan biri (veya bir üst view) hızlı/kısa bir sürüklemede
+            // yanıtlayıcıyı "çalabiliyor"; bu durumda onPanResponderRelease HİÇ
+            // çalışmıyor, sürükleme sessizce hiçbir şey olmamış gibi iptal oluyordu
+            // (görsel geri bildirim yok, onDrop çağrılmıyor) — canlı sitede bizzat
+            // doğrulanan "bazı turlarda sürükle çalışmıyor" hatasının kök nedeni buydu.
+            onPanResponderTerminationRequest: () => false,
             onPanResponderGrant: () => {
                 setIsDragging(true);
                 pan.setOffset({ x: 0, y: 0 });
@@ -59,14 +75,14 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
             },
             onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
             onPanResponderRelease: (_, g) => {
-                pan.flattenOffset();
-                Animated.spring(scale, { toValue: 1, useNativeDriver: false }).start();
-                setIsDragging(false);
-                if (g.dy < -25) {
-                    onDropRef.current(value);
-                }
-                Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
-            }
+                const shouldDrop = g.dy < -25;
+                resetVisual();
+                if (shouldDrop) onDropRef.current(value);
+            },
+            // Yanıtlayıcı yine de çalınırsa (örn. onPanResponderTerminationRequest
+            // henüz güncel kod dağıtılmamış eski bir istemcide) parça havada asılı
+            // kalmasın diye aynı sıfırlama burada da çalıştırılır.
+            onPanResponderTerminate: resetVisual,
         })
     ).current;
 
@@ -299,7 +315,7 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
 }
 
 const styles = StyleSheet.create({
-    outerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
+    outerContainer: { flex: 1, width: '100%', justifyContent: 'center', alignItems: 'center', ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(206, 147, 216, 0.4)',

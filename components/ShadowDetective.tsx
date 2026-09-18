@@ -99,6 +99,15 @@ function DraggableAnimal({ animal, size, isMatched, onDrop }: {
     const panResponder = useMemo(() => PanResponder.create({
         onStartShouldSetPanResponder: () => !isMatched,
         onMoveShouldSetPanResponder: () => !isMatched,
+        // Birden fazla hayvan aynı anda sürüklenebilir olduğu için, bu tanımlanmadan
+        // bırakılırsa yanıtlayıcı rolü başka bir view'e "çalınabiliyor" — hayvan havada
+        // asılı kalıp hiçbir şey olmuyordu (Tartı Dengesi'nde canlı sitede doğrulanan
+        // "sürükleme bazen sessizce hiçbir şey yapmıyor" hatasıyla aynı kök neden).
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderTerminate: () => {
+            Animated.spring(scale, { toValue: 1, friction: 5, useNativeDriver: false }).start();
+            Animated.spring(pan, { toValue: { x: 0, y: 0 }, friction: 5, useNativeDriver: false }).start();
+        },
         onPanResponderGrant: () => {
             // @ts-ignore
             pan.setOffset({ x: pan.x._value, y: pan.y._value });

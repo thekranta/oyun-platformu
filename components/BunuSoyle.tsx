@@ -559,7 +559,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 }
 
 const styles = StyleSheet.create({
-    bgContainer: { flex: 1, ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
+    bgContainer: { flex: 1, width: '100%', ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(255, 255, 255, 0.2)',

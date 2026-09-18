@@ -212,12 +212,30 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
         setGameReady(false);
     };
 
+    const snapPieceHome = (pieceId: number) => {
+        const pan = panRefs[pieceId];
+        const home = homePositions[pieceId];
+        Animated.spring(pan, {
+            toValue: { x: home.x, y: home.y },
+            useNativeDriver: false,
+            speed: 20,
+            bounciness: 0,
+        }).start();
+    };
+
     const createPanResponder = (pieceId: number, targetRow: number, targetCol: number) => {
         const pan = panRefs[pieceId];
 
         return PanResponder.create({
             onStartShouldSetPanResponder: () => !lockedPieces.has(pieceId) && !isComplete,
             onMoveShouldSetPanResponder: () => !lockedPieces.has(pieceId) && !isComplete,
+            // 9 parça aynı anda sürüklenebilir olduğu için, bu tanımlanmadan bırakılırsa
+            // hızlı/kısa bir sürüklemede yanıtlayıcı rolü başka bir view'e "çalınabiliyor"
+            // — bu durumda parça havada asılı kalıp hiçbir şey olmuyordu (TartiDengesi'nde
+            // canlı sitede doğrulanan "sürükleme bazen sessizce hiçbir şey yapmıyor" hatasıyla
+            // aynı kök neden).
+            onPanResponderTerminationRequest: () => false,
+            onPanResponderTerminate: () => snapPieceHome(pieceId),
             onPanResponderGrant: () => {
                 // @ts-ignore
                 pan.setOffset({ x: pan.x._value, y: pan.y._value });
@@ -262,13 +280,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                     // (aksi halde parça ekran dışında kaybolabilir ya da başka bir
                     // parçanın üstüne binip görünmez olabilir)
                     setErrors(e => e + 1);
-                    const home = homePositions[pieceId];
-                    Animated.spring(pan, {
-                        toValue: { x: home.x, y: home.y },
-                        useNativeDriver: false,
-                        speed: 20,
-                        bounciness: 0,
-                    }).start();
+                    snapPieceHome(pieceId);
                 }
             },
         });
@@ -448,7 +460,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
+    container: { flex: 1, width: '100%', ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(26, 26, 46, 0.7)',

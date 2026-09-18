@@ -645,6 +645,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        width: '100%',
         ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}),
     },
     darkOverlay: {
