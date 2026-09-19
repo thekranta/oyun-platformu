@@ -16,7 +16,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { asset } from '../../lib/assetMap';
 import { changeLanguage, SupportedLanguage } from '../../lib/i18n';
 import { supabase } from '../../lib/supabase';
-import { getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
+import { fetchClassGameTier, ClassGameTier } from '../../lib/classAccess';
+import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
 // Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
@@ -320,6 +321,7 @@ export default function App() {
   const [email, setEmail] = useState('');
   const [subscriptionTier, setSubscriptionTier] = useState<VeliTier | null>(null);
   const [packageExpiresAt, setPackageExpiresAt] = useState<string | null>(null);
+  const [classGameTier, setClassGameTier] = useState<ClassGameTier | null>(null);
   const [yukleniyor, setYukleniyor] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
 
@@ -333,6 +335,16 @@ export default function App() {
     isLoggingIn,
     girisYap, sifremiUnuttum,
   } = useAuth({ email, setEmail, setAd, setYas, setAsama, setSubscriptionTier, setPackageExpiresAt, showToast, resumeAfterInteraction });
+
+  // Çocuk bir sınıfa (Çınar/Meşe öğretmeni) eklenmişse sınıf paketi de oyun erişimi açar.
+  // Menüye her girişte yeniden okunur (öğretmen paketi bitince/sınıftan çıkarılınca yansısın);
+  // RPC yoksa/hata verirse null döner ve çocuk kendi paketiyle devam eder.
+  useEffect(() => {
+    if (asama !== 'menu' || !email) return;
+    let cancelled = false;
+    fetchClassGameTier().then((r) => { if (!cancelled && r !== undefined) setClassGameTier(r); });
+    return () => { cancelled = true; };
+  }, [asama, email]);
 
   // Kalıcı Supabase oturumu varsa yenilemede giriş ekranını atla (sessiz geri yükleme);
   // ayrıca çevrimdışı kalmış oyun sonuçlarını arka planda gönder.
@@ -415,6 +427,7 @@ export default function App() {
     setEmail('');
     setSubscriptionTier(null);
     setPackageExpiresAt(null);
+    setClassGameTier(null);
     setActiveDailyRoute(null);
     setDailyCompletedRoutes([]);
     setDailyPlanRoutes([]);
@@ -536,7 +549,10 @@ export default function App() {
       onMute={toggleMute}
       onGame={oyunuBaslat}
       onLogout={cikisYap}
-      subscriptionTier={getEffectiveVeliTier(subscriptionTier, packageExpiresAt)}
+      subscriptionTier={combineGameTier(
+        getEffectiveVeliTier(subscriptionTier, packageExpiresAt),
+        classGameTier ? getEffectiveOgretmenTier(classGameTier.tier, classGameTier.expiresAt) : null,
+      )}
     />;
   }
 

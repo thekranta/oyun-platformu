@@ -78,6 +78,18 @@ export function veliTierMeetsMinimum(tier: VeliTier | null | undefined, minimum:
     return rank >= 0 && rank >= minRank;
 }
 
+// Sınıf paketi -> oyun erişimi karşılığı: Çınar "tüm oyun/hikaye kütüphanesi" = Filiz düzeyi
+// (Akıllı + değer hikayeleri), Meşe = Fidan düzeyi (+ beste şarkılar). Orman'ın "erken erişim"i
+// henüz kodda yok, bu yüzden sınıf paketi Orman'a çıkmaz. Yalnız OYUN kilidini açar; veli paneli
+// özellikleri (AI analiz/PDF/paylaşım) velinin kendi paketine bağlı kalır.
+const CLASS_TIER_GAME_LEVEL: Record<OgretmenTier, VeliTier> = { free: 'free', cinar: 'filiz', mese: 'fidan' };
+
+/** Çocuğun kendi paketi ile sınıfının paketinden gelen oyun erişimini birleştirir (yüksek olan geçerli). */
+export function combineGameTier(own: VeliTier, classTier: OgretmenTier | null | undefined): VeliTier {
+    const fromClass = CLASS_TIER_GAME_LEVEL[classTier || 'free'];
+    return VELI_TIER_ORDER.indexOf(fromClass) > VELI_TIER_ORDER.indexOf(own) ? fromClass : own;
+}
+
 /** Bir oyun kaydının (constants/gameCatalog.ts) gerektirdiği asgari veli paketini döndürür. */
 export function requiredVeliTierForGame(game: { adaptive?: boolean; status: string }): VeliTier {
     if (game.status === 'music') return 'fidan';
