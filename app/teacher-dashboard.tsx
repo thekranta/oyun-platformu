@@ -405,8 +405,8 @@ export default function TeacherDashboardPage() {
                             </TouchableOpacity>
 
                             <Text style={styles.registerNote}>
-                                Kayıt olduktan sonra Free plana dahil olursunuz.
-                                Premium özellikler için bizimle iletişime geçin.
+                                Kayıt olduktan sonra Ücretsiz plana dahil olursunuz.
+                                Çınar (Sınıf) ve Meşe (Kurumsal) paketleri için childhoodtech.com adresini ziyaret edin.
                             </Text>
                         </View>
                     </View>

@@ -6,6 +6,7 @@ import {
     Alert,
     Dimensions,
     Image,
+    Linking,
     Modal,
     Platform,
     ScrollView,
@@ -22,6 +23,9 @@ import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+
+const PRICING_URL = 'https://childhoodtech.com/#pricing';
+const openPricing = () => { Linking.openURL(PRICING_URL).catch(() => { }); };
 
 // RLS'in auth.uid() gormesi icin REST cagrilarinda anon key yerine oturum jetonu kullan.
 // Jeton yoksa anon key'e duser (akis kirilmaz).
@@ -629,10 +633,10 @@ export default function TeacherDashboard({
                         <Text style={styles.sectionTitle}>{t('teacher.studentHistoryTitle', { name: selectedStudent.child_name })}</Text>
 
                         {!flags.canSeeAiAnalysis && (
-                            <View style={styles.premiumBanner}>
+                            <TouchableOpacity style={styles.premiumBanner} onPress={openPricing} activeOpacity={0.85}>
                                 <Text style={styles.premiumBannerEmoji}>🔒</Text>
                                 <Text style={styles.premiumBannerText}>{t('teacher.upgradeForAiMessage')}</Text>
-                            </View>
+                            </TouchableOpacity>
                         )}
 
                         {studentScores.length === 0 ? (
