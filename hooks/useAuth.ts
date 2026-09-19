@@ -100,11 +100,17 @@ export function useAuth({
         setEmail(loginEmail);
 
         // Profil bilgisini çek
-        const { data: profiles } = await supabase
+        const fetchProfile = () => supabase
           .from('profiles')
           .select('child_name, child_age_months, subscription_tier, package_expires_at')
           .eq('email', loginEmail)
           .single();
+        let { data: profiles } = await fetchProfile();
+        if (!profiles) {
+          // Geçici ağ hatasında ücretli veli 'free'ye (10 oyun) düşmesin diye bir kez daha dene.
+          await new Promise((resolve) => setTimeout(resolve, 600));
+          ({ data: profiles } = await fetchProfile());
+        }
 
         if (profiles) {
           setAd(profiles.child_name);

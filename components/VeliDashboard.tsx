@@ -24,7 +24,8 @@ import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyRepo
 import { getGameDisplay } from '../lib/gameDisplay';
 import { supabase } from '../lib/supabase';
 import { asset } from '../lib/assetMap';
-import { getEffectiveVeliTier, getVeliFlags, VeliTier } from '../lib/subscriptionTiers';
+import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, getVeliFlags, VeliTier } from '../lib/subscriptionTiers';
+import { ClassGameTier, fetchClassGameTier } from '../lib/classAccess';
 import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -221,6 +222,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const [activeTab, setActiveTab] = useState<'ozet' | 'gelisim' | 'gecmis'>('ozet');
     const [subscriptionTier, setSubscriptionTier] = useState<VeliTier>(initialTier || 'free');
     const [packageExpiresAt, setPackageExpiresAt] = useState<string | null>(initialExpiresAt || null);
+    // Çocuk bir Çınar/Meşe sınıfındaysa oyun erişimi velinin kendi paketinden yüksek olabilir;
+    // "10 oyun" mesajını yanlışlıkla göstermemek için sınıf paketi de okunur (oturum yoksa/demo'da null).
+    const [classGameTier, setClassGameTier] = useState<ClassGameTier | null>(null);
+    useEffect(() => {
+        let cancelled = false;
+        fetchClassGameTier().then((r) => { if (!cancelled && r) setClassGameTier(r); });
+        return () => { cancelled = true; };
+    }, []);
     const [generatingPDF, setGeneratingPDF] = useState(false);
     const [aiReportExpanded, setAiReportExpanded] = useState(false);
     const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
@@ -431,6 +440,11 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
     const effectiveTier = getEffectiveVeliTier(subscriptionTier, packageExpiresAt);
     const flags = getVeliFlags(effectiveTier);
+    // Yalnız sınıfı da olmayan gerçekten ücretsiz çocuğa "10 oyun / Tohum'a geç" çağrısı gösterilir.
+    const onlyFreeGames = combineGameTier(
+        effectiveTier,
+        classGameTier ? getEffectiveOgretmenTier(classGameTier.tier, classGameTier.expiresAt) : null,
+    ) === 'free';
     const successRate = avgCorrectAnswers * 10;
 
     // Selected game's AI comment for timeline - only if approved
@@ -1437,10 +1451,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             {!flags.canSeeAiAnalysis && (
                                 <View style={styles.freeBanner}>
                                     <View style={styles.freeBannerContent}>
-                                        <Text style={styles.freeBannerEmoji}>{effectiveTier === 'free' ? '🌱' : '🌿🌳🌲'}</Text>
+                                        <Text style={styles.freeBannerEmoji}>{onlyFreeGames ? '🌱' : '🌿🌳🌲'}</Text>
                                         <View style={styles.freeBannerText}>
-                                            <Text style={styles.freeBannerTitle}>{t(effectiveTier === 'free' ? 'veli.freeTrialTitle' : 'veli.freePlanTitle')}</Text>
-                                            <Text style={styles.freeBannerSubtitle}>{t(effectiveTier === 'free' ? 'veli.freeTrialSubtitle' : 'veli.freePlanSubtitle')}</Text>
+                                            <Text style={styles.freeBannerTitle}>{t(onlyFreeGames ? 'veli.freeTrialTitle' : 'veli.freePlanTitle')}</Text>
+                                            <Text style={styles.freeBannerSubtitle}>{t(onlyFreeGames ? 'veli.freeTrialSubtitle' : 'veli.freePlanSubtitle')}</Text>
                                         </View>
                                     </View>
                                     <TouchableOpacity style={styles.freeBannerButton} onPress={openPricing}>

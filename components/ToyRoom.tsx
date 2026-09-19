@@ -197,9 +197,12 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   }, []);
   const games = groups.map((group, i) => {
     const pool = playable.filter(g => group.includes(g.forestCategory) && g.id !== firstGames[i]);
-    // Havuz boşsa (kısıtlı pakette bir grupta açık oyun kalmadıysa) odayı çökertmek yerine sabit oyuna düş.
+    // Sabit ilk oyun döngünün başında: round 0'da o görünür, sonra havuz dönerken tekrar sıraya girer
+    // (yoksa küçük havuzlu ücretsiz pakette ilk oyunlar "Başka oyuncaklar"a basınca odadan kalıcı
+    // kaybolurdu). Havuz boşsa odayı çökertmek yerine sabit oyunda kalır.
     const first = playable.find(g => g.id === firstGames[i]) ?? playable[0];
-    return round === 0 || pool.length === 0 ? first : pool[(round - 1) % pool.length];
+    const cycle = [first, ...pool];
+    return cycle[round % cycle.length];
   });
   const portrait = bounds.height > bounds.width;
   const sceneWidth = portrait ? 400 : 1000;

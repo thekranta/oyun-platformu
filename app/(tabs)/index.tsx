@@ -17,6 +17,7 @@ import { asset } from '../../lib/assetMap';
 import { changeLanguage, SupportedLanguage } from '../../lib/i18n';
 import { supabase } from '../../lib/supabase';
 import { fetchClassGameTier, ClassGameTier } from '../../lib/classAccess';
+import { isRouteOpenForTier } from '../../lib/gameAccess';
 import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
@@ -322,6 +323,11 @@ export default function App() {
   const [subscriptionTier, setSubscriptionTier] = useState<VeliTier | null>(null);
   const [packageExpiresAt, setPackageExpiresAt] = useState<string | null>(null);
   const [classGameTier, setClassGameTier] = useState<ClassGameTier | null>(null);
+  // Çocuğun oyun erişimi: kendi paketi ile (varsa) sınıfının paketinin yükseği.
+  const gameTier = combineGameTier(
+    getEffectiveVeliTier(subscriptionTier, packageExpiresAt),
+    classGameTier ? getEffectiveOgretmenTier(classGameTier.tier, classGameTier.expiresAt) : null,
+  );
   const [yukleniyor, setYukleniyor] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
 
@@ -376,6 +382,9 @@ export default function App() {
   }, []);
 
   const oyunuBaslat = (oyunTipi: string) => {
+    // Kilit yalnız çocuk odasında olursa "Sıradaki Günlük Oyun" gibi odayı atlayan yollar kilitli
+    // oyunu açar; oyunu başlatan her yol paketi burada da kontrol eder.
+    if (!isRouteOpenForTier(gameTier, oyunTipi)) return;
     if (dailyPlanRoutes.includes(oyunTipi)) {
       setActiveDailyRoute(oyunTipi);
     } else {
@@ -482,7 +491,8 @@ export default function App() {
   const [activeDailyRoute, setActiveDailyRoute] = useState<string | null>(null);
 
   const parsedAgeMonths = parseInt(yas, 10) || 48;
-  const nextDailyRoute = dailyPlanRoutes.find((route) => !dailyCompletedRoutes.includes(route)) || null;
+  // Plan 3 çekirdek oyun seçer; paketin açmadığı oyunlar atlanır (hiç kalmazsa buton görünmez).
+  const nextDailyRoute = dailyPlanRoutes.find((route) => !dailyCompletedRoutes.includes(route) && isRouteOpenForTier(gameTier, route)) || null;
 
 
   const ensureDailyPlan = useCallback(() => {
@@ -549,10 +559,7 @@ export default function App() {
       onMute={toggleMute}
       onGame={oyunuBaslat}
       onLogout={cikisYap}
-      subscriptionTier={combineGameTier(
-        getEffectiveVeliTier(subscriptionTier, packageExpiresAt),
-        classGameTier ? getEffectiveOgretmenTier(classGameTier.tier, classGameTier.expiresAt) : null,
-      )}
+      subscriptionTier={gameTier}
     />;
   }
 

@@ -101,9 +101,9 @@ export const FREE_GAME_IDS: ReadonlySet<string> = new Set([
 ]);
 
 /** Bir oyun kaydının (constants/gameCatalog.ts) gerektirdiği asgari veli paketini döndürür. */
-export function requiredVeliTierForGame(game: { id?: string; adaptive?: boolean; status: string }): VeliTier {
+export function requiredVeliTierForGame(game: { id: string; adaptive?: boolean; status: string }): VeliTier {
     if (game.status === 'music') return 'fidan';
     if (game.adaptive || game.status === 'story') return 'filiz';
-    if (game.id && FREE_GAME_IDS.has(game.id)) return 'free';
+    if (FREE_GAME_IDS.has(game.id)) return 'free';
     return 'tohum';
 }

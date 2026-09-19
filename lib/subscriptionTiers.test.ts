@@ -114,19 +114,19 @@ describe('requiredVeliTierForGame', () => {
     it('sıradan ama ücretsiz sette olmayan oyunlar Tohum ister', () => {
         expect(requiredVeliTierForGame({ id: 'labirent', status: 'secondary' })).toBe('tohum');
         expect(requiredVeliTierForGame({ id: 'hafiza', status: 'core' })).toBe('tohum');
-        expect(requiredVeliTierForGame({ status: 'creative' })).toBe('tohum');
+        expect(requiredVeliTierForGame({ id: 'kum-boyasi', status: 'creative' })).toBe('tohum');
     });
 
     it('adaptive (Akıllı) oyunlar filiz gerektirir', () => {
-        expect(requiredVeliTierForGame({ status: 'secondary', adaptive: true })).toBe('filiz');
+        expect(requiredVeliTierForGame({ id: 'akilli-x', status: 'secondary', adaptive: true })).toBe('filiz');
     });
 
     it('değer hikayeleri (story) filiz gerektirir', () => {
-        expect(requiredVeliTierForGame({ status: 'story' })).toBe('filiz');
+        expect(requiredVeliTierForGame({ id: 'hikaye-x', status: 'story' })).toBe('filiz');
     });
 
     it('müzik (music) fidan gerektirir', () => {
-        expect(requiredVeliTierForGame({ status: 'music' })).toBe('fidan');
+        expect(requiredVeliTierForGame({ id: 'muzik-x', status: 'music' })).toBe('fidan');
     });
 });
 
@@ -140,15 +140,15 @@ describe('combineGameTier (sınıf paketi + kendi paket)', () => {
     it('Çınar sınıfı Filiz düzeyi açar (Akıllı + hikaye, müzik değil)', () => {
         const t = combineGameTier('free', 'cinar');
         expect(t).toBe('filiz');
-        expect(veliTierMeetsMinimum(t, requiredVeliTierForGame({ status: 'secondary', adaptive: true }))).toBe(true);
-        expect(veliTierMeetsMinimum(t, requiredVeliTierForGame({ status: 'story' }))).toBe(true);
-        expect(veliTierMeetsMinimum(t, requiredVeliTierForGame({ status: 'music' }))).toBe(false);
+        expect(veliTierMeetsMinimum(t, requiredVeliTierForGame({ id: 'akilli-x', status: 'secondary', adaptive: true }))).toBe(true);
+        expect(veliTierMeetsMinimum(t, requiredVeliTierForGame({ id: 'hikaye-x', status: 'story' }))).toBe(true);
+        expect(veliTierMeetsMinimum(t, requiredVeliTierForGame({ id: 'muzik-x', status: 'music' }))).toBe(false);
     });
 
     it('Meşe sınıfı Fidan düzeyi açar (müzik dahil)', () => {
         const t = combineGameTier('tohum', 'mese');
         expect(t).toBe('fidan');
-        expect(veliTierMeetsMinimum(t, requiredVeliTierForGame({ status: 'music' }))).toBe(true);
+        expect(veliTierMeetsMinimum(t, requiredVeliTierForGame({ id: 'muzik-x', status: 'music' }))).toBe(true);
     });
 
     it('çocuğun kendi paketi sınıftakinden yüksekse düşürülmez', () => {
