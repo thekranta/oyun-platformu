@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AccessibilityInfo, Alert, Animated, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Animated, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
@@ -20,11 +20,7 @@ const groups = [
   ['sayi-agaci'],
 ];
 const TIER_LABELS: Record<VeliTier, string> = { free: 'Ücretsiz', tohum: 'Tohum', filiz: 'Filiz', fidan: 'Fidan', orman: 'Orman' };
-// PackageAssignForm.tsx/TeacherDashboard.tsx'teki aynı platform-farkındalıklı alert deseni.
-const showAlert = (title: string, message: string) => {
-  if (Platform.OS === 'web') { window.alert(`${title}\n\n${message}`); return; }
-  Alert.alert(title, message);
-};
+const PRICING_URL = 'https://childhoodtech.com/#pricing';
 const kinds: ToyKind[] = ['puzzle', 'paint', 'animal', 'drum', 'blocks'];
 // Keep the original set on opening; the gift alternates illustrated toy sets.
 const alternateKinds: ToyKind[] = ['train', 'crayons', 'rabbit', 'xylophone', 'rings'];
@@ -193,6 +189,8 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
     : allPlayable.filter(g => veliTierMeetsMinimum(subscriptionTier, requiredVeliTierForGame(g)));
   const [bounds, setBounds] = useState({ width: 0, height: 0 });
   const [adult, setAdult] = useState(false);
+  const [locked, setLocked] = useState<{ game: string; tier: VeliTier } | null>(null);
+  useEffect(() => { if (!adult) setLocked(null); }, [adult]);
   const [query, setQuery] = useState('');
   const [calm, setCalm] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(true);
@@ -261,16 +259,27 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
         <TextInput accessibilityLabel={t('toyRoom.searchLabel')} placeholder={t('toyRoom.searchPlaceholder')} value={query} onChangeText={setQuery} style={styles.search}/>
         <ScrollView keyboardShouldPersistTaps="handled">{filtered.map(g => {
           const required = requiredVeliTierForGame(g);
-          const locked = subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, required);
+          const isLocked = subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, required);
           return <Pressable key={g.id} accessibilityRole="button" onPress={() => {
-            if (locked) { showAlert(t('toyRoom.lockedAlertTitle'), t('toyRoom.lockedAlertMessage', { game: title(g), tier: TIER_LABELS[required] })); return; }
+            if (isLocked) { setLocked({ game: title(g), tier: required }); return; }
             setAdult(false); onGame(g.routeKey);
-          }} style={[styles.gameRow, locked && styles.gameRowLocked]}>
-            <Text style={[styles.gameText, locked && styles.gameTextLocked]}>{locked ? '🔒' : (GAME_EMOJI[g.id] || '🧩')}  {title(g)}</Text>
-            <Text style={locked ? styles.lockedHint : undefined}>{locked ? t('toyRoom.lockedHint', { tier: TIER_LABELS[required] }) : '▶'}</Text>
+          }} style={[styles.gameRow, isLocked && styles.gameRowLocked]}>
+            <Text style={[styles.gameText, isLocked && styles.gameTextLocked]}>{isLocked ? '🔒' : (GAME_EMOJI[g.id] || '🧩')}  {title(g)}</Text>
+            <Text style={isLocked ? styles.lockedHint : undefined}>{isLocked ? t('toyRoom.lockedHint', { tier: TIER_LABELS[required] }) : '▶'}</Text>
           </Pressable>;
         })}{!filtered.length && <Text style={styles.adultNote}>{t('toyRoom.noGamesFound')}</Text>}</ScrollView>
-      </View></View>
+      </View>
+      {locked && <Pressable accessibilityLabel={t('toyRoom.lockedClose')} onPress={() => setLocked(null)} style={styles.upsellBackdrop}>
+        <Pressable accessibilityViewIsModal onPress={() => {}} style={styles.upsellCard}>
+          <Text style={styles.upsellIcon}>🔒</Text>
+          <Text style={styles.upsellTitle}>{t('toyRoom.lockedAlertTitle')}</Text>
+          <Text style={styles.upsellText}>{t('toyRoom.lockedAlertMessage', { game: locked.game, tier: TIER_LABELS[locked.tier] })}</Text>
+          {!!t(`toyRoom.lockedBenefit.${locked.tier}`, { defaultValue: '' }) && <Text style={styles.upsellBenefit}>{t(`toyRoom.lockedBenefit.${locked.tier}`, { defaultValue: '' })}</Text>}
+          <Pressable accessibilityRole="link" onPress={() => { Linking.openURL(PRICING_URL).catch(() => {}); }} style={styles.upsellPrimary}><Text style={styles.upsellPrimaryText}>{t('toyRoom.lockedPrimary')}</Text></Pressable>
+          <Pressable accessibilityRole="button" onPress={() => setLocked(null)} style={styles.upsellSecondary}><Text style={styles.upsellSecondaryText}>{t('toyRoom.lockedClose')}</Text></Pressable>
+        </Pressable>
+      </Pressable>}
+      </View>
     </Modal>
   </View>;
 }
@@ -282,4 +291,13 @@ const styles = StyleSheet.create({
   controls: { position: 'absolute', right: 10, top: 10, flexDirection: 'row', gap: 6 }, control: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFFCC', borderRadius: 22 }, controlText: { fontSize: 21, color: '#706452' },
   overlay: { flex: 1, backgroundColor: '#40372999', justifyContent: 'center', alignItems: 'center', padding: 20 }, adult: { backgroundColor: '#FFFCF5', borderRadius: 26, padding: 22, width: '100%', maxWidth: 590, maxHeight: '90%' }, adultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, adultTitle: { fontSize: 23, fontWeight: '800', color: '#584B40' }, adultNote: { fontSize: 14, color: '#756753', lineHeight: 22, marginVertical: 14 }, adultActions: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' }, adultButton: { backgroundColor: '#EFE7D9', padding: 14, borderRadius: 15 }, search: { padding: 14, borderWidth: 1, borderColor: '#D7CBBA', borderRadius: 14, marginVertical: 16, fontSize: 16 }, gameRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderColor: '#EEE6D9', gap: 8 }, gameText: { fontSize: 15, color: '#584B40', flexShrink: 1 },
   gameRowLocked: { opacity: 0.55 }, gameTextLocked: { color: '#8A7A63' }, lockedHint: { fontSize: 12, color: '#A07D2F', fontWeight: '700' },
+  upsellBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: '#2B2317B3', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  upsellCard: { backgroundColor: '#FFFCF5', borderRadius: 26, paddingVertical: 28, paddingHorizontal: 24, width: '100%', maxWidth: 380, alignItems: 'center' },
+  upsellIcon: { fontSize: 44 }, upsellTitle: { fontSize: 22, fontWeight: '800', color: '#584B40', marginTop: 8, textAlign: 'center' },
+  upsellText: { fontSize: 15, color: '#756753', lineHeight: 22, marginTop: 10, textAlign: 'center' },
+  upsellBenefit: { fontSize: 14, color: '#A07D2F', fontWeight: '700', lineHeight: 20, marginTop: 10, textAlign: 'center' },
+  upsellPrimary: { alignSelf: 'stretch', backgroundColor: '#3F7D72', paddingVertical: 14, borderRadius: 16, marginTop: 22, alignItems: 'center' },
+  upsellPrimaryText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  upsellSecondary: { alignSelf: 'stretch', paddingVertical: 12, marginTop: 6, alignItems: 'center' },
+  upsellSecondaryText: { color: '#756753', fontSize: 15, fontWeight: '700' },
 });

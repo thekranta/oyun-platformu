@@ -36,8 +36,14 @@
     "searchPlaceholder": "Search games…",
     "noGamesFound": "No game found with that name.",
     "lockedHint": "Unlocks with {{tier}}",
-    "lockedAlertTitle": "This game is locked 🔒",
-    "lockedAlertMessage": "\"{{game}}\" unlocks with the {{tier}} plan. You can review current plans at childhoodtech.com."
+    "lockedAlertTitle": "This game is locked",
+    "lockedAlertMessage": "\"{{game}}\" unlocks with the {{tier}} plan.",
+    "lockedBenefit": {
+      "filiz": "Filiz unlocks every Smart game and interactive value story.",
+      "fidan": "Fidan unlocks all 40+ original songs."
+    },
+    "lockedPrimary": "View plans",
+    "lockedClose": "Close"
   },
   "veli": {
     "loading": "Loading data...",

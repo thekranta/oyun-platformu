@@ -36,8 +36,14 @@
     "searchPlaceholder": "Oyun ara…",
     "noGamesFound": "Bu isimde bir oyun bulunamadı.",
     "lockedHint": "{{tier}} ile açılır",
-    "lockedAlertTitle": "Bu oyun kilitli 🔒",
-    "lockedAlertMessage": "\"{{game}}\" {{tier}} paketiyle açılıyor. Güncel paketleri childhoodtech.com adresinden inceleyebilirsiniz."
+    "lockedAlertTitle": "Bu oyun kilitli",
+    "lockedAlertMessage": "\"{{game}}\" {{tier}} paketiyle açılıyor.",
+    "lockedBenefit": {
+      "filiz": "Filiz ile tüm Akıllı oyunlar ve etkileşimli değer hikayeleri açılır.",
+      "fidan": "Fidan ile 40+ özel beste şarkının tamamı açılır."
+    },
+    "lockedPrimary": "Paketleri İncele",
+    "lockedClose": "Kapat"
   },
   "veli": {
     "loading": "Veriler yükleniyor...",
