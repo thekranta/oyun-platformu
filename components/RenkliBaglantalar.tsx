@@ -528,10 +528,6 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                         <Text style={styles.completeText}>Tüm topları patlattın!</Text>
                         <View style={styles.statsRow}>
                             <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Puan</Text>
-                                <Text style={styles.statValue}>{score}</Text>
-                            </View>
-                            <View style={styles.statBox}>
                                 <Text style={styles.statLabel}>Patlatma</Text>
                                 <Text style={styles.statValue}>{popCount}</Text>
                             </View>

@@ -13,6 +13,7 @@ import { speak } from '../services/speechService';
 // ============================================
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+const INSTRUCTION_TEXT = 'Kesik çizgileri parmağınla takip et, resmi adım adım çiz!';
 const CANVAS_BG = '#fffef9';
 const COLORS = ['#000000', '#ef476f', '#f78c6b', '#ffd166', '#06d6a0', '#118ab2', '#5f4b8b', '#8B4513'];
 const SIZES = [6, 12, 20];
@@ -146,7 +147,7 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
     <View style={styles.container}>
       {!gameReady && (
         <CountdownOverlay
-          message="Kesik çizgileri parmağınla takip et, resmi adım adım çiz!"
+          message={INSTRUCTION_TEXT}
           childName={childName}
           countdownSeconds={5}
           interaction="draw"
@@ -174,7 +175,7 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.stepText}>Adım {cur + 1}/{pic.steps.length}: {pic.steps[cur].text}</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(pic.steps[cur].text, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
         <Ionicons name="volume-high" size={20} color="#fff" />
         <Text style={styles.listenText}>Tekrar Dinle</Text>
       </TouchableOpacity>

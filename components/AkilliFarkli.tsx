@@ -26,6 +26,7 @@ interface Props {
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 7000;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+const INSTRUCTION_TEXT = 'Diğerlerinden farklı olan tek nesneyi bul! Sen başardıkça zorlaşır 📈';
 // Renk çemberi (hue sırası) — komşular benzer, karşıttlar çok farklı
 const PALETTE = ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣'];
 
@@ -128,7 +129,7 @@ export default function AkilliFarkli({ onGameEnd, onExit, childName = 'Küçük 
 
                 <Text style={styles.question}>Farklı olanı bul!</Text>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Farklı olanı bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
                     <Ionicons name="volume-high" size={20} color="#fff" />
                     <Text style={styles.listenText}>Tekrar Dinle</Text>
                 </TouchableOpacity>
@@ -166,7 +167,7 @@ export default function AkilliFarkli({ onGameEnd, onExit, childName = 'Küçük 
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Diğerlerinden farklı olan tek nesneyi bul! Sen başardıkça zorlaşır 📈"
+                    message={INSTRUCTION_TEXT}
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

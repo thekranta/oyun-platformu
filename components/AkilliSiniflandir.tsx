@@ -25,6 +25,7 @@ interface Props {
 }
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+const INSTRUCTION_TEXT = 'Nesneyi doğru gruba ayır! Sen başardıkça gruplar zorlaşır 📈';
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 7000;
 
@@ -161,7 +162,7 @@ export default function AkilliSiniflandir({ onGameEnd, onExit, childName = 'Kü�
 
                 <Text style={styles.question}>Bu hangi gruba ait?</Text>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu hangi gruba ait?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
                     <Ionicons name="volume-high" size={20} color="#fff" />
                     <Text style={styles.listenText}>Tekrar Dinle</Text>
                 </TouchableOpacity>
@@ -204,7 +205,7 @@ export default function AkilliSiniflandir({ onGameEnd, onExit, childName = 'Kü�
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Nesneyi doğru gruba ayır! Sen başardıkça gruplar zorlaşır 📈"
+                    message={INSTRUCTION_TEXT}
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

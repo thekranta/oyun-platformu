@@ -8,6 +8,7 @@ import JuicyProgressBar from './JuicyProgressBar';
 import { speak } from '../services/speechService';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+const INSTRUCTION_TEXT = 'Nesneleri doğru gruba ayır. Meyve mi, hayvan mı?';
 
 const GRUPLAMA_SORULARI = [
     { nesne: '🍎', kategori: 'Meyve' },
@@ -119,7 +120,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                 <View style={styles.header}><Text style={styles.baslik}>🍎 Gruplama</Text></View>
                 <Text style={styles.bilgi}>Bu nesne hangisi?</Text>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu nesne hangisi?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
                     <Ionicons name="volume-high" size={20} color="#fff" />
                     <Text style={styles.listenText}>Tekrar Dinle</Text>
                 </TouchableOpacity>
@@ -151,7 +152,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Nesneleri doğru gruba ayır. Meyve mi, hayvan mı?"
+                    message={INSTRUCTION_TEXT}
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}
                 />

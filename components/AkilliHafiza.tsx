@@ -24,6 +24,7 @@ interface Props {
 }
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+const INSTRUCTION_TEXT = 'Kartları çevir, aynı ikilileri hatırla ve eşleştir! Sen başardıkça zorlaşır 📈';
 const TOTAL_ROUNDS = 6;
 const ANIMALS = ['🐶', '🐱', '🐭', '🐰', '🦊', '🐻', '🐼', '🐸'];
 const PAIRS_BY_DIFF: Record<number, number> = { 1: 2, 2: 3, 3: 3, 4: 4, 5: 5 };
@@ -150,7 +151,7 @@ export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük 
 
                 <Text style={styles.question}>Aynı ikilileri bul 🧠</Text>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Aynı ikilileri bul', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
                     <Ionicons name="volume-high" size={20} color="#fff" />
                     <Text style={styles.listenText}>Tekrar Dinle</Text>
                 </TouchableOpacity>
@@ -183,7 +184,7 @@ export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük 
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Kartları çevir, aynı ikilileri hatırla ve eşleştir! Sen başardıkça zorlaşır 📈"
+                    message={INSTRUCTION_TEXT}
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

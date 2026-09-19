@@ -27,6 +27,7 @@ const TOTAL_ROUNDS = 9;
 const TARGET_MS = 9000;
 const OBJECT = '🍪';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+const INSTRUCTION_TEXT = 'Bazıları gitti! Kalanları say ve doğru sayıya dokun. Sen başardıkça zorlaşır 📈';
 
 const CFG: Record<number, { max: number; near: boolean }> = {
     1: { max: 4, near: false },
@@ -124,6 +125,7 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
         if (n === current.answer) {
             lockRef.current = true;
             setFeedback('correct');
+            speak('Aferin!');
             Animated.sequence([
                 Animated.timing(bump, { toValue: 1.15, duration: 140, useNativeDriver: true }),
                 Animated.timing(bump, { toValue: 1, duration: 140, useNativeDriver: true }),
@@ -155,7 +157,7 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
 
                 <Text style={styles.question}>Kaç tane kaldı?</Text>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Kaç tane kaldı?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
                     <Ionicons name="volume-high" size={20} color="#fff" />
                     <Text style={styles.listenText}>Tekrar Dinle</Text>
                 </TouchableOpacity>
@@ -197,7 +199,7 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
                 </View>
 
                 <Text style={styles.hint}>
-                    {feedback === 'correct' ? 'Harika! 🎉' : feedback === 'wrong' ? 'Kalanları tekrar say 👀' : 'Kalan (soluk olmayan) nesneleri say'}
+                    {feedback === 'correct' ? 'Harika! 🎉' : feedback === 'wrong' ? 'Kalanları tekrar say 👀' : ''}
                 </Text>
 
                 <View style={styles.progressDots}>
@@ -209,7 +211,7 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Bazıları gitti! Kalanları say ve doğru sayıya dokun. Sen başardıkça zorlaşır 📈"
+                    message={INSTRUCTION_TEXT}
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}
