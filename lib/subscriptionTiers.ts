@@ -90,9 +90,20 @@ export function combineGameTier(own: VeliTier, classTier: OgretmenTier | null | 
     return VELI_TIER_ORDER.indexOf(fromClass) > VELI_TIER_ORDER.indexOf(own) ? fromClass : own;
 }
 
+// Ücretsiz hesabın (subscription_tier='free') oynayabildiği başlangıç seti: 10 oyun, farklı alanlardan
+// (bulmaca, çizim, bellek, ritim, matematik ×2, harf, duygu, hareket/müzik, örüntü). Geri kalan tüm
+// sıradan oyunlar Tohum ister ("100+ oyuna tam erişim"). Çocuk odası ilk açılışta
+// TOY_ROOM_FIRST_GAMES'i sabit gösterir ve her oda grubunda en az bir açık oyun olmalı — bu
+// kısıtlar lib/freeTier.test.ts ile korunur; seti değiştirirken testi çalıştırın.
+export const FREE_GAME_IDS: ReadonlySet<string> = new Set([
+    'yapboz', 'yaratici-cizim', 'hafiza-2', 'davul-ustasi', 'siralama',
+    'eksik-sayi-bul', 'ilk-harf', 'duygu-yuzleri', 'muzik-durunca-don', 'diziyi-tamamla-3',
+]);
+
 /** Bir oyun kaydının (constants/gameCatalog.ts) gerektirdiği asgari veli paketini döndürür. */
-export function requiredVeliTierForGame(game: { adaptive?: boolean; status: string }): VeliTier {
+export function requiredVeliTierForGame(game: { id?: string; adaptive?: boolean; status: string }): VeliTier {
     if (game.status === 'music') return 'fidan';
     if (game.adaptive || game.status === 'story') return 'filiz';
-    return 'free';
+    if (game.id && FREE_GAME_IDS.has(game.id)) return 'free';
+    return 'tohum';
 }

@@ -39,6 +39,7 @@
     "lockedAlertTitle": "This game is locked",
     "lockedAlertMessage": "\"{{game}}\" unlocks with the {{tier}} plan.",
     "lockedBenefit": {
+      "tohum": "Tohum unlocks all 100+ games.",
       "filiz": "Filiz unlocks every Smart game and interactive value story.",
       "fidan": "Fidan unlocks all 40+ original songs."
     },
@@ -113,6 +114,8 @@
     "homeActivitiesTitle": "What to Do at Home?",
     "freePlanTitle": "Upgrade for More",
     "freePlanSubtitle": "Get all features with Filiz, Fidan and Orman!",
+    "freeTrialTitle": "Switch to Tohum for all games",
+    "freeTrialSubtitle": "The free account includes 10 games. Tohum unlocks all 100+ games.",
     "upgradeShort": "Upgrade 🚀",
     "gameHistoryTitle": "📅 Game History",
     "gameHistoryHint": "Tap a game to filter the detailed analysis and chart 👇",

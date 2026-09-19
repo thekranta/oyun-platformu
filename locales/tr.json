@@ -39,6 +39,7 @@
     "lockedAlertTitle": "Bu oyun kilitli",
     "lockedAlertMessage": "\"{{game}}\" {{tier}} paketiyle açılıyor.",
     "lockedBenefit": {
+      "tohum": "Tohum ile 100+ oyunun tamamı açılır.",
       "filiz": "Filiz ile tüm Akıllı oyunlar ve etkileşimli değer hikayeleri açılır.",
       "fidan": "Fidan ile 40+ özel beste şarkının tamamı açılır."
     },
@@ -113,6 +114,8 @@
     "homeActivitiesTitle": "Evde Ne Yapmalı?",
     "freePlanTitle": "Daha Fazlası İçin Yükselt",
     "freePlanSubtitle": "Filiz, Fidan ve Orman paketleriyle tüm özelliklere erişin!",
+    "freeTrialTitle": "Tüm oyunlar için Tohum'a geçin",
+    "freeTrialSubtitle": "Ücretsiz hesapta 10 oyun var. Tohum paketiyle 100+ oyunun tamamı açılır.",
     "upgradeShort": "Yükselt 🚀",
     "gameHistoryTitle": "📅 Oyun Geçmişi",
     "gameHistoryHint": "Detaylı analiz ve grafik filtrelemek için bir oyuna dokunun 👇",

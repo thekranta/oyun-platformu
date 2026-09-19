@@ -105,10 +105,16 @@ describe('getOgretmenFlags', () => {
 });
 
 describe('requiredVeliTierForGame', () => {
-    it('sıradan (core/secondary/creative) oyunlar free\'ye açık', () => {
-        expect(requiredVeliTierForGame({ status: 'core' })).toBe('free');
-        expect(requiredVeliTierForGame({ status: 'secondary' })).toBe('free');
-        expect(requiredVeliTierForGame({ status: 'creative' })).toBe('free');
+    it('ücretsiz başlangıç setindeki oyunlar free\'ye açık', () => {
+        expect(requiredVeliTierForGame({ id: 'yapboz', status: 'secondary' })).toBe('free');
+        expect(requiredVeliTierForGame({ id: 'siralama', status: 'core' })).toBe('free');
+        expect(requiredVeliTierForGame({ id: 'yaratici-cizim', status: 'creative' })).toBe('free');
+    });
+
+    it('sıradan ama ücretsiz sette olmayan oyunlar Tohum ister', () => {
+        expect(requiredVeliTierForGame({ id: 'labirent', status: 'secondary' })).toBe('tohum');
+        expect(requiredVeliTierForGame({ id: 'hafiza', status: 'core' })).toBe('tohum');
+        expect(requiredVeliTierForGame({ status: 'creative' })).toBe('tohum');
     });
 
     it('adaptive (Akıllı) oyunlar filiz gerektirir', () => {

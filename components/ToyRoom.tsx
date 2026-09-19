@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Animated, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
+import { TOY_ROOM_FIRST_GAMES, TOY_ROOM_GROUPS } from '@/constants/toyRoomLayout';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import { requiredVeliTierForGame, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
@@ -11,14 +12,8 @@ type Props = { name: string; muted: boolean; round: number; onShuffle: () => voi
 type ToyKind = 'puzzle' | 'paint' | 'animal' | 'drum' | 'blocks' | 'train' | 'crayons' | 'rabbit' | 'xylophone' | 'rings' | 'gift' | 'bear';
 const native = Platform.OS !== 'web';
 const allPlayable = GAME_CATALOG.filter(g => !!GAME_RENDERERS[g.routeKey]);
-const firstGames = ['yapboz', 'yaratici-cizim', 'hafiza-2', 'davul-ustasi', 'siralama'];
-const groups = [
-  ['bulmaca-yolu', 'dikkat-dalgasi', 'ani-kelebegi'],
-  ['renk-cayiri', 'harf-cicegi', 'sekil-goleti'],
-  ['kesif-kucaklamasi', 'masal-kovugu', 'arkadas-cicegi', 'duygu-pinari'],
-  ['ritim-kelebegi', 'kosu-kirazi', 'denge-dalgasi', 'can-elmasi'],
-  ['sayi-agaci'],
-];
+const firstGames = TOY_ROOM_FIRST_GAMES;
+const groups = TOY_ROOM_GROUPS;
 const TIER_LABELS: Record<VeliTier, string> = { free: 'Ücretsiz', tohum: 'Tohum', filiz: 'Filiz', fidan: 'Fidan', orman: 'Orman' };
 const PRICING_URL = 'https://childhoodtech.com/#pricing';
 const kinds: ToyKind[] = ['puzzle', 'paint', 'animal', 'drum', 'blocks'];
@@ -202,7 +197,9 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   }, []);
   const games = groups.map((group, i) => {
     const pool = playable.filter(g => group.includes(g.forestCategory) && g.id !== firstGames[i]);
-    return round === 0 ? playable.find(g => g.id === firstGames[i])! : pool[(round - 1) % pool.length];
+    // Havuz boşsa (kısıtlı pakette bir grupta açık oyun kalmadıysa) odayı çökertmek yerine sabit oyuna düş.
+    const first = playable.find(g => g.id === firstGames[i]) ?? playable[0];
+    return round === 0 || pool.length === 0 ? first : pool[(round - 1) % pool.length];
   });
   const portrait = bounds.height > bounds.width;
   const sceneWidth = portrait ? 400 : 1000;

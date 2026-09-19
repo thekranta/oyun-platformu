@@ -1437,10 +1437,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             {!flags.canSeeAiAnalysis && (
                                 <View style={styles.freeBanner}>
                                     <View style={styles.freeBannerContent}>
-                                        <Text style={styles.freeBannerEmoji}>🌿🌳🌲</Text>
+                                        <Text style={styles.freeBannerEmoji}>{effectiveTier === 'free' ? '🌱' : '🌿🌳🌲'}</Text>
                                         <View style={styles.freeBannerText}>
-                                            <Text style={styles.freeBannerTitle}>{t('veli.freePlanTitle')}</Text>
-                                            <Text style={styles.freeBannerSubtitle}>{t('veli.freePlanSubtitle')}</Text>
+                                            <Text style={styles.freeBannerTitle}>{t(effectiveTier === 'free' ? 'veli.freeTrialTitle' : 'veli.freePlanTitle')}</Text>
+                                            <Text style={styles.freeBannerSubtitle}>{t(effectiveTier === 'free' ? 'veli.freeTrialSubtitle' : 'veli.freePlanSubtitle')}</Text>
                                         </View>
                                     </View>
                                     <TouchableOpacity style={styles.freeBannerButton} onPress={openPricing}>
