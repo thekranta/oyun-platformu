@@ -7,6 +7,7 @@ import {
     Animated,
     Dimensions,
     Image,
+    Linking,
     Platform,
     ScrollView,
     StyleSheet,
@@ -28,6 +29,9 @@ import DynamicBackground from './DynamicBackground';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+
+const PRICING_URL = 'https://childhoodtech.com/#pricing';
+const openPricing = () => { Linking.openURL(PRICING_URL).catch(() => { }); };
 
 // RLS: okuma/yazma istekleri oturum jetonuyla gider (yoksa anon key'e düşer —
 // RLS açıkken anon istek veri döndürmez, sızdırmaz).
@@ -1182,7 +1186,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                         </Text>
                                         <TouchableOpacity
                                             style={[styles.analyzeButton, { backgroundColor: COLORS.premium }]}
-                                            onPress={() => Alert.alert(t('veli.upgradeAlertTitle'), t('veli.upgradeAlertMessage'))}
+                                            onPress={openPricing}
                                         >
                                             <Ionicons name="diamond" size={18} color="#fff" />
                                             <Text style={styles.analyzeButtonText}>{t('veli.upgradeButton')}</Text>
@@ -1433,13 +1437,13 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             {!flags.canSeeAiAnalysis && (
                                 <View style={styles.freeBanner}>
                                     <View style={styles.freeBannerContent}>
-                                        <Text style={styles.freeBannerEmoji}>🆓</Text>
+                                        <Text style={styles.freeBannerEmoji}>🌿🌳🌲</Text>
                                         <View style={styles.freeBannerText}>
                                             <Text style={styles.freeBannerTitle}>{t('veli.freePlanTitle')}</Text>
                                             <Text style={styles.freeBannerSubtitle}>{t('veli.freePlanSubtitle')}</Text>
                                         </View>
                                     </View>
-                                    <TouchableOpacity style={styles.freeBannerButton}>
+                                    <TouchableOpacity style={styles.freeBannerButton} onPress={openPricing}>
                                         <Text style={styles.freeBannerButtonText}>{t('veli.upgradeShort')}</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -2114,7 +2118,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     freeBannerEmoji: {
-        fontSize: 32,
+        fontSize: 24,
         marginRight: 12,
     },
     freeBannerText: {

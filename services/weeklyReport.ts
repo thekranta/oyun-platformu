@@ -354,11 +354,11 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
     <section class="sec">
       <div class="locked">
         <div class="locked-lock">🔒</div>
-        <div class="locked-kicker">Premium Rapor</div>
+        <div class="locked-kicker">Filiz ve Üzeri Paketlerde</div>
         <h3 class="locked-title">Detaylı Gelişim Analizi</h3>
-        <p class="locked-desc">Çocuğunuzun Maarif kazanımlarına göre ayrıntılı analizini, gelişim profilini ve eve özel önerileri Premium raporda bulabilirsiniz.</p>
+        <p class="locked-desc">Çocuğunuzun Maarif kazanımlarına göre ayrıntılı analizini, gelişim profilini ve eve özel önerileri Filiz, Fidan ve Orman paketlerindeki detaylı raporda bulabilirsiniz.</p>
         <ul class="locked-list">${lockedList.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-        <div class="locked-badge">Premium&apos;a Geçin</div>
+        <div class="locked-badge">Paketler: childhoodtech.com</div>
       </div>
     </section>`;
 
@@ -376,7 +376,7 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
     }
 
     const tierTag = premium
-        ? `<span class="tier tier-p">Premium Rapor</span>`
+        ? `<span class="tier tier-p">Detaylı Rapor</span>`
         : `<span class="tier tier-f">Özet Rapor</span>`;
 
     return `<!doctype html>
