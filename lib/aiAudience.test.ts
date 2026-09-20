@@ -47,6 +47,15 @@ describe('splitAnalysis', () => {
         expect(splitAnalysis('A\n---\n**veli bilgilendirme notu**\nmerhaba').parent).toBe('merhaba');
     });
 
+    it('işaret bölünmez boşluk / BOM ile yazılsa da tanınır (SQL eşi private.ai_academic_part aynısını yapar)', () => {
+        for (const ch of [' ', ' ', ' ', '﻿', '　']) {
+            const p = splitAnalysis(`Akademik.\n\n---\n\n**VELİ${ch}BİLGİLENDİRME${ch}NOTU**\nDeğerli Velimiz, merhaba.`);
+            expect(p.marked).toBe(true);
+            expect(p.academic).toBe('Akademik.');
+            expect(p.parent).toBe('Değerli Velimiz, merhaba.');
+        }
+    });
+
     it('işaret aynı satırda devam metniyle gelirse metin kaybolmaz', () => {
         const p = splitAnalysis('Akademik.\n\n**VELİ BİLGİLENDİRME NOTU:** Değerli Velimiz, merhaba.');
         expect(p.parent).toBe('Değerli Velimiz, merhaba.');
