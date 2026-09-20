@@ -187,14 +187,17 @@ export class ReportEngine {
      * Calculate radar chart data from game history
      */
     private static calculateRadarData(games: GameData[]): RadarChartPoint[] {
+        // Supabase, ölçülmeyen sütunları undefined değil null döndürür (gameResults.ts `?? null` yazar).
+        // `!== undefined` null'ı "ölçülmüş 0" sayıp Görsel Dikkat'i 0, Tepki Hızı'nı 100 gösteriyordu;
+        // ölçülmüş = `!= null` (0 geçerli bir ölçümdür).
         // Visual Attention - from visual_attention_score or error rate
-        const visualGames = games.filter(g => g.visual_attention_score !== undefined);
+        const visualGames = games.filter(g => g.visual_attention_score != null);
         const visualScore = visualGames.length > 0
             ? visualGames.reduce((sum, g) => sum + (g.visual_attention_score || 0), 0) / visualGames.length
             : this.calculateFromErrorRate(games, true);
 
         // Response Speed - from response_time (lower is better)
-        const responseGames = games.filter(g => g.response_time !== undefined);
+        const responseGames = games.filter(g => g.response_time != null);
         const avgResponseTime = responseGames.length > 0
             ? responseGames.reduce((sum, g) => sum + (g.response_time || 0), 0) / responseGames.length
             : 3000; // default 3 seconds
@@ -238,7 +241,7 @@ export class ReportEngine {
 
     private static calculateProblemSolving(games: GameData[]): number {
         // Based on level progression
-        const levelGames = games.filter(g => g.seviye !== undefined);
+        const levelGames = games.filter(g => g.seviye != null);
         if (levelGames.length === 0) return 50;
 
         const avgLevel = levelGames.reduce((sum, g) => sum + (g.seviye || 1), 0) / levelGames.length;
