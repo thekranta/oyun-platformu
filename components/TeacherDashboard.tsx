@@ -19,6 +19,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { teacherView } from '../lib/aiAudience';
+import InAppNotice from './InAppNotice';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
 
@@ -52,6 +53,12 @@ const showAlert = (title: string, message: string, buttons?: Array<{ text: strin
     }
 };
 
+// Sunucu fonksiyonu henüz yoksa (SQL çalıştırılmadıysa) PostgREST PGRST202 döner: eski okuma yoluna düşülür.
+const isMissingFunction = (error: { code?: string; message?: string } | null | undefined) =>
+    !!error && (error.code === 'PGRST202' || /Could not find the function|schema cache/i.test(error.message || ''));
+
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
 interface TeacherDashboardProps {
     teacherId: string;
     teacherName: string;
@@ -69,17 +76,24 @@ interface ClassData {
     emoji: string;
 }
 
+type EnrolStatus = 'pending' | 'accepted' | 'suspended';
+
 interface StudentData {
     id: string;
     child_name: string;
-    child_age_months: number;
+    child_age_months: number | null;
     email: string;
     gameCount: number;
+    /** Sunucudan gelen kayıt durumu; eski yolda (fonksiyon yokken) tanımsız = onaylı. */
+    status?: EnrolStatus;
+    /** Birden çok çocuklu hesap: kardeş ayrımı gelene kadar görüntülenmez. */
+    hidden?: boolean;
 }
 
 interface StudentPreview {
-    child_name: string;
-    child_age_months: number;
+    /** NULL: önizleme yalnız e-postayı doğrular (çocuk bilgisi yok: ücretsiz öğretmen / kayıtsız / engelli). */
+    child_name: string | null;
+    child_age_months: number | null;
     email: string;
 }
 
@@ -90,6 +104,8 @@ interface GameScore {
     hamle_sayisi: number;
     hata_sayisi: number;
     sure?: number;
+    correct_answers?: number | null;
+    cizim_verisi?: unknown;
     yapay_zeka_yorumu?: string;
 }
 
@@ -121,6 +137,7 @@ export default function TeacherDashboard({
     const [studentPreview, setStudentPreview] = useState<StudentPreview | null>(null);
     const [searchingStudent, setSearchingStudent] = useState(false);
     const [analyzingId, setAnalyzingId] = useState<number | null>(null);
+    const [notice, setNotice] = useState<string | null>(null);
 
     const effectiveTier = getEffectiveOgretmenTier(subscriptionTier, packageExpiresAt);
     const flags = getOgretmenFlags(effectiveTier);
@@ -181,6 +198,26 @@ export default function TeacherDashboard({
             return;
         }
 
+        // Yeni yol: yalnız gereken alanları veren sunucu fonksiyonu (onay durumu dahil).
+        const roster = await supabase.rpc('teacher_class_roster', { p_class_id: classId });
+        if (!roster.error && Array.isArray(roster.data)) {
+            setStudents(roster.data.map((r: any) => ({
+                id: r.student_id,
+                child_name: r.child_name ?? '',
+                child_age_months: r.child_age_months ?? null,
+                email: r.student_email,
+                gameCount: Number(r.game_count ?? 0),
+                status: r.status as EnrolStatus,
+                hidden: !!r.hidden,
+            })));
+            return;
+        }
+        if (roster.error && !isMissingFunction(roster.error)) {
+            console.error('Öğrenciler yüklenirken hata:', roster.error);
+            return;
+        }
+
+        // Eski yol (sunucu fonksiyonu yoksa)
         try {
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/class_students?class_id=eq.${classId}&select=child_email`,
@@ -236,8 +273,8 @@ export default function TeacherDashboard({
             const data = await response.json();
             if (Array.isArray(data) && data.length > 0) {
                 setStudentPreview({
-                    child_name: data[0].child_name,
-                    child_age_months: data[0].child_age_months,
+                    child_name: data[0].child_name ?? null,
+                    child_age_months: data[0].child_age_months ?? null,
                     email: data[0].email,
                 });
             } else {
@@ -250,7 +287,7 @@ export default function TeacherDashboard({
         }
     };
 
-    const fetchStudentScores = async (studentName: string, studentAge: number) => {
+    const fetchStudentScores = async (student: StudentData) => {
         if (teacherId === 'demo-teacher') {
             setStudentScores([
                 { id: 1, created_at: new Date().toISOString(), oyun_turu: 'hafiza', hamle_sayisi: 12, hata_sayisi: 2, sure: 45 },
@@ -259,6 +296,30 @@ export default function TeacherDashboard({
             return;
         }
 
+        // Yeni yol: yalnız onaylı kayıt için, yalnız gereken kolonlar; yapay zekâ yorumunun yalnız AKADEMİK kısmı.
+        const rpc = await supabase.rpc('teacher_student_scores', { p_student_id: student.id, p_limit: 20 });
+        if (!rpc.error && Array.isArray(rpc.data)) {
+            setStudentScores(rpc.data.map((r: any) => ({
+                id: r.score_id,
+                created_at: r.created_at,
+                oyun_turu: r.oyun_turu,
+                hamle_sayisi: r.hamle_sayisi,
+                hata_sayisi: r.hata_sayisi,
+                sure: r.sure ?? undefined,
+                correct_answers: r.correct_answers,
+                cizim_verisi: r.cizim_verisi,
+                yapay_zeka_yorumu: r.ai_akademik ?? undefined,
+            })));
+            return;
+        }
+        if (rpc.error && !isMissingFunction(rpc.error)) {
+            console.error('Skorlar yüklenirken hata:', rpc.error);
+            return;
+        }
+
+        // Eski yol (sunucu fonksiyonu yoksa)
+        const studentName = student.child_name;
+        const studentAge = student.child_age_months;
         try {
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/oyun_skorlari?ogrenci_adi=eq.${encodeURIComponent(studentName)}&ogrenci_yasi=eq.${studentAge}&order=created_at.desc&limit=20`,
@@ -279,8 +340,10 @@ export default function TeacherDashboard({
     };
 
     const handleStudentSelect = (student: StudentData) => {
+        // Onaylanmamış / askıdaki / kardeşli kayıtta gösterilecek veri yoktur (durum rozeti açıklar).
+        if ((student.status && student.status !== 'accepted') || student.hidden) return;
         setSelectedStudent(student);
-        fetchStudentScores(student.child_name, student.child_age_months);
+        fetchStudentScores(student);
     };
 
     const handleAddClass = async () => {
@@ -377,7 +440,7 @@ export default function TeacherDashboard({
         if (teacherId === 'demo-teacher') {
             setStudents([...students, {
                 id: `demo-${Date.now()}`,
-                child_name: studentPreview.child_name,
+                child_name: studentPreview.child_name ?? '',
                 child_age_months: studentPreview.child_age_months,
                 email: studentPreview.email,
                 gameCount: 0,
@@ -405,16 +468,27 @@ export default function TeacherDashboard({
                 setNewStudentEmail('');
                 setStudentPreview(null);
                 setShowAddStudentModal(false);
+                setNotice(flags.canSeeAiAnalysis ? t('teacher.addedPaid') : t('teacher.addedFree'));
+                return;
             }
+            // Sunucunun hata kodlarını uygulama içi mesaja çevir (sessiz başarısızlık yok).
+            const body: any = await response.json().catch(() => ({}));
+            const msg = String(body?.message || '') + ' ' + String(body?.details || '');
+            if (msg.includes('class_enroll_blocked')) setNotice(t('teacher.enrollBlocked'));
+            else if (msg.includes('class_student_limit')) setNotice(t('teacher.studentLimitMessage'));
+            else if (msg.includes('invalid_email') || msg.includes('class_students_email_format')) setNotice(t('teacher.invalidEmail'));
+            else if (response.status === 409 || msg.includes('duplicate key')) setNotice(t('teacher.alreadyInClass'));
+            else setNotice(t('teacher.addFailed'));
         } catch (error) {
             console.error('Öğrenci eklenirken hata:', error);
+            setNotice(t('teacher.addFailed'));
         }
     };
 
     const handleRemoveStudent = (student: StudentData) => {
         showAlert(
             t('teacher.removeStudentTitle'),
-            t('teacher.removeStudentMessage', { name: student.child_name }),
+            t('teacher.removeStudentMessage', { name: student.child_name || student.email }),
             [
                 { text: t('teacher.cancel'), style: 'cancel' },
                 {
@@ -480,7 +554,8 @@ export default function TeacherDashboard({
         return map[turu] || turu;
     };
 
-    const getAgeText = (months: number) => {
+    const getAgeText = (months: number | null | undefined) => {
+        if (months == null) return '';
         const years = Math.floor(months / 12);
         const m = months % 12;
         return m > 0 ? t('teacher.ageYearsMonths', { years, months: m }) : t('teacher.ageYearsOnly', { years });
@@ -596,24 +671,42 @@ export default function TeacherDashboard({
                             </View>
                         ) : (
                             <View style={styles.studentsList}>
-                                {students.map((s) => (
+                                {students.some(s => s.status === 'pending') && (
+                                    <View style={styles.pendingHintBox}>
+                                        <Text style={styles.pendingHintText}>{t('teacher.pendingHint')}</Text>
+                                    </View>
+                                )}
+                                {students.map((s) => {
+                                    const lockedLabel = s.hidden
+                                        ? t('teacher.statusHidden')
+                                        : s.status === 'pending'
+                                            ? t('teacher.statusPending')
+                                            : s.status === 'suspended'
+                                                ? t('teacher.statusSuspended')
+                                                : null;
+                                    return (
                                     <View key={s.id} style={styles.studentCardWrapper}>
                                         <TouchableOpacity
-                                            style={[styles.studentCard, selectedStudent?.id === s.id && styles.studentCardSelected]}
+                                            style={[styles.studentCard, selectedStudent?.id === s.id && styles.studentCardSelected, !!lockedLabel && styles.studentCardLocked]}
                                             onPress={() => handleStudentSelect(s)}
+                                            activeOpacity={lockedLabel ? 1 : 0.7}
                                         >
                                             <View style={styles.studentAvatar}>
                                                 <Text style={styles.studentAvatarText}>
-                                                    {s.child_age_months < 48 ? '👶' : s.child_age_months < 60 ? '👦' : '🧒'}
+                                                    {lockedLabel ? '⏳' : (s.child_age_months ?? 60) < 48 ? '👶' : (s.child_age_months ?? 60) < 60 ? '👦' : '🧒'}
                                                 </Text>
                                             </View>
                                             <View style={styles.studentInfo}>
-                                                <Text style={styles.studentName}>{s.child_name}</Text>
-                                                <Text style={styles.studentAge}>{getAgeText(s.child_age_months)}</Text>
+                                                <Text style={styles.studentName}>{s.child_name || s.email}</Text>
+                                                {lockedLabel
+                                                    ? <Text style={styles.statusBadgeText}>{lockedLabel}</Text>
+                                                    : <Text style={styles.studentAge}>{getAgeText(s.child_age_months)}</Text>}
                                             </View>
-                                            <View style={styles.gamesBadge}>
-                                                <Text style={styles.gamesBadgeText}>🎮 {s.gameCount}</Text>
-                                            </View>
+                                            {!lockedLabel && (
+                                                <View style={styles.gamesBadge}>
+                                                    <Text style={styles.gamesBadgeText}>🎮 {s.gameCount}</Text>
+                                                </View>
+                                            )}
                                         </TouchableOpacity>
                                         <TouchableOpacity
                                             style={styles.removeStudentBtn}
@@ -622,7 +715,8 @@ export default function TeacherDashboard({
                                             <Ionicons name="close-circle" size={24} color="#FF6B6B" />
                                         </TouchableOpacity>
                                     </View>
-                                ))}
+                                    );
+                                })}
                             </View>
                         )}
                     </View>
@@ -848,7 +942,7 @@ export default function TeacherDashboard({
                                 <Text style={styles.searchingText}>{t('teacher.searching')}</Text>
                             </View>
                         )}
-                        {studentPreview && (
+                        {studentPreview && studentPreview.child_name && (
                             <View style={styles.previewCard}>
                                 <Text style={styles.previewEmoji}>✅</Text>
                                 <View>
@@ -857,10 +951,18 @@ export default function TeacherDashboard({
                                 </View>
                             </View>
                         )}
+                        {studentPreview && !studentPreview.child_name && (
+                            <View style={styles.previewCard}>
+                                <Text style={styles.previewEmoji}>✉️</Text>
+                                <Text style={[styles.previewAge, { flex: 1 }]}>
+                                    {flags.canSeeAiAnalysis ? t('teacher.previewNeutralPaid') : t('teacher.previewNeutralFree')}
+                                </Text>
+                            </View>
+                        )}
                         {newStudentEmail.includes('@') && !searchingStudent && !studentPreview && newStudentEmail.length > 5 && (
                             <View style={styles.notFoundCard}>
                                 <Text style={styles.notFoundEmoji}>❌</Text>
-                                <Text style={styles.notFoundText}>{t('teacher.noRegisteredStudent')}</Text>
+                                <Text style={styles.notFoundText}>{EMAIL_RE.test(newStudentEmail.trim()) ? t('teacher.noRegisteredStudent') : t('teacher.invalidEmail')}</Text>
                             </View>
                         )}
                         <View style={styles.modalBtnRow}>
@@ -881,12 +983,17 @@ export default function TeacherDashboard({
                     </View>
                 </View>
             </Modal>
+            <InAppNotice message={notice} onDismiss={() => setNotice(null)} />
         </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFF9F0' },
+    studentCardLocked: { opacity: 0.75, backgroundColor: '#FFF6E5' },
+    statusBadgeText: { fontSize: 12, fontWeight: '600', color: '#B26A00', marginTop: 2 },
+    pendingHintBox: { backgroundColor: '#FFF3D6', borderRadius: 12, padding: 12, marginBottom: 12, borderWidth: 1, borderColor: '#FFE0A3' },
+    pendingHintText: { fontSize: 13, color: '#7A5200', lineHeight: 18 },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF9F0' },
     loadingEmoji: { fontSize: 64, marginBottom: 20 },
     loadingLogo: { width: 80, height: 80, borderRadius: 18, marginBottom: 20 },

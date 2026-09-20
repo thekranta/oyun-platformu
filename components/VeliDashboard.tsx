@@ -127,6 +127,19 @@ ChildhoodTech Ekibi
     }
 };
 
+/** Sınıf davetleri (sunucu fonksiyonu my_class_invites): supabase_migrations/add_class_consent.sql */
+interface ClassInvite {
+    invite_id: string;
+    status: 'pending' | 'accepted' | 'suspended';
+    class_name: string | null;
+    teacher_name: string | null;
+    teacher_email: string | null;
+    school_name: string | null;
+    teacher_is_paid: boolean;
+    added_at: string;
+    accepted_via: 'legacy' | 'package' | 'parent' | null;
+}
+
 interface VeliDashboardProps {
     childName: string;
     childAge: number;
@@ -233,6 +246,40 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         fetchClassGameTier().then((r) => { if (!cancelled && r) setClassGameTier(r); });
         return () => { cancelled = true; };
     }, []);
+    // Sınıf davetleri: bir öğretmen çocuğu sınıfına eklemek istediğinde velinin onayı/reddi.
+    // Fonksiyon henüz yoksa ya da oturum yoksa (demo) hata sessizce yutulur ve kart hiç görünmez.
+    const [classInvites, setClassInvites] = useState<ClassInvite[]>([]);
+    const [inviteBusy, setInviteBusy] = useState<string | null>(null);
+    const [inviteConfirm, setInviteConfirm] = useState<string | null>(null);
+    const loadClassInvites = async () => {
+        try {
+            const { data, error } = await supabase.rpc('my_class_invites');
+            if (!error && Array.isArray(data)) setClassInvites(data as ClassInvite[]);
+        } catch {
+            /* sessiz */
+        }
+    };
+    useEffect(() => {
+        loadClassInvites();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [email]);
+    const respondInvite = async (invite: ClassInvite, accept: boolean) => {
+        setInviteBusy(invite.invite_id);
+        setInviteConfirm(null);
+        try {
+            const { error } = await supabase.rpc('respond_class_invite', { p_id: invite.invite_id, p_accept: accept });
+            if (error) {
+                setReportNotice(t('veli.classInvites.error'));
+            } else {
+                setReportNotice(accept ? t('veli.classInvites.approved') : t('veli.classInvites.rejected'));
+                await loadClassInvites();
+            }
+        } catch {
+            setReportNotice(t('veli.classInvites.error'));
+        } finally {
+            setInviteBusy(null);
+        }
+    };
     const [generatingPDF, setGeneratingPDF] = useState(false);
     // Öğretmen özeti ayrı bayrak: yüklenirken çark kendi kartında görünsün (veli PDF kartı çökmesin).
     const [generatingTeacher, setGeneratingTeacher] = useState(false);
@@ -902,6 +949,81 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             </View>
                         </View>
                     </Animated.View>
+
+                    {/* Sınıf davetleri: öğretmenin çocuğu sınıfına ekleme isteği / mevcut sınıf bağlantıları */}
+                    {classInvites.length > 0 && (
+                        <View style={styles.inviteCard}>
+                            <Text style={styles.inviteTitle}>🏫 {t('veli.classInvites.title')}</Text>
+                            <Text style={styles.inviteIntro}>{t('veli.classInvites.intro')}</Text>
+                            {classInvites.map((inv) => {
+                                const busy = inviteBusy === inv.invite_id;
+                                const confirming = inviteConfirm === inv.invite_id;
+                                const registeredTeacher = !!(inv.teacher_name || inv.teacher_email);
+                                const canApprove = inv.status === 'pending' || inv.status === 'suspended';
+                                const meta = [inv.school_name, inv.class_name ? t('veli.classInvites.className', { name: inv.class_name }) : null]
+                                    .filter(Boolean).join(' · ');
+                                return (
+                                    <View key={inv.invite_id} style={[styles.inviteItem, inv.status === 'pending' && styles.inviteItemPending]}>
+                                        <View style={styles.inviteHeaderRow}>
+                                            <Text style={styles.inviteTeacher} numberOfLines={2}>
+                                                {inv.teacher_name || inv.teacher_email || t('veli.classInvites.unknownTeacher')}
+                                            </Text>
+                                            <View style={[styles.inviteBadge, inv.status === 'accepted' && styles.inviteBadgeOk]}>
+                                                <Text style={styles.inviteBadgeText}>
+                                                    {inv.status === 'pending'
+                                                        ? t('veli.classInvites.pendingBadge')
+                                                        : inv.status === 'accepted'
+                                                            ? t('veli.classInvites.acceptedBadge')
+                                                            : t('veli.classInvites.suspendedBadge')}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                        {!!meta && <Text style={styles.inviteMeta} numberOfLines={2}>{meta}</Text>}
+                                        {!!inv.teacher_email && inv.teacher_name ? <Text style={styles.inviteMeta}>{inv.teacher_email}</Text> : null}
+                                        {registeredTeacher
+                                            ? <Text style={styles.inviteMetaSmall}>{inv.teacher_is_paid ? `✓ ${t('veli.classInvites.paidTeacher')} · ` : ''}{t('veli.classInvites.selfDeclared')}</Text>
+                                            : <Text style={styles.inviteWarn}>⚠️ {t('veli.classInvites.unverifiedTeacher')}</Text>}
+                                        {inv.status === 'accepted' && inv.accepted_via === 'package' && (
+                                            <Text style={styles.inviteMetaSmall}>{t('veli.classInvites.acceptedByPackage')}</Text>
+                                        )}
+                                        {inv.status === 'suspended' && (
+                                            <Text style={styles.inviteMetaSmall}>{t('veli.classInvites.suspendedText')}</Text>
+                                        )}
+
+                                        {busy ? (
+                                            <ActivityIndicator size="small" color={COLORS.primary} style={{ marginTop: 10 }} />
+                                        ) : confirming ? (
+                                            <View style={styles.inviteConfirmBox}>
+                                                <Text style={styles.inviteConfirmTitle}>{t('veli.classInvites.confirmTitle')}</Text>
+                                                <Text style={styles.inviteMetaSmall}>{t('veli.classInvites.confirmText')}</Text>
+                                                <View style={styles.inviteBtnRow}>
+                                                    <TouchableOpacity style={[styles.inviteBtn, styles.inviteBtnDanger]} onPress={() => respondInvite(inv, false)} accessibilityRole="button">
+                                                        <Text style={[styles.inviteBtnText, styles.inviteBtnTextLight]}>{t('veli.classInvites.confirmYes')}</Text>
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity style={styles.inviteBtn} onPress={() => setInviteConfirm(null)} accessibilityRole="button">
+                                                        <Text style={styles.inviteBtnText}>{t('veli.classInvites.confirmNo')}</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </View>
+                                        ) : (
+                                            <View style={styles.inviteBtnRow}>
+                                                {canApprove && (
+                                                    <TouchableOpacity style={[styles.inviteBtn, styles.inviteBtnPrimary]} onPress={() => respondInvite(inv, true)} accessibilityRole="button">
+                                                        <Text style={[styles.inviteBtnText, styles.inviteBtnTextLight]}>{t('veli.classInvites.approve')}</Text>
+                                                    </TouchableOpacity>
+                                                )}
+                                                <TouchableOpacity style={styles.inviteBtn} onPress={() => setInviteConfirm(inv.invite_id)} accessibilityRole="button">
+                                                    <Text style={styles.inviteBtnText}>
+                                                        {inv.status === 'accepted' ? t('veli.classInvites.leave') : t('veli.classInvites.reject')}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+                                    </View>
+                                );
+                            })}
+                        </View>
+                    )}
 
                     {/* Tab Navigation - Simplified to 2 tabs */}
                     <View style={styles.tabContainer}>
@@ -2750,6 +2872,50 @@ const styles = StyleSheet.create({
         marginTop: 4,
         lineHeight: 18,
     },
+
+    // Sınıf davetleri kartı
+    inviteCard: {
+        backgroundColor: COLORS.card,
+        borderRadius: 20,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 2,
+        borderColor: COLORS.secondary,
+    },
+    inviteTitle: { fontSize: 17, fontWeight: 'bold', color: COLORS.text },
+    inviteIntro: { fontSize: 13, color: COLORS.textLight, lineHeight: 19, marginTop: 6, marginBottom: 10 },
+    inviteItem: {
+        backgroundColor: '#fff',
+        borderRadius: 14,
+        padding: 12,
+        marginTop: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(96,125,139,0.25)',
+    },
+    inviteItemPending: { borderColor: COLORS.secondary, backgroundColor: '#FFFBEA' },
+    inviteHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+    inviteTeacher: { flex: 1, fontSize: 15, fontWeight: '700', color: COLORS.text },
+    inviteBadge: { backgroundColor: '#FFE082', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 },
+    inviteBadgeOk: { backgroundColor: '#C8E6C9' },
+    inviteBadgeText: { fontSize: 11, fontWeight: '700', color: COLORS.text },
+    inviteMeta: { fontSize: 13, color: COLORS.text, marginTop: 4 },
+    inviteMetaSmall: { fontSize: 12, color: COLORS.textLight, marginTop: 4, lineHeight: 17 },
+    inviteWarn: { fontSize: 12, color: '#B23B00', fontWeight: '600', marginTop: 4, lineHeight: 17 },
+    inviteBtnRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
+    inviteBtn: {
+        paddingVertical: 9,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        borderWidth: 1.5,
+        borderColor: 'rgba(96,125,139,0.5)',
+        backgroundColor: '#fff',
+    },
+    inviteBtnPrimary: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+    inviteBtnDanger: { backgroundColor: '#D32F2F', borderColor: '#D32F2F' },
+    inviteBtnText: { fontSize: 14, fontWeight: '700', color: COLORS.text },
+    inviteBtnTextLight: { color: '#fff' },
+    inviteConfirmBox: { marginTop: 10, padding: 10, borderRadius: 12, backgroundColor: '#FFF3E0' },
+    inviteConfirmTitle: { fontSize: 14, fontWeight: '700', color: COLORS.text },
 
     // Sayfa içi rapor bildirimi (web'de Alert.alert boş işlem olduğu için)
     reportNoticeWrap: {
