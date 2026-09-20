@@ -10,15 +10,17 @@ export interface VeliFeatureFlags {
     canDownloadDetailedPdf: boolean;
     canShareCard: boolean;
     canSeePastGameAiComment: boolean;
+    /** Fidan+: çocuğun gelişim özetini öğretmene yönelik ayrı bir rapor olarak hazırlayıp paylaşabilir. */
+    canShareWithTeacher: boolean;
     maxChildProfiles: number;
 }
 
 export const VELI_TIER_FLAGS: Record<VeliTier, VeliFeatureFlags> = {
-    free: { canSeeAiAnalysis: false, canDownloadDetailedPdf: false, canShareCard: false, canSeePastGameAiComment: false, maxChildProfiles: 1 },
-    tohum: { canSeeAiAnalysis: false, canDownloadDetailedPdf: false, canShareCard: false, canSeePastGameAiComment: false, maxChildProfiles: 1 },
-    filiz: { canSeeAiAnalysis: true, canDownloadDetailedPdf: true, canShareCard: true, canSeePastGameAiComment: true, maxChildProfiles: 1 },
-    fidan: { canSeeAiAnalysis: true, canDownloadDetailedPdf: true, canShareCard: true, canSeePastGameAiComment: true, maxChildProfiles: 2 },
-    orman: { canSeeAiAnalysis: true, canDownloadDetailedPdf: true, canShareCard: true, canSeePastGameAiComment: true, maxChildProfiles: Infinity },
+    free: { canSeeAiAnalysis: false, canDownloadDetailedPdf: false, canShareCard: false, canSeePastGameAiComment: false, canShareWithTeacher: false, maxChildProfiles: 1 },
+    tohum: { canSeeAiAnalysis: false, canDownloadDetailedPdf: false, canShareCard: false, canSeePastGameAiComment: false, canShareWithTeacher: false, maxChildProfiles: 1 },
+    filiz: { canSeeAiAnalysis: true, canDownloadDetailedPdf: true, canShareCard: true, canSeePastGameAiComment: true, canShareWithTeacher: false, maxChildProfiles: 1 },
+    fidan: { canSeeAiAnalysis: true, canDownloadDetailedPdf: true, canShareCard: true, canSeePastGameAiComment: true, canShareWithTeacher: true, maxChildProfiles: 2 },
+    orman: { canSeeAiAnalysis: true, canDownloadDetailedPdf: true, canShareCard: true, canSeePastGameAiComment: true, canShareWithTeacher: true, maxChildProfiles: Infinity },
 };
 
 export interface OgretmenFeatureFlags {

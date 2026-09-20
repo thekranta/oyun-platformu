@@ -69,6 +69,15 @@ describe('getVeliFlags', () => {
         }
     });
 
+    it('öğretmenle rapor paylaşımı yalnız Fidan ve üzerinde (Filiz\'de değil)', () => {
+        expect(getVeliFlags('free').canShareWithTeacher).toBe(false);
+        expect(getVeliFlags('tohum').canShareWithTeacher).toBe(false);
+        expect(getVeliFlags('filiz').canShareWithTeacher).toBe(false);
+        expect(getVeliFlags('fidan').canShareWithTeacher).toBe(true);
+        expect(getVeliFlags('orman').canShareWithTeacher).toBe(true);
+        expect(getVeliFlags(null).canShareWithTeacher).toBe(false);
+    });
+
     it('çocuk profili limiti tier arttıkça artar', () => {
         expect(getVeliFlags('tohum').maxChildProfiles).toBe(1);
         expect(getVeliFlags('fidan').maxChildProfiles).toBe(2);

@@ -20,7 +20,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { ReportEngine } from '../services/ReportEngine';
-import { buildWeeklyReport, buildWeeklyReportHTML } from '../services/weeklyReport';
+import { buildWeeklyReport, buildWeeklyReportHTML, ReportAudience } from '../services/weeklyReport';
 import { getGameDisplay } from '../lib/gameDisplay';
 import { supabase } from '../lib/supabase';
 import { asset } from '../lib/assetMap';
@@ -231,6 +231,15 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         return () => { cancelled = true; };
     }, []);
     const [generatingPDF, setGeneratingPDF] = useState(false);
+    // Öğretmen özeti ayrı bayrak: yüklenirken çark kendi kartında görünsün (veli PDF kartı çökmesin).
+    const [generatingTeacher, setGeneratingTeacher] = useState(false);
+    // react-native-web'de Alert.alert boş işlemdir; web'de rapor uyarıları bu sayfa içi karta düşer.
+    const [reportNotice, setReportNotice] = useState<string | null>(null);
+    useEffect(() => {
+        if (!reportNotice) return;
+        const id = setTimeout(() => setReportNotice(null), 6000);
+        return () => clearTimeout(id);
+    }, [reportNotice]);
     const [aiReportExpanded, setAiReportExpanded] = useState(false);
     const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
 
@@ -524,33 +533,46 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     // Haftalık Gelişim Raporu — güvenilir yazdırma tabanlı PDF (tarayıcı motoru).
     // jsPDF/CDN yerine tarayıcının kendi yazdırma motorunu kullanır: Türkçe + emoji
     // kusursuz, çevrimdışı çalışır, "PDF olarak kaydet" ile indirilir.
-    const handleDownloadPDF = async () => {
+    const openReport = async (audience: ReportAudience) => {
+        // Öğretmen özeti Fidan+ özelliği; kart zaten kilitli gösterir, bu ikinci kapı.
+        // Kilitliyken "önce oyun oynayın" uyarısı yerine doğrudan paket sayfasına gider.
+        if (audience === 'teacher' && !flags.canShareWithTeacher) {
+            openPricing();
+            return;
+        }
+        if (generatingPDF || generatingTeacher) return;
+        setReportNotice(null);
+        const setBusy = audience === 'teacher' ? setGeneratingTeacher : setGeneratingPDF;
+        const notify = (title: string, message: string) => {
+            if (Platform.OS === 'web') setReportNotice(message);
+            else Alert.alert(title, message);
+        };
         if (scores.length === 0) {
-            Alert.alert(t('veli.infoTitle'), t('veli.pdfNeedsGamesMessage'));
+            notify(t('veli.infoTitle'), t('veli.pdfNeedsGamesMessage'));
             return;
         }
 
         if (Platform.OS !== 'web') {
-            setGeneratingPDF(true);
+            setBusy(true);
             try {
-                const html = buildWeeklyReportHTML(weekly, flags.canDownloadDetailedPdf);
+                const html = buildWeeklyReportHTML(weekly, flags.canDownloadDetailedPdf, audience);
                 const { uri } = await Print.printToFileAsync({ html });
                 await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: t('veli.pdfShareDialogTitle') });
             } catch (error) {
                 console.error('PDF oluşturma hatası (native):', error);
-                Alert.alert(t('veli.pdfGenericErrorTitle'), t('veli.pdfGenericErrorMessage'));
+                notify(t('veli.pdfGenericErrorTitle'), t('veli.pdfGenericErrorMessage'));
             } finally {
-                setGeneratingPDF(false);
+                setBusy(false);
             }
             return;
         }
 
-        setGeneratingPDF(true);
+        setBusy(true);
         try {
-            const html = buildWeeklyReportHTML(weekly, flags.canDownloadDetailedPdf);
+            const html = buildWeeklyReportHTML(weekly, flags.canDownloadDetailedPdf, audience);
             const win = window.open('', '_blank', 'width=920,height=1000');
             if (!win) {
-                Alert.alert(t('veli.popupBlockedTitle'), t('veli.popupBlockedMessage'));
+                notify(t('veli.popupBlockedTitle'), t('veli.popupBlockedMessage'));
                 return;
             }
             win.document.open();
@@ -558,11 +580,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
             win.document.close();
         } catch (error) {
             console.error('Rapor oluşturma hatası:', error);
-            Alert.alert(t('veli.pdfGenericErrorTitle'), t('veli.pdfGenericErrorMessage'));
+            notify(t('veli.pdfGenericErrorTitle'), t('veli.pdfGenericErrorMessage'));
         } finally {
-            setGeneratingPDF(false);
+            setBusy(false);
         }
     };
+    // onPress olay nesnesini ilk argüman olarak geçirir; bu yüzden ayrı, argümansız sarmalayıcılar.
+    const handleDownloadPDF = () => openReport('parent');
+    const handleTeacherReport = () => openReport('teacher');
 
     // Generate shareable achievement image (1080x1080 square for social media)
     const handleGenerateShareImage = async () => {
@@ -956,7 +981,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 <TouchableOpacity
                                     style={styles.weeklyDownloadBtn}
                                     onPress={handleDownloadPDF}
-                                    disabled={generatingPDF}
+                                    disabled={generatingPDF || generatingTeacher}
                                     activeOpacity={0.85}
                                 >
                                     {generatingPDF ? (
@@ -1599,7 +1624,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         <TouchableOpacity
                             style={styles.pdfCard}
                             onPress={handleDownloadPDF}
-                            disabled={generatingPDF}
+                            disabled={generatingPDF || generatingTeacher}
                         >
                             <View style={styles.pdfCardGradient}>
                                 {generatingPDF ? (
@@ -1626,6 +1651,40 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             </View>
                         </TouchableOpacity>
 
+                        {/* Öğretmene özet — Fidan+; kilitliyse paket sayfasına yönlendirir */}
+                        <TouchableOpacity
+                            style={[styles.teacherReportCard, !flags.canShareWithTeacher && styles.teacherReportCardLocked]}
+                            onPress={handleTeacherReport}
+                            disabled={generatingPDF || generatingTeacher}
+                            accessibilityRole="button"
+                        >
+                            <View style={styles.teacherReportIcon}>
+                                <Ionicons name="school" size={26} color="#fff" />
+                            </View>
+                            <View style={styles.teacherReportBody}>
+                                <View style={styles.teacherReportTitleRow}>
+                                    <Text style={styles.teacherReportTitle}>{t('veli.teacherReportTitle')}</Text>
+                                    {!flags.canShareWithTeacher && (
+                                        <View style={styles.teacherReportBadge}>
+                                            <Text style={styles.teacherReportBadgeText}>{t('veli.teacherReportBadge')}</Text>
+                                        </View>
+                                    )}
+                                </View>
+                                <Text style={styles.teacherReportSubtitle}>
+                                    {flags.canShareWithTeacher ? t('veli.teacherReportSubtitle') : t('veli.teacherReportLockedSubtitle')}
+                                </Text>
+                            </View>
+                            {generatingTeacher ? (
+                                <ActivityIndicator size="small" color={COLORS.primary} />
+                            ) : (
+                                <Ionicons
+                                    name={flags.canShareWithTeacher ? 'chevron-forward' : 'lock-closed'}
+                                    size={20}
+                                    color={COLORS.textLight}
+                                />
+                            )}
+                        </TouchableOpacity>
+
                         {/* Share Image Button - Instagram Ready */}
                         {flags.canShareCard && Platform.OS === 'web' && (
                             <TouchableOpacity
@@ -1648,6 +1707,14 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         <Text style={styles.footerSubtext}>{t('veli.footerSubtext')}</Text>
                     </View>
                 </ScrollView>
+                {reportNotice && (
+                    <View style={styles.reportNoticeWrap}>
+                        <View style={styles.reportNotice} accessibilityRole="alert">
+                            <Ionicons name="information-circle" size={22} color="#fff" />
+                            <Text style={styles.reportNoticeText}>{reportNotice}</Text>
+                        </View>
+                    </View>
+                )}
             </Animated.View >
         </DynamicBackground >
     );
@@ -2619,6 +2686,92 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.9)',
         textAlign: 'center',
         marginTop: 4,
+    },
+
+    // Öğretmene özet kartı
+    teacherReportCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        marginTop: 16,
+        padding: 16,
+        borderRadius: 20,
+        backgroundColor: COLORS.card,
+        borderWidth: 2,
+        borderColor: COLORS.primary,
+    },
+    teacherReportCardLocked: {
+        borderColor: 'rgba(96,125,139,0.4)',
+        borderStyle: 'dashed',
+    },
+    teacherReportIcon: {
+        width: 52,
+        height: 52,
+        borderRadius: 26,
+        backgroundColor: COLORS.primary,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    teacherReportBody: {
+        flex: 1,
+    },
+    teacherReportTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    teacherReportTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    teacherReportBadge: {
+        backgroundColor: COLORS.premium,
+        borderRadius: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+    },
+    teacherReportBadgeText: {
+        color: '#fff',
+        fontSize: 11,
+        fontWeight: '800',
+        letterSpacing: 0.5,
+    },
+    teacherReportSubtitle: {
+        fontSize: 13,
+        color: COLORS.textLight,
+        marginTop: 4,
+        lineHeight: 18,
+    },
+
+    // Sayfa içi rapor bildirimi (web'de Alert.alert boş işlem olduğu için)
+    reportNoticeWrap: {
+        position: 'absolute',
+        left: 16,
+        right: 16,
+        bottom: 24,
+        alignItems: 'center',
+    },
+    reportNotice: {
+        width: '100%',
+        maxWidth: 560,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        padding: 14,
+        borderRadius: 16,
+        backgroundColor: COLORS.text,
+        ...Platform.select({
+            web: { boxShadow: '0 6px 20px rgba(0,0,0,0.25)' },
+            default: { elevation: 6 },
+        }),
+    },
+    reportNoticeText: {
+        flex: 1,
+        color: '#fff',
+        fontSize: 14,
+        lineHeight: 20,
     },
 
     // Share Image Button Styles

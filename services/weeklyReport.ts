@@ -276,12 +276,20 @@ const esc = (s: string): string =>
 // Gelişim profili boyutları için sade lacivert tonları (editöryal palet)
 const DIM_COLORS = ['#12172b', '#2b3350', '#3d466b', '#586394', '#7580ab'];
 
+/** Raporu kim okuyacak: veli (varsayılan) ya da velinin paylaştığı öğretmen. */
+export type ReportAudience = 'parent' | 'teacher';
+
 /**
  * Premium Editöryal tasarımlı yazdırılabilir rapor.
  * @param premium  true → tam detaylı rapor; false → temel özet + günlük grafik
  *                 + kilitli premium bölümü (ücretsiz kademe).
+ * @param audience 'teacher' → veli, çocuğunun özetini öğretmeniyle paylaşmak için hazırlıyor (Fidan+).
+ *                 Her zaman tam ayrıntı (Maarif alanları+kodlar, gelişim profili, oyunlar, güçlü yönler);
+ *                 veliye dönük içerik (öne çıkan kutu, teşvik mesajı, evde etkinlik, AI notu) ve
+ *                 oturum bazlı kayıt/çizim/e-posta/iletişim bilgisi YOK; sonda paylaşım/gizlilik notu var.
  */
-export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = true): string {
+export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = true, audience: ReportAudience = 'parent'): string {
+    const teacher = audience === 'teacher';
     const initial = esc((r.childName || '?').charAt(0).toUpperCase());
 
     let n = 0;
@@ -364,27 +372,33 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
 
     // ---- Bölümleri sıraya diz ----
     let sections = dailySection;
-    if (premium) {
+    if (premium || teacher) {
         if (r.skillAreas.length) sections += sec('Çalışılan Gelişim Alanları · Maarif Modeli', skillInner);
         if (r.dimensions.length) sections += sec('Gelişim Profili', dimInner);
         if (r.topGames.length) sections += sec('En Çok Oynanan Oyunlar', gamesInner);
         if (r.strengths.length) sections += sec('Güçlü Yönler', strengthsInner);
-        if (r.homeActivities.length) sections += sec('Evde Ne Yapabilirsiniz?', homeInner);
-        if (r.aiNote) sections += sec('Uzman Değerlendirme Notu', `<div class="ai">${esc(r.aiNote).replace(/\n/g, '<br/>')}</div>`);
+        if (!teacher && r.homeActivities.length) sections += sec('Evde Ne Yapabilirsiniz?', homeInner);
+        if (!teacher && r.aiNote) sections += sec('Uzman Değerlendirme Notu', `<div class="ai">${esc(r.aiNote).replace(/\n/g, '<br/>')}</div>`);
     } else {
         sections += lockedSection;
     }
+    if (teacher) {
+        sections += sec('Paylaşım Notu', `<div class="ai">Bu özet, çocuğun velisi tarafından öğretmeniyle paylaşılmak üzere hazırlanmıştır. Oyun etkinliğinin özetini (oyun sayıları, başarı yüzdeleri, gelişim alanları) içerir; oturum bazlı ayrıntılı kayıt, çizim, e-posta veya iletişim bilgisi içermez. Kişisel veri niteliğindedir; velinin izni olmadan başkalarıyla paylaşılmamalıdır.</div>`);
+    }
 
-    const tierTag = premium
-        ? `<span class="tier tier-p">Detaylı Rapor</span>`
-        : `<span class="tier tier-f">Özet Rapor</span>`;
+    const tierTag = teacher
+        ? `<span class="tier tier-p">Veli Paylaşımı</span>`
+        : premium
+            ? `<span class="tier tier-p">Detaylı Rapor</span>`
+            : `<span class="tier tier-f">Özet Rapor</span>`;
+    const reportTitle = teacher ? 'Öğretmen İçin Gelişim Özeti' : 'Haftalık Gelişim Raporu';
 
     return `<!doctype html>
 <html lang="tr">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Haftalık Gelişim Raporu — ${esc(r.childName)}</title>
+<title>${reportTitle} — ${esc(r.childName)}</title>
 <style>
   *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;margin:0;padding:0}
   @page{size:A4;margin:11mm}
@@ -514,7 +528,7 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
     <div class="mast">
       <div class="monogram">${initial}</div>
       <div class="mast-main">
-        <div class="kicker">Haftalık Gelişim Raporu</div>
+        <div class="kicker">${reportTitle}</div>
         <div class="mast-name">${esc(r.childName)}</div>
         <div class="mast-brand">CHILDHOODTECH AKADEMİ · Erken Çocukluk Gelişim Takibi</div>
       </div>
@@ -531,18 +545,18 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
       <div>Rapora Giren Oyun<b>${r.sourceCount}</b></div>
     </div>
 
-    ${highlight}
+    ${teacher ? '' : highlight}
     ${emptyBanner}
     ${statStrip}
     ${sections}
-    ${encourage}
+    ${teacher ? '' : encourage}
 
     <div class="foot">
       <div class="rule"></div>
       <div class="foot-in">
         <div class="maarif">${esc(r.maarifNote)}</div>
         <div class="brand">ChildhoodTech Ekibi</div>
-        <div class="site">childhoodtech.com · Çocuğunuzun gelişimini birlikte takip ediyoruz</div>
+        <div class="site">${teacher ? 'childhoodtech.com · Bu özet velinin isteğiyle hazırlanmıştır' : 'childhoodtech.com · Çocuğunuzun gelişimini birlikte takip ediyoruz'}</div>
         <div class="gen">Oluşturulma: ${esc(r.generatedLabel)}</div>
       </div>
     </div>
