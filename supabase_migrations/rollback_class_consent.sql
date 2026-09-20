@@ -9,26 +9,37 @@
 -- geri almaya ÇALIŞMAYIN: fix_teacher_auth.sql'in 0. adımı tüm öğretmen, sınıf ve sınıf öğrencisi
 -- verisini SİLER.
 --
--- NE GERİ ALINIR (davranış): yeni tetikleyiciler, iki eski geniş okuma politikası ve eski arama
--- fonksiyonu geri gelir; yeni fonksiyonlar (veli davetleri, öğretmen listesi/skorları, yardımcılar),
--- e-posta biçim kısıtı ve yinelenen-kayıt dizini kalkar. Eski istemci yine çalışır.
+-- NE KALDIRILIR / GERİ GELİR (davranış):
+--   * KALKAN: yeni tetikleyiciler (class_students_before_insert, teachers e-posta sabitleme), yeni
+--     fonksiyonlar (veli davetleri, öğretmen listesi/skorları, yardımcılar), e-posta biçim kısıtı ve
+--     yinelenen-kayıt dizini.
+--   * GERİ GELİR: iki eski geniş okuma politikası ve eski arama fonksiyonu. Eski istemci yine çalışır.
+--     Politikalar "TO authenticated" olarak kurulur (eskiden herkese açıktı): anon'un class_students
+--     izni olmadığından, herkese açık politika anon isteklerinde boş küme yerine HATA verirdi;
+--     giriş yapmış kullanıcılar için davranış aynıdır.
 --
 -- NE KORUNUR (durum): accepted_at / accepted_via / accepted_user_id kolonları ve kısıtları ile
 -- class_blocks tablosu SİLİNMEZ; hiçbir sınıf/öğrenci verisi ve hiçbir veli kararı (onay, ret/engel)
 -- kaybolmaz. Böylece add_class_consent.sql'i sonradan yeniden çalıştırmak kolonların varlığını görüp
 -- geri doldurmayı ATLAR: bekleyen kayıtlar "onaylı" sayılmaz, veli engelleri geçerli kalır. (Kolonlar
 -- silinseydi yeniden uygulama her kaydı 'legacy' yapar, bekleyen ve açığın kendisiyle eklenmiş kayıtlara
--- da kalıcı erişim verirdi.)
+-- da kalıcı erişim verirdi.) idx_oyun_skorlari_lower_email de KALIR (yalnız performans dizini; kaldırmak
+-- yeniden kurulurken tablo yazmalarını bekletirdi).
 --   * Tablo izinleri ÇOK DAR kalır (SELECT, DELETE ve INSERT(class_id, child_email)); geniş "ALL" izni
 --     geri VERİLMEZ, çünkü kolonlar duruyorken öğretmen kendi kaydını UPDATE ile "onaylı" yapabilirdi.
 --     Eski istemci bu üç işlemden fazlasını kullanmaz. (Eski Supabase varsayılanı anon'a da ALL veriyordu;
---     anon hiçbir politikayla satır göremediği için geri verilmez.)
+--     anon hiçbir satır göremediği için geri verilmez.)
 --   * Geri alma SÜRESİNCE eklenen kayıtlarda onay kolonları NULL kalır (tetikleyici yok): yeniden
 --     uygulandığında bunlar BEKLEYEN olur — ücretli öğretmenin kayıtları dahil (güvenli taraf; veli
---     onaylar ya da öğretmen silip yeniden ekler). Aynı e-posta aynı sınıfa iki kez eklendiyse
---     yeniden uygulama, yinelenenleri silmenizi isteyerek durur.
+--     onaylar ya da öğretmen silip yeniden ekler).
+--   * Aynı e-posta aynı sınıfa iki kez eklendiyse (eski istemci bunu engellemez) yeniden uygulama
+--     durur ve grupları listeler: her grupta ONAYLI satırı tutun (silerseniz veli onayı kaybolur).
 --   * Veli engelleri (class_blocks) geri alma süresince UYGULANMAZ (tetikleyici yok); yeniden
 --     uygulanınca geçerli olur.
+--   * Öğretmen e-postaları geri alma süresince SABİTLENMEZ (öğretmen kendi teachers.email'ini
+--     değiştirebilir); yeniden uygulama sapmış e-postaları oturum e-postasına bir kez eşitler.
+--   * add_class_consent.sql'i YENİDEN uyguladıktan sonra, daha önce drop_teacher_direct_reads.sql'i
+--     çalıştırdıysanız onu TEKRAR çalıştırın: bu dosya eski geniş okuma politikalarını yeniden yaratır.
 --
 -- Tek seferde çalıştırın (tek işlem gibi davranır). Tekrar çalıştırılabilir.
 -- ============================================================================
@@ -37,10 +48,11 @@
 DROP TRIGGER IF EXISTS trg_teachers_pin_identity ON public.teachers;
 DROP TRIGGER IF EXISTS trg_class_students_before_insert ON public.class_students;
 
--- 2) Eski okuma politikaları (fix_teacher_auth.sql / fix_teacher_profiles_pii_exposure.sql'deki tanımlar)
+-- 2) Eski okuma politikaları (fix_teacher_auth.sql / fix_teacher_profiles_pii_exposure.sql'deki
+--    tanımlar; tek fark TO authenticated — bkz. yukarıdaki not)
 DROP POLICY IF EXISTS "teacher_reads_student_scores" ON public.oyun_skorlari;
 CREATE POLICY "teacher_reads_student_scores" ON public.oyun_skorlari
-  FOR SELECT USING (
+  FOR SELECT TO authenticated USING (
     EXISTS (
       SELECT 1
       FROM class_students cs
@@ -52,7 +64,7 @@ CREATE POLICY "teacher_reads_student_scores" ON public.oyun_skorlari
 
 DROP POLICY IF EXISTS "teacher_reads_own_class_profiles" ON public.profiles;
 CREATE POLICY "teacher_reads_own_class_profiles" ON public.profiles
-  FOR SELECT USING (
+  FOR SELECT TO authenticated USING (
     EXISTS (
       SELECT 1
       FROM class_students cs
@@ -94,9 +106,13 @@ DROP FUNCTION IF EXISTS private.user_is_paid_teacher(uuid);
 DROP FUNCTION IF EXISTS private.class_student_limit(uuid);
 DROP FUNCTION IF EXISTS private.ai_academic_part(text);
 
--- 6) Yalnız davranışı etkileyen dizin/kısıtlar (durum kolonları ve class_blocks KORUNUR)
+-- 6) Yalnız davranışı etkileyen dizin/kısıt (durum kolonları, class_blocks ve performans dizini KORUNUR)
 DROP INDEX IF EXISTS public.uq_class_students_class_email;
-DROP INDEX IF EXISTS public.idx_oyun_skorlari_lower_email;
 ALTER TABLE public.class_students DROP CONSTRAINT IF EXISTS class_students_email_format;
+
+DO $$
+BEGIN
+  RAISE NOTICE 'Geri alma tamam. add_class_consent.sql yeniden uygulanırsa: (1) drop_teacher_direct_reads.sql daha önce çalıştırıldıysa onu TEKRAR çalıştırın; (2) yinelenen sınıf kaydı hatası çıkarsa listelenen gruplarda ONAYLI satırı tutun.';
+END $$;
 
 NOTIFY pgrst, 'reload schema';

@@ -74,8 +74,13 @@
 --
 -- Bu SQL'i Supabase SQL Editor'da TEK SEFERDE çalıştırın (tek işlem gibi davranır; hata olursa
 -- hiçbir şey uygulanmaz). Tekrar çalıştırılabilir: geri doldurma yalnız ilk çalıştırmada olur,
--- sonradan bekleyen kayıtlar yeniden "onaylı" sayılmaz; eski okuma politikaları kaldırıldıysa
--- (drop_teacher_direct_reads.sql) yeniden YARATILMAZ.
+-- sonradan bekleyen kayıtlar yeniden "onaylı" sayılmaz; eski okuma politikaları o an YOKSA
+-- (drop_teacher_direct_reads.sql çalıştırıldıysa) yeniden YARATILMAZ. UYARI: araya rollback_class_consent.sql
+-- girdiyse rollback o iki politikayı yeniden yaratmıştır; o durumda bu dosyayı yeniden uyguladıktan
+-- sonra drop_teacher_direct_reads.sql'i TEKRAR çalıştırın.
+-- Yeni dizin (oyun_skorlari üzerinde lower(email)) kurulurken tablo yazmaları kısa süre (tablo boyutuna
+-- göre birkaç saniye) bekler: yoğun olmayan bir saatte çalıştırın. Dosya ayrıca teachers.email
+-- değerlerini bir kez oturum e-postasına eşitler (bkz. bölüm 5b) ve boşluk sınıfını kendini sınayarak doğrular.
 --
 -- SÜRDÜRME NOTU: ücretli paket listesi ve öğrenci sınırı lib/subscriptionTiers.ts
 -- (OGRETMEN_TIER_FLAGS) ile ELLE senkron; lib/classConsentSql.test.ts ikisini karşılaştırır.
@@ -85,6 +90,8 @@
 -- 0) Ön kontroller
 -- ---------------------------------------------------------------------------
 DO $$
+DECLARE
+  v_dups text;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_lock_tier_insert_teachers' AND NOT tgisinternal) THEN
     RAISE EXCEPTION 'Önce supabase_migrations/add_tier_insert_guard.sql çalıştırılmalı (ücretli öğretmen ayrımı paket alanlarının kullanıcı tarafından yazılamamasına dayanır)';
@@ -97,8 +104,20 @@ BEGIN
      OR to_regclass('public.oyun_skorlari') IS NULL OR to_regclass('public.profiles') IS NULL THEN
     RAISE EXCEPTION 'classes / class_students / teachers / owners / oyun_skorlari / profiles tabloları bulunamadı';
   END IF;
-  IF EXISTS (SELECT 1 FROM public.class_students GROUP BY class_id, lower(btrim(child_email)) HAVING count(*) > 1) THEN
-    RAISE EXCEPTION 'class_students içinde aynı sınıfa iki kez eklenmiş e-posta var; önce yinelenenleri silin';
+  -- Yinelenen (sınıf, e-posta): hangi satırların silineceği onay durumuna bağlıdır, bu yüzden gruplar listelenir.
+  -- (to_jsonb ile okunur: accepted_at kolonu ilk çalıştırmada henüz yoktur.)
+  SELECT string_agg(format('sınıf=%s e-posta=%s satırlar=[%s]', g.class_id, g.e, g.rows), E'\n' ORDER BY g.class_id)
+    INTO v_dups
+    FROM (SELECT cs.class_id,
+                 lower(btrim(cs.child_email)) AS e,
+                 string_agg(cs.id::text || CASE WHEN to_jsonb(cs) ->> 'accepted_at' IS NULL THEN ':bekliyor' ELSE ':ONAYLI' END,
+                            ', ' ORDER BY cs.added_at, cs.id) AS rows
+            FROM public.class_students cs
+           GROUP BY cs.class_id, lower(btrim(cs.child_email))
+          HAVING count(*) > 1
+           LIMIT 10) g;
+  IF v_dups IS NOT NULL THEN
+    RAISE EXCEPTION E'class_students içinde aynı sınıfa iki kez eklenmiş e-posta var. Her grupta ONAYLI satırı tutup diğerlerini silin (hiçbiri onaylı değilse en eskisini tutun); onaylı satırı silerseniz veli onayı kaybolur. Gruplar (ilk 10):\n%', v_dups;
   END IF;
 END $$;
 
@@ -259,7 +278,7 @@ IMMUTABLE
 AS $$
 DECLARE
   v text;
-  ws constant text := '[[:space:]   -     　﻿]+';
+  ws constant text := '[[:space:]\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]+';
   m constant text := 'VEL[İIiı]' || ws || 'B[İIiı]LG[İIiı]LEND[İIiı]RME' || ws || 'NOTU';
 BEGIN
   IF p_text IS NULL THEN
@@ -290,6 +309,22 @@ REVOKE ALL ON FUNCTION private.class_owner_is_paid(uuid), private.user_is_paid_t
 GRANT EXECUTE ON FUNCTION private.class_owner_is_paid(uuid), private.user_is_paid_teacher(uuid),
   private.class_row_readable(uuid, timestamptz, text, text, uuid),
   private.class_student_limit(uuid), private.ai_academic_part(text) TO authenticated, service_role;
+
+-- Kendini sınama: boşluk sınıfı bozulduysa (ör. SQL metni kopyala-yapıştırda değiştiyse) veli notunun
+-- öğretmene SIZMASINA izin vermek yerine migration'ı DURDUR. (Karakterler chr() ile üretilir; bu blokta
+-- görünmez karakter yoktur.)
+DO $$
+DECLARE
+  v_cp  int;
+  v_txt text;
+BEGIN
+  FOREACH v_cp IN ARRAY ARRAY[160, 5760, 8192, 8194, 8201, 8202, 8232, 8233, 8239, 8287, 12288, 65279] LOOP
+    v_txt := 'Akademik.' || E'\n\n---\n\n' || 'VELI' || chr(v_cp) || 'BILGILENDIRME' || chr(v_cp) || 'NOTU' || E'\nGizli veli notu';
+    IF private.ai_academic_part(v_txt) IS DISTINCT FROM 'Akademik.' THEN
+      RAISE EXCEPTION 'private.ai_academic_part boşluk sınıfı bozuk (U+%): veli notu öğretmene sızardı', upper(to_hex(v_cp));
+    END IF;
+  END LOOP;
+END $$;
 
 -- ---------------------------------------------------------------------------
 -- 5) class_students BEFORE INSERT: e-posta normalizasyonu/doğrulama, engel, sınır, onay durumu
@@ -395,14 +430,44 @@ CREATE TRIGGER trg_teachers_pin_identity
   BEFORE UPDATE OF email ON public.teachers
   FOR EACH ROW EXECUTE FUNCTION public.teachers_pin_identity();
 
+-- Tetikleyici yalnız SONRAKİ değişiklikleri sabitler. Daha önce (bu migration'dan önce ya da bir
+-- geri alma penceresinde: rollback tetikleyiciyi kaldırır) oturum e-postasından SAPMIŞ satırları bir kez
+-- düzelt: aksi halde sapmış e-posta velinin gördüğü öğretmen kimliği olarak ve owner'ın e-posta anahtarlı
+-- paket ataması için kalırdı. Yalnız gerçek sapma (büyük/küçük harf ve boşluk farkı sayılmaz) ve yalnız
+-- çakışma yoksa düzeltilir (teachers.email tekildir); atlananlar bildirilir. SQL Editor'da JWT olmadığından
+-- yukarıdaki tetikleyici bu güncellemede devreye girmez.
+DO $$
+DECLARE
+  v_fixed   bigint;
+  v_skipped bigint;
+BEGIN
+  WITH drift AS (
+    SELECT t.user_id AS uid, u.email AS auth_email
+      FROM public.teachers t
+      JOIN auth.users u ON u.id = t.user_id
+     WHERE u.email IS NOT NULL
+       AND lower(btrim(t.email)) IS DISTINCT FROM lower(btrim(u.email))),
+  ok AS (
+    SELECT d.* FROM drift d
+     WHERE NOT EXISTS (SELECT 1 FROM public.teachers t2 WHERE t2.email = d.auth_email AND t2.user_id <> d.uid)),
+  fixed AS (
+    UPDATE public.teachers t SET email = ok.auth_email FROM ok WHERE t.user_id = ok.uid RETURNING t.user_id)
+  SELECT (SELECT count(*) FROM fixed), (SELECT count(*) FROM drift) - (SELECT count(*) FROM ok)
+    INTO v_fixed, v_skipped;
+  IF v_fixed > 0 OR v_skipped > 0 THEN
+    RAISE NOTICE 'teachers.email: % satır oturum e-postasına eşitlendi, % satır e-posta çakışması nedeniyle atlandı (elle inceleyin)', v_fixed, v_skipped;
+  END IF;
+END $$;
+
 -- ---------------------------------------------------------------------------
 -- 6) Öğretmen okuma politikalarını onay şartıyla sıkılaştır
 -- ---------------------------------------------------------------------------
 -- (Yeni istemci bu politikalara hiç dayanmayacak; eski istemci de onaysız veriyi göremez.) Eşleşme,
 -- eski politikalarla AYNI (tam eşitlik; yeni kayıtlar küçük harfe çevrildiği için yeter). Yalnız
 -- giriş yapmış rollere uygulanır: anon eskisi gibi boş küme alır (class_students izni olmadığından
--- politika anon için değerlendirilirse hata verirdi). drop_teacher_direct_reads.sql bu politikaları
--- kaldırdıysa YENİDEN YARATILMAZ.
+-- politika anon için değerlendirilirse hata verirdi). O an YOKLARSA (drop_teacher_direct_reads.sql
+-- çalıştırıldıysa) YENİDEN YARATILMAZ; rollback_class_consent.sql onları yeniden yaratır — o yoldan
+-- sonra drop_teacher_direct_reads.sql'i tekrar çalıştırın.
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'oyun_skorlari'
@@ -585,7 +650,7 @@ BEGIN
   WITH r AS (
     SELECT cs.id AS rid, cs.child_email AS remail, cs.class_id AS rclass, cs.accepted_at AS racc, cs.added_at AS radded,
            private.class_row_readable(cs.class_id, cs.accepted_at, cs.accepted_via, cs.child_email, cs.accepted_user_id) AS rok,
-           private.child_count_for_email(cs.child_email) AS rn
+           private.child_count_for_email(lower(btrim(cs.child_email))) AS rn
       FROM class_students cs
      WHERE cs.class_id = p_class_id)
   SELECT r.rid,
@@ -596,11 +661,11 @@ BEGIN
          CASE WHEN r.rok AND r.rn <= 1 THEN coalesce(cp.child_age_months, pr.child_age_months) END,
          CASE WHEN r.rok AND r.rn <= 1 THEN
                 (SELECT count(*) FROM oyun_skorlari s
-                  WHERE lower(s.email) = lower(r.remail) AND (cp.child_id IS NULL OR s.child_id = cp.child_id))
+                  WHERE lower(s.email) = lower(btrim(r.remail)) AND (cp.child_id IS NULL OR s.child_id = cp.child_id))
          END,
          (r.rok AND r.rn > 1)
     FROM r
-    LEFT JOIN profiles pr ON lower(pr.email) = lower(r.remail)
+    LEFT JOIN profiles pr ON lower(pr.email) = lower(btrim(r.remail))
     LEFT JOIN LATERAL (
       SELECT ch.id AS child_id, ch.child_name, ch.child_age_months
         FROM child_profiles ch WHERE ch.user_id = pr.user_id
@@ -642,6 +707,7 @@ BEGIN
   IF v_email IS NULL OR NOT coalesce(v_ok, false) THEN
     RETURN;
   END IF;
+  v_email := lower(btrim(v_email));            -- boşluklu eski kayıtlar da eşleşsin (onay/kısıt zaten btrim'lidir)
   IF private.child_count_for_email(v_email) > 1 THEN
     RETURN;
   END IF;

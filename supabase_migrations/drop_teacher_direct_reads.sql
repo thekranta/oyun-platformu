@@ -7,8 +7,8 @@
 -- Neden gerekli: add_class_consent.sql, teacher_reads_student_scores / teacher_reads_own_class_profiles
 -- politikalarını onay şartıyla sıkılaştırdı; ama bu politikalar tabloyu HÂLÂ satır düzeyinde açar:
 -- oyun_skorlari'nın TÜM kolonlarını (uzman-onay alanları, yapay zekâ yorumunun VELİ NOTU kısmı,
--- rıza durumu) ve profiles'ın TÜM kolonlarını (veli adı, paket bilgisi) öğretmenin tarayıcısına
--- getirir. Yeni istemci bunlara hiç dayanmaz; teacher_class_roster() ve teacher_student_scores()
+-- kümülatif rapor) ve profiles'ın TÜM kolonlarını (veli adı, paket bilgisi, rıza durumu)
+-- öğretmenin tarayıcısına getirir. Yeni istemci bunlara hiç dayanmaz; teacher_class_roster() ve teacher_student_scores()
 -- yalnız öğretmenin görmesi gereken kolonları döndürür. Bu dosya eski yolu tamamen kapatır.
 --
 -- ÖN KOŞULLAR (hepsi doğrulanmadan ÇALIŞTIRMA):
@@ -21,7 +21,12 @@
 -- Etkilenmeyenler: veli/owner/uzman okumaları (kendi politikaları), classes ve class_students
 -- (öğretmenin kendi sınıf listesi), teacher_search_child_by_email (önizleme).
 --
--- Güvenle yeniden çalıştırılabilir (IF EXISTS).
+-- Güvenle yeniden çalıştırılabilir (IF EXISTS). Yeni fonksiyonlar (teacher_class_roster /
+-- teacher_student_scores) yoksa (add_class_consent.sql uygulanmamış ya da rollback edilmiş) çalışmayı
+-- REDDEDER: aksi halde öğretmen paneli için hiçbir okuma yolu kalmazdı.
+--
+-- Not: rollback_class_consent.sql + add_class_consent.sql yolunu izlediyseniz bu dosyayı TEKRAR çalıştırın
+-- (rollback iki eski politikayı yeniden yaratır).
 --
 -- GERİ ALMA (gerekirse; add_class_consent.sql bölüm 6'nın onay şartlı tanımları):
 --   CREATE POLICY "teacher_reads_student_scores" ON public.oyun_skorlari
@@ -35,6 +40,14 @@
 --        WHERE cs.child_email = profiles.email AND c.teacher_id = auth.uid()
 --          AND private.class_row_readable(cs.class_id, cs.accepted_at, cs.accepted_via, cs.child_email, cs.accepted_user_id)));
 -- =============================================================================
+
+DO $$
+BEGIN
+  IF to_regprocedure('public.teacher_class_roster(uuid)') IS NULL
+     OR to_regprocedure('public.teacher_student_scores(uuid, integer, boolean)') IS NULL THEN
+    RAISE EXCEPTION 'Önce add_class_consent.sql uygulanmalı (teacher_class_roster / teacher_student_scores yok); yoksa öğretmen paneli için hiçbir okuma yolu kalmaz';
+  END IF;
+END $$;
 
 DROP POLICY IF EXISTS "teacher_reads_student_scores"      ON public.oyun_skorlari;
 DROP POLICY IF EXISTS "teacher_reads_own_class_profiles"  ON public.profiles;

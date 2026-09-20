@@ -66,6 +66,15 @@ describe('add_class_consent.sql ↔ lib/subscriptionTiers.ts', () => {
         expect(missing).toEqual([]);
     });
 
+    it('SQL dosyaları HAM bölünmez/görünmez boşluk karakteri içermez (SQL Editor\'a yapıştırırken bozulabilir)', () => {
+        const invisible = new Set([0xa0, 0x1680, 0x2028, 0x2029, 0x202f, 0x205f, 0x3000, 0xfeff, ...Array.from({ length: 12 }, (_, i) => 0x2000 + i)]);
+        for (const f of ['add_class_consent.sql', 'rollback_class_consent.sql', 'drop_teacher_direct_reads.sql']) {
+            const text = readFileSync(join(__dirname, '../supabase_migrations', f), 'utf8');
+            const bad = [...text].filter(c => invisible.has(c.codePointAt(0)!));
+            expect({ file: f, raw: bad.length }).toEqual({ file: f, raw: 0 });
+        }
+    });
+
     it('drop_teacher_direct_reads.sql, bölüm 6\'da yeniden yaratılan öğretmen politikalarının TAMAMINI kaldırır', () => {
         const drop = readFileSync(join(__dirname, '../supabase_migrations/drop_teacher_direct_reads.sql'), 'utf8');
         const created = [...sql.matchAll(/CREATE POLICY "(teacher_reads_[a-z_]+)"/g)].map(x => x[1]).sort();
