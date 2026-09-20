@@ -559,13 +559,15 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT cs.id,
-         CASE WHEN cs.accepted_at IS NULL THEN 'pending'
-              WHEN private.class_row_readable(cs.class_id, cs.accepted_at, cs.accepted_via, cs.child_email, cs.accepted_user_id) THEN 'accepted'
-              ELSE 'suspended' END,
-         left(c.name, 80), left(t.name, 80), left(t.email, 120), left(t.school_name, 120),
+  -- Sonuç sütunları açıkça dönüştürülür: canlı şemada küçük bir tip farkı (ör. varchar/timestamp) olsa da
+  -- fonksiyon tip uyuşmazlığı hatası vermesin.
+  SELECT cs.id::uuid,
+         (CASE WHEN cs.accepted_at IS NULL THEN 'pending'
+               WHEN private.class_row_readable(cs.class_id, cs.accepted_at, cs.accepted_via, cs.child_email, cs.accepted_user_id) THEN 'accepted'
+               ELSE 'suspended' END)::text,
+         left(c.name, 80)::text, left(t.name, 80)::text, left(t.email, 120)::text, left(t.school_name, 120)::text,
          private.class_owner_is_paid(cs.class_id),
-         cs.added_at, cs.accepted_via
+         cs.added_at::timestamptz, cs.accepted_via::text
     FROM class_students cs
     JOIN classes c ON c.id = cs.class_id
     LEFT JOIN teachers t ON t.user_id = c.teacher_id
@@ -653,16 +655,17 @@ BEGIN
            private.child_count_for_email(lower(btrim(cs.child_email))) AS rn
       FROM class_students cs
      WHERE cs.class_id = p_class_id)
-  SELECT r.rid,
-         r.remail,
-         CASE WHEN r.racc IS NULL THEN 'pending' WHEN r.rok THEN 'accepted' ELSE 'suspended' END,
-         r.radded,
-         CASE WHEN r.rok AND r.rn <= 1 THEN coalesce(cp.child_name, pr.child_name) END,
-         CASE WHEN r.rok AND r.rn <= 1 THEN coalesce(cp.child_age_months, pr.child_age_months) END,
-         CASE WHEN r.rok AND r.rn <= 1 THEN
+  -- (RETURN QUERY sütun tiplerini birebir ister; açık dönüşümler canlı şemadaki küçük tip farklarına karşı sigortadır.)
+  SELECT r.rid::uuid,
+         r.remail::text,
+         (CASE WHEN r.racc IS NULL THEN 'pending' WHEN r.rok THEN 'accepted' ELSE 'suspended' END)::text,
+         r.radded::timestamptz,
+         (CASE WHEN r.rok AND r.rn <= 1 THEN coalesce(cp.child_name, pr.child_name) END)::text,
+         (CASE WHEN r.rok AND r.rn <= 1 THEN coalesce(cp.child_age_months, pr.child_age_months) END)::integer,
+         (CASE WHEN r.rok AND r.rn <= 1 THEN
                 (SELECT count(*) FROM oyun_skorlari s
                   WHERE lower(s.email) = lower(btrim(r.remail)) AND (cp.child_id IS NULL OR s.child_id = cp.child_id))
-         END,
+          END)::bigint,
          (r.rok AND r.rn > 1)
     FROM r
     LEFT JOIN profiles pr ON lower(pr.email) = lower(btrim(r.remail))
@@ -718,10 +721,12 @@ BEGIN
    ORDER BY ch.created_at, ch.id LIMIT 1;
 
   RETURN QUERY
-  SELECT s.id, s.created_at, s.oyun_turu, s.hamle_sayisi, s.hata_sayisi, s.sure, s.correct_answers,
-         s.zorluk_seviyesi, s.kazanim_odagi,
-         CASE WHEN coalesce(p_with_drawings, false) THEN s.cizim_verisi END,
-         CASE WHEN s.onay_durumu = 'onaylandi' THEN private.ai_academic_part(s.yapay_zeka_yorumu) END
+  -- (RETURN QUERY sütun tiplerini birebir ister; açık dönüşümler canlı şemadaki küçük tip farklarına karşı
+  -- sigortadır. to_jsonb: cizim_verisi canlıda jsonb da olsa text de olsa çalışır.)
+  SELECT s.id::bigint, s.created_at::timestamptz, s.oyun_turu::text, s.hamle_sayisi::bigint, s.hata_sayisi::bigint,
+         s.sure::bigint, s.correct_answers::integer, s.zorluk_seviyesi::integer, s.kazanim_odagi::text,
+         (CASE WHEN coalesce(p_with_drawings, false) THEN to_jsonb(s.cizim_verisi) END)::jsonb,
+         (CASE WHEN s.onay_durumu = 'onaylandi' THEN private.ai_academic_part(s.yapay_zeka_yorumu) END)::text
     FROM oyun_skorlari s
    WHERE lower(s.email) = lower(v_email)
      AND (v_child IS NULL OR s.child_id = v_child)
