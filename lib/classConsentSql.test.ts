@@ -66,9 +66,24 @@ describe('add_class_consent.sql ↔ lib/subscriptionTiers.ts', () => {
         expect(missing).toEqual([]);
     });
 
+    it('class_students_before_insert: owner hesabı muaf DEĞİL (veli engeli / sınır onu da bağlar); düzeltme dosyası ana dosyayla birebir', () => {
+        const grab = (text: string) => {
+            const m = text.match(/CREATE OR REPLACE FUNCTION public\.class_students_before_insert\(\)[\s\S]*?\$\$;/);
+            if (!m) throw new Error('class_students_before_insert bulunamadı');
+            return m[0];
+        };
+        const fn = grab(sql);
+        const trusted = fn.match(/v_trusted := ([\s\S]*?);/);
+        expect(trusted).not.toBeNull();
+        expect(trusted![1]).not.toMatch(/owners/);
+        expect(trusted![1]).toMatch(/service_role/);
+        const patch = readFileSync(join(__dirname, '../supabase_migrations/fix_class_students_owner_bypass.sql'), 'utf8');
+        expect(grab(patch)).toBe(fn);
+    });
+
     it('SQL dosyaları HAM bölünmez/görünmez boşluk karakteri içermez (SQL Editor\'a yapıştırırken bozulabilir)', () => {
         const invisible = new Set([0xa0, 0x1680, 0x2028, 0x2029, 0x202f, 0x205f, 0x3000, 0xfeff, ...Array.from({ length: 12 }, (_, i) => 0x2000 + i)]);
-        for (const f of ['add_class_consent.sql', 'rollback_class_consent.sql', 'drop_teacher_direct_reads.sql']) {
+        for (const f of ['add_class_consent.sql', 'rollback_class_consent.sql', 'drop_teacher_direct_reads.sql', 'fix_class_students_owner_bypass.sql', 'class_consent_dogrulama.sql', 'class_consent_engel_kontrolu.sql']) {
             const text = readFileSync(join(__dirname, '../supabase_migrations', f), 'utf8');
             const bad = [...text].filter(c => invisible.has(c.codePointAt(0)!));
             expect({ file: f, raw: bad.length }).toEqual({ file: f, raw: 0 });

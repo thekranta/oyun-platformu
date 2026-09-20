@@ -344,9 +344,11 @@ BEGIN
   NEW.child_email := lower(btrim(NEW.child_email));   -- eşleşmeler e-postanın küçük harfli hâline göre
 
   SELECT c.teacher_id INTO v_owner FROM classes c WHERE c.id = NEW.class_id;
+  -- Güvenilir bağlam YALNIZ destek işlemleridir: service_role ve SQL Editor (JWT'siz). Owner hesabı
+  -- uygulamadan öğretmen olarak eklerken muaf DEĞİLDİR: veli engeli, öğrenci sınırı ve e-posta doğrulaması
+  -- onu da bağlar (owner olmak, velinin "beni bir daha ekleme" kararını aşma yetkisi vermez).
   v_trusted := coalesce(auth.role(), '') = 'service_role'
-            OR (auth.uid() IS NULL AND auth.role() IS NULL)
-            OR EXISTS (SELECT 1 FROM owners WHERE user_id = auth.uid());
+            OR (auth.uid() IS NULL AND auth.role() IS NULL);
 
   IF NOT v_trusted THEN
     -- Başkasının sınıfına ekleme: RLS reddedecek; BEFORE tetikleyicileri RLS'ten ÖNCE çalışır,
