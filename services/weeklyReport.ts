@@ -11,6 +11,7 @@
  */
 
 import { getMaarif } from '../constants/maarifMap';
+import { parentView, teacherView } from '../lib/aiAudience';
 import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
 import { ReportEngine } from './ReportEngine';
 
@@ -81,7 +82,10 @@ export interface WeeklyReportData {
     encouragingMessage: string;
     highlight: { emoji: string; title: string; description: string };
     maarifNote: string;
+    /** Velinin göreceği yapay zekâ notu (kümülatif raporun VELİ BİLGİLENDİRME NOTU kısmı). */
     aiNote: string | null;
+    /** Öğretmen özetinde gösterilecek yapay zekâ AKADEMİK notu (kümülatif raporun akademik kısmı). */
+    aiTeacherNote: string | null;
 }
 
 // ============== YARDIMCILAR ==============
@@ -250,8 +254,14 @@ export function buildWeeklyReport(
         encouragingMessage,
         highlight: highlightFor(avgSuccess, gamesCount, activeDays),
         maarifNote,
-        aiNote: aiNote ? cleanText(aiNote) : null,
+        // Kümülatif AI raporu tek metinde iki kitleyi taşır: veli yalnız veli notunu, öğretmen yalnız akademik kısmı görür.
+        aiNote: cleanNote(parentView(aiNote)),
+        aiTeacherNote: cleanNote(teacherView(aiNote)),
     };
+}
+
+function cleanNote(t: string | null): string | null {
+    return t ? cleanText(t) : null;
 }
 
 // Markdown işaretlerini temizle (** __ * _ #)
@@ -285,8 +295,9 @@ export type ReportAudience = 'parent' | 'teacher';
  *                 + kilitli premium bölümü (ücretsiz kademe).
  * @param audience 'teacher' → veli, çocuğunun özetini öğretmeniyle paylaşmak için hazırlıyor (Fidan+).
  *                 Her zaman tam ayrıntı (Maarif alanları+kodlar, gelişim profili, oyunlar, güçlü yönler);
- *                 veliye dönük içerik (öne çıkan kutu, teşvik mesajı, evde etkinlik, AI notu) ve
- *                 oturum bazlı kayıt/çizim/e-posta/iletişim bilgisi YOK; sonda paylaşım/gizlilik notu var.
+ *                 veliye dönük içerik (öne çıkan kutu, teşvik mesajı, evde etkinlik, yapay zekânın VELİ notu)
+ *                 ve oturum bazlı kayıt/çizim/e-posta/iletişim bilgisi YOK; yapay zekânın AKADEMİK notu
+ *                 (varsa) VAR; sonda paylaşım/gizlilik notu var.
  */
 export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = true, audience: ReportAudience = 'parent'): string {
     const teacher = audience === 'teacher';
@@ -381,6 +392,9 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
         if (!teacher && r.aiNote) sections += sec('Uzman Değerlendirme Notu', `<div class="ai">${esc(r.aiNote).replace(/\n/g, '<br/>')}</div>`);
     } else {
         sections += lockedSection;
+    }
+    if (teacher && r.aiTeacherNote) {
+        sections += sec('Yapay Zekâ Akademik Notu', `<div class="ai">${esc(r.aiTeacherNote).replace(/\n/g, '<br/>')}</div><div class="cap">Bu not yapay zekâ tarafından üretilmiştir; uzman değerlendirmesi yerine geçmez.</div>`);
     }
     if (teacher) {
         sections += sec('Paylaşım Notu', `<div class="ai">Bu özet, çocuğun velisi tarafından öğretmeniyle paylaşılmak üzere hazırlanmıştır. Oyun etkinliğinin özetini (oyun sayıları, başarı yüzdeleri, gelişim alanları) içerir; oturum bazlı ayrıntılı kayıt, çizim, e-posta veya iletişim bilgisi içermez. Kişisel veri niteliğindedir; velinin izni olmadan başkalarıyla paylaşılmamalıdır.</div>`);

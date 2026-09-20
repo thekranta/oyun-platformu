@@ -21,6 +21,7 @@ import * as Sharing from 'expo-sharing';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { ReportEngine } from '../services/ReportEngine';
 import { buildWeeklyReport, buildWeeklyReportHTML, ReportAudience } from '../services/weeklyReport';
+import { parentView } from '../lib/aiAudience';
 import { getGameDisplay } from '../lib/gameDisplay';
 import { supabase } from '../lib/supabase';
 import { asset } from '../lib/assetMap';
@@ -73,7 +74,7 @@ ${JSON.stringify(gamesData, null, 2)}
 
 GÖREV: Aşağıdaki iki bölümlü yapıda rapor oluştur.
 
-## BÖLÜM 1: MAARİF MODELİ PEDAGOJİK ANALİZ (Öğretmen/Akademisyen İçin)
+## BÖLÜM 1: MAARİF MODELİ PEDAGOJİK ANALİZ
 
 ÖNEMLİ - SADECE AŞAĞIDAKİ MAARİF PROGRAM KODLARINI KULLAN:
 - FAB: Fen Alanı Becerileri (FAB.1, FAB.2, FAB.3 vb.)
@@ -98,6 +99,8 @@ Bu bölümde şunları yap:
 ---
 
 ## BÖLÜM 2: VELİ BİLGİLENDİRME NOTU
+
+Bu bölümün başlığını AYNEN böyle yaz ("## BÖLÜM 2: VELİ BİLGİLENDİRME NOTU"). Bu bölüm YALNIZ veliye gösterilir: Maarif kodu, teknik/akademik terim, "öğretmen" ya da "akademisyen" ifadesi KULLANMA.
 
 Değerli Velimiz,
 
@@ -353,7 +356,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                 scoresData = await emailScoresResponse.json();
             }
 
-            setScores(Array.isArray(scoresData) ? scoresData : []);
+            // Yapay zekâ yorumları tek metinde hem akademik (öğretmen) hem veli notu taşır; veli panelinde YALNIZ veli notu gösterilir.
+            setScores(Array.isArray(scoresData)
+                ? scoresData.map((s: GameScore) => (s.yapay_zeka_yorumu ? { ...s, yapay_zeka_yorumu: parentView(s.yapay_zeka_yorumu) } : s))
+                : []);
             console.log('✅ Total scores loaded:', Array.isArray(scoresData) ? scoresData.length : 0);
 
             // Cache check: If the latest score has a cumulative AI report, use it
@@ -1241,7 +1247,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                         {cumulativeReport ? (
                                             <View>
                                                 <Text style={{ color: COLORS.text, fontSize: 14, lineHeight: 22 }}>
-                                                    {cumulativeReport}
+                                                    {parentView(cumulativeReport) ?? ''}
                                                 </Text>
                                                 <Text style={{ color: COLORS.textLight, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
                                                     {t('veli.aiAutoUpdateNote')}

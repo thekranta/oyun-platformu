@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
+import { teacherView } from '../lib/aiAudience';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
 
@@ -685,10 +686,11 @@ export default function TeacherDashboard({
                                             )}
                                         </TouchableOpacity>
                                     )}
-                                    {score.yapay_zeka_yorumu && (
+                                    {/* Yorum tek metinde hem akademik hem VELİ notu taşır; öğretmene yalnız akademik kısım gösterilir. */}
+                                    {teacherView(score.yapay_zeka_yorumu) && (
                                         <View style={styles.aiResult}>
                                             <Text style={styles.aiResultTitle}>{t('teacher.pedagogicalAnalysisTitle')}</Text>
-                                            <Text style={styles.aiResultText}>{score.yapay_zeka_yorumu}</Text>
+                                            <Text style={styles.aiResultText}>{teacherView(score.yapay_zeka_yorumu)}</Text>
                                         </View>
                                     )}
                                 </View>

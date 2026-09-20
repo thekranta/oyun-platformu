@@ -1,4 +1,4 @@
-import { buildWeeklyReportHTML, WeeklyReportData } from './weeklyReport';
+import { buildWeeklyReport, buildWeeklyReportHTML, WeeklyReportData } from './weeklyReport';
 
 const sample: WeeklyReportData = {
     childName: 'Deniz',
@@ -23,6 +23,7 @@ const sample: WeeklyReportData = {
     highlight: { emoji: '⭐', title: 'Başlık', description: 'Açıklama' },
     maarifNote: '',
     aiNote: null,
+    aiTeacherNote: null,
 };
 
 const rich: WeeklyReportData = {
@@ -34,6 +35,57 @@ const rich: WeeklyReportData = {
     homeActivities: [{ title: 'Eşya Sayma Oyunu', description: 'Mutfakta kaşıkları sayın.', emoji: '🥄', duration: '10 dk' }],
     aiNote: 'Bu haftaki çalışmalar dikkat becerisini destekledi.',
 };
+
+const DUAL_AI = [
+    '## BÖLÜM 1: MAARİF MODELİ PEDAGOJİK ANALİZ',
+    '',
+    'MAB.2 alanında yükselen trend.',
+    '',
+    '---',
+    '',
+    '## BÖLÜM 2: VELİ BİLGİLENDİRME NOTU',
+    '',
+    'Değerli Velimiz,',
+    '',
+    'Çocuğunuz sayılarda gelişiyor.',
+    '',
+    'Saygılarımızla,',
+    'ChildhoodTech Ekibi',
+].join('\n');
+
+describe('kümülatif yapay zekâ notu hedef kitleye göre ayrılır', () => {
+    const data = buildWeeklyReport('Deniz', 54, [], DUAL_AI);
+
+    it('veri: aiNote yalnız veli notu, aiTeacherNote yalnız akademik kısım', () => {
+        expect(data.aiNote).toContain('Değerli Velimiz');
+        expect(data.aiNote).not.toContain('MAB.2');
+        expect(data.aiTeacherNote).toContain('MAB.2');
+        expect(data.aiTeacherNote).not.toContain('Değerli Velimiz');
+    });
+
+    it('veli PDF çıktısı yalnız veli notunu içerir (Maarif kodu / akademik metin yok)', () => {
+        const html = buildWeeklyReportHTML(data, true, 'parent');
+        expect(html).toContain('Uzman Değerlendirme Notu');
+        expect(html).toContain('Değerli Velimiz');
+        expect(html).not.toContain('MAB.2');
+        expect(html).not.toContain('Yapay Zekâ Akademik Notu');
+    });
+
+    it('öğretmen özeti yalnız akademik notu içerir (veli notu yok) ve yapay zekâ uyarısını taşır', () => {
+        const html = buildWeeklyReportHTML(data, true, 'teacher');
+        expect(html).toContain('Yapay Zekâ Akademik Notu');
+        expect(html).toContain('MAB.2');
+        expect(html).toContain('uzman değerlendirmesi yerine geçmez');
+        expect(html).not.toContain('Değerli Velimiz');
+        expect(html).not.toContain('Saygılarımızla');
+    });
+
+    it('AI notu yoksa iki PDF de o bölümü göstermez', () => {
+        const none = buildWeeklyReport('Deniz', 54, [], null);
+        expect(buildWeeklyReportHTML(none, true, 'parent')).not.toContain('Uzman Değerlendirme Notu');
+        expect(buildWeeklyReportHTML(none, true, 'teacher')).not.toContain('Yapay Zekâ Akademik Notu');
+    });
+});
 
 describe('buildWeeklyReportHTML — öğretmen paylaşımı', () => {
     const html = buildWeeklyReportHTML(rich, true, 'teacher');
