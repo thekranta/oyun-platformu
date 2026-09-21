@@ -219,7 +219,7 @@ export default function SignUp() {
                         </View>
 
                         {/* Parent Name */}
-                        <View style={[
+                        <View collapsable={false} style={[
                             styles.inputContainer,
                             focusedInput === 'parentName' && styles.inputContainerFocused
                         ]}>
@@ -236,7 +236,7 @@ export default function SignUp() {
                         </View>
 
                         {/* Email */}
-                        <View style={[
+                        <View collapsable={false} style={[
                             styles.inputContainer,
                             focusedInput === 'email' && styles.inputContainerFocused
                         ]}>
@@ -255,7 +255,7 @@ export default function SignUp() {
                         </View>
 
                         {/* Password */}
-                        <View style={[
+                        <View collapsable={false} style={[
                             styles.inputContainer,
                             focusedInput === 'password' && styles.inputContainerFocused
                         ]}>
@@ -286,7 +286,7 @@ export default function SignUp() {
                         </View>
 
                         {/* Child Name */}
-                        <View style={[
+                        <View collapsable={false} style={[
                             styles.inputContainer,
                             focusedInput === 'childName' && styles.inputContainerFocused
                         ]}>
@@ -324,7 +324,7 @@ export default function SignUp() {
                             ))}
                         </View>
                         <Text style={styles.ageHint}>veya</Text>
-                        <View style={[
+                        <View collapsable={false} style={[
                             styles.inputContainer,
                             focusedInput === 'childAge' && styles.inputContainerFocused,
                             { marginBottom: 16 }

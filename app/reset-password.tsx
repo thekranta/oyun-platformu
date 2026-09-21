@@ -184,7 +184,7 @@ export default function ResetPassword() {
                     <Text style={styles.welcomeSubtitle}>Yeni şifrenizi giriniz</Text>
 
                     {/* New Password Input */}
-                    <View style={[
+                    <View collapsable={false} style={[
                         styles.inputContainer,
                         focusedInput === 'newPassword' && styles.inputContainerFocused
                     ]}>
@@ -202,7 +202,7 @@ export default function ResetPassword() {
                     </View>
 
                     {/* Confirm Password Input */}
-                    <View style={[
+                    <View collapsable={false} style={[
                         styles.inputContainer,
                         focusedInput === 'confirmPassword' && styles.inputContainerFocused
                     ]}>

@@ -21,11 +21,6 @@ import { isRouteOpenForTier } from '../../lib/gameAccess';
 import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
-// Hangi APK'nin calistigini ekranda kanitlar (yanlis surum test edilmesin diye).
-// NOT: b9-tani (newArchEnabled:false denemesi) Gradle hatasiyla hic derlenemedi,
-// bu yuzden atlaniyor -- bu build b8-tani ile AYNI koddur (mimari geri alindi).
-const BUILD_ETIKET = 'b8-tani';
-
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
  *
@@ -40,8 +35,6 @@ const GirisFormu = React.memo(function GirisFormu({
   isMobile,
   isLoggingIn,
   initialEmail,
-  decorAcik,
-  onToggleDecor,
   onLogin,
   onForgot,
   onSignup,
@@ -52,8 +45,6 @@ const GirisFormu = React.memo(function GirisFormu({
   isMobile: boolean;
   isLoggingIn: boolean;
   initialEmail: string;
-  decorAcik: boolean;
-  onToggleDecor: () => void;
   onLogin: (email: string, password: string) => void;
   onForgot: (email: string) => void;
   onSignup: () => void;
@@ -72,43 +63,15 @@ const GirisFormu = React.memo(function GirisFormu({
   // yeniden boyutlanmayabiliyor; bosluğu kendimiz birakiyoruz (deterministik).
   const [kbHeight, setKbHeight] = useState(0);
 
-  // ---- TANI GOSTERGESI (yalniz bu ic-test surumunde) ----
-  // ONEMLI: tus basina setState YAPILMAZ — olcum sistemi bozmasin diye degerler
-  // ref'te birikir ve saniyede bir ekrana kopyalanir.
-  //
-  // KRITIK DUZELTME: bu zamanlayici DAHA ONCE odak varken bile her saniye
-  // setState cagirip GirisFormu'yu (TextInput'larin da icinde oldugu bilesen)
-  // yeniden render ediyordu. Ilk tani turunda blur:39 / degisim:0 / e:0 gozlendi
-  // — yani alan odaga girip 39 kez odagi kaybetmis ama TEK KARAKTER bile
-  // girmemis. Bu, tanı aracının olcmeye calistigi sorunu kendisinin yaratma/
-  // agirlastirma ihtimalini gosteriyor. Simdi zamanlayici ODAKLIYKEN durur,
-  // blur oldugu AN anlik yenilenir (boylece test sonrasi sayilar yine gorunur).
-  const hudRef = useRef({ eLen: 0, pLen: 0, lastKey: '-', delta: '-', blur: 0, degisim: 0, jsFps: 0 });
-  const [hud, setHud] = useState(hudRef.current);
-  const focusedRef = useRef(false);
-  const renderSayaci = useRef(0);
-  renderSayaci.current += 1;
-
   useEffect(() => {
     const show = Keyboard.addListener('keyboardDidShow', (e) => setKbHeight(e.endCoordinates?.height ?? 0));
     const hide = Keyboard.addListener('keyboardDidHide', () => setKbHeight(0));
-    // JS thread canliligi: saniyedeki kare sayisi. Dekor acik/kapali farki
-    // burada gorunur — kok neden animasyon yuku ise bu sayi dramatik degisir.
-    let kare = 0;
-    let raf = requestAnimationFrame(function tick() { kare += 1; raf = requestAnimationFrame(tick); });
-    const iv = setInterval(() => {
-      hudRef.current.jsFps = kare; kare = 0;
-      // ODAKLIYKEN setState YOK: input'un ustundeki bileseni saniyede bir
-      // yeniden render etmek odak/klavye ile catisiyor olabilir.
-      if (!focusedRef.current) setHud({ ...hudRef.current });
-    }, 1000);
-    return () => { show.remove(); hide.remove(); cancelAnimationFrame(raf); clearInterval(iv); };
+    return () => { show.remove(); hide.remove(); };
   }, []);
 
   const submit = () => onLogin(emailRef.current.trim(), passwordRef.current);
 
   const keyboardOpen = kbHeight > 0;
-  const win = Dimensions.get('window');
 
   return (
     // KeyboardAvoidingView KULLANILMIYOR: davranisi platform/edge-to-edge'e gore
@@ -163,13 +126,14 @@ const GirisFormu = React.memo(function GirisFormu({
           <View style={styles.titleContainer}>
             <Image source={asset('/images/icon.png')} style={styles.logoImage} />
             <Text style={styles.girisBaslik}>{t('login.title')}</Text>
-            {/* A/B ANAHTARI: kalemE dokunmak arka plan animasyonlarini acip kapatir.
-                Kapatinca yazma/silme duzeliyorsa kok neden kesinlesir. */}
-            <Text style={styles.titleEmoji} onPress={onToggleDecor} suppressHighlighting>✏️</Text>
+            <Text style={styles.titleEmoji}>✏️</Text>
           </View>
           <Text style={styles.welcomeSubtitle}>{t('login.welcome')}</Text>
 
-          <View style={[
+          {/* collapsable={false}: odakta kapsayıcıya gölge/elevation eklenip çıkarılınca Android'de (Fabric)
+              kapsayıcı yeniden oluşturulup TextInput'u ağaçtan söküyor, odak anında kayboluyordu
+              (yazılamama/silinememe hatasının kök nedeni; Expo Go + BlueStacks'te ölçüldü). */}
+          <View collapsable={false} style={[
             styles.inputContainer,
             focusedInput === 'email' && styles.inputContainerFocused
           ]}>
@@ -179,14 +143,7 @@ const GirisFormu = React.memo(function GirisFormu({
               placeholder={t('login.emailPlaceholder')}
               placeholderTextColor="#9E9E9E"
               defaultValue={initialEmail}
-              onChangeText={(t) => {
-                const d = t.length - emailRef.current.length;
-                emailRef.current = t;
-                hudRef.current.eLen = t.length;
-                hudRef.current.delta = d > 0 ? `+${d}` : String(d);
-                hudRef.current.degisim += 1;
-              }}
-              onKeyPress={(e) => { hudRef.current.lastKey = e.nativeEvent.key; }}
+              onChangeText={(t) => { emailRef.current = t; }}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
@@ -196,22 +153,14 @@ const GirisFormu = React.memo(function GirisFormu({
               // BlueStacks/kisa pencerede IME kendi tam-ekran metin kutusunu aciyordu
               // ("hizli bir gecis" tarifine birebir uyar) — kapatiliyor.
               disableFullscreenUI
-              onFocus={() => {
-                focusedRef.current = true;
-                setFocusedInput('email');
-              }}
-              onBlur={() => {
-                focusedRef.current = false;
-                setFocusedInput(null);
-                hudRef.current.blur += 1;
-                setHud({ ...hudRef.current }); // aninda yenile — test sonrasi sayilar hemen gorunsun
-              }}
+              onFocus={() => setFocusedInput('email')}
+              onBlur={() => setFocusedInput(null)}
               returnKeyType="next"
               onSubmitEditing={() => passwordInputRef.current?.focus()}
             />
           </View>
 
-          <View style={[
+          <View collapsable={false} style={[
             styles.inputContainer,
             focusedInput === 'password' && styles.inputContainerFocused
           ]}>
@@ -221,28 +170,15 @@ const GirisFormu = React.memo(function GirisFormu({
               style={styles.inputModern}
               placeholder={t('login.passwordPlaceholder')}
               placeholderTextColor="#9E9E9E"
-              onChangeText={(t) => {
-                passwordRef.current = t;
-                hudRef.current.pLen = t.length;
-                hudRef.current.degisim += 1;
-              }}
-              onKeyPress={(e) => { hudRef.current.lastKey = e.nativeEvent.key; }}
+              onChangeText={(t) => { passwordRef.current = t; }}
               secureTextEntry
               autoCapitalize="none"
               autoCorrect={false}
               autoComplete="off"
               importantForAutofill="no"
               disableFullscreenUI
-              onFocus={() => {
-                focusedRef.current = true;
-                setFocusedInput('password');
-              }}
-              onBlur={() => {
-                focusedRef.current = false;
-                setFocusedInput(null);
-                hudRef.current.blur += 1;
-                setHud({ ...hudRef.current });
-              }}
+              onFocus={() => setFocusedInput('password')}
+              onBlur={() => setFocusedInput(null)}
               returnKeyType="go"
               onSubmitEditing={submit}
             />
@@ -274,18 +210,6 @@ const GirisFormu = React.memo(function GirisFormu({
             </TouchableOpacity>
           </View>
 
-          {/* ---- TANI GOSTERGESI ----
-              YALNIZCA native (Android tani APK'si) icin. Web'de gosterilmez:
-              hata Android'e ozgu ve canli sitede kirmizi olcum satiri rahatsiz edici. */}
-          {Platform.OS !== 'web' && (
-            <Text style={styles.taniHud}>
-              {`odak:${focusedInput ?? 'YOK'}  e:${hud.eLen}  s:${hud.pLen}  Δ:${hud.delta}  tus:${hud.lastKey}`}
-              {'\n'}
-              {`kb:${kbHeight}  pencere:${Math.round(win.width)}x${Math.round(win.height)}  blur:${hud.blur}  degisim:${hud.degisim}`}
-              {'\n'}
-              {`render:${renderSayaci.current}  jsFPS:${hud.jsFps}  DEKOR:${decorAcik ? 'ACIK' : 'KAPALI'}  ${BUILD_ETIKET}`}
-            </Text>
-          )}
         </View>
 
         {/* Alt butonlar artik ScrollView ICINDE ve kosullu KALDIRILMIYOR —
@@ -480,9 +404,6 @@ export default function App() {
   const handleAdmin = useCallback(() => router.push('/admin'), [router]);
   const handleVeli = useCallback(() => router.push('/veli-dashboard'), [router]);
   const handleOgretmen = useCallback(() => router.push('/teacher-dashboard'), [router]);
-  // Giris ekraninda arka plan animasyonlarini ac/kapa (Android IME tanisi icin A/B).
-  const [decorAcik, setDecorAcik] = useState(true);
-  const handleToggleDecor = useCallback(() => setDecorAcik((v) => !v), []);
 
   const [selectedSongIndex] = useState<number>(0);
   const [dailyPlanDate, setDailyPlanDate] = useState<string>('');
@@ -520,13 +441,11 @@ export default function App() {
     const isMobile = windowWidth < 768;
 
     return (
-      <DynamicBackground decor={decorAcik}>
+      <DynamicBackground>
         <GirisFormu
           isMobile={isMobile}
           isLoggingIn={isLoggingIn}
           initialEmail={email}
-          decorAcik={decorAcik}
-          onToggleDecor={handleToggleDecor}
           onLogin={handleLogin}
           onForgot={handleForgot}
           onSignup={handleSignup}
@@ -747,15 +666,6 @@ const styles = StyleSheet.create({
   inputIcon: {
     fontSize: 20,
     marginRight: 12,
-  },
-  // Tani gostergesi — yalniz ic-test surumunde gorunur, kucuk ve dikkat cekmeyen.
-  taniHud: {
-    marginTop: 10,
-    fontSize: 10,
-    lineHeight: 14,
-    color: '#B71C1C',
-    textAlign: 'center',
-    fontVariant: ['tabular-nums'],
   },
   inputModern: {
     flex: 1,
