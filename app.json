@@ -53,7 +53,15 @@
           "microphonePermission": "Uygulama, çocuğun sesli yanıtlarını değerlendirmek için mikrofonu kullanır."
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.1"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
