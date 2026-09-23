@@ -61,6 +61,12 @@
             "deploymentTarget": "15.1"
           }
         }
+      ],
+      [
+        "./plugins/withIosPodDeploymentTarget",
+        {
+          "deploymentTarget": "15.1"
+        }
       ]
     ],
     "experiments": {
