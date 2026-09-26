@@ -10,13 +10,17 @@ interface RewardCardProps {
     todayCount: number;
     concept: RewardConcept;
     onAward: () => Promise<void> | void;
+    /** Bahçe sanatının piksel genişliği — Sınıf Bahçesi tam ekranında büyük, önizlemede küçük. */
+    artSize?: number;
+    /** Sunum modu: buton/pip/sayaç gizlenir, yalnız isim + büyümüş bahçe kalır (akıllı tahta için). */
+    presentation?: boolean;
 }
 
 // Konsept ne olursa olsun SABİT kalan UI-chrome rengi (buton/odak halkası) — öğretmen
 // günden güne konsept değiştirdiğinde "hangi buton neyi yapıyor" yeniden öğrenilmesin.
 const AWARD_COLOR = '#4ECDC4';
 
-export default function RewardCard({ name, stage, todayCount, concept, onAward }: RewardCardProps) {
+export default function RewardCard({ name, stage, todayCount, concept, onAward, artSize = 110, presentation = false }: RewardCardProps) {
     const [awardPulse, setAwardPulse] = useState(0);
     const [celebrate, setCelebrate] = useState(0);
     const [busy, setBusy] = useState(false);
@@ -44,28 +48,32 @@ export default function RewardCard({ name, stage, todayCount, concept, onAward }
     const Art = concept.Art;
 
     return (
-        <View style={[styles.card, { borderColor: `${concept.accentColor}33` }]}>
-            <Text style={styles.name} numberOfLines={1}>{name}</Text>
-            <Text style={[styles.stageLabel, { color: concept.accentColor }]}>{concept.stageLabels[stage]}</Text>
-            <View style={styles.artWrap}>
-                <Art stage={stage} size={110} awardPulse={awardPulse} celebrate={celebrate} />
+        <View style={[styles.card, { borderColor: `${concept.accentColor}33` }, presentation && styles.cardPresentation]}>
+            <Text style={[styles.name, presentation && styles.namePresentation]} numberOfLines={1}>{name}</Text>
+            <Text style={[styles.stageLabel, presentation && styles.stageLabelPresentation, { color: concept.accentColor }]}>{concept.stageLabels[stage]}</Text>
+            <View style={{ width: artSize, height: (artSize * 170) / 120, alignItems: 'center', justifyContent: 'center' }}>
+                <Art stage={stage} size={artSize} awardPulse={awardPulse} celebrate={celebrate} />
             </View>
-            <View style={styles.pips}>
-                {[0, 1, 2].map((i) => (
-                    <View key={i} style={[styles.pip, i < pips && { backgroundColor: AWARD_COLOR }]} />
-                ))}
-            </View>
-            <TouchableOpacity style={styles.awardBtn} onPress={handlePress} disabled={busy} accessibilityRole="button" accessibilityLabel={`${name} için ödül ver`}>
-                {busy ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                    <>
-                        <Ionicons name="water" size={14} color="#fff" />
-                        <Text style={styles.awardBtnText}>Ödül ver</Text>
-                    </>
-                )}
-            </TouchableOpacity>
-            <Text style={styles.countLine}>Bugün: {todayCount}</Text>
+            {!presentation && (
+                <>
+                    <View style={styles.pips}>
+                        {[0, 1, 2].map((i) => (
+                            <View key={i} style={[styles.pip, i < pips && { backgroundColor: AWARD_COLOR }]} />
+                        ))}
+                    </View>
+                    <TouchableOpacity style={styles.awardBtn} onPress={handlePress} disabled={busy} accessibilityRole="button" accessibilityLabel={`${name} için ödül ver`}>
+                        {busy ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                            <>
+                                <Ionicons name="water" size={14} color="#fff" />
+                                <Text style={styles.awardBtnText}>Ödül ver</Text>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                    <Text style={styles.countLine}>Bugün: {todayCount}</Text>
+                </>
+            )}
         </View>
     );
 }
@@ -76,9 +84,14 @@ const styles = StyleSheet.create({
         alignItems: 'center', padding: 12, gap: 6,
         shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
     },
+    cardPresentation: {
+        width: 'auto', backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 0,
+        shadowOpacity: 0, elevation: 0, paddingVertical: 10,
+    },
     name: { fontSize: 14.5, fontWeight: '700', color: '#333' },
+    namePresentation: { fontSize: 18 },
     stageLabel: { fontSize: 11.5, fontWeight: '700' },
-    artWrap: { width: 110, height: (110 * 170) / 120, alignItems: 'center', justifyContent: 'center' },
+    stageLabelPresentation: { fontSize: 13.5 },
     pips: { flexDirection: 'row', gap: 4 },
     pip: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#E5E5E5' },
     awardBtn: {

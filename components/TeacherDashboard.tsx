@@ -22,7 +22,7 @@ import { teacherView } from '../lib/aiAudience';
 import InAppNotice from './InAppNotice';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
-import TeacherRewardBoard from './rewardBoard/TeacherRewardBoard';
+import SinifBahcesiScreen from './rewardBoard/SinifBahcesiScreen';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -131,6 +131,7 @@ export default function TeacherDashboard({
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState<ClassData[]>([]);
     const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
+    const [gardenOpen, setGardenOpen] = useState(false);
     const [students, setStudents] = useState<StudentData[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
     const [studentScores, setStudentScores] = useState<GameScore[]>([]);
@@ -727,13 +728,28 @@ export default function TeacherDashboard({
                     </View>
                 )}
 
-                {/* Sınıf Bahçesi: ödül panosu (yalnız ücretli sınıf paketi) */}
+                {/* Sınıf Bahçesi: ayrı, tam ekran bir "sunum" görünümüne açılan giriş (yalnız ücretli sınıf paketi).
+                    Öğrenci listesiyle aynı yerde küçük bir bölüm olarak GÖMÜLÜ DEĞİL — kullanıcı geri bildirimiyle
+                    (buried + tekrarcı + görsel olarak zayıf durduğu için) ayrı tam ekrana taşındı. */}
                 {selectedClass && flags.canUseRewardBoard && (
-                    <TeacherRewardBoard
-                        key={selectedClass.id}
+                    <TouchableOpacity style={styles.gardenBanner} onPress={() => setGardenOpen(true)} activeOpacity={0.85}>
+                        <Text style={styles.gardenBannerEmoji}>🌱</Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.gardenBannerTitle}>Sınıf Bahçesini Aç</Text>
+                            <Text style={styles.gardenBannerSubtitle}>Tam ekran, sınıfa yansıtılabilir ödül panosu</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={22} color="#2e9e6b" />
+                    </TouchableOpacity>
+                )}
+                {selectedClass && (
+                    <SinifBahcesiScreen
+                        visible={gardenOpen}
                         classId={selectedClass.id}
+                        className={selectedClass.name}
+                        classEmoji={selectedClass.emoji}
                         initialTheme={selectedClass.reward_theme || 'bitki'}
                         roster={students}
+                        onClose={() => setGardenOpen(false)}
                     />
                 )}
 
@@ -1096,6 +1112,16 @@ const styles = StyleSheet.create({
     premiumBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF3CD', padding: 14, borderRadius: 16, marginBottom: 16, gap: 10 },
     premiumBannerEmoji: { fontSize: 20 },
     premiumBannerText: { fontSize: 14, color: '#856404', fontWeight: '500' },
+
+    // Sınıf Bahçesi giriş bandı
+    gardenBanner: {
+        flexDirection: 'row', alignItems: 'center', backgroundColor: '#EAFBF1', padding: 18, borderRadius: 22,
+        marginTop: 8, gap: 14, borderWidth: 2, borderColor: '#BFEBD3',
+        shadowColor: '#2e9e6b', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 8, elevation: 3,
+    },
+    gardenBannerEmoji: { fontSize: 34 },
+    gardenBannerTitle: { fontSize: 17, fontWeight: '800', color: '#1f6b46' },
+    gardenBannerSubtitle: { fontSize: 12.5, color: '#4d8a6c', marginTop: 2 },
 
     // Score Card
     scoreCard: { backgroundColor: '#fff', borderRadius: 20, padding: 18, marginBottom: 12, borderWidth: 2, borderColor: '#F0F0F0' },
