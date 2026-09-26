@@ -22,6 +22,7 @@ import { teacherView } from '../lib/aiAudience';
 import InAppNotice from './InAppNotice';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
+import TeacherRewardBoard from './rewardBoard/TeacherRewardBoard';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -74,6 +75,9 @@ interface ClassData {
     name: string;
     studentCount: number;
     emoji: string;
+    /** Sınıf Bahçesi'nde aktif görsel konsept (bkz. components/rewardBoard). Sunucu fonksiyonu
+     * henüz çalıştırılmadıysa ya da demo modundaysa gelmez — TeacherRewardBoard 'bitki'ye düşer. */
+    reward_theme?: string;
 }
 
 type EnrolStatus = 'pending' | 'accepted' | 'suspended';
@@ -176,6 +180,7 @@ export default function TeacherDashboard({
                         name: c.name,
                         studentCount: Array.isArray(countData) ? countData.length : 0,
                         emoji: CLASS_EMOJIS[idx % CLASS_EMOJIS.length],
+                        reward_theme: c.reward_theme,
                     };
                 }));
                 setClasses(classesWithCount);
@@ -720,6 +725,16 @@ export default function TeacherDashboard({
                             </View>
                         )}
                     </View>
+                )}
+
+                {/* Sınıf Bahçesi: ödül panosu (yalnız ücretli sınıf paketi) */}
+                {selectedClass && flags.canUseRewardBoard && (
+                    <TeacherRewardBoard
+                        key={selectedClass.id}
+                        classId={selectedClass.id}
+                        initialTheme={selectedClass.reward_theme || 'bitki'}
+                        roster={students}
+                    />
                 )}
 
                 {/* Student Details */}

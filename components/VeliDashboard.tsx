@@ -28,6 +28,7 @@ import { asset } from '../lib/assetMap';
 import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, getVeliFlags, VeliTier } from '../lib/subscriptionTiers';
 import { ClassGameTier, fetchClassGameTier } from '../lib/classAccess';
 import DynamicBackground from './DynamicBackground';
+import { getRewardConcept } from './rewardBoard/conceptRegistry';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -138,6 +139,15 @@ interface ClassInvite {
     teacher_is_paid: boolean;
     added_at: string;
     accepted_via: 'legacy' | 'package' | 'parent' | null;
+}
+
+/** Sınıf Bahçesi (sunucu fonksiyonu my_child_rewards): supabase_migrations/add_class_rewards.sql */
+interface ChildReward {
+    class_name: string | null;
+    teacher_name: string | null;
+    today_count: number;
+    stage: 0 | 1 | 2 | 3;
+    reward_theme: string | null;
 }
 
 interface VeliDashboardProps {
@@ -261,6 +271,21 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     };
     useEffect(() => {
         loadClassInvites();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [email]);
+    // Sınıf Bahçesi: çocuğun (yalnız ücretli sınıf paketi öğretmeninde, onaylı) bugünkü ödül durumu.
+    // Fonksiyon henüz yoksa ya da veri yoksa hata sessizce yutulur, kart hiç görünmez.
+    const [childRewards, setChildRewards] = useState<ChildReward[]>([]);
+    const loadChildRewards = async () => {
+        try {
+            const { data, error } = await supabase.rpc('my_child_rewards');
+            if (!error && Array.isArray(data)) setChildRewards(data as ChildReward[]);
+        } catch {
+            /* sessiz */
+        }
+    };
+    useEffect(() => {
+        loadChildRewards();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [email]);
     const respondInvite = async (invite: ClassInvite, accept: boolean) => {
@@ -1024,6 +1049,27 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                             })}
                         </View>
                     )}
+
+                    {/* Sınıf Bahçesi: öğretmenin (ücretli sınıf paketi) sınıfındaki davranış ödül panosu */}
+                    {childRewards.map((r, i) => {
+                        const concept = getRewardConcept(r.reward_theme);
+                        const RewardArt = concept.Art;
+                        return (
+                            <View key={i} style={styles.inviteCard}>
+                                <Text style={styles.inviteTitle}>🌱 Sınıf Bahçesi</Text>
+                                <View style={styles.rewardArtWrap}>
+                                    <RewardArt stage={r.stage} size={140} />
+                                </View>
+                                <Text style={styles.rewardHeadline}>
+                                    {childName}'in bahçesi bugün {concept.stageLabels[r.stage].toLowerCase()} aşamasında
+                                </Text>
+                                <Text style={styles.inviteMetaSmall}>
+                                    {r.teacher_name ? `${r.teacher_name} — ` : ''}{r.class_name} · bugün {r.today_count} kez su/güneş aldı
+                                </Text>
+                                <Text style={styles.rewardFootnote}>Her çocuk kendi bahçesinde, kendi hızında büyür.</Text>
+                            </View>
+                        );
+                    })}
 
                     {/* Tab Navigation - Simplified to 2 tabs */}
                     <View style={styles.tabContainer}>
@@ -2884,6 +2930,9 @@ const styles = StyleSheet.create({
     },
     inviteTitle: { fontSize: 17, fontWeight: 'bold', color: COLORS.text },
     inviteIntro: { fontSize: 13, color: COLORS.textLight, lineHeight: 19, marginTop: 6, marginBottom: 10 },
+    rewardArtWrap: { alignItems: 'center', marginVertical: 8 },
+    rewardHeadline: { fontSize: 15, fontWeight: '700', color: COLORS.text, textAlign: 'center', marginTop: 4 },
+    rewardFootnote: { fontSize: 12, color: COLORS.textLight, textAlign: 'center', marginTop: 6, fontStyle: 'italic' },
     inviteItem: {
         backgroundColor: '#fff',
         borderRadius: 14,
