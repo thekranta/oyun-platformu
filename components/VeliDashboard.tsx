@@ -336,19 +336,27 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                 // Save to Supabase - Update the latest score with cumulative report
                 if (scores.length > 0 && scores[0].id) {
                     try {
-                        await fetch(
+                        // Prefer: return=representation — PostgREST bir UPDATE'i RLS satırı
+                        // filtrelese bile (0 satır eşleşse bile) 2xx döner; gerçekten bir satır
+                        // güncellendiğini yalnız dönen dizinin doluluğuna bakarak anlayabiliriz.
+                        const response = await fetch(
                             `${SUPABASE_URL}/rest/v1/oyun_skorlari?id=eq.${scores[0].id}`,
                             {
                                 method: 'PATCH',
                                 headers: {
                                     ...(await getAuthHeaders()),
                                     'Content-Type': 'application/json',
-                                    'Prefer': 'return=minimal',
+                                    'Prefer': 'return=representation',
                                 },
                                 body: JSON.stringify({ kumulatif_ai_yorumu: report }),
                             }
                         );
-                        console.log('💾 Cumulative report saved to Supabase');
+                        const updated = response.ok ? await response.json().catch(() => []) : [];
+                        if (!response.ok || !Array.isArray(updated) || updated.length === 0) {
+                            console.error('Kümülatif rapor kaydedilemedi (izin/RLS ya da satır bulunamadı):', response.status);
+                        } else {
+                            console.log('💾 Cumulative report saved to Supabase');
+                        }
                     } catch (saveError) {
                         console.error('Failed to save report to Supabase:', saveError);
                     }
