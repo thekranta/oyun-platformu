@@ -21,8 +21,13 @@ const AnimatedG = Animated.createAnimatedComponent(G);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
+// NOT: cloud saf beyaz (#FFFFFF) DEĞİLDİR — kart arka planı da beyaz olduğundan saf beyaz
+// bulut görünmez oluyordu (bkz. kullanıcı ekran görüntüsü: güneş+gökkuşağı arasında bulutun
+// olması gereken yerde boşluk). Hafif mavimsi ton + kontur her arka planda (beyaz kart, mavi
+// gökyüzü degrade) okunur kalmasını sağlar.
 const COLORS = {
-    cloud: '#FFFFFF',
+    cloud: '#EAF6FE',
+    cloudOutline: '#BFE0F2',
     cloudShade: '#CFE3EE',
     sun: '#FFC857',
     rainbow: ['#FF6F6F', '#FFC857', '#6BCB77', '#4D96FF', '#B388EB'],
@@ -163,9 +168,9 @@ export default function SkyArt({ stage, size, awardPulse = 0, celebrate = 0 }: R
             <AnimatedG animatedProps={stage1}>
                 <AnimatedG animatedProps={driftProps}>
                     <Ellipse cx={60} cy={110} rx={22} ry={5} fill={COLORS.cloudShade} opacity={0.5} />
-                    <Ellipse cx={44} cy={104} rx={11} ry={9} fill={COLORS.cloud} />
-                    <Ellipse cx={76} cy={103} rx={12} ry={10} fill={COLORS.cloud} />
-                    <Ellipse cx={60} cy={100} rx={20} ry={13} fill={COLORS.cloud} />
+                    <Ellipse cx={44} cy={104} rx={11} ry={9} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
+                    <Ellipse cx={76} cy={103} rx={12} ry={10} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
+                    <Ellipse cx={60} cy={100} rx={20} ry={13} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
                 </AnimatedG>
             </AnimatedG>
 
@@ -175,10 +180,10 @@ export default function SkyArt({ stage, size, awardPulse = 0, celebrate = 0 }: R
                 <Circle cx={82} cy={68} r={15} fill={COLORS.sun} />
                 <AnimatedG animatedProps={driftProps}>
                     <Ellipse cx={55} cy={92} rx={23} ry={6} fill={COLORS.cloudShade} opacity={0.5} />
-                    <Ellipse cx={58} cy={68} rx={15} ry={12} fill={COLORS.cloud} />
-                    <Ellipse cx={36} cy={87} rx={13} ry={10} fill={COLORS.cloud} />
-                    <Ellipse cx={76} cy={85} rx={14} ry={11} fill={COLORS.cloud} />
-                    <Ellipse cx={55} cy={82} rx={26} ry={16} fill={COLORS.cloud} />
+                    <Ellipse cx={58} cy={68} rx={15} ry={12} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
+                    <Ellipse cx={36} cy={87} rx={13} ry={10} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
+                    <Ellipse cx={76} cy={85} rx={14} ry={11} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
+                    <Ellipse cx={55} cy={82} rx={26} ry={16} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
                 </AnimatedG>
             </AnimatedG>
 
@@ -193,14 +198,14 @@ export default function SkyArt({ stage, size, awardPulse = 0, celebrate = 0 }: R
                     strokeLinecap="round"
                 />
                 <Circle cx={88} cy={60} r={18} fill={COLORS.sun} />
-                <Path d={SPARKLE_D} fill={COLORS.cloud} transform="translate(18 96) scale(0.9)" />
+                <Path d={SPARKLE_D} fill={COLORS.cloudOutline} transform="translate(18 96) scale(0.9)" />
                 <Path d={SPARKLE_D} fill={COLORS.sun} transform="translate(100 100) scale(0.7)" />
                 <AnimatedG animatedProps={driftProps}>
                     <Ellipse cx={55} cy={82} rx={26} ry={7} fill={COLORS.cloudShade} opacity={0.5} />
-                    <Ellipse cx={58} cy={56} rx={17} ry={13} fill={COLORS.cloud} />
-                    <Ellipse cx={32} cy={78} rx={15} ry={11} fill={COLORS.cloud} />
-                    <Ellipse cx={80} cy={75} rx={16} ry={12} fill={COLORS.cloud} />
-                    <Ellipse cx={55} cy={72} rx={30} ry={18} fill={COLORS.cloud} />
+                    <Ellipse cx={58} cy={56} rx={17} ry={13} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
+                    <Ellipse cx={32} cy={78} rx={15} ry={11} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
+                    <Ellipse cx={80} cy={75} rx={16} ry={12} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
+                    <Ellipse cx={55} cy={72} rx={30} ry={18} fill={COLORS.cloud} stroke={COLORS.cloudOutline} strokeWidth={1.5} />
                 </AnimatedG>
             </AnimatedG>
 

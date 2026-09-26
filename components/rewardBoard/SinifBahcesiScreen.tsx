@@ -3,7 +3,7 @@
 // sinif-bahcesi-uygulama — ilk sürüm TeacherDashboard içine küçük bir bölüm olarak
 // gömülüydü, kullanıcı geri bildirimiyle ayrı tam ekrana taşındı).
 import React, { useEffect, useMemo, useState } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
@@ -181,29 +181,35 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
 
                 {!!notice && <Text style={styles.noticeText}>{notice}</Text>}
 
-                {unavailable ? (
-                    <Text style={styles.emptyText}>Sınıf Bahçesi henüz kurulmadı.</Text>
-                ) : visibleStudents.length === 0 ? (
-                    <Text style={styles.emptyText}>Onaylı öğrenci olduğunda bahçe burada görünecek.</Text>
-                ) : (
-                    <View style={[styles.grid, { paddingHorizontal: horizontalPadding, gap }]}>
-                        {visibleStudents.map((s) => {
-                            const row = summary[s.id];
-                            return (
-                                <RewardCard
-                                    key={s.id}
-                                    name={s.child_name || '—'}
-                                    stage={(row?.stage ?? 0) as RewardStage}
-                                    todayCount={row?.today_count ?? 0}
-                                    concept={concept}
-                                    artSize={artSize}
-                                    presentation={presentation}
-                                    onAward={() => handleAward(s.id)}
-                                />
-                            );
-                        })}
-                    </View>
-                )}
+                {/* ScrollView + flexGrow:1 justifyContent:'center': az öğrenci varken bahçe ekranın
+                    ortasında toplu durur (tek kart boş ekranda kaybolmaz), çok öğrenci varken
+                    normal şekilde kaydırılır (önceki sürümde kaydırma YOKTU — sınıf büyüdükçe
+                    kartlar ekranın altından taşardı). */}
+                <ScrollView contentContainerStyle={styles.scrollContent}>
+                    {unavailable ? (
+                        <Text style={styles.emptyText}>Sınıf Bahçesi henüz kurulmadı.</Text>
+                    ) : visibleStudents.length === 0 ? (
+                        <Text style={styles.emptyText}>Onaylı öğrenci olduğunda bahçe burada görünecek.</Text>
+                    ) : (
+                        <View style={[styles.grid, { paddingHorizontal: horizontalPadding, gap }]}>
+                            {visibleStudents.map((s) => {
+                                const row = summary[s.id];
+                                return (
+                                    <RewardCard
+                                        key={s.id}
+                                        name={s.child_name || '—'}
+                                        stage={(row?.stage ?? 0) as RewardStage}
+                                        todayCount={row?.today_count ?? 0}
+                                        concept={concept}
+                                        artSize={artSize}
+                                        presentation={presentation}
+                                        onAward={() => handleAward(s.id)}
+                                    />
+                                );
+                            })}
+                        </View>
+                    )}
+                </ScrollView>
 
                 <Modal visible={dayOverlayOpen} transparent animationType="fade" onRequestClose={() => setDayOverlayOpen(false)}>
                     <View style={styles.overlayBg}>
@@ -258,7 +264,8 @@ const styles = StyleSheet.create({
     dayBtnText: { fontSize: 13, fontWeight: '700', color: '#333' },
     noticeText: { color: '#C0392B', fontSize: 13, textAlign: 'center', marginBottom: 8 },
     emptyText: { color: '#888', fontSize: 15, fontStyle: 'italic', textAlign: 'center', marginTop: 60 },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', paddingBottom: 40 },
+    scrollContent: { flexGrow: 1, justifyContent: 'center' },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', paddingBottom: 40 },
     overlayBg: { flex: 1, backgroundColor: 'rgba(20,42,40,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24 },
     overlayCard: { backgroundColor: '#fff', borderRadius: 26, padding: 28, width: '100%', maxWidth: 560, alignItems: 'center' },
     overlayTitle: { fontSize: 22, fontWeight: '800', color: '#333', marginBottom: 4, textAlign: 'center' },

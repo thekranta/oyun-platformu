@@ -79,13 +79,18 @@ export default function RewardCard({ name, stage, todayCount, concept, onAward, 
 }
 
 const styles = StyleSheet.create({
+    // GENİŞLİK KASITLI OLARAK BURADA SABİTLENMEZ: kart, içindeki sanat kutusunun (artSize)
+    // genişliğine göre kendini boyutlandırır (flex column + alignItems:'center' varsayılan
+    // davranışı). Önceki sabit width:150, çağıranın verdiği artSize'ı (150'den büyük
+    // olabiliyordu) yok sayıyor, bitki/gökyüzü sanatı kartın dışına taşıyordu — özellikle
+    // çok öğrencili sınıflarda komşu kartların üst üste binmesine yol açardı.
     card: {
-        width: 150, backgroundColor: '#fff', borderRadius: 20, borderWidth: 2,
-        alignItems: 'center', padding: 12, gap: 6,
+        backgroundColor: '#fff', borderRadius: 20, borderWidth: 2,
+        alignItems: 'center', padding: 14, gap: 6, minWidth: 120,
         shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2,
     },
     cardPresentation: {
-        width: 'auto', backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 0,
+        backgroundColor: 'rgba(255,255,255,0.7)', borderWidth: 0,
         shadowOpacity: 0, elevation: 0, paddingVertical: 10,
     },
     name: { fontSize: 14.5, fontWeight: '700', color: '#333' },
