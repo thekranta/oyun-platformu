@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Animated, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
 import { TOY_ROOM_FIRST_GAMES, TOY_ROOM_GROUPS } from '@/constants/toyRoomLayout';
@@ -247,10 +248,10 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
         <Plaything kind="gift" label={t('toyRoom.moreToys')} color="#9A5B4B" moving={moving} size={portrait ? 132 : 140} onPress={onShuffle}/>
       </View>
     </View>}
-    <View style={styles.controls}>
+    <SafeAreaView edges={['top', 'right']} style={styles.controls}>
       <Pressable accessibilityRole="button" accessibilityLabel={muted ? t('toyRoom.muteOn') : t('toyRoom.muteOff')} onPress={onMute} style={styles.control}><Text style={styles.controlText}>{muted ? '🔇' : '🔊'}</Text></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.adultMenuLabel')} delayLongPress={1200} onLongPress={() => setAdult(true)} style={styles.control}><Text style={styles.controlText}>⚙</Text></Pressable>
-    </View>
+    </SafeAreaView>
     <Modal visible={adult} transparent animationType="fade" onRequestClose={() => setAdult(false)}>
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
         <View style={styles.adultHeader}><Text style={styles.adultTitle}>{t('toyRoom.adultTitle')}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} onPress={() => setAdult(false)} style={styles.control}><Text style={styles.controlText}>✕</Text></Pressable></View>
