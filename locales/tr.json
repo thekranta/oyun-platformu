@@ -259,5 +259,44 @@
       "sihirliTuval": "🎨 Sihirli Tuval",
       "uzayBloklari": "🌟 Uzay Blokları"
     }
+  },
+  "rewardBoard": {
+    "concepts": {
+      "bitki": {
+        "label": "Bitki",
+        "stage0": "Tohum",
+        "stage1": "Filiz",
+        "stage2": "Fidan",
+        "stage3": "Çiçek"
+      },
+      "gokyuzu": {
+        "label": "Gökyüzü",
+        "stage0": "Açık Gökyüzü",
+        "stage1": "İlk Bulut",
+        "stage2": "Güneşli Bulut",
+        "stage3": "Gökkuşağı"
+      }
+    },
+    "awardButton": "Ödül ver",
+    "awardAccessibility": "{{name}} için ödül ver",
+    "todayCount": "Bugün: {{count}}",
+    "title": "Sınıf Bahçesi",
+    "closeAccessibility": "Kapat",
+    "presentationAccessibility": "Sunum modu",
+    "closeDayButton": "Günü kapat",
+    "unavailable": "Sınıf Bahçesi henüz kurulmadı.",
+    "emptyStudents": "Onaylı öğrenci olduğunda bahçe burada görünecek.",
+    "awardFailed": "Ödül verilemedi, tekrar dene.",
+    "themeChangeFailed": "Konsept değiştirilemedi, tekrar dene.",
+    "dayOverlayTitle": "Bugün bahçemiz böyle görünüyor",
+    "dayOverlaySubtitle": "Sınıfın ortak bahçesi — her bitki kendi hızında büyüdü.",
+    "dayOverlayClose": "Kapat",
+    "openBannerTitle": "Sınıf Bahçesini Aç",
+    "openBannerSubtitle": "Tam ekran, sınıfa yansıtılabilir ödül panosu",
+    "veliTitle": "🌱 Sınıf Bahçesi",
+    "veliHeadline": "{{name}}'in bahçesi bugün {{stage}} aşamasında",
+    "veliMetaWithTeacher": "{{teacher}} — {{class}} · bugün {{count}} kez su/güneş aldı",
+    "veliMetaNoTeacher": "{{class}} · bugün {{count}} kez su/güneş aldı",
+    "veliFootnote": "Her çocuk kendi bahçesinde, kendi hızında büyür."
   }
 }

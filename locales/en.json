@@ -259,5 +259,44 @@
       "sihirliTuval": "🎨 Magic Canvas",
       "uzayBloklari": "🌟 Space Blocks"
     }
+  },
+  "rewardBoard": {
+    "concepts": {
+      "bitki": {
+        "label": "Plant",
+        "stage0": "Seed",
+        "stage1": "Sprout",
+        "stage2": "Sapling",
+        "stage3": "Bloom"
+      },
+      "gokyuzu": {
+        "label": "Sky",
+        "stage0": "Clear Sky",
+        "stage1": "First Cloud",
+        "stage2": "Sunny Cloud",
+        "stage3": "Rainbow"
+      }
+    },
+    "awardButton": "Give reward",
+    "awardAccessibility": "Give a reward to {{name}}",
+    "todayCount": "Today: {{count}}",
+    "title": "Classroom Garden",
+    "closeAccessibility": "Close",
+    "presentationAccessibility": "Presentation mode",
+    "closeDayButton": "Close the day",
+    "unavailable": "Classroom Garden isn't set up yet.",
+    "emptyStudents": "The garden will appear here once students are approved.",
+    "awardFailed": "Couldn't give the reward, try again.",
+    "themeChangeFailed": "Couldn't change the theme, try again.",
+    "dayOverlayTitle": "Here's our garden today",
+    "dayOverlaySubtitle": "The class's shared garden — every plant grew at its own pace.",
+    "dayOverlayClose": "Close",
+    "openBannerTitle": "Open Classroom Garden",
+    "openBannerSubtitle": "A full-screen reward board you can project for the class",
+    "veliTitle": "🌱 Classroom Garden",
+    "veliHeadline": "{{name}}'s garden is at the {{stage}} stage today",
+    "veliMetaWithTeacher": "{{teacher}} — {{class}} · watered/sunned {{count}} times today",
+    "veliMetaNoTeacher": "{{class}} · watered/sunned {{count}} times today",
+    "veliFootnote": "Every child grows in their own garden, at their own pace."
   }
 }

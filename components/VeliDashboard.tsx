@@ -1056,17 +1056,19 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         const RewardArt = concept.Art;
                         return (
                             <View key={i} style={styles.inviteCard}>
-                                <Text style={styles.inviteTitle}>🌱 Sınıf Bahçesi</Text>
+                                <Text style={styles.inviteTitle}>{t('rewardBoard.veliTitle')}</Text>
                                 <View style={styles.rewardArtWrap}>
                                     <RewardArt stage={r.stage} size={140} />
                                 </View>
                                 <Text style={styles.rewardHeadline}>
-                                    {childName}'in bahçesi bugün {concept.stageLabels[r.stage].toLowerCase()} aşamasında
+                                    {t('rewardBoard.veliHeadline', { name: childName, stage: t(concept.stageLabelKeys[r.stage]).toLowerCase() })}
                                 </Text>
                                 <Text style={styles.inviteMetaSmall}>
-                                    {r.teacher_name ? `${r.teacher_name} — ` : ''}{r.class_name} · bugün {r.today_count} kez su/güneş aldı
+                                    {r.teacher_name
+                                        ? t('rewardBoard.veliMetaWithTeacher', { teacher: r.teacher_name, class: r.class_name, count: r.today_count })
+                                        : t('rewardBoard.veliMetaNoTeacher', { class: r.class_name, count: r.today_count })}
                                 </Text>
-                                <Text style={styles.rewardFootnote}>Her çocuk kendi bahçesinde, kendi hızında büyür.</Text>
+                                <Text style={styles.rewardFootnote}>{t('rewardBoard.veliFootnote')}</Text>
                             </View>
                         );
                     })}

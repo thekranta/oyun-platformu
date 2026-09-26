@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import type { RewardConcept, RewardStage } from './types';
 import { pipsForStage } from './stageMath';
@@ -21,6 +22,7 @@ interface RewardCardProps {
 const AWARD_COLOR = '#4ECDC4';
 
 export default function RewardCard({ name, stage, todayCount, concept, onAward, artSize = 110, presentation = false }: RewardCardProps) {
+    const { t } = useTranslation();
     const [awardPulse, setAwardPulse] = useState(0);
     const [celebrate, setCelebrate] = useState(0);
     const [busy, setBusy] = useState(false);
@@ -50,7 +52,7 @@ export default function RewardCard({ name, stage, todayCount, concept, onAward, 
     return (
         <View style={[styles.card, { borderColor: `${concept.accentColor}33` }, presentation && styles.cardPresentation]}>
             <Text style={[styles.name, presentation && styles.namePresentation]} numberOfLines={1}>{name}</Text>
-            <Text style={[styles.stageLabel, presentation && styles.stageLabelPresentation, { color: concept.accentColor }]}>{concept.stageLabels[stage]}</Text>
+            <Text style={[styles.stageLabel, presentation && styles.stageLabelPresentation, { color: concept.accentColor }]}>{t(concept.stageLabelKeys[stage])}</Text>
             <View style={{ width: artSize, height: (artSize * 170) / 120, alignItems: 'center', justifyContent: 'center' }}>
                 <Art stage={stage} size={artSize} awardPulse={awardPulse} celebrate={celebrate} />
             </View>
@@ -61,17 +63,17 @@ export default function RewardCard({ name, stage, todayCount, concept, onAward, 
                             <View key={i} style={[styles.pip, i < pips && { backgroundColor: AWARD_COLOR }]} />
                         ))}
                     </View>
-                    <TouchableOpacity style={styles.awardBtn} onPress={handlePress} disabled={busy} accessibilityRole="button" accessibilityLabel={`${name} için ödül ver`}>
+                    <TouchableOpacity style={styles.awardBtn} onPress={handlePress} disabled={busy} accessibilityRole="button" accessibilityLabel={t('rewardBoard.awardAccessibility', { name })}>
                         {busy ? (
                             <ActivityIndicator size="small" color="#fff" />
                         ) : (
                             <>
                                 <Ionicons name="water" size={14} color="#fff" />
-                                <Text style={styles.awardBtnText}>Ödül ver</Text>
+                                <Text style={styles.awardBtnText}>{t('rewardBoard.awardButton')}</Text>
                             </>
                         )}
                     </TouchableOpacity>
-                    <Text style={styles.countLine}>Bugün: {todayCount}</Text>
+                    <Text style={styles.countLine}>{t('rewardBoard.todayCount', { count: todayCount })}</Text>
                 </>
             )}
         </View>

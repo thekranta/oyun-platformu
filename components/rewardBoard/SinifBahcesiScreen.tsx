@@ -4,6 +4,7 @@
 // gömülüydü, kullanıcı geri bildirimiyle ayrı tam ekrana taşındı).
 import React, { useEffect, useMemo, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
@@ -43,6 +44,7 @@ interface SinifBahcesiScreenProps {
 }
 
 export default function SinifBahcesiScreen({ visible, classId, className, classEmoji, initialTheme, roster, onClose }: SinifBahcesiScreenProps) {
+    const { t } = useTranslation();
     const { width } = useWindowDimensions();
     const [theme, setTheme] = useState<RewardConceptId>((initialTheme as RewardConceptId) || 'bitki');
     const [summary, setSummary] = useState<Record<string, SummaryRow>>({});
@@ -86,7 +88,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
         });
         const { data, error } = await supabase.rpc('teacher_award_reward', { p_student_id: studentId });
         if (error) {
-            setNotice('Ödül verilemedi, tekrar dene.');
+            setNotice(t('rewardBoard.awardFailed'));
             loadSummary();
             return;
         }
@@ -103,7 +105,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
         const { error } = await supabase.rpc('teacher_set_reward_theme', { p_class_id: classId, p_theme: id });
         if (error) {
             setTheme(prev);
-            setNotice('Konsept değiştirilemedi, tekrar dene.');
+            setNotice(t('rewardBoard.themeChangeFailed'));
         }
     };
 
@@ -141,18 +143,18 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
                 </Svg>
 
                 <View style={styles.header}>
-                    <TouchableOpacity style={styles.iconBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel="Kapat">
+                    <TouchableOpacity style={styles.iconBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel={t('rewardBoard.closeAccessibility')}>
                         <Ionicons name="close" size={22} color="#333" />
                     </TouchableOpacity>
                     <View style={styles.headerTitleWrap}>
                         <Text style={styles.headerTitle}>{classEmoji ? `${classEmoji} ` : '🌱 '}{className}</Text>
-                        <Text style={styles.headerSubtitle}>Sınıf Bahçesi</Text>
+                        <Text style={styles.headerSubtitle}>{t('rewardBoard.title')}</Text>
                     </View>
                     <TouchableOpacity
                         style={[styles.iconBtn, presentation && styles.iconBtnActive]}
                         onPress={() => setPresentation((p) => !p)}
                         accessibilityRole="button"
-                        accessibilityLabel="Sunum modu"
+                        accessibilityLabel={t('rewardBoard.presentationAccessibility')}
                     >
                         <Ionicons name={presentation ? 'contract' : 'expand'} size={20} color={presentation ? '#fff' : '#333'} />
                     </TouchableOpacity>
@@ -168,13 +170,13 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
                                     onPress={() => handleThemeChange(c.id)}
                                     accessibilityRole="button"
                                 >
-                                    <Text style={[styles.segBtnText, theme === c.id && styles.segBtnTextActive]}>{c.label}</Text>
+                                    <Text style={[styles.segBtnText, theme === c.id && styles.segBtnTextActive]}>{t(c.labelKey)}</Text>
                                 </TouchableOpacity>
                             ))}
                         </View>
                         <TouchableOpacity style={styles.dayBtn} onPress={openDayOverlay}>
                             <Ionicons name="time-outline" size={16} color="#333" />
-                            <Text style={styles.dayBtnText}>Günü kapat</Text>
+                            <Text style={styles.dayBtnText}>{t('rewardBoard.closeDayButton')}</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -187,9 +189,9 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
                     kartlar ekranın altından taşardı). */}
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     {unavailable ? (
-                        <Text style={styles.emptyText}>Sınıf Bahçesi henüz kurulmadı.</Text>
+                        <Text style={styles.emptyText}>{t('rewardBoard.unavailable')}</Text>
                     ) : visibleStudents.length === 0 ? (
-                        <Text style={styles.emptyText}>Onaylı öğrenci olduğunda bahçe burada görünecek.</Text>
+                        <Text style={styles.emptyText}>{t('rewardBoard.emptyStudents')}</Text>
                     ) : (
                         <View style={[styles.grid, { paddingHorizontal: horizontalPadding, gap }]}>
                             {visibleStudents.map((s) => {
@@ -214,8 +216,8 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
                 <Modal visible={dayOverlayOpen} transparent animationType="fade" onRequestClose={() => setDayOverlayOpen(false)}>
                     <View style={styles.overlayBg}>
                         <View style={styles.overlayCard}>
-                            <Text style={styles.overlayTitle}>Bugün bahçemiz böyle görünüyor</Text>
-                            <Text style={styles.overlaySub}>Sınıfın ortak bahçesi — her bitki kendi hızında büyüdü.</Text>
+                            <Text style={styles.overlayTitle}>{t('rewardBoard.dayOverlayTitle')}</Text>
+                            <Text style={styles.overlaySub}>{t('rewardBoard.dayOverlaySubtitle')}</Text>
                             <View style={styles.miniGrid}>
                                 {shuffledIds.map((id) => {
                                     const row = summary[id];
@@ -224,7 +226,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
                                 })}
                             </View>
                             <TouchableOpacity style={styles.overlayCloseBtn} onPress={() => setDayOverlayOpen(false)}>
-                                <Text style={styles.overlayCloseText}>Kapat</Text>
+                                <Text style={styles.overlayCloseText}>{t('rewardBoard.dayOverlayClose')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

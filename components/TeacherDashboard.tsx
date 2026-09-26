@@ -735,8 +735,8 @@ export default function TeacherDashboard({
                     <TouchableOpacity style={styles.gardenBanner} onPress={() => setGardenOpen(true)} activeOpacity={0.85}>
                         <Text style={styles.gardenBannerEmoji}>🌱</Text>
                         <View style={{ flex: 1 }}>
-                            <Text style={styles.gardenBannerTitle}>Sınıf Bahçesini Aç</Text>
-                            <Text style={styles.gardenBannerSubtitle}>Tam ekran, sınıfa yansıtılabilir ödül panosu</Text>
+                            <Text style={styles.gardenBannerTitle}>{t('rewardBoard.openBannerTitle')}</Text>
+                            <Text style={styles.gardenBannerSubtitle}>{t('rewardBoard.openBannerSubtitle')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={22} color="#2e9e6b" />
                     </TouchableOpacity>

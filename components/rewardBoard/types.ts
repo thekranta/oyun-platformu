@@ -22,10 +22,14 @@ export interface RewardConceptArtProps {
 
 export interface RewardConcept {
     id: RewardConceptId;
-    /** Segmented control'de görünen ad, ör. "Bitki". */
-    label: string;
-    /** private.reward_stage() ile AYNI 4 eşiğin (0/1-2/3-5/6+) etiketleri. */
-    stageLabels: readonly [string, string, string, string];
+    /** i18n anahtarı (locales/*.json rewardBoard.concepts.<id>.label) — segmented control'de
+     * görünen ad. Metin burada literal DEĞİL: bu obje bir React bileşeni değil, modül yüklenirken
+     * bir kez oluşturuluyor, bu yüzden useTranslation() hook'una erişemiyor. Anahtarı çağıran
+     * bileşen (RewardCard, SinifBahcesiScreen, VeliDashboard) kendi t()'siyle çözer. */
+    labelKey: string;
+    /** private.reward_stage() ile AYNI 4 eşiğin (0/1-2/3-5/6+) i18n anahtarları
+     * (rewardBoard.concepts.<id>.stage0..stage3). */
+    stageLabelKeys: readonly [string, string, string, string];
     /** Kart/hero vurgu rengi — yalnız bu konseptin sahne sanatında kullanılır, buton/odak
      * halkası gibi UI-chrome renkleri TÜM konseptlerde ortak kalır (öğrenilmiş davranış bozulmasın). */
     accentColor: string;

@@ -3,8 +3,13 @@ import SkyArt from './SkyArt';
 
 export const SkyConcept: RewardConcept = {
     id: 'gokyuzu',
-    label: 'Gökyüzü',
-    stageLabels: ['Açık Gökyüzü', 'İlk Bulut', 'Güneşli Bulut', 'Gökkuşağı'],
+    labelKey: 'rewardBoard.concepts.gokyuzu.label',
+    stageLabelKeys: [
+        'rewardBoard.concepts.gokyuzu.stage0',
+        'rewardBoard.concepts.gokyuzu.stage1',
+        'rewardBoard.concepts.gokyuzu.stage2',
+        'rewardBoard.concepts.gokyuzu.stage3',
+    ],
     accentColor: '#4FA8E0',
     Art: SkyArt,
 };
