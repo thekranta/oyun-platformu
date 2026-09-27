@@ -53,6 +53,14 @@ export function ttsSlug(text: string): string {
 // Şu an çalan hazır-MP3 sesi; yenisi gelince durdurulup boşaltılır (üst üste binmesin).
 let currentTtsSound: ExpoAudio.Sound | null = null;
 
+// playBundled() çağrıları arasındaki yarışı (race) önlemek için: her çağrı kendi sıra
+// numarasını alır. createAsync() süresince (asenkron) daha YENİ bir çağrı başlamışsa,
+// eskisi yüklemesi bitince kendini sessizce iptal eder — aksi halde art arda hızlı
+// speak() çağrılarında (ör. bir oyunda D-pad'e hızlı basmak) iki ses nesnesi aynı anda
+// oynatılabiliyordu ve currentTtsSound yalnızca sonuncuyu izlediği için stopSpeech()
+// öbürünü hiç durduramıyordu (oyundan çıksan bile "öksüz" ses çalmaya devam ediyordu).
+let ttsRequestId = 0;
+
 // Şu an çalan canlı-proxy sesi (web, HTMLAudioElement) — hazır-MP3'ten AYRI bir oynatma
 // yolu olduğu için currentTtsSound'a dahil değildi; stopSpeech() bunu da durdurabilsin
 // ve üst üste binmesin diye ayrıca izleniyor.
@@ -63,6 +71,8 @@ let currentLiveAudio: HTMLAudioElement | null = null;
  * (CevizMacera vb.) desenle birebir aynıdır: öncekini boşalt → oynat → bitince boşalt.
  */
 async function playBundled(src: number): Promise<void> {
+    const myRequestId = ++ttsRequestId;
+
     // Tarayıcı otomatik-oynatma engeli, ağ/decode hatası, sekme arka plana alınması
     // gibi nedenlerle expo-av'ın ASENKRON ADIMLARINDAN HERHANGİ BİRİ (createAsync'in
     // kendisi DAHİL — sadece "oynatma bitti" olayı değil) hiç tamamlanmayabilir.
@@ -86,8 +96,9 @@ async function playBundled(src: number): Promise<void> {
                 currentTtsSound = null;
             }
             const { sound } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: true, volume: 1.0 });
-            if (timedOut) {
-                // Üst zaman aşımı zaten devam etmişse, geç gelen bu sesi sessizce boşalt.
+            if (timedOut || myRequestId !== ttsRequestId) {
+                // Üst zaman aşımı zaten devam etmişse YA DA biz yüklenirken daha yeni bir
+                // speak() çağrısı başlamışsa: bu geç gelen sesi sessizce boşalt, çalma.
                 sound.unloadAsync().catch(() => { });
                 return;
             }
