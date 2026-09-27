@@ -105,7 +105,7 @@
     "aiPremiumLockTitle": "AI Development Analysis is in Filiz and above",
     "aiPremiumLockText": "Get a cumulative analysis of all your child's game data with AI, see development trends, and get personalized suggestions.",
     "upgradeButton": "View plans",
-    "aiAnalyzedNote": "All game data is analyzed by AI.",
+    "aiAnalyzedNote": "Your last 12 games are analyzed by AI — this isn't limited to this week.",
     "aiAutoUpdateNote": "ℹ️ The analysis updates automatically when a new game is played.",
     "downloadPdfShort": "Download PDF",
     "waitingForData": "Waiting for Data...",

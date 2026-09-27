@@ -71,6 +71,15 @@ describe('kümülatif yapay zekâ notu hedef kitleye göre ayrılır', () => {
         expect(html).not.toContain('Yapay Zekâ Akademik Notu');
     });
 
+    it('uzman notu, son 12 oyuna dayandığını ve haftalık pencereden farklı olabileceğini belirtir', () => {
+        // Gerçek bir raporda AI notu (son 12 oyun) ve haftalık istatistikler (son 7 gün) farklı
+        // oyunlara işaret edebiliyordu (bkz. kullanıcı ekran görüntüsü: not, o haftanın oyun
+        // listesinde olmayan oyunlardan bahsediyordu) — bu netleştirme metni o karışıklığı önler.
+        const html = buildWeeklyReportHTML(data, true, 'parent');
+        expect(html).toContain('son 12 oyun');
+        expect(html).toContain('yalnızca bu haftaya değil');
+    });
+
     it('öğretmen özeti yalnız akademik notu içerir (veli notu yok) ve yapay zekâ uyarısını taşır', () => {
         const html = buildWeeklyReportHTML(data, true, 'teacher');
         expect(html).toContain('Yapay Zekâ Akademik Notu');

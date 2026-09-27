@@ -389,7 +389,7 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
         if (r.topGames.length) sections += sec('En Çok Oynanan Oyunlar', gamesInner);
         if (r.strengths.length) sections += sec('Güçlü Yönler', strengthsInner);
         if (!teacher && r.homeActivities.length) sections += sec('Evde Ne Yapabilirsiniz?', homeInner);
-        if (!teacher && r.aiNote) sections += sec('Uzman Değerlendirme Notu', `<div class="ai">${esc(r.aiNote).replace(/\n/g, '<br/>')}</div>`);
+        if (!teacher && r.aiNote) sections += sec('Uzman Değerlendirme Notu', `<div class="ai">${esc(r.aiNote).replace(/\n/g, '<br/>')}</div><div class="cap">Bu değerlendirme yalnızca bu haftaya değil, çocuğunuzun genel oyun geçmişine (son 12 oyun) dayanır — yukarıdaki haftalık istatistiklerden farklı bir zaman aralığını kapsayabilir.</div>`);
     } else {
         sections += lockedSection;
     }
