@@ -12,6 +12,7 @@ const sample: WeeklyReportData = {
     totalMinutes: 12,
     avgSuccess: 70,
     trend: null,
+    consistencyNote: null,
     hasWeekData: true,
     sourceCount: 3,
     skillAreas: [],
@@ -265,5 +266,43 @@ describe('Gelişim Profili: açıklamalar + en zayıf alanın evde etkinliğe ba
     it('gelişim profili yoksa (dimensions boş) bağlantı cümlesi hiç eklenmez', () => {
         const html = buildWeeklyReportHTML(sample, true, 'parent');
         expect(html).not.toContain('en az öne çıkan gelişim alanına');
+    });
+});
+
+describe('düzenlilik notu (aktif gün düşükken)', () => {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+    const game = (created_at: string) => ({ created_at, oyun_turu: 'hafiza', correct_answers: 8, hata_sayisi: 0 });
+
+    it('bu hafta 2 veya daha az gün oynanmışsa (ama en az 1 oyun varsa) düzenlilik notu gösterilir', () => {
+        // Gerçek örnekte olduğu gibi: 9 oyun ama yalnız 2 farklı günde (bkz. kullanıcı ekran görüntüsü).
+        const scores = [game(daysAgo(0)), game(daysAgo(0)), game(daysAgo(1))];
+        const r = buildWeeklyReport('Deniz', 54, scores);
+        expect(r.activeDays).toBe(2);
+        expect(r.consistencyNote).not.toBeNull();
+        expect(r.consistencyNote).toContain('2 gün oynandı');
+        const html = buildWeeklyReportHTML(r, true, 'parent');
+        expect(html).toContain('class="consistency"');
+        expect(html).toContain('2 gün oynandı');
+    });
+
+    it('aktif gün 3 ve üzeriyse düzenlilik notu gösterilmez (mesaj yalnız gerçekten düşükken çıkar)', () => {
+        const scores = [game(daysAgo(0)), game(daysAgo(1)), game(daysAgo(2))];
+        const r = buildWeeklyReport('Deniz', 54, scores);
+        expect(r.activeDays).toBe(3);
+        expect(r.consistencyNote).toBeNull();
+    });
+
+    it('bu hafta hiç oyun yoksa (boş hafta mesajı zaten var) düzenlilik notu tekrar etmez', () => {
+        const r = buildWeeklyReport('Deniz', 54, []);
+        expect(r.gamesCount).toBe(0);
+        expect(r.consistencyNote).toBeNull();
+    });
+
+    it('öğretmen özetinde düzenlilik notu hiç gösterilmez (veliye yönelik bir öneridir)', () => {
+        const scores = [game(daysAgo(0)), game(daysAgo(1))];
+        const r = buildWeeklyReport('Deniz', 54, scores);
+        expect(r.consistencyNote).not.toBeNull();
+        const html = buildWeeklyReportHTML(r, true, 'teacher');
+        expect(html).not.toContain('class="consistency"');
     });
 });

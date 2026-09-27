@@ -84,6 +84,9 @@ export interface WeeklyReportData {
     avgSuccess: number;
     /** Önceki 7 günle karşılaştırma; hesaplanamıyorsa null (bkz. WeeklyTrend). */
     trend: WeeklyTrend | null;
+    /** Aktif gün sayısı düşükken (≤2/7) gösterilen, suçlayıcı olmayan düzenlilik notu; aksi halde null.
+     * "highlight" yalnız başarıyı kutlar — düzenlilik hiç ele alınmadan geçebiliyordu, bu onu tamamlar. */
+    consistencyNote: string | null;
 
     hasWeekData: boolean;   // son 7 günde oyun var mı
     sourceCount: number;    // rapora giren oyun sayısı
@@ -147,6 +150,15 @@ const highlightFor = (avgSuccess: number, gamesCount: number, activeDays: number
     if (avgSuccess >= 75) return { emoji: '🌟', title: 'Parlayan Yıldız', description: 'Yüksek başarı oranıyla güçlü bir hafta!' };
     if (gamesCount >= 8) return { emoji: '🚀', title: 'Meraklı Kâşif', description: 'Bu hafta bolca pratik yapıldı!' };
     return { emoji: '💪', title: 'Gelişen Yetenek', description: 'Her oyunla biraz daha güçleniyor!' };
+};
+
+// highlightFor yalnız BAŞARIYI kutluyor — 2/7 gibi düşük bir aktif gün sayısı hiç ele alınmadan
+// geçebiliyordu (bkz. kullanıcı geri bildirimi). Suçlayıcı olmayan, öneri niteliğinde bir not:
+// yalnız gerçek bir hafta verisi VARSA ve düzenlilik düşükse gösterilir (0 oyunluk hafta zaten
+// kendi "Yeni Bir Hafta" mesajını taşıyor, orada tekrar etmeye gerek yok).
+const consistencyNoteFor = (hasWeekData: boolean, gamesCount: number, activeDays: number): string | null => {
+    if (!hasWeekData || gamesCount === 0 || activeDays > 2) return null;
+    return `Bu hafta ${activeDays} gün oynandı. Kısa ama düzenli oturumlar (örneğin haftada 4-5 gün, günde yalnızca 10 dakika) öğrenmeyi kalıcı hale getirir.`;
 };
 
 // ============== RAPOR VERİSİ ==============
@@ -301,6 +313,7 @@ export function buildWeeklyReport(
         homeActivities,
         encouragingMessage,
         highlight: highlightFor(avgSuccess, gamesCount, activeDays),
+        consistencyNote: consistencyNoteFor(hasWeekData, gamesCount, activeDays),
         maarifNote,
         // Kümülatif AI raporu tek metinde iki kitleyi taşır: veli yalnız veli notunu, öğretmen yalnız akademik kısmı görür.
         aiNote: cleanNote(parentView(aiNote)),
@@ -430,6 +443,9 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
 
     // ---- Ortak öğeler ----
     const highlight = `<div class="hl"><span class="hl-em">${r.highlight.emoji}</span><div><div class="hl-t">${esc(r.highlight.title)}</div><div class="hl-d">${esc(r.highlight.description)}</div></div></div>`;
+    const consistencyHint = r.consistencyNote
+        ? `<div class="consistency"><span class="consistency-em">🗓️</span><span>${esc(r.consistencyNote)}</span></div>`
+        : '';
     const encourage = `<div class="encourage">“${esc(r.encouragingMessage)}”</div>`;
 
     const emptyBanner = r.gamesCount === 0
@@ -528,6 +544,8 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
   .hl-em{font-size:26px}
   .hl-t{font-family:var(--serif);font-size:16px;color:var(--navy);font-weight:700}
   .hl-d{font-size:12.5px;color:#6c6f5f;margin-top:2px}
+  .consistency{margin:10px 34px 0;border-left:3px solid var(--line);background:#f7f8fa;padding:10px 16px;display:flex;gap:10px;align-items:center;font-size:11.5px;color:var(--ink)}
+  .consistency-em{font-size:17px}
   .empty{margin:18px 34px 0;padding:11px 16px;border:1px solid #e6d9b8;background:#fbf6e8;color:#8a6d2f;font-size:12px}
   /* Stats */
   .stats{display:flex;margin:20px 34px 0;border:1px solid var(--line)}
@@ -643,6 +661,7 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
     </div>
 
     ${teacher ? '' : highlight}
+    ${teacher ? '' : consistencyHint}
     ${emptyBanner}
     ${statStrip}
     ${r.trend ? '<div class="cap" style="text-align:center;margin:2px 34px 0">▲▼ değerler önceki 7 güne göre değişimi gösterir.</div>' : ''}
