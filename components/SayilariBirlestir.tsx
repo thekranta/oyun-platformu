@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Image, PanResponder, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, Image, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
@@ -474,7 +474,14 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginBottom: 16,
         overflow: 'hidden',
-    },
+        // Webde fareyle sürüklerken bazen rakam/metin seçili hale geliyordu — sürükleme
+        // hep tuvalin üzerinde olduğundan tarayıcının metin seçimini burada kapatıyoruz.
+        ...(Platform.OS === 'web' && {
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            touchAction: 'none',
+        }),
+    } as any,
     fruitContainer: {
         position: 'absolute',
         alignItems: 'center',
