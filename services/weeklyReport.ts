@@ -334,6 +334,19 @@ const esc = (s: string): string =>
 // Gelişim profili boyutları için sade lacivert tonları (editöryal palet)
 const DIM_COLORS = ['#12172b', '#2b3350', '#3d466b', '#586394', '#7580ab'];
 
+// "Gelişim Profili" sayıları (0-100) açıklamasız görününce veli için anlamsız kalıyordu (bkz.
+// kullanıcı geri bildirimi: "Görsel Dikkat: 22 ne anlama geliyor?"). Her boyutun ne ölçtüğünü
+// ReportEngine.ts'teki hesaplama mantığına göre (calculateRadarData/calculatePersistence/
+// calculateProblemSolving) sade bir cümleyle özetler — etiket TEK kaynak (ReportEngine), burada
+// yalnız açıklama metni tutulur.
+const DIM_DESCRIPTIONS: Record<string, string> = {
+    'Görsel Dikkat': 'Görsel ayrıntıları fark etme ve dikkatini görev üzerinde tutma becerisi.',
+    'Tepki Hızı': 'Bir soruya ya da göreve ne kadar hızlı tepki verdiği.',
+    'Hata Toleransı': 'Oyunlardaki doğru cevap oranı — hatalardan ne kadar az etkilendiği.',
+    'Sürdürülebilirlik': 'Bir etkinliğe yarıda bırakmadan ne kadar süre odaklanabildiği.',
+    'Problem Çözme': 'Oyun içindeki zorluk seviyelerinde ilerleme becerisi.',
+};
+
 /** Raporu kim okuyacak: veli (varsayılan) ya da velinin paylaştığı öğretmen. */
 export type ReportAudience = 'parent' | 'teacher';
 
@@ -395,14 +408,24 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
       </div>`).join('');
 
     const dimInner = r.dimensions.map((d, i) => `
-      <div class="drow"><span class="dlabel">${esc(d.label)}</span><div class="bar"><div class="fill" style="width:${d.value}%;background:${DIM_COLORS[i % DIM_COLORS.length]}"></div></div><span class="dval">${d.value}</span></div>`).join('');
+      <div class="dim-block">
+        <div class="drow"><span class="dlabel">${esc(d.label)}</span><div class="bar"><div class="fill" style="width:${d.value}%;background:${DIM_COLORS[i % DIM_COLORS.length]}"></div></div><span class="dval">${d.value}</span></div>
+        ${DIM_DESCRIPTIONS[d.label] ? `<div class="ddesc">${esc(DIM_DESCRIPTIONS[d.label])}</div>` : ''}
+      </div>`).join('');
 
     const gamesInner = r.topGames.map(g => `
       <div class="grow"><span class="gem">${g.emoji}</span><div class="gmain"><div class="gname">${esc(g.name)}</div><div class="bar sm"><div class="fill gold" style="width:${g.success}%"></div></div></div><div class="gmeta"><span class="gc">${g.count}×</span><span class="gs">%${g.success}</span></div></div>`).join('');
 
     const strengthsInner = `<div class="strengths">${r.strengths.map(s => `<div class="strength"><span class="tick">✓</span><span>${esc(s)}</span></div>`).join('')}</div>`;
 
-    const homeInner = r.homeActivities.map(a => `
+    // İlk öneri her zaman bu haftanın en az öne çıkan gelişim alanına göre seçilir
+    // (bkz. ReportEngine.generateHomeActivities: weakestCategory), ama bu bağlantı hiç
+    // söylenmiyordu — düşük bir sayı (ör. Görsel Dikkat: 22) hiçbir yerde ele alınmadan
+    // kayboluyordu. Burada açıkça belirtiliyor.
+    const weakestDim = r.dimensions.length > 0 ? [...r.dimensions].sort((a, b) => a.value - b.value)[0] : null;
+    const homeInner = (weakestDim
+        ? `<div class="cap" style="margin:0 0 10px">Bu öneriler, bu hafta en az öne çıkan gelişim alanına (<b>${esc(weakestDim.label)}</b>) göre seçildi.</div>`
+        : '') + r.homeActivities.map(a => `
       <div class="home"><span class="hem">${a.emoji}</span><div class="hbody"><div class="ht"><span class="htitle">${esc(a.title)}</span><span class="hdur">${esc(a.duration)}</span></div><div class="hdesc">${esc(a.description)}</div></div></div>`).join('');
 
     // ---- Ortak öğeler ----
@@ -551,10 +574,12 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
   .gc{display:block;font-family:var(--serif);font-size:15px;font-weight:700;color:var(--navy)}
   .gs{font-size:10.5px;color:var(--muted)}
   /* Dimensions */
-  .drow{display:flex;align-items:center;gap:12px;margin-bottom:9px}
+  .dim-block{margin-bottom:9px}
+  .drow{display:flex;align-items:center;gap:12px}
   .dlabel{width:118px;font-size:12.5px;font-weight:600;color:var(--ink);flex:0 0 auto}
   .drow .bar{flex:1}
   .dval{width:30px;text-align:right;font-family:var(--serif);font-size:13px;font-weight:700;color:var(--navy)}
+  .ddesc{font-size:10px;color:var(--muted);margin:2px 0 0 130px}
   /* Strengths */
   .strengths{display:flex;flex-direction:column;gap:8px}
   .strength{display:flex;gap:10px;align-items:flex-start;background:#faf9f5;border-left:3px solid var(--gold);padding:9px 13px;font-size:13px;color:var(--ink)}

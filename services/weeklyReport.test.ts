@@ -227,3 +227,43 @@ describe('geçen haftayla karşılaştırma (trend)', () => {
         expect(html).not.toContain('önceki 7 güne göre değişimi gösterir');
     });
 });
+
+describe('Gelişim Profili: açıklamalar + en zayıf alanın evde etkinliğe bağlanması', () => {
+    it('bilinen bir boyut etiketi için açıklama metni gösterilir', () => {
+        const withDims: WeeklyReportData = {
+            ...sample,
+            dimensions: [
+                { label: 'Görsel Dikkat', value: 22 },
+                { label: 'Sürdürülebilirlik', value: 100 },
+            ],
+        };
+        const html = buildWeeklyReportHTML(withDims, true, 'parent');
+        expect(html).toContain('Görsel ayrıntıları fark etme');
+        expect(html).toContain('Bir etkinliğe yarıda bırakmadan');
+    });
+
+    it('tanımsız bir etiket için açıklama satırı sessizce atlanır (hata vermez)', () => {
+        const withUnknownDim: WeeklyReportData = { ...sample, dimensions: [{ label: 'Bilinmeyen Alan', value: 50 }] };
+        expect(() => buildWeeklyReportHTML(withUnknownDim, true, 'parent')).not.toThrow();
+    });
+
+    it('"Evde Ne Yapabilirsiniz" bölümü, önerinin en zayıf alana göre seçildiğini açıkça belirtir', () => {
+        // ReportEngine.generateHomeActivities ilk öneriyi HER ZAMAN en düşük radar değerine göre
+        // seçer (weakestCategory) — bu bağlantı önceden hiç söylenmiyordu.
+        const withWeakDim: WeeklyReportData = {
+            ...rich,
+            dimensions: [
+                { label: 'Görsel Dikkat', value: 22 },
+                { label: 'Sürdürülebilirlik', value: 100 },
+            ],
+        };
+        const html = buildWeeklyReportHTML(withWeakDim, true, 'parent');
+        expect(html).toContain('en az öne çıkan gelişim alanına');
+        expect(html).toContain('<b>Görsel Dikkat</b>');
+    });
+
+    it('gelişim profili yoksa (dimensions boş) bağlantı cümlesi hiç eklenmez', () => {
+        const html = buildWeeklyReportHTML(sample, true, 'parent');
+        expect(html).not.toContain('en az öne çıkan gelişim alanına');
+    });
+});
