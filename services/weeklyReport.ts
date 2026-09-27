@@ -57,6 +57,19 @@ export interface WeeklyHomeActivity {
     duration: string;
 }
 
+/** Bu hafta ile ÖNCEKİ 7 günün karşılaştırması. Yalnız hasWeekData true iken VE elimizdeki
+ * veri geçen haftayı da gerçekten kapsıyorsa (bkz. buildWeeklyReport) dolu olur — aksi halde
+ * "geçen hafta 0" iddiası, veri eksikliğini gerçek bir düşüş gibi gösterebilirdi. */
+export interface WeeklyTrend {
+    gamesDelta: number;
+    activeDaysDelta: number;
+    minutesDelta: number;
+    successDelta: number;   // yüzde puan farkı
+    prevGamesCount: number;
+    prevActiveDays: number;
+    prevAvgSuccess: number;
+}
+
 export interface WeeklyReportData {
     childName: string;
     childAge: number;
@@ -69,6 +82,8 @@ export interface WeeklyReportData {
     activeDays: number;
     totalMinutes: number;
     avgSuccess: number;
+    /** Önceki 7 günle karşılaştırma; hesaplanamıyorsa null (bkz. WeeklyTrend). */
+    trend: WeeklyTrend | null;
 
     hasWeekData: boolean;   // son 7 günde oyun var mı
     sourceCount: number;    // rapora giren oyun sayısı
@@ -161,6 +176,38 @@ export function buildWeeklyReport(
         ? Math.round(source.reduce((a, g) => a + successOf(g), 0) / gamesCount)
         : 0;
 
+    // Geçen haftayla karşılaştırma. hasWeekData YANLIŞKEN source zaten "bu hafta" değil (son 12
+    // oyun yedeği) — o modda "geçen hafta" kıyaslaması anlamsız, farklı iki pencereyi karşılaştırmış
+    // oluruz (tıpkı AI notu/haftalık istatistik karışıklığında olduğu gibi). Ayrıca elimizdeki veri
+    // gerçekten iki hafta öncesine UZANMIYORSA "geçen hafta 0" demek veri eksikliğini düşüş gibi
+    // gösterir — bu yüzden en eski kaydın prevWeekStart'tan önce olduğunu da doğruluyoruz.
+    const prevWeekStart = new Date(weekStart);
+    prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+    const oldestMs = valid.length > 0 ? Math.min(...valid.map(s => new Date(s.created_at).getTime())) : null;
+    const hasPrevWeekVisibility = oldestMs !== null && oldestMs <= prevWeekStart.getTime();
+    let trend: WeeklyTrend | null = null;
+    if (hasWeekData && hasPrevWeekVisibility) {
+        const prevWeekScores = valid.filter(s => {
+            const d = new Date(s.created_at);
+            return d >= prevWeekStart && d < weekStart;
+        });
+        const prevGamesCount = prevWeekScores.length;
+        const prevActiveDays = new Set(prevWeekScores.map(s => new Date(s.created_at).toDateString())).size;
+        const prevTotalSeconds = prevWeekScores.reduce((a, g) => a + secondsOf(g), 0);
+        const prevAvgSuccess = prevGamesCount > 0
+            ? Math.round(prevWeekScores.reduce((a, g) => a + successOf(g), 0) / prevGamesCount)
+            : 0;
+        trend = {
+            gamesDelta: gamesCount - prevGamesCount,
+            activeDaysDelta: activeDays - prevActiveDays,
+            minutesDelta: totalMinutes - Math.max(0, Math.round(prevTotalSeconds / 60)),
+            successDelta: avgSuccess - prevAvgSuccess,
+            prevGamesCount,
+            prevActiveDays,
+            prevAvgSuccess,
+        };
+    }
+
     // Gelişim alanları (Maarif) — badgeAlan öncelikli, yoksa alan
     const areaMap = new Map<string, { count: number; codes: Set<string> }>();
     source.forEach(g => {
@@ -243,6 +290,7 @@ export function buildWeeklyReport(
         activeDays,
         totalMinutes,
         avgSuccess,
+        trend,
         hasWeekData,
         sourceCount: source.length,
         skillAreas,
@@ -314,13 +362,20 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
     };
 
     // ---- İstatistik şeridi (her iki kademede) ----
-    const stat = (num: string, label: string) =>
-        `<div class="stat"><div class="stat-num">${esc(num)}</div><div class="stat-rule"></div><div class="stat-lbl">${esc(label)}</div></div>`;
+    // Geçen haftaya göre değişim: yalnız r.trend doluysa (bkz. buildWeeklyReport) gösterilir.
+    const trendChip = (delta: number, unit: string = '') => {
+        const cls = delta > 0 ? 'trend-up' : delta < 0 ? 'trend-down' : 'trend-flat';
+        const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '±';
+        const num = delta > 0 ? `+${delta}` : String(delta);
+        return `<div class="stat-trend ${cls}">${arrow} ${esc(num)}${esc(unit)}</div>`;
+    };
+    const stat = (num: string, label: string, trend?: string) =>
+        `<div class="stat"><div class="stat-num">${esc(num)}</div><div class="stat-rule"></div><div class="stat-lbl">${esc(label)}</div>${trend || ''}</div>`;
     const statStrip = `<div class="stats">
-      ${stat(String(r.gamesCount), r.hasWeekData ? 'Oyun' : 'Son Oyun')}
-      ${stat(`${r.activeDays}/7`, 'Aktif Gün')}
-      ${stat(String(r.totalMinutes), 'Dakika')}
-      ${stat(`%${r.avgSuccess}`, 'Başarı')}
+      ${stat(String(r.gamesCount), r.hasWeekData ? 'Oyun' : 'Son Oyun', r.trend ? trendChip(r.trend.gamesDelta) : undefined)}
+      ${stat(`${r.activeDays}/7`, 'Aktif Gün', r.trend ? trendChip(r.trend.activeDaysDelta) : undefined)}
+      ${stat(String(r.totalMinutes), 'Dakika', r.trend ? trendChip(r.trend.minutesDelta) : undefined)}
+      ${stat(`%${r.avgSuccess}`, 'Başarı', r.trend ? trendChip(r.trend.successDelta, ' p') : undefined)}
     </div>`;
 
     // ---- Günlük aktivite (her iki kademede) ----
@@ -458,6 +513,9 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
   .stat-num{font-family:var(--serif);font-size:27px;color:var(--navy);font-weight:700;line-height:1}
   .stat-rule{width:22px;height:2px;background:var(--gold);margin:8px auto 0}
   .stat-lbl{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:7px}
+  .stat-trend{font-size:10.5px;font-weight:700;margin-top:5px}
+  .stat-trend.trend-up{color:var(--gold)}
+  .stat-trend.trend-down,.stat-trend.trend-flat{color:var(--muted)}
   /* Sections */
   .sec{padding:22px 34px 0}
   .sec-h{display:flex;align-items:center;gap:11px;margin-bottom:14px}
@@ -562,6 +620,7 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
     ${teacher ? '' : highlight}
     ${emptyBanner}
     ${statStrip}
+    ${r.trend ? '<div class="cap" style="text-align:center;margin:2px 34px 0">▲▼ değerler önceki 7 güne göre değişimi gösterir.</div>' : ''}
     ${sections}
     ${teacher ? '' : encourage}
 

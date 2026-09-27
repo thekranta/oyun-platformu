@@ -1118,18 +1118,26 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                 {/* Özet istatistik kutucukları */}
                                 <View style={styles.weeklyStatRow}>
                                     {[
-                                        { e: '🎮', v: `${weekly.gamesCount}`, l: weekly.hasWeekData ? t('veli.statGames') : t('veli.weeklyStatLastGame'), c: COLORS.primary },
-                                        { e: '📅', v: `${weekly.activeDays}/7`, l: t('veli.activeDays'), c: COLORS.accent },
-                                        { e: '⏱️', v: `${weekly.totalMinutes}dk`, l: t('veli.duration'), c: COLORS.orange },
-                                        { e: '⭐', v: `%${weekly.avgSuccess}`, l: t('veli.statSuccess'), c: COLORS.secondary },
-                                    ].map((t, i) => (
+                                        { e: '🎮', v: `${weekly.gamesCount}`, l: weekly.hasWeekData ? t('veli.statGames') : t('veli.weeklyStatLastGame'), c: COLORS.primary, d: weekly.trend?.gamesDelta },
+                                        { e: '📅', v: `${weekly.activeDays}/7`, l: t('veli.activeDays'), c: COLORS.accent, d: weekly.trend?.activeDaysDelta },
+                                        { e: '⏱️', v: `${weekly.totalMinutes}dk`, l: t('veli.duration'), c: COLORS.orange, d: weekly.trend?.minutesDelta },
+                                        { e: '⭐', v: `%${weekly.avgSuccess}`, l: t('veli.statSuccess'), c: COLORS.secondary, d: weekly.trend?.successDelta },
+                                    ].map((tile, i) => (
                                         <View key={i} style={styles.weeklyStatTile}>
-                                            <Text style={{ fontSize: 20 }}>{t.e}</Text>
-                                            <Text style={[styles.weeklyStatValue, { color: t.c }]}>{t.v}</Text>
-                                            <Text style={styles.weeklyStatLabel}>{t.l}</Text>
+                                            <Text style={{ fontSize: 20 }}>{tile.e}</Text>
+                                            <Text style={[styles.weeklyStatValue, { color: tile.c }]}>{tile.v}</Text>
+                                            <Text style={styles.weeklyStatLabel}>{tile.l}</Text>
+                                            {tile.d !== undefined && (
+                                                <Text style={[styles.weeklyStatTrend, { color: tile.d > 0 ? COLORS.accent : COLORS.textLight }]}>
+                                                    {tile.d > 0 ? `▲ +${tile.d}` : tile.d < 0 ? `▼ ${tile.d}` : '± 0'}
+                                                </Text>
+                                            )}
                                         </View>
                                     ))}
                                 </View>
+                                {!!weekly.trend && (
+                                    <Text style={styles.weeklyTrendCaption}>{t('veli.weeklyTrendCaption')}</Text>
+                                )}
 
                                 {/* Premium: çalışılan gelişim alanları (Maarif) */}
                                 {flags.canSeeAiAnalysis && weekly.skillAreas.length > 0 && (
@@ -3153,6 +3161,18 @@ const styles = StyleSheet.create({
         color: COLORS.textLight,
         marginTop: 2,
         fontWeight: '600',
+    },
+    weeklyStatTrend: {
+        fontSize: 10.5,
+        fontWeight: '800',
+        marginTop: 3,
+    },
+    weeklyTrendCaption: {
+        fontSize: 10.5,
+        color: COLORS.textLight,
+        fontStyle: 'italic',
+        textAlign: 'center',
+        marginTop: 6,
     },
     weeklySubTitle: {
         fontSize: 14,

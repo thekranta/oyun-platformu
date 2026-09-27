@@ -11,6 +11,7 @@ const sample: WeeklyReportData = {
     activeDays: 2,
     totalMinutes: 12,
     avgSuccess: 70,
+    trend: null,
     hasWeekData: true,
     sourceCount: 3,
     skillAreas: [],
@@ -169,5 +170,60 @@ describe('buildWeeklyReportHTML — paket adları', () => {
         const html = buildWeeklyReportHTML(sample, true);
         expect(html).not.toContain('Premium');
         expect(html).toContain('Detaylı Rapor');
+    });
+});
+
+describe('geçen haftayla karşılaştırma (trend)', () => {
+    const daysAgo = (n: number) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+    const game = (created_at: string, correct_answers: number) => ({ created_at, oyun_turu: 'hafiza', correct_answers, hata_sayisi: 0 });
+
+    it('iki haftalık veri varsa (ve daha eski bir kayıt önceki haftayı da doğruluyorsa) trend hesaplanır', () => {
+        const scores = [
+            game(daysAgo(0), 8), game(daysAgo(1), 8), game(daysAgo(2), 8),   // bu hafta: 3 oyun, %80
+            game(daysAgo(8), 5), game(daysAgo(9), 5),                        // geçen hafta: 2 oyun, %50
+            game(daysAgo(20), 5),                                            // yalnızca "geçen haftadan önce de veri var" görünürlüğü için
+        ];
+        const r = buildWeeklyReport('Deniz', 54, scores);
+        expect(r.trend).not.toBeNull();
+        expect(r.trend!.gamesDelta).toBe(1);        // 3 - 2
+        expect(r.trend!.successDelta).toBe(30);     // 80 - 50
+        expect(r.trend!.activeDaysDelta).toBe(1);   // 3 - 2
+        expect(r.trend!.prevGamesCount).toBe(2);
+        expect(r.trend!.prevAvgSuccess).toBe(50);
+    });
+
+    it('önceki haftaya dair hiç görünürlük yoksa (veri yalnız bu haftayı kapsıyorsa) trend null döner', () => {
+        // "geçen hafta 0 oyun" demek, veri eksikliğini gerçek bir düşüş gibi göstermemeli.
+        const scores = [game(daysAgo(0), 8), game(daysAgo(1), 8)];
+        const r = buildWeeklyReport('Deniz', 54, scores);
+        expect(r.trend).toBeNull();
+    });
+
+    it('bu hafta hiç oyun yoksa (son-12-oyun yedeğine düşülse bile) trend null döner', () => {
+        // hasWeekData=false iken source "bu hafta" değildir — farklı iki pencereyi karşılaştırmamalı.
+        const scores = [game(daysAgo(10), 8), game(daysAgo(11), 8), game(daysAgo(20), 5)];
+        const r = buildWeeklyReport('Deniz', 54, scores);
+        expect(r.hasWeekData).toBe(false);
+        expect(r.trend).toBeNull();
+    });
+
+    it('PDF, trend varsa değişim okunu ve geçen-hafta açıklamasını gösterir', () => {
+        const scores = [
+            game(daysAgo(0), 8), game(daysAgo(1), 8), game(daysAgo(2), 8),
+            game(daysAgo(8), 5), game(daysAgo(9), 5),
+            game(daysAgo(20), 5),
+        ];
+        const r = buildWeeklyReport('Deniz', 54, scores);
+        const html = buildWeeklyReportHTML(r, true, 'parent');
+        expect(html).toContain('▲ +1');
+        expect(html).toContain('önceki 7 güne göre değişimi gösterir');
+    });
+
+    it('trend yoksa PDF hiçbir değişim okunu / açıklamasını göstermez', () => {
+        // .stat-trend CSS kuralı stil sayfasında HER ZAMAN vardır (kullanılsa da kullanılmasa da);
+        // asıl kanıt gövdede gerçek bir ok/rakam elementinin (class="stat-trend ...") olmamasıdır.
+        const html = buildWeeklyReportHTML(sample, true);
+        expect(html).not.toContain('class="stat-trend');
+        expect(html).not.toContain('önceki 7 güne göre değişimi gösterir');
     });
 });

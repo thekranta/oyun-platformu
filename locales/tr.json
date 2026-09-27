@@ -59,6 +59,7 @@
     "weeklyEmptyText": "Bu hafta henüz oyun oynanmadı. Rapor, en son oynanan oyunlardan derlenmiş bir gelişim özeti sunar.",
     "weeklyStatLastGame": "Son Oyun",
     "activeDays": "Aktif Gün",
+    "weeklyTrendCaption": "▲▼ değerler önceki 7 güne göre değişimi gösterir.",
     "duration": "Süre",
     "skillAreasTitle": "📚 Çalışılan Gelişim Alanları",
     "premiumAlsoIncludes": "Filiz ve üzeri paketlerde ayrıca",
