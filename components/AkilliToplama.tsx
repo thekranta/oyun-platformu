@@ -127,6 +127,7 @@ export default function AkilliToplama({ onGameEnd, onExit, childName = 'Küçük
         if (n === current.sum) {
             lockRef.current = true;
             setFeedback('correct');
+            speak('Aferin!');
             Animated.sequence([
                 Animated.timing(bump, { toValue: 1.15, duration: 140, useNativeDriver: true }),
                 Animated.timing(bump, { toValue: 1, duration: 140, useNativeDriver: true }),

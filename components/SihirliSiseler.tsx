@@ -249,6 +249,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 // Check for completed bottle and update count
                 if (isBottleComplete(newBottles[bottleIndex])) {
                     playSound('complete');
+                    speak('Aferin!');
                     animateBottleComplete(bottleIndex);
                     // Update completed bottles count for interactive elements
                     const totalCompleted = newBottles.filter(b => isBottleComplete(b)).length;
@@ -315,6 +316,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
     // Handle win
     const handleWin = async (moves: number, history: string[]) => {
         playSound('win');
+        speak('Tebrikler!');
         setShowCelebration(true);
 
         // Celebration animation

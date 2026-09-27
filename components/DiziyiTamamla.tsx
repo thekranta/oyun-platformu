@@ -132,6 +132,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
             setStageCompleted(true);
             setShowConfetti(true);
             playSound('correct');
+            speak('Aferin!');
 
             if (confettiRef.current) {
                 confettiRef.current.start();
@@ -196,7 +197,6 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
             setIsCorrect(false);
             scaleAnim.setValue(1);
         } else {
-            speak('Aferin!');
             const totalTime = Math.floor((Date.now() - startTime) / 1000);
             onGameEnd(oyunAdi, totalTime, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: currentStage + 1,

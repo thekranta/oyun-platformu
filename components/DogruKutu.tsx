@@ -90,6 +90,7 @@ export default function DogruKutu({ onGameEnd, onExit, childName }: Props) {
     if (binKey === cat) {
       setLocked(true);
       correctRef.current += 1;
+      speak('Aferin!');
       Animated.timing(pop, { toValue: 0, duration: 280, useNativeDriver: USE_NATIVE }).start();
       const isLast = itemIndex + 1 >= TOTAL_ITEMS;
       if (isLast) setShowConfetti(true);
