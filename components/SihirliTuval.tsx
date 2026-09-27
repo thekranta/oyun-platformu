@@ -12,6 +12,7 @@ import {
 import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { speak } from '../services/speechService';
 
 // ============= TYPES =============
@@ -482,9 +483,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
 
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={handleExit} style={styles.exitBtn}>
-                    <Text style={styles.exitIcon}>🚪</Text>
-                </TouchableOpacity>
+                <GameExitButton onPress={handleExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
 
                 <View style={styles.timerContainer}>
                     <Text style={styles.timerIcon}>🚀</Text>
@@ -695,29 +694,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingBottom: 8,
         zIndex: 20,
-    },
-    exitBtn: {
-        position: 'absolute',
-        bottom: 30,
-        left: 20,
-        backgroundColor: '#FF5252',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100,
-        elevation: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        borderWidth: 3,
-        borderColor: '#FFF'
-    },
-    exitIcon: {
-        fontSize: 30,
-        color: 'white',
     },
     timerContainer: {
         flexDirection: 'row',

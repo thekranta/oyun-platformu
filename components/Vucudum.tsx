@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
 
 // ============================================
@@ -127,9 +128,7 @@ export default function Vucudum({ onGameEnd, onExit, childName }: Props) {
       )}
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={24} color="#C62828" />
-        </TouchableOpacity>
+        <GameExitButton onPress={onExit ?? (() => {})} />
         <View style={styles.roundBadge}><Text style={styles.roundText}>🧒 {round}/{TOTAL_ROUNDS}</Text></View>
         <View style={{ width: 44 }} />
       </View>
@@ -171,7 +170,6 @@ export default function Vucudum({ onGameEnd, onExit, childName }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF3F0', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
-  iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#C62828' },
 

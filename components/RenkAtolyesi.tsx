@@ -5,6 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import Svg, { Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
@@ -344,9 +345,7 @@ export default function RenkAtolyesi({ onGameEnd, onExit, childName }: Props) {
       )}
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={24} color="#C2185B" />
-        </TouchableOpacity>
+        <GameExitButton onPress={onExit ?? (() => {})} />
         <Text style={styles.title}>🎨 Renk Atölyesi</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.smallBtn} onPress={clearPoster} disabled={!hasWork} activeOpacity={0.8}>
@@ -496,7 +495,6 @@ export default function RenkAtolyesi({ onGameEnd, onExit, childName }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF1F6', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
-  iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   title: { fontSize: 19, fontWeight: '900', color: '#C2185B' },
   headerActions: { flexDirection: 'row', gap: 8 },
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },

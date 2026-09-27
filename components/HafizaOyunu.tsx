@@ -3,6 +3,7 @@ import { Animated, Dimensions, Image, ImageBackground, Platform, ScrollView, Sty
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import JuicyProgressBar from './JuicyProgressBar';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
@@ -333,11 +334,8 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
         return (
             <ImageBackground source={BACKGROUND_IMAGE} style={styles.background} resizeMode="cover">
                 <View style={styles.darkOverlay} />
-                {/* Exit Button */}
                 {onExit && (
-                    <TouchableOpacity style={styles.exitButton} onPress={onExit}>
-                        <Text style={styles.exitButtonText}>🚪</Text>
-                    </TouchableOpacity>
+                    <GameExitButton onPress={onExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
                 )}
                 <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
                     <Text style={styles.soundButtonText}>{isMuted ? '🔇' : '🔊'}</Text>
@@ -363,11 +361,8 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
     return (
         <ImageBackground source={BACKGROUND_IMAGE} style={styles.background} resizeMode="cover">
             <View style={styles.darkOverlay} />
-            {/* Exit Button */}
             {onExit && (
-                <TouchableOpacity style={styles.exitButton} onPress={onExit}>
-                    <Text style={styles.exitButtonText}>🚪</Text>
-                </TouchableOpacity>
+                <GameExitButton onPress={onExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
             )}
             <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
                 <Text style={styles.soundButtonText}>{isMuted ? '🔇' : '🔊'}</Text>
@@ -460,26 +455,6 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
 const styles = StyleSheet.create({
     background: { flex: 1, width: '100%', height: '100%', ...(isWeb ? { height: '100vh' as any } : {}) },
     darkOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0, 0, 0, 0.25)' },
-    exitButton: {
-        position: 'absolute',
-        bottom: 30,
-        left: 20,
-        backgroundColor: '#FF5252',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100,
-        elevation: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        borderWidth: 3,
-        borderColor: '#FFF'
-    },
-    exitButtonText: { fontSize: 30, color: 'white' },
     soundButton: {
         position: 'absolute',
         top: 40,

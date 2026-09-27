@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -117,9 +118,7 @@ export default function SayiBoya({ onGameEnd, onExit, childName }: Props) {
       )}
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={24} color="#6A1B9A" />
-        </TouchableOpacity>
+        <GameExitButton onPress={onExit ?? (() => {})} />
         <Text style={styles.title}>🔢 Sayı-Boya</Text>
         <TouchableOpacity style={[styles.smallBtn, doneRef.current && styles.saveBtn]} onPress={finish} disabled={!doneRef.current} activeOpacity={0.8}>
           <Ionicons name="checkmark" size={20} color={doneRef.current ? '#43A047' : '#ccc'} />
@@ -184,7 +183,6 @@ export default function SayiBoya({ onGameEnd, onExit, childName }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FBF6FF', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
-  iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   title: { fontSize: 19, fontWeight: '900', color: '#6A1B9A' },
   smallBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#eee' },
   saveBtn: { borderColor: '#43A047' },

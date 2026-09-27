@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
+import GameExitButton from './GameExitButton';
 import {
     Animated,
     Dimensions,
@@ -246,7 +247,7 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
 
             <View style={[styles.gameContainer, { width: containerWidth, height: containerHeight }]}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={onExit}><Ionicons name="arrow-back-circle" size={30} color="#9C27B0" /></TouchableOpacity>
+                    <GameExitButton onPress={onExit} />
                     <View style={styles.roundBadge}><Text style={styles.roundText}>⚖️ Tur {round}/10</Text></View>
                     <TouchableOpacity onPress={toggleMute}><Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={26} color="#9C27B0" /></TouchableOpacity>
                 </View>

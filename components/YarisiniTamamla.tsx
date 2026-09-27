@@ -4,6 +4,7 @@ import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from
 import Svg, { Circle, Ellipse, Line, Path, Rect } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -167,9 +168,7 @@ export default function YarisiniTamamla({ onGameEnd, onExit, childName }: Props)
       )}
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={24} color="#5E35B1" />
-        </TouchableOpacity>
+        <GameExitButton onPress={onExit ?? (() => {})} />
         <Text style={styles.title}>🦋 Yarısını Tamamla</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.smallBtn} onPress={clearCanvas} disabled={!hasContent} activeOpacity={0.8}>
@@ -233,7 +232,6 @@ export default function YarisiniTamamla({ onGameEnd, onExit, childName }: Props)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F0FB', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
-  iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   title: { fontSize: 18, fontWeight: '900', color: '#5E35B1' },
   headerActions: { flexDirection: 'row', gap: 8 },
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },

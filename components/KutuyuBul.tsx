@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
 
@@ -268,9 +269,10 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
         <DynamicBackground>
             <View style={styles.container}>
                 {/* Exit button */}
-                <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                    <Text style={styles.exitIcon}>🚪</Text>
-                </TouchableOpacity>
+                <GameExitButton
+                    onPress={onExit ?? (() => {})}
+                    style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }}
+                />
 
                 {/* Progress bar */}
                 <View style={styles.progressBarContainer}>
@@ -365,29 +367,6 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingTop: 45,
         paddingHorizontal: 12,
-    },
-    exitBtn: {
-        position: 'absolute',
-        bottom: 30,
-        left: 20,
-        backgroundColor: '#FF5252',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100,
-        elevation: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        borderWidth: 3,
-        borderColor: '#FFF'
-    },
-    exitIcon: {
-        fontSize: 30,
-        color: 'white',
     },
     progressBarContainer: {
         marginTop: 45,

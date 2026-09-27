@@ -4,6 +4,7 @@ import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from
 import Svg, { Circle, G, Line, Path, Polygon } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -156,9 +157,7 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
       )}
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={24} color="#00838F" />
-        </TouchableOpacity>
+        <GameExitButton onPress={onExit ?? (() => {})} />
         <Text style={styles.title}>📝 Adım Adım</Text>
         <TouchableOpacity style={styles.smallBtn} onPress={clearStrokes} disabled={!hasContent} activeOpacity={0.8}>
           <Ionicons name="trash-outline" size={20} color={hasContent ? '#e53935' : '#ccc'} />
@@ -230,7 +229,6 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E0F7FA', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
-  iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   title: { fontSize: 19, fontWeight: '900', color: '#00838F' },
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   picRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, paddingTop: 6 },

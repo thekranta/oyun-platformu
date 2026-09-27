@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
 
@@ -148,7 +149,7 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
             <View style={[styles.gameContainer, { width: containerWidth, height: containerHeight }]}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={onExit}><Ionicons name="arrow-back-circle" size={30} color="#FF9800" /></TouchableOpacity>
+                    <GameExitButton onPress={onExit} />
                     <View style={styles.roundBadge}><Text style={styles.roundText}>🔢 Tur {round}/10</Text></View>
                     <TouchableOpacity onPress={toggleMute}><Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={26} color="#FF9800" /></TouchableOpacity>
                 </View>

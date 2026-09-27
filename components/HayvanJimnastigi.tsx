@@ -7,6 +7,7 @@ import Svg, { Circle, Line } from 'react-native-svg';
 import { asset } from '../lib/assetMap';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 
 // ============================================
 // 🦘 HAYVAN JİMNASTİĞİ - Düşünme kapılı hareket molası (Hareket ve Sağlık, HSAB.1)
@@ -562,9 +563,7 @@ export default function HayvanJimnastigi({ onGameEnd, onExit, childName }: Props
       )}
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={handleExit} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={24} color={tur.renk} />
-        </TouchableOpacity>
+        <GameExitButton onPress={handleExit} />
         <View style={styles.roundBadge}>
           <Text style={[styles.roundText, { color: tur.renk }]}>🦘 {round}/{TOTAL_ROUNDS}</Text>
         </View>
@@ -672,7 +671,6 @@ export default function HayvanJimnastigi({ onGameEnd, onExit, childName }: Props
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#E8F5E9', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
-  iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900' },
 

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
+import GameExitButton from './GameExitButton';
 import {
     Animated,
     Dimensions,
@@ -448,12 +449,10 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                 />
             )}
             <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.btn}
+                <GameExitButton
                     onPress={selectedPuzzle !== null ? goBackToSelection : onExit}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
+                    accessibilityLabel={selectedPuzzle !== null ? 'Seçim ekranına dön' : 'Oyundan çık'}
+                />
                 <Text style={styles.title}>
                     {currentPuzzle ? `🧩 ${currentPuzzle.name}` : '🧩 Yapboz'}
                 </Text>

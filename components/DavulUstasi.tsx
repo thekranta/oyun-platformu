@@ -7,6 +7,7 @@ import Svg, { Circle, Ellipse, Path } from 'react-native-svg';
 import { asset } from '../lib/assetMap';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 
 // ============================================
 // 🥁 DAVUL USTASI - Çağır-yanıtla ritim tekrarı (Müzik, MÇB.4)
@@ -537,9 +538,7 @@ export default function DavulUstasi({ onGameEnd, onExit, childName }: Props) {
       )}
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
-          <Ionicons name="arrow-back" size={24} color="#5D4037" />
-        </TouchableOpacity>
+        <GameExitButton onPress={onExit ?? (() => {})} />
         <View style={styles.roundBadge}><Text style={styles.roundText}>🥁 {round}/{TOTAL_ROUNDS}</Text></View>
         <View style={{ width: 44 }} />
       </View>
@@ -624,7 +623,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF3E0', alignItems: 'center' },
   containerHappy: { backgroundColor: '#FFF8E1' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
-  iconBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#5D4037' },
 

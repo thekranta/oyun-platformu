@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, View } from 'react-native';
+import GameExitButton from './GameExitButton';
 import MusicButton from './MusicButton';
 
 const { width, height } = Dimensions.get('window');
@@ -275,9 +276,7 @@ export default function DynamicBackground({ children, onExit, decor = true }: Dy
 
             {/* Global Exit Button */}
             {onExit && (
-                <TouchableOpacity style={styles.exitButton} onPress={onExit}>
-                    <Text style={styles.exitIcon}>🚪</Text>
-                </TouchableOpacity>
+                <GameExitButton onPress={onExit} style={styles.exitButton} />
             )}
 
             <View style={styles.content}>
@@ -317,25 +316,8 @@ const styles = StyleSheet.create({
     },
     exitButton: {
         position: 'absolute',
-        bottom: 30,
-        left: 20,
-        backgroundColor: '#FF5252',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
+        top: 16,
+        left: 16,
         zIndex: 100,
-        elevation: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        borderWidth: 3,
-        borderColor: '#FFF'
-    },
-    exitIcon: {
-        fontSize: 30,
-        color: 'white',
     },
 });

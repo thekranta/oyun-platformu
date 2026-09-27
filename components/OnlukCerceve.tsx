@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
 
@@ -222,9 +223,7 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
             <View style={[styles.gameContainer, { width: containerWidth, height: containerHeight }]}>
                 {/* Header */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={onExit} style={styles.headerBtn}>
-                        <Ionicons name="arrow-back-circle" size={30} color="#4CAF50" />
-                    </TouchableOpacity>
+                    <GameExitButton onPress={onExit} />
                     <View style={styles.roundBadge}>
                         <Text style={styles.roundText}>🎯 Tur {round}/10</Text>
                     </View>

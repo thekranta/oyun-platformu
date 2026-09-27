@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { asset } from '../lib/assetMap';
+import GameExitButton from './GameExitButton';
 import {
     Animated,
     Easing,
@@ -601,9 +602,7 @@ export default function MuzikCalar({ onExit, initialSongIndex = 0 }: MuzikCalarP
     return (
         <View style={styles.mpContainer}>
             <View style={styles.mpHeader}>
-                <TouchableOpacity style={styles.mpBack} onPress={onExit} activeOpacity={0.7}>
-                    <Ionicons name="arrow-back" size={24} color="#3a1d6e" />
-                </TouchableOpacity>
+                <GameExitButton onPress={onExit} />
                 <Text style={styles.mpTitle}>🎵 Müzik Kutusu</Text>
                 <View style={{ width: 44 }} />
             </View>
@@ -707,7 +706,6 @@ const styles = StyleSheet.create({
   // ===== Eğlenceli medya çalar =====
   mpContainer: { flex: 1, backgroundColor: '#EDE7FF' },
   mpHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 12 },
-  mpBack: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 3, elevation: 3 },
   mpTitle: { fontSize: 22, fontWeight: '900', color: '#3a1d6e' },
   mpScroll: { padding: 16, paddingBottom: 44, alignItems: 'center' },
 

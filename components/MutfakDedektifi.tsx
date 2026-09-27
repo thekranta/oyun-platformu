@@ -23,6 +23,7 @@ import { supabase } from '../lib/supabase';
 import { speak } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
+import GameExitButton from './GameExitButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -487,6 +488,11 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 {/* Dark overlay to make game elements more visible */}
                 <View style={styles.darkOverlay} />
 
+                <GameExitButton
+                    onPress={onExit ?? (() => {})}
+                    style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }}
+                />
+
                 {/* Countdown Overlay */}
                 {!gameReady && (
                     <CountdownOverlay
@@ -526,9 +532,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
-                            <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-                                <Text style={styles.exitIcon}>🚪</Text>
-                            </TouchableOpacity>
                             <TouchableOpacity style={styles.repeatBtn} onPress={() => speak(fullIntroMessage)}>
                                 <Ionicons name="volume-high" size={20} color="#fff" />
                             </TouchableOpacity>
@@ -721,29 +724,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 10,
-    },
-    exitBtn: {
-        position: 'absolute',
-        bottom: 30,
-        left: 20,
-        backgroundColor: '#FF5252',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100,
-        elevation: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        borderWidth: 3,
-        borderColor: '#FFF'
-    },
-    exitIcon: {
-        fontSize: 30,
-        color: 'white',
     },
     repeatBtn: {
         width: 40,

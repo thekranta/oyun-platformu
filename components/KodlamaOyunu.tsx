@@ -12,6 +12,7 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/kodlama_bg.webp');
@@ -438,7 +439,10 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
       <View style={st.container}>
         {/* Top */}
         <View style={st.top}>
-          <TouchableOpacity style={st.exitBtn} onPress={() => { stopBgMusic(); stopSpeech(); onExit?.(); }}><Text style={st.exitTxt}>🚪</Text></TouchableOpacity>
+          <GameExitButton
+            onPress={() => { stopBgMusic(); stopSpeech(); onExit?.(); }}
+            style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }}
+          />
 
           <View style={st.levels}>
             {LEVELS.map((l, i) => (
@@ -548,26 +552,6 @@ const st = StyleSheet.create({
 
   // Top
   top: { flexDirection: 'row', alignItems: 'center', width: '100%', justifyContent: 'space-between' },
-  exitBtn: {
-    position: 'absolute',
-    bottom: 30,
-    left: 20,
-    backgroundColor: '#FF5252',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    borderWidth: 3,
-    borderColor: '#FFF'
-  },
-  exitTxt: { fontSize: 30, color: 'white' },
   levels: { flexDirection: 'row', gap: 4 },
   lvlBtn: { width: BTN_SIZE, height: BTN_SIZE, borderRadius: BTN_SIZE / 2, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: 'transparent' },
   lvlActive: { borderColor: '#2196F3', backgroundColor: '#E3F2FD' },

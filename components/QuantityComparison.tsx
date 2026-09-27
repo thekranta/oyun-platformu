@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
 
@@ -292,9 +293,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
                         <Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={24} color="#5D4037" />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
-                    <Text style={styles.exitIcon}>🚪</Text>
-                </TouchableOpacity>
+                <GameExitButton onPress={onExit} style={styles.exitBtn} />
 
                 {/* Dynamic Question */}
                 <Animated.View style={[styles.questionContainer, { transform: [{ scale: questionPulse }] }]}>
@@ -411,24 +410,10 @@ const styles = StyleSheet.create({
     headerBtn: { padding: 4 },
     exitBtn: {
         position: 'absolute',
-        bottom: 30,
-        left: 20,
-        backgroundColor: '#FF5252',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100,
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        borderWidth: 3,
-        borderColor: '#FFF',
+        top: 16,
+        left: 16,
+        zIndex: 20,
     },
-    exitIcon: { fontSize: 30, color: 'white' },
     listenBtn: {
         flexDirection: 'row',
         alignItems: 'center',

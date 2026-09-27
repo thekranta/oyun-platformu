@@ -4,6 +4,7 @@ import { Animated, ImageBackground, PanResponder, Platform, StyleSheet, Text, To
 import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { speak } from '../services/speechService';
 import { asset } from '../lib/assetMap';
 
@@ -410,9 +411,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
           />
         )}
 
-        <TouchableOpacity style={styles.exitBtn} onPress={onExit}>
-          <Text style={styles.exitIcon}>🚪</Text>
-        </TouchableOpacity>
+        <GameExitButton onPress={onExit ?? (() => {})} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
 
         <TouchableOpacity
           style={styles.listenBtn}
@@ -615,29 +614,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   container: { flex: 1 },
-  exitBtn: {
-    position: 'absolute',
-    bottom: 30,
-    left: 20,
-    backgroundColor: '#FF5252',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    borderWidth: 3,
-    borderColor: '#FFF'
-  },
-  exitIcon: {
-    fontSize: 30,
-    color: 'white',
-  },
   listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
   listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: {

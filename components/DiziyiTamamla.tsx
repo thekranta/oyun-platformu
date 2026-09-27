@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { speak } from '../services/speechService';
@@ -227,7 +228,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
 
             {/* Üst Bar: Başlık ve Ses */}
             <View style={styles.topBar}>
-                <View style={{ width: 40 }} /> {/* Spacer for centering title */}
+                <GameExitButton onPress={onLogout} />
                 <Text style={styles.title}>{title}</Text>
 
                 <View style={styles.soundContainer}>
@@ -307,10 +308,6 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                 </View>
             </View>
 
-            {/* Çıkış Butonu (Sol Alt) */}
-            <TouchableOpacity onPress={onLogout} style={styles.logoutButton}>
-                <Text style={styles.logoutIcon}>🚪</Text>
-            </TouchableOpacity>
         </View>
     );
 }
@@ -488,29 +485,6 @@ const styles = StyleSheet.create({
     optionWrong: {
         borderColor: '#E74C3C',
         backgroundColor: '#FADBD8',
-    },
-    logoutButton: {
-        position: 'absolute',
-        bottom: 30,
-        left: 20,
-        backgroundColor: '#FF5252',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100,
-        elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        borderWidth: 3,
-        borderColor: '#FFF',
-    },
-    logoutIcon: {
-        fontSize: 30,
-        color: 'white',
     },
 });
 

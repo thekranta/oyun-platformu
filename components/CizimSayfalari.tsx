@@ -4,6 +4,7 @@ import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, PanResp
 import Svg, { Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { speak } from '../services/speechService';
 
 // ============================================
@@ -290,9 +291,7 @@ export default function CizimSayfalari({ onGameEnd, onExit, childName }: Props) 
         )}
 
         <View style={styles.header}>
-          <TouchableOpacity style={styles.iconBtn} onPress={onExit} activeOpacity={0.8}>
-            <Ionicons name="arrow-back" size={24} color="#00695C" />
-          </TouchableOpacity>
+          <GameExitButton onPress={onExit ?? (() => {})} />
           <Text style={styles.title}>✏️ Çizim Sayfaları</Text>
           <View style={{ width: 44 }} />
         </View>

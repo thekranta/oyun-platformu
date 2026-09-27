@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
 import { asset } from '../lib/assetMap';
 import { speak } from '../services/speechService';
 
@@ -313,9 +314,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
 
             {/* Header - Sadece geri butonu ve tur */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onExit} style={styles.exitBtn}>
-                    <Text style={styles.exitIcon}>🚪</Text>
-                </TouchableOpacity>
+                <GameExitButton onPress={onExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
                 <Text style={styles.roundText}>🔍 Tur {round}/{TOTAL}</Text>
                 <View style={{ width: 36 }} />
             </View>
@@ -421,29 +420,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 15,
         paddingBottom: 8,
         zIndex: 20,
-    },
-    exitBtn: {
-        position: 'absolute',
-        bottom: 30,
-        left: 20,
-        backgroundColor: '#FF5252',
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 100,
-        elevation: 8,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4.65,
-        borderWidth: 3,
-        borderColor: '#FFF'
-    },
-    exitIcon: {
-        fontSize: 30,
-        color: 'white',
     },
     roundText: {
         fontSize: 18,
