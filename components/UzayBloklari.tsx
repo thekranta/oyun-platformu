@@ -4,6 +4,7 @@ import {
     Animated,
     Dimensions,
     ImageBackground,
+    PanResponder,
     Platform,
     ScrollView,
     StyleSheet,
@@ -13,6 +14,7 @@ import {
     View
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FeedbackService } from '../services/FeedbackService';
 import { speak } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
@@ -68,6 +70,35 @@ const BLOCK_CELL_SIZE = isWeb ? 45 : 35;
 const GRID_PADDING = 8; // padding inside grid container
 const CELL_MARGIN = 2;  // margin around each cell
 const EFFECTIVE_CELL_SIZE = CELL_SIZE + (CELL_MARGIN * 2); // total space per cell including margins
+const GRID_BORDER_WIDTH = 2; // styles.grid borderWidth
+// Izgaranin disindan (padding+border) hucre alaninin basladigi nokta.
+const GRID_INNER_OFFSET = GRID_PADDING + GRID_BORDER_WIDTH;
+// Basit bir dokunusun (tap) yanlislikla surukleme sayilmamasi icin gereken en az mesafe.
+const DRAG_THRESHOLD = 10;
+
+/**
+ * Izgara 90 derecelik katlarla dondurulebiliyor (handleRotateGrid) — bu yuzden ekran
+ * uzerindeki bir dokunma noktasini mantiksal (donmemis) hucre koordinatina cevirmek icin
+ * ters donusum uygulamak gerekiyor. Izgara kare oldugundan (GRID_SIZE x GRID_SIZE, esit
+ * hucre boyutu) donme onun olcum kutusunu degistirmez — sadece icerigini dondurur.
+ */
+function rotateInverse(dx: number, dy: number, deg: number): { x: number; y: number } {
+    const d = ((Math.round(deg) % 360) + 360) % 360;
+    if (d === 90) return { x: dy, y: -dx };
+    if (d === 180) return { x: -dx, y: -dy };
+    if (d === 270) return { x: -dy, y: dx };
+    return { x: dx, y: dy };
+}
+
+function getBlockFootprint(block: Block, originRow: number, originCol: number): { row: number; col: number }[] {
+    const cells: { row: number; col: number }[] = [];
+    for (let r = 0; r < block.shape.length; r++) {
+        for (let c = 0; c < block.shape[r].length; c++) {
+            if (block.shape[r][c] === 1) cells.push({ row: originRow + r, col: originCol + c });
+        }
+    }
+    return cells;
+}
 
 const COLORS = {
     neonGreen: '#39FF14',
@@ -112,8 +143,26 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const [rocketLaunch, setRocketLaunch] = useState(false);
     const [gameReady, setGameReady] = useState(false);
 
-    // Selection state (tap-to-select, tap-to-place)
+    // Selection state (tap-to-select, tap-to-place VE gercek surukle-birak icin ortak)
     const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
+    // Surukleme sirasinda: parmagin ekrandaki (window-mutlak) konumu ve altindaki hucre.
+    const [dragActive, setDragActive] = useState(false);
+    const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+    const [hoverOrigin, setHoverOrigin] = useState<{ row: number; col: number } | null>(null);
+    // Izgaranin ekran uzerindeki olcumu (donmeden bagimsiz — bkz. rotateInverse yorumu).
+    const gridRef = useRef<any>(null);
+    const gridRectRef = useRef({ x: 0, y: 0, w: 0, h: 0 });
+    // Webde bazi tarayici/otomasyon ortamlarinda tek bir dokunus icin
+    // onPanResponderGrant iki kez tetiklenebiliyor; ilk Grant'in setSelectedBlock'u yeniden
+    // render tetikleyip Release'in closure'inin "zaten seciliydi" durumunu YANLIS okumasina
+    // yol aciyordu. Bu yuzden "jest baslamadan ONCEKI secim" bir REF'te (state degil)
+    // tutulur ve SADECE bu jestin ILK Grant'inde yazilir.
+    // dist de PanResponder'in kendi gestureState.dx/dy biriktiricisine guvenmek yerine
+    // Grant/Release'teki ham pageX/pageY'den hesaplanir (bazi web ortamlarinda ara
+    // mousemove olaylari yeterince gelmeyip gestureState.dx/dy 0 kalabiliyordu).
+    const gestureRef = useRef<{ active: boolean; wasSelected: boolean; startX: number; startY: number }>(
+        { active: false, wasSelected: false, startX: 0, startY: 0 }
+    );
 
     // Animations
     const glowAnim = useRef(new Animated.Value(0)).current;
@@ -237,6 +286,28 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         });
     };
 
+    const measureGrid = () => {
+        gridRef.current?.measureInWindow?.((x: number, y: number, w: number, h: number) => {
+            gridRectRef.current = { x, y, w, h };
+        });
+    };
+
+    // Bir ekran noktasini (window-mutlak, pageX/pageY) mantiksal (donmemis) hucre
+    // koordinatina cevirir. Izgara disina denk gelirse null doner.
+    const screenToCell = (screenX: number, screenY: number): { row: number; col: number } | null => {
+        const rect = gridRectRef.current;
+        if (!rect.w || !rect.h) return null;
+        const cx = rect.x + rect.w / 2;
+        const cy = rect.y + rect.h / 2;
+        const rel = rotateInverse(screenX - cx, screenY - cy, gridRotation);
+        const localX = rel.x + rect.w / 2 - GRID_INNER_OFFSET;
+        const localY = rel.y + rect.h / 2 - GRID_INNER_OFFSET;
+        const col = Math.floor(localX / EFFECTIVE_CELL_SIZE);
+        const row = Math.floor(localY / EFFECTIVE_CELL_SIZE);
+        if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return null;
+        return { row, col };
+    };
+
     const canPlaceBlock = (block: Block, startRow: number, startCol: number): boolean => {
         const shape = block.shape;
         for (let r = 0; r < shape.length; r++) {
@@ -334,16 +405,81 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         FeedbackService.animateError({ shake: shakeAnim });
     };
 
-    // Handle selecting a block from palette
-    const handleBlockSelect = (block: Block) => {
-        if (block.placed) return;
+    // Paletteki bir blogu surukleme + dokunma (tap) icin ortak PanResponder.
+    // Basit bir dokunma (az hareket) eski dokun-sec/kaldir davranisi gibi calisir;
+    // yeterince surukleme sonrasi birakma, parmagin altindaki hucreye yerlestirmeyi dener.
+    const createBlockDragResponder = (block: Block) => {
+        return PanResponder.create({
+            onStartShouldSetPanResponder: () => !block.placed,
+            onMoveShouldSetPanResponder: () => !block.placed,
+            onPanResponderTerminationRequest: () => false,
+            onPanResponderGrant: (evt) => {
+                // Bazi web/otomasyon ortamlarinda Grant ayni jest icin iki kez tetiklenebiliyor;
+                // "jest baslamadan onceki secim" SADECE ilk cagrida kaydedilir (bkz. gestureRef yorumu).
+                const { pageX, pageY } = evt.nativeEvent;
+                if (!gestureRef.current.active) {
+                    gestureRef.current.active = true;
+                    gestureRef.current.wasSelected = selectedBlock?.id === block.id;
+                    gestureRef.current.startX = pageX;
+                    gestureRef.current.startY = pageY;
+                }
+                setSelectedBlock(block);
+                setDragActive(true);
+                setDragPos({ x: pageX, y: pageY });
+                setHoverOrigin(screenToCell(pageX, pageY));
+            },
+            onPanResponderMove: (evt) => {
+                const { pageX, pageY } = evt.nativeEvent;
+                setDragPos({ x: pageX, y: pageY });
+                setHoverOrigin(screenToCell(pageX, pageY));
+            },
+            onPanResponderRelease: (evt) => {
+                const { pageX, pageY } = evt.nativeEvent;
+                const dist = Math.max(
+                    Math.abs(pageX - gestureRef.current.startX),
+                    Math.abs(pageY - gestureRef.current.startY)
+                );
+                const wasSelected = gestureRef.current.wasSelected;
+                gestureRef.current.active = false;
+                setDragActive(false);
+                setDragPos(null);
+                setHoverOrigin(null);
 
-        if (selectedBlock?.id === block.id) {
-            // Deselect if same block tapped again
-            setSelectedBlock(null);
-        } else {
-            setSelectedBlock(block);
-        }
+                if (dist < DRAG_THRESHOLD) {
+                    // Basit dokunma: ayni blok zaten seciliyse kaldir (eski dokun-sec deseni).
+                    if (wasSelected) setSelectedBlock(null);
+                    return;
+                }
+
+                const cell = screenToCell(pageX, pageY);
+                if (!cell) return; // Izgara disina birakildi: sessizce iptal, hata sayilmaz.
+
+                if (canPlaceBlock(block, cell.row, cell.col)) {
+                    placeBlock(block, cell.row, cell.col);
+                    setSelectedBlock(null);
+                } else {
+                    errorsRef.current += 1;
+                    setErrors(prev => prev + 1);
+                    playErrorFeedback();
+                    const errorMove: MoveData = {
+                        blockId: block.id,
+                        targetCell: cell,
+                        isCorrect: false,
+                        responseTime: Date.now() - lastActionTime,
+                        timestamp: Date.now(),
+                    };
+                    moveHistoryRef.current = [...moveHistoryRef.current, errorMove];
+                    setMoveHistory(prev => [...prev, errorMove]);
+                    setLastActionTime(Date.now());
+                }
+            },
+            onPanResponderTerminate: () => {
+                gestureRef.current.active = false;
+                setDragActive(false);
+                setDragPos(null);
+                setHoverOrigin(null);
+            },
+        });
     };
 
     // Handle tapping a grid cell to place selected block
@@ -379,6 +515,14 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const filledCells = grid.flat().filter(c => c.filled).length;
     const totalCells = GRID_SIZE * GRID_SIZE;
     const progress = filledCells / totalCells;
+
+    // Surukleme sirasinda canli onizleme: hangi hucreler hedefleniyor ve uyuyor mu?
+    const hoverFootprint = (dragActive && selectedBlock && hoverOrigin)
+        ? getBlockFootprint(selectedBlock, hoverOrigin.row, hoverOrigin.col)
+        : [];
+    const hoverValid = (dragActive && selectedBlock && hoverOrigin)
+        ? canPlaceBlock(selectedBlock, hoverOrigin.row, hoverOrigin.col)
+        : false;
 
     const glowOpacity = glowAnim.interpolate({
         inputRange: [0, 1],
@@ -424,7 +568,12 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
 
             {/* Header */}
             <View style={styles.header}>
-                <GameExitButton onPress={onExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
+                {/* iOS'ta çentik/saat alanıyla çakışmasın diye güvenli alan içine alındı
+                    (bkz. ToyRoom.tsx'teki aynı düzeltme — top:16 tek başına notch'lu
+                    cihazlarda durum çubuğunun altında kalıyordu). */}
+                <SafeAreaView edges={['top', 'left']} style={{ position: 'absolute', top: 0, left: 0, zIndex: 20 }}>
+                    <GameExitButton onPress={onExit} style={{ margin: 16 }} />
+                </SafeAreaView>
 
                 <View style={styles.timerContainer}>
                     <Text style={styles.timerIcon}>⏳</Text>
@@ -461,16 +610,18 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     </TouchableOpacity>
                 </View>
 
-                {/* Instruction for tap-to-place */}
+                {/* Instruction for drag-to-place / tap-to-place */}
                 {selectedBlock && (
                     <View style={styles.instructionBanner}>
-                        <Text style={styles.instructionText}>👆 Yerleştirmek için ızgaraya dokun</Text>
+                        <Text style={styles.instructionText}>👆 Sürükle ya da ızgaraya dokun!</Text>
                     </View>
                 )}
 
                 {/* Grid Area with Rotation */}
                 <View style={styles.gridContainer}>
                     <Animated.View
+                        ref={gridRef}
+                        onLayout={measureGrid}
                         style={[
                             styles.grid,
                             { transform: [{ rotate: gridRotationInterpolate }, { translateX: shakeAnim }] }
@@ -479,22 +630,28 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                         <Animated.View style={[styles.gridGlow, { opacity: glowOpacity }]} />
                         {grid.map((row, rowIndex) => (
                             <View key={rowIndex} style={styles.gridRow}>
-                                {row.map((cell, colIndex) => (
-                                    <TouchableOpacity
-                                        key={`${rowIndex}-${colIndex}`}
-                                        onPress={() => handleCellTap(rowIndex, colIndex)}
-                                        activeOpacity={0.7}
-                                        style={[
-                                            styles.gridCell,
-                                            cell.filled && { backgroundColor: cell.color || 'transparent' },
-                                            selectedBlock && !cell.filled && styles.gridCellHighlight,
-                                        ]}
-                                    >
-                                        {cell.filled && (
-                                            <Text style={styles.cellStar}>✨</Text>
-                                        )}
-                                    </TouchableOpacity>
-                                ))}
+                                {row.map((cell, colIndex) => {
+                                    const isHover = dragActive && hoverFootprint.some(
+                                        h => h.row === rowIndex && h.col === colIndex
+                                    );
+                                    return (
+                                        <TouchableOpacity
+                                            key={`${rowIndex}-${colIndex}`}
+                                            onPress={() => handleCellTap(rowIndex, colIndex)}
+                                            activeOpacity={0.7}
+                                            style={[
+                                                styles.gridCell,
+                                                cell.filled && { backgroundColor: cell.color || 'transparent' },
+                                                selectedBlock && !cell.filled && !dragActive && styles.gridCellHighlight,
+                                                isHover && (hoverValid ? styles.gridCellHoverValid : styles.gridCellHoverInvalid),
+                                            ]}
+                                        >
+                                            {cell.filled && (
+                                                <Text style={styles.cellStar}>✨</Text>
+                                            )}
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
                         ))}
                     </Animated.View>
@@ -520,20 +677,21 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 {/* Blocks Palette - Tap to Select */}
                 <View style={styles.blocksContainer}>
                     <Text style={styles.blocksTitle}>
-                        {selectedBlock ? '✅ Blok seçildi! Izgaraya dokun.' : '👆 Bir blok seç:'}
+                        {selectedBlock ? '✅ Sürükle ya da ızgaraya dokun!' : '👆 Bir bloğu sürükle ya da seç:'}
                     </Text>
                     <View style={styles.blocksPalette}>
                         {blocks.filter(b => !b.placed).map(block => {
                             const isSelected = selectedBlock?.id === block.id;
+                            const responder = createBlockDragResponder(block);
 
                             return (
-                                <TouchableOpacity
+                                <Animated.View
                                     key={block.id}
-                                    onPress={() => handleBlockSelect(block)}
-                                    activeOpacity={0.7}
+                                    {...responder.panHandlers}
                                     style={[
                                         styles.blockWrapper,
                                         isSelected && styles.blockWrapperSelected,
+                                        dragActive && isSelected && styles.blockWrapperDragging,
                                     ]}
                                 >
                                     <View style={styles.blockShape}>
@@ -552,12 +710,41 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                                             </View>
                                         ))}
                                     </View>
-                                </TouchableOpacity>
+                                </Animated.View>
                             );
                         })}
                     </View>
                 </View>
             </ScrollView>
+
+            {/* Sürüklenen bloğun parmağı takip eden "hayalet" kopyası */}
+            {dragActive && selectedBlock && dragPos && (
+                <View
+                    pointerEvents="none"
+                    style={[
+                        styles.dragGhost,
+                        {
+                            left: dragPos.x - (selectedBlock.shape[0].length * BLOCK_CELL_SIZE) / 2,
+                            top: dragPos.y - (selectedBlock.shape.length * BLOCK_CELL_SIZE) / 2,
+                        },
+                    ]}
+                >
+                    {selectedBlock.shape.map((row, ri) => (
+                        <View key={ri} style={styles.blockRow}>
+                            {row.map((cell, ci) => (
+                                <View
+                                    key={ci}
+                                    style={[
+                                        styles.blockCell,
+                                        cell === 1 && { backgroundColor: selectedBlock.color },
+                                        cell === 0 && styles.blockCellEmpty,
+                                    ]}
+                                />
+                            ))}
+                        </View>
+                    ))}
+                </View>
+            )}
 
             {/* Rocket Launch Animation */}
             {rocketLaunch && (
@@ -928,11 +1115,29 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         backgroundColor: 'rgba(57, 255, 20, 0.15)',
     },
+    gridCellHoverValid: {
+        borderColor: '#39FF14',
+        borderWidth: 3,
+        backgroundColor: 'rgba(57, 255, 20, 0.4)',
+    },
+    gridCellHoverInvalid: {
+        borderColor: '#FF5252',
+        borderWidth: 3,
+        backgroundColor: 'rgba(255, 82, 82, 0.4)',
+    },
     blockWrapperSelected: {
         borderWidth: 3,
         borderColor: '#39FF14',
         backgroundColor: 'rgba(57, 255, 20, 0.3)',
         transform: [{ scale: 1.1 }],
+    },
+    blockWrapperDragging: {
+        opacity: 0.35,
+    },
+    dragGhost: {
+        position: 'absolute',
+        zIndex: 500,
+        opacity: 0.9,
     },
     listenBtnRow: {
         alignItems: 'center',

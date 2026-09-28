@@ -794,7 +794,7 @@ export const TTS: Record<string, number> = {
   'ucurtma-cizelim-kesik-cizgileri-takip-et': require('../assets/sounds/tts/ucurtma-cizelim-kesik-cizgileri-takip-et.mp3'),
   'ustunde-olani-bul': require('../assets/sounds/tts/ustunde-olani-bul.mp3'),
   'uzak-dur-cok-guvenlisin-aferin': require('../assets/sounds/tts/uzak-dur-cok-guvenlisin-aferin.mp3'),
-  'uzay-bloklari-oyununa-hos-geldin-bloklari-yerlestirmeme-yardim-eder-misin': require('../assets/sounds/tts/uzay-bloklari-oyununa-hos-geldin-bloklari-yerlestirmeme-yardim-eder-misin.mp3'),
+  'uzay-bloklari-oyununa-hos-geldin-bloklari-yerlestirmeme-yardim-eder-misin': require('../assets/sounds/tts/uzay-bloklari-oyununa-hos-geldin-bloklari-yerlestirmeme-yardim-eder-misin.wav'),
   'uzgun-ile-mutlu-zittir-aferin': require('../assets/sounds/tts/uzgun-ile-mutlu-zittir-aferin.mp3'),
   'uzum-olan-kutuyu-bul': require('../assets/sounds/tts/uzum-olan-kutuyu-bul.wav'),
   'uzumleri-1-den-5-e-cizgi-cizerek-birlestir': require('../assets/sounds/tts/uzumleri-1-den-5-e-cizgi-cizerek-birlestir.wav'),
