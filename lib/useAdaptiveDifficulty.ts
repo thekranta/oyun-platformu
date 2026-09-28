@@ -56,8 +56,19 @@ export function performanceScore(outcomes: LevelOutcome[], accuracyWeight = 0.7)
 
     for (const o of outcomes) {
         const total = Math.max(1, o.total);
-        // Doğruluk: hata oranını temel al (oyunlar arası en tutarlı sinyal)
-        const acc = clamp01((total - o.errors) / total);
+        // Dogruluk: hata oranini temel al (oyunlar arasi en tutarli sinyal).
+        // total===1 olan (cogu "Akilli" oyunun kullandigi tek-soruluk seviye) durumda
+        // dogrusal (total-errors)/total formulu HER hatayi 0 puana esitliyordu — 3
+        // turda sadece 1 kucuk yanlis tahmin (gayet normal cocuk davranisi) checkpoint
+        // skorunu raiseThreshold'un (0.80) altina cekip zorlugun pratikte neredeyse
+        // hic artmamasina yol aciyordu (dogrulandi: 2/3 mukemmel+hizli + 1/3 tek hata
+        // = 0.767 < 0.80). Tek-soruluk seviyede bunun yerine "ilk denemede olmayan
+        // basari" icin kismi puan verilir (1 hata=0.5, 2 hata=0.33 ...). Birden fazla
+        // soru iceren seviyeler (total>1) zaten dogru orantili puan aldigindan
+        // dokunulmadi.
+        const acc = total === 1
+            ? 1 / (1 + Math.max(0, o.errors))
+            : clamp01((total - o.errors) / total);
         accSum += acc;
 
         // Hız: hedef süre verildiyse değerlendir (hızlı = yüksek)
