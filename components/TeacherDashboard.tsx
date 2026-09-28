@@ -23,6 +23,7 @@ import InAppNotice from './InAppNotice';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
 import SinifBahcesiScreen from './rewardBoard/SinifBahcesiScreen';
+import { getMaarif } from '../constants/maarifMap';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -557,7 +558,11 @@ export default function TeacherDashboard({
             'golge-dedektifi': t('teacher.games.golgeDedektifi'), 'sihirli-tuval': t('teacher.games.sihirliTuval'),
             'uzay-bloklari': t('teacher.games.uzayBloklari'),
         };
-        return map[turu] || turu;
+        // Bu kucuk harita yalnizca i18n (EN/TR) cevirisi olan birkac eski oyunu
+        // kapsiyor; digerleri icin ham routeKey ("golge-dedektifi-2" gibi) donuyordu
+        // — platform genelinde tek dogru Turkce ad kaynagi olan maarifMap'e dusuyoruz
+        // (isimlerin her yerde ayni olmasi icin; bkz. constants/maarifMap.ts).
+        return map[turu] || getMaarif(turu).displayName;
     };
 
     const getAgeText = (months: number | null | undefined) => {

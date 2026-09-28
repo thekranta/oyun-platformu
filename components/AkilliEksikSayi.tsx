@@ -156,8 +156,10 @@ export default function AkilliEksikSayi({ onGameEnd, onExit, childName = 'Küç�
                     </View>
                 </View>
 
-                <Text style={styles.question}>Eksik sayı hangisi?</Text>
-
+                {/* Ekrandaki "Eksik sayı hangisi?" yazısı kaldırıldı: okuma bilmeyen
+                    cocuk icin gereksizdi, gorev zaten CountdownOverlay + Tekrar Dinle
+                    ile sesli veriliyor (her tur ayni gorev oldugundan tur-basi ayrica
+                    seslendirmeye gerek yok). */}
                 <TouchableOpacity
                     style={styles.listenBtn}
                     onPress={() => speak('Diziye bak, eksik sayıyı bul! Sen başardıkça zorlaşır', { instructions: HAPPY_VOICE })}
@@ -230,7 +232,6 @@ const styles = StyleSheet.create({
     roundBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
-    question: { fontSize: 20, fontWeight: '800', color: '#37474F', marginTop: 6, marginBottom: 14, textAlign: 'center' },
     listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1976D2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
     listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 

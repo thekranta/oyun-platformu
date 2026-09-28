@@ -290,6 +290,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#E3F2FD', // Fallback color (light blue)
+        // FloatingItem'lar ekranin altindan (translateY: height+100) ustune dogru
+        // surekli animasyonla geciyor; overflow olmadan bu, gercek sayfayi
+        // viewport'tan ~100-200px daha uzun yapip alt kisimda bos, kaydirilabilir
+        // alana yol aciyordu (kisa icerikli oyunlarda "yarisi bos" gibi gorunuyordu —
+        // web'de dogrulandi: scrollHeight viewport'tan 234px fazlaydi).
+        overflow: 'hidden',
     },
     gradientBackground: {
         ...StyleSheet.absoluteFillObject,

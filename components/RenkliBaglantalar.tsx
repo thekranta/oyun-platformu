@@ -496,12 +496,10 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                 </View>
             </View>
 
-            {/* Score Display */}
+            {/* Hata sayaci (Puan bilgisi kaldirildi: cocuga rekabetci bir sayisal
+                puan gosterilmemeli — skor veli raporu icin state/extraData'da
+                korunuyor, sadece ekrana basilmiyor) */}
             <View style={styles.scoreContainer}>
-                <View style={styles.scoreBox}>
-                    <Text style={styles.scoreLabel}>Puan</Text>
-                    <Text style={styles.scoreValue}>{score}</Text>
-                </View>
                 <View style={styles.scoreBox}>
                     <Text style={styles.scoreLabel}>Hata</Text>
                     <Text style={[styles.scoreValue, { color: '#FF6B6B' }]}>{errors}</Text>

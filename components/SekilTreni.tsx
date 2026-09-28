@@ -23,7 +23,7 @@ const SHAPES = [
   { key: 'daire', name: 'Daire' },
   { key: 'kare', name: 'Kare' },
   { key: 'ucgen', name: 'Üçgen' },
-  { key: 'yildiz', name: 'Yıldız' },
+  { key: 'dikdortgen', name: 'Dikdörtgen' },
 ];
 // Tur başına tek tema rengi (renk kısayolunu engeller)
 const ROUND_COLORS = ['#FF7043', '#42A5F5', '#66BB6A', '#AB47BC', '#FFA726', '#26C6DA'];
@@ -32,9 +32,11 @@ function ShapeSvg({ type, size, color }: { type: string; size: number; color: st
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
       {type === 'daire' && <Circle cx={50} cy={50} r={40} fill={color} />}
-      {type === 'kare' && <Rect x={12} y={12} width={76} height={76} rx={10} fill={color} />}
+      {/* Karenin/dikdortgenin kosesi sivri olmali (rx=0) — egitsel dogruluk icin
+          onceki rx=10 (yuvarlatilmis kose) yanlisti. */}
+      {type === 'kare' && <Rect x={12} y={12} width={76} height={76} fill={color} />}
       {type === 'ucgen' && <Polygon points="50,10 90,86 10,86" fill={color} />}
-      {type === 'yildiz' && <Polygon points="50,5 61,38 98,38 68,60 79,95 50,72 21,95 32,60 2,38 39,38" fill={color} />}
+      {type === 'dikdortgen' && <Rect x={4} y={28} width={92} height={44} fill={color} />}
     </Svg>
   );
 }
@@ -175,11 +177,17 @@ export default function SekilTreni({ onGameEnd, onExit, childName }: Props) {
         <Text style={styles.loco}>🚂</Text>
         {options.map((s) => {
           const isWrong = wrongKey === s.key;
+          const isCorrectPick = locked && s.key === target.key;
           return (
             <Animated.View key={s.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.wagon, isWrong && styles.wagonWrong]} onPress={() => handlePick(s)} activeOpacity={0.85}>
+              <TouchableOpacity style={[styles.wagon, isWrong && styles.wagonWrong, isCorrectPick && styles.wagonCorrect]} onPress={() => handlePick(s)} activeOpacity={0.85}>
                 <ShapeSvg type={s.key} size={58} color={color} />
                 <View style={styles.wheels}><View style={styles.wheel} /><View style={styles.wheel} /></View>
+                {isCorrectPick && (
+                  <View style={styles.correctBadge}>
+                    <Ionicons name="checkmark-circle" size={26} color="#2E7D32" />
+                  </View>
+                )}
               </TouchableOpacity>
             </Animated.View>
           );
@@ -206,6 +214,8 @@ const styles = StyleSheet.create({
   loco: { fontSize: 52 },
   wagon: { width: 92, height: 92, borderRadius: 16, backgroundColor: '#FFE0B2', borderWidth: 3, borderColor: '#EFB47A', alignItems: 'center', justifyContent: 'center', paddingTop: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 4 },
   wagonWrong: { borderColor: '#FF6B6B' },
+  wagonCorrect: { borderColor: '#4CAF50', borderWidth: 4, backgroundColor: '#DFF3E0' },
+  correctBadge: { position: 'absolute', top: -10, right: -10, backgroundColor: '#fff', borderRadius: 16 },
   wheels: { flexDirection: 'row', gap: 22, marginTop: 2 },
   wheel: { width: 14, height: 14, borderRadius: 7, backgroundColor: '#5A3A1E' },
 });

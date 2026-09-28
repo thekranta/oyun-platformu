@@ -337,6 +337,8 @@ export const TTS: Record<string, number> = {
   'deniz-avcisina-hos-geldin-hangisi-daha-cok-veya-az-bul': require('../assets/sounds/tts/deniz-avcisina-hos-geldin-hangisi-daha-cok-veya-az-bul.wav'),
   'diger-yarisini-da-tamamladin-aferin': require('../assets/sounds/tts/diger-yarisini-da-tamamladin-aferin.mp3'),
   'digerlerinden-farkli-olan-tek-nesneyi-bul-sen-basardikca-zorlasir': require('../assets/sounds/tts/digerlerinden-farkli-olan-tek-nesneyi-bul-sen-basardikca-zorlasir.mp3'),
+  'dikdortgen-nerede-vagonda-bul': require('../assets/sounds/tts/dikdortgen-nerede-vagonda-bul.wav'),
+  'dikdortgen-nerede': require('../assets/sounds/tts/dikdortgen-nerede.wav'),
   'dinle-dugmesine-bas-ve-sesi-dinle': require('../assets/sounds/tts/dinle-dugmesine-bas-ve-sesi-dinle.mp3'),
   'dis-fircasi-ile-dis-birbirine-gider': require('../assets/sounds/tts/dis-fircasi-ile-dis-birbirine-gider.mp3'),
   'dis-ile-dis-fircasi-birbirine-gider': require('../assets/sounds/tts/dis-ile-dis-fircasi-birbirine-gider.mp3'),
