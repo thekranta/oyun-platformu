@@ -19,20 +19,25 @@ const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher.
 const TOTAL_ROUNDS = 4;
 const PAIRS_PER_ROUND = 3;
 
-interface Item { emoji: string; name: string }
+// emojiSize: emoji'lerin kendi glif boyutu neyi temsil ettiğinden bağımsızdır (bir fil
+// ile bir karınca emoji'si aynı font-size'da neredeyse aynı görsel boyutta çıkar) — bu
+// yüzden "Büyük/Küçük" gibi boyut karşıtlığına dayanan çiftlerde, karşıtlık göze
+// görünsün diye açıkça farklı fontSize veriliyor. Diğer çiftlerde (boyutla ilgisi
+// olmayan kavramlar) varsayılan boyut kullanılır.
+interface Item { emoji: string; name: string; emojiSize?: number }
 interface Pair { a: Item; b: Item }
 
 const PAIRS: Pair[] = [
   { a: { emoji: '☀️', name: 'Gündüz' }, b: { emoji: '🌙', name: 'Gece' } },
   { a: { emoji: '🔥', name: 'Sıcak' }, b: { emoji: '❄️', name: 'Soğuk' } },
   { a: { emoji: '😊', name: 'Mutlu' }, b: { emoji: '😢', name: 'Üzgün' } },
-  { a: { emoji: '🐘', name: 'Büyük' }, b: { emoji: '🐜', name: 'Küçük' } },
+  { a: { emoji: '🐘', name: 'Büyük', emojiSize: 70 }, b: { emoji: '🐜', name: 'Küçük', emojiSize: 26 } },
   { a: { emoji: '🐇', name: 'Hızlı' }, b: { emoji: '🐢', name: 'Yavaş' } },
   { a: { emoji: '⬆️', name: 'Yukarı' }, b: { emoji: '⬇️', name: 'Aşağı' } },
   { a: { emoji: '📖', name: 'Açık' }, b: { emoji: '📕', name: 'Kapalı' } },
 ];
 
-interface Card { cardId: number; pairId: number; emoji: string; name: string }
+interface Card { cardId: number; pairId: number; emoji: string; name: string; emojiSize?: number }
 
 const shuffle = <T,>(arr: T[]): T[] => {
   const a = [...arr];
@@ -47,8 +52,8 @@ const buildRound = (): Card[] => {
   const chosen = shuffle(PAIRS).slice(0, PAIRS_PER_ROUND);
   const cards: Card[] = [];
   chosen.forEach((p, pairId) => {
-    cards.push({ cardId: 0, pairId, emoji: p.a.emoji, name: p.a.name });
-    cards.push({ cardId: 0, pairId, emoji: p.b.emoji, name: p.b.name });
+    cards.push({ cardId: 0, pairId, emoji: p.a.emoji, name: p.a.name, emojiSize: p.a.emojiSize });
+    cards.push({ cardId: 0, pairId, emoji: p.b.emoji, name: p.b.name, emojiSize: p.b.emojiSize });
   });
   return shuffle(cards).map((c, i) => ({ ...c, cardId: i }));
 };
@@ -190,42 +195,44 @@ export default function ZitlariEslestir({ onGameEnd, onExit, childName }: Props)
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Zıt olanları eşleştir!</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Zıt olanları eşleştir!</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Zıt olanları eşleştir!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Zıt olanları eşleştir!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.grid}>
-        {cards.map((card) => {
-          const isMatched = matched.has(card.cardId);
-          const isSelected = firstId === card.cardId;
-          const isWrong = wrongIds.includes(card.cardId);
-          return (
-            <Animated.View key={card.cardId} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity
-                style={[
-                  styles.card,
-                  isSelected && styles.cardSelected,
-                  isMatched && styles.cardMatched,
-                  isWrong && styles.cardWrong,
-                ]}
-                onPress={() => handleTap(card)}
-                activeOpacity={0.85}
-                disabled={isMatched}
-              >
-                <Text style={styles.cardEmoji}>{card.emoji}</Text>
-                <Text style={[styles.cardName, isMatched && styles.cardNameMatched]}>{card.name}</Text>
-                {isMatched && (
-                  <View style={styles.checkBadge}>
-                    <Ionicons name="checkmark" size={16} color="#fff" />
-                  </View>
-                )}
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        <View style={styles.grid}>
+          {cards.map((card) => {
+            const isMatched = matched.has(card.cardId);
+            const isSelected = firstId === card.cardId;
+            const isWrong = wrongIds.includes(card.cardId);
+            return (
+              <Animated.View key={card.cardId} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity
+                  style={[
+                    styles.card,
+                    isSelected && styles.cardSelected,
+                    isMatched && styles.cardMatched,
+                    isWrong && styles.cardWrong,
+                  ]}
+                  onPress={() => handleTap(card)}
+                  activeOpacity={0.85}
+                  disabled={isMatched}
+                >
+                  <Text style={[styles.cardEmoji, card.emojiSize ? { fontSize: card.emojiSize } : undefined]}>{card.emoji}</Text>
+                  <Text style={[styles.cardName, isMatched && styles.cardNameMatched]}>{card.name}</Text>
+                  {isMatched && (
+                    <View style={styles.checkBadge}>
+                      <Ionicons name="checkmark" size={16} color="#fff" />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -233,6 +240,10 @@ export default function ZitlariEslestir({ onGameEnd, onExit, childName }: Props)
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF8F0', alignItems: 'center' },
+  // Header sabit en üstte kalsın (çıkış butonu standardıyla tutarlı); geri kalan içerik
+  // (soru + Tekrar Dinle + kart ızgarası) altındaki boş alanda dikey ortalanır — önceden
+  // container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu.
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#B54708' },
