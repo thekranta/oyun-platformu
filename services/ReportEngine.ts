@@ -118,7 +118,7 @@ const GAME_NAMES: Record<string, string> = {
     'tarti-dengesi': 'Tartı Dengesi',
     'kodlama-oyunu': 'Kodlama Oyunu',
     'gruplama-oyunu': 'Gruplama Oyunu',
-    'eksik-sayi-bul': 'Eksik Sayı Bul',
+    'eksik-sayi-bul': 'Eksik Sayıyı Bul',
     'diziyi-tamamla': 'Diziyi Tamamla',
     'onluk-cerceve': 'Onluk Çerçeve',
     'miktar-karsilastirma': 'Miktar Avcısı',
