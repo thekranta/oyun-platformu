@@ -119,7 +119,12 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
     const isPortrait = screenHeight > screenWidth;
 
     const containerWidth = isPortrait ? Math.min(screenWidth * 0.92, 500) : Math.min(screenWidth * 0.85, 850);
-    const containerHeight = containerWidth * (isPortrait ? 0.8 : 9 / 16);
+    // Dikey modda 0.8 oranı, sabit boyutlu içerik (başlık + soru + Tekrar Dinle + %50
+    // terazi alanı) ile birlikte seçenekler satırını konteynerin dışına taşırıyordu —
+    // overflow:'hidden' onu görünmez/dokunulamaz kılıyordu (mobilde doğrulandı: "kg"
+    // etiketleri konteyner alt sınırının 27px altındaydı). Oran artırıldı, ayrıca ekran
+    // yüksekliğinin üzerine çıkmasın diye üst sınır eklendi.
+    const containerHeight = Math.min(containerWidth * (isPortrait ? 1.05 : 9 / 16), screenHeight * 0.9);
     const WEIGHT_SIZE = containerHeight * 0.12;
     const OPTION_SIZE = containerHeight * 0.14;
 
@@ -207,13 +212,16 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
             setMistakes(m => m + 1);
             playSound('wrong');
             animateBalance(10);
-            timersRef.current.push(setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000));
+            // Yanlış geri bildirim önceden 1000ms'de sıfırlanıyordu — doğru cevabın 1500ms'lik
+            // penceresinden daha kısaydı ve çocuk (özellikle sağdaki seçeneği bıraktıktan hemen
+            // sonra ekrana bakmayı bırakırsa) hiçbir şey olmamış gibi hissedebiliyordu.
+            timersRef.current.push(setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1500));
         } else {
             setFeedback('wrong');
             setMistakes(m => m + 1);
             playSound('wrong');
             animateBalance(-6);
-            timersRef.current.push(setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1000));
+            timersRef.current.push(setTimeout(() => { setPlacedValue(null); setFeedback(null); animateBalance(-12); }, 1500));
         }
     };
 
