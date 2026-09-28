@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import GameExitButton from './GameExitButton';
 import {
     Animated,
-    Dimensions,
     Image,
     ImageBackground,
     PanResponder,
@@ -12,6 +11,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
+    useWindowDimensions,
     View,
 } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
@@ -110,7 +110,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
     const [gameStarted, setGameStarted] = useState(false);
     const [startTime, setStartTime] = useState(Date.now());
 
-    const { width: screenW, height: screenH } = Dimensions.get('window');
+    const { width: screenW, height: screenH } = useWindowDimensions();
     // Mobil için daha küçük boyutlar
     const isSmallScreen = screenH < 700;
     const puzzleSize = Math.min(screenW * 0.55, screenH * 0.28, isSmallScreen ? 200 : 260);
