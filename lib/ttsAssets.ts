@@ -508,6 +508,7 @@ export const TTS: Record<string, number> = {
   'harika-sinirlenince-bese-kadar-saymak-rahatlatir': require('../assets/sounds/tts/harika-sinirlenince-bese-kadar-saymak-rahatlatir.mp3'),
   'harika-siraladin-aferin': require('../assets/sounds/tts/harika-siraladin-aferin.mp3'),
   'harika-tam-oturdu': require('../assets/sounds/tts/harika-tam-oturdu.mp3'),
+  'harika-tuvalini-tamamladin-cok-guzel-bir-astronot-oldun': require('../assets/sounds/tts/harika-tuvalini-tamamladin-cok-guzel-bir-astronot-oldun.wav'),
   'harika-uc-vurus-caldin-dum-dum-dum': require('../assets/sounds/tts/harika-uc-vurus-caldin-dum-dum-dum.mp3'),
   'harika-uzulunce-ne-hissettigini-soylemek-rahatlatir': require('../assets/sounds/tts/harika-uzulunce-ne-hissettigini-soylemek-rahatlatir.mp3'),
   'harika-yine-zil-zile-vurunca-ses-hemen-bitmez-uzun-uzun-cinlamaya-devam-eder': require('../assets/sounds/tts/harika-yine-zil-zile-vurunca-ses-hemen-bitmez-uzun-uzun-cinlamaya-devam-eder.mp3'),

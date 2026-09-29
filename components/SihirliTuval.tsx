@@ -214,6 +214,10 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     const finishedRef = useRef(false);
     // Tamamlanma sonrasi finishGame'i geciktiren setTimeout; cikista/unmount'ta temizlenir.
     const completeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Son bolge boyandiktan sonra tamamlanma overlay'ini geciktiren setTimeout —
+    // koyu overlay HEMEN acilirsa cocuk kendi tamamladigi tuvali goremeden
+    // farkli bir ekrana geciyordu; once tuval bir sure acikca gorunsun.
+    const showCompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [lastColorSelectTime, setLastColorSelectTime] = useState<number>(Date.now());
     const [score, setScore] = useState(0);
     const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error'; regionId: string } | null>(null);
@@ -282,15 +286,21 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     useEffect(() => {
         const allFilled = regions.every(r => r.isFilled);
         if (allFilled && !isGameComplete) {
-            setIsGameComplete(true);
-            completeTimeoutRef.current = setTimeout(finishGame, 1500);
+            // Cocuk tamamladigi tuvali bir sure acikca gorsun, sonra tebrik
+            // overlay'i (sesli + yazili) acilsin, en son sonuc ekranina gecilsin.
+            showCompleteTimeoutRef.current = setTimeout(() => {
+                setIsGameComplete(true);
+                speak('Harika, tuvalini tamamladın! Çok güzel bir astronot oldun!', { instructions: HAPPY_VOICE });
+                completeTimeoutRef.current = setTimeout(finishGame, 1500);
+            }, 1400);
         }
     }, [regions]);
 
-    // Unmount'ta bekleyen tamamlanma timeout'unu temizle (cocuk ayrildiktan sonra
-    // finishGame/onGameEnd tetiklenmesin).
+    // Unmount'ta bekleyen tamamlanma timeout'larini temizle (cocuk ayrildiktan
+    // sonra overlay/finishGame/onGameEnd tetiklenmesin).
     useEffect(() => () => {
         if (completeTimeoutRef.current) clearTimeout(completeTimeoutRef.current);
+        if (showCompleteTimeoutRef.current) clearTimeout(showCompleteTimeoutRef.current);
     }, []);
 
     const finishGame = () => {
@@ -330,6 +340,10 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
         if (completeTimeoutRef.current) {
             clearTimeout(completeTimeoutRef.current);
             completeTimeoutRef.current = null;
+        }
+        if (showCompleteTimeoutRef.current) {
+            clearTimeout(showCompleteTimeoutRef.current);
+            showCompleteTimeoutRef.current = null;
         }
         finishedRef.current = true;
         onExit();
