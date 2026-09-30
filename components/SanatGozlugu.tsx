@@ -378,37 +378,39 @@ export default function SanatGozlugu({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>{current.short}</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>{current.short}</Text>
 
-      <Animated.View style={[styles.artFrame, { transform: [{ scale: bounce }] }]}>
-        <ArtCard art={current.art} />
-      </Animated.View>
+        <Animated.View style={[styles.artFrame, { transform: [{ scale: bounce }] }]}>
+          <ArtCard art={current.art} />
+        </Animated.View>
 
-      <TouchableOpacity
-        style={styles.listenBtn}
-        onPress={() => speak(current.question, { instructions: HAPPY_VOICE })}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.listenBtn}
+          onPress={() => speak(current.question, { instructions: HAPPY_VOICE })}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.options}>
-        {options.map((opt) => {
-          const isWrong = wrong === opt.key;
-          return (
-            <Animated.View key={opt.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity
-                style={[styles.optChip, isWrong && styles.optWrong]}
-                onPress={() => handlePick(opt)}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.optEmoji}>{opt.emoji}</Text>
-                <Text style={styles.optLabel}>{opt.label}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        <View style={styles.options}>
+          {options.map((opt) => {
+            const isWrong = wrong === opt.key;
+            return (
+              <Animated.View key={opt.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity
+                  style={[styles.optChip, isWrong && styles.optWrong]}
+                  onPress={() => handlePick(opt)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.optEmoji}>{opt.emoji}</Text>
+                  <Text style={styles.optLabel}>{opt.label}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -419,6 +421,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },
+
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
 
   prompt: { fontSize: 20, fontWeight: '800', color: '#6A1B9A', marginTop: 6, textAlign: 'center', paddingHorizontal: 16 },
 
