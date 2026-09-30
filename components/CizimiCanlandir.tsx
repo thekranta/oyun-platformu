@@ -5,7 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // ✨ ÇİZİMİNİ CANLANDIR - Çiz, sonra çizimin oynasın (Sanat)
@@ -50,6 +50,9 @@ export default function CizimiCanlandir({ onGameEnd, onExit, childName }: Props)
   const wiggle = useRef(new Animated.Value(0)).current;
 
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
+
+  // Unmount'ta o an calan sesi durdur (bkz. OdaminKrokisi/RenkAtolyesi deseni)
+  useEffect(() => () => { stopSpeech(); }, []);
 
   useEffect(() => {
     if (playing) {

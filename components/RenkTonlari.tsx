@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🎨 RENK TONLARI - Ton sıralama (açık→koyu) (Matematik, MAB.3)
@@ -63,7 +63,7 @@ export default function RenkTonlari({ onGameEnd, onExit, childName }: Props) {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -78,7 +78,7 @@ export default function RenkTonlari({ onGameEnd, onExit, childName }: Props) {
     setExpected(0);
     setWrongId(null);
     roundDoneRef.current = false;
-    speak('En açık tondan en koyuya sırala!', { instructions: HAPPY_VOICE });
+    speak('En açık tondan en koyuya sırayla dokunarak diz!', { instructions: HAPPY_VOICE });
   }, [round, gameReady]);
 
   const finish = () => {
@@ -141,31 +141,33 @@ export default function RenkTonlari({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>En açıktan en koyuya!</Text>
-      <Text style={styles.hint}>Sıradaki: {expected + 1}. (en açık kalan)</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>En açıktan en koyuya!</Text>
+        <Text style={styles.hint}>Sıradaki: {expected + 1}. (en açık kalan)</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('En açık tondan en koyuya sırala!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('En açık tondan en koyuya sırayla dokunarak diz!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.row}>
-        {cards.map((card) => {
-          const placed = card.rank < expected;
-          const isWrong = wrongId === card.id;
-          return (
-            <Animated.View key={card.id} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity
-                style={[styles.swatch, { backgroundColor: card.color }, placed && styles.placed]}
-                onPress={() => handleTap(card)}
-                activeOpacity={0.85}
-                disabled={placed}
-              >
-                {placed && <View style={styles.orderBadge}><Text style={styles.orderText}>{card.rank + 1}</Text></View>}
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        <View style={styles.row}>
+          {cards.map((card) => {
+            const placed = card.rank < expected;
+            const isWrong = wrongId === card.id;
+            return (
+              <Animated.View key={card.id} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity
+                  style={[styles.swatch, { backgroundColor: card.color }, placed && styles.placed]}
+                  onPress={() => handleTap(card)}
+                  activeOpacity={0.85}
+                  disabled={placed}
+                >
+                  {placed && <View style={styles.orderBadge}><Text style={styles.orderText}>{card.rank + 1}</Text></View>}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -173,6 +175,7 @@ export default function RenkTonlari({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7F0FB', alignItems: 'center' },
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },

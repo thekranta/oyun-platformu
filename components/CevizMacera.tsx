@@ -8,7 +8,7 @@ import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { supabase } from '../lib/supabase';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
@@ -183,6 +183,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
             if (finalTimerRef.current) {
                 clearTimeout(finalTimerRef.current);
             }
+            stopSpeech();
         };
     }, []);
 

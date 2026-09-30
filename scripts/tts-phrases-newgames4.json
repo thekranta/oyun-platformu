@@ -24,7 +24,7 @@
   { "text": "Aferin! Çok heyecanlanınca derin nefes almak sakinleştirir.", "game": "SakinlesmeBahcesi" },
   { "text": "Bu seni sakinleştirir mi? Sakinleşmek için bir daha bak.", "game": "SakinlesmeBahcesi" },
 
-  { "text": "Hikâye kartlarını sırala! Sonra hikâyeyi kendi cümlelerinle anlat.", "game": "KucukAnlatici" },
+  { "text": "Hikâye kartlarını sırayla dokunarak diz! Sonra hikâyeyi kendi cümlelerinle anlat.", "game": "KucukAnlatici" },
   { "text": "Kartları doğru sıraya koy! Önce ne oldu?", "game": "KucukAnlatici" },
   { "text": "Önce toprağa tohumu ektik. Sonra her gün suladık. Tohum yavaşça filizlendi. En sonunda güzel bir çiçek açtı!", "game": "KucukAnlatici" },
   { "text": "Önce yuvada bir yumurta vardı. Sonra yumurta çatladı. İçinden minik bir civciv çıktı. En sonunda civciv büyüyüp tavuk oldu!", "game": "KucukAnlatici" },

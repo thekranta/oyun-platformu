@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🏖️ KUM BOYASI - Akan/yumuşak boya (Sanat, duyusal)
@@ -45,6 +45,8 @@ export default function KumBoyasi({ onGameEnd, onExit, childName }: Props) {
   const startTimeRef = useRef(Date.now());
   const colorRef = useRef(color); colorRef.current = color;
   const sizeRef = useRef(size); sizeRef.current = size;
+
+  useEffect(() => () => { stopSpeech(); }, []);
 
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
 

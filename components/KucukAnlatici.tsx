@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 📖 KÜÇÜK ANLATICI - Sözlü anlatım / öykü sıralama (Türkçe/TAKB.1)
@@ -141,7 +141,7 @@ export default function KucukAnlatici({ onGameEnd, onExit, childName }: Props) {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -215,7 +215,7 @@ export default function KucukAnlatici({ onGameEnd, onExit, childName }: Props) {
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Hikâye kartlarını sırala! Sonra hikâyeyi kendi cümlelerinle anlat."
+          message="Hikâye kartlarını sırayla dokunarak diz! Sonra hikâyeyi kendi cümlelerinle anlat."
           childName={childName}
           countdownSeconds={5}
           interaction="tap"
@@ -292,7 +292,7 @@ export default function KucukAnlatici({ onGameEnd, onExit, childName }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F1EAFB', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#F1EAFB', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#5E35B1' },

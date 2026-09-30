@@ -5,7 +5,7 @@ import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 import { asset } from '../lib/assetMap';
 
 // Arka plan g�rseli
@@ -83,6 +83,9 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
   const [showBrushPicker, setShowBrushPicker] = useState(false);
   const [showShapeSizePicker, setShowShapeSizePicker] = useState(false);
   const startTimeRef = useRef(Date.now());
+
+  // Unmount'ta o an calan sesi durdur (bkz. OdaminKrokisi/RenkAtolyesi deseni)
+  useEffect(() => () => { stopSpeech(); }, []);
 
   const colorPickerAnim = useRef(new Animated.Value(0)).current;
   const sizePickerAnim = useRef(new Animated.Value(0)).current;

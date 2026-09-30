@@ -10,7 +10,7 @@ import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { apiUrl } from '../lib/apiBase';
 import { supabase } from '../lib/supabase';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
@@ -64,6 +64,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     // "dinliyor" durumunu engeller).
     const startingRef = useRef(false);
     const pendingStopRef = useRef(false);
+    // Unmount'ta bekleyen setTimeout'lari + o an calan sesi temizlemek icin
+    // (bkz. OdaminKrokisi/RenkAtolyesi deseni)
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const [audioLevels, setAudioLevels] = useState<number[]>([0, 0, 0, 0, 0]);
     const [maxAudioLevel, setMaxAudioLevel] = useState(-160);
@@ -86,6 +89,12 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 await requestPermission();
             }
         })();
+    }, []);
+
+    // Unmount'ta bekleyen setTimeout'lari + o an calan sesi temizle
+    useEffect(() => () => {
+        timersRef.current.forEach(clearTimeout);
+        stopSpeech();
     }, []);
 
     // Aşama değiştiğinde: Her zaman kullanıcının basılı tutmasını bekle (push-to-talk)
@@ -283,7 +292,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             }
 
             setRecordingStatus('Ses Dosyası Hatası ⚠️');
-            setTimeout(() => handleNextStage(), 2000);
+            timersRef.current.push(setTimeout(() => handleNextStage(), 2000));
         }
     };
 
@@ -310,9 +319,9 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             setStageResults(updatedResults);
 
             // Otomatik olarak bir sonraki aşamaya geç
-            setTimeout(() => {
+            timersRef.current.push(setTimeout(() => {
                 handleNextStage(updatedResults);
-            }, 2000);
+            }, 2000));
             return;
         }
 
@@ -412,13 +421,13 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                     // Doğru cevap - hata yok
                     setRecordingStatus('Harika! 🎉');
                     speak('Harika!');
-                    setTimeout(() => handleNextStage(updatedResults), 2000);
+                    timersRef.current.push(setTimeout(() => handleNextStage(updatedResults), 2000));
                 } else {
                     // Yanlış cevap - hata kaydet ve yine de devam et
                     errorsRef.current += 1; setErrors(e => e + 1);
                     setRecordingStatus(`"${transcript}" 😊`);
                     // Otomatik olarak bir sonraki aşamaya geç
-                    setTimeout(() => handleNextStage(updatedResults), 2000);
+                    timersRef.current.push(setTimeout(() => handleNextStage(updatedResults), 2000));
                 }
             } catch (fetchError: any) {
                 clearTimeout(timeoutId);
@@ -445,7 +454,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             errorsRef.current += 1; setErrors(e => e + 1);
             movesRef.current += 1; setMoves(m => m + 1);
             setRecordingStatus('API Hatası ⚠️');
-            setTimeout(() => handleNextStage(updatedResults), 2000);
+            timersRef.current.push(setTimeout(() => handleNextStage(updatedResults), 2000));
         }
     };
 
@@ -582,6 +591,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
+        justifyContent: 'center',
         paddingTop: 20,
         paddingHorizontal: 20,
     },

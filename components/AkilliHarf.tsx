@@ -4,7 +4,7 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // Akıllı Harf — UYARLANIR (adaptif) zorluk. Maarif: TAEOB.1
 // (Yazı farkındalığına ilişkin becerileri gösterebilme; harf biçimi ayırt etme).
@@ -100,7 +100,7 @@ export default function AkilliHarf({ onGameEnd, onExit, childName = 'Küçük Ka
     const bump = useRef(new Animated.Value(1)).current;
     const shake = useRef(new Animated.Value(0)).current;
 
-    React.useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+    React.useEffect(() => () => { timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
     const startTimer = (t: ReturnType<typeof setTimeout>) => { timersRef.current.push(t); return t; };
 
     const nextRound = useCallback((solvedInDiff: number) => {

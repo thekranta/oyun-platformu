@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🔢 SAYI-BOYA - Numaraya göre boyama (Sanat + sayı-renk eşleme)
@@ -56,7 +56,7 @@ export default function SayiBoya({ onGameEnd, onExit, childName }: Props) {
   const cols = tpl.grid[0].length;
   const cell = Math.min(40, (SCREEN_W - 80) / cols);
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   // Bu şablonda kullanılan numaralar (palet için)
   const usedNums = Array.from(new Set(tpl.grid.join('').split('').map(Number).filter((n) => n > 0))).sort();
@@ -181,7 +181,7 @@ export default function SayiBoya({ onGameEnd, onExit, childName }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF6FF', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#FBF6FF', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
   title: { fontSize: 19, fontWeight: '900', color: '#6A1B9A' },
   smallBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#eee' },
