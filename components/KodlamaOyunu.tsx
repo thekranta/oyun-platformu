@@ -436,7 +436,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
       {/* Countdown Overlay */}
       {!gameReady && (
         <CountdownOverlay
-          message="Minik Kaşif'e hoş geldin! Robotu hedefe götür!"
+          message="Minik Kaşif'e hoş geldin! Önce ok tuşlarına dokunarak tavşana yol göster, sonra ▶️ tuşuna bas ve tavşanın yürüyüşünü izle!"
           childName={childName}
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}

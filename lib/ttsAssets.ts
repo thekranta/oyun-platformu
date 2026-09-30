@@ -653,6 +653,7 @@ export const TTS: Record<string, number> = {
   'meyveleri-turlerine-gore-dizip-grafik-yapalim-sonra-en-cok-ya-da-en-az-olani-bul': require('../assets/sounds/tts/meyveleri-turlerine-gore-dizip-grafik-yapalim-sonra-en-cok-ya-da-en-az-olani-bul.mp3'),
   'meyveleri-turune-gore-yerlestir': require('../assets/sounds/tts/meyveleri-turune-gore-yerlestir.mp3'),
   'miktar-avcisi-oyununa-hos-geldin-hangisi-daha-cok-veya-az-bul': require('../assets/sounds/tts/miktar-avcisi-oyununa-hos-geldin-hangisi-daha-cok-veya-az-bul.mp3'),
+  'minik-kasif-e-hos-geldin-once-ok-tuslarina-dokunarak-tavsana-yol-goster-sonra-tusuna-bas-ve-tavsanin-yuruyusunu-izle': require('../assets/sounds/tts/minik-kasif-e-hos-geldin-once-ok-tuslarina-dokunarak-tavsana-yol-goster-sonra-tusuna-bas-ve-tavsanin-yuruyusunu-izle.wav'),
   'minik-kasif-e-hos-geldin-robotu-hedefe-gotur': require('../assets/sounds/tts/minik-kasif-e-hos-geldin-robotu-hedefe-gotur.wav'),
   'misirlar-sicak-tavada-sonra-ne-olur': require('../assets/sounds/tts/misirlar-sicak-tavada-sonra-ne-olur.mp3'),
   'mor-mor-masal-gibi-gizemli-bir-renktir': require('../assets/sounds/tts/mor-mor-masal-gibi-gizemli-bir-renktir.mp3'),
