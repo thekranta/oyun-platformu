@@ -4,7 +4,7 @@ import { Animated, Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity,
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // Rakam Yazma 6-10 — "Rakam Yazma" oyununun büyük sayılarla temalı varyantı.
 // Aynı çizim/kapsama mekaniği; 6, 7, 8, 9 ve iki basamaklı 10 için yeni şablonlar.
@@ -131,6 +131,10 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
         updateDimensions();
         const subscription = Dimensions.addEventListener('change', updateDimensions);
         return () => subscription?.remove();
+    }, []);
+
+    useEffect(() => () => {
+        stopSpeech();
     }, []);
 
     const targetPoints = useMemo(() => {
@@ -419,7 +423,7 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16, alignItems: 'center' },
+    container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
     header: {
         flexDirection: 'row',
         width: '100%',
