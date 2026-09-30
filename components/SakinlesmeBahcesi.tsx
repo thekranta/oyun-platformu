@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🫧 SAKİNLEŞME BAHÇESİ - Öz düzenleme / sakinleşme stratejisi (Sosyal-Duygusal, TADB.2)
@@ -156,7 +156,11 @@ export default function SakinlesmeBahcesi({ onGameEnd, onExit, childName }: Prop
 
   const TOTAL_ROUNDS = 8;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => {
+    isMountedRef.current = false;
+    timersRef.current.forEach(clearTimeout);
+    stopSpeech();
+  }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -237,43 +241,45 @@ export default function SakinlesmeBahcesi({ onGameEnd, onExit, childName }: Prop
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Sakinleşmek için ne yapmalı?</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Sakinleşmek için ne yapmalı?</Text>
 
-      <Animated.View style={[styles.sceneCard, calmed && styles.sceneCardCalm, { transform: [{ scale: bounce }] }]}>
-        <Animated.Text style={[styles.faceEmoji, { transform: [{ scale: facePop }] }]}>
-          {calmed ? scenario.calm : scenario.face}
-        </Animated.Text>
-        <View style={[styles.emotionPill, calmed && styles.emotionPillCalm]}>
-          <Text style={[styles.emotionText, calmed && styles.emotionTextCalm]}>
-            {calmed ? 'Sakinleştim! 😌' : scenario.emotion}
-          </Text>
+        <Animated.View style={[styles.sceneCard, calmed && styles.sceneCardCalm, { transform: [{ scale: bounce }] }]}>
+          <Animated.Text style={[styles.faceEmoji, { transform: [{ scale: facePop }] }]}>
+            {calmed ? scenario.calm : scenario.face}
+          </Animated.Text>
+          <View style={[styles.emotionPill, calmed && styles.emotionPillCalm]}>
+            <Text style={[styles.emotionText, calmed && styles.emotionTextCalm]}>
+              {calmed ? 'Sakinleştim! 😌' : scenario.emotion}
+            </Text>
+          </View>
+          <Text style={styles.sceneText}>{scenario.scene}  {scenario.text}</Text>
+        </Animated.View>
+
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${scenario.text} Ne yapmalı?`, { instructions: MOTHER_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
+
+        <View style={styles.options}>
+          {options.map((opt) => {
+            const isWrong = wrong === opt.emoji;
+            const isPicked = picked === opt.emoji;
+            return (
+              <Animated.View key={opt.emoji} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity
+                  style={[styles.optCard, isWrong && styles.optWrong, isPicked && styles.optCalm]}
+                  onPress={() => handlePick(opt)}
+                  activeOpacity={0.85}
+                  disabled={locked}
+                >
+                  <Text style={styles.optEmoji}>{opt.emoji}</Text>
+                  <Text style={styles.optLabel}>{opt.label}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
         </View>
-        <Text style={styles.sceneText}>{scenario.scene}  {scenario.text}</Text>
-      </Animated.View>
-
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${scenario.text} Ne yapmalı?`, { instructions: MOTHER_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
-
-      <View style={styles.options}>
-        {options.map((opt) => {
-          const isWrong = wrong === opt.emoji;
-          const isPicked = picked === opt.emoji;
-          return (
-            <Animated.View key={opt.emoji} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity
-                style={[styles.optCard, isWrong && styles.optWrong, isPicked && styles.optCalm]}
-                onPress={() => handlePick(opt)}
-                activeOpacity={0.85}
-                disabled={locked}
-              >
-                <Text style={styles.optEmoji}>{opt.emoji}</Text>
-                <Text style={styles.optLabel}>{opt.label}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
       </View>
     </View>
   );
@@ -284,6 +290,10 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#00796B' },
+
+  // Header üstte sabit kalmalı; geri kalan içerik dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
 
   prompt: { fontSize: 19, fontWeight: '800', color: '#00796B', marginTop: 8, textAlign: 'center', paddingHorizontal: 16 },
   sceneCard: { width: '86%', maxWidth: 420, minHeight: 168, borderRadius: 28, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 14, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
