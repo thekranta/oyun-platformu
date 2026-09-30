@@ -4,7 +4,7 @@ import { Animated, Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity,
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 type Point = { x: number; y: number };
 type Stroke = { color: string; size: number; points: Point[] };
@@ -173,6 +173,12 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
         updateDimensions();
         const subscription = Dimensions.addEventListener('change', updateDimensions);
         return () => subscription?.remove();
+    }, []);
+
+    // Unmount'ta calan sesi durdur (bkz. OdaminKrokisi/RenkAtolyesi deseni: cikista
+    // stopSpeech() cagrilmazsa X'e basip menuye donulse bile ses calmaya devam eder)
+    useEffect(() => () => {
+        stopSpeech();
     }, []);
 
     const targetPoints = useMemo(() => {
