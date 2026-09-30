@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 💛 İYİLİK YAP - Nazik/yardımsever davranış seçimi (Sosyal-Duygusal)
@@ -69,7 +69,7 @@ export default function IyilikYap({ onGameEnd, onExit, childName }: Props) {
 
   const TOTAL_ROUNDS = SCENARIOS.length;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -145,29 +145,31 @@ export default function IyilikYap({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Ne yapmalı?</Text>
-      <Animated.View style={[styles.sceneCard, { transform: [{ scale: bounce }] }]}>
-        <Text style={styles.sceneEmoji}>{scenario.scene}</Text>
-        <Text style={styles.sceneText}>{scenario.text}</Text>
-      </Animated.View>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Ne yapmalı?</Text>
+        <Animated.View style={[styles.sceneCard, { transform: [{ scale: bounce }] }]}>
+          <Text style={styles.sceneEmoji}>{scenario.scene}</Text>
+          <Text style={styles.sceneText}>{scenario.text}</Text>
+        </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${scenario.text} Sence ne yapmalı?`, { instructions: MOTHER_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${scenario.text} Sence ne yapmalı?`, { instructions: MOTHER_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.options}>
-        {options.map((opt) => {
-          const isWrong = wrong === opt.emoji;
-          return (
-            <Animated.View key={opt.emoji} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(opt)} activeOpacity={0.85}>
-                <Text style={styles.optEmoji}>{opt.emoji}</Text>
-                <Text style={styles.optLabel}>{opt.label}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        <View style={styles.options}>
+          {options.map((opt) => {
+            const isWrong = wrong === opt.emoji;
+            return (
+              <Animated.View key={opt.emoji} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(opt)} activeOpacity={0.85}>
+                  <Text style={styles.optEmoji}>{opt.emoji}</Text>
+                  <Text style={styles.optLabel}>{opt.label}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -175,6 +177,9 @@ export default function IyilikYap({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF0F5', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#C2185B' },
