@@ -216,7 +216,7 @@ export default function KulturEslestirme({ onGameEnd, onExit, childName = 'Küç
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16, alignItems: 'center' },
+    container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
     header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
     title: { fontSize: 19, fontWeight: 'bold', color: '#263238' },
     countBadge: { backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
