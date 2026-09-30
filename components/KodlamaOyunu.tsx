@@ -93,10 +93,12 @@ const LEVELS: LevelConfig[] = [
 import { speak, stopSpeech as stopSpeechService } from '../services/speechService';
 import { asset } from '../lib/assetMap';
 
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
+
 const speakTeacher = async (text: string) => {
   if (Platform.OS !== 'web') return;
   try {
-    await speak(text, { voice: 'nova', speed: 0.9 });
+    await speak(text, { instructions: HAPPY_VOICE });
   } catch (e) {
     console.log('TTS error:', e);
   }
@@ -393,8 +395,6 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
   const rot = () => ({ UP: '-90deg', DOWN: '90deg', LEFT: '180deg', RIGHT: '0deg' }[playerDir] || '0deg');
   const dirIcon = (d: Direction) => ({ UP: '⬆️', DOWN: '⬇️', LEFT: '⬅️', RIGHT: '➡️' }[d]);
   const dirColor = (d: Direction) => ({ UP: '#FF9800', DOWN: '#9C27B0', LEFT: '#E91E63', RIGHT: '#4CAF50' }[d]);
-
-  const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
   // ============== RENDER ==============
   const renderGrid = () => {
