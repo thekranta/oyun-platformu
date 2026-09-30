@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 👷 MESLEKLER - Meslek-araç ilişkisi (Sosyal, SAB.3)
@@ -65,7 +65,7 @@ export default function Meslekler({ onGameEnd, onExit, childName }: Props) {
   const bounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -166,7 +166,7 @@ export default function Meslekler({ onGameEnd, onExit, childName }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F0FB', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#F3F0FB', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#5E35B1' },
