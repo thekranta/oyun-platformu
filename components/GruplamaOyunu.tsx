@@ -5,7 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import JuicyProgressBar from './JuicyProgressBar';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const INSTRUCTION_TEXT = 'Nesneleri doğru gruba ayır. Meyve mi, hayvan mı?';
@@ -48,8 +48,9 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
 
     // Unmount cleanup: bekleyen setTimeout'lari temizle
     useEffect(() => () => {
-         
+
         timersRef.current.forEach(clearTimeout);
+        stopSpeech();
     }, []);
 
     const baslat = () => {
