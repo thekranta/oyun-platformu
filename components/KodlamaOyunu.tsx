@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
@@ -128,31 +129,34 @@ const BTN_SIZE = Math.min(width * 0.13, 48);
 const DPAD_SIZE = Math.min(width * 0.18, 68);
 
 // ============== ARKA PLAN MÜZİĞİ ==============
-let bgMusic: HTMLAudioElement | null = null;
+let bgMusic: Audio.Sound | null = null;
+let bgMusicLoadToken = 0;
 
-const startBgMusic = () => {
+const startBgMusic = async () => {
   if (Platform.OS !== 'web') return;
   if (bgMusic) return;
 
-  // Ücretsiz çocuk müziği URL'si (royalty-free)
-  bgMusic = new Audio('https://cdn.pixabay.com/audio/2022/01/18/audio_d0ef91aed6.mp3');
-  bgMusic.loop = true;
-  bgMusic.volume = 0.3;
-  bgMusic.play().catch(() => { });
+  const token = ++bgMusicLoadToken;
+  try {
+    const { sound } = await Audio.Sound.createAsync(asset('/sounds/background.mp3'), { shouldPlay: true, isLooping: true, volume: 0.3 });
+    if (token !== bgMusicLoadToken) {
+      sound.unloadAsync();
+      return;
+    }
+    bgMusic = sound;
+  } catch { }
 };
 
 const stopBgMusic = () => {
+  bgMusicLoadToken++;
   if (bgMusic) {
-    bgMusic.pause();
-    bgMusic.currentTime = 0;
+    bgMusic.unloadAsync().catch(() => { });
     bgMusic = null;
   }
 };
 
 const setBgMusicVolume = (on: boolean) => {
-  if (bgMusic) {
-    bgMusic.volume = on ? 0.3 : 0;
-  }
+  bgMusic?.setVolumeAsync(on ? 0.3 : 0).catch(() => { });
 };
 
 // ============== COMPONENT ==============
@@ -457,9 +461,6 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
                 {i < levelIdx && <View style={st.check}><Text style={st.checkTxt}>✓</Text></View>}
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={[st.lvlBtn, st.editBtn, mode === GameMode.EDIT && st.lvlActive]} onPress={() => { setMode(GameMode.EDIT); setGrid(Array(4).fill(null).map(() => Array(4).fill(CellType.EMPTY))); setCommands([]); }}>
-              <Text style={st.lvlEmoji}>✏️</Text>
-            </TouchableOpacity>
           </View>
 
           <TouchableOpacity style={[st.soundBtn, !soundOn && st.soundOff]} onPress={() => { setSoundOn(!soundOn); if (soundOn) stopSpeech(); }}>
