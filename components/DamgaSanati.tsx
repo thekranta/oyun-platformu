@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // ✨ DAMGA SANATI - Çıkartma/damga ile serbest kompozisyon (Sanat)
@@ -54,6 +54,8 @@ export default function DamgaSanati({ onGameEnd, onExit, childName }: Props) {
   const startTimeRef = useRef(Date.now());
   const activeRef = useRef(active); activeRef.current = active;
   const sizeRef = useRef(size); sizeRef.current = size;
+
+  useEffect(() => () => { stopSpeech(); }, []);
 
   const place = (x: number, y: number) => {
     setStamps((prev) => [...prev, { id: idRef.current++, emoji: activeRef.current, x, y, size: sizeRef.current }]);
