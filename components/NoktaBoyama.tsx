@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🔵 NOKTA BOYAMA - Noktalarla resim (pointillism) (Sanat)
@@ -43,6 +43,8 @@ export default function NoktaBoyama({ onGameEnd, onExit, childName }: Props) {
   const startTimeRef = useRef(Date.now());
   const colorRef = useRef(color); colorRef.current = color;
   const sizeRef = useRef(size); sizeRef.current = size;
+
+  useEffect(() => () => { stopSpeech(); }, []);
 
   const addDot = (x: number, y: number, force = false) => {
     const last = lastRef.current;
