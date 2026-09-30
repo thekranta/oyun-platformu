@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🎨 RENK ÖRÜNTÜSÜ - Örüntüyü sürdür (Matematik/MAB.3)
@@ -79,7 +79,7 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
   const qBounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -150,36 +150,37 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Sırada ne var?</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Sırada ne var?</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Sırada hangi renk var?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Sırada hangi renk var?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      {/* Örüntü şeridi — beyaz tepside, "?" ile biter */}
-      <View style={styles.patternTray}>
-        {shown.map((col, i) => (
-          <View key={i} style={[styles.bead, { backgroundColor: col.c }]} />
-        ))}
-        <Animated.View style={[styles.qBox, { transform: [{ scale: qBounce }] }]}>
-          <Text style={styles.qMark}>?</Text>
-        </Animated.View>
-      </View>
+        {/* Örüntü şeridi — beyaz tepside, "?" ile biter */}
+        <View style={styles.patternTray}>
+          {shown.map((col, i) => (
+            <View key={i} style={[styles.bead, { backgroundColor: col.c }]} />
+          ))}
+          <Animated.View style={[styles.qBox, { transform: [{ scale: qBounce }] }]}>
+            <Text style={styles.qMark}>?</Text>
+          </Animated.View>
+        </View>
 
-      {/* Seçenekler — ayrı etiketli panel, beyaz buton karolar */}
-      <Text style={styles.optionsLabel}>👇 Hangi renk gelmeli? Birini seç</Text>
-      <View style={styles.optionsPanel}>
-        {options.map((col) => {
-          const isWrong = wrongKey === col.key;
-          return (
-            <Animated.View key={col.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.optTile, isWrong && styles.optWrong]} onPress={() => handlePick(col)} activeOpacity={0.85}>
-                <View style={[styles.optBead, { backgroundColor: col.c }]} />
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        {/* Seçenekler — beyaz buton karolar */}
+        <View style={styles.optionsPanel}>
+          {options.map((col) => {
+            const isWrong = wrongKey === col.key;
+            return (
+              <Animated.View key={col.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity style={[styles.optTile, isWrong && styles.optWrong]} onPress={() => handlePick(col)} activeOpacity={0.85}>
+                  <View style={[styles.optBead, { backgroundColor: col.c }]} />
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -187,6 +188,9 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F7F0FB', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },
@@ -204,11 +208,10 @@ const styles = StyleSheet.create({
   qBox: { width: 50, height: 50, borderRadius: 25, borderWidth: 3, borderColor: '#B39DDB', borderStyle: 'dashed', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F7F0FB' },
   qMark: { fontSize: 26, fontWeight: '900', color: '#8E24AA' },
 
-  // Seçenekler paneli (ayrı, etiketli)
-  optionsLabel: { fontSize: 15, fontWeight: '800', color: '#7B1FA2', marginTop: 26, marginBottom: 12 },
+  // Seçenekler paneli
   optionsPanel: {
     flexDirection: 'row', justifyContent: 'center', gap: 16, backgroundColor: '#EDE7F6', borderRadius: 24,
-    borderWidth: 2, borderColor: '#B39DDB', paddingVertical: 16, paddingHorizontal: 20,
+    borderWidth: 2, borderColor: '#B39DDB', paddingVertical: 16, paddingHorizontal: 20, marginTop: 26,
   },
   optTile: {
     width: 82, height: 82, borderRadius: 41, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
