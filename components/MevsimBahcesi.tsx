@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🍂 MEVSİM BAHÇESİ - Mevsimleri tanıma (Sosyal/Zaman Kavramı, SAB.1)
@@ -76,7 +76,7 @@ export default function MevsimBahcesi({ onGameEnd, onExit, childName }: Props) {
   const bounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -147,28 +147,30 @@ export default function MevsimBahcesi({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Hangi mevsimde olur?</Text>
-      <Animated.View style={[styles.itemCard, { transform: [{ scale: bounce }] }]}>
-        <Text style={styles.itemEmoji}>{current.emoji}</Text>
-      </Animated.View>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Hangi mevsimde olur?</Text>
+        <Animated.View style={[styles.itemCard, { transform: [{ scale: bounce }] }]}>
+          <Text style={styles.itemEmoji}>{current.emoji}</Text>
+        </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu hangi mevsimde olur? Doğru mevsimi bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu hangi mevsimde olur? Doğru mevsimi bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.options}>
-        {options.map((key) => {
-          const isWrong = wrong === key;
-          return (
-            <Animated.View key={key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(key)} activeOpacity={0.85}>
-                <Text style={styles.optEmoji}>{SEASONS[key].emoji}</Text>
-                <Text style={styles.optName}>{SEASONS[key].name}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        <View style={styles.options}>
+          {options.map((key) => {
+            const isWrong = wrong === key;
+            return (
+              <Animated.View key={key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(key)} activeOpacity={0.85}>
+                  <Text style={styles.optEmoji}>{SEASONS[key].emoji}</Text>
+                  <Text style={styles.optName}>{SEASONS[key].name}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -176,6 +178,8 @@ export default function MevsimBahcesi({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F1F8E9', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#2E7D32' },
