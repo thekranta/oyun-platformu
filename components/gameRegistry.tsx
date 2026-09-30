@@ -92,6 +92,12 @@ const AkilliHafiza = lazyWithReload(() => import('./AkilliHafiza'));
 const AkilliHarf = lazyWithReload(() => import('./AkilliHarf'));
 const AkilliSiniflandir = lazyWithReload(() => import('./AkilliSiniflandir'));
 const AkilliOnceSonra = lazyWithReload(() => import('./AkilliOnceSonra'));
+const AkilliAyiAilesi = lazyWithReload(() => import('./AkilliAyiAilesi'));
+const AkilliCiftlikSayma = lazyWithReload(() => import('./AkilliCiftlikSayma'));
+const AkilliNeredeyim = lazyWithReload(() => import('./AkilliNeredeyim'));
+const AkilliSayiyiBul = lazyWithReload(() => import('./AkilliSayiyiBul'));
+const AkilliEnUzun = lazyWithReload(() => import('./AkilliEnUzun'));
+const AkilliIkizleriBul = lazyWithReload(() => import('./AkilliIkizleriBul'));
 const DunyaBayraklari = lazyWithReload(() => import('./DunyaBayraklari'));
 const DunyaSelamlari = lazyWithReload(() => import('./DunyaSelamlari'));
 import KulturEslestirme, { YAPILAR, YIYECEKLER } from './KulturEslestirme';
@@ -192,6 +198,12 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'akilli-harf': (c) => <AkilliHarf onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-siniflandir': (c) => <AkilliSiniflandir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-once-sonra': (c) => <AkilliOnceSonra onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-ayi-ailesi': (c) => <AkilliAyiAilesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-ciftlik-sayma': (c) => <AkilliCiftlikSayma onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-neredeyim': (c) => <AkilliNeredeyim onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-sayiyi-bul': (c) => <AkilliSayiyiBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-en-uzun': (c) => <AkilliEnUzun onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-ikizleri-bul': (c) => <AkilliIkizleriBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-bayraklari': (c) => <DunyaBayraklari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'bayrak-boya': (c) => <BayrakBoya onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-selamlari': (c) => <DunyaSelamlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

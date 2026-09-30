@@ -52,6 +52,8 @@ const GAME_EMOJI: Record<string, string> = {
     'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
     'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
     'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
+    'akilli-ayi-ailesi': '🐻', 'akilli-ciftlik-sayma': '🐔', 'akilli-neredeyim': '📦',
+    'akilli-sayiyi-bul': '🔢', 'akilli-en-uzun': '📏', 'akilli-ikizleri-bul': '👯',
     'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
     'bayrak-boya': '🎨',
     // Yeni oyunlar (Türkçe / Fen)
