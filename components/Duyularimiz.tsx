@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 👀 DUYULARIMIZ - Duyu organları (Hareket/Sağlık, HSAB.4)
@@ -68,7 +68,7 @@ export default function Duyularimiz({ onGameEnd, onExit, childName }: Props) {
 
   const TOTAL_ROUNDS = 8;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -141,27 +141,29 @@ export default function Duyularimiz({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Animated.View style={[styles.sceneCard, { transform: [{ scale: bounce }] }]}>
-        <Text style={styles.sceneEmoji}>{q.stimulus}</Text>
-        <Text style={styles.sceneText}>{q.text}</Text>
-      </Animated.View>
+      <View style={styles.contentArea}>
+        <Animated.View style={[styles.sceneCard, { transform: [{ scale: bounce }] }]}>
+          <Text style={styles.sceneEmoji}>{q.stimulus}</Text>
+          <Text style={styles.sceneText}>{q.text}</Text>
+        </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(q.text, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(q.text, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.options}>
-        {options.map((organ) => {
-          const isWrong = wrong === organ;
-          return (
-            <Animated.View key={organ} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(organ)} activeOpacity={0.85}>
-                <Text style={styles.optEmoji}>{organ}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        <View style={styles.options}>
+          {options.map((organ) => {
+            const isWrong = wrong === organ;
+            return (
+              <Animated.View key={organ} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(organ)} activeOpacity={0.85}>
+                  <Text style={styles.optEmoji}>{organ}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -169,6 +171,9 @@ export default function Duyularimiz({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F0FB', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },
