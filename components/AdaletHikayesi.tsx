@@ -237,7 +237,7 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
         await stopAudio();
         if (!audioSource) {
             // Ses dosyası yoksa otomatik ilerleme
-            setTimeout(() => onAudioFinish(type), 1000);
+            timersRef.current.push(setTimeout(() => onAudioFinish(type), 1000));
             return;
         }
 
@@ -254,7 +254,7 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
         } catch (e) {
             console.log('Audio playback error:', e);
             // Ses yüklenemezse otomatik ilerleme
-            setTimeout(() => onAudioFinish(type), 1000);
+            timersRef.current.push(setTimeout(() => onAudioFinish(type), 1000));
         }
     };
 

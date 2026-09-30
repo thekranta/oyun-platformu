@@ -158,7 +158,7 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
 
       <View style={styles.header}>
         <GameExitButton onPress={onExit ?? (() => {})} />
-        <Text style={styles.title}>📝 Adım Adım</Text>
+        <Text style={styles.title}>📝 Adım Adım Çizim</Text>
         <TouchableOpacity style={styles.smallBtn} onPress={clearStrokes} disabled={!hasContent} activeOpacity={0.8}>
           <Ionicons name="trash-outline" size={20} color={hasContent ? '#e53935' : '#ccc'} />
         </TouchableOpacity>
