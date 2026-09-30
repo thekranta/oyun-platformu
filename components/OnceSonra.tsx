@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // ⏳ ÖNCE-SONRA - Zaman sıralama (Sosyal Bilgiler/SAB.1 zaman-kronoloji)
@@ -71,7 +71,7 @@ export default function OnceSonra({ onGameEnd, onExit, childName }: Props) {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -146,30 +146,32 @@ export default function OnceSonra({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Önce ne olur?</Text>
-      <Text style={styles.hint}>Sıradaki: {expected + 1}.</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Önce ne olur?</Text>
+        <Text style={styles.hint}>Sıradaki: {expected + 1}.</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Önce ne olur? En baştan sırayla dokun!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Önce ne olur? En baştan sırayla dokun!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.row}>
-        {cards.map((card) => {
-          const placed = card.order < expected;
-          const isWrong = wrongId === card.id;
-          return (
-            <Animated.View key={card.id} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.card, placed && styles.cardPlaced]} onPress={() => handleTap(card)} activeOpacity={0.85} disabled={placed}>
-                <Text style={styles.cardEmoji}>{card.emoji}</Text>
-                {placed && <View style={styles.orderBadge}><Text style={styles.orderText}>{card.order + 1}</Text></View>}
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        <View style={styles.row}>
+          {cards.map((card) => {
+            const placed = card.order < expected;
+            const isWrong = wrongId === card.id;
+            return (
+              <Animated.View key={card.id} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity style={[styles.card, placed && styles.cardPlaced]} onPress={() => handleTap(card)} activeOpacity={0.85} disabled={placed}>
+                  <Text style={styles.cardEmoji}>{card.emoji}</Text>
+                  {placed && <View style={styles.orderBadge}><Text style={styles.orderText}>{card.order + 1}</Text></View>}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
+
+        <Text style={styles.label}>{label}</Text>
       </View>
-
-      <Text style={styles.label}>{label}</Text>
     </View>
   );
 }
@@ -177,6 +179,7 @@ export default function OnceSonra({ onGameEnd, onExit, childName }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#EAF7F4', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#00695C' },
 
