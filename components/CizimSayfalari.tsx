@@ -1,11 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View, PanResponder } from 'react-native';
 import Svg, { Circle, Ellipse, Line, Path, Polygon, Rect } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // ✏️ ÇİZİM SAYFALARI - Kılavuz çizgili temalı çizim/boyama (Sanat)
@@ -185,6 +185,8 @@ export default function CizimSayfalari({ onGameEnd, onExit, childName }: Props) 
 
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
 
+  useEffect(() => () => { stopSpeech(); }, []);
+
   const addPoint = (x: number, y: number) => {
     const base = liveStrokeRef.current ?? {
       color: eraseRef.current ? CANVAS_BG : colorRef.current,
@@ -315,9 +317,7 @@ export default function CizimSayfalari({ onGameEnd, onExit, childName }: Props) 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => setThemeIdx(null)} activeOpacity={0.8}>
-          <Ionicons name="grid" size={22} color="#00695C" />
-        </TouchableOpacity>
+        <GameExitButton onPress={() => setThemeIdx(null)} accessibilityLabel="Tema seçimine dön" />
         <Text style={styles.title}>{theme.emoji} {theme.name}</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.smallBtn} onPress={undoLast} disabled={!hasContent} activeOpacity={0.8}>
