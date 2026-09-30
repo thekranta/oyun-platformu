@@ -14,7 +14,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
@@ -158,10 +158,11 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
         initializeGame();
     }, [initializeGame]);
 
-    // Unmount'ta secili sise glow loop'unu durdur
+    // Unmount'ta secili sise glow loop'unu ve konusmayi durdur
     useEffect(() => () => {
-         
+
         selectedGlowLoopRef.current?.stop();
+        stopSpeech();
     }, []);
 
     // Geri bildirim sesi: şişe tamamlanınca/kazanınca global 'correct' earcon'u çalar.
