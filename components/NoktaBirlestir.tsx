@@ -5,7 +5,7 @@ import Svg, { Line } from 'react-native-svg';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🔢 NOKTA BİRLEŞTİR - Noktaları sırayla birleştir (Çizim + sayı sırası)
@@ -58,7 +58,11 @@ export default function NoktaBirlestir({ onGameEnd, onExit, childName }: Props) 
   const pic = PICTURES[(round - 1) % PICTURES.length];
   const TOTAL_ROUNDS = PICTURES.length;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => {
+    isMountedRef.current = false;
+    timersRef.current.forEach(clearTimeout);
+    stopSpeech();
+  }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -168,7 +172,7 @@ export default function NoktaBirlestir({ onGameEnd, onExit, childName }: Props) 
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#E8F6F3', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#E8F6F3', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#00695C' },
