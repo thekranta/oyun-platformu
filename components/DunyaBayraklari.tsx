@@ -5,7 +5,7 @@ import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
 import { Flag, FLAGS, FlagSpec } from './WorldFlag';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // Dünya Bayrakları — MONTESSORI tarzı kültürel farkındalık çalışması.
 // Puan/yarış YOK; kendi kendini düzelten (yanlış nazikçe titrer), doğru
@@ -55,7 +55,7 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
     const shakeMap = useRef<Record<string, Animated.Value>>({});
 
-    React.useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+    React.useEffect(() => () => { timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
     const startTimer = (t: ReturnType<typeof setTimeout>) => { timersRef.current.push(t); return t; };
     const shakeFor = (id: string) => {
         if (!shakeMap.current[id]) shakeMap.current[id] = new Animated.Value(0);
@@ -184,7 +184,7 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16, alignItems: 'center' },
+    container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
     header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
     title: { fontSize: 19, fontWeight: 'bold', color: '#263238' },
     countBadge: { backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
