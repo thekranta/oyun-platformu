@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🛒 MİNİK MARKET - Para/Ekonomi farkındalığı (Sosyal, SAB.22)
@@ -84,7 +84,7 @@ export default function MinikMarket({ onGameEnd, onExit, childName }: Props) {
 
   const cur = ROUNDS[round - 1];
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -154,38 +154,38 @@ export default function MinikMarket({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Fiyat kadar para seç!</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Fiyat kadar para seç!</Text>
 
-      {/* Ürün + fiyatı (jeton sayısı = fiyat) */}
-      <Animated.View style={[styles.priceRow, { transform: [{ scale: bounce }] }]}>
-        <View style={styles.productCard}>
-          <Text style={styles.productEmoji}>{cur.product}</Text>
+        {/* Ürün + fiyatı (jeton sayısı = fiyat) */}
+        <Animated.View style={[styles.priceRow, { transform: [{ scale: bounce }] }]}>
+          <View style={styles.productCard}>
+            <Text style={styles.productEmoji}>{cur.product}</Text>
+          </View>
+          <View style={styles.priceBox}>
+            <Text style={styles.priceLabel}>FİYAT</Text>
+            <CoinRow count={cur.price} size={26} />
+          </View>
+        </Animated.View>
+
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(PROMPT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
+
+        <View style={styles.options}>
+          {options.map((count, idx) => {
+            const isWrong = wrongIdx === idx;
+            return (
+              <Animated.View key={idx} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(count, idx)} activeOpacity={0.85}>
+                  <Text style={styles.purseEmoji}>👛</Text>
+                  <CoinRow count={count} size={20} />
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
         </View>
-        <View style={styles.priceBox}>
-          <Text style={styles.priceLabel}>FİYAT</Text>
-          <CoinRow count={cur.price} size={26} />
-        </View>
-      </Animated.View>
-
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(PROMPT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.hint}>Hangi kesede aynı sayıda para var?</Text>
-
-      <View style={styles.options}>
-        {options.map((count, idx) => {
-          const isWrong = wrongIdx === idx;
-          return (
-            <Animated.View key={idx} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(count, idx)} activeOpacity={0.85}>
-                <Text style={styles.purseEmoji}>👛</Text>
-                <CoinRow count={count} size={20} />
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
       </View>
     </View>
   );
@@ -193,6 +193,9 @@ export default function MinikMarket({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF8E1', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#EF6C00' },
@@ -207,8 +210,6 @@ const styles = StyleSheet.create({
 
   listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FB8C00', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
   listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
-
-  hint: { fontSize: 15, fontWeight: '700', color: '#EF6C00', marginTop: 14, textAlign: 'center', paddingHorizontal: 16 },
 
   options: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 12, flexWrap: 'wrap', maxWidth: 440, paddingHorizontal: 10 },
   optCard: { width: 108, minHeight: 132, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },
