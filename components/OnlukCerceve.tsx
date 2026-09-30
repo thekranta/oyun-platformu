@@ -158,11 +158,13 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
             if (newCount === target) {
                 setShowConfetti(true);
                 setShowSuccess(true);
+                speak('Aferin!');
                 setRoundData(prev => [...prev, { round, target, result: 'success' }]);
                 timersRef.current.push(setTimeout(() => {
                     if (round < 10) setRound(r => r + 1);
                     else {
                         const duration = Math.floor((Date.now() - startTime) / 1000);
+                        speak('Tebrikler!');
                         onGameEnd(oyunAdi, duration, 10, mistakes, undefined, {
                             zorlukSeviyesi: 1, kazanimOdagi: 'MAB.1 Sayı Kompozisyonu'
                         });

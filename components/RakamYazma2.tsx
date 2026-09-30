@@ -153,6 +153,7 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
 
     const handleSuccess = useCallback(() => {
         setShowSuccess(true);
+        speak('Harika!');
         Animated.sequence([
             Animated.timing(successAnim, { toValue: 1, duration: 400, useNativeDriver: false }),
             Animated.delay(600),

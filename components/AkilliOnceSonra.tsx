@@ -122,6 +122,7 @@ export default function AkilliOnceSonra({ onGameEnd, onExit, childName = 'Küç�
         if (card.correctPos === nextIdx) {
             const newOrder = { ...orderMap, [card.id]: nextIdx + 1 };
             setOrderMap(newOrder);
+            speak('Aferin!');
             if (Object.keys(newOrder).length === current.cards.length) {
                 lockRef.current = true;
                 const solvedInDiff = diffRef.current;

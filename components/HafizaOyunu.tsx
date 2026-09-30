@@ -258,6 +258,7 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 // Animations
                 animateMatch(cards.find(c => c.id === firstCard.id)!);
                 animateMatch(cards.find(c => c.id === secondCard.id)!);
+                speak('Aferin!');
 
                 // Check Stage Completion
                 if (matchedCards.every(c => c.isMatched)) {

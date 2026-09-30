@@ -90,6 +90,7 @@ export default function BayrakBoya({ onGameEnd, onExit, childName = 'Küçük Ka
         if (next.every((c, idx) => c === spec.colors[idx])) {
             lockRef.current = true;
             setSolved(true);
+            speak('Harika!');
             Animated.sequence([
                 Animated.timing(bump, { toValue: 1.12, duration: 160, useNativeDriver: true }),
                 Animated.timing(bump, { toValue: 1, duration: 160, useNativeDriver: true }),

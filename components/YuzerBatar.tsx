@@ -86,7 +86,7 @@ export default function YuzerBatar({ onGameEnd, onExit, childName }: Props) {
       // batıyorsa aşağı, yüzüyorsa hafif yukarı
       Animated.timing(drop, { toValue: 1, duration: 500, useNativeDriver: USE_NATIVE }).start();
       setShowConfetti(true);
-      speakThenWait(floats ? 'Doğru, yüzüyor!' : 'Doğru, batıyor!', 1500, { instructions: HAPPY_VOICE }).then(() => {
+      speakThenWait(floats ? 'Doğru, yüzüyor! Aferin!' : 'Doğru, batıyor! Aferin!', 1500, { instructions: HAPPY_VOICE }).then(() => {
         if (!isMountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);

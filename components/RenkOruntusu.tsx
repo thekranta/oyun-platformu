@@ -113,7 +113,7 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speakThenWait('Doğru! Örüntüyü buldun.', 1300, { instructions: HAPPY_VOICE }).then(() => {
+      speakThenWait('Doğru! Örüntüyü buldun. Aferin!', 1300, { instructions: HAPPY_VOICE }).then(() => {
         if (!isMountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);

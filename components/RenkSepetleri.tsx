@@ -105,6 +105,7 @@ export default function RenkSepetleri({ onGameEnd, onExit, childName }: Props) {
     if (color.key === ballColor.key) {
       setLocked(true);
       correctRef.current += 1;
+      speak('Aferin!');
       // top sepete düşer
       Animated.timing(ballDrop, { toValue: 1, duration: 350, useNativeDriver: USE_NATIVE }).start();
       const isLast = itemIndex + 1 >= TOTAL_ITEMS;

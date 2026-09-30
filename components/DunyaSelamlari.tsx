@@ -72,6 +72,7 @@ export default function DunyaSelamlari({ onGameEnd, onExit, childName = 'Küçü
             const nf = new Set(found); nf.add(id);
             setFound(nf);
             setJustFound(id);
+            speak('Aferin!');
             startTimer(setTimeout(() => setJustFound(null), 900));
 
             if (nf.size === board.length) {

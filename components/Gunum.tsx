@@ -95,6 +95,7 @@ export default function Gunum({ onGameEnd, onExit, childName }: Props) {
     movesRef.current += 1;
     if (card.order === expected) {
       correctRef.current += 1;
+      speak('Aferin!');
       const next = expected + 1;
       setExpected(next);
       if (next >= cards.length) {

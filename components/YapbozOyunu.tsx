@@ -275,6 +275,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
                         speed: 20,
                         bounciness: 0,
                     }).start(() => {
+                        speak('Aferin!');
                         handleLock(pieceId);
                     });
                 } else {

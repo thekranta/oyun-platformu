@@ -90,6 +90,7 @@ export default function AyiAilesi({ onGameEnd, onExit, childName }: Props) {
     movesRef.current += 1;
     if (bear.rank === expectedRank) {
       correctRef.current += 1;
+      speak('Aferin!');
       const next = expectedRank + 1;
       setExpectedRank(next);
       if (next >= bears.length) {

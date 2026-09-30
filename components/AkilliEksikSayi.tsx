@@ -127,6 +127,7 @@ export default function AkilliEksikSayi({ onGameEnd, onExit, childName = 'Küç�
         if (n === current.answer) {
             lockRef.current = true;
             setFeedback('correct');
+            speak('Harika!');
             Animated.sequence([
                 Animated.timing(bump, { toValue: 1.15, duration: 140, useNativeDriver: true }),
                 Animated.timing(bump, { toValue: 1, duration: 140, useNativeDriver: true }),

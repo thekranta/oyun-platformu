@@ -131,6 +131,7 @@ export default function AkilliSiniflandir({ onGameEnd, onExit, childName = 'KÃ¼Ã
         if (key === current.answer) {
             lockRef.current = true;
             setFeedback('correct');
+            speak('Harika!');
             Animated.sequence([
                 Animated.timing(bump, { toValue: 1.15, duration: 140, useNativeDriver: true }),
                 Animated.timing(bump, { toValue: 1, duration: 140, useNativeDriver: true }),

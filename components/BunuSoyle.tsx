@@ -411,6 +411,7 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 if (isCorrect) {
                     // Doğru cevap - hata yok
                     setRecordingStatus('Harika! 🎉');
+                    speak('Harika!');
                     setTimeout(() => handleNextStage(updatedResults), 2000);
                 } else {
                     // Yanlış cevap - hata kaydet ve yine de devam et

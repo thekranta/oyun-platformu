@@ -117,6 +117,7 @@ export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük 
                 const matched = cardsRef.current.map(c => (c.id === a.id || c.id === b.id ? { ...c, matched: true } : c));
                 setCards(matched);
                 cardsRef.current = matched;
+                speak('Aferin!');
                 lockRef.current = false;
                 if (matched.every(c => c.matched)) {
                     lockRef.current = true; // sonraki tahta kurulana kadar kilit

@@ -177,6 +177,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
             } else {
                 setBeklenenSayi(b => b + 1);
                 setShowHint(false);
+                speechService.speak('Aferin!');
             }
         } else {
             setTotalHata(h => h + 1);

@@ -248,6 +248,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     const handleGameComplete = () => {
         setIsGameComplete(true);
         setRocketLaunch(true);
+        speak('Tebrikler!');
         Animated.timing(rocketAnim, {
             toValue: -screenH,
             duration: 2000,
@@ -358,6 +359,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         setLastActionTime(Date.now());
         setScore(prev => prev + 25);
         playSuccessFeedback();
+        speak('Aferin!');
     };
 
     // UNDO - Remove last placed block

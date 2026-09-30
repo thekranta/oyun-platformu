@@ -76,10 +76,12 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
             const nf = new Set(found); nf.add(spec.id);
             setFound(nf);
             setJustFound(spec.id);
+            speak('Aferin!');
             startTimer(setTimeout(() => setJustFound(null), 900));
 
             if (nf.size === board.length) {
                 lockRef.current = true;
+                speak('Tebrikler!');
                 startTimer(setTimeout(() => {
                     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
                     onGameEnd('dunya-bayraklari', duration, movesRef.current, errorsRef.current, undefined, {

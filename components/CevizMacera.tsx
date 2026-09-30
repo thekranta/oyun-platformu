@@ -249,6 +249,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                 setViewState('options');
             } else {
                 setShowConfetti(true);
+                speak('Tebrikler!');
                 finalTimerRef.current = setTimeout(() => onExit(), 4000);
             }
         }

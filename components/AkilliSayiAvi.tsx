@@ -118,6 +118,7 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
         if (n === current.count) {
             lockRef.current = true;
             setFeedback('correct');
+            speak('Harika!');
             Animated.sequence([
                 Animated.timing(bump, { toValue: 1.15, duration: 140, useNativeDriver: true }),
                 Animated.timing(bump, { toValue: 1, duration: 140, useNativeDriver: true }),

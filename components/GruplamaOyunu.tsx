@@ -81,6 +81,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
             setDogruSayisi(yeniDogru);
 
             if (suankiSoruIndex + 1 < sorular.length) {
+                speak('Aferin!');
                 setSuankiSoruIndex(i => i + 1);
             } else {
                 // Game Complete
@@ -88,6 +89,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                 if (confettiRef.current) {
                     confettiRef.current.start();
                 }
+                speak('Tebrikler!');
 
                 timersRef.current.push(setTimeout(() => {
                     const bitisZamani = new Date();

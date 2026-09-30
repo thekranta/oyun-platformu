@@ -163,6 +163,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             setCompletedLines(prev => [...prev, { from: fromNum, to: toNum, path }]);
             setMoves(prev => prev + 1);
             playSound('correct');
+            speak('Harika!');
 
             if (toNum === NUMBERS_COUNT) {
                 // Stage complete!

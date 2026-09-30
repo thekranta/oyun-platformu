@@ -100,6 +100,7 @@ export default function AkilliFarkli({ onGameEnd, onExit, childName = 'Küçük 
         if (index === current.oddPos) {
             lockRef.current = true;
             setFeedback('correct');
+            speak('Harika!');
             const solvedInDiff = diffRef.current;
             startTimer(setTimeout(() => nextRound(solvedInDiff), 800));
         } else {

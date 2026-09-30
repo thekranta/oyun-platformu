@@ -192,6 +192,7 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
     if (value === missingNumber) {
       setPlacedNumber(value);
       setFeedback('correct');
+      speak('Aferin!');
       Animated.sequence([
         Animated.spring(correctScale, { toValue: 1.12, useNativeDriver: true, friction: 5 }),
         Animated.spring(correctScale, { toValue: 1, useNativeDriver: true, friction: 5 }),

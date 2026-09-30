@@ -162,6 +162,8 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
             return;
         }
 
+        speak('Aferin!');
+
         // Animate pop
         poppedBalls.forEach(ball => {
             Animated.sequence([
@@ -197,6 +199,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
             if (newPopCount >= MAX_POPS) {
                 setIsGameComplete(true);
                 setShowConfetti(true);
+                speak('Harika!');
                 timersRef.current.push(setTimeout(finishGame, 2500));
             }
         }, 400));

@@ -115,6 +115,7 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
         if (side === correctSide(current)) {
             lockRef.current = true;
             setFeedback('correct');
+            speak('Harika!');
             const solvedInDiff = diffRef.current;
             startTimer(setTimeout(() => nextRound(solvedInDiff), 850));
         } else {

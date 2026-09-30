@@ -333,6 +333,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
             setPlacedItems(prev => new Set([...prev, selectedItem.id]));
             setMoves(m => m + 1);
             setMavisMessage('🎉 ✨');
+            speak('Aferin!');
 
             // Check if level complete
             const remainingItems = foods.filter(f => !placedItems.has(f.id) && f.id !== selectedItem.id);

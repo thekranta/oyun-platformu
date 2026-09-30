@@ -114,6 +114,7 @@ export default function AkilliSiralama({ onGameEnd, onExit, childName = 'Küçü
         if (card.count === current.sortedAsc[nextIdx]) {
             const newOrder = { ...orderMap, [card.id]: nextIdx + 1 };
             setOrderMap(newOrder);
+            speak('Harika!');
             if (Object.keys(newOrder).length === current.cards.length) {
                 lockRef.current = true;
                 const solvedInDiff = diffRef.current;

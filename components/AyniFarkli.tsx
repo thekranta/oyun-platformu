@@ -95,7 +95,7 @@ export default function AyniFarkli({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speakThenWait(isSame ? 'Doğru, ikisi de aynı!' : 'Doğru, farklılar!', 1300, { instructions: HAPPY_VOICE }).then(() => {
+      speakThenWait(isSame ? 'Doğru, ikisi de aynı! Aferin!' : 'Doğru, farklılar! Aferin!', 1300, { instructions: HAPPY_VOICE }).then(() => {
         if (!isMountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);

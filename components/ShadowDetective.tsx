@@ -274,6 +274,7 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
             if (x >= layout.x && x <= layout.x + layout.w && y >= layout.y && y <= layout.y + layout.h) {
                 if (id === sid) {
                     setMatched(prev => new Set(prev).add(id));
+                    speak('Aferin!');
                     return true;
                 } else {
                     setErrors(e => e + 1);

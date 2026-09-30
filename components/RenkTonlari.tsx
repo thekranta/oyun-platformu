@@ -97,6 +97,7 @@ export default function RenkTonlari({ onGameEnd, onExit, childName }: Props) {
     movesRef.current += 1;
     if (card.rank === expected) {
       correctRef.current += 1;
+      speak('Aferin!');
       const next = expected + 1;
       setExpected(next);
       if (next >= cards.length) {

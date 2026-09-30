@@ -421,6 +421,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
             setCorrectAnswers(prev => prev + 1);
             setScore(prev => prev + (10 * filledCount));
             playSuccessFeedback();
+            speak('Aferin!');
             setShowFeedback({ type: 'success', regionId });
         } else {
             errorsRef.current += 1;
