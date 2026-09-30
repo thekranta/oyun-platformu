@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
         fontWeight: '800',
     },
     optionsArea: {
-        backgroundColor: '#eef7ff',
+        backgroundColor: '#d6eaf8',
         borderRadius: 24,
         padding: 16,
         borderWidth: 2,

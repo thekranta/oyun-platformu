@@ -71,7 +71,7 @@ export default function AyiAilesi({ onGameEnd, onExit, childName }: Props) {
     setExpectedRank(0);
     setWrongId(null);
     roundDoneRef.current = false;
-    speak('En küçük ayıdan en büyüğe doğru sırala!', { instructions: HAPPY_VOICE });
+    speak('Ayı ailesini en küçükten en büyüğe sırayla dokunarak diz!', { instructions: HAPPY_VOICE });
   }, [round, gameReady]);
 
   const finish = () => {
@@ -135,9 +135,8 @@ export default function AyiAilesi({ onGameEnd, onExit, childName }: Props) {
       </View>
 
       <Text style={styles.prompt}>En küçükten en büyüğe!</Text>
-      <Text style={styles.hint}>Sıradaki: {expectedRank + 1}. ayı</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('En küçük ayıdan en büyüğe doğru sırala!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Ayı ailesini en küçükten en büyüğe sırayla dokunarak diz!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
         <Ionicons name="volume-high" size={20} color="#fff" />
         <Text style={styles.listenText}>Tekrar Dinle</Text>
       </TouchableOpacity>
@@ -168,18 +167,17 @@ export default function AyiAilesi({ onGameEnd, onExit, childName }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FBF3EC', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#FBF3EC', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#795548' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#795548', marginTop: 10 },
-  hint: { fontSize: 15, fontWeight: '700', color: '#A1887F', marginTop: 4, marginBottom: 6 },
 
   listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#795548', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
   listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
-  field: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingBottom: 40 },
+  field: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingTop: 24, paddingBottom: 40 },
   slot: { alignItems: 'center', justifyContent: 'flex-end' },
   bearBtn: { alignItems: 'center', justifyContent: 'flex-end', paddingHorizontal: 6, paddingVertical: 4, borderRadius: 16 },
   bearPlaced: { opacity: 0.45 },

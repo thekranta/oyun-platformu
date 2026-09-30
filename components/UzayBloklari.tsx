@@ -294,7 +294,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
     };
 
     // Bir ekran noktasini (window-mutlak, pageX/pageY) mantiksal (donmemis) hucre
-    // koordinatina cevirir. Izgara disina denk gelirse null doner.
+    // koordinatina cevirir. Izgara disina denk gelirse null doner. Sadece "parmak
+    // izgaranin uzerinde mi" testi icin kullanilir (bkz. getDragOrigin).
     const screenToCell = (screenX: number, screenY: number): { row: number; col: number } | null => {
         const rect = gridRectRef.current;
         if (!rect.w || !rect.h) return null;
@@ -307,6 +308,28 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
         const row = Math.floor(localY / EFFECTIVE_CELL_SIZE);
         if (row < 0 || row >= GRID_SIZE || col < 0 || col >= GRID_SIZE) return null;
         return { row, col };
+    };
+
+    // Surukleme sirasinda blogun hedef (sol-ust) hucresini hesaplar. Parmak, suruklenen
+    // "hayalet" gorselinde oldugu gibi (bkz. dragGhost stili, ~35 satir asagida) blogun
+    // GORSEL MERKEZINE denk gelir — dogrudan screenToCell sonucunu blogun sol-ust kosesi
+    // saymak, parmak tam uygun bir noktadayken bile blogu asagi-saga kaydirip yeterli
+    // bosluk olmasina ragmen izgara disina tasirip yerlesimi reddediyordu (test raporu:
+    // "yeterince bosluk olmasina ragmen yerlestirmiyor"). Blogun yarisi kadar geri kaydirir.
+    const getDragOrigin = (block: Block, screenX: number, screenY: number): { row: number; col: number } | null => {
+        const rect = gridRectRef.current;
+        if (!rect.w || !rect.h) return null;
+        const cx = rect.x + rect.w / 2;
+        const cy = rect.y + rect.h / 2;
+        const rel = rotateInverse(screenX - cx, screenY - cy, gridRotation);
+        const localX = rel.x + rect.w / 2 - GRID_INNER_OFFSET;
+        const localY = rel.y + rect.h / 2 - GRID_INNER_OFFSET;
+        const rows = block.shape.length;
+        const cols = block.shape[0].length;
+        return {
+            row: Math.floor(localY / EFFECTIVE_CELL_SIZE - rows / 2),
+            col: Math.floor(localX / EFFECTIVE_CELL_SIZE - cols / 2),
+        };
     };
 
     const canPlaceBlock = (block: Block, startRow: number, startCol: number): boolean => {
@@ -428,12 +451,12 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 setSelectedBlock(block);
                 setDragActive(true);
                 setDragPos({ x: pageX, y: pageY });
-                setHoverOrigin(screenToCell(pageX, pageY));
+                setHoverOrigin(getDragOrigin(block, pageX, pageY));
             },
             onPanResponderMove: (evt) => {
                 const { pageX, pageY } = evt.nativeEvent;
                 setDragPos({ x: pageX, y: pageY });
-                setHoverOrigin(screenToCell(pageX, pageY));
+                setHoverOrigin(getDragOrigin(block, pageX, pageY));
             },
             onPanResponderRelease: (evt) => {
                 const { pageX, pageY } = evt.nativeEvent;
@@ -453,11 +476,12 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     return;
                 }
 
-                const cell = screenToCell(pageX, pageY);
-                if (!cell) return; // Izgara disina birakildi: sessizce iptal, hata sayilmaz.
+                if (!screenToCell(pageX, pageY)) return; // Izgara disina birakildi: sessizce iptal, hata sayilmaz.
+                const origin = getDragOrigin(block, pageX, pageY);
+                if (!origin) return;
 
-                if (canPlaceBlock(block, cell.row, cell.col)) {
-                    placeBlock(block, cell.row, cell.col);
+                if (canPlaceBlock(block, origin.row, origin.col)) {
+                    placeBlock(block, origin.row, origin.col);
                     setSelectedBlock(null);
                 } else {
                     errorsRef.current += 1;
@@ -465,7 +489,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                     playErrorFeedback();
                     const errorMove: MoveData = {
                         blockId: block.id,
-                        targetCell: cell,
+                        targetCell: origin,
                         isCorrect: false,
                         responseTime: Date.now() - lastActionTime,
                         timestamp: Date.now(),

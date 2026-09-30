@@ -132,32 +132,34 @@ export default function AyniFarkli({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Aynı mı, farklı mı?</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Aynı mı, farklı mı?</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Aynı mı, farklı mı?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Aynı mı, farklı mı?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <Animated.View style={[styles.cards, { transform: [{ scale: cardsBounce }] }]}>
-        <View style={styles.card}><Text style={styles.cardEmoji}>{left}</Text></View>
-        <Text style={styles.vs}>?</Text>
-        <View style={styles.card}><Text style={styles.cardEmoji}>{right}</Text></View>
-      </Animated.View>
-
-      <View style={styles.answers}>
-        <Animated.View style={wrongChoice === 'ayni' ? { transform: [{ translateX: shake }] } : undefined}>
-          <TouchableOpacity style={[styles.ansBtn, styles.sameBtn, wrongChoice === 'ayni' && styles.ansWrong]} onPress={() => handleAnswer('ayni')} activeOpacity={0.85}>
-            <Text style={styles.ansSymbol}>=</Text>
-            <Text style={styles.ansLabel}>Aynı</Text>
-          </TouchableOpacity>
+        <Animated.View style={[styles.cards, { transform: [{ scale: cardsBounce }] }]}>
+          <View style={styles.card}><Text style={styles.cardEmoji}>{left}</Text></View>
+          <Text style={styles.vs}>?</Text>
+          <View style={styles.card}><Text style={styles.cardEmoji}>{right}</Text></View>
         </Animated.View>
-        <Animated.View style={wrongChoice === 'farkli' ? { transform: [{ translateX: shake }] } : undefined}>
-          <TouchableOpacity style={[styles.ansBtn, styles.diffBtn, wrongChoice === 'farkli' && styles.ansWrong]} onPress={() => handleAnswer('farkli')} activeOpacity={0.85}>
-            <Text style={styles.ansSymbol}>≠</Text>
-            <Text style={styles.ansLabel}>Farklı</Text>
-          </TouchableOpacity>
-        </Animated.View>
+
+        <View style={styles.answers}>
+          <Animated.View style={wrongChoice === 'ayni' ? { transform: [{ translateX: shake }] } : undefined}>
+            <TouchableOpacity style={[styles.ansBtn, styles.sameBtn, wrongChoice === 'ayni' && styles.ansWrong]} onPress={() => handleAnswer('ayni')} activeOpacity={0.85}>
+              <Text style={styles.ansSymbol}>=</Text>
+              <Text style={styles.ansLabel}>Aynı</Text>
+            </TouchableOpacity>
+          </Animated.View>
+          <Animated.View style={wrongChoice === 'farkli' ? { transform: [{ translateX: shake }] } : undefined}>
+            <TouchableOpacity style={[styles.ansBtn, styles.diffBtn, wrongChoice === 'farkli' && styles.ansWrong]} onPress={() => handleAnswer('farkli')} activeOpacity={0.85}>
+              <Text style={styles.ansSymbol}>≠</Text>
+              <Text style={styles.ansLabel}>Farklı</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
       </View>
     </View>
   );
@@ -165,6 +167,9 @@ export default function AyniFarkli({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F1FC', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#5E35B1' },

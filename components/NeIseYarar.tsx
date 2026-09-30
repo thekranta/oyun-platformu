@@ -93,7 +93,7 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
     setFirstId(null);
     setWrongIds([]);
     setLocked(false);
-    speak('Birbiriyle giden ikilileri eşleştir!', { instructions: HAPPY_VOICE });
+    speak('Eşleşenleri bul!', { instructions: HAPPY_VOICE });
   }, [round, gameReady]);
 
   const finish = () => {
@@ -158,7 +158,7 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
       {showConfetti && <ConfettiCannon count={120} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Birbiriyle giden ikilileri bul! Şemsiye - yağmur gibi."
+          message="Eşleşenleri bul! Şemsiye - yağmur gibi."
           childName={childName}
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}
@@ -171,9 +171,9 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Birbirine gidenleri eşle!</Text>
+      <Text style={styles.prompt}>Eşleşenleri bul!</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Birbiriyle giden ikilileri eşleştir!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Eşleşenleri bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
         <Ionicons name="volume-high" size={20} color="#fff" />
         <Text style={styles.listenText}>Tekrar Dinle</Text>
       </TouchableOpacity>

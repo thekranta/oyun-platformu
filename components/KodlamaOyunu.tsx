@@ -208,10 +208,11 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
     return () => loop.stop();
   }, []);
 
-  // Unmount'ta bekleyen setTimeout'lari temizle
+  // Unmount'ta bekleyen setTimeout'lari + o an calan sesi temizle (bkz. OdaminKrokisi/RenkAtolyesi
+  // deseni: cikista stopSpeech() cagrilmazsa X'e basip menuye donulse bile ses calmaya devam eder)
   useEffect(() => () => {
-     
     timersRef.current.forEach(clearTimeout);
+    stopSpeech();
   }, []);
 
   // Arka plan müziği başlat
@@ -236,10 +237,15 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
   }, [playerPos, CELL]);
 
   // Voice
+  // Bu zamanlanmis cagri, kosul degisince (ör. cocuk hemen bir komut eklerse commands.length
+  // 0'dan 1'e cikar) iptal edilmezse 300ms sonra yine de calar ve o an calan komut sesiyle
+  // ust uste biner ("2 komut ayni anda caliyor") — cleanup ile iptal ediyoruz.
   useEffect(() => {
     if (!soundOn) return;
     if (mode === GameMode.PLAY && status === GameStatus.PLANNING && commands.length === 0) {
-      timersRef.current.push(setTimeout(() => speakTeacher(level.story || 'Hadi oynayalım!'), 300));
+      const t = setTimeout(() => speakTeacher(level.story || 'Hadi oynayalım!'), 300);
+      timersRef.current.push(t);
+      return () => clearTimeout(t);
     }
   }, [level, status, soundOn, mode, commands.length]);
 
