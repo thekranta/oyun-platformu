@@ -5,7 +5,7 @@ import Svg, { Circle, Polygon, Rect } from 'react-native-svg';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🕳️ ŞEKİL DELİĞİ - Şekil-delik eşleme (Matematik/MAB.2)
@@ -80,7 +80,7 @@ export default function SekilDeligi({ onGameEnd, onExit, childName }: Props) {
   const bounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -155,27 +155,29 @@ export default function SekilDeligi({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Bu şekil hangi deliğe girer?</Text>
-      <Animated.View style={[styles.targetCard, { transform: [{ scale: bounce }] }]}>
-        <ShapeSvg type={target.key} size={96} fill={fill} />
-      </Animated.View>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Bu şekil hangi deliğe girer?</Text>
+        <Animated.View style={[styles.targetCard, { transform: [{ scale: bounce }] }]}>
+          <ShapeSvg type={target.key} size={96} fill={fill} />
+        </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target.name} hangi deliğe girer?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target.name} hangi deliğe girer?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.holes}>
-        {options.map((s) => {
-          const isWrong = wrongKey === s.key;
-          return (
-            <Animated.View key={s.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.hole, isWrong && styles.holeWrong]} onPress={() => handlePick(s)} activeOpacity={0.85}>
-                <ShapeSvg type={s.key} size={70} fill="#000" hole />
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        <View style={styles.holes}>
+          {options.map((s) => {
+            const isWrong = wrongKey === s.key;
+            return (
+              <Animated.View key={s.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity style={[styles.hole, isWrong && styles.holeWrong]} onPress={() => handlePick(s)} activeOpacity={0.85}>
+                  <ShapeSvg type={s.key} size={70} fill="#000" hole />
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -184,6 +186,7 @@ export default function SekilDeligi({ onGameEnd, onExit, childName }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ECEFF1', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#455A64' },
 
