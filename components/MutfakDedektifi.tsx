@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { supabase } from '../lib/supabase';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
 import GameExitButton from './GameExitButton';
@@ -357,6 +357,13 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     // Seviye 1 kalibrasyon tekrar sayaci. Sinir olmadan, iyi performans gostermeyen
     // cocuk seviye 1'de sonsuza kadar takilir kalir ve oyun hic bitmezdi.
     const retryCountRef = useRef(0);
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+    // Unmount temizligi: bekleyen zamanlayicilari iptal et ve devam eden sesi durdur.
+    useEffect(() => () => {
+        timersRef.current.forEach(clearTimeout);
+        stopSpeech();
+    }, []);
 
     // ============== LEVEL COMPLETION ==============
     const handleLevelComplete = async () => {
@@ -373,7 +380,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
         // DDA Logic - Level 1: Under 20 seconds → Level up for next session
         const shouldLevelUp = errors === 0 && levelTime < 20;
 
-        setTimeout(() => {
+        const t = setTimeout(() => {
             setShowWin(false);
 
             if (level >= 5 || (!shouldLevelUp && level > 1)) {
@@ -399,6 +406,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 setMavisMessage('Tekrar deneyelim! 💪');
             }
         }, 2000);
+        timersRef.current.push(t);
     };
 
     // ============== DYNAMIC DIFFICULTY SCORE CALCULATION ==============
@@ -472,7 +480,8 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
 
     useEffect(() => {
         if (gameReady) {
-            setTimeout(measureTargets, 500);
+            const t = setTimeout(measureTargets, 500);
+            timersRef.current.push(t);
         }
     }, [gameReady, level]);
 
