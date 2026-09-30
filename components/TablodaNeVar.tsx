@@ -538,48 +538,50 @@ export default function TablodaNeVar({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      {/* TABLO */}
-      <View style={styles.paintWrap}>
-        <Animated.View style={{ opacity: fade }}>
-          <Painting id={current.painting} active={proofActive} />
-        </Animated.View>
-        {proofCount > 0 && (
-          <View style={styles.countBadge}>
-            <Text style={styles.countText}>{proofCount}</Text>
-          </View>
-        )}
-      </View>
-      <View style={styles.plaque}><Text style={styles.plaqueText}>{PAINTING_TITLES[current.painting]}</Text></View>
+      <View style={styles.contentArea}>
+        {/* TABLO */}
+        <View style={styles.paintWrap}>
+          <Animated.View style={{ opacity: fade }}>
+            <Painting id={current.painting} active={proofActive} />
+          </Animated.View>
+          {proofCount > 0 && (
+            <View style={styles.countBadge}>
+              <Text style={styles.countText}>{proofCount}</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.plaque}><Text style={styles.plaqueText}>{PAINTING_TITLES[current.painting]}</Text></View>
 
-      {/* SORU */}
-      <Text style={styles.prompt}>{current.soru}</Text>
-      <Text style={styles.hint}>{current.ipucu}</Text>
+        {/* SORU */}
+        <Text style={styles.prompt}>{current.soru}</Text>
+        <Text style={styles.hint}>{current.ipucu}</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(current.soru, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={19} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(current.soru, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={19} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      {/* CEVAP ÇİPLERİ — renk lekesi / rakam / etiketli sembol (tablonun kopyası DEĞİL) */}
-      <View style={styles.chips}>
-        {chips.map((c) => {
-          const isWrong = wrongId === c.id;
-          return (
-            <Animated.View key={c.id} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity
-                style={[styles.chip, isWrong && styles.chipWrong]}
-                onPress={() => handlePick(c.id)}
-                activeOpacity={0.85}
-                disabled={locked}
-              >
-                {current.chipKind === 'renk' && <View style={[styles.swatch, { backgroundColor: c.color }]} />}
-                {current.chipKind === 'sayi' && <Text style={styles.digit}>{c.label}</Text>}
-                {current.chipKind === 'emoji' && <Text style={styles.chipEmoji}>{c.emoji}</Text>}
-                {current.chipKind !== 'sayi' && <Text style={styles.chipLabel}>{c.label}</Text>}
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        {/* CEVAP ÇİPLERİ — renk lekesi / rakam / etiketli sembol (tablonun kopyası DEĞİL) */}
+        <View style={styles.chips}>
+          {chips.map((c) => {
+            const isWrong = wrongId === c.id;
+            return (
+              <Animated.View key={c.id} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity
+                  style={[styles.chip, isWrong && styles.chipWrong]}
+                  onPress={() => handlePick(c.id)}
+                  activeOpacity={0.85}
+                  disabled={locked}
+                >
+                  {current.chipKind === 'renk' && <View style={[styles.swatch, { backgroundColor: c.color }]} />}
+                  {current.chipKind === 'sayi' && <Text style={styles.digit}>{c.label}</Text>}
+                  {current.chipKind === 'emoji' && <Text style={styles.chipEmoji}>{c.emoji}</Text>}
+                  {current.chipKind !== 'sayi' && <Text style={styles.chipLabel}>{c.label}</Text>}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -587,6 +589,9 @@ export default function TablodaNeVar({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FBF3E7', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#5D4037' },

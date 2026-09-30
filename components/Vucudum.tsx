@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🧒 VÜCUDUM - Beden farkındalığı (Hareket/Sağlık, HSAB.4)
@@ -54,7 +54,7 @@ export default function Vucudum({ onGameEnd, onExit, childName }: Props) {
   const bounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -133,42 +133,47 @@ export default function Vucudum({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Animated.View style={[styles.targetPill, { transform: [{ scale: bounce }] }]}>
-        <Text style={styles.targetText}>{target.emoji}  {target.acc} göster!</Text>
-      </Animated.View>
+      <View style={styles.contentArea}>
+        <Animated.View style={[styles.targetPill, { transform: [{ scale: bounce }] }]}>
+          <Text style={styles.targetText}>{target.emoji}  {target.acc} göster!</Text>
+        </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target.name} nerede?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target.name} nerede?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      {/* Yüz */}
-      <Animated.View style={[styles.faceWrap, { transform: [{ translateX: shake }] }]}>
-        {/* Kulaklar (baş arkasında) */}
-        <TouchableOpacity style={[styles.earL, ...zoneStyle('kulak')]} onPress={() => handlePick('kulak')} activeOpacity={0.7} />
-        <TouchableOpacity style={[styles.earR, ...zoneStyle('kulak')]} onPress={() => handlePick('kulak')} activeOpacity={0.7} />
-        {/* Baş */}
-        <View style={styles.head} />
-        {/* Gözler */}
-        <TouchableOpacity style={[styles.eyesZone, ...zoneStyle('goz')]} onPress={() => handlePick('goz')} activeOpacity={0.7}>
-          <View style={styles.eye} />
-          <View style={styles.eye} />
-        </TouchableOpacity>
-        {/* Burun */}
-        <TouchableOpacity style={[styles.noseZone, ...zoneStyle('burun')]} onPress={() => handlePick('burun')} activeOpacity={0.7}>
-          <View style={styles.nose} />
-        </TouchableOpacity>
-        {/* Ağız */}
-        <TouchableOpacity style={[styles.mouthZone, ...zoneStyle('agiz')]} onPress={() => handlePick('agiz')} activeOpacity={0.7}>
-          <View style={styles.mouth} />
-        </TouchableOpacity>
-      </Animated.View>
+        {/* Yüz */}
+        <Animated.View style={[styles.faceWrap, { transform: [{ translateX: shake }] }]}>
+          {/* Kulaklar (baş arkasında) */}
+          <TouchableOpacity style={[styles.earL, ...zoneStyle('kulak')]} onPress={() => handlePick('kulak')} activeOpacity={0.7} />
+          <TouchableOpacity style={[styles.earR, ...zoneStyle('kulak')]} onPress={() => handlePick('kulak')} activeOpacity={0.7} />
+          {/* Baş */}
+          <View style={styles.head} />
+          {/* Gözler */}
+          <TouchableOpacity style={[styles.eyesZone, ...zoneStyle('goz')]} onPress={() => handlePick('goz')} activeOpacity={0.7}>
+            <View style={styles.eye} />
+            <View style={styles.eye} />
+          </TouchableOpacity>
+          {/* Burun */}
+          <TouchableOpacity style={[styles.noseZone, ...zoneStyle('burun')]} onPress={() => handlePick('burun')} activeOpacity={0.7}>
+            <View style={styles.nose} />
+          </TouchableOpacity>
+          {/* Ağız */}
+          <TouchableOpacity style={[styles.mouthZone, ...zoneStyle('agiz')]} onPress={() => handlePick('agiz')} activeOpacity={0.7}>
+            <View style={styles.mouth} />
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF3F0', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#C62828' },
