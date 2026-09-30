@@ -4,7 +4,7 @@ import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🧠 SIRAYI HATIRLA - Çalışma belleği/dikkat (Bilişsel)
@@ -53,7 +53,7 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
   const isMountedRef = useRef(true);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   const playSequence = (sequence: number[]) => {
     setPhase('showing');
@@ -143,35 +143,37 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>{phase === 'input' ? 'Şimdi sen tekrarla!' : phase === 'showing' ? 'İyi izle...' : 'Aferin!'}</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>{phase === 'input' ? 'Şimdi sen tekrarla!' : phase === 'showing' ? 'İyi izle...' : 'Aferin!'}</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('İzle ve aynı sırayla tekrarla!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('İzle ve aynı sırayla tekrarla!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      <View style={styles.board}>
-        {PADS.map((p, i) => {
-          const isActive = activePad === i;
-          const isWrong = wrongPad === i;
-          return (
-            <TouchableOpacity
-              key={i}
-              style={[
-                styles.pad,
-                { backgroundColor: isActive ? p.on : p.off },
-                isActive && styles.padActive,
-                isWrong && styles.padWrong,
-              ]}
-              onPress={() => handlePad(i)}
-              activeOpacity={0.9}
-              disabled={phase !== 'input'}
-            />
-          );
-        })}
+        <View style={styles.board}>
+          {PADS.map((p, i) => {
+            const isActive = activePad === i;
+            const isWrong = wrongPad === i;
+            return (
+              <TouchableOpacity
+                key={i}
+                style={[
+                  styles.pad,
+                  { backgroundColor: isActive ? p.on : p.off },
+                  isActive && styles.padActive,
+                  isWrong && styles.padWrong,
+                ]}
+                onPress={() => handlePad(i)}
+                activeOpacity={0.9}
+                disabled={phase !== 'input'}
+              />
+            );
+          })}
+        </View>
+
+        <Text style={styles.hint}>{phase === 'showing' ? 'Sıra yanıyor' : phase === 'input' ? 'Sıra sende' : ''}</Text>
       </View>
-
-      <Text style={styles.hint}>{phase === 'showing' ? 'Sıra yanıyor' : phase === 'input' ? 'Sıra sende' : ''}</Text>
     </View>
   );
 }
@@ -179,6 +181,7 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F0FB', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#4527A0' },
 
