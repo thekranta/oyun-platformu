@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🎨 RENK SEPETLERİ - Renk eşleştirme/ayırma (2-4 yaş)
@@ -67,6 +67,7 @@ export default function RenkSepetleri({ onGameEnd, onExit, childName }: Props) {
 
   useEffect(() => () => {
     timersRef.current.forEach(clearTimeout);
+    stopSpeech();
   }, []);
 
   // Her top: renk seti + top rengini uret, rengi seslendir
@@ -152,40 +153,42 @@ export default function RenkSepetleri({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Bu topu doğru sepete koy!</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Bu topu doğru sepete koy!</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${ballColor.name}!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${ballColor.name}!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
 
-      {/* Top */}
-      <View style={styles.ballZone}>
-        <Animated.View
-          style={[
-            styles.ball,
-            { backgroundColor: ballColor.hex, transform: [{ translateY: ballTranslateY }, { scale: ballPop }], opacity: ballOpacity },
-          ]}
-        />
-      </View>
+        {/* Top */}
+        <View style={styles.ballZone}>
+          <Animated.View
+            style={[
+              styles.ball,
+              { backgroundColor: ballColor.hex, transform: [{ translateY: ballTranslateY }, { scale: ballPop }], opacity: ballOpacity },
+            ]}
+          />
+        </View>
 
-      {/* Sepetler */}
-      <View style={styles.baskets}>
-        {baskets.map((c) => {
-          const isWrong = wrongKey === c.key;
-          return (
-            <Animated.View key={c.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity
-                style={[styles.basket, { backgroundColor: c.hex, borderColor: isWrong ? '#fff' : 'rgba(0,0,0,0.12)' }]}
-                onPress={() => handleBasket(c)}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="basket" size={40} color="rgba(255,255,255,0.95)" />
-                <Text style={styles.basketName}>{c.name}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
+        {/* Sepetler */}
+        <View style={styles.baskets}>
+          {baskets.map((c) => {
+            const isWrong = wrongKey === c.key;
+            return (
+              <Animated.View key={c.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity
+                  style={[styles.basket, { backgroundColor: c.hex, borderColor: isWrong ? '#fff' : 'rgba(0,0,0,0.12)' }]}
+                  onPress={() => handleBasket(c)}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="basket" size={40} color="rgba(255,255,255,0.95)" />
+                  <Text style={styles.basketName}>{c.name}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </View>
       </View>
     </View>
   );
@@ -197,6 +200,7 @@ const styles = StyleSheet.create({
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#2E7D5B' },
 
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   prompt: { fontSize: 20, fontWeight: '800', color: '#2E7D5B', marginTop: 10 },
   ballZone: { height: 150, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
   ball: { width: 96, height: 96, borderRadius: 48, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.22, shadowRadius: 1, elevation: 8 },

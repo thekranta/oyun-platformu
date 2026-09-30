@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, speakThenWait } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🖼️ RESİMDE NE TERS? - Görsel materyalleri çözümleme (Türkçe / TAOB.3)
@@ -107,7 +107,7 @@ export default function ResimdeNeTers({ onGameEnd, onExit, childName }: Props) {
 
   const scene = order[Math.min(round - 1, order.length - 1)];
 
-  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -180,39 +180,44 @@ export default function ResimdeNeTers({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Bu resimde ne ters?</Text>
-      <View style={styles.sceneCaption}>
-        <Text style={styles.sceneCaptionText}>{scene.icon} {scene.setting}</Text>
+      <View style={styles.contentArea}>
+        <Text style={styles.prompt}>Bu resimde ne ters?</Text>
+        <View style={styles.sceneCaption}>
+          <Text style={styles.sceneCaptionText}>{scene.icon} {scene.setting}</Text>
+        </View>
+
+        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu resimde ne ters? Olmaması gerekene dokun!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
+          <Ionicons name="volume-high" size={20} color="#fff" />
+          <Text style={styles.listenText}>Tekrar Dinle</Text>
+        </TouchableOpacity>
+
+        <Animated.View style={[styles.scene, { transform: [{ scale: bounce }] }]}>
+          {cells.map((cell) => {
+            const isWrong = wrongId === cell.id;
+            const isCorrect = correctId === cell.id;
+            return (
+              <Animated.View key={cell.id} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
+                <TouchableOpacity
+                  style={[styles.cell, isWrong && styles.cellWrong, isCorrect && styles.cellCorrect]}
+                  onPress={() => handleTap(cell)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.cellEmoji}>{cell.emoji}</Text>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })}
+        </Animated.View>
       </View>
-
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu resimde ne ters? Olmaması gerekene dokun!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
-
-      <Animated.View style={[styles.scene, { transform: [{ scale: bounce }] }]}>
-        {cells.map((cell) => {
-          const isWrong = wrongId === cell.id;
-          const isCorrect = correctId === cell.id;
-          return (
-            <Animated.View key={cell.id} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity
-                style={[styles.cell, isWrong && styles.cellWrong, isCorrect && styles.cellCorrect]}
-                onPress={() => handleTap(cell)}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.cellEmoji}>{cell.emoji}</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
-      </Animated.View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F6EEFC', alignItems: 'center' },
+  // Header sabit en üstte kalsın; geri kalan içerik altındaki boş alanda dikey ortalanır
+  // (önceden container'da justifyContent olmadığından hepsi ekranın üstüne yığılıyordu).
+  contentArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },

@@ -540,6 +540,10 @@ export default function SesNasil({ onGameEnd, onExit, childName }: Props) {
       clearTimeout(questionTimerRef.current);
       questionTimerRef.current = null;
     }
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
     stopSpeech();
 
     if (key === current) {
@@ -656,7 +660,7 @@ export default function SesNasil({ onGameEnd, onExit, childName }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3E9FF', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#F3E9FF', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },

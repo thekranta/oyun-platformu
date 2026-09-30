@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 // ============================================
 // 🔢 SAYI-BOYA 2 - Detaylı numaraya göre boyama (Sanat + sayı-renk)
@@ -59,7 +59,7 @@ export default function SayiBoya2({ onGameEnd, onExit, childName }: Props) {
   const cols = tpl.grid[0].length;
   const cell = Math.max(18, Math.min(32, (SCREEN_W - 70) / cols));
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   const usedNums = Array.from(new Set(tpl.grid.join('').split('').map(Number).filter((n) => n > 0))).sort();
   const totalToPaint = tpl.grid.join('').split('').filter((c) => c !== '0').length;
@@ -180,7 +180,7 @@ export default function SayiBoya2({ onGameEnd, onExit, childName }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F0FB', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#F3F0FB', alignItems: 'center', justifyContent: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
   title: { fontSize: 19, fontWeight: '900', color: '#4527A0' },
   smallBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#eee' },
