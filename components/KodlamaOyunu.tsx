@@ -356,6 +356,27 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
   const isGoal = (p: Position) => level.goalPos.x === p.x && level.goalPos.y === p.y;
   const valid = (p: Position) => p.x >= 0 && p.x < level.gridSize && p.y >= 0 && p.y < level.gridSize && !blocked(p);
 
+  // "Çok belirsiz, kör planlama yapıyorum" geri bildirimi (Oyun_Test_Listesi.docx, #10)
+  // üzerine: çocuk komut eklerken tavşanın o anki planına göre NEREYE varacağını canlı
+  // görsün diye yarı saydam bir "hayalet" tavşan + ayak izi — kör planlama yerine her
+  // adımı görerek ekliyor. Bir komut ızgara dışına/engele çarpıyorsa yol orada durur ve
+  // "blocked" true olur (gerçek koşu sırasındaki ▶️ davranışıyla birebir aynı mantık).
+  const computeGhostPath = (cmds: Direction[]): { path: Position[]; blockedAt: number | null } => {
+    const path: Position[] = [level.startPos];
+    let cur = level.startPos;
+    for (let i = 0; i < cmds.length; i++) {
+      const n = nextPos(cur, cmds[i]);
+      if (isGoal(n) || valid(n)) {
+        path.push(n);
+        cur = n;
+        if (isGoal(n)) break;
+      } else {
+        return { path, blockedAt: i };
+      }
+    }
+    return { path, blockedAt: null };
+  };
+
   useEffect(() => {
     if (status !== GameStatus.RUNNING) return;
     let i = 0;
@@ -395,6 +416,12 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
   const rot = () => ({ UP: '-90deg', DOWN: '90deg', LEFT: '180deg', RIGHT: '0deg' }[playerDir] || '0deg');
   const dirIcon = (d: Direction) => ({ UP: '⬆️', DOWN: '⬇️', LEFT: '⬅️', RIGHT: '➡️' }[d]);
   const dirColor = (d: Direction) => ({ UP: '#FF9800', DOWN: '#9C27B0', LEFT: '#E91E63', RIGHT: '#4CAF50' }[d]);
+
+  // Planlama sırasında (koşu başlamadan önce) canlı "hayalet" önizleme — bkz. computeGhostPath.
+  const ghost = mode === GameMode.PLAY && status === GameStatus.PLANNING && commands.length > 0
+    ? computeGhostPath(commands)
+    : null;
+  const ghostEnd = ghost ? ghost.path[ghost.path.length - 1] : null;
 
   // ============== RENDER ==============
   const renderGrid = () => {
@@ -487,6 +514,19 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
             <Animated.View style={[st.player, { width: CELL, height: CELL, transform: [{ translateX: animX }, { translateY: animY }, { rotate: rot() }] }]}>
               <Text style={{ fontSize: CELL * 0.55 }}>🐰</Text>
             </Animated.View>
+          )}
+          {/* Hayalet önizleme: ara adımlarda ayak izi, plan sonunda yarı saydam tavşan —
+              engele çarpıyorsa kırmızı ⚠️ ile işaretlenir (bkz. computeGhostPath). */}
+          {ghost && ghost.path.slice(1, -1).map((p, i) => (
+            <View key={`fp-${i}`} style={[st.footprint, { width: CELL, height: CELL, left: 8 + p.x * (CELL + GAP), top: 8 + p.y * (CELL + GAP) }]}>
+              <Text style={{ fontSize: CELL * 0.3 }}>👣</Text>
+            </View>
+          ))}
+          {ghostEnd && (ghostEnd.x !== level.startPos.x || ghostEnd.y !== level.startPos.y || ghost!.blockedAt !== null) && (
+            <View style={[st.ghost, { width: CELL, height: CELL, left: 8 + ghostEnd.x * (CELL + GAP), top: 8 + ghostEnd.y * (CELL + GAP) }]}>
+              <Text style={{ fontSize: CELL * 0.55, opacity: 0.45 }}>🐰</Text>
+              {ghost!.blockedAt !== null && <Text style={st.ghostWarn}>⚠️</Text>}
+            </View>
           )}
           {showWin && <View style={st.winBox}><Text style={st.winTxt}>🎉</Text></View>}
         </View>
@@ -585,6 +625,9 @@ const st = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
   cell: { borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#90A4AE' },
   player: { position: 'absolute', top: 8, left: 8, justifyContent: 'center', alignItems: 'center', zIndex: 10 },
+  footprint: { position: 'absolute', justifyContent: 'center', alignItems: 'center', zIndex: 5, opacity: 0.55 },
+  ghost: { position: 'absolute', justifyContent: 'center', alignItems: 'center', zIndex: 8 },
+  ghostWarn: { position: 'absolute', top: -6, right: -6, fontSize: 16 },
   winBox: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.85)', borderRadius: 14 },
   winTxt: { fontSize: 50 },
 
