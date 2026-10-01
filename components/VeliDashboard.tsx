@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -34,7 +35,11 @@ const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
 const PRICING_URL = 'https://childhoodtech.com/#pricing';
-const openPricing = () => { Linking.openURL(PRICING_URL).catch(() => { }); };
+// Native'de uygulama içi satın alma ekranına git; web'de eski web ödeme sayfasına yönlendir.
+const openPricing = () => {
+    if (Platform.OS !== 'web') { router.push('/paket-satin-al?kind=veli'); return; }
+    Linking.openURL(PRICING_URL).catch(() => { });
+};
 
 // RLS: okuma/yazma istekleri oturum jetonuyla gider (yoksa anon key'e düşer —
 // RLS açıkken anon istek veri döndürmez, sızdırmaz).

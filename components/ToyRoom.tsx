@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Animated, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -17,6 +18,11 @@ const firstGames = TOY_ROOM_FIRST_GAMES;
 const groups = TOY_ROOM_GROUPS;
 const TIER_LABELS: Record<VeliTier, string> = { free: 'Ücretsiz', tohum: 'Tohum', filiz: 'Filiz', fidan: 'Fidan', orman: 'Orman' };
 const PRICING_URL = 'https://childhoodtech.com/#pricing';
+// Native'de uygulama içi satın alma ekranına git; web'de eski web ödeme sayfasına yönlendir.
+const openPricing = () => {
+  if (Platform.OS !== 'web') { router.push('/paket-satin-al?kind=veli'); return; }
+  Linking.openURL(PRICING_URL).catch(() => {});
+};
 const kinds: ToyKind[] = ['puzzle', 'paint', 'animal', 'drum', 'blocks'];
 // Keep the original set on opening; the gift alternates illustrated toy sets.
 const alternateKinds: ToyKind[] = ['train', 'crayons', 'rabbit', 'xylophone', 'rings'];
@@ -276,7 +282,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
           <Text style={styles.upsellTitle}>{t('toyRoom.lockedAlertTitle')}</Text>
           <Text style={styles.upsellText}>{t('toyRoom.lockedAlertMessage', { game: locked.game, tier: TIER_LABELS[locked.tier] })}</Text>
           {!!t(`toyRoom.lockedBenefit.${locked.tier}`, { defaultValue: '' }) && <Text style={styles.upsellBenefit}>{t(`toyRoom.lockedBenefit.${locked.tier}`, { defaultValue: '' })}</Text>}
-          <Pressable accessibilityRole="link" onPress={() => { Linking.openURL(PRICING_URL).catch(() => {}); }} style={styles.upsellPrimary}><Text style={styles.upsellPrimaryText}>{t('toyRoom.lockedPrimary')}</Text></Pressable>
+          <Pressable accessibilityRole="link" onPress={openPricing} style={styles.upsellPrimary}><Text style={styles.upsellPrimaryText}>{t('toyRoom.lockedPrimary')}</Text></Pressable>
           <Pressable accessibilityRole="button" onPress={() => setLocked(null)} style={styles.upsellSecondary}><Text style={styles.upsellSecondaryText}>{t('toyRoom.lockedClose')}</Text></Pressable>
         </Pressable>
       </Pressable>}
