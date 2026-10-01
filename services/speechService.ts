@@ -13,6 +13,8 @@
  */
 
 import { Audio as ExpoAudio } from 'expo-av';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
 import { TTS } from '../lib/ttsAssets';
 import { supabase } from '../lib/supabase';
 import { apiUrl } from '../lib/apiBase';
@@ -186,9 +188,18 @@ export async function generateSpeech(
             };
         }
 
-        // Convert base64 to blob URL
-        const audioBlob = base64ToBlob(data.audioContent, 'audio/mp3');
-        const audioUrl = URL.createObjectURL(audioBlob);
+        // Web: blob URL (HTMLAudioElement ile çalınır). Native: Blob/URL.createObjectURL
+        // yok (ya da expo-av'ın tanıyacağı bir uri üretmez) — base64'ü geçici bir dosyaya
+        // yazıp onun file:// uri'sini kullanıyoruz (bkz. services/gameResults.ts'teki aynı desen).
+        let audioUrl: string;
+        if (Platform.OS === 'web') {
+            const audioBlob = base64ToBlob(data.audioContent, 'audio/mp3');
+            audioUrl = URL.createObjectURL(audioBlob);
+        } else {
+            const fileUri = `${FileSystem.cacheDirectory}tts-live-${Date.now()}.mp3`;
+            await FileSystem.writeAsStringAsync(fileUri, data.audioContent, { encoding: FileSystem.EncodingType.Base64 });
+            audioUrl = fileUri;
+        }
 
         // Cache the result
         audioCache.set(cacheKey, audioUrl);
@@ -238,31 +249,55 @@ export async function speak(
     const result = await generateSpeech(text, options);
 
     if (result.success && result.audioUrl) {
-        // Önceki canlı-proxy sesi hâlâ çalıyorsa durdur (üst üste binmesin).
-        if (currentLiveAudio) {
-            currentLiveAudio.pause();
-            currentLiveAudio = null;
-        }
-        return new Promise((resolve) => {
-            // NOT: expo-av 'Audio' takma adla (ExpoAudio) import edildi; buradaki 'Audio'
-            // tarayıcının global HTMLAudioElement'idir (bu yol yalnızca web'de çalışır).
-            const audio = new Audio(result.audioUrl);
-            currentLiveAudio = audio;
-            const clear = () => {
-                if (currentLiveAudio === audio) currentLiveAudio = null;
-            };
-            audio.onended = () => { clear(); resolve(); };
-            audio.onerror = () => {
-                console.warn('🔊 TTS: Audio oynatma hatasi (sessiz gecildi)');
-                clear();
-                resolve();
-            };
-            audio.play().catch(() => {
-                console.warn('🔊 TTS: Audio play basarisiz (sessiz gecildi)');
-                clear();
-                resolve();
+        if (Platform.OS === 'web') {
+            // Önceki canlı-proxy sesi hâlâ çalıyorsa durdur (üst üste binmesin).
+            if (currentLiveAudio) {
+                currentLiveAudio.pause();
+                currentLiveAudio = null;
+            }
+            return new Promise((resolve) => {
+                const audio = new Audio(result.audioUrl);
+                currentLiveAudio = audio;
+                const clear = () => {
+                    if (currentLiveAudio === audio) currentLiveAudio = null;
+                };
+                audio.onended = () => { clear(); resolve(); };
+                audio.onerror = () => {
+                    console.warn('🔊 TTS: Audio oynatma hatasi (sessiz gecildi)');
+                    clear();
+                    resolve();
+                };
+                audio.play().catch(() => {
+                    console.warn('🔊 TTS: Audio play basarisiz (sessiz gecildi)');
+                    clear();
+                    resolve();
+                });
             });
-        });
+        }
+
+        // Native: tarayıcının HTMLAudioElement'i yok — expo-av ile çal. playBundled()'daki
+        // aynı currentTtsSound değişkenini kullanıyoruz ki stopSpeech() bunu da kapsasın.
+        try {
+            if (currentTtsSound) {
+                await currentTtsSound.unloadAsync().catch(() => { });
+                currentTtsSound = null;
+            }
+            const { sound } = await ExpoAudio.Sound.createAsync({ uri: result.audioUrl }, { shouldPlay: true, volume: 1.0 });
+            currentTtsSound = sound;
+            await new Promise<void>((resolve) => {
+                sound.setOnPlaybackStatusUpdate((status) => {
+                    if (status.isLoaded && status.didJustFinish) {
+                        sound.unloadAsync().catch(() => { });
+                        if (currentTtsSound === sound) currentTtsSound = null;
+                        resolve();
+                    } else if (!status.isLoaded && (status as any).error) {
+                        resolve();
+                    }
+                });
+            });
+        } catch (e) {
+            console.warn('🔊 TTS: canlı ses native oynatılamadı (sessiz geçildi):', e);
+        }
     } else {
         // Robotik tarayıcı sesine DÜŞMÜYORUZ; sessiz geçiyoruz.
         console.warn('🔊 TTS: hazır MP3 yok + coral üretilemedi, sessiz geçildi:', text.substring(0, 40));
