@@ -183,6 +183,16 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       introMessage="Hayvan Çiftlerine hoş geldin! Kartların çiftlerini bulmaya çalış!"
     />
   ),
+  'hafiza-3': (c) => (
+    <HafizaOyunu
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      emojiSet={['😊', '😢', '😠', '😨', '😲']}
+      oyunAdi="hafiza-3"
+      title="🎭 Duygu Çiftleri"
+      introMessage="Duygu Çiftlerine hoş geldin! Kartların çiftlerini bulmaya çalış!"
+    />
+  ),
   siralama: (c) => <SiralamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'eksik-sayi-bul': (c) => <EksikSayiBul onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'eksik-sayi-bul-2': (c) => <EksikSayiBul onGameEnd={c.onGameEnd} onExit={c.onExit} numbers={[6, 7, 8, 9, 10]} oyunAdi="eksik-sayi-bul-2" />,

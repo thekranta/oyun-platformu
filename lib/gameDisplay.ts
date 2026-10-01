@@ -45,7 +45,7 @@ const GAME_EMOJI: Record<string, string> = {
     'sayi-boya': '🖌️', 'sayi-boya-2': '🖌️', 'kutuyu-bul': '📦', 'gruplama': '🗂️', 'siralama': '📊',
     'kodlama': '🤖', 'eksik-sayi-bul': '❓', 'mutfak-dedektifi': '🍳', 'renkli-baglantalar': '🔀',
     // Temalı varyantlar
-    'rakam-yazma-2': '🔟', 'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟',
+    'rakam-yazma-2': '🔟', 'hafiza-2': '🐾', 'hafiza-3': '🎭', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟',
     'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
     // Adaptif oyunlar
     'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',

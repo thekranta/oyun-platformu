@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof Ionicons.glyphMap; displayTitle?: string; subtitle?: string }> = {
   'hafiza': { color: '#64B5F6', icon: 'grid', displayTitle: 'Çiftini Bul', subtitle: 'Hafıza ve dikkat' },
   'hafiza-2': { color: '#4DD0E1', icon: 'paw', displayTitle: 'Hayvan Çiftleri', subtitle: 'Hafıza (hayvanlar)' },
+  'hafiza-3': { color: '#FFA726', icon: 'happy-outline', displayTitle: 'Duygu Çiftleri', subtitle: 'Hafıza (duygular)' },
   'siralama': { color: '#FFB74D', icon: 'list', displayTitle: 'Sıralama', subtitle: 'Sayıları diz' },
   'eksik-sayi-bul': { color: '#FF8A65', icon: 'help-circle', displayTitle: 'Eksik Sayıyı Bul', subtitle: 'Eksik rakamı tamamla' },
   'eksik-sayi-bul-2': { color: '#FF7043', icon: 'help-circle', displayTitle: 'Eksik Sayıyı Bul 6-10', subtitle: '6-10 arası eksik' },
@@ -172,7 +173,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'sayi-boya': '🔢', 'mandala': '🌀', 'nokta-boyama': '🔵', 'cizimi-canlandir': '💫',
   'yuz-yap': '😀', 'yarisini-tamamla': '🪞', 'kum-boyasi': '🏖️', 'adim-adim': '📝', 'sayi-boya-2': '🖼️',
   // Temalı varyantlar
-  'hafiza-2': '🐾', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐', 'diziyi-tamamla-3': '🔰',
+  'hafiza-2': '🐾', 'hafiza-3': '🎭', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐', 'diziyi-tamamla-3': '🔰',
   // Adaptif oyunlar
   'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
   'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',

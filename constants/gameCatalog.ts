@@ -16,6 +16,7 @@ export interface GameCatalogItem {
 export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'hafiza', title: 'Hafiza Oyunu', status: 'core', domain: 'Bilissel', skillFocus: 'Bellek ve dikkat', routeKey: 'hafiza', forestCategory: 'ani-kelebegi' },
   { id: 'hafiza-2', title: 'Hayvan Ciftleri', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel bellek (hayvan temasi)', routeKey: 'hafiza-2', forestCategory: 'ani-kelebegi' },
+  { id: 'hafiza-3', title: 'Duygu Ciftleri', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel bellek (duygu temasi)', routeKey: 'hafiza-3', forestCategory: 'ani-kelebegi' },
   { id: 'siralama', title: 'Siralama Oyunu', status: 'core', domain: 'Matematik', skillFocus: 'Siralama ve dizilim', routeKey: 'siralama', forestCategory: 'sayi-agaci' },
   { id: 'eksik-sayi-bul', title: 'Eksik Sayi Bul', status: 'core', domain: 'Matematik', skillFocus: 'Sayi farkindaligi', routeKey: 'eksik-sayi-bul', forestCategory: 'sayi-agaci' },
   { id: 'eksik-sayi-bul-2', title: 'Eksik Sayi Bul 6-10', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi farkindaligi (6-10)', routeKey: 'eksik-sayi-bul-2', forestCategory: 'sayi-agaci' },

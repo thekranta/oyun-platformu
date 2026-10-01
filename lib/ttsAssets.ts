@@ -435,6 +435,7 @@ export const TTS: Record<string, number> = {
   'dunyanin-farkli-ulkelerinden-bayraklar-ayni-olani-sakince-bul-ve-eslestir': require('../assets/sounds/tts/dunyanin-farkli-ulkelerinden-bayraklar-ayni-olani-sakince-bul-ve-eslestir.mp3'),
   'dunyanin-farkli-yapilari-ve-anitlari-aynisini-sakince-bul': require('../assets/sounds/tts/dunyanin-farkli-yapilari-ve-anitlari-aynisini-sakince-bul.mp3'),
   'dur-bekle-cok-guvenlisin-aferin': require('../assets/sounds/tts/dur-bekle-cok-guvenlisin-aferin.mp3'),
+  'duygu-ciftlerine-hos-geldin-kartlarin-ciftlerini-bulmaya-calis': require('../assets/sounds/tts/duygu-ciftlerine-hos-geldin-kartlarin-ciftlerini-bulmaya-calis.wav'),
   'duyularimizi-taniyalim-bunu-hangi-organimizla-algilariz-onu-sec': require('../assets/sounds/tts/duyularimizi-taniyalim-bunu-hangi-organimizla-algilariz-onu-sec.mp3'),
   'e-ile-baslayan-resmi-bul': require('../assets/sounds/tts/e-ile-baslayan-resmi-bul.mp3'),
   'eksik-olan-komsu-sayiyi-bul': require('../assets/sounds/tts/eksik-olan-komsu-sayiyi-bul.mp3'),
