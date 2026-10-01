@@ -37,6 +37,10 @@ const PAIRS: Pair[] = [
   { a: { emoji: '📖', name: 'Açık' }, b: { emoji: '📕', name: 'Kapalı' } },
 ];
 
+// Not: Temalı varyant (zitlari-eslestir-2 / Günlük Hayat Zıtları, bkz.
+// components/gameRegistry.tsx) için ikinci çift seti registry'de tanımlanır
+// (lazyWithReload'ın kod bölme amacını bozmamak için burada named export YOK).
+
 interface Card { cardId: number; pairId: number; emoji: string; name: string; emojiSize?: number }
 
 const shuffle = <T,>(arr: T[]): T[] => {
@@ -48,8 +52,8 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return a;
 };
 
-const buildRound = (): Card[] => {
-  const chosen = shuffle(PAIRS).slice(0, PAIRS_PER_ROUND);
+const buildRound = (pairs: Pair[]): Card[] => {
+  const chosen = shuffle(pairs).slice(0, PAIRS_PER_ROUND);
   const cards: Card[] = [];
   chosen.forEach((p, pairId) => {
     cards.push({ cardId: 0, pairId, emoji: p.a.emoji, name: p.a.name, emojiSize: p.a.emojiSize });
@@ -69,9 +73,13 @@ interface Props {
   ) => void;
   onExit?: () => void;
   childName?: string;
+  pairs?: Pair[];       // temalı varyant için zıt-çift seti (verilmezse varsayılan set)
+  oyunAdi?: string;     // varyant oyun kimliği
+  title?: string;       // tur rozetindeki emoji+başlık (verilmezse ↔️)
+  introMessage?: string; // giriş sesi metni (temalı varyant için)
 }
 
-export default function ZitlariEslestir({ onGameEnd, onExit, childName }: Props) {
+export default function ZitlariEslestir({ onGameEnd, onExit, childName, pairs = PAIRS, oyunAdi = 'zitlari-eslestir', title = '↔️', introMessage = 'Birbirinin zıddı olan kartları eşleştir! Gündüz - gece gibi.' }: Props) {
   const [gameReady, setGameReady] = useState(false);
   const [round, setRound] = useState(1);
   const [cards, setCards] = useState<Card[]>([]);
@@ -98,7 +106,7 @@ export default function ZitlariEslestir({ onGameEnd, onExit, childName }: Props)
   // Her tur: yeni zıt çiftleri
   useEffect(() => {
     if (!gameReady) return;
-    setCards(buildRound());
+    setCards(buildRound(pairs));
     setMatched(new Set());
     setFirstId(null);
     setWrongIds([]);
@@ -110,7 +118,7 @@ export default function ZitlariEslestir({ onGameEnd, onExit, childName }: Props)
     if (finishedRef.current) return;
     finishedRef.current = true;
     const duration = Math.floor((Date.now() - startTime) / 1000);
-    onGameEnd('zitlari-eslestir', duration, movesRef.current, errorsRef.current, undefined, {
+    onGameEnd(oyunAdi, duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
       kazanimOdagi: 'Dil ve Kavram Gelişimi: Zıt Kavramlar',
       correct_answers: correctRef.current,
@@ -180,7 +188,7 @@ export default function ZitlariEslestir({ onGameEnd, onExit, childName }: Props)
 
       {!gameReady && (
         <CountdownOverlay
-          message="Birbirinin zıddı olan kartları eşleştir! Gündüz - gece gibi."
+          message={introMessage}
           childName={childName}
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}
@@ -190,7 +198,7 @@ export default function ZitlariEslestir({ onGameEnd, onExit, childName }: Props)
       <View style={styles.header}>
         <GameExitButton onPress={onExit ?? (() => {})} />
         <View style={styles.roundBadge}>
-          <Text style={styles.roundText}>↔️ {round}/{TOTAL_ROUNDS}</Text>
+          <Text style={styles.roundText}>{title} {round}/{TOTAL_ROUNDS}</Text>
         </View>
         <View style={{ width: 44 }} />
       </View>

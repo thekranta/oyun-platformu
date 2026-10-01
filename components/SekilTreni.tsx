@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Svg, { Circle, Polygon, Rect } from 'react-native-svg';
+import Svg, { Circle, Defs, LinearGradient, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
@@ -28,15 +28,62 @@ const SHAPES = [
 // Tur başına tek tema rengi (renk kısayolunu engeller)
 const ROUND_COLORS = ['#FF7043', '#42A5F5', '#66BB6A', '#AB47BC', '#FFA726', '#26C6DA'];
 
+// Verilen rengi koyulaştırır (kenar çizgisi/gölge için) — küçük, bağımsız bir
+// hex-karartma yardımcısı; yeni bir renk kütüphanesi eklemeye gerek bırakmıyor.
+function darken(hex: string, amount: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.max(0, (n >> 16) - amount);
+  const g = Math.max(0, ((n >> 8) & 0xff) - amount);
+  const b = Math.max(0, (n & 0xff) - amount);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+}
+
+// "Çok profesyonel olmamış, yeniden tasarlayalım" geri bildirimi üzerine: düz tek
+// renkli dolgu yerine hafif degrade + koyu kontur + parlak cam/sticker vurgusu
+// eklendi — tüm şekiller aynı tutarlı, "oyuncak" hissi veren stille çiziliyor.
 function ShapeSvg({ type, size, color }: { type: string; size: number; color: string }) {
+  const gradId = `grad-${type}`;
+  const glossId = `gloss-${type}`;
+  const stroke = darken(color, 45);
+
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
-      {type === 'daire' && <Circle cx={50} cy={50} r={40} fill={color} />}
+      <Defs>
+        <LinearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor={color} stopOpacity={1} />
+          <Stop offset="100%" stopColor={darken(color, 25)} stopOpacity={1} />
+        </LinearGradient>
+        <RadialGradient id={glossId} cx="35%" cy="28%" r="45%">
+          <Stop offset="0%" stopColor="#fff" stopOpacity={0.65} />
+          <Stop offset="100%" stopColor="#fff" stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      {type === 'daire' && (
+        <>
+          <Circle cx={50} cy={50} r={40} fill={`url(#${gradId})`} stroke={stroke} strokeWidth={4} />
+          <Circle cx={50} cy={50} r={40} fill={`url(#${glossId})`} />
+        </>
+      )}
       {/* Karenin/dikdortgenin kosesi sivri olmali (rx=0) — egitsel dogruluk icin
           onceki rx=10 (yuvarlatilmis kose) yanlisti. */}
-      {type === 'kare' && <Rect x={12} y={12} width={76} height={76} fill={color} />}
-      {type === 'ucgen' && <Polygon points="50,10 90,86 10,86" fill={color} />}
-      {type === 'dikdortgen' && <Rect x={4} y={28} width={92} height={44} fill={color} />}
+      {type === 'kare' && (
+        <>
+          <Rect x={12} y={12} width={76} height={76} fill={`url(#${gradId})`} stroke={stroke} strokeWidth={4} />
+          <Rect x={12} y={12} width={76} height={76} fill={`url(#${glossId})`} />
+        </>
+      )}
+      {type === 'ucgen' && (
+        <>
+          <Polygon points="50,10 90,86 10,86" fill={`url(#${gradId})`} stroke={stroke} strokeWidth={4} strokeLinejoin="round" />
+          <Polygon points="50,10 90,86 10,86" fill={`url(#${glossId})`} />
+        </>
+      )}
+      {type === 'dikdortgen' && (
+        <>
+          <Rect x={4} y={28} width={92} height={44} fill={`url(#${gradId})`} stroke={stroke} strokeWidth={4} />
+          <Rect x={4} y={28} width={92} height={44} fill={`url(#${glossId})`} />
+        </>
+      )}
     </Svg>
   );
 }

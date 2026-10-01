@@ -57,6 +57,8 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'rakam-yazma', title: 'Rakam Yazma', status: 'secondary', domain: 'Matematik', skillFocus: 'Rakam tanima ve yazma', routeKey: 'rakam-yazma', forestCategory: 'sayi-agaci' },
   { id: 'rakam-yazma-2', title: 'Rakam Yazma 6-10', status: 'secondary', domain: 'Matematik', skillFocus: 'Rakam tanima ve yazma (6-10)', routeKey: 'rakam-yazma-2', forestCategory: 'sayi-agaci' },
   { id: 'kutuyu-bul', title: 'Kutuyu Bul', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel takip', routeKey: 'kutuyu-bul', forestCategory: 'dikkat-dalgasi' },
+  { id: 'kutuyu-bul-2', title: 'Arac Bul', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel takip (arac temasi)', routeKey: 'kutuyu-bul-2', forestCategory: 'dikkat-dalgasi' },
+  { id: 'akilli-kutuyu-bul', title: 'Akilli Kutuyu Bul', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel takip (uyarlanir zorluk)', routeKey: 'akilli-kutuyu-bul', adaptive: true, forestCategory: 'dikkat-dalgasi' },
   { id: 'sayilari-birlestir', title: 'Sayilari Birlestir', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi sirasi', routeKey: 'sayilari-birlestir', forestCategory: 'sayi-agaci' },
   { id: 'yapboz', title: 'Yapboz Oyunu', status: 'secondary', domain: 'Bilissel', skillFocus: 'Parca-butun iliskisi', routeKey: 'yapboz', forestCategory: 'bulmaca-yolu' },
   { id: 'golge-dedektifi', title: 'Golge Dedektifi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel eslestirme', routeKey: 'golge-dedektifi', forestCategory: 'dikkat-dalgasi' },
@@ -77,6 +79,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
 
   { id: 'renk-sepetleri', title: 'Renk Sepetleri', status: 'secondary', domain: 'Kavram', skillFocus: 'Renkleri ayirt etme', routeKey: 'renk-sepetleri', forestCategory: 'sekil-goleti' },
   { id: 'zitlari-eslestir', title: 'Zitlari Eslestir', status: 'secondary', domain: 'Kavram', skillFocus: 'Zit kavramlar', routeKey: 'zitlari-eslestir', forestCategory: 'bulmaca-yolu' },
+  { id: 'zitlari-eslestir-2', title: 'Gunluk Hayat Zitlari', status: 'secondary', domain: 'Kavram', skillFocus: 'Zit kavramlar (gunluk hayat temasi)', routeKey: 'zitlari-eslestir-2', forestCategory: 'bulmaca-yolu' },
   { id: 'sekil-treni', title: 'Sekil Treni', status: 'secondary', domain: 'Kavram', skillFocus: 'Geometrik sekiller', routeKey: 'sekil-treni', forestCategory: 'sekil-goleti' },
   { id: 'ayi-ailesi', title: 'Ayi Ailesi', status: 'secondary', domain: 'Kavram', skillFocus: 'Boyut siralama', routeKey: 'ayi-ailesi', forestCategory: 'sekil-goleti' },
   { id: 'ciftlikte-sayalim', title: 'Ciftlikte Sayalim', status: 'secondary', domain: 'Kavram', skillFocus: 'Sayma (1-5)', routeKey: 'ciftlikte-sayalim', forestCategory: 'sayi-agaci' },

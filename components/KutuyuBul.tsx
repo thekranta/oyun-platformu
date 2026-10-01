@@ -17,6 +17,9 @@ interface Props {
         extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string },
     ) => void;
     onExit?: () => void;
+    questions?: typeof QUESTIONS; // temalı varyant için soru seti (verilmezse varsayılan karışık set)
+    oyunAdi?: string;             // varyant oyun kimliği
+    introMessage?: string;        // giriş sesi metni (temalı varyant için)
 }
 
 // Item categories with emojis
@@ -24,6 +27,7 @@ const ITEM_CATEGORIES = {
     animals: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆', '🦅', '🦉', '🦇', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌', '🐞', '🐜', '🐢', '🐍', '🦎', '🐙', '🦑', '🦐', '🦀', '🐡', '🐠', '🐟', '🐬', '🐳', '🦈', '🐊'],
     fruits: ['🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🥑'],
     objects: ['⭐', '🌙', '☀️', '🌈', '❤️', '💎', '🎈', '🎁', '🎀', '🏀', '⚽', '🎾', '🎸', '🎺', '🎨', '✏️', '📚', '🔔', '🏠', '🚗', '✈️', '🚀', '⛵', '🎂', '🍰', '🍪', '🍩', '🍭'],
+    vehicles: ['🚗', '🚕', '🚙', '🚓', '🚑', '🚒', '🚜', '🚌', '🏎️', '🚁', '✈️', '⛵', '🚂', '🚲', '🛵', '🚀'],
 };
 
 // Question templates - Turkish
@@ -45,11 +49,15 @@ const QUESTIONS: { target: string; question: string; category: keyof typeof ITEM
     { target: '🎈', question: 'Balon olan kutuyu bul! 🎈', category: 'objects' },
 ];
 
+// Not: 'vehicles' kategorisi yalnızca temalı varyant (kutuyu-bul-2 / Araç Bul,
+// bkz. components/gameRegistry.tsx) için var — soru seti registry'de tanımlanır
+// (lazyWithReload'ın kod bölme amacını bozmamak için burada named export YOK).
+
 const TOTAL_STAGES = 5;
 const ITEMS_PER_BOX = 4;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
-export default function KutuyuBul({ onGameEnd, onExit }: Props) {
+export default function KutuyuBul({ onGameEnd, onExit, questions = QUESTIONS, oyunAdi = 'kutuyu-bul', introMessage = 'Sana söylenen şeyi bul ve dokun!' }: Props) {
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
     const isPortrait = screenHeight > screenWidth;
     const { playSound } = useSound();
@@ -87,13 +95,13 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
 
     // Generate a new round
     const generateRound = () => {
-        let availableQuestions = QUESTIONS.map((_, i) => i).filter(i => !usedQuestions.includes(i));
+        let availableQuestions = questions.map((_, i) => i).filter(i => !usedQuestions.includes(i));
         if (availableQuestions.length === 0) {
             setUsedQuestions([]);
-            availableQuestions = QUESTIONS.map((_, i) => i);
+            availableQuestions = questions.map((_, i) => i);
         }
         const questionIndex = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-        const question = QUESTIONS[questionIndex];
+        const question = questions[questionIndex];
         setUsedQuestions(prev => [...prev, questionIndex]);
         setCurrentQuestion(question);
         // İlk tur CountdownOverlay'in kendi giriş sesiyle çakışmasın diye onComplete'te
@@ -187,7 +195,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
                     setStage(prev => prev + 1);
                 } else {
                     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-                    onGameEnd('kutuyu-bul', duration, moves + 1, errors, undefined, {
+                    onGameEnd(oyunAdi, duration, moves + 1, errors, undefined, {
                         zorlukSeviyesi: stage,
                         kazanimOdagi: 'Görsel Arama ve Dikkat',
                     });
@@ -353,7 +361,7 @@ export default function KutuyuBul({ onGameEnd, onExit }: Props) {
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Sana söylenen şeyi bul ve dokun!"
+                    message={introMessage}
                     countdownSeconds={5}
                     onComplete={() => { setGameReady(true); if (currentQuestion) speak(currentQuestion.question); }}
                 />

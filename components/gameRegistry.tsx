@@ -98,6 +98,7 @@ const AkilliNeredeyim = lazyWithReload(() => import('./AkilliNeredeyim'));
 const AkilliSayiyiBul = lazyWithReload(() => import('./AkilliSayiyiBul'));
 const AkilliEnUzun = lazyWithReload(() => import('./AkilliEnUzun'));
 const AkilliIkizleriBul = lazyWithReload(() => import('./AkilliIkizleriBul'));
+const AkilliKutuyuBul = lazyWithReload(() => import('./AkilliKutuyuBul'));
 const DunyaBayraklari = lazyWithReload(() => import('./DunyaBayraklari'));
 const DunyaSelamlari = lazyWithReload(() => import('./DunyaSelamlari'));
 import KulturEslestirme, { YAPILAR, YIYECEKLER } from './KulturEslestirme';
@@ -214,6 +215,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'akilli-sayiyi-bul': (c) => <AkilliSayiyiBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-en-uzun': (c) => <AkilliEnUzun onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-ikizleri-bul': (c) => <AkilliIkizleriBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-kutuyu-bul': (c) => <AkilliKutuyuBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-bayraklari': (c) => <DunyaBayraklari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'bayrak-boya': (c) => <BayrakBoya onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-selamlari': (c) => <DunyaSelamlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
@@ -276,6 +278,26 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'rakam-yazma': (c) => <RakamYazma onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'rakam-yazma-2': (c) => <RakamYazma2 onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'kutuyu-bul': (c) => <KutuyuBul onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'kutuyu-bul-2': (c) => (
+    <KutuyuBul
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      oyunAdi="kutuyu-bul-2"
+      introMessage="Söylenen aracı bul ve dokun!"
+      questions={[
+        { target: '🚗', question: 'Araba olan kutuyu bul! 🚗', category: 'vehicles' },
+        { target: '🚒', question: 'İtfaiye arabası olan kutuyu bul! 🚒', category: 'vehicles' },
+        { target: '🚑', question: 'Ambulans olan kutuyu bul! 🚑', category: 'vehicles' },
+        { target: '✈️', question: 'Uçak olan kutuyu bul! ✈️', category: 'vehicles' },
+        { target: '🚁', question: 'Helikopter olan kutuyu bul! 🚁', category: 'vehicles' },
+        { target: '🚂', question: 'Tren olan kutuyu bul! 🚂', category: 'vehicles' },
+        { target: '🚌', question: 'Otobüs olan kutuyu bul! 🚌', category: 'vehicles' },
+        { target: '⛵', question: 'Yelkenli olan kutuyu bul! ⛵', category: 'vehicles' },
+        { target: '🚲', question: 'Bisiklet olan kutuyu bul! 🚲', category: 'vehicles' },
+        { target: '🚜', question: 'Traktör olan kutuyu bul! 🚜', category: 'vehicles' },
+      ]}
+    />
+  ),
   'sayilari-birlestir': (c) => <SayilariBirlestir onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   yapboz: (c) => <YapbozOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'golge-dedektifi': (c) => (
@@ -367,6 +389,23 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'duygu-yuzleri': (c) => <DuyguYuzleri onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'renk-sepetleri': (c) => <RenkSepetleri onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'zitlari-eslestir': (c) => <ZitlariEslestir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'zitlari-eslestir-2': (c) => (
+    <ZitlariEslestir
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      childName={c.ad}
+      oyunAdi="zitlari-eslestir-2"
+      title="🏋️"
+      introMessage="Birbirinin zıddı olan kartları eşleştir! Ağır - hafif gibi."
+      pairs={[
+        { a: { emoji: '🏋️', name: 'Ağır' }, b: { emoji: '🪶', name: 'Hafif' } },
+        { a: { emoji: '🪨', name: 'Sert' }, b: { emoji: '🧸', name: 'Yumuşak' } },
+        { a: { emoji: '💧', name: 'Islak' }, b: { emoji: '🌵', name: 'Kuru' } },
+        { a: { emoji: '📚', name: 'Kalın' }, b: { emoji: '📄', name: 'İnce' } },
+        { a: { emoji: '🧼', name: 'Temiz' }, b: { emoji: '🐽', name: 'Kirli' } },
+      ]}
+    />
+  ),
   'sekil-treni': (c) => <SekilTreni onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ayi-ailesi': (c) => <AyiAilesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ciftlikte-sayalim': (c) => <CiftlikteSayalim onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

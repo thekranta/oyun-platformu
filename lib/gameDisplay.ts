@@ -46,14 +46,14 @@ const GAME_EMOJI: Record<string, string> = {
     'kodlama': '🤖', 'eksik-sayi-bul': '❓', 'mutfak-dedektifi': '🍳', 'renkli-baglantalar': '🔀',
     // Temalı varyantlar
     'rakam-yazma-2': '🔟', 'hafiza-2': '🐾', 'hafiza-3': '🎭', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟',
-    'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐',
+    'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐', 'kutuyu-bul-2': '🚓', 'zitlari-eslestir-2': '🏋️',
     // Adaptif oyunlar
     'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
     'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
     'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
     'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
     'akilli-ayi-ailesi': '🐻', 'akilli-ciftlik-sayma': '🐔', 'akilli-neredeyim': '📦',
-    'akilli-sayiyi-bul': '🔢', 'akilli-en-uzun': '📏', 'akilli-ikizleri-bul': '👯',
+    'akilli-sayiyi-bul': '🔢', 'akilli-en-uzun': '📏', 'akilli-ikizleri-bul': '👯', 'akilli-kutuyu-bul': '📦',
     'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
     'bayrak-boya': '🎨',
     // Yeni oyunlar (Türkçe / Fen)

@@ -44,6 +44,8 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'rakam-yazma': { color: '#4DB6AC', icon: 'pencil', displayTitle: 'Rakam Yazma', subtitle: 'Rakam tanıma' },
   'rakam-yazma-2': { color: '#26A69A', icon: 'pencil', displayTitle: 'Rakam Yazma 6-10', subtitle: 'Büyük rakamlar' },
   'kutuyu-bul': { color: '#7E57C2', icon: 'cube', displayTitle: 'Kutuyu Bul', subtitle: 'Görsel takip' },
+  'kutuyu-bul-2': { color: '#5E35B1', icon: 'car-sport', displayTitle: 'Araç Bul', subtitle: 'Görsel takip (araçlar)' },
+  'akilli-kutuyu-bul': { color: '#9575CD', icon: 'cube', displayTitle: 'Akıllı Kutuyu Bul', subtitle: 'Uyarlanır zorluk' },
   'sayilari-birlestir': { color: '#26A69A', icon: 'git-network', displayTitle: 'Sayıları Birleştir', subtitle: 'Sayı sırası' },
   'yapboz': { color: '#E91E63', icon: 'apps', displayTitle: 'Yapboz', subtitle: 'Parça-bütün' },
   'golge-dedektifi': { color: '#1565C0', icon: 'eye-outline', displayTitle: 'Gölge Dedektifi', subtitle: 'Eşleştirme' },
@@ -62,6 +64,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'duygu-yuzleri': { color: '#FF8FB1', icon: 'happy', displayTitle: 'Duygu Yüzleri', subtitle: 'Duyguları tanı' },
   'renk-sepetleri': { color: '#57D971', icon: 'color-palette', displayTitle: 'Renk Sepetleri', subtitle: 'Renkleri ayır' },
   'zitlari-eslestir': { color: '#FF8A00', icon: 'swap-horizontal', displayTitle: 'Zıtları Eşleştir', subtitle: 'Zıt kavramlar' },
+  'zitlari-eslestir-2': { color: '#F4511E', icon: 'swap-horizontal', displayTitle: 'Günlük Hayat Zıtları', subtitle: 'Zıt kavramlar (günlük hayat)' },
   'sekil-treni': { color: '#FF7043', icon: 'triangle', displayTitle: 'Şekil Treni', subtitle: 'Şekilleri tanı' },
   'ayi-ailesi': { color: '#8D6E63', icon: 'resize', displayTitle: 'Ayı Ailesi', subtitle: 'Küçükten büyüğe' },
   'ciftlikte-sayalim': { color: '#66BB6A', icon: 'calculator', displayTitle: 'Çiftlikte Sayalım', subtitle: 'Saymayı öğren' },
@@ -173,14 +176,14 @@ export const GAME_EMOJI: Record<string, string> = {
   'sayi-boya': '🔢', 'mandala': '🌀', 'nokta-boyama': '🔵', 'cizimi-canlandir': '💫',
   'yuz-yap': '😀', 'yarisini-tamamla': '🪞', 'kum-boyasi': '🏖️', 'adim-adim': '📝', 'sayi-boya-2': '🖼️',
   // Temalı varyantlar
-  'hafiza-2': '🐾', 'hafiza-3': '🎭', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐', 'diziyi-tamamla-3': '🔰',
+  'hafiza-2': '🐾', 'hafiza-3': '🎭', 'eksik-sayi-bul-2': '❔', 'miktar-avcisi-2': '🐟', 'diziyi-tamamla-2': '✨', 'golge-dedektifi-2': '🔦', 'onluk-cerceve-2': '⭐', 'diziyi-tamamla-3': '🔰', 'kutuyu-bul-2': '🚓', 'zitlari-eslestir-2': '🏋️',
   // Adaptif oyunlar
   'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
   'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
   'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
   'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
   'akilli-ayi-ailesi': '🐻', 'akilli-ciftlik-sayma': '🐔', 'akilli-neredeyim': '📦',
-  'akilli-sayiyi-bul': '🔢', 'akilli-en-uzun': '📏', 'akilli-ikizleri-bul': '👯',
+  'akilli-sayiyi-bul': '🔢', 'akilli-en-uzun': '📏', 'akilli-ikizleri-bul': '👯', 'akilli-kutuyu-bul': '📦',
   // Kültür / Montessori
   'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
   'bayrak-boya': '🎨',
