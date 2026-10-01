@@ -264,11 +264,16 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
               const isMissing = value === null;
               if (!isMissing) {
                 return (
-                  <View key={`seq-${index}`} style={styles.sequenceCard}>
+                  <TouchableOpacity
+                    key={`seq-${index}`}
+                    style={styles.sequenceCard}
+                    onPress={() => speak(NUMBER_WORDS[value as number] ?? String(value))}
+                    activeOpacity={0.7}
+                  >
                     <Text style={styles.sequenceText} selectable={false}>
                       {value}
                     </Text>
-                  </View>
+                  </TouchableOpacity>
                 );
               }
               return (
