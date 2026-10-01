@@ -7,6 +7,7 @@ import {
     ActivityIndicator,
     Dimensions,
     KeyboardAvoidingView,
+    Linking,
     Modal,
     Platform,
     ScrollView,
@@ -19,6 +20,11 @@ import {
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+
+const PRIVACY_URL = 'https://childhoodtech.com/gizlilik-politikasi.html';
+const TERMS_URL = 'https://childhoodtech.com/kullanim-sartlari.html';
+const openPrivacy = () => { Linking.openURL(PRIVACY_URL).catch(() => { }); };
+const openTerms = () => { Linking.openURL(TERMS_URL).catch(() => { }); };
 
 export default function SignUp() {
     const router = useRouter();
@@ -359,6 +365,15 @@ export default function SignUp() {
                             <TouchableOpacity onPress={() => setShowConsentModal(true)}>
                                 <Text style={styles.learnMoreLink}>Daha Fazla Öğren</Text>
                             </TouchableOpacity>
+                            <View style={styles.legalLinksRow}>
+                                <TouchableOpacity onPress={openPrivacy}>
+                                    <Text style={styles.legalLinkText}>Gizlilik Politikası</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.legalLinkDivider}>·</Text>
+                                <TouchableOpacity onPress={openTerms}>
+                                    <Text style={styles.legalLinkText}>Kullanım Şartları</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         {/* Submit Button */}
@@ -440,6 +455,17 @@ export default function SignUp() {
                             <Text style={styles.modalParagraph}>
                                 Araştırma süreci veya verilerin kullanımıyla ilgili her türlü sorunuz için ChildhoodTech Ekibi ve ilgili araştırmacılarla e-posta yoluyla iletişime geçebilirsiniz.
                             </Text>
+
+                            <Text style={styles.modalSectionTitle}>📄 Resmi Metinler</Text>
+                            <View style={[styles.legalLinksRow, { marginLeft: 0 }]}>
+                                <TouchableOpacity onPress={openPrivacy}>
+                                    <Text style={styles.legalLinkText}>Gizlilik Politikası</Text>
+                                </TouchableOpacity>
+                                <Text style={styles.legalLinkDivider}>·</Text>
+                                <TouchableOpacity onPress={openTerms}>
+                                    <Text style={styles.legalLinkText}>Kullanım Şartları</Text>
+                                </TouchableOpacity>
+                            </View>
 
                             <TouchableOpacity
                                 style={styles.modalCloseButton}
@@ -683,6 +709,23 @@ const styles = StyleSheet.create({
         marginTop: 8,
         marginLeft: 36,
         textDecorationLine: 'underline',
+    },
+    legalLinksRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginTop: 8,
+        marginLeft: 36,
+    },
+    legalLinkText: {
+        fontSize: 12,
+        color: '#78909C',
+        fontWeight: '600',
+        textDecorationLine: 'underline',
+    },
+    legalLinkDivider: {
+        fontSize: 12,
+        color: '#B0BEC5',
     },
 
     // Modal Styles
