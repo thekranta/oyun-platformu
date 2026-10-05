@@ -4,6 +4,7 @@ import {
   Dimensions,
   ImageBackground,
   Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,6 +15,7 @@ import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
+import { useSound } from './SoundContext';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/kodlama_bg.webp');
@@ -174,11 +176,14 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
   const [levelIdx, setLevelIdx] = useState(0);
   const [level, setLevel] = useState<LevelConfig>(LEVELS[0]);
   const [playerPos, setPlayerPos] = useState<Position>(LEVELS[0].startPos);
-  const [playerDir, setPlayerDir] = useState<string>('RIGHT');
   const [commands, setCommands] = useState<Direction[]>([]);
   const [status, setStatus] = useState<GameStatus>(GameStatus.PLANNING);
   const [step, setStep] = useState(-1);
-  const [soundOn, setSoundOn] = useState(true);
+  // Oyun seçme menüsündeki genel ses aç/kapa durumunu başlangıç değeri olarak kullan —
+  // önceden her zaman true ile başlıyordu, menüde sessize alınmış olsa bile oyuna girince
+  // arka plan müziği yeniden çalmaya başlıyordu.
+  const { isMuted: globalMuted } = useSound();
+  const [soundOn, setSoundOn] = useState(!globalMuted);
   const [showWin, setShowWin] = useState(false);
 
   // Editor
@@ -246,14 +251,19 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
   // Bu zamanlanmis cagri, kosul degisince (ör. cocuk hemen bir komut eklerse commands.length
   // 0'dan 1'e cikar) iptal edilmezse 300ms sonra yine de calar ve o an calan komut sesiyle
   // ust uste biner ("2 komut ayni anda caliyor") — cleanup ile iptal ediyoruz.
+  // !gameReady kontrolü: CountdownOverlay kendi "hoş geldin" mesajını zaten sesli okuyor
+  // (bkz. CountdownOverlay.tsx speak(message)); gameReady henüz false iken bu efekt de
+  // level.story'yi seslendirirse ikisi aynı anda çalışıp birbirine biniyordu ve çocuk hangisinin
+  // çaldığına göre YANLIŞ (eski) metni duyabiliyordu — Oyun_Test_Listesi geri bildirimiyle
+  // doğrulandı: ekranda doğru yönerge yazarken sesli olarak hâlâ eski seviye hikayesi çalıyordu.
   useEffect(() => {
-    if (!soundOn) return;
+    if (!soundOn || !gameReady) return;
     if (mode === GameMode.PLAY && status === GameStatus.PLANNING && commands.length === 0) {
       const t = setTimeout(() => speakTeacher(level.story || 'Hadi oynayalım!'), 300);
       timersRef.current.push(t);
       return () => clearTimeout(t);
     }
-  }, [level, status, soundOn, mode, commands.length]);
+  }, [level, status, soundOn, mode, commands.length, gameReady]);
 
   // Auto next level
   const nextLevel = useCallback(() => {
@@ -275,8 +285,10 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
     setShowWin(false);
     animX.setValue(next.startPos.x * (CELL + GAP));
     animY.setValue(next.startPos.y * (CELL + GAP));
-    if (soundOn) timersRef.current.push(setTimeout(() => speakTeacher(next.story || 'Yeni bölüm!'), 300));
-  }, [levelIdx, CELL, GAP, soundOn, startTime, moves, errors, onGameEnd]);
+    // Not: yeni seviyenin hikayesi burada ayrıca seslendirilmiyor — yukarıdaki genel
+    // "level story" efekti (level/status/commands.length değişince tetiklenir) zaten
+    // bunu yapıyor; burada da çağrılırsa aynı metin iki kez üst üste çalardı.
+  }, [levelIdx, CELL, GAP, startTime, moves, errors, onGameEnd]);
 
   useEffect(() => {
     // Sadece kampanya (PLAY) modunda otomatik ilerle. EDIT modunda ozel harita kazanmak
@@ -289,7 +301,6 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
 
   const reset = useCallback(() => {
     setPlayerPos(level.startPos);
-    setPlayerDir('RIGHT');
     setStatus(GameStatus.PLANNING);
     setStep(-1);
     setShowWin(false);
@@ -388,7 +399,6 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
       }
       const d = commands[i];
       setStep(i);
-      setPlayerDir(d);
       setPlayerPos(prev => {
         const n = nextPos(prev, d);
         if (isGoal(n)) {
@@ -413,7 +423,6 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
     setPlayerPos(l.startPos); setStatus(GameStatus.PLANNING); setShowWin(false);
   };
 
-  const rot = () => ({ UP: '-90deg', DOWN: '90deg', LEFT: '180deg', RIGHT: '0deg' }[playerDir] || '0deg');
   const dirIcon = (d: Direction) => ({ UP: '⬆️', DOWN: '⬇️', LEFT: '⬅️', RIGHT: '➡️' }[d]);
   const dirColor = (d: Direction) => ({ UP: '#FF9800', DOWN: '#9C27B0', LEFT: '#E91E63', RIGHT: '#4CAF50' }[d]);
 
@@ -473,7 +482,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
           onComplete={() => setGameReady(true)}
         />
       )}
-      <View style={st.container}>
+      <ScrollView style={st.scroll} contentContainerStyle={st.container} showsVerticalScrollIndicator={false}>
         {/* Top */}
         <View style={st.top}>
           <GameExitButton
@@ -511,7 +520,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
         <View style={[st.gridWrap, { width: GRID_SIZE + 16, height: GRID_SIZE + 16, backgroundColor: getThemeBg(level.theme || 'room') }]}>
           <View style={[st.grid, { gap: GAP }]}>{renderGrid()}</View>
           {mode === GameMode.PLAY && (
-            <Animated.View style={[st.player, { width: CELL, height: CELL, transform: [{ translateX: animX }, { translateY: animY }, { rotate: rot() }] }]}>
+            <Animated.View style={[st.player, { width: CELL, height: CELL, transform: [{ translateX: animX }, { translateY: animY }] }]}>
               <Text style={{ fontSize: CELL * 0.55 }}>🐰</Text>
             </Animated.View>
           )}
@@ -582,7 +591,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
             </View>
           </>
         )}
-      </View>
+      </ScrollView>
       <ConfettiCannon ref={confetti} count={60} origin={{ x: width / 2, y: 0 }} autoStart={false} fadeOut />
     </ImageBackground>
   );
@@ -595,7 +604,11 @@ const st = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(255, 255, 255, 0.25)',
   },
-  container: { flex: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingTop: 30, paddingBottom: 10, paddingHorizontal: 6 },
+  scroll: { flex: 1, width: '100%' },
+  // flexGrow (flex degil): ScrollView'un contentContainerStyle'i icin — icerik viewport'a
+  // sigdigi surece eskisi gibi (space-evenly) dagitilir, sigmadigi dar/kisa ekranlarda ise
+  // elemanlar sikisip ust uste binmek yerine kaydirilabilir olur.
+  container: { flexGrow: 1, alignItems: 'center', justifyContent: 'space-evenly', paddingTop: 30, paddingBottom: 10, paddingHorizontal: 6 },
 
   // Top
   top: { flexDirection: 'row', alignItems: 'center', width: '100%', justifyContent: 'space-between' },
