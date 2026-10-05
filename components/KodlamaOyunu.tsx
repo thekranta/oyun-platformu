@@ -402,7 +402,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'KodlamacÄ
       setPlayerPos(prev => {
         const n = nextPos(prev, d);
         if (isGoal(n)) {
-          timersRef.current.push(setTimeout(() => { setStatus(GameStatus.WON); setShowWin(true); confetti.current?.start(); if (soundOn) speakTeacher('Aferin!'); }, 150));
+          timersRef.current.push(setTimeout(() => { setStatus(GameStatus.WON); setShowWin(true); confetti.current?.start(); if (soundOn) speak('Aferin!', { instructions: HAPPY_VOICE }); }, 150));
           return n;
         }
         if (valid(n)) return n;

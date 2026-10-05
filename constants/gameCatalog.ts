@@ -59,6 +59,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'kutuyu-bul', title: 'Kutuyu Bul', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel takip', routeKey: 'kutuyu-bul', forestCategory: 'dikkat-dalgasi' },
   { id: 'kutuyu-bul-2', title: 'Arac Bul', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel takip (arac temasi)', routeKey: 'kutuyu-bul-2', forestCategory: 'dikkat-dalgasi' },
   { id: 'akilli-kutuyu-bul', title: 'Akilli Kutuyu Bul', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel takip (uyarlanir zorluk)', routeKey: 'akilli-kutuyu-bul', adaptive: true, forestCategory: 'dikkat-dalgasi' },
+  { id: 'akilli-agir-hafif', title: 'Akilli En Agir Hangisi', status: 'secondary', domain: 'Kavram', skillFocus: 'Agirlik karsilastirma (uyarlanir zorluk)', routeKey: 'akilli-agir-hafif', adaptive: true, forestCategory: 'kesif-kucaklamasi' },
   { id: 'sayilari-birlestir', title: 'Sayilari Birlestir', status: 'secondary', domain: 'Matematik', skillFocus: 'Sayi sirasi', routeKey: 'sayilari-birlestir', forestCategory: 'sayi-agaci' },
   { id: 'yapboz', title: 'Yapboz Oyunu', status: 'secondary', domain: 'Bilissel', skillFocus: 'Parca-butun iliskisi', routeKey: 'yapboz', forestCategory: 'bulmaca-yolu' },
   { id: 'golge-dedektifi', title: 'Golge Dedektifi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Gorsel eslestirme', routeKey: 'golge-dedektifi', forestCategory: 'dikkat-dalgasi' },

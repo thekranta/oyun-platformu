@@ -84,6 +84,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'yuzer-batar': { color: '#039BE5', icon: 'water', displayTitle: 'Yüzer mi Batar mı?', subtitle: 'Tahmin et' },
   'duygu-eslestir': { color: '#EC407A', icon: 'heart-half', displayTitle: 'Duygu Eşleştir', subtitle: 'Aynı duygu' },
   'sirayi-hatirla': { color: '#5E35B1', icon: 'flash', displayTitle: 'Sırayı Hatırla', subtitle: 'Belleği çalıştır' },
+  'akilli-agir-hafif': { color: '#6D4C41', icon: 'barbell', displayTitle: 'Akıllı En Ağır Hangisi?', subtitle: 'Uyarlanır zorluk' },
   'agir-hafif': { color: '#8D6E63', icon: 'barbell', displayTitle: 'En Ağır Hangisi?', subtitle: 'Ağırlık' },
   'gunduz-gece': { color: '#5C6BC0', icon: 'partly-sunny', displayTitle: 'Gündüz mü Gece mi?', subtitle: 'Zaman' },
   'kac-oldu': { color: '#00897B', icon: 'add-circle', displayTitle: 'Kaç Oldu?', subtitle: 'Toplama' },
@@ -183,7 +184,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'akilli-cikarma': '➖', 'akilli-hafiza': '🧠',
   'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
   'akilli-ayi-ailesi': '🐻', 'akilli-ciftlik-sayma': '🐔', 'akilli-neredeyim': '📦',
-  'akilli-sayiyi-bul': '🔢', 'akilli-en-uzun': '📏', 'akilli-ikizleri-bul': '👯', 'akilli-kutuyu-bul': '📦',
+  'akilli-sayiyi-bul': '🔢', 'akilli-en-uzun': '📏', 'akilli-agir-hafif': '🏋️', 'akilli-ikizleri-bul': '👯', 'akilli-kutuyu-bul': '📦',
   // Kültür / Montessori
   'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
   'bayrak-boya': '🎨',

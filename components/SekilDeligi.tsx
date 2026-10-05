@@ -23,7 +23,7 @@ const SHAPES = [
   { key: 'daire', name: 'Daire' },
   { key: 'kare', name: 'Kare' },
   { key: 'ucgen', name: 'Üçgen' },
-  { key: 'yildiz', name: 'Yıldız' },
+  { key: 'dikdortgen', name: 'Dikdörtgen' }, // docx #47: müfredat dışı yıldız yerine dikdörtgen
 ];
 const FILL_COLORS = ['#FF7043', '#42A5F5', '#66BB6A', '#AB47BC', '#FFA726'];
 
@@ -34,9 +34,11 @@ function ShapeSvg({ type, size, fill, hole }: { type: string; size: number; fill
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100">
       {type === 'daire' && <Circle cx={50} cy={50} r={40} {...props} />}
-      {type === 'kare' && <Rect x={12} y={12} width={76} height={76} rx={10} {...props} />}
+      {/* Kare ve dikdörtgenin köşeleri sivri olmalı (rx yok) — eğitsel doğruluk (docx #47).
+          Dikdörtgen, kareden uzunluğuyla açıkça ayrışsın diye belirgin biçimde uzun. */}
+      {type === 'kare' && <Rect x={14} y={14} width={72} height={72} {...props} />}
       {type === 'ucgen' && <Polygon points="50,10 90,86 10,86" {...props} />}
-      {type === 'yildiz' && <Polygon points="50,5 61,38 98,38 68,60 79,95 50,72 21,95 32,60 2,38 39,38" {...props} />}
+      {type === 'dikdortgen' && <Rect x={3} y={30} width={94} height={40} {...props} />}
     </Svg>
   );
 }

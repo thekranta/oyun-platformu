@@ -99,6 +99,7 @@ const AkilliSayiyiBul = lazyWithReload(() => import('./AkilliSayiyiBul'));
 const AkilliEnUzun = lazyWithReload(() => import('./AkilliEnUzun'));
 const AkilliIkizleriBul = lazyWithReload(() => import('./AkilliIkizleriBul'));
 const AkilliKutuyuBul = lazyWithReload(() => import('./AkilliKutuyuBul'));
+const AkilliAgirHafif = lazyWithReload(() => import('./AkilliAgirHafif'));
 const DunyaBayraklari = lazyWithReload(() => import('./DunyaBayraklari'));
 const DunyaSelamlari = lazyWithReload(() => import('./DunyaSelamlari'));
 import KulturEslestirme, { YAPILAR, YIYECEKLER } from './KulturEslestirme';
@@ -216,6 +217,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'akilli-en-uzun': (c) => <AkilliEnUzun onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-ikizleri-bul': (c) => <AkilliIkizleriBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-kutuyu-bul': (c) => <AkilliKutuyuBul onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'akilli-agir-hafif': (c) => <AkilliAgirHafif onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-bayraklari': (c) => <DunyaBayraklari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'bayrak-boya': (c) => <BayrakBoya onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'dunya-selamlari': (c) => <DunyaSelamlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
