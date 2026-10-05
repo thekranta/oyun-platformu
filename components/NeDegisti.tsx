@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔍 NE DEĞİŞTİ? - Görsel dikkat/bellek (Bilişsel/MAB.2)
@@ -142,14 +143,7 @@ export default function NeDegisti({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>{promptText}</Text>
 
-      <TouchableOpacity
-        style={styles.listenBtn}
-        onPress={() => speak(phase === 'study' ? 'İyi bak, ezberle!' : 'Ne değişti? Değişeni bul!', { instructions: HAPPY_VOICE })}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(phase === 'study' ? 'İyi bak, ezberle!' : 'Ne değişti? Değişeni bul!', { instructions: HAPPY_VOICE })} color="#00838F" style={{ marginTop: 12 }} />
 
       <View style={styles.row}>
         {row.map((emoji, i) => {
@@ -182,8 +176,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#00838F' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#00838F', marginTop: 16, marginBottom: 22, minHeight: 30 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00838F', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   row: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, maxWidth: 420, paddingHorizontal: 12 },
   card: { width: 92, height: 92, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   cardCover: { backgroundColor: '#B2EBF2' },

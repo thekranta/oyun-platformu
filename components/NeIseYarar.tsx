@@ -5,6 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔗 NE İŞE YARAR? - İlişkili ikilileri eşleştir (Matematik/MAB.3 ilişki)
@@ -173,10 +174,7 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>Eşleşenleri bul!</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Eşleşenleri bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Eşleşenleri bul!', { instructions: HAPPY_VOICE })} color="#00695C" style={{ marginTop: 4, marginBottom: 8 }} />
 
       <View style={styles.grid}>
         {cards.map((card) => {
@@ -210,9 +208,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#00695C' },
 
   prompt: { fontSize: 21, fontWeight: '900', color: '#00695C', marginTop: 12, marginBottom: 8 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00695C', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 6, maxWidth: 400, paddingHorizontal: 8 },
   card: { width: 104, height: 116, borderRadius: 22, backgroundColor: '#fff', borderWidth: 3, borderColor: 'rgba(0,0,0,0.06)', alignItems: 'center', justifyContent: 'center', gap: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },

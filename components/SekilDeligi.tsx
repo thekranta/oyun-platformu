@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, Polygon, Rect } from 'react-native-svg';
@@ -6,6 +6,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🕳️ ŞEKİL DELİĞİ - Şekil-delik eşleme (Matematik/MAB.2)
@@ -161,10 +162,7 @@ export default function SekilDeligi({ onGameEnd, onExit, childName }: Props) {
           <ShapeSvg type={target.key} size={96} fill={fill} />
         </Animated.View>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target.name} hangi deliğe girer?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak(`${target.name} hangi deliğe girer?`, { instructions: HAPPY_VOICE })} color="#455A64" style={{ marginTop: 12 }} />
 
         <View style={styles.holes}>
           {options.map((s) => {
@@ -192,9 +190,6 @@ const styles = StyleSheet.create({
 
   prompt: { fontSize: 19, fontWeight: '800', color: '#455A64', marginTop: 10, textAlign: 'center', paddingHorizontal: 16 },
   targetCard: { width: 150, height: 150, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.16, shadowRadius: 10, elevation: 6 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#455A64', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   holes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, marginTop: 30, maxWidth: 420, paddingHorizontal: 12 },
   hole: { width: 104, height: 104, borderRadius: 20, backgroundColor: '#CFD8DC', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 1, elevation: 3 },

@@ -1,10 +1,10 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // Akıllı Toplama — UYARLANIR (adaptif) zorluk. Maarif: MAB.7
 // (Matematiksel problemler ve çözümlerine ilişkin stratejiler geliştirebilme).
@@ -159,10 +159,7 @@ export default function AkilliToplama({ onGameEnd, onExit, childName = 'Küçük
 
                 <Text style={styles.question}>Toplam kaç tane?</Text>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} color="#2196F3" style={{ marginTop: 12 }} />
 
                 {/* İki grup + toplam */}
                 <Animated.View style={[styles.card, { transform: [{ scale: bump }, { translateX: shake }] }]}>
@@ -232,9 +229,6 @@ const styles = StyleSheet.create({
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
     question: { fontSize: 20, fontWeight: '800', color: '#37474F', marginTop: 6, marginBottom: 12, textAlign: 'center' },
-
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#2196F3', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     card: {
         backgroundColor: '#FFFDF5', borderRadius: 24, borderWidth: 3, borderColor: '#FFE0B2',

@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🐻 AYI AİLESİ - Boyut sıralama (Matematik/MAB.3 karşılaştırma-sıralama)
@@ -136,10 +137,7 @@ export default function AyiAilesi({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>En küçükten en büyüğe!</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Ayı ailesini en küçükten en büyüğe sırayla dokunarak diz!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Ayı ailesini en küçükten en büyüğe sırayla dokunarak diz!', { instructions: HAPPY_VOICE })} color="#795548" style={{ marginTop: 4, marginBottom: 6 }} />
 
       <View style={styles.field}>
         {bears.map((bear) => {
@@ -173,9 +171,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#795548' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#795548', marginTop: 10 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#795548', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   field: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'center', gap: 6, paddingHorizontal: 12, paddingTop: 24, paddingBottom: 40 },
   slot: { alignItems: 'center', justifyContent: 'flex-end' },

@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🎨 RENK ÖRÜNTÜSÜ - Örüntüyü sürdür (Matematik/MAB.3)
@@ -68,6 +69,9 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
   const [locked, setLocked] = useState(false);
   const [wrongKey, setWrongKey] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  // Doğru bulununca cevap rengi "?" kutusunda görünür (docx #42: çocuk örüntünün devamını
+  // görüp algılasın, sonra diğer örüntüye geçilsin).
+  const [revealed, setRevealed] = useState(false);
 
   const [startTime] = useState(Date.now());
   const movesRef = useRef(0);
@@ -89,6 +93,7 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
     setOptions(r.options);
     setLocked(false);
     setWrongKey(null);
+    setRevealed(false);
     qBounce.setValue(0.8);
     Animated.spring(qBounce, { toValue: 1, friction: 5, useNativeDriver: USE_NATIVE }).start();
     speak('Sırada hangi renk var?', { instructions: HAPPY_VOICE });
@@ -113,7 +118,11 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speakThenWait('Doğru! Örüntüyü buldun. Aferin!', 1300, { instructions: HAPPY_VOICE }).then(() => {
+      setRevealed(true);
+      qBounce.setValue(0.6);
+      Animated.spring(qBounce, { toValue: 1, friction: 4, useNativeDriver: USE_NATIVE }).start();
+      // Ses bitse bile cevap en az 3 sn görünür kalır (en son turda konfeti için biraz daha).
+      speakThenWait('Doğru! Örüntüyü buldun. Aferin!', round < TOTAL_ROUNDS ? 3000 : 3500, { instructions: HAPPY_VOICE }).then(() => {
         if (!isMountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);
@@ -153,18 +162,21 @@ export default function RenkOruntusu({ onGameEnd, onExit, childName }: Props) {
       <View style={styles.contentArea}>
         <Text style={styles.prompt}>Sırada ne var?</Text>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Sırada hangi renk var?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak('Sırada hangi renk var?', { instructions: HAPPY_VOICE })} color="#8E24AA" style={{ marginTop: 12, marginBottom: 12 }} />
 
         {/* Örüntü şeridi — beyaz tepside, "?" ile biter */}
         <View style={styles.patternTray}>
           {shown.map((col, i) => (
             <View key={i} style={[styles.bead, { backgroundColor: col.c }]} />
           ))}
-          <Animated.View style={[styles.qBox, { transform: [{ scale: qBounce }] }]}>
-            <Text style={styles.qMark}>?</Text>
+          <Animated.View
+            style={[
+              styles.qBox,
+              revealed && { borderStyle: 'solid', borderColor: '#fff', backgroundColor: answer.c, width: 56, height: 56, borderRadius: 28 },
+              { transform: [{ scale: qBounce }] },
+            ]}
+          >
+            {!revealed && <Text style={styles.qMark}>?</Text>}
           </Animated.View>
         </View>
 
@@ -196,8 +208,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#6A1B9A', marginTop: 12, marginBottom: 18 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8E24AA', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   // Örüntü şeridi (beyaz tepsi)
   patternTray: {
     flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10,

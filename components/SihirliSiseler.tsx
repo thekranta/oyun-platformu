@@ -15,6 +15,7 @@ import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
@@ -583,14 +584,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-                style={styles.listenBtn}
-                onPress={() => speak('Sihirli Şişeler oyununa hoş geldin! Aynı renk sıvıları birleştir!', { instructions: HAPPY_VOICE })}
-                activeOpacity={0.85}
-            >
-                <Ionicons name="volume-high" size={20} color="#fff" />
-                <Text style={styles.listenText}>Tekrar Dinle</Text>
-            </TouchableOpacity>
+            <ListenButton onPress={() => speak('Sihirli Şişeler oyununa hoş geldin! Aynı renk sıvıları birleştir!', { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ alignSelf: 'center', marginTop: 12 }} />
 
             {/* Bottles Grid - Centered with responsive gap */}
             <View style={styles.bottlesContainer}>
@@ -819,27 +813,6 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#fff',
-    },
-    listenBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        alignSelf: 'center',
-        backgroundColor: '#4CAF50',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 22,
-        marginTop: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.18,
-        shadowRadius: 1,
-        elevation: 3,
-    },
-    listenText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '800',
     },
     statsContainer: {
         backgroundColor: 'rgba(255,255,255,0.2)',

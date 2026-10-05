@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -7,7 +7,6 @@ import {
     Platform,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -15,6 +14,7 @@ import Svg, { Line } from 'react-native-svg';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============= TYPES =============
 interface RenkliBaglantalarProps {
@@ -415,10 +415,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                 <Text style={styles.instructionText}>
                     3+ aynı renk topu sürükle ve bağla! 🎯
                 </Text>
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Aynı renk topları birbirine bağla ve patlat!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => speak('Aynı renk topları birbirine bağla ve patlat!', { instructions: HAPPY_VOICE })} color="#FF6B9D" style={{ marginTop: 12 }} />
             </View>
 
             {/* Game Grid */}
@@ -605,8 +602,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         opacity: 0.9,
     },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FF6B9D', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     gameArea: {
         flex: 1,
         alignItems: 'center',

@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { Audio } from 'expo-av';
-import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
@@ -94,6 +93,7 @@ const LEVELS: LevelConfig[] = [
 // ============== AUDIO - Use unified speechService ==============
 import { speak, stopSpeech as stopSpeechService } from '../services/speechService';
 import { asset } from '../lib/assetMap';
+import ListenButton from './ListenButton';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
@@ -510,10 +510,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
         </View>
 
         {mode === GameMode.PLAY && (
-          <TouchableOpacity style={st.listenBtn} onPress={() => speak(level.story || 'Hadi oynayalım!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-            <Ionicons name="volume-high" size={20} color="#fff" />
-            <Text style={st.listenText}>Tekrar Dinle</Text>
-          </TouchableOpacity>
+          <ListenButton onPress={() => speak(level.story || 'Hadi oynayalım!', { instructions: HAPPY_VOICE })} color="#64B5F6" style={{ marginTop: 12 }} />
         )}
 
         {/* Grid - Büyütülmüş */}
@@ -623,9 +620,6 @@ const st = StyleSheet.create({
   soundTxt: { fontSize: BTN_SIZE * 0.5 },
   check: { position: 'absolute', bottom: -2, right: -2, backgroundColor: '#4CAF50', width: 14, height: 14, borderRadius: 7, justifyContent: 'center', alignItems: 'center' },
   checkTxt: { color: '#FFF', fontSize: 8, fontWeight: 'bold' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#64B5F6', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   // Dots - Küçük
   dots: { flexDirection: 'row', gap: 5 },

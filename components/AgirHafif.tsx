@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // ⚖️ EN AĞIR HANGİSİ? - Ağırlık karşılaştırma (Matematik/MAB.3)
@@ -134,10 +135,7 @@ export default function AgirHafif({ onGameEnd, onExit, childName }: Props) {
       <Text style={styles.prompt}>En ağır hangisi?</Text>
       <Text style={styles.scale}>⚖️</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('En ağır olanı bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('En ağır olanı bul!', { instructions: HAPPY_VOICE })} color="#4E342E" style={{ marginTop: 12 }} />
 
       <View style={styles.cards}>
         {cards.map((card) => {
@@ -163,8 +161,6 @@ const styles = StyleSheet.create({
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#4E342E', marginTop: 12 },
   scale: { fontSize: 52, marginTop: 8 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4E342E', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   cards: { flexDirection: 'row', justifyContent: 'center', gap: 24, marginTop: 20 },
   card: { width: 140, height: 140, borderRadius: 28, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.16, shadowRadius: 10, elevation: 6 },
   cardWrong: { backgroundColor: '#FFE0E0' },

@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // ♻️ GERİ DÖNÜŞÜM - Malzemeye göre sınıflandırma (Fen/çevre, FAB.2)
@@ -129,10 +130,7 @@ export default function GeriDonusum({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>Hangi kutuya?</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bunu hangi kutuya atarız?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Bunu hangi kutuya atarız?', { instructions: HAPPY_VOICE })} color="#2E7D32" style={{ marginTop: 12 }} />
 
       <View style={styles.itemZone}>
         <Animated.Text style={[styles.item, { transform: [{ scale: pop }] }]}>{emoji}</Animated.Text>
@@ -162,8 +160,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#2E7D32' },
 
   prompt: { fontSize: 21, fontWeight: '900', color: '#2E7D32', marginTop: 10 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#2E7D32', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   itemZone: { height: 150, alignItems: 'center', justifyContent: 'center', marginTop: 6 },
   item: { fontSize: 92 },
 

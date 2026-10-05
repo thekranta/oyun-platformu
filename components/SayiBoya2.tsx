@@ -5,6 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔢 SAYI-BOYA 2 - Detaylı numaraya göre boyama (Sanat + sayı-renk)
@@ -135,14 +136,7 @@ export default function SayiBoya2({ onGameEnd, onExit, childName }: Props) {
       </View>
       <Text style={styles.progress}>{paintedCount}/{totalToPaint} kare</Text>
 
-      <TouchableOpacity
-        style={styles.listenBtn}
-        onPress={() => speak('Her karede bir sayı var! O sayının rengini seç ve kareye dokun, boya. Bakalım hangi resim çıkacak!', { instructions: HAPPY_VOICE })}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Her karede bir sayı var! O sayının rengini seç ve kareye dokun, boya. Bakalım hangi resim çıkacak!', { instructions: HAPPY_VOICE })} color="#7E57C2" style={{ marginBottom: 12 }} />
 
       <Animated.View style={[styles.grid, { transform: [{ translateX: shake }] }]}>
         {tpl.grid.map((row, r) => (
@@ -191,9 +185,6 @@ const styles = StyleSheet.create({
   picActive: { borderColor: '#7E57C2', transform: [{ scale: 1.08 }] },
   picEmoji: { fontSize: 24 },
   progress: { fontSize: 14, fontWeight: '800', color: '#7E57C2', marginBottom: 6 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7E57C2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   grid: { backgroundColor: '#fff', padding: 6, borderRadius: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 5 },
   cell: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#ECEFF1', margin: 1, borderRadius: 3 },

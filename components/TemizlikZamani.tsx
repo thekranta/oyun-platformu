@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🧼 TEMİZLİK ZAMANI - Öz bakım / temizlik (Hareket/Sağlık, HSAB.9)
@@ -142,10 +143,7 @@ export default function TemizlikZamani({ onGameEnd, onExit, childName }: Props) 
           <Text style={styles.sceneText}>{task.text}</Text>
         </Animated.View>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${task.text} Ne kullanırız?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak(`${task.text} Ne kullanırız?`, { instructions: HAPPY_VOICE })} color="#039BE5" style={{ marginTop: 12 }} />
 
         <View style={styles.options}>
           {options.map((emoji) => {
@@ -177,9 +175,6 @@ const styles = StyleSheet.create({
   sceneCard: { width: '86%', maxWidth: 420, minHeight: 140, borderRadius: 28, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', paddingVertical: 16, paddingHorizontal: 14, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
   sceneEmoji: { fontSize: 62 },
   sceneText: { fontSize: 18, fontWeight: '800', color: '#37474F', textAlign: 'center', marginTop: 8 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#039BE5', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 20, flexWrap: 'wrap', maxWidth: 420, paddingHorizontal: 12 },
   optCard: { width: 104, height: 104, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },

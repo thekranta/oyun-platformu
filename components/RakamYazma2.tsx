@@ -5,6 +5,7 @@ import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // Rakam Yazma 6-10 — "Rakam Yazma" oyununun büyük sayılarla temalı varyantı.
 // Aynı çizim/kapsama mekaniği; 6, 7, 8, 9 ve iki basamaklı 10 için yeni şablonlar.
@@ -399,10 +400,7 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
 
                 <View style={styles.footer}>
                     <Text style={styles.infoText}>{currentNumber} sayısının üzerini çiz! ✨</Text>
-                    <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${currentNumber} sayısının üzerini çiz!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                        <Ionicons name="volume-high" size={20} color="#fff" />
-                        <Text style={styles.listenText}>Tekrar Dinle</Text>
-                    </TouchableOpacity>
+                    <ListenButton onPress={() => speak(`${currentNumber} sayısının üzerini çiz!`, { instructions: HAPPY_VOICE })} color="#1976D2" style={{ marginBottom: 12 }} />
                     <TouchableOpacity style={styles.clearBtn} onPress={clearCanvas}>
                         <Ionicons name="refresh" size={20} color="#fff" style={{ marginRight: 6 }} />
                         <Text style={styles.clearBtnText}>Temizle</Text>
@@ -527,8 +525,6 @@ const styles = StyleSheet.create({
     },
     footer: { marginTop: 14, alignItems: 'center' },
     infoText: { fontSize: 16, color: '#5D4037', marginBottom: 12, fontWeight: '500' },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1976D2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     clearBtn: {
         flexDirection: 'row',
         alignItems: 'center',

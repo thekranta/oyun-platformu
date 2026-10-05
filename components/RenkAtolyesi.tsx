@@ -7,6 +7,7 @@ import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🎨 RENK ATÖLYESİ - Tekrar ve varyasyon (Sanat, SNAB.4)
@@ -386,14 +387,7 @@ export default function RenkAtolyesi({ onGameEnd, onExit, childName }: Props) {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.listenBtn}
-        onPress={() => speak('Aynı resmi dört kere boyayacağız, ama her birini başka renkle!', { instructions: HAPPY_VOICE })}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Aynı resmi dört kere boyayacağız, ama her birini başka renkle!', { instructions: HAPPY_VOICE })} color="#EC407A" style={{ marginTop: 12 }} />
 
       {/* POSTER — dört panel birlikte büyür */}
       <View style={styles.posterArea}>
@@ -511,9 +505,6 @@ const styles = StyleSheet.create({
   hint: { fontSize: 14, fontWeight: '800', color: '#AD1457' },
   progressBadge: { backgroundColor: '#fff', paddingVertical: 5, paddingHorizontal: 12, borderRadius: 999, elevation: 2 },
   progressText: { fontSize: 13, fontWeight: '900', color: '#C2185B' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EC407A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   posterArea: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
   poster: { width: 340, maxWidth: '96%', padding: 8, backgroundColor: '#fff', borderRadius: 20, borderWidth: 4, borderColor: '#F8BBD0', elevation: 5 },

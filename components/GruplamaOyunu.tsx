@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -6,6 +6,7 @@ import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import JuicyProgressBar from './JuicyProgressBar';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const INSTRUCTION_TEXT = 'Nesneleri doğru gruba ayır. Meyve mi, hayvan mı?';
@@ -123,10 +124,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
                 <View style={styles.header}><Text style={styles.baslik}>🍎 Gruplama</Text></View>
                 <Text style={styles.bilgi}>Bu nesne hangisi?</Text>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} color="#8D6E63" style={{ marginTop: 12 }} />
 
                 {/* Ortadaki Nesne */}
                 <Animated.View style={[styles.buyukNesneKutusu, { transform: [{ translateX: shakeAnim }] }]}>
@@ -174,6 +172,4 @@ const styles = StyleSheet.create({
     secenekContainer: { flexDirection: 'row', justifyContent: 'space-between', width: '100%' },
     secenekButon: { flex: 0.48, padding: 20, borderRadius: 15, alignItems: 'center', elevation: 3 },
     secenekYazi: { color: 'white', fontSize: 18, fontWeight: 'bold' },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8D6E63', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

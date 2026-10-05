@@ -6,6 +6,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🚂 ŞEKİL TRENİ - Geometrik şekil tanıma (Matematik/MAB.2)
@@ -214,10 +215,7 @@ export default function SekilTreni({ onGameEnd, onExit, childName }: Props) {
         <Text style={[styles.targetName, { color }]}>{target.name}</Text>
       </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target.name} nerede?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(`${target.name} nerede?`, { instructions: HAPPY_VOICE })} color="#FF8A00" style={{ marginTop: 14 }} />
 
       {/* Tren */}
       <View style={styles.train}>
@@ -253,9 +251,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 20, fontWeight: '800', color: '#B54708', marginTop: 8 },
   targetCard: { width: 160, height: 160, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
   targetName: { fontSize: 20, fontWeight: '900', marginTop: 2 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FF8A00', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   train: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 24, maxWidth: 480, paddingHorizontal: 10 },
   loco: { fontSize: 52 },

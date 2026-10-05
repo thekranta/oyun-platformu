@@ -1,11 +1,11 @@
 import speechService from '@/services/speechService';
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import JuicyProgressBar from './JuicyProgressBar';
+import ListenButton from './ListenButton';
 
 const SIRALAMA_SAYILARI = [1, 2, 3, 4, 5];
 const TOTAL_ROUNDS = 4;
@@ -232,10 +232,7 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
                         Sıradaki sayı: <Text style={[styles.bilgiVurgulu, { color: currentColors.bg }]}>{beklenenSayi}</Text>
                     </Text>
                 )}
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speechService.speak('Sayıları birden beşe kadar sırayla bul ve dokun!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => speechService.speak('Sayıları birden beşe kadar sırayla bul ve dokun!', { instructions: HAPPY_VOICE })} color="#1565C0" style={{ marginTop: 12 }} />
             </View>
 
             <View
@@ -326,8 +323,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 24,
     },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1565C0', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     gameArea: {
         flex: 1,
         margin: 15,

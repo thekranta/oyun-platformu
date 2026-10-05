@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🧒 VÜCUDUM - Beden farkındalığı (Hareket/Sağlık, HSAB.4)
@@ -138,10 +139,7 @@ export default function Vucudum({ onGameEnd, onExit, childName }: Props) {
           <Text style={styles.targetText}>{target.emoji}  {target.acc} göster!</Text>
         </Animated.View>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${target.name} nerede?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak(`${target.name} nerede?`, { instructions: HAPPY_VOICE })} color="#EF5350" style={{ marginTop: 12 }} />
 
         {/* Yüz */}
         <Animated.View style={[styles.faceWrap, { transform: [{ translateX: shake }] }]}>
@@ -180,8 +178,6 @@ const styles = StyleSheet.create({
 
   targetPill: { backgroundColor: '#fff', paddingVertical: 12, paddingHorizontal: 22, borderRadius: 22, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   targetText: { fontSize: 22, fontWeight: '900', color: '#C62828' },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EF5350', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   faceWrap: { width: 260, height: 260, marginTop: 24 },
   head: { position: 'absolute', left: 30, top: 30, width: 200, height: 200, borderRadius: 100, backgroundColor: '#FFD9B3', borderWidth: 3, borderColor: '#EBB98C' },

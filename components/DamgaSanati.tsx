@@ -5,6 +5,7 @@ import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // ✨ DAMGA SANATI - Çıkartma/damga ile serbest kompozisyon (Sanat)
@@ -129,10 +130,7 @@ export default function DamgaSanati({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.hint}>Bir damga seç, tuvale dokunup bas! 👆</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bir damga seç, tuvale dokun ve resmini süsle!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Bir damga seç, tuvale dokun ve resmini süsle!', { instructions: HAPPY_VOICE })} color="#00838F" style={{ marginTop: 12 }} />
 
       <View ref={canvasRef} style={[styles.canvas, { backgroundColor: bg.color }]} {...panResponder.panHandlers}>
         {stamps.map((s) => (
@@ -176,8 +174,6 @@ const styles = StyleSheet.create({
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },
   savedBtn: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
   hint: { fontSize: 15, fontWeight: '700', color: '#0097A7', marginVertical: 6 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00838F', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: { flex: 1, width: '94%', borderRadius: 20, borderWidth: 3, borderColor: '#B2EBF2', overflow: 'hidden' },
 
   stampRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, paddingTop: 10, paddingHorizontal: 10, maxWidth: 540 },

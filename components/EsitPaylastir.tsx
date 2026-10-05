@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🍪 EŞİT PAYLAŞTIR - Eşit paylaşım / bölme sezgisi (Matematik, MAB.4)
@@ -141,10 +142,7 @@ export default function EsitPaylastir({ onGameEnd, onExit, childName }: Props) {
       </Animated.View>
       <Text style={styles.plates}>🍽️  🍽️</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('İki tabağa eşit paylaştır. Her tabağa kaç düşer?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('İki tabağa eşit paylaştır. Her tabağa kaç düşer?', { instructions: HAPPY_VOICE })} color="#8D6E63" style={{ marginTop: 10 }} />
 
       <View style={styles.numbers}>
         {options.map((n) => {
@@ -172,9 +170,6 @@ const styles = StyleSheet.create({
   card: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#fff', borderRadius: 24, minHeight: 96, width: '86%', maxWidth: 400, marginTop: 10, padding: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
   obj: { fontSize: 38 },
   plates: { fontSize: 44, marginTop: 10 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8D6E63', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   numbers: { flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 16 },
   numBtn: { width: 78, height: 78, borderRadius: 22, backgroundColor: '#8D6E63', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 5 },

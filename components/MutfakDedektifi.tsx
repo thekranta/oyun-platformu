@@ -24,6 +24,7 @@ import { speak, stopSpeech } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
 import GameExitButton from './GameExitButton';
+import ListenButton from './ListenButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -556,10 +557,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                         <View style={{ width: 44 }} />
                     </View>
 
-                    <TouchableOpacity style={styles.listenBtn} onPress={() => speak(fullIntroMessage, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                        <Ionicons name="volume-high" size={20} color="#fff" />
-                        <Text style={styles.listenText}>Tekrar Dinle</Text>
-                    </TouchableOpacity>
+                    <ListenButton onPress={() => speak(fullIntroMessage, { instructions: HAPPY_VOICE })} color="#5D4037" style={{ marginTop: 12, alignSelf: 'center' }} />
 
                     {/* Target Areas - Yeni sepet görselleri ile */}
                     <View style={styles.targetsContainer}>
@@ -788,8 +786,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
     },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#5D4037', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     // Target Areas - Soft-UI Containers
     targetsContainer: {

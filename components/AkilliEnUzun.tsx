@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -6,6 +6,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 📈 AKILLI EN UZUN - Uzunluk karşılaştırma, UYARLANIR (adaptif) zorluk.
@@ -176,10 +177,7 @@ export default function AkilliEnUzun({ onGameEnd, onExit, childName }: Props) {
 
             <Text style={styles.prompt}>En uzun hangisi?</Text>
 
-            <TouchableOpacity style={styles.listenBtn} onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                <Ionicons name="volume-high" size={20} color="#fff" />
-                <Text style={styles.listenText}>Tekrar Dinle</Text>
-            </TouchableOpacity>
+            <ListenButton onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} color="#F97316" style={{ marginTop: 12 }} />
 
             <View style={styles.bars}>
                 {current.bars.map((bar) => {
@@ -207,8 +205,6 @@ const styles = StyleSheet.create({
     roundText: { fontSize: 15, fontWeight: '900', color: '#C2410C' },
 
     prompt: { fontSize: 22, fontWeight: '900', color: '#C2410C', marginTop: 10 },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#F97316', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     bars: { marginTop: 26, gap: 18, alignItems: 'flex-start', width: 280 },
     barRow: { justifyContent: 'flex-start' },

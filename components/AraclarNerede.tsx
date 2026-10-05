@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🚗 ARAÇLAR NEREDE GİDER? - Taşıtları sınıflandırma (Bilişsel/Fen, FAB.2)
@@ -142,10 +143,7 @@ export default function AraclarNerede({ onGameEnd, onExit, childName }: Props) {
         <Text style={styles.cardEmoji}>{vehicle.v}</Text>
       </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu araç nerede gider?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Bu araç nerede gider?', { instructions: HAPPY_VOICE })} color="#1E88E5" style={{ marginTop: 12 }} />
 
       <View style={styles.options}>
         {options.map((key) => {
@@ -173,9 +171,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 20, fontWeight: '800', color: '#1565C0', marginTop: 8 },
   card: { width: 140, height: 140, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
   cardEmoji: { fontSize: 88 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1E88E5', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', justifyContent: 'center', gap: 14, marginTop: 20, flexWrap: 'wrap', maxWidth: 440, paddingHorizontal: 12 },
   optCard: { width: 116, height: 120, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },

@@ -14,6 +14,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 const NUMBER_WORDS: Record<number, string> = {
     1: 'Bir', 2: 'İki', 3: 'Üç', 4: 'Dört', 5: 'Beş',
@@ -158,10 +159,7 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
                 <View style={styles.mainArea}>
                     {/* Question Cards */}
                     <Text style={styles.questionTitle}>Boşluğa hangi sayı gelir?</Text>
-                    <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Eksik olan komşu sayıyı bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                        <Ionicons name="volume-high" size={20} color="#fff" />
-                        <Text style={styles.listenText}>Tekrar Dinle</Text>
-                    </TouchableOpacity>
+                    <ListenButton onPress={() => speak('Eksik olan komşu sayıyı bul!', { instructions: HAPPY_VOICE })} color="#FF9800" style={{ marginBottom: 16 }} />
                     <Animated.View style={[styles.cardsRow, { opacity: fadeAnim }]}>
                         {question?.numbers.map((num, idx) => (
                             <View key={idx} style={styles.cardWrapper}>
@@ -241,8 +239,6 @@ const styles = StyleSheet.create({
     roundText: { fontSize: 13, fontWeight: 'bold', color: '#E65100' },
     mainArea: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: '3%' },
     questionTitle: { fontSize: 16, fontWeight: 'bold', color: '#5D4037', marginBottom: 12 },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FF9800', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     cardsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
     cardWrapper: { flexDirection: 'row', alignItems: 'center' },
     dash: { width: 8, height: 3, backgroundColor: '#BCAAA4', marginHorizontal: 3 },

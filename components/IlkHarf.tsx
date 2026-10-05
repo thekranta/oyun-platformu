@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔤 İLK HARF - İlk ses/harf farkındalığı (Dil / Erken Okuryazarlık, TAEOB)
@@ -179,10 +180,7 @@ export default function IlkHarf({ onGameEnd, onExit, childName }: Props) {
           <Text style={styles.letterBig}>{letter}</Text>
         </Animated.View>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${letter} ile başlayan resmi bul!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak(`${letter} ile başlayan resmi bul!`, { instructions: HAPPY_VOICE })} color="#EC407A" style={{ marginTop: 12 }} />
 
         <View style={styles.options}>
           {options.map((w) => {
@@ -214,9 +212,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 20, fontWeight: '800', color: '#C2185B', marginTop: 8 },
   letterCard: { width: 130, height: 130, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
   letterBig: { fontSize: 88, fontWeight: '900', color: '#EC407A' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EC407A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 22, maxWidth: 460, paddingHorizontal: 12 },
   optCard: { width: 120, height: 128, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },

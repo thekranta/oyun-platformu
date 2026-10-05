@@ -6,6 +6,7 @@ import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 interface Props {
     onGameEnd: (
@@ -317,10 +318,7 @@ export default function KutuyuBul({ onGameEnd, onExit, questions = QUESTIONS, oy
                     <Text style={styles.targetEmoji}>{currentQuestion?.target}</Text>
                 </Animated.View>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => currentQuestion && speak(currentQuestion.question, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => currentQuestion && speak(currentQuestion.question, { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
 
                 {/* Boxes - Triangle/Pyramid layout on portrait */}
                 {isPortrait ? (
@@ -412,27 +410,6 @@ const styles = StyleSheet.create({
         fontSize: 64,
         textAlign: 'center',
         marginBottom: 4,
-    },
-    listenBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        backgroundColor: '#4CAF50',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 22,
-        marginTop: 12,
-        alignSelf: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.18,
-        shadowRadius: 1,
-        elevation: 3,
-    },
-    listenText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '800',
     },
     pyramidContainer: {
         flex: 1,

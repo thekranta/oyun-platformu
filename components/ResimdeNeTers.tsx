@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🖼️ RESİMDE NE TERS? - Görsel materyalleri çözümleme (Türkçe / TAOB.3)
@@ -186,10 +187,7 @@ export default function ResimdeNeTers({ onGameEnd, onExit, childName }: Props) {
           <Text style={styles.sceneCaptionText}>{scene.icon} {scene.setting}</Text>
         </View>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu resimde ne ters? Olmaması gerekene dokun!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak('Bu resimde ne ters? Olmaması gerekene dokun!', { instructions: HAPPY_VOICE })} color="#8E24AA" style={{ marginTop: 12 }} />
 
         <Animated.View style={[styles.scene, { transform: [{ scale: bounce }] }]}>
           {cells.map((cell) => {
@@ -225,9 +223,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 22, fontWeight: '900', color: '#6A1B9A', marginTop: 10, marginBottom: 6 },
   sceneCaption: { backgroundColor: '#fff', paddingVertical: 6, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 2, elevation: 2 },
   sceneCaptionText: { fontSize: 16, fontWeight: '800', color: '#8E24AA' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8E24AA', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   scene: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 14, marginTop: 18, maxWidth: 300, padding: 16, backgroundColor: '#fff', borderRadius: 28, borderWidth: 5, borderColor: '#CE93D8', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
   cell: { width: 116, height: 116, borderRadius: 22, backgroundColor: '#F3E5F5', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 1, elevation: 2 },

@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -7,6 +7,7 @@ import { asset } from '../lib/assetMap';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔔 HANGİ ÇALGI ÇALDI? - İşitsel kaynak ayırt etme (Müzik, MDB.3)
@@ -408,14 +409,7 @@ export default function HangiCalgiCaldi({ onGameEnd, onExit, childName }: Props)
         {isSeqRound ? 'Önce hangisi, sonra hangisi?' : 'Bu sesi hangi çalgı çıkardı?'}
       </Text>
 
-      <TouchableOpacity
-        style={styles.repeatBtn}
-        onPress={() => speak(current.sounds.length > 1 ? 'Şimdi arka arkaya iki ses çalacak. Dinle, sonra iki çalgıyı sırasıyla göster.' : 'DİNLE düğmesine bas ve sesi dinle.', { instructions: HAPPY_VOICE })}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.repeatText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(current.sounds.length > 1 ? 'Şimdi arka arkaya iki ses çalacak. Dinle, sonra iki çalgıyı sırasıyla göster.' : 'DİNLE düğmesine bas ve sesi dinle.', { instructions: HAPPY_VOICE })} color="#4527A0" style={{ marginTop: 12 }} />
 
       {/* DİNLE: tek uyaran kaynağı. Çalarken hiçbir kart kıpırdamaz. */}
       <View style={styles.listenWrap}>
@@ -497,8 +491,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#4527A0' },
 
   prompt: { fontSize: 20, fontWeight: '900', color: '#4527A0', marginTop: 6, textAlign: 'center', paddingHorizontal: 20 },
-  repeatBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4527A0', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  repeatText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   listenWrap: { width: 176, height: 176, alignItems: 'center', justifyContent: 'center', marginTop: 10 },
   ring: { position: 'absolute', width: 160, height: 160, borderRadius: 80, borderWidth: 6, borderColor: '#7E57C2' },

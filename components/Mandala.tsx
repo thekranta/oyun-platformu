@@ -6,6 +6,7 @@ import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🌀 MANDALA - Radyal simetrik çizim (Sanat)
@@ -161,10 +162,7 @@ export default function Mandala({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.hint}>Çiz — deseninin 6 kopyası birden oluşur! 🌀</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Parmağınla çiz, deseninin altı kopyası birden oluşsun!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Parmağınla çiz, deseninin altı kopyası birden oluşsun!', { instructions: HAPPY_VOICE })} color="#7E57C2" style={{ marginTop: 12 }} />
 
       <View
         ref={canvasRef}
@@ -215,8 +213,6 @@ const styles = StyleSheet.create({
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },
   savedBtn: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
   hint: { fontSize: 15, fontWeight: '700', color: '#7E57C2', marginVertical: 6 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7E57C2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#5E35B1', overflow: 'hidden' },
   palette: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 12, maxWidth: 520 },
   swatch: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(0,0,0,0.15)', shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 3 },

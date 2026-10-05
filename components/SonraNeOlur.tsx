@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔮 SONRA NE OLUR? - Bilimsel tahmin / neden-sonuç (Fen, FAB.4)
@@ -256,10 +257,7 @@ export default function SonraNeOlur({ onGameEnd, onExit, childName }: Props) {
       </Animated.View>
       <Text style={styles.scene}>{current.scene}</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(current.setup, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(current.setup, { instructions: HAPPY_VOICE })} color="#7E57C2" style={{ marginTop: 12 }} />
 
       <View style={styles.options}>
         {options.map((opt, i) => {
@@ -292,9 +290,6 @@ const styles = StyleSheet.create({
   stageEmoji: { fontSize: 74 },
   resultArrow: { fontSize: 34, marginHorizontal: 2 },
   scene: { fontSize: 15, fontWeight: '700', color: '#7E57C2', marginTop: 10, fontStyle: 'italic' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7E57C2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', justifyContent: 'center', gap: 14, marginTop: 20, flexWrap: 'wrap', maxWidth: 440, paddingHorizontal: 12 },
   optCard: { width: 116, height: 124, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },

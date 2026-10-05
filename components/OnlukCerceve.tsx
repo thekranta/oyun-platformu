@@ -15,6 +15,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // EksikSayiBul.tsx'teki NUMBER_WORDS ile aynı desen — bu sayıların ses klipleri
 // (Bir..Dokuz + "10") o oyunun eklendiği turda zaten üretildi.
@@ -234,10 +235,7 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
 
                 {/* Main */}
                 <View style={styles.mainArea}>
@@ -342,8 +340,6 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(232,245,233,0.9)', borderBottomWidth: 1, borderBottomColor: '#C8E6C9',
     },
     headerBtn: { padding: 2 },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     roundBadge: { backgroundColor: '#FFF', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 16, borderWidth: 2, borderColor: '#81C784' },
     roundText: { fontSize: 13, fontWeight: 'bold', color: '#2E7D32' },
     mainArea: { flex: 1, flexDirection: 'row', padding: '2%' },

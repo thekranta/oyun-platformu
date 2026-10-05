@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🧠 SIRAYI HATIRLA - Çalışma belleği/dikkat (Bilişsel)
@@ -55,6 +56,15 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
 
   useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
+  // Her çağrı kendi numarasını alır; yeni bir oynatma başlayınca eskisinin ses bitiş
+  // callback'i (veya zamanlayıcıları) artık geçersizdir.
+  const runIdRef = useRef(0);
+
+  const clearTimers = () => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+  };
+
   const playSequence = (sequence: number[]) => {
     setPhase('showing');
     setActivePad(null);
@@ -67,14 +77,29 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
     timersRef.current.push(setTimeout(() => setPhase('input'), sequence.length * step + 300));
   };
 
+  // Oyun_Test_Listesi.docx #44: "önden hatırlanacak sıra ses komutu bitmeden başlıyor —
+  // sese odaklanmak ve görsele aynı anda bakmak ağır bilişsel yük". Önce sesli komut
+  // tamamen biter, kısa bir nefes payından sonra renkli tuşlar yanar.
+  const speakThenShow = (text: string, sequence: number[]) => {
+    const myRun = ++runIdRef.current;
+    clearTimers();
+    setPhase('showing');
+    setActivePad(null);
+    setWrongPad(null);
+    inputRef.current = 0;
+    speak(text, { instructions: HAPPY_VOICE }).catch(() => { }).then(() => {
+      if (!isMountedRef.current || myRun !== runIdRef.current) return;
+      timersRef.current.push(setTimeout(() => playSequence(sequence), 350));
+    });
+  };
+
   useEffect(() => {
     if (!gameReady) return;
     const len = seqLen(round);
     const seq = Array.from({ length: len }, () => Math.floor(Math.random() * 4));
     seqRef.current = seq;
-    setWrongPad(null);
-    speak('İzle ve aynı sırayla tekrarla!', { instructions: HAPPY_VOICE });
-    playSequence(seq);
+    speakThenShow('İzle ve aynı sırayla tekrarla!', seq);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round, gameReady]);
 
   const finish = () => {
@@ -113,15 +138,17 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
         });
       }
     } else {
-      // yanlış - nazik: diziyi tekrar göster
+      // yanlış - nazik: ses bitince diziyi tekrar göster (ses ve görsel üst üste binmesin)
       errorsRef.current += 1;
+      const myRun = ++runIdRef.current;
+      clearTimers();
       setPhase('done');
       setWrongPad(pad);
-      speak('Tekrar izle bakalım.', { instructions: HAPPY_VOICE });
-      timersRef.current.push(setTimeout(() => {
+      speakThenWait('Tekrar izle bakalım.', 900, { instructions: HAPPY_VOICE }).then(() => {
+        if (!isMountedRef.current || myRun !== runIdRef.current) return;
         setWrongPad(null);
-        playSequence(seqRef.current);
-      }, 900));
+        timersRef.current.push(setTimeout(() => playSequence(seqRef.current), 350));
+      });
     }
   };
 
@@ -146,10 +173,12 @@ export default function SirayiHatirla({ onGameEnd, onExit, childName }: Props) {
       <View style={styles.contentArea}>
         <Text style={styles.prompt}>{phase === 'input' ? 'Şimdi sen tekrarla!' : phase === 'showing' ? 'İyi izle...' : 'Aferin!'}</Text>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('İzle ve aynı sırayla tekrarla!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        {/* "Tekrar dinle denilince sıra animasyonu da tekrar etmeli" (docx #44): komut ve dizi yeniden oynar. */}
+        <ListenButton
+          onPress={() => { if (phase !== 'done' && seqRef.current.length) speakThenShow('İzle ve aynı sırayla tekrarla!', seqRef.current); }}
+          color="#7E57C2"
+          style={{ marginTop: 12, marginBottom: 16 }}
+        />
 
         <View style={styles.board}>
           {PADS.map((p, i) => {
@@ -186,8 +215,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#4527A0' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#4527A0', marginTop: 12, marginBottom: 16, textAlign: 'center', paddingHorizontal: 20 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7E57C2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   board: { width: 280, height: 280, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignContent: 'space-between' },
   pad: { width: 132, height: 132, borderRadius: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 4 },
   padActive: { transform: [{ scale: 1.06 }], shadowOpacity: 0.35 },

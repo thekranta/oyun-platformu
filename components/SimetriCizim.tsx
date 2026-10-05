@@ -6,6 +6,7 @@ import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🪞 SİMETRİ ÇİZİM - Aynalı (simetrik) serbest çizim (Sanat)
@@ -156,10 +157,7 @@ export default function SimetriCizim({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.hint}>Bir tarafa çiz — diğer taraf aynalanır! 🦋</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bir tarafa parmağınla çiz, diğer taraf aynalansın!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Bir tarafa parmağınla çiz, diğer taraf aynalansın!', { instructions: HAPPY_VOICE })} color="#5E35B1" style={{ marginTop: 4, marginBottom: 6 }} />
 
       <View
         ref={canvasRef}
@@ -212,6 +210,4 @@ const styles = StyleSheet.create({
   swatchActive: { borderColor: '#212121', transform: [{ scale: 1.12 }] },
   sizeOpt: { width: 48, height: 48, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#E0E0E0' },
   sizeOptActive: { borderColor: '#5E35B1', backgroundColor: '#EDE7F6' },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#5E35B1', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

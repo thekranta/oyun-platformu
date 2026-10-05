@@ -7,6 +7,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
 import { asset } from '../lib/assetMap';
+import ListenButton from './ListenButton';
 
 // Arka plan g�rseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/yaratici_cizim_bg.webp');
@@ -416,14 +417,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
 
         <GameExitButton onPress={onExit ?? (() => {})} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
 
-        <TouchableOpacity
-          style={styles.listenBtn}
-          onPress={() => speak('Parmağınla istediğin resmi çiz, renkleri ve fırçaları dene!', { instructions: HAPPY_VOICE })}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak('Parmağınla istediğin resmi çiz, renkleri ve fırçaları dene!', { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
 
         <View ref={canvasRef} style={styles.canvas} {...panResponder.panHandlers}>
           <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -617,8 +611,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   container: { flex: 1 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: {
     flex: 1, backgroundColor: '#fffef9', marginTop: 10, marginHorizontal: 10, marginBottom: 85,
     borderRadius: 20, borderWidth: 3, borderColor: '#f2e4cf', overflow: 'hidden', elevation: 4,

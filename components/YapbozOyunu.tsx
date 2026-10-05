@@ -18,6 +18,7 @@ import CountdownOverlay from './CountdownOverlay';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/yapboz_bg.webp');
@@ -340,14 +341,7 @@ export default function YapbozOyunu({ onGameEnd, onExit }: YapbozOyunuProps) {
             <Text style={styles.selectionTitle}>🧩 Bir Yapboz Seç!</Text>
             <Text style={styles.selectionSubtitle}>Hangi resmi tamamlamak istersin?</Text>
 
-            <TouchableOpacity
-                style={styles.listenBtn}
-                onPress={() => speak('Bir yapboz seç, parçaları sürükleyip resmi tamamla!', { instructions: HAPPY_VOICE })}
-                activeOpacity={0.85}
-            >
-                <Ionicons name="volume-high" size={20} color="#fff" />
-                <Text style={styles.listenText}>Tekrar Dinle</Text>
-            </TouchableOpacity>
+            <ListenButton onPress={() => speak('Bir yapboz seç, parçaları sürükleyip resmi tamamla!', { instructions: HAPPY_VOICE })} color="#4ECDC4" style={{ marginTop: 12, alignSelf: 'center' }} />
 
             <ScrollView
                 contentContainerStyle={styles.puzzleGrid}
@@ -544,8 +538,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         textAlign: 'center',
     },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4ECDC4', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     // Preview Screen
     previewContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },

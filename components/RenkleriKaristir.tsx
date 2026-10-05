@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🎨 RENKLERİ KARIŞTIR - Renk karışımı gözlem/tahmin (Fen/FAB.3)
@@ -144,10 +145,7 @@ export default function RenkleriKaristir({ onGameEnd, onExit, childName }: Props
 
       <Text style={styles.prompt}>Karışınca ne olur?</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu iki renk karışınca ne olur?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Bu iki renk karışınca ne olur?', { instructions: HAPPY_VOICE })} color="#8E24AA" style={{ marginTop: 4, marginBottom: 16 }} />
 
       <Animated.View style={[styles.mixRow, { transform: [{ scale: pop }] }]}>
         <View style={[styles.blob, { backgroundColor: mix.a }]} />
@@ -178,8 +176,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#6A1B9A' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#6A1B9A', marginTop: 12, marginBottom: 20 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8E24AA', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   mixRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   blob: { width: 62, height: 62, borderRadius: 31, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 3 },
   op: { fontSize: 30, fontWeight: '900', color: '#8E24AA' },

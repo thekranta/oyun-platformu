@@ -5,6 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔢 SAYI-BOYA - Numaraya göre boyama (Sanat + sayı-renk eşleme)
@@ -125,14 +126,7 @@ export default function SayiBoya({ onGameEnd, onExit, childName }: Props) {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.listenBtn}
-        onPress={() => speak('Her karede bir sayı var! O sayının rengini seç ve kareye dokun, boya.', { instructions: HAPPY_VOICE })}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Her karede bir sayı var! O sayının rengini seç ve kareye dokun, boya.', { instructions: HAPPY_VOICE })} color="#6A1B9A" style={{ marginTop: 4 }} />
 
       {/* Resim seçici */}
       <View style={styles.picRow}>
@@ -186,9 +180,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 19, fontWeight: '900', color: '#6A1B9A' },
   smallBtn: { width: 44, height: 44, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#eee' },
   saveBtn: { borderColor: '#43A047' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#6A1B9A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   picRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, paddingVertical: 8 },
   picBtn: { width: 50, height: 50, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'transparent', elevation: 2 },

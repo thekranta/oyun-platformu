@@ -20,6 +20,7 @@ import { speak } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { asset } from '../lib/assetMap';
+import ListenButton from './ListenButton';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/uzay_bg.webp');
@@ -626,14 +627,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna' }: 
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.listenBtnRow}>
-                    <TouchableOpacity
-                        style={styles.listenBtn}
-                        onPress={() => speak('Uzay Blokları oyununa hoş geldin! Blokları yerleştirmeme yardım eder misin?', { instructions: HAPPY_VOICE })}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="volume-high" size={20} color="#fff" />
-                        <Text style={styles.listenText}>Tekrar Dinle</Text>
-                    </TouchableOpacity>
+                    <ListenButton onPress={() => speak('Uzay Blokları oyununa hoş geldin! Blokları yerleştirmeme yardım eder misin?', { instructions: HAPPY_VOICE })} color="#BF40BF" style={{ marginTop: 12 }} />
                 </View>
 
                 {/* Instruction for drag-to-place / tap-to-place */}
@@ -1169,7 +1163,5 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingTop: 4,
     },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#BF40BF', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });
 

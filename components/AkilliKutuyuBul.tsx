@@ -7,6 +7,7 @@ import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import ListenButton from './ListenButton';
 
 interface Props {
     onGameEnd: (
@@ -258,10 +259,7 @@ export default function AkilliKutuyuBul({ onGameEnd, onExit, childName }: Props)
                     <Text style={styles.targetEmoji}>{currentQuestion?.target}</Text>
                 </Animated.View>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => currentQuestion && speak(currentQuestion.question, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => currentQuestion && speak(currentQuestion.question, { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
 
                 {isPortrait ? (
                     <View style={styles.pyramidContainer}>
@@ -301,8 +299,6 @@ const styles = StyleSheet.create({
     progressText: { marginTop: 4, fontSize: 12, fontWeight: '600', color: '#666' },
     questionContainer: { backgroundColor: 'rgba(255, 255, 255, 0.95)', borderRadius: 14, padding: 14, marginHorizontal: 16, marginBottom: 16, elevation: 4 },
     targetEmoji: { fontSize: 64, textAlign: 'center', marginBottom: 4 },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
     pyramidContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 16 },
     pyramidTop: { alignItems: 'center' },
     pyramidBottom: { flexDirection: 'row', justifyContent: 'center', gap: 20 },

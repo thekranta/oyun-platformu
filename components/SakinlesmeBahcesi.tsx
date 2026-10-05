@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🫧 SAKİNLEŞME BAHÇESİ - Öz düzenleme / sakinleşme stratejisi (Sosyal-Duygusal, TADB.2)
@@ -256,10 +257,7 @@ export default function SakinlesmeBahcesi({ onGameEnd, onExit, childName }: Prop
           <Text style={styles.sceneText}>{scenario.scene}  {scenario.text}</Text>
         </Animated.View>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${scenario.text} Ne yapmalı?`, { instructions: MOTHER_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak(`${scenario.text} Ne yapmalı?`, { instructions: MOTHER_VOICE })} color="#26A69A" style={{ marginTop: 12 }} />
 
         <View style={styles.options}>
           {options.map((opt) => {
@@ -305,9 +303,6 @@ const styles = StyleSheet.create({
   emotionPillCalm: { backgroundColor: '#C8E6C9' },
   emotionText: { fontSize: 14, fontWeight: '900', color: '#00695C' },
   emotionTextCalm: { color: '#2E7D32' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#26A69A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 18, paddingHorizontal: 10 },
   optCard: { width: 106, height: 116, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },

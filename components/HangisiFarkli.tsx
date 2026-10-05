@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔎 HANGİSİ FARKLI? - Gruba uymayanı bul (Fen/FAB.2 benzerlik-farklılık)
@@ -135,10 +136,7 @@ export default function HangisiFarkli({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>Hangisi farklı?</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Hangisi farklı? Ötekilere benzemeyeni bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Hangisi farklı? Ötekilere benzemeyeni bul!', { instructions: HAPPY_VOICE })} color="#00838F" style={{ marginTop: 12 }} />
 
       <View style={styles.grid}>
         {cells.map((cell) => {
@@ -167,6 +165,4 @@ const styles = StyleSheet.create({
   cell: { width: 104, height: 104, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   cellWrong: { backgroundColor: '#FFE0E0' },
   cellEmoji: { fontSize: 58 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00838F', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

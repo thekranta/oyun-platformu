@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // ➕ KAÇ OLDU? - 5'e kadar toplama (Matematik/MAB.1)
@@ -155,10 +156,7 @@ export default function KacOldu({ onGameEnd, onExit, childName }: Props) {
           </View>
         </Animated.View>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Hepsi kaç etti? Say bakalım!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak('Hepsi kaç etti? Say bakalım!', { instructions: HAPPY_VOICE })} color="#00897B" style={{ marginTop: 14 }} />
 
         <View style={styles.numbers}>
           {options.map((n) => {
@@ -191,9 +189,6 @@ const styles = StyleSheet.create({
   group: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 2, maxWidth: 150 },
   obj: { fontSize: 34 },
   op: { fontSize: 36, fontWeight: '900', color: '#00897B' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00897B', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   numbers: { flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 20 },
   numBtn: { width: 78, height: 78, borderRadius: 22, backgroundColor: '#26A69A', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 5 },

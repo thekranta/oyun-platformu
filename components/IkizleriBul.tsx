@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 👯 İKİZLERİ BUL - Birbirinin aynısını eşleme (Matematik/MAB.2)
@@ -150,10 +151,7 @@ export default function IkizleriBul({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>İkizleri bul!</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Birbirinin aynısı iki resmi bul!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Birbirinin aynısı iki resmi bul!', { instructions: HAPPY_VOICE })} color="#EC407A" style={{ marginTop: 12 }} />
 
       <View style={styles.grid}>
         {cards.map((card) => {
@@ -185,8 +183,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#AD1457' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#AD1457', marginTop: 12, marginBottom: 10 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EC407A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 6, maxWidth: 400, paddingHorizontal: 10 },
   card: { width: 100, height: 100, borderRadius: 22, backgroundColor: '#fff', borderWidth: 3, borderColor: 'rgba(0,0,0,0.06)', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   cardSelected: { borderColor: '#EC407A', backgroundColor: '#FCE4EC', transform: [{ scale: 1.05 }] },

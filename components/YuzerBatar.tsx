@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🌊 YÜZER Mİ BATAR MI? - Tahmin/gözlem (Fen/FAB.3)
@@ -128,10 +129,7 @@ export default function YuzerBatar({ onGameEnd, onExit, childName }: Props) {
       <View style={styles.contentArea}>
         <Text style={styles.prompt}>Yüzer mi, batar mı?</Text>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Bu suya atılınca yüzer mi, batar mı?', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak('Bu suya atılınca yüzer mi, batar mı?', { instructions: HAPPY_VOICE })} color="#0277BD" style={{ marginTop: 12 }} />
 
         <View style={styles.tank}>
           <Animated.Text style={[styles.obj, { transform: [{ translateY: objTranslate }] }]}>{emoji}</Animated.Text>
@@ -169,8 +167,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#0277BD' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#0277BD', marginTop: 10 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#0277BD', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   tank: { width: '84%', maxWidth: 380, height: 200, marginTop: 14, borderRadius: 24, backgroundColor: '#B3E5FC', overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-start', paddingTop: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
   obj: { fontSize: 70, zIndex: 2 },
   water: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 96, backgroundColor: '#4FC3F7', alignItems: 'center', paddingTop: 4 },

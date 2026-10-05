@@ -5,6 +5,7 @@ import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 type Point = { x: number; y: number };
 type Stroke = { color: string; size: number; points: Point[] };
@@ -351,14 +352,7 @@ export default function RakamYazma({ onGameEnd, onExit }: Props) {
                     ))}
                 </View>
 
-                <TouchableOpacity
-                    style={styles.listenBtn}
-                    onPress={() => speak(`${currentNumber}. rakamın üzerini çiz!`, { instructions: HAPPY_VOICE })}
-                    activeOpacity={0.85}
-                >
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => speak(`${currentNumber}. rakamın üzerini çiz!`, { instructions: HAPPY_VOICE })} color="#FF7043" style={{ marginBottom: 12 }} />
 
                 <View
                     style={[
@@ -519,9 +513,6 @@ const styles = StyleSheet.create({
         transform: [{ scale: 1.15 }],
         elevation: 4,
     },
-
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FF7043', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     canvasContainer: {
         backgroundColor: '#FFFEF7',

@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🗺️ HAZİNE HARİTASI - Basit kroki/harita okuma (Sosyal/SAB.15)
@@ -198,14 +199,7 @@ export default function HazineHaritasi({ onGameEnd, onExit, childName }: Props) 
         <Text style={styles.clueText}>{current.clue}</Text>
       </View>
 
-      <TouchableOpacity
-        style={styles.listenBtn}
-        onPress={() => speak(current.clue, { instructions: HAPPY_VOICE })}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(current.clue, { instructions: HAPPY_VOICE })} color="#8D6E63" style={{ marginTop: 12 }} />
 
       <Animated.View style={[styles.board, { transform: [{ scale: boardScale }] }]}>
         {current.cells.map((cell, idx) => {
@@ -252,9 +246,6 @@ const styles = StyleSheet.create({
   clueCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#FFF8E7', borderWidth: 2, borderColor: '#E0C08A', borderRadius: 18, paddingVertical: 12, paddingHorizontal: 16, marginTop: 12, maxWidth: BOARD_W, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 4 },
   clueIcon: { fontSize: 26 },
   clueText: { flex: 1, fontSize: 17, fontWeight: '800', color: '#6D4C41' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8D6E63', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   board: { width: CELL * 3 + GAP * 2, flexDirection: 'row', flexWrap: 'wrap', gap: GAP, marginTop: 20, padding: GAP, backgroundColor: '#C9A063', borderRadius: 22, borderWidth: 3, borderColor: '#A67C48', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 },
   cell: { width: CELL, height: CELL, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

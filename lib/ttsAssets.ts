@@ -10,7 +10,7 @@
  */
 export const TTS: Record<string, number> = {
   '1-1-tane-olani-bul': require('../assets/sounds/tts/1-1-tane-olani-bul.mp3'),
-  '1-aferin': require('../assets/sounds/tts/1-aferin.mp3'),
+  '1-aferin': require('../assets/sounds/tts/1-aferin.wav'),
   '1-kaldi-aferin': require('../assets/sounds/tts/1-kaldi-aferin.mp3'),
   '1-rakamindan-basla-noktalari-sirayla-birlestir': require('../assets/sounds/tts/1-rakamindan-basla-noktalari-sirayla-birlestir.mp3'),
   '1-tane-aferin': require('../assets/sounds/tts/1-tane-aferin.mp3'),
@@ -524,7 +524,7 @@ export const TTS: Record<string, number> = {
   'hangisinde-daha-cok-var': require('../assets/sounds/tts/hangisinde-daha-cok-var.wav'),
   'harika-bir-kuvvetli-iki-hafif-kuvvetli-hafif-hafif': require('../assets/sounds/tts/harika-bir-kuvvetli-iki-hafif-kuvvetli-hafif-hafif.mp3'),
   'harika-dogru-boyut': require('../assets/sounds/tts/harika-dogru-boyut.mp3'),
-  'harika-dogru-hatirladin': require('../assets/sounds/tts/harika-dogru-hatirladin.mp3'),
+  'harika-dogru-hatirladin': require('../assets/sounds/tts/harika-dogru-hatirladin.wav'),
   'harika-dogru-sekil': require('../assets/sounds/tts/harika-dogru-sekil.mp3'),
   'harika-hali-tam-ortada-odanin-ortasi-oyun-oynamak-icin-en-guzel-yerdir': require('../assets/sounds/tts/harika-hali-tam-ortada-odanin-ortasi-oyun-oynamak-icin-en-guzel-yerdir.mp3'),
   'harika-kitaplik-yatagin-arkasinda-krokide-arka-taraf-yukarisidir': require('../assets/sounds/tts/harika-kitaplik-yatagin-arkasinda-krokide-arka-taraf-yukarisidir.mp3'),
@@ -786,7 +786,7 @@ export const TTS: Record<string, number> = {
   'simdi-tablolara-bakacagiz-soruyu-iyi-dinle-tabloyu-incele-ve-dogru-cevaba-dokun': require('../assets/sounds/tts/simdi-tablolara-bakacagiz-soruyu-iyi-dinle-tabloyu-incele-ve-dogru-cevaba-dokun.mp3'),
   'sinif-daginik-sence-ne-yapmali': require('../assets/sounds/tts/sinif-daginik-sence-ne-yapmali.mp3'),
   'sira-sende-pede-dokun-ve-duydugun-ritmi-cal': require('../assets/sounds/tts/sira-sende-pede-dokun-ve-duydugun-ritmi-cal.mp3'),
-  'sirada-hangi-renk-var': require('../assets/sounds/tts/sirada-hangi-renk-var.mp3'),
+  'sirada-hangi-renk-var': require('../assets/sounds/tts/sirada-hangi-renk-var.wav'),
   'sirada-hangi-sekil-var-hep-beraber-bulalim': require('../assets/sounds/tts/sirada-hangi-sekil-var-hep-beraber-bulalim.wav'),
   'siradaki-eksik-sayiyi-bul-ve-yerine-koy': require('../assets/sounds/tts/siradaki-eksik-sayiyi-bul-ve-yerine-koy.mp3'),
   'siraya-bak-siradaki-sekil-hangisi-dogru-sekle-dokun': require('../assets/sounds/tts/siraya-bak-siradaki-sekil-hangisi-dogru-sekle-dokun.mp3'),

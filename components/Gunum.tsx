@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // ⏰ GÜNÜM - Günlük rutini zaman sırasına koyma (Sosyal Bilgiler, SAB.1)
@@ -142,10 +143,7 @@ export default function Gunum({ onGameEnd, onExit, childName }: Props) {
       <Text style={styles.prompt}>Günü sıraya koy!</Text>
       <Text style={styles.hint}>Sıradaki: {expected + 1}.</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Günün sırasını yap! Önce ne olur, en baştan dokun.', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Günün sırasını yap! Önce ne olur, en baştan dokun.', { instructions: HAPPY_VOICE })} color="#26A69A" style={{ marginTop: 12 }} />
 
       <View style={styles.row}>
         {cards.map((card) => {
@@ -182,6 +180,4 @@ const styles = StyleSheet.create({
   orderBadge: { position: 'absolute', top: -6, left: -6, width: 28, height: 28, borderRadius: 14, backgroundColor: '#26A69A', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
   orderText: { color: '#fff', fontSize: 15, fontWeight: '900' },
   label: { fontSize: 15, fontWeight: '700', color: '#4DB6AC', marginTop: 18, fontStyle: 'italic', textAlign: 'center', paddingHorizontal: 16 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#26A69A', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

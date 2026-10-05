@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // Akıllı Eksik Sayı — UYARLANIR (adaptif) zorluk. Maarif: MAB.5
 // (Matematiksel durumlara ilişkin eksik olan parçayı söyler).
@@ -161,14 +162,7 @@ export default function AkilliEksikSayi({ onGameEnd, onExit, childName = 'Küç�
                     cocuk icin gereksizdi, gorev zaten CountdownOverlay + Tekrar Dinle
                     ile sesli veriliyor (her tur ayni gorev oldugundan tur-basi ayrica
                     seslendirmeye gerek yok). */}
-                <TouchableOpacity
-                    style={styles.listenBtn}
-                    onPress={() => speak('Diziye bak, eksik sayıyı bul! Sen başardıkça zorlaşır', { instructions: HAPPY_VOICE })}
-                    activeOpacity={0.85}
-                >
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => speak('Diziye bak, eksik sayıyı bul! Sen başardıkça zorlaşır', { instructions: HAPPY_VOICE })} color="#1976D2" style={{ marginTop: 12 }} />
 
                 {/* Dizi */}
                 <Animated.View style={[styles.seqCard, { transform: [{ scale: bump }, { translateX: shake }] }]}>
@@ -232,9 +226,6 @@ const styles = StyleSheet.create({
     title: { fontSize: 19, fontWeight: 'bold', color: '#3e2723' },
     roundBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
-
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1976D2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     seqCard: {
         backgroundColor: '#FFFDF5', borderRadius: 24, borderWidth: 3, borderColor: '#FFE0B2',

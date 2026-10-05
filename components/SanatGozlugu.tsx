@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -6,6 +6,7 @@ import Svg, { Circle, Ellipse, G, Path, Polygon, Rect } from 'react-native-svg';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 👓 SANAT GÖZLÜĞÜ - Sanat kavramlarını bir esere UYGULAMA (Sanat, SNAB.1)
@@ -385,14 +386,7 @@ export default function SanatGozlugu({ onGameEnd, onExit, childName }: Props) {
           <ArtCard art={current.art} />
         </Animated.View>
 
-        <TouchableOpacity
-          style={styles.listenBtn}
-          onPress={() => speak(current.question, { instructions: HAPPY_VOICE })}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak(current.question, { instructions: HAPPY_VOICE })} color="#8E24AA" style={{ marginTop: 12 }} />
 
         <View style={styles.options}>
           {options.map((opt) => {
@@ -427,9 +421,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 20, fontWeight: '800', color: '#6A1B9A', marginTop: 6, textAlign: 'center', paddingHorizontal: 16 },
 
   artFrame: { marginTop: 10, padding: 6, borderRadius: 26, backgroundColor: '#fff', borderWidth: 3, borderColor: '#D1C4E9', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8E24AA', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 16, flexWrap: 'wrap', maxWidth: 460, paddingHorizontal: 12 },
   optChip: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#fff', paddingVertical: 12, paddingHorizontal: 18, borderRadius: 22, borderWidth: 2, borderColor: '#E1BEE7', shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },

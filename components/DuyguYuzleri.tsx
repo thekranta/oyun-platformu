@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 💛 DUYGU YÜZLERİ - Duygu tanıma (Sosyal-Duygusal / SAB)
@@ -191,14 +192,7 @@ export default function DuyguYuzleri({ onGameEnd, onExit, childName }: Props) {
         <Text style={styles.sceneText}>{situation.text}</Text>
       </Animated.View>
 
-      <TouchableOpacity
-        style={styles.listenBtn}
-        onPress={() => speak(`${situation.text} Sence nasıl hissediyor?`, { instructions: MOTHER_VOICE })}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(`${situation.text} Sence nasıl hissediyor?`, { instructions: MOTHER_VOICE })} color="#FF6AA9" style={{ marginTop: 14 }} />
 
       {/* Seçenek yüzleri */}
       <View style={styles.options}>
@@ -232,9 +226,6 @@ const styles = StyleSheet.create({
   sceneCard: { width: '86%', maxWidth: 420, minHeight: 150, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', paddingVertical: 18, paddingHorizontal: 16, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
   sceneEmoji: { fontSize: 68 },
   sceneText: { fontSize: 18, fontWeight: '800', color: '#5A3A66', textAlign: 'center', marginTop: 8 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FF6AA9', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 22, maxWidth: 480, paddingHorizontal: 12 },
   optionCard: { width: 118, height: 128, borderRadius: 26, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 6 },

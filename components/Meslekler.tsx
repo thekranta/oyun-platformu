@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 👷 MESLEKLER - Meslek-araç ilişkisi (Sosyal, SAB.3)
@@ -144,10 +145,7 @@ export default function Meslekler({ onGameEnd, onExit, childName }: Props) {
         <Text style={styles.jobName}>{job.name}</Text>
       </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${job.name} ne kullanır?`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(`${job.name} ne kullanır?`, { instructions: HAPPY_VOICE })} color="#7E57C2" style={{ marginTop: 12 }} />
 
       <View style={styles.options}>
         {options.map((tool) => {
@@ -175,9 +173,6 @@ const styles = StyleSheet.create({
   jobCard: { width: 150, height: 150, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
   jobEmoji: { fontSize: 78 },
   jobName: { fontSize: 17, fontWeight: '900', color: '#4527A0' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7E57C2', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', justifyContent: 'center', gap: 16, marginTop: 20, flexWrap: 'wrap', maxWidth: 420, paddingHorizontal: 12 },
   optCard: { width: 104, height: 104, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },

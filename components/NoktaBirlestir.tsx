@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Line } from 'react-native-svg';
@@ -6,6 +6,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔢 NOKTA BİRLEŞTİR - Noktaları sırayla birleştir (Çizim + sayı sırası)
@@ -140,10 +141,7 @@ export default function NoktaBirlestir({ onGameEnd, onExit, childName }: Props) 
 
       <Text style={styles.prompt}>{done ? `Bir ${pic.name} oldu! ${pic.emoji}` : `Sıradaki: ${next + 1}`}</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('1 rakamından başla, noktaları sırayla birleştir!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('1 rakamından başla, noktaları sırayla birleştir!', { instructions: HAPPY_VOICE })} color="#00897B" style={{ marginTop: 4, marginBottom: 8 }} />
 
       <Animated.View style={[styles.canvas, { width: SIZE, height: SIZE, transform: [{ translateX: shake }] }]}>
         <Svg width={SIZE} height={SIZE} viewBox="0 0 300 300" pointerEvents="none" style={StyleSheet.absoluteFill}>
@@ -178,8 +176,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#00695C' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#00695C', marginVertical: 12, minHeight: 30 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00897B', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   canvas: { backgroundColor: '#fff', borderRadius: 20, borderWidth: 3, borderColor: '#B2DFDB', marginTop: 4 },
   revealEmoji: { position: 'absolute', alignSelf: 'center', top: SIZE / 2 - 44, fontSize: 80, opacity: 0.5 },
   dot: { position: 'absolute', width: 44, height: 44, borderRadius: 22, backgroundColor: '#fff', borderWidth: 3, borderColor: '#B0BEC5', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 1, elevation: 2 },

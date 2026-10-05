@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🔠 BÜYÜK-ORTA-KÜÇÜK - 3'lü boyut ayırt etme (Matematik/MAB.3)
@@ -151,10 +152,7 @@ export default function BuyukOrtaKucuk({ onGameEnd, onExit, childName }: Props) 
         <Text style={styles.targetName}>{targetSize.name}</Text>
       </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${targetSize.name} olanı bul!`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(`${targetSize.name} olanı bul!`, { instructions: HAPPY_VOICE })} color="#8D6E63" style={{ marginTop: 12 }} />
 
       <View style={styles.options}>
         {options.map((s) => {
@@ -182,9 +180,6 @@ const styles = StyleSheet.create({
   targetCard: { width: 170, height: 160, borderRadius: 28, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
   sizeBox: { height: 110, alignItems: 'center', justifyContent: 'center' },
   targetName: { fontSize: 20, fontWeight: '900', color: '#8D6E63', marginTop: 2 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8D6E63', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 20, minHeight: 130 },
   optBox: { width: 108, height: 128, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },

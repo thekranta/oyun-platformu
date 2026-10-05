@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
@@ -6,6 +6,7 @@ import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
 import { Flag, FLAGS, FlagSpec } from './WorldFlag';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // Dünya Bayrakları — MONTESSORI tarzı kültürel farkındalık çalışması.
 // Puan/yarış YOK; kendi kendini düzelten (yanlış nazikçe titrer), doğru
@@ -123,14 +124,7 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
                         <Text style={styles.targetLabel}>Bunun aynısını bul</Text>
                         <Flag spec={target} w={120} />
                         <Text style={styles.targetName}>{target.name}</Text>
-                        <TouchableOpacity
-                            style={styles.listenBtn}
-                            onPress={() => speak('Dünyanın farklı ülkelerinden bayraklar! Aynı olanı sakince bul ve eşleştir.', { instructions: HAPPY_VOICE })}
-                            activeOpacity={0.85}
-                        >
-                            <Ionicons name="volume-high" size={20} color="#fff" />
-                            <Text style={styles.listenText}>Tekrar Dinle</Text>
-                        </TouchableOpacity>
+                        <ListenButton onPress={() => speak('Dünyanın farklı ülkelerinden bayraklar! Aynı olanı sakince bul ve eşleştir.', { instructions: HAPPY_VOICE })} color="#00796B" style={{ marginTop: 12 }} />
                     </View>
                 )}
                 {allDone && (
@@ -198,9 +192,6 @@ const styles = StyleSheet.create({
     targetName: { fontSize: 20, fontWeight: '800', color: '#263238', marginTop: 10 },
     doneEmoji: { fontSize: 44 },
     doneText: { fontSize: 17, fontWeight: '800', color: '#2E7D32', marginTop: 8, textAlign: 'center' },
-
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00796B', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, maxWidth: 520 },
     slot: {

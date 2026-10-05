@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -7,6 +7,7 @@ import DynamicBackground from './DynamicBackground';
 import JuicyProgressBar from './JuicyProgressBar';
 import { asset } from '../lib/assetMap';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
@@ -241,14 +242,7 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
           </View>
         </View>
 
-        <TouchableOpacity
-          style={styles.listenBtn}
-          onPress={() => speak('Sıradaki eksik sayıyı bul ve yerine koy!', { instructions: HAPPY_VOICE })}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak('Sıradaki eksik sayıyı bul ve yerine koy!', { instructions: HAPPY_VOICE })} color="#e65100" style={{ marginTop: 4, alignSelf: 'center' }} />
 
         <View style={styles.progressRow}>
           <JuicyProgressBar current={currentStage + 1} total={TOTAL_STAGES} />
@@ -377,27 +371,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#e65100',
-  },
-  listenBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#e65100',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 22,
-    marginTop: 4,
-    alignSelf: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 1,
-    elevation: 3,
-  },
-  listenText: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '800',
   },
   sequenceArea: {
     backgroundColor: '#fff7e0',

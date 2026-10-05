@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // ⚫ NOKTA SAY - Nokta sayma → rakam (Matematik/MAB.1)
@@ -146,10 +147,7 @@ export default function NoktaSay({ onGameEnd, onExit, childName }: Props) {
         ))}
       </Animated.View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Kaç nokta var? Say bakalım!', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak('Kaç nokta var? Say bakalım!', { instructions: HAPPY_VOICE })} color="#00ACC1" style={{ marginTop: 14 }} />
 
       <View style={styles.numbers}>
         {options.map((n) => {
@@ -176,9 +174,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 22, fontWeight: '900', color: '#00838F', marginTop: 10 },
   dotCard: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 14, backgroundColor: '#fff', borderRadius: 28, minHeight: 150, width: '84%', maxWidth: 380, marginTop: 12, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
   dot: { width: 44, height: 44, borderRadius: 22 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00ACC1', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   numbers: { flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 22 },
   numBtn: { width: 82, height: 82, borderRadius: 22, backgroundColor: '#26C6DA', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 5 },

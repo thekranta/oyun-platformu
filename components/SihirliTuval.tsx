@@ -10,10 +10,10 @@ import {
     View
 } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Text as SvgText } from 'react-native-svg';
-import { Ionicons } from '@expo/vector-icons';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============= TYPES =============
 interface SihirliTuvalProps {
@@ -514,14 +514,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
                 </View>
             </View>
 
-            <TouchableOpacity
-                style={styles.listenBtn}
-                onPress={() => speak('Sihirli Tuval oyununa hoş geldin! Renkleri numaralarına göre boyama yapalım.', { instructions: HAPPY_VOICE })}
-                activeOpacity={0.85}
-            >
-                <Ionicons name="volume-high" size={20} color="#fff" />
-                <Text style={styles.listenText}>Tekrar Dinle</Text>
-            </TouchableOpacity>
+            <ListenButton onPress={() => speak('Sihirli Tuval oyununa hoş geldin! Renkleri numaralarına göre boyama yapalım.', { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
 
             {/* SVG Canvas */}
             <Animated.View style={[
@@ -758,8 +751,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
     },
-    listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#4CAF50', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3, alignSelf: 'center' },
-    listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
     // Title
     title: {

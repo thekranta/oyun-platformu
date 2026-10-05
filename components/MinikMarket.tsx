@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🛒 MİNİK MARKET - Para/Ekonomi farkındalığı (Sosyal, SAB.22)
@@ -168,10 +169,7 @@ export default function MinikMarket({ onGameEnd, onExit, childName }: Props) {
           </View>
         </Animated.View>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(PROMPT, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak(PROMPT, { instructions: HAPPY_VOICE })} color="#FB8C00" style={{ marginTop: 16 }} />
 
         <View style={styles.options}>
           {options.map((count, idx) => {
@@ -207,9 +205,6 @@ const styles = StyleSheet.create({
   productEmoji: { fontSize: 64 },
   priceBox: { minWidth: 116, paddingHorizontal: 12, paddingVertical: 12, borderRadius: 22, backgroundColor: '#fff', borderWidth: 3, borderColor: '#FFB300', alignItems: 'center', justifyContent: 'center', gap: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 8, elevation: 5 },
   priceLabel: { fontSize: 14, fontWeight: '900', color: '#E65100', letterSpacing: 1 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FB8C00', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 
   options: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 12, flexWrap: 'wrap', maxWidth: 440, paddingHorizontal: 10 },
   optCard: { width: 108, minHeight: 132, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },

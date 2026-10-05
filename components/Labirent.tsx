@@ -1,10 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 🐭 LABİRENT - Problem çözme / yol bulma (Bilişsel, MAB.7)
@@ -145,10 +146,7 @@ export default function Labirent({ onGameEnd, onExit, childName }: Props) {
       <View style={styles.contentArea}>
         <Text style={styles.prompt}>Peyniri bul! 🧀</Text>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak('Fareyi peynire ulaştır! Komşu kareye dokun.', { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak('Fareyi peynire ulaştır! Komşu kareye dokun.', { instructions: HAPPY_VOICE })} color="#8D6E63" style={{ marginTop: 12 }} />
 
         <Animated.View style={[styles.grid, { transform: [{ translateX: shake }] }]}>
           {maze.map((row, r) => (
@@ -188,8 +186,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#5D4037' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#5D4037', marginTop: 12, marginBottom: 14 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8D6E63', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   grid: { backgroundColor: '#8D6E63', padding: 6, borderRadius: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 6 },
   row: { flexDirection: 'row' },
   cell: { width: CELL, height: CELL, margin: 2, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },

@@ -6,6 +6,7 @@ import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // ✏️ ÇİZİM SAYFALARI - Kılavuz çizgili temalı çizim/boyama (Sanat)
@@ -332,10 +333,7 @@ export default function CizimSayfalari({ onGameEnd, onExit, childName }: Props) 
         </View>
       </View>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(`${theme.name} çizelim! Kesik çizgileri takip et.`, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(`${theme.name} çizelim! Kesik çizgileri takip et.`, { instructions: HAPPY_VOICE })} color="#00897B" style={{ marginTop: 4 }} />
 
       <View
         ref={canvasRef}
@@ -432,7 +430,4 @@ const styles = StyleSheet.create({
   eraserBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 18, backgroundColor: '#ECEFF1', borderWidth: 2, borderColor: '#B0BEC5' },
   eraserActive: { backgroundColor: '#546E7A', borderColor: '#37474F' },
   eraserLabel: { fontSize: 15, fontWeight: '900', color: '#546E7A' },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00897B', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginTop: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

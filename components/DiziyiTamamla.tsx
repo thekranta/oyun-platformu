@@ -7,6 +7,7 @@ import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { speak } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 export type ShapeType = 'kare' | 'ucgen' | 'daire' | 'yildiz';
 
@@ -263,10 +264,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                     </View>
                 </View>
 
-                <TouchableOpacity style={styles.listenBtn} onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-                    <Ionicons name="volume-high" size={20} color="#fff" />
-                    <Text style={styles.listenText}>Tekrar Dinle</Text>
-                </TouchableOpacity>
+                <ListenButton onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} color="#2ECC71" style={{ marginBottom: 20 }} />
 
                 {/* Seçenekler */}
                 <View style={styles.optionsArea}>
@@ -374,26 +372,6 @@ const styles = StyleSheet.create({
         marginBottom: 20,
         borderWidth: 2,
         borderColor: '#ffc88f',
-    },
-    listenBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-        backgroundColor: '#2ECC71',
-        paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 22,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.18,
-        shadowRadius: 1,
-        elevation: 3,
-    },
-    listenText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '800',
     },
     optionsArea: {
         backgroundColor: '#d6eaf8',
