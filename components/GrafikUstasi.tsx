@@ -1,15 +1,15 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import ListenButton from './ListenButton';
 
 // ============================================
 // 📊 GRAFİK USTASI - Veri düzenleme + grafik okuma (Matematik/MAB.11, ikincil MAB.13)
 // İki aşama: (1) karışık meyveleri türüne göre DOKUNARAK sütunlara diz (basit piktograf kur);
-//            (2) "Hangisi en çok?" / "Hangisi en az?" sorusuna en uzun/en kısa sütuna dokunarak yanıt ver.
+//            (2) 2 sütunda "daha çok / daha az", 3 sütunda "en çok / en az" sorusuna en uzun/en kısa sütuna dokunarak yanıt ver.
 // Veri okuryazarlığına giriş. Tamamen görsel; sütun yüksekliği doğal hata kontrolüdür
 // (özdeş ögeyi bulmak değil, çocuğun kendi kurduğu grafiği okuması). NON-adaptif.
 // ============================================
@@ -45,6 +45,8 @@ const ROUNDS: RoundDef[] = [
 const TOTAL_ROUNDS = ROUNDS.length; // 8
 
 // Doğru sütun: 'cok' → en yüksek sayılı; 'az' → en düşük sayılı (sayılar tur içinde tekil).
+// Dil doğruluğu: iki şey kıyaslanırken "daha", üç ve üstünde "en" denir.
+const cmpWord = (r: RoundDef): string => (r.cols.length <= 2 ? 'daha' : 'en');
 const answerKeyOf = (r: RoundDef): string => {
   let best = r.cols[0];
   for (const c of r.cols) {
@@ -97,7 +99,8 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
 
   const currentRound = ROUNDS[round - 1];
   const answerKey = answerKeyOf(currentRound);
-  const questionText = currentRound.question === 'cok' ? 'Hangisi en çok?' : 'Hangisi en az?';
+  const cmp = cmpWord(currentRound);
+  const questionText = `Hangisi ${cmp} ${currentRound.question === 'cok' ? 'çok' : 'az'}?`;
   const promptText = phase === 'build' ? 'Meyveleri türüne göre yerleştir!' : questionText;
 
   useEffect(() => () => { isMountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
@@ -145,7 +148,7 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
     if (remainingRef.current <= 0) {
       // Grafik tamam → okuma aşamasına geç, soruyu seslendir.
       setPhase('read');
-      speak(currentRound.question === 'cok' ? 'Hangisi en çok?' : 'Hangisi en az?', { instructions: HAPPY_VOICE });
+      speak(questionText, { instructions: HAPPY_VOICE });
     }
   };
 
@@ -157,7 +160,7 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      const confirmText = currentRound.question === 'cok' ? 'Aferin! En çok olanı buldun.' : 'Aferin! En az olanı buldun.';
+      const confirmText = `Aferin! ${cmp === 'daha' ? 'Daha' : 'En'} ${currentRound.question === 'cok' ? 'çok' : 'az'} olanı buldun.`;
       speakThenWait(confirmText, 1500, { instructions: HAPPY_VOICE }).then(() => {
         if (!isMountedRef.current) return;
         setShowConfetti(false);
@@ -182,7 +185,7 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Meyveleri türlerine göre dizip grafik yapalım! Sonra en çok ya da en az olanı bul."
+          message="Meyveleri türlerine göre dizip grafik yapalım! Sonra çok olanı ya da az olanı bul."
           childName={childName}
           countdownSeconds={5}
           interaction="tap"
@@ -198,10 +201,7 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>{promptText}</Text>
 
-      <TouchableOpacity style={styles.listenBtn} onPress={() => speak(promptText, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-        <Ionicons name="volume-high" size={20} color="#fff" />
-        <Text style={styles.listenText}>Tekrar Dinle</Text>
-      </TouchableOpacity>
+      <ListenButton onPress={() => speak(promptText, { instructions: HAPPY_VOICE })} color="#1E88E5" style={{ marginTop: 10 }} />
 
       {/* Grafik alanı — piktograf sütunları (kurma aşamasında büyür, okuma aşamasında dokunulabilir) */}
       <View style={styles.chart}>
@@ -257,7 +257,7 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
         </View>
       ) : (
         <View style={styles.bottomZone}>
-          <Text style={styles.readHint}>En {currentRound.question === 'cok' ? 'uzun' : 'kısa'} sütuna dokun 👆</Text>
+          <Text style={styles.readHint}>{cmp === 'daha' ? 'Daha' : 'En'} {currentRound.question === 'cok' ? 'uzun' : 'kısa'} sütuna dokun 👆</Text>
         </View>
       )}
     </View>
@@ -271,9 +271,6 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#1565C0' },
 
   prompt: { fontSize: 21, fontWeight: '900', color: '#1565C0', marginTop: 6, textAlign: 'center', paddingHorizontal: 16 },
-
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#1E88E5', paddingVertical: 9, paddingHorizontal: 18, borderRadius: 22, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 14, fontWeight: '800' },
 
   chart: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center', gap: 16, marginTop: 18, minHeight: 240, paddingHorizontal: 12 },
   colWrap: { alignItems: 'center' },

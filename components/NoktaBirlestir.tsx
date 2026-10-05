@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Svg, { Line } from 'react-native-svg';
+import Svg, { Polygon, Polyline } from 'react-native-svg';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
@@ -20,12 +20,13 @@ const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher.
 const SIZE = Math.min(SCREEN_W - 40, 340);
 const SCALE = SIZE / 300;
 
-interface Pic { key: string; name: string; emoji: string; dots: [number, number][] }
+interface Pic { key: string; name: string; emoji?: string; dots: [number, number][] }
 
 const PICTURES: Pic[] = [
-  { key: 'ucgen', name: 'üçgen', emoji: '🔺', dots: [[150, 70], [232, 225], [68, 225]] },
-  { key: 'kare', name: 'kare', emoji: '🟦', dots: [[85, 85], [215, 85], [215, 215], [85, 215]] },
-  { key: 'ev', name: 'ev', emoji: '🏠', dots: [[85, 250], [85, 140], [150, 85], [215, 140], [215, 250]] },
+  { key: 'ucgen', name: 'üçgen', dots: [[150, 70], [232, 225], [68, 225]] },
+  { key: 'kare', name: 'kare', dots: [[85, 85], [215, 85], [215, 215], [85, 215]] },
+  { key: 'dikdortgen', name: 'dikdörtgen', dots: [[55, 100], [245, 100], [245, 200], [55, 200]] },
+  { key: 'besgen', name: 'beşgen', dots: [[150, 60], [236, 122], [203, 223], [97, 223], [64, 122]] },
   { key: 'yildiz', name: 'yıldız', emoji: '⭐', dots: [[150, 55], [195, 190], [75, 110], [225, 110], [105, 190]] },
 ];
 
@@ -116,10 +117,9 @@ export default function NoktaBirlestir({ onGameEnd, onExit, childName }: Props) 
     }
   };
 
-  // Çizilecek çizgiler: 0-1, 1-2, ... (next-1). Tamamlandıysa son->ilk (kapanış).
-  const lines: [number, number][] = [];
-  for (let i = 1; i < next; i++) lines.push([i - 1, i]);
-  if (done) lines.push([pic.dots.length - 1, 0]);
+  // Tek bir kırık çizgi (miter birleşim → sivri köşeler); tamamlanınca kapalı çokgen (dolgulu).
+  const toPoints = (pts: [number, number][]) => pts.map(([x, y]) => `${x},${y}`).join(' ');
+  const drawn = pic.dots.slice(0, next);
 
   return (
     <View style={styles.container}>
@@ -139,17 +139,19 @@ export default function NoktaBirlestir({ onGameEnd, onExit, childName }: Props) 
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>{done ? `Bir ${pic.name} oldu! ${pic.emoji}` : `Sıradaki: ${next + 1}`}</Text>
+      <Text style={styles.prompt}>{done ? `Bir ${pic.name} oldu!${pic.emoji ? ' ' + pic.emoji : ''}` : `Sıradaki: ${next + 1}`}</Text>
 
       <ListenButton onPress={() => speak('1 rakamından başla, noktaları sırayla birleştir!', { instructions: HAPPY_VOICE })} color="#00897B" style={{ marginTop: 4, marginBottom: 8 }} />
 
       <Animated.View style={[styles.canvas, { width: SIZE, height: SIZE, transform: [{ translateX: shake }] }]}>
         <Svg width={SIZE} height={SIZE} viewBox="0 0 300 300" pointerEvents="none" style={StyleSheet.absoluteFill}>
-          {lines.map(([a, b], i) => (
-            <Line key={i} x1={pic.dots[a][0]} y1={pic.dots[a][1]} x2={pic.dots[b][0]} y2={pic.dots[b][1]} stroke="#26A69A" strokeWidth={5} strokeLinecap="round" />
-          ))}
+          {done ? (
+            <Polygon points={toPoints(pic.dots)} fill="#26A69A" fillOpacity={0.22} stroke="#26A69A" strokeWidth={5} strokeLinejoin="miter" strokeMiterlimit={10} />
+          ) : drawn.length >= 2 ? (
+            <Polyline points={toPoints(drawn)} fill="none" stroke="#26A69A" strokeWidth={5} strokeLinejoin="miter" strokeLinecap="butt" strokeMiterlimit={10} />
+          ) : null}
         </Svg>
-        {done && <Text style={styles.revealEmoji}>{pic.emoji}</Text>}
+        {done && pic.emoji ? <Text style={styles.revealEmoji}>{pic.emoji}</Text> : null}
         {pic.dots.map(([x, y], i) => {
           const connected = i < next;
           const isWrong = wrongDot === i;

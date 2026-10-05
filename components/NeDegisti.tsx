@@ -143,7 +143,7 @@ export default function NeDegisti({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.prompt}>{promptText}</Text>
 
-      <ListenButton onPress={() => speak(phase === 'study' ? 'İyi bak, ezberle!' : 'Ne değişti? Değişeni bul!', { instructions: HAPPY_VOICE })} color="#00838F" style={{ marginTop: 12 }} />
+      <ListenButton onPress={() => speak(phase === 'study' ? 'İyi bak, ezberle!' : 'Ne değişti? Değişeni bul!', { instructions: HAPPY_VOICE })} color="#00838F" style={{ marginTop: 12, marginBottom: 28 }} />
 
       <View style={styles.row}>
         {row.map((emoji, i) => {
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#00838F' },
 
-  prompt: { fontSize: 22, fontWeight: '900', color: '#00838F', marginTop: 16, marginBottom: 22, minHeight: 30 },
+  prompt: { fontSize: 22, fontWeight: '900', color: '#00838F', marginTop: 16, marginBottom: 6, minHeight: 30 },
   row: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, maxWidth: 420, paddingHorizontal: 12 },
   card: { width: 92, height: 92, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   cardCover: { backgroundColor: '#B2EBF2' },
