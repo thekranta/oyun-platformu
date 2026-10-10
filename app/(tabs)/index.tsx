@@ -41,6 +41,7 @@ const GirisFormu = React.memo(function GirisFormu({
   onAdmin,
   onVeli,
   onOgretmen,
+  onKurum,
 }: {
   isMobile: boolean;
   isLoggingIn: boolean;
@@ -51,6 +52,7 @@ const GirisFormu = React.memo(function GirisFormu({
   onAdmin: () => void;
   onVeli: () => void;
   onOgretmen: () => void;
+  onKurum: () => void;
 }) {
   const { t, i18n } = useTranslation();
   // Metin state'te DEGIL — native alanda. JS yalnizca son degeri saklar.
@@ -230,6 +232,12 @@ const GirisFormu = React.memo(function GirisFormu({
           >
             <Text style={[styles.adminButtonText, { color: '#E65100' }]}>{t('login.teacherButton')}</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.adminButtonBottom, { backgroundColor: 'rgba(31, 143, 134, 0.22)', borderColor: 'rgba(31, 143, 134, 0.45)' }]}
+            onPress={onKurum}
+          >
+            <Text style={[styles.adminButtonText, { color: '#146A63' }]}>{t('login.institutionButton')}</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -404,6 +412,7 @@ export default function App() {
   const handleAdmin = useCallback(() => router.push('/admin'), [router]);
   const handleVeli = useCallback(() => router.push('/veli-dashboard'), [router]);
   const handleOgretmen = useCallback(() => router.push('/teacher-dashboard'), [router]);
+  const handleKurum = useCallback(() => router.push('/kurum'), [router]);
 
   const [selectedSongIndex] = useState<number>(0);
   const [dailyPlanDate, setDailyPlanDate] = useState<string>('');
@@ -452,6 +461,7 @@ export default function App() {
           onAdmin={handleAdmin}
           onVeli={handleVeli}
           onOgretmen={handleOgretmen}
+          onKurum={handleKurum}
         />
         <Toast
           visible={toast.visible}

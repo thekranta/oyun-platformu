@@ -11,7 +11,8 @@
     "signupLink": "Kayıt Ol",
     "adminButton": "🔑 Uzman",
     "parentButton": "👨‍👩‍👧 Veli Paneli",
-    "teacherButton": "👩‍🏫 Öğretmen"
+    "teacherButton": "👩‍🏫 Öğretmen",
+    "institutionButton": "🏛️ Kurum"
   },
   "language": {
     "tr": "TR",

@@ -11,7 +11,8 @@
     "signupLink": "Sign Up",
     "adminButton": "🔑 Expert",
     "parentButton": "👨‍👩‍👧 Parent Panel",
-    "teacherButton": "👩‍🏫 Teacher"
+    "teacherButton": "👩‍🏫 Teacher",
+    "institutionButton": "🏛️ Institution"
   },
   "language": {
     "tr": "TR",
