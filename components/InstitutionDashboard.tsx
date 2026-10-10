@@ -31,15 +31,18 @@ import {
 interface Props {
     institution: InstitutionInfo;
     source: InstitutionDataSource;
-    onClose: () => void;
+    /** Verilirse sol üstte geri düğmesi çıkar. */
+    onClose?: () => void;
     /** Verilirse üst çubukta "Öğretmen Paneli" düğmesi çıkar. */
     onOpenTeacherPanel?: () => void;
+    /** Verilirse üst çubukta "Çıkış" düğmesi çıkar (kurum girişinden gelen oturum). */
+    onSignOut?: () => void;
 }
 
 interface DashData { overview: Overview | null; daily: DailyPoint[]; types: GameTypeRow[]; classes: ClassRow[] }
 
 // Kurum paneline özgü sakin palet (öğretmen panelinin şeker pembesinden bilinçli olarak ayrı: yönetici ekranı).
-const C = {
+export const C = {
     bg: '#F3F6FA', card: '#FFFFFF', ink: '#1B2B45', muted: '#66758C', line: '#E3E9F1',
     primary: '#1F8F86', primaryDark: '#146A63', primarySoft: '#E3F4F2',
     good: '#2FA46F', goodSoft: '#E6F6EE', warn: '#C98A0B', warnSoft: '#FFF4D9', bad: '#D9485B', badSoft: '#FDE8EB',
@@ -68,7 +71,7 @@ const parseDay = (iso: string): Date => {
     return new Date(y, (m || 1) - 1, d || 1);
 };
 
-export default function InstitutionDashboard({ institution, source, onClose, onOpenTeacherPanel }: Props) {
+export default function InstitutionDashboard({ institution, source, onClose, onOpenTeacherPanel, onSignOut }: Props) {
     const { t, i18n } = useTranslation();
     const lang = i18n.language || 'tr';
     const { width } = useWindowDimensions();
@@ -407,13 +410,21 @@ export default function InstitutionDashboard({ institution, source, onClose, onO
         <View style={styles.container}>
             {/* Üst çubuk */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onClose} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('institution.back')}>
-                    <Ionicons name="arrow-back" size={22} color={C.ink} />
-                </TouchableOpacity>
-                <View style={{ flex: 1, marginLeft: 12 }}>
+                {onClose && (
+                    <TouchableOpacity onPress={onClose} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('institution.back')}>
+                        <Ionicons name="arrow-back" size={22} color={C.ink} />
+                    </TouchableOpacity>
+                )}
+                <View style={{ flex: 1, marginLeft: onClose ? 12 : 0 }}>
                     <Text style={styles.eyebrow}>{t('institution.panelTitle').toLocaleUpperCase(lang.startsWith('tr') ? 'tr-TR' : 'en-US')}</Text>
                     <Text style={[styles.title, width < 500 && styles.titleSmall]} numberOfLines={2}>{institution.name}</Text>
                 </View>
+                {onSignOut && (
+                    <TouchableOpacity onPress={onSignOut} style={[styles.switchBtn, styles.signOutBtn]} accessibilityRole="button" accessibilityLabel={t('institution.signOut')}>
+                        <Ionicons name="log-out-outline" size={18} color={C.muted} />
+                        {width >= 520 && <Text style={[styles.switchText, { color: C.muted }]}>{t('institution.signOut')}</Text>}
+                    </TouchableOpacity>
+                )}
                 {onOpenTeacherPanel && (
                     <TouchableOpacity onPress={onOpenTeacherPanel} style={styles.switchBtn} accessibilityRole="button" accessibilityLabel={t('institution.teacherPanel')}>
                         <Ionicons name="school" size={16} color={C.primaryDark} />
@@ -538,6 +549,7 @@ const styles = StyleSheet.create({
     titleSmall: { fontSize: 17, lineHeight: 21 },
     switchBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, height: 38, borderRadius: 19, backgroundColor: C.primarySoft },
     switchText: { fontSize: 13, fontWeight: '700', color: C.primaryDark },
+    signOutBtn: { backgroundColor: C.neutralSoft, marginRight: 8 },
 
     scroll: { padding: 16, paddingBottom: 40, maxWidth: 1240, width: '100%', alignSelf: 'center' },
 

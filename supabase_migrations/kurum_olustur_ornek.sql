@@ -5,9 +5,11 @@
 -- Aşağıdaki 3 değeri değiştirin (v_name, v_admin_email, v_teacher_emails), sonra tümünü çalıştırın.
 --
 -- KURALLAR
---  * Yönetici ve öğretmenlerin ÖNCEDEN uygulamada hesabı olmalı (auth.users'ta e-postaları bulunmalı).
---  * Yönetici, öğretmen paneline girebilmek için ayrıca bir öğretmen kaydına (teachers) ihtiyaç duyar:
---    uygulamada "Öğretmen Paneli > Kayıt Ol" ile açılan ücretsiz kayıt yeterlidir (yönetici sınıf açmak zorunda değil).
+--  * Yönetici ve öğretmenlerin ÖNCEDEN hesabı olmalı (auth.users'ta e-postaları bulunmalı).
+--  * Yönetici /kurum adresinden (kurum girişi) e-posta + şifreyle girer; ÖĞRETMEN KAYDI GEREKMEZ. Hesabı yoksa
+--    Supabase > Authentication > Users > "Add user" ile e-posta + şifre oluşturup "Auto Confirm" işaretleyin
+--    (şifreyi yöneticiye güvenli bir kanaldan iletin; "Şifremi unuttum" ile değiştirebilir).
+--  * Öğretmenler kendi öğretmen paneline (öğretmen girişi) girer; yönetici de ayrıca öğretmense orada "Kurum Paneli" kartını görür.
 --  * Kurum paketi Meşe satışıyla birlikte verilir: öğretmenlerin paket atamasını owner panelinden yapın
 --    (bu dosya paket ATAMAZ; yalnız kurum + üyelik kurar). Süresi dolan Meşe öğretmeninin 'package' onaylı
 --    çocukları panelden otomatik düşer (veri kapanır).
@@ -43,9 +45,6 @@ BEGIN
   SELECT id INTO v_uid FROM auth.users WHERE lower(email) = lower(btrim(v_admin_email));
   IF v_uid IS NULL THEN
     RAISE EXCEPTION 'Yönetici hesabı bulunamadı: % (önce uygulamada kayıt olmalı)', v_admin_email;
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.teachers t WHERE t.user_id = v_uid) THEN
-    RAISE WARNING 'Uyarı: % için öğretmen kaydı yok; öğretmen paneline giremez (Öğretmen Paneli > Kayıt Ol)', v_admin_email;
   END IF;
   INSERT INTO public.institution_members (institution_id, user_id, role) VALUES (v_inst, v_uid, 'admin')
   ON CONFLICT (institution_id, user_id) DO UPDATE SET role = 'admin';
