@@ -74,6 +74,8 @@ interface TeacherDashboardProps {
     subscriptionTier: OgretmenTier;
     packageExpiresAt?: string | null;
     onClose: () => void;
+    /** Kurum yöneticisi ise verilir: üst çubukta "Kurum Paneli" düğmesi çıkar. */
+    onOpenInstitution?: () => void;
 }
 
 interface ClassData {
@@ -129,6 +131,7 @@ export default function TeacherDashboard({
     subscriptionTier,
     packageExpiresAt,
     onClose,
+    onOpenInstitution,
 }: TeacherDashboardProps) {
     const { t } = useTranslation();
     const { width } = Dimensions.get('window');
@@ -609,6 +612,18 @@ export default function TeacherDashboard({
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+                {/* Kurum yöneticisi: kurum paneline geçiş */}
+                {onOpenInstitution && (
+                    <TouchableOpacity style={styles.institutionCard} onPress={onOpenInstitution} accessibilityRole="button">
+                        <View style={styles.institutionCardIcon}><Ionicons name="business" size={22} color="#146A63" /></View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.institutionCardTitle}>{t('institution.openButton')}</Text>
+                            <Text style={styles.institutionCardText}>{t('institution.openHint')}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color="#146A63" />
+                    </TouchableOpacity>
+                )}
+
                 {/* Stats Row */}
                 <View style={styles.statsRow}>
                     <View style={[styles.statCard, styles.statCardPink]}>
@@ -1053,6 +1068,10 @@ const styles = StyleSheet.create({
     headerSchool: { fontSize: 14, color: '#888' },
     tierBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0F0F0', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, gap: 6 },
     tierBadgePremium: { backgroundColor: '#FFF3CD' },
+    institutionCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#E3F4F2', borderRadius: 20, padding: 14, marginBottom: 16, borderWidth: 2, borderColor: '#BFE4DF' },
+    institutionCardIcon: { width: 42, height: 42, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center' },
+    institutionCardTitle: { fontSize: 16, fontWeight: '800', color: '#146A63' },
+    institutionCardText: { fontSize: 12.5, color: '#3C7F78', marginTop: 2, fontWeight: '600' },
     tierEmoji: { fontSize: 16 },
     tierText: { fontSize: 13, fontWeight: '600', color: '#666' },
     tierTextPremium: { color: '#D4A000' },

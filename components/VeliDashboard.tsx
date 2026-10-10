@@ -25,6 +25,7 @@ import { buildWeeklyReport, buildWeeklyReportHTML, ReportAudience } from '../ser
 import { parentView } from '../lib/aiAudience';
 import { getGameDisplay } from '../lib/gameDisplay';
 import { supabase } from '../lib/supabase';
+import { fetchMyClassInstitutions } from '../lib/institutionApi';
 import { asset } from '../lib/assetMap';
 import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, getVeliFlags, VeliTier } from '../lib/subscriptionTiers';
 import { ClassGameTier, fetchClassGameTier } from '../lib/classAccess';
@@ -266,7 +267,10 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const [classInvites, setClassInvites] = useState<ClassInvite[]>([]);
     const [inviteBusy, setInviteBusy] = useState<string | null>(null);
     const [inviteConfirm, setInviteConfirm] = useState<string | null>(null);
+    // Sınıfın bağlı olduğu kurum (varsa): kurum yöneticisinin toplu özet görebildiğini veliye bildirir.
+    const [inviteInstitutions, setInviteInstitutions] = useState<Record<string, string>>({});
     const loadClassInvites = async () => {
+        fetchMyClassInstitutions().then(setInviteInstitutions);
         try {
             const { data, error } = await supabase.rpc('my_class_invites');
             if (!error && Array.isArray(data)) setClassInvites(data as ClassInvite[]);
@@ -1026,6 +1030,9 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                         )}
                                         {inv.status === 'suspended' && (
                                             <Text style={styles.inviteMetaSmall}>{t('veli.classInvites.suspendedText')}</Text>
+                                        )}
+                                        {!!inviteInstitutions[inv.invite_id] && (
+                                            <Text style={styles.inviteMetaSmall}>🏛️ {t('veli.classInvites.institutionNote', { name: inviteInstitutions[inv.invite_id] })}</Text>
                                         )}
 
                                         {busy ? (
