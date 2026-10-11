@@ -72,7 +72,7 @@ export function getOgretmenFlags(tier: OgretmenTier | null | undefined): Ogretme
 // --- Oyun erişimi: paket sırası ve oyun kataloğundan asgari paket türetme ---
 // childhoodtech.com paket karşılaştırması: Tohum = 100+ oyuna tam erişim;
 // Filiz = + tüm "Akıllı" (adaptive) oyunlar + tüm etkileşimli değer hikayeleri;
-// Fidan = + 40+ özel beste şarkı; Orman = + erken erişim (henüz kod tarafında
+// Fidan = + 40+ özel beste şarkı + Minik Müze'nin tüm tabloları (Tohum 6 tablo, ücretsiz 1); Orman = + erken erişim (henüz kod tarafında
 // karşılığı yok, bu yüzden burada işlenmiyor).
 const VELI_TIER_ORDER: VeliTier[] = ['free', 'tohum', 'filiz', 'fidan', 'orman'];
 

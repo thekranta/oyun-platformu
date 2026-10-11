@@ -23,7 +23,11 @@ const DRY = process.argv.includes('--dry');
 const FORCE = process.argv.includes('--force');
 
 // İstenen genişlik (px). Dikey tablolarda (Mona Lisa) tam ekran yüksekliği karşılasın diye daha dar tutulur.
-const WIDTHS = { 'mona-lisa': 1200, 'yildizli-gece': 1600, 'buyuk-dalga': 1600 };
+const WIDTHS = {
+    'mona-lisa': 1200, 'yildizli-gece': 1600, 'buyuk-dalga': 1600,
+    'kaplumbaga-terbiyecisi': 1000, 'cocuk-oyunlari': 1600, 'meyveden-portre': 1200, 'sari-kirmizi-mavi': 1600,
+    'su-zambaklari': 1400, 'tropik-firtinada-kaplan': 1600, 'inci-kupeli-kiz': 1200,
+};
 
 // constants/minikMuze.ts TypeScript olduğundan dosyayı metin olarak okuyup id + commonsFile çiftlerini çıkarırız.
 const src = await fs.readFile(path.join(ROOT, 'constants', 'minikMuze.ts'), 'utf8');

@@ -48,6 +48,23 @@ describe('Minik Müze veri bütünlüğü', () => {
         }
     });
 
+    it('her tablonun görseli dosyada var ve paintingImages haritasında kayıtlı', () => {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const fs = require('node:fs') as typeof import('node:fs');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const path = require('node:path') as typeof import('node:path');
+        const map = fs.readFileSync(path.join(__dirname, '../components/minikMuze/paintingImages.ts'), 'utf8');
+        for (const p of PAINTINGS) {
+            expect({ id: p.id, dosya: fs.existsSync(path.join(__dirname, `../assets/images/muze/${p.id}.webp`)) }).toEqual({ id: p.id, dosya: true });
+            expect({ id: p.id, harita: map.includes(`'${p.id}':`) }).toEqual({ id: p.id, harita: true });
+        }
+    });
+
+    it('paket kademesi: 1 ücretsiz vitrin (Mona Lisa), toplam 6 Tohum-seviyesi (vitrin dahil), kalanı Fidan', () => {
+        expect(PAINTINGS.filter((p) => p.tier === 'free').map((p) => p.id)).toEqual(['mona-lisa']);
+        expect(PAINTINGS.filter((p) => p.tier !== 'fidan')).toHaveLength(6);
+    });
+
     it('üretilecek ses metinleri tekil ve giriş/bitiş metinlerini içerir', () => {
         const all = allMuseumTexts();
         expect(new Set(all).size).toBe(all.length);

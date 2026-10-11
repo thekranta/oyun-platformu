@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { MUSEUM_DONE, MUSEUM_INTRO, PAINTINGS, Painting } from '../constants/minikMuze';
-import { isPaintingOpenForTier } from '../lib/minikMuzeAccess';
+import { isPaintingOpenForTier, paintingTierName, sortPaintingsByTier } from '../lib/minikMuzeAccess';
 import { focusTransform, fitContain } from '../lib/minikMuzeMath';
 import { openPricing } from '../lib/openPricing';
 import type { VeliTier } from '../lib/subscriptionTiers';
@@ -166,7 +166,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                     <View style={{ width: 44 }} />
                 </View>
                 <ScrollView contentContainerStyle={styles.gallery} showsVerticalScrollIndicator={false}>
-                    {PAINTINGS.map((p) => {
+                    {sortPaintingsByTier(PAINTINGS).map((p) => {
                         const done = viewed.includes(p.id);
                         const locked = !isPaintingOpenForTier(tier, p);
                         return (
@@ -176,7 +176,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                                 onPress={() => openPainting(p)}
                                 activeOpacity={0.85}
                                 accessibilityRole="button"
-                                accessibilityLabel={locked ? `${p.title}, ${p.artist}, paketle açılır` : `${p.title}, ${p.artist}`}
+                                accessibilityLabel={locked ? `${p.title}, ${p.artist}, ${paintingTierName(p)} paketiyle açılır` : `${p.title}, ${p.artist}`}
                             >
                                 <View style={styles.thumbBox}>
                                     <Image source={PAINTING_IMAGES[p.id]} style={[styles.thumb, locked && styles.thumbLocked]} resizeMode="contain" />
@@ -194,7 +194,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                         <View style={styles.lockCard} accessibilityViewIsModal>
                             <Ionicons name="lock-closed" size={30} color="#B5742F" />
                             <Text style={styles.lockTitle}>{lockedPainting.title}</Text>
-                            <Text style={styles.lockText}>Bu tablo paketle açılır. Paketi yükselten veli, müzedeki tüm tabloları çocukla birlikte dinleyebilir.</Text>
+                            <Text style={styles.lockText}>Bu tablo {paintingTierName(lockedPainting)} paketiyle açılır. {lockedPainting.tier === 'fidan' ? 'Fidan paketinde müzedeki tüm tablolar çocukla birlikte dinlenebilir.' : 'Tohum paketinde müzedeki ilk altı tablo açılır.'}</Text>
                             <TouchableOpacity style={styles.lockPrimary} onPress={() => { setLockedPainting(null); openPricing(); }} accessibilityRole="link">
                                 <Text style={styles.lockPrimaryText}>Paketleri Gör</Text>
                             </TouchableOpacity>
@@ -246,6 +246,13 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                         <View key={i} style={[styles.dot, i === seg && { backgroundColor: '#FFD27A', width: 22 }, i < seg && { backgroundColor: '#B79B6B' }]} />
                     ))}
                 </View>
+
+                {finished && (
+                    <View style={styles.artistCard}>
+                        <Text style={styles.artistName}>🎨 {selected.artist}</Text>
+                        <Text style={styles.artistMeta}>{selected.country} · {selected.credit.museum}</Text>
+                    </View>
+                )}
 
                 {finished ? (
                     <View style={styles.controls}>
@@ -315,6 +322,9 @@ const styles = StyleSheet.create({
     subtitleTextSide: { fontSize: 16, lineHeight: 22 },
     subtitle: { width: '100%', maxWidth: 760, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, minHeight: 74, justifyContent: 'center' },
     subtitleText: { color: '#FFF8EA', fontSize: 19, lineHeight: 27, fontWeight: '700', textAlign: 'center' },
+    artistCard: { alignItems: 'center', backgroundColor: '#3C2F23', borderRadius: 14, borderWidth: 1, borderColor: '#6B5538', paddingVertical: 8, paddingHorizontal: 16 },
+    artistName: { fontSize: 16, fontWeight: '900', color: '#F4E7CF' },
+    artistMeta: { fontSize: 12, color: '#CDB892', fontWeight: '600', marginTop: 2, textAlign: 'center' },
     dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
     dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#5B4A35' },
     controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap' },
