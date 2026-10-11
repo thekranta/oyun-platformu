@@ -314,7 +314,7 @@ export const TTS: Record<string, number> = {
   'bu-tabloda-hangi-sekil-yok': require('../assets/sounds/tts/bu-tabloda-hangi-sekil-yok.mp3'),
   'bu-tabloda-kac-tane-agac-var': require('../assets/sounds/tts/bu-tabloda-kac-tane-agac-var.mp3'),
   'bu-tabloda-kac-tane-buyuk-daire-var': require('../assets/sounds/tts/bu-tabloda-kac-tane-buyuk-daire-var.mp3'),
-  'bu-tablonun-adi-buyuk-dalga-hokusai-adinda-bir-japon-ressam-yapmis-japonya-cok-uzaklarda-bir-ulke-bu-resmi-once-tahtaya-oyup-sonra-boya-surerek-basmislar': require('../assets/sounds/tts/bu-tablonun-adi-buyuk-dalga-hokusai-adinda-bir-japon-ressam-yapmis-japonya-cok-uzaklarda-bir-ulke-bu-resmi-once-tahtaya-oyup-sonra-boya-surerek-basmislar.wav'),
+  'bu-tablonun-adi-buyuk-dalga-hokusai-adinda-bir-japon-ressam-yapmis-resmi-tahtaya-kaziyip-boya-surerek-basmis': require('../assets/sounds/tts/bu-tablonun-adi-buyuk-dalga-hokusai-adinda-bir-japon-ressam-yapmis-resmi-tahtaya-kaziyip-boya-surerek-basmis.wav'),
   'bu-tablonun-adi-yildizli-gece-vincent-van-gogh-adinda-bir-ressam-yapmis-van-gogh-hollandali-tablo-new-york-taki-bir-muzede-duruyor': require('../assets/sounds/tts/bu-tablonun-adi-yildizli-gece-vincent-van-gogh-adinda-bir-ressam-yapmis-van-gogh-hollandali-tablo-new-york-taki-bir-muzede-duruyor.wav'),
   'bulut-cizelim-kesik-cizgileri-takip-et': require('../assets/sounds/tts/bulut-cizelim-kesik-cizgileri-takip-et.mp3'),
   'bunu-dogru-kutuya-koy': require('../assets/sounds/tts/bunu-dogru-kutuya-koy.mp3'),

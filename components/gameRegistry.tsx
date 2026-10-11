@@ -1,6 +1,7 @@
 import React from 'react';
 import { GameResultExtraData } from '../services/gameResults';
 import { lazyWithReload } from '../lib/lazyWithReload';
+import type { VeliTier } from '../lib/subscriptionTiers';
 
 const AdaletHikayesi = lazyWithReload(() => import('./AdaletHikayesi'));
 const AileSepetiMacerasi = lazyWithReload(() => import('./AileSepetiMacerasi'));
@@ -165,6 +166,8 @@ export interface GameRenderContext {
   yas: string;
   email: string;
   selectedSongIndex: number;
+  /** Çocuğun oyun erişim paketi (kendi + sınıf paketinin yükseği); içeriği kısmen kilitli oyunlar kullanır. */
+  tier: VeliTier;
 }
 
 /**
@@ -486,7 +489,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'kucuk-anlatici': (c) => <KucukAnlatici onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'sanat-gozlugu': (c) => <SanatGozlugu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'tabloda-ne-var': (c) => <TablodaNeVar onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
-  'minik-muze': (c) => <MinikMuze onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'minik-muze': (c) => <MinikMuze onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} tier={c.tier} />,
   'renk-atolyesi': (c) => <RenkAtolyesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'hangi-calgi-caldi': (c) => <HangiCalgiCaldi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ses-nasil': (c) => <SesNasil onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

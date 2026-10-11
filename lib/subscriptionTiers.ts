@@ -134,10 +134,15 @@ export const FREE_GAME_IDS: ReadonlySet<string> = new Set([
     'eksik-sayi-bul', 'ilk-harf', 'duygu-yuzleri', 'muzik-durunca-don', 'diziyi-tamamla-3',
 ]);
 
+// Vitrin oyunları: kart ücretsiz pakette de açılır ama içeriğinin yalnız bir kısmı ücretsizdir, geri kalanı
+// oyunun içinde kilitlidir (ör. Minik Müze'de yalnız Mona Lisa — bkz. lib/minikMuzeAccess.ts). Ücretsiz
+// "10 oyun" başlangıç setine DAHİL DEĞİLDİR; ayrıca sayılır ve lib/freeTier.test.ts ile korunur.
+export const FREE_SHOWCASE_GAME_IDS: ReadonlySet<string> = new Set(['minik-muze']);
+
 /** Bir oyun kaydının (constants/gameCatalog.ts) gerektirdiği asgari veli paketini döndürür. */
 export function requiredVeliTierForGame(game: { id: string; adaptive?: boolean; status: string }): VeliTier {
     if (game.status === 'music') return 'fidan';
     if (game.adaptive || game.status === 'story') return 'filiz';
-    if (FREE_GAME_IDS.has(game.id)) return 'free';
+    if (FREE_GAME_IDS.has(game.id) || FREE_SHOWCASE_GAME_IDS.has(game.id)) return 'free';
     return 'tohum';
 }

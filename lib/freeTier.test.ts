@@ -4,6 +4,7 @@ import { GAME_CATALOG } from '../constants/gameCatalog';
 import { TOY_ROOM_FIRST_GAMES, TOY_ROOM_GROUPS } from '../constants/toyRoomLayout';
 import {
     FREE_GAME_IDS,
+    FREE_SHOWCASE_GAME_IDS,
     requiredVeliTierForGame,
     veliTierMeetsMinimum,
     VeliTier,
@@ -28,9 +29,19 @@ describe('ücretsiz paket başlangıç seti', () => {
         expect(restricted).toEqual([]);
     });
 
-    it('free 10 oyun açar, Tohum ondan fazlasını (100+)', () => {
-        expect(openGames('free').length).toBe(10);
+    it('free 10 oyun + vitrin oyunlarını açar, Tohum ondan fazlasını (100+)', () => {
+        expect(openGames('free').length).toBe(10 + FREE_SHOWCASE_GAME_IDS.size);
         expect(openGames('tohum').length).toBeGreaterThan(100);
+    });
+
+    it('vitrin oyunları katalogda, ücretsiz 10 sette değil ve Akıllı/hikaye/müzik değil', () => {
+        const byId = new Map(GAME_CATALOG.map(g => [g.id, g]));
+        for (const id of FREE_SHOWCASE_GAME_IDS) {
+            const g = byId.get(id);
+            expect(g).toBeDefined();
+            expect(FREE_GAME_IDS.has(id)).toBe(false);
+            expect(!!g?.adaptive || g?.status === 'story' || g?.status === 'music').toBe(false);
+        }
     });
 
     it('paket yükseldikçe açık oyun sayısı azalmaz', () => {

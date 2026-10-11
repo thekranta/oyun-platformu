@@ -23,6 +23,8 @@ export interface Painting {
     artist: string;
     /** Çocuğa değil veliye/künyeye: kısa tarih ifadesi. */
     yearLabel: string;
+    /** true: ücretsiz pakette de izlenir (vitrin tablosu); diğerleri Tohum ve üstünü ister (lib/minikMuzeAccess.ts). */
+    free?: boolean;
     country: string;
     /** assets/images/muze/<id>.webp (bkz. components/minikMuze/paintingImages.ts). */
     aspect: number;                 // genişlik / yükseklik
@@ -41,6 +43,7 @@ export const PAINTINGS: Painting[] = [
         title: 'Mona Lisa',
         artist: 'Leonardo da Vinci',
         yearLabel: '1503 – 1506 civarı',
+        free: true,
         country: 'İtalya',
         aspect: 0.671,
         accent: '#8D6E3F',
@@ -97,7 +100,7 @@ export const PAINTINGS: Painting[] = [
             museum: 'The Metropolitan Museum of Art, New York',
         },
         segments: [
-            { text: 'Bu tablonun adı Büyük Dalga. Hokusai adında bir Japon ressam yapmış. Japonya çok uzaklarda bir ülke. Bu resmi önce tahtaya oyup sonra boya sürerek basmışlar.', focus: null },
+            { text: 'Bu tablonun adı Büyük Dalga. Hokusai adında bir Japon ressam yapmış. Resmi tahtaya kazıyıp boya sürerek basmış.', focus: null },
             { text: 'Tabloya bak. Dalga ne kadar büyük! Sen ne görüyorsun?', focus: null, pauseAfterMs: 5000 },
             { text: 'Dalganın köpükleri sanki parmaklar gibi uzanıyor. Sence dalga ne yapmak istiyor?', focus: { x: 0.47, y: 0.28, scale: 2.0 } },
             { text: 'Dalganın altında küçük tekneler var. İçindeki insanlar kürek çekiyor.', focus: { x: 0.7, y: 0.8, scale: 2.1 } },

@@ -516,6 +516,7 @@ export default function App() {
             yas,
             email,
             selectedSongIndex,
+            tier: gameTier,
           })}
         </React.Suspense>
       </GameErrorBoundary>

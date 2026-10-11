@@ -2,7 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { MUSEUM_DONE, MUSEUM_INTRO, PAINTINGS, Painting } from '../constants/minikMuze';
+import { isPaintingOpenForTier } from '../lib/minikMuzeAccess';
 import { focusTransform, fitContain } from '../lib/minikMuzeMath';
+import { openPricing } from '../lib/openPricing';
+import type { VeliTier } from '../lib/subscriptionTiers';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
@@ -30,9 +33,11 @@ interface Props {
     ) => void;
     onExit?: () => void;
     childName?: string;
+    /** Oyun erişim paketi; ücretsizde yalnız vitrin tablosu (Mona Lisa) açılır. Verilmezse (eski çağrı) tümü açık sayılır. */
+    tier?: VeliTier;
 }
 
-export default function MinikMuze({ onGameEnd, onExit, childName }: Props) {
+export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman' }: Props) {
     const { width: W, height: H } = useWindowDimensions();
     // Kısa yatay ekran (telefon yan): tablo solda, altyazı + düğmeler sağda; aksi hâlde tablo üstte, altyazı altta.
     const sideBySide = W > H && H < 620;
@@ -43,6 +48,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName }: Props) {
     const [finished, setFinished] = useState(false);
     const [stage, setStage] = useState({ w: 0, h: 0 });
     const [viewed, setViewed] = useState<string[]>([]);
+    const [lockedPainting, setLockedPainting] = useState<Painting | null>(null);
 
     const startRef = useRef(Date.now());
     const runRef = useRef(0);
@@ -105,6 +111,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName }: Props) {
     }, [animateFocus]);
 
     const openPainting = (p: Painting) => {
+        if (!isPaintingOpenForTier(tier, p)) { setLockedPainting(p); return; }
         scaleV.setValue(1); txV.setValue(0); tyV.setValue(0);
         setSelected(p);
         playSegment(p, 0);
@@ -161,6 +168,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName }: Props) {
                 <ScrollView contentContainerStyle={styles.gallery} showsVerticalScrollIndicator={false}>
                     {PAINTINGS.map((p) => {
                         const done = viewed.includes(p.id);
+                        const locked = !isPaintingOpenForTier(tier, p);
                         return (
                             <TouchableOpacity
                                 key={p.id}
@@ -168,10 +176,11 @@ export default function MinikMuze({ onGameEnd, onExit, childName }: Props) {
                                 onPress={() => openPainting(p)}
                                 activeOpacity={0.85}
                                 accessibilityRole="button"
-                                accessibilityLabel={`${p.title}, ${p.artist}`}
+                                accessibilityLabel={locked ? `${p.title}, ${p.artist}, paketle açılır` : `${p.title}, ${p.artist}`}
                             >
                                 <View style={styles.thumbBox}>
-                                    <Image source={PAINTING_IMAGES[p.id]} style={styles.thumb} resizeMode="contain" />
+                                    <Image source={PAINTING_IMAGES[p.id]} style={[styles.thumb, locked && styles.thumbLocked]} resizeMode="contain" />
+                                    {locked && <View style={styles.lockBadge}><Ionicons name="lock-closed" size={22} color="#F4E7CF" /></View>}
                                 </View>
                                 <Text style={styles.frameTitle} numberOfLines={1}>{p.title}</Text>
                                 <Text style={styles.frameArtist} numberOfLines={1}>{p.artist}</Text>
@@ -180,6 +189,21 @@ export default function MinikMuze({ onGameEnd, onExit, childName }: Props) {
                         );
                     })}
                 </ScrollView>
+                {lockedPainting && (
+                    <View style={styles.lockOverlay}>
+                        <View style={styles.lockCard} accessibilityViewIsModal>
+                            <Ionicons name="lock-closed" size={30} color="#B5742F" />
+                            <Text style={styles.lockTitle}>{lockedPainting.title}</Text>
+                            <Text style={styles.lockText}>Bu tablo paketle açılır. Paketi yükselten veli, müzedeki tüm tabloları çocukla birlikte dinleyebilir.</Text>
+                            <TouchableOpacity style={styles.lockPrimary} onPress={() => { setLockedPainting(null); openPricing(); }} accessibilityRole="link">
+                                <Text style={styles.lockPrimaryText}>Paketleri Gör</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.lockSecondary} onPress={() => setLockedPainting(null)} accessibilityRole="button">
+                                <Text style={styles.lockSecondaryText}>Şimdi Değil</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
             </View>
         );
     }
@@ -266,6 +290,16 @@ const styles = StyleSheet.create({
     frame: { backgroundColor: '#3C2F23', borderRadius: 18, borderWidth: 4, padding: 12, alignItems: 'center' },
     thumbBox: { width: '100%', height: 200, backgroundColor: '#1E1711', borderRadius: 8, overflow: 'hidden' },
     thumb: { width: '100%', height: '100%' },
+    thumbLocked: { opacity: 0.45 },
+    lockBadge: { position: 'absolute', top: '50%', left: '50%', marginTop: -24, marginLeft: -24, width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(43,33,25,0.85)', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#B5742F' },
+    lockOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+    lockCard: { width: '100%', maxWidth: 380, backgroundColor: '#3C2F23', borderRadius: 20, borderWidth: 2, borderColor: '#6B5538', padding: 22, alignItems: 'center', gap: 10 },
+    lockTitle: { fontSize: 20, fontWeight: '900', color: '#F4E7CF' },
+    lockText: { fontSize: 15, lineHeight: 22, color: '#E3D3B5', textAlign: 'center', fontWeight: '600' },
+    lockPrimary: { alignSelf: 'stretch', backgroundColor: '#B5742F', borderRadius: 22, paddingVertical: 13, alignItems: 'center', marginTop: 6 },
+    lockPrimaryText: { color: '#fff', fontSize: 16, fontWeight: '900' },
+    lockSecondary: { paddingVertical: 8, paddingHorizontal: 16 },
+    lockSecondaryText: { color: '#CDB892', fontSize: 14, fontWeight: '700' },
     frameTitle: { fontSize: 18, fontWeight: '900', color: '#F4E7CF', marginTop: 10 },
     frameArtist: { fontSize: 13, color: '#CDB892', marginTop: 2, fontWeight: '600' },
     doneBadge: { position: 'absolute', top: -10, right: -10, width: 30, height: 30, borderRadius: 15, backgroundColor: '#6A8F5B', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: WALL },
