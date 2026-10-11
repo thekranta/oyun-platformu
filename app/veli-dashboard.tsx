@@ -3,6 +3,7 @@ import VeliDashboard from '@/components/VeliDashboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { AUTH_MESSAGES, ensureProfileFromMetadata, isEmailNotConfirmed } from '../lib/authFlow';
 import { supabase } from '../lib/supabase';
 import { VeliTier } from '../lib/subscriptionTiers';
 import {
@@ -118,18 +119,22 @@ export default function VeliDashboardPage() {
         setLoading(true);
         try {
             const emailValue = email.trim();
-            const { error } = await supabase.auth.signInWithPassword({
+            const { data: signIn, error } = await supabase.auth.signInWithPassword({
                 email: emailValue,
                 password,
             });
             if (error) {
-                if (error.message.includes('Invalid login credentials')) {
+                if (isEmailNotConfirmed(error)) {
+                    showAlert('E-posta doğrulanmamış', AUTH_MESSAGES.notConfirmed);
+                } else if (error.message.includes('Invalid login credentials')) {
                     showAlert('Hata', 'Hatalı e-posta veya şifre.');
                 } else {
                     showAlert('Hata', `Giriş başarısız: ${error.message}`);
                 }
                 return;
             }
+            // Kayıt, e-posta doğrulamasından önce yapıldıysa profil ilk girişte oluşturulur.
+            await ensureProfileFromMetadata(signIn?.user);
             await loadProfile(emailValue);
         } catch (error) {
             showAlert('Hata', `Giriş sırasında bir hata oluştu: ${error}`);

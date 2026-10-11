@@ -19,6 +19,7 @@ import DynamicBackground from '../components/DynamicBackground';
 import InstitutionDashboard from '../components/InstitutionDashboard';
 import TeacherDashboard from '../components/TeacherDashboard';
 import { supabase } from '../lib/supabase';
+import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, ensureTeacherFromMetadata, isEmailNotConfirmed, needsEmailConfirmation } from '../lib/authFlow';
 import { createInstitutionSource, fetchAdminInstitutions } from '../lib/institutionApi';
 import { createDemoInstitution } from '../lib/institutionDemo';
 import { InstitutionInfo } from '../lib/institutionStats';
@@ -123,10 +124,23 @@ export default function TeacherDashboardPage() {
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: regEmail.trim(),
                 password: regPassword,
+                options: {
+                    emailRedirectTo: EMAIL_CONFIRM_REDIRECT,
+                    // E-posta doğrulaması açıksa öğretmen satırı şimdi yazılamaz; ilk girişte bu bilgilerden oluşturulur.
+                    data: { teacher_signup: true, teacher_name: regName.trim(), school_name: regSchool.trim() || null },
+                },
             });
 
             if (authError || !authData.user) {
                 showAlert('Hata', `Kayıt hatası: ${authError?.message || 'Bilinmeyen hata'}`);
+                setIsRegistering(false);
+                return;
+            }
+
+            if (needsEmailConfirmation(authData)) {
+                showAlert('E-postanı doğrula', AUTH_MESSAGES.confirmSent);
+                setShowRegister(false);
+                setEmail(regEmail.trim());
                 setIsRegistering(false);
                 return;
             }
@@ -174,10 +188,17 @@ export default function TeacherDashboardPage() {
                 password,
             });
 
+            if (isEmailNotConfirmed(authError)) {
+                showAlert('E-posta doğrulanmamış', AUTH_MESSAGES.notConfirmed);
+                return;
+            }
             if (authError || !authData.user) {
                 showAlert('Giriş Başarısız', 'Hatalı e-posta veya şifre.');
                 return;
             }
+
+            // Kayıt, e-posta doğrulamasından önce yapıldıysa öğretmen satırı ilk girişte oluşturulur.
+            await ensureTeacherFromMetadata(authData.user);
 
             // 2. teachers tablosundan profil bilgilerini cek (user_id = auth.uid())
             const { data: teacherRow, error: teacherError } = await supabase

@@ -18,6 +18,8 @@ import {
     View,
 } from 'react-native';
 
+import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, resendConfirmation } from '../lib/authFlow';
+
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
@@ -45,6 +47,8 @@ export default function SignUp() {
     const [dataConsent, setDataConsent] = useState(false);
     const [showConsentModal, setShowConsentModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    // E-posta doğrulaması açıksa kayıt, bağlantıya tıklanana kadar oturum DÖNDÜRMEZ: bu durumda bu e-posta gösterilir.
+    const [awaitingEmail, setAwaitingEmail] = useState<string | null>(null);
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
     const [toast, setToast] = useState({ visible: false, message: '', type: 'info' as 'success' | 'error' | 'info' });
 
@@ -94,7 +98,7 @@ export default function SignUp() {
         setIsLoading(true);
         try {
             // 1. Create user in Supabase Auth
-            const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+            const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/signup?redirect_to=${encodeURIComponent(EMAIL_CONFIRM_REDIRECT)}`, {
                 method: 'POST',
                 headers: {
                     'apikey': SUPABASE_KEY || '',
@@ -106,6 +110,9 @@ export default function SignUp() {
                     data: {
                         parent_name: parentName.trim(),
                         child_name: childName.trim(),
+                        // Doğrulama açıksa profil kayıt anında yazılamaz; bu bilgiler ilk girişte profile dönüştürülür (lib/authFlow.ts).
+                        child_age_months: parseInt(childAge),
+                        data_consent: dataConsent,
                     }
                 }),
             });
@@ -133,6 +140,12 @@ export default function SignUp() {
 
                 // Generic error
                 throw new Error(authData.msg || authData.error_description || authData.message || 'Kayıt işlemi başarısız oldu. Lütfen tekrar deneyin.');
+            }
+
+            // E-posta doğrulaması açık: hesap oluştu ama oturum yok → kullanıcıya bağlantıyı onaylamasını söyle.
+            if (!(authData.access_token || authData.session?.access_token)) {
+                setAwaitingEmail(email.trim().toLowerCase());
+                return;
             }
 
             // Get the user ID from auth response
@@ -194,6 +207,35 @@ export default function SignUp() {
 
     // Age picker buttons (36-72 months)
     const ageOptions = [36, 42, 48, 54, 60, 66, 72];
+
+    if (awaitingEmail) {
+        return (
+            <DynamicBackground>
+                <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+                    <View style={[styles.card, styles.glassCard, { width: isMobile ? '95%' : 450, maxWidth: 500, alignItems: 'center' }]}>
+                        <Text style={styles.titleEmoji}>✉️</Text>
+                        <Text style={styles.title}>E-postanı doğrula</Text>
+                        <Text style={[styles.subtitle, { textAlign: 'center' }]}>{awaitingEmail}</Text>
+                        <Text style={styles.confirmText}>{AUTH_MESSAGES.confirmSent}</Text>
+                        <TouchableOpacity
+                            style={styles.confirmBtn}
+                            onPress={async () => {
+                                const ok = await resendConfirmation(awaitingEmail);
+                                showToast(ok ? AUTH_MESSAGES.resendOk : AUTH_MESSAGES.resendFail, ok ? 'success' : 'error');
+                            }}
+                            accessibilityRole="button"
+                        >
+                            <Text style={styles.confirmBtnText}>Doğrulama e-postasını tekrar gönder</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.confirmLink} onPress={() => router.replace('/(tabs)')} accessibilityRole="button">
+                            <Text style={styles.confirmLinkText}>Girişe dön</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+                <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={() => setToast({ ...toast, visible: false })} />
+            </DynamicBackground>
+        );
+    }
 
     return (
         <DynamicBackground>
@@ -482,6 +524,11 @@ export default function SignUp() {
 }
 
 const styles = StyleSheet.create({
+    confirmText: { fontSize: 15, color: '#37474F', textAlign: 'center', lineHeight: 22, marginTop: 8, marginBottom: 18, paddingHorizontal: 8 },
+    confirmBtn: { backgroundColor: '#1E88E5', borderRadius: 14, paddingVertical: 13, paddingHorizontal: 20, alignSelf: 'stretch', alignItems: 'center' },
+    confirmBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+    confirmLink: { paddingVertical: 14 },
+    confirmLinkText: { color: '#1565C0', fontSize: 15, fontWeight: '700' },
     scrollContainer: {
         flexGrow: 1,
         justifyContent: 'center',

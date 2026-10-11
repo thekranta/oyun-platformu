@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import InstitutionDashboard, { C } from '../components/InstitutionDashboard';
 import { asset } from '../lib/assetMap';
+import { isEmailNotConfirmed } from '../lib/authFlow';
 import { createInstitutionSource, fetchAdminInstitutions } from '../lib/institutionApi';
 import { createDemoInstitution } from '../lib/institutionDemo';
 import { InstitutionInfo } from '../lib/institutionStats';
@@ -76,6 +77,7 @@ export default function KurumPage() {
         setBusy(true);
         try {
             const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+            if (isEmailNotConfirmed(authError)) { setError(t('institution.login.notConfirmed')); return; }
             if (authError || !data.user) { setError(t('institution.login.invalid')); return; }
             const list = await fetchAdminInstitutions();
             if (list === undefined) {

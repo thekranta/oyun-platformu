@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AUTH_MESSAGES, ensureProfileFromMetadata, isEmailNotConfirmed, needsEmailConfirmation } from '../lib/authFlow';
 import { calculateAgeInMonths } from '../lib/menuHelpers';
 import { supabase } from '../lib/supabase';
 import { VeliTier } from '../lib/subscriptionTiers';
@@ -86,7 +87,9 @@ export function useAuth({
       });
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+        if (isEmailNotConfirmed(error)) {
+          showToast(AUTH_MESSAGES.notConfirmed, 'error');
+        } else if (error.message.includes('Invalid login credentials')) {
           showToast('Hatalı e-posta veya şifre.', 'error');
         } else {
           showToast('Giriş başarısız: ' + error.message, 'error');
@@ -106,6 +109,10 @@ export function useAuth({
           .eq('email', loginEmail)
           .single();
         let { data: profiles } = await fetchProfile();
+        if (!profiles && (await ensureProfileFromMetadata(data.user))) {
+          // Kayıt, e-posta doğrulamasından önce yapıldıysa profil ilk girişte oluşturuldu: yeniden oku.
+          ({ data: profiles } = await fetchProfile());
+        }
         if (!profiles) {
           // Geçici ağ hatasında ücretli veli 'free'ye (10 oyun) düşmesin diye bir kez daha dene.
           await new Promise((resolve) => setTimeout(resolve, 600));
@@ -206,6 +213,13 @@ export function useAuth({
       if (authError) {
         showToast('Kayıt hatası: ' + authError.message, 'error');
         setIsRegistering(false);
+        return;
+      }
+
+      if (needsEmailConfirmation(authData)) {
+        // E-posta doğrulaması açık: oturum yok, profil satırı şimdi yazılamaz.
+        showToast(AUTH_MESSAGES.confirmSent, 'info');
+        setShowRegistration(false);
         return;
       }
 
