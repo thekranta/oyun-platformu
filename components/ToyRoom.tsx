@@ -8,9 +8,9 @@ import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
 import { TOY_ROOM_FIRST_GAMES, TOY_ROOM_GROUPS } from '@/constants/toyRoomLayout';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
-import { requiredVeliTierForGame, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
+import { requiredVeliTierForGame, summarizePackage, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
 
-type Props = { name: string; muted: boolean; round: number; onShuffle: () => void; onMute: () => void; onGame: (route: string) => void; onLogout: () => void; subscriptionTier?: VeliTier };
+type Props = { name: string; muted: boolean; round: number; onShuffle: () => void; onMute: () => void; onGame: (route: string) => void; onLogout: () => void; subscriptionTier?: VeliTier; /** Velinin KENDİ kayıtlı paketi (süre kontrolü burada yapılır) + bitiş tarihi — yetişkin menüsünde "Paketiniz" kartı için. */ ownTier?: VeliTier | null; packageExpiresAt?: string | null };
 type ToyKind = 'puzzle' | 'paint' | 'animal' | 'drum' | 'blocks' | 'train' | 'crayons' | 'rabbit' | 'xylophone' | 'rings' | 'gift' | 'bear';
 const native = Platform.OS !== 'web';
 const allPlayable = GAME_CATALOG.filter(g => !!GAME_RENDERERS[g.routeKey]);
@@ -181,8 +181,10 @@ function Plaything({ kind, label, onPress, moving, size, color, replacement }: {
   </Animated.View>;
 }
 
-export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame, onLogout, subscriptionTier }: Props) {
-  const { t } = useTranslation();
+export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame, onLogout, subscriptionTier, ownTier, packageExpiresAt }: Props) {
+  const { t, i18n } = useTranslation();
+  // Yetişkin menüsündeki "Paketiniz" kartı: çocuk odası önizlemesinde (tier verilmemiş) gösterilmez.
+  const pkg = subscriptionTier === undefined ? null : summarizePackage(ownTier, packageExpiresAt, subscriptionTier);
   // subscriptionTier verilmezse (ör. tasarım önizlemesi) kısıtlama uygulanmaz;
   // verildiğinde çocuğun paketinin karşılamadığı oyunlar (Akıllı/hikaye/müzik) hem
   // odada hem yetişkin aramasında hiç gösterilmez.
@@ -262,6 +264,15 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
         <View style={styles.adultHeader}><Text style={styles.adultTitle}>{t('toyRoom.adultTitle')}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} onPress={() => setAdult(false)} style={styles.control}><Text style={styles.controlText}>✕</Text></Pressable></View>
         <Text style={styles.adultNote}>{t('toyRoom.adultNote')}</Text>
+        {pkg && <View style={styles.pkgCard} accessibilityLabel={t('toyRoom.packageTitle')}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.pkgLabel}>{t('toyRoom.packageTitle')}</Text>
+            <Text style={styles.pkgName}>{t(`veli.tier.${pkg.own}`)}</Text>
+            <Text style={styles.pkgText}>{pkg.expired ? t('toyRoom.packageExpired') : pkg.own === 'free' ? t('toyRoom.packageFree') : pkg.expiresAt ? t('toyRoom.packageValidUntil', { date: new Date(pkg.expiresAt).toLocaleDateString(i18n.language?.startsWith('en') ? 'en-GB' : 'tr-TR') }) : t('toyRoom.packageActive')}</Text>
+            {pkg.viaClass && <Text style={styles.pkgText}>{t('toyRoom.packageViaClass', { tier: t(`veli.tier.${pkg.accessTier}`) })}</Text>}
+          </View>
+          {pkg.isTop ? <Text style={styles.pkgTop}>{t('toyRoom.packageTop')}</Text> : <Pressable accessibilityRole="link" onPress={openPricing} style={styles.pkgButton}><Text style={styles.pkgButtonText}>{pkg.own === 'free' || pkg.expired ? t('toyRoom.lockedPrimary') : t('toyRoom.packageUpgrade')}</Text></Pressable>}
+        </View>}
         <View style={styles.adultActions}><Pressable onPress={() => setCalm(v => !v)} accessibilityRole="button" style={styles.adultButton}><Text>{calm ? t('toyRoom.animationsOn') : t('toyRoom.reduceMotion')}</Text></Pressable><Pressable accessibilityRole="button" onPress={onLogout} style={styles.adultButton}><Text>{t('toyRoom.logout')}</Text></Pressable></View>
         <TextInput accessibilityLabel={t('toyRoom.searchLabel')} placeholder={t('toyRoom.searchPlaceholder')} value={query} onChangeText={setQuery} style={styles.search}/>
         <ScrollView keyboardShouldPersistTaps="handled">{filtered.map(g => {
@@ -292,6 +303,13 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
 }
 
 const styles = StyleSheet.create({
+  pkgCard: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#F4EBDB', borderRadius: 16, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: '#E4D6BE' },
+  pkgLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, color: '#A27D59', textTransform: 'uppercase' },
+  pkgName: { fontSize: 20, fontWeight: '900', color: '#584B40', marginTop: 2 },
+  pkgText: { fontSize: 13, color: '#756753', lineHeight: 19, marginTop: 2 },
+  pkgButton: { backgroundColor: '#507C72', borderRadius: 14, paddingVertical: 11, paddingHorizontal: 16 },
+  pkgButtonText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  pkgTop: { fontSize: 13, fontWeight: '800', color: '#507C72' },
   root: { flex: 1, backgroundColor: '#FAF2E4', overflow: 'hidden' },
   heading: { position: 'absolute', alignItems: 'center' }, eyebrow: { color: '#A27D59', letterSpacing: 3, fontWeight: '800' }, headline: { color: '#584B40', fontWeight: '900', letterSpacing: -1.2, marginTop: 6 }, greeting: { color: '#887864', fontSize: 14, marginTop: 6, textAlign: 'center' },
   toy: { alignItems: 'center' }, toyLabel: { fontWeight: '800', textAlign: 'center', paddingHorizontal: 5, lineHeight: 20 }, replacement: { position: 'absolute', right: 0, bottom: 0, borderRadius: 40, backgroundColor: '#FFF5DD', alignItems: 'center', justifyContent: 'center' },

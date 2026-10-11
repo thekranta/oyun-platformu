@@ -6,6 +6,7 @@ import {
     OGRETMEN_TIER_FLAGS,
     VELI_TIER_FLAGS,
     combineGameTier,
+    summarizePackage,
     requiredVeliTierForGame,
     veliTierMeetsMinimum,
 } from './subscriptionTiers';
@@ -163,6 +164,41 @@ describe('combineGameTier (sınıf paketi + kendi paket)', () => {
     it('çocuğun kendi paketi sınıftakinden yüksekse düşürülmez', () => {
         expect(combineGameTier('orman', 'mese')).toBe('orman');
         expect(combineGameTier('fidan', 'cinar')).toBe('fidan');
+    });
+});
+
+describe('summarizePackage (yetişkin menüsü)', () => {
+    const future = new Date(Date.now() + 40 * 86400000).toISOString();
+    const past = new Date(Date.now() - 86400000).toISOString();
+
+    it('ücretsiz hesap: free, süresi dolmuş değil, yükseltilebilir', () => {
+        const s = summarizePackage('free', null);
+        expect(s).toMatchObject({ own: 'free', accessTier: 'free', expired: false, viaClass: false, isTop: false, expiresAt: null });
+        expect(summarizePackage(null, null).own).toBe('free');
+    });
+
+    it('geçerli ücretli paket + bitiş tarihi', () => {
+        const s = summarizePackage('filiz', future);
+        expect(s).toMatchObject({ own: 'filiz', expired: false, isTop: false, expiresAt: future });
+        expect(summarizePackage('filiz', null).expiresAt).toBeNull();   // süresiz
+    });
+
+    it('süresi dolan paket ücretsize düşer ve "doldu" işaretlenir', () => {
+        const s = summarizePackage('fidan', past);
+        expect(s).toMatchObject({ own: 'free', expired: true, expiresAt: null });
+    });
+
+    it('Orman en üst pakettir', () => {
+        expect(summarizePackage('orman', null).isTop).toBe(true);
+        expect(summarizePackage('fidan', null).isTop).toBe(false);
+    });
+
+    it('sınıf paketi kendi paketinden yüksek erişim veriyorsa viaClass; eşit ya da düşükse değil', () => {
+        expect(summarizePackage('free', null, 'filiz')).toMatchObject({ own: 'free', accessTier: 'filiz', viaClass: true });
+        expect(summarizePackage('tohum', null, 'fidan').viaClass).toBe(true);
+        expect(summarizePackage('fidan', null, 'fidan').viaClass).toBe(false);
+        expect(summarizePackage('orman', null, 'fidan').viaClass).toBe(false);
+        expect(summarizePackage('filiz', null, undefined).viaClass).toBe(false);
     });
 });
 

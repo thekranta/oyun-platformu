@@ -489,6 +489,8 @@ export default function App() {
       onGame={oyunuBaslat}
       onLogout={cikisYap}
       subscriptionTier={gameTier}
+      ownTier={subscriptionTier}
+      packageExpiresAt={packageExpiresAt}
     />;
   }
 

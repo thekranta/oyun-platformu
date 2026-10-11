@@ -94,6 +94,36 @@ export function combineGameTier(own: VeliTier, classTier: OgretmenTier | null | 
     return VELI_TIER_ORDER.indexOf(fromClass) > VELI_TIER_ORDER.indexOf(own) ? fromClass : own;
 }
 
+// Yetişkin menüsünde gösterilen paket özeti. own = velinin KENDİ geçerli paketi (süresi dolmuşsa free);
+// accessTier = oyun erişim düzeyi (sınıf paketi daha yüksekse onu yansıtır). Yalnız GÖSTERİM içindir.
+export interface PackageSummary {
+    own: VeliTier;
+    accessTier: VeliTier;
+    /** Kayıtlı paket vardı ama süresi doldu (free'ye düştü). */
+    expired: boolean;
+    /** Sınıf paketi sayesinde kendi paketinden daha yüksek düzeyde oyun açık. */
+    viaClass: boolean;
+    isTop: boolean;
+    expiresAt: string | null;
+}
+
+export function summarizePackage(
+    rawTier: VeliTier | null | undefined,
+    expiresAt: string | null | undefined,
+    accessTier?: VeliTier | null,
+): PackageSummary {
+    const own = getEffectiveVeliTier(rawTier, expiresAt);
+    const access = accessTier ?? own;
+    return {
+        own,
+        accessTier: access,
+        expired: !!rawTier && rawTier !== 'free' && own === 'free',
+        viaClass: access !== own && !veliTierMeetsMinimum(own, access),
+        isTop: own === 'orman',
+        expiresAt: own !== 'free' ? (expiresAt ?? null) : null,
+    };
+}
+
 // Ücretsiz hesabın (subscription_tier='free') oynayabildiği başlangıç seti: 10 oyun, farklı alanlardan
 // (bulmaca, çizim, bellek, ritim, matematik ×2, harf, duygu, hareket/müzik, örüntü). Geri kalan tüm
 // sıradan oyunlar Tohum ister ("100+ oyuna tam erişim"). Çocuk odası ilk açılışta

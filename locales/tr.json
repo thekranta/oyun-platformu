@@ -45,7 +45,15 @@
       "fidan": "Fidan ile 40+ özel beste şarkının tamamı açılır."
     },
     "lockedPrimary": "Paketleri İncele",
-    "lockedClose": "Kapat"
+    "lockedClose": "Kapat",
+    "packageTitle": "Paketiniz",
+    "packageFree": "Ücretsiz pakette seçili oyunlar açık. Tüm oyun kütüphanesi için bir paket seçebilirsiniz.",
+    "packageActive": "Paketiniz aktif.",
+    "packageValidUntil": "{{date}} tarihine kadar geçerli.",
+    "packageExpired": "Paketinizin süresi doldu. Tüm oyunlar için paketi yenileyebilirsiniz.",
+    "packageViaClass": "Sınıf paketiniz sayesinde {{tier}} düzeyindeki oyunlar da açık.",
+    "packageUpgrade": "Paketi Yükselt",
+    "packageTop": "En kapsamlı pakettesiniz 🎉"
   },
   "veli": {
     "loading": "Veriler yükleniyor...",

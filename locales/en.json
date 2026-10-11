@@ -45,7 +45,15 @@
       "fidan": "Fidan unlocks all 40+ original songs."
     },
     "lockedPrimary": "View plans",
-    "lockedClose": "Close"
+    "lockedClose": "Close",
+    "packageTitle": "Your plan",
+    "packageFree": "The free plan unlocks a selection of games. Choose a plan for the full game library.",
+    "packageActive": "Your plan is active.",
+    "packageValidUntil": "Valid until {{date}}.",
+    "packageExpired": "Your plan has expired. Renew it to unlock all games.",
+    "packageViaClass": "Thanks to your class plan, {{tier}}-level games are unlocked too.",
+    "packageUpgrade": "Upgrade plan",
+    "packageTop": "You are on the top plan 🎉"
   },
   "veli": {
     "loading": "Loading data...",
