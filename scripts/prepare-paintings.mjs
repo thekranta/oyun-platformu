@@ -27,12 +27,15 @@ const WIDTHS = {
     'mona-lisa': 1200, 'yildizli-gece': 1600, 'buyuk-dalga': 1600,
     'kaplumbaga-terbiyecisi': 1000, 'cocuk-oyunlari': 1600, 'meyveden-portre': 1200, 'sari-kirmizi-mavi': 1600,
     'su-zambaklari': 1400, 'tropik-firtinada-kaplan': 1600, 'inci-kupeli-kiz': 1200,
+    'aycicekleri': 1200, 'karda-avcilar': 1600, 'pazar-gunu-parkta': 1600, 'semsiyeler': 1000,
+    'japon-koprusu': 1400, 'elmali-naturmort': 1400,
 };
 
 // constants/minikMuze.ts TypeScript olduğundan dosyayı metin olarak okuyup id + commonsFile çiftlerini çıkarırız.
 const src = await fs.readFile(path.join(ROOT, 'constants', 'minikMuze.ts'), 'utf8');
-const items = [...src.matchAll(/id: '([a-z-]+)',[\s\S]*?commonsFile: '([^']+)',[\s\S]*?license: 'Public domain'/g)]
-    .map((m) => ({ id: m[1], file: m[2] }));
+// commonsFile tek ya da çift tırnaklı olabilir (dosya adında kesme işareti varsa çift tırnak).
+const items = [...src.matchAll(/id: '([a-z-]+)',[\s\S]*?commonsFile: (['"])(.+?)\2,[\s\S]*?license: 'Public domain'/g)]
+    .map((m) => ({ id: m[1], file: m[3] }));
 
 if (!items.length) throw new Error('constants/minikMuze.ts içinde tablo bulunamadı');
 await fs.mkdir(OUT_DIR, { recursive: true });

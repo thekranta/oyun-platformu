@@ -13,4 +13,10 @@ export const PAINTING_IMAGES: Record<string, ImageSourcePropType> = {
     'su-zambaklari': require('../../assets/images/muze/su-zambaklari.webp'),
     'tropik-firtinada-kaplan': require('../../assets/images/muze/tropik-firtinada-kaplan.webp'),
     'inci-kupeli-kiz': require('../../assets/images/muze/inci-kupeli-kiz.webp'),
+    'aycicekleri': require('../../assets/images/muze/aycicekleri.webp'),
+    'karda-avcilar': require('../../assets/images/muze/karda-avcilar.webp'),
+    'pazar-gunu-parkta': require('../../assets/images/muze/pazar-gunu-parkta.webp'),
+    'semsiyeler': require('../../assets/images/muze/semsiyeler.webp'),
+    'japon-koprusu': require('../../assets/images/muze/japon-koprusu.webp'),
+    'elmali-naturmort': require('../../assets/images/muze/elmali-naturmort.webp'),
 };
