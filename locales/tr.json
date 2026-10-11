@@ -327,7 +327,8 @@
       "resetFailed": "Bağlantı gönderilemedi. Lütfen tekrar deneyin.",
       "checking": "Oturum kontrol ediliyor…",
       "footer": "Kurum paneli, Meşe (Kurumsal) paketiyle birlikte gelir.",
-      "backToLogin": "Girişe dön"
+      "backToLogin": "Girişe dön",
+      "backHome": "Veli / öğretmen girişine dön"
     },
     "teacherPanel": "Öğretmen Paneli",
     "back": "Geri",

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,6 +32,7 @@ type Phase = 'checking' | 'login' | 'panel';
 
 export default function KurumPage() {
     const { t } = useTranslation();
+    const router = useRouter();
     const [phase, setPhase] = useState<Phase>('checking');
     const [institutions, setInstitutions] = useState<InstitutionInfo[]>([]);
     const [demo, setDemo] = useState(false);
@@ -109,6 +111,13 @@ export default function KurumPage() {
         } catch {
             setError(t('institution.login.resetFailed'));
         }
+    };
+
+    // Kurum girişinden veli/öğretmen girişine dönüş. Kurum yöneticisi oturumu açıksa ana ekran onu veli/öğretmen
+    // hesabı sanmasın diye oturum kapatılır (giriş ekranında zaten oturum yoksa zararsız).
+    const goHome = async () => {
+        try { await supabase.auth.signOut(); } catch { /* sessiz */ }
+        router.replace('/');
     };
 
     const signOut = async () => {
@@ -205,6 +214,10 @@ export default function KurumPage() {
                             <Text style={styles.demoHint}>{t('institution.login.demoHint')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={18} color={C.primaryDark} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={goHome} style={styles.linkBtn} accessibilityRole="button">
+                        <Text style={styles.link}>← {t('institution.login.backHome')}</Text>
                     </TouchableOpacity>
                 </View>
                 <Text style={styles.footer}>{t('institution.login.footer')}</Text>

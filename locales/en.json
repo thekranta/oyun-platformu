@@ -327,7 +327,8 @@
       "resetFailed": "Could not send the link. Please try again.",
       "checking": "Checking your session…",
       "footer": "The institution panel comes with the Oak (Institutional) plan.",
-      "backToLogin": "Back to sign-in"
+      "backToLogin": "Back to sign-in",
+      "backHome": "Back to parent / teacher sign-in"
     },
     "teacherPanel": "Teacher Panel",
     "back": "Back",
