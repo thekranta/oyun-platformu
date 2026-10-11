@@ -21,6 +21,7 @@ import { supabase } from '../lib/supabase';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { teacherView } from '../lib/aiAudience';
 import InAppNotice from './InAppNotice';
+import TeacherDrawings from './TeacherDrawings';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
 import SinifBahcesiScreen from './rewardBoard/SinifBahcesiScreen';
@@ -775,6 +776,7 @@ export default function TeacherDashboard({
                         initialTheme={selectedClass.reward_theme || 'bitki'}
                         roster={students}
                         onClose={() => setGardenOpen(false)}
+                        demo={teacherId === 'demo-teacher'}
                     />
                 )}
 
@@ -789,6 +791,8 @@ export default function TeacherDashboard({
                                 <Text style={styles.premiumBannerText}>{t('teacher.upgradeForAiMessage')}</Text>
                             </TouchableOpacity>
                         )}
+
+                        <TeacherDrawings key={selectedStudent.id} studentId={selectedStudent.id} studentName={selectedStudent.child_name} demo={teacherId === 'demo-teacher'} />
 
                         {studentScores.length === 0 ? (
                             <View style={styles.emptyCard}>

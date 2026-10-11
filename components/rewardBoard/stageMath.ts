@@ -5,6 +5,14 @@ import type { RewardStage } from './types';
 
 const STAGE_STARTS: Record<RewardStage, number> = { 0: 0, 1: 1, 2: 3, 3: 6 };
 
+/** Bugünkü ödül sayısından aşama (demo modu için yerel hesap; gerçek aşama sunucudan gelir: private.reward_stage). */
+export function stageForCount(count: number): RewardStage {
+    if (count <= 0) return 0;
+    if (count <= 2) return 1;
+    if (count <= 5) return 2;
+    return 3;
+}
+
 export function pipsForStage(todayCount: number, stage: RewardStage): number {
     if (stage === 3) return 3;
     const start = STAGE_STARTS[stage];

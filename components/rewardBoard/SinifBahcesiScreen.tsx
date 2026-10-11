@@ -10,6 +10,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { supabase } from '../../lib/supabase';
 import { REWARD_CONCEPT_LIST, getRewardConcept } from './conceptRegistry';
 import RewardCard from './RewardCard';
+import { stageForCount } from './stageMath';
 import type { RewardConceptId, RewardStage } from './types';
 
 const isMissingFunction = (error: { code?: string; message?: string } | null | undefined) =>
@@ -41,9 +42,11 @@ interface SinifBahcesiScreenProps {
     initialTheme: string;
     roster: RosterEntry[];
     onClose: () => void;
+    /** Satış gösterisi (demo öğretmen): sunucu çağrısı yapılmaz, ödül/tema yerelde çalışır. */
+    demo?: boolean;
 }
 
-export default function SinifBahcesiScreen({ visible, classId, className, classEmoji, initialTheme, roster, onClose }: SinifBahcesiScreenProps) {
+export default function SinifBahcesiScreen({ visible, classId, className, classEmoji, initialTheme, roster, onClose, demo }: SinifBahcesiScreenProps) {
     const { t } = useTranslation();
     const { width } = useWindowDimensions();
     const [theme, setTheme] = useState<RewardConceptId>((initialTheme as RewardConceptId) || 'bitki');
@@ -59,6 +62,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
     }, [visible, initialTheme, classId]);
 
     const loadSummary = async () => {
+        if (demo) return;
         const { data, error } = await supabase.rpc('teacher_class_reward_summary', { p_class_id: classId });
         if (error) {
             if (!isMissingFunction(error)) console.error('Sınıf Bahçesi yüklenirken hata:', error);
@@ -82,6 +86,13 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
     );
 
     const handleAward = async (studentId: string) => {
+        if (demo) {
+            setSummary((prev) => {
+                const count = (prev[studentId]?.today_count ?? 0) + 1;
+                return { ...prev, [studentId]: { student_id: studentId, today_count: count, stage: stageForCount(count) } };
+            });
+            return;
+        }
         setSummary((prev) => {
             const cur = prev[studentId] || { student_id: studentId, today_count: 0, stage: 0 as RewardStage };
             return { ...prev, [studentId]: { ...cur, today_count: cur.today_count + 1 } };
@@ -102,6 +113,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
         if (id === theme) return;
         const prev = theme;
         setTheme(id);
+        if (demo) return;
         const { error } = await supabase.rpc('teacher_set_reward_theme', { p_class_id: classId, p_theme: id });
         if (error) {
             setTheme(prev);
