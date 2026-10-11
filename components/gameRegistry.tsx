@@ -134,6 +134,7 @@ const SakinlesmeBahcesi = lazyWithReload(() => import('./SakinlesmeBahcesi'));
 const KucukAnlatici = lazyWithReload(() => import('./KucukAnlatici'));
 const SanatGozlugu = lazyWithReload(() => import('./SanatGozlugu'));
 const TablodaNeVar = lazyWithReload(() => import('./TablodaNeVar'));
+const MinikMuze = lazyWithReload(() => import('./MinikMuze'));
 const RenkAtolyesi = lazyWithReload(() => import('./RenkAtolyesi'));
 const HangiCalgiCaldi = lazyWithReload(() => import('./HangiCalgiCaldi'));
 const SesNasil = lazyWithReload(() => import('./SesNasil'));
@@ -485,6 +486,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'kucuk-anlatici': (c) => <KucukAnlatici onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'sanat-gozlugu': (c) => <SanatGozlugu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'tabloda-ne-var': (c) => <TablodaNeVar onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'minik-muze': (c) => <MinikMuze onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'renk-atolyesi': (c) => <RenkAtolyesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'hangi-calgi-caldi': (c) => <HangiCalgiCaldi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ses-nasil': (c) => <SesNasil onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

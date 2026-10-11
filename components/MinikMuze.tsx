@@ -1,0 +1,292 @@
+import { Ionicons } from '@expo/vector-icons';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Easing, Image, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { MUSEUM_DONE, MUSEUM_INTRO, PAINTINGS, Painting } from '../constants/minikMuze';
+import { focusTransform, fitContain } from '../lib/minikMuzeMath';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import CountdownOverlay from './CountdownOverlay';
+import GameExitButton from './GameExitButton';
+import ListenButton from './ListenButton';
+import { PAINTING_IMAGES } from './minikMuze/paintingImages';
+
+// ============================================
+// 🏛️ MİNİK MÜZE — dünyaca ünlü tabloları tam ekranda göster, sade bir dille sesli anlat
+// (Sanat: SNAB.2 sanat eseri inceleme / SNAB.3 sanat eserlerine ve sanatçılara değer verme).
+// Çocuk bir tabloya dokunur; ses parça parça anlatılırken tablo anlatılan ayrıntıya yakınlaşır.
+// Otomatik ilerler; duraklat / önceki / sonraki / "Tekrar Dinle" ile çocuk ya da veli yönlendirebilir.
+// Veri ve anlatım metinleri: constants/minikMuze.ts (her metnin VoiceBox klibi vardır).
+// ============================================
+
+const USE_NATIVE = Platform.OS !== 'web';
+const HAPPY_VOICE = 'Speak in Turkish like a warm, gentle museum guide for small children. Calm and friendly.';
+const WALL = '#2B2119';
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+interface Props {
+    onGameEnd: (
+        oyunAdi: string, sure: number, finalHamle: number, finalHata: number,
+        algilananKelime?: string,
+        extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string; correct_answers?: number },
+    ) => void;
+    onExit?: () => void;
+    childName?: string;
+}
+
+export default function MinikMuze({ onGameEnd, onExit, childName }: Props) {
+    const { width: W, height: H } = useWindowDimensions();
+    // Kısa yatay ekran (telefon yan): tablo solda, altyazı + düğmeler sağda; aksi hâlde tablo üstte, altyazı altta.
+    const sideBySide = W > H && H < 620;
+    const [gameReady, setGameReady] = useState(false);
+    const [selected, setSelected] = useState<Painting | null>(null);
+    const [seg, setSeg] = useState(0);
+    const [playing, setPlaying] = useState(false);
+    const [finished, setFinished] = useState(false);
+    const [stage, setStage] = useState({ w: 0, h: 0 });
+    const [viewed, setViewed] = useState<string[]>([]);
+
+    const startRef = useRef(Date.now());
+    const runRef = useRef(0);
+    const mountedRef = useRef(true);
+    const sizeRef = useRef({ w: 0, h: 0 });
+    const viewedRef = useRef<Set<string>>(new Set());
+    const finishedRef = useRef(false);
+
+    const scaleV = useRef(new Animated.Value(1)).current;
+    const txV = useRef(new Animated.Value(0)).current;
+    const tyV = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => () => { mountedRef.current = false; runRef.current++; stopSpeech(); }, []);
+
+    const img = selected ? fitContain(stage.w - 24, stage.h - 24, selected.aspect) : { w: 0, h: 0 };
+    sizeRef.current = img;
+
+    const animateFocus = useCallback((focus: Painting['segments'][number]['focus'], instant = false) => {
+        const { w, h } = sizeRef.current;
+        const t = focusTransform(w, h, focus);
+        if (instant) { scaleV.setValue(t.scale); txV.setValue(t.tx); tyV.setValue(t.ty); return; }
+        const cfg = { duration: 1500, easing: Easing.inOut(Easing.cubic), useNativeDriver: USE_NATIVE };
+        Animated.parallel([
+            Animated.timing(scaleV, { toValue: t.scale, ...cfg }),
+            Animated.timing(txV, { toValue: t.tx, ...cfg }),
+            Animated.timing(tyV, { toValue: t.ty, ...cfg }),
+        ]).start();
+    }, [scaleV, txV, tyV]);
+
+    // Pencere/sahne boyutu değişince (döndürme vb.) geçerli yakınlaşmayı anında yeniden uygula.
+    useEffect(() => {
+        if (selected) animateFocus(selected.segments[seg]?.focus ?? null, true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [img.w, img.h]);
+
+    const playSegment = useCallback((p: Painting, index: number) => {
+        const run = ++runRef.current;
+        stopSpeech();
+        setSeg(index);
+        setFinished(false);
+        setPlaying(true);
+        const s = p.segments[index];
+        animateFocus(s.focus);
+        (async () => {
+            await speakThenWait(s.text, 900, { instructions: HAPPY_VOICE });
+            if (run !== runRef.current || !mountedRef.current) return;
+            await wait(s.pauseAfterMs ?? 700);
+            if (run !== runRef.current || !mountedRef.current) return;
+            if (index < p.segments.length - 1) {
+                playSegment(p, index + 1);
+            } else {
+                viewedRef.current.add(p.id);
+                setViewed(Array.from(viewedRef.current));
+                setPlaying(false);
+                setFinished(true);
+                animateFocus(null);
+                speak(MUSEUM_DONE, { instructions: HAPPY_VOICE });
+            }
+        })();
+    }, [animateFocus]);
+
+    const openPainting = (p: Painting) => {
+        scaleV.setValue(1); txV.setValue(0); tyV.setValue(0);
+        setSelected(p);
+        playSegment(p, 0);
+    };
+
+    const backToGallery = () => {
+        runRef.current++;
+        stopSpeech();
+        setPlaying(false);
+        setFinished(false);
+        setSelected(null);
+    };
+
+    const pause = () => { runRef.current++; stopSpeech(); setPlaying(false); };
+    const go = (delta: number) => {
+        if (!selected) return;
+        const next = Math.min(selected.segments.length - 1, Math.max(0, seg + delta));
+        playSegment(selected, next);
+    };
+
+    const finishAndExit = () => {
+        if (finishedRef.current) return;
+        runRef.current++;
+        stopSpeech();
+        if (viewedRef.current.size === 0) { onExit?.(); return; }
+        finishedRef.current = true;
+        const duration = Math.floor((Date.now() - startRef.current) / 1000);
+        onGameEnd('minik-muze', duration, viewedRef.current.size, 0, undefined, {
+            zorlukSeviyesi: 1,
+            kazanimOdagi: 'Sanat: Sanat Eseri İnceleme ve Sanatçılara Değer Verme (SNAB.2, SNAB.3)',
+            correct_answers: viewedRef.current.size,
+        });
+    };
+
+    const onStageLayout = (e: LayoutChangeEvent) => {
+        const { width, height } = e.nativeEvent.layout;
+        setStage((prev) => (Math.abs(prev.w - width) < 1 && Math.abs(prev.h - height) < 1 ? prev : { w: width, h: height }));
+    };
+
+    // ------------------------------------------------------------ GALERİ
+    if (!selected) {
+        const cols = W >= 900 ? 3 : W >= 560 ? 2 : 1;
+        const cardW = Math.min(340, (W - 32 - (cols - 1) * 16) / cols);
+        return (
+            <View key="gallery" style={styles.container}>
+                {!gameReady && (
+                    <CountdownOverlay message={MUSEUM_INTRO} childName={childName} countdownSeconds={5} interaction="tap" onComplete={() => setGameReady(true)} />
+                )}
+                <View style={styles.header}>
+                    <GameExitButton onPress={finishAndExit} />
+                    <Text style={styles.headerTitle}>🏛️ Minik Müze</Text>
+                    <View style={{ width: 44 }} />
+                </View>
+                <ScrollView contentContainerStyle={styles.gallery} showsVerticalScrollIndicator={false}>
+                    {PAINTINGS.map((p) => {
+                        const done = viewed.includes(p.id);
+                        return (
+                            <TouchableOpacity
+                                key={p.id}
+                                style={[styles.frame, { width: cardW, borderColor: p.accent }]}
+                                onPress={() => openPainting(p)}
+                                activeOpacity={0.85}
+                                accessibilityRole="button"
+                                accessibilityLabel={`${p.title}, ${p.artist}`}
+                            >
+                                <View style={styles.thumbBox}>
+                                    <Image source={PAINTING_IMAGES[p.id]} style={styles.thumb} resizeMode="contain" />
+                                </View>
+                                <Text style={styles.frameTitle} numberOfLines={1}>{p.title}</Text>
+                                <Text style={styles.frameArtist} numberOfLines={1}>{p.artist}</Text>
+                                {done && <View style={styles.doneBadge}><Ionicons name="checkmark" size={18} color="#fff" /></View>}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+        );
+    }
+
+    // ------------------------------------------------------------ İZLEYİCİ
+    const segment = selected.segments[seg];
+    // key: galeri ve izleyici aynı konumda View olduğundan React sahneyi yeniden kullanıp onLayout'u kaçırıyordu.
+    return (
+        <View key="viewer" style={styles.container}>
+            <View style={styles.header}>
+                <GameExitButton onPress={backToGallery} accessibilityLabel="Galeriye dön" />
+                <View style={styles.plaque}>
+                    <Text style={styles.plaqueTitle} numberOfLines={1}>{selected.title}</Text>
+                    <Text style={styles.plaqueArtist} numberOfLines={1}>{selected.artist} · {selected.yearLabel}</Text>
+                </View>
+                <View style={{ width: 44 }} />
+            </View>
+
+            <View style={[styles.body, sideBySide && styles.bodyRow]}>
+            <View key={selected.id} style={styles.stage} onLayout={onStageLayout}>
+                {img.w > 0 && (
+                    <Animated.View
+                        style={[
+                            styles.paintingWrap,
+                            { width: img.w, height: img.h, borderColor: selected.accent, transform: [{ translateX: txV }, { translateY: tyV }, { scale: scaleV }] },
+                        ]}
+                    >
+                        <Image source={PAINTING_IMAGES[selected.id]} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={`${selected.title} tablosu`} />
+                    </Animated.View>
+                )}
+            </View>
+
+            <View style={[styles.bottom, sideBySide && { ...styles.bottomSide, width: Math.min(380, W * 0.4) }]}>
+                <View style={[styles.subtitle, sideBySide && styles.subtitleSide]}>
+                    <Text style={[styles.subtitleText, sideBySide && styles.subtitleTextSide]}>{segment.text}</Text>
+                </View>
+
+                <View style={styles.dots}>
+                    {selected.segments.map((_, i) => (
+                        <View key={i} style={[styles.dot, i === seg && { backgroundColor: '#FFD27A', width: 22 }, i < seg && { backgroundColor: '#B79B6B' }]} />
+                    ))}
+                </View>
+
+                {finished ? (
+                    <View style={styles.controls}>
+                        <TouchableOpacity style={styles.bigBtn} onPress={() => playSegment(selected, 0)} accessibilityRole="button" accessibilityLabel="Tekrar izle">
+                            <Ionicons name="refresh" size={26} color="#fff" />
+                            <Text style={styles.bigBtnText}>Tekrar izle</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.bigBtn, { backgroundColor: '#6A8F5B' }]} onPress={backToGallery} accessibilityRole="button" accessibilityLabel="Başka tablo">
+                            <Ionicons name="images" size={26} color="#fff" />
+                            <Text style={styles.bigBtnText}>Başka tablo</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : (
+                    <View style={styles.controls}>
+                        <TouchableOpacity style={[styles.roundBtn, seg === 0 && styles.disabled]} onPress={() => go(-1)} disabled={seg === 0} accessibilityRole="button" accessibilityLabel="Önceki">
+                            <Ionicons name="play-skip-back" size={26} color="#fff" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.roundBtn, styles.mainBtn]} onPress={() => (playing ? pause() : playSegment(selected, seg))} accessibilityRole="button" accessibilityLabel={playing ? 'Duraklat' : 'Devam et'}>
+                            <Ionicons name={playing ? 'pause' : 'play'} size={32} color="#fff" />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.roundBtn} onPress={() => go(1)} accessibilityRole="button" accessibilityLabel="Sonraki">
+                            <Ionicons name="play-skip-forward" size={26} color="#fff" />
+                        </TouchableOpacity>
+                        <ListenButton onPress={() => playSegment(selected, seg)} color="#8D6E63" />
+                    </View>
+                )}
+            </View>
+            </View>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: WALL },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 16 : 44, paddingBottom: 8 },
+    headerTitle: { fontSize: 22, fontWeight: '900', color: '#F4E7CF' },
+    plaque: { flex: 1, marginHorizontal: 12, alignItems: 'center', backgroundColor: '#3C2F23', borderRadius: 12, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#6B5538' },
+    plaqueTitle: { fontSize: 17, fontWeight: '900', color: '#F4E7CF' },
+    plaqueArtist: { fontSize: 12, color: '#CDB892', marginTop: 1, fontWeight: '600' },
+
+    gallery: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16, padding: 16, paddingBottom: 40 },
+    frame: { backgroundColor: '#3C2F23', borderRadius: 18, borderWidth: 4, padding: 12, alignItems: 'center' },
+    thumbBox: { width: '100%', height: 200, backgroundColor: '#1E1711', borderRadius: 8, overflow: 'hidden' },
+    thumb: { width: '100%', height: '100%' },
+    frameTitle: { fontSize: 18, fontWeight: '900', color: '#F4E7CF', marginTop: 10 },
+    frameArtist: { fontSize: 13, color: '#CDB892', marginTop: 2, fontWeight: '600' },
+    doneBadge: { position: 'absolute', top: -10, right: -10, width: 30, height: 30, borderRadius: 15, backgroundColor: '#6A8F5B', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: WALL },
+
+    body: { flex: 1 },
+    bodyRow: { flexDirection: 'row', alignItems: 'stretch' },
+    stage: { flex: 1, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', marginHorizontal: 8, borderRadius: 14, backgroundColor: '#1E1711' },
+    paintingWrap: { borderWidth: 6, borderRadius: 2, overflow: 'hidden', backgroundColor: '#000' },
+
+    bottom: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: Platform.OS === 'web' ? 16 : 26, alignItems: 'center', gap: 10 },
+    bottomSide: { justifyContent: 'center', paddingHorizontal: 10, paddingTop: 0, paddingBottom: 12 },
+    subtitleSide: { minHeight: 0, paddingVertical: 10, paddingHorizontal: 12 },
+    subtitleTextSide: { fontSize: 16, lineHeight: 22 },
+    subtitle: { width: '100%', maxWidth: 760, backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 16, minHeight: 74, justifyContent: 'center' },
+    subtitleText: { color: '#FFF8EA', fontSize: 19, lineHeight: 27, fontWeight: '700', textAlign: 'center' },
+    dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+    dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#5B4A35' },
+    controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap' },
+    roundBtn: { width: 54, height: 54, borderRadius: 27, backgroundColor: '#6B5538', alignItems: 'center', justifyContent: 'center' },
+    mainBtn: { width: 66, height: 66, borderRadius: 33, backgroundColor: '#B5742F' },
+    disabled: { opacity: 0.35 },
+    bigBtn: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#B5742F', borderRadius: 26, paddingVertical: 14, paddingHorizontal: 24 },
+    bigBtnText: { color: '#fff', fontSize: 18, fontWeight: '900' },
+});

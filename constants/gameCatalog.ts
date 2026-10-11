@@ -172,6 +172,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   // ---------- Yeni oyunlar (Sanat / Muzik / Sosyal / Hareket ve Saglik - tap) ----------
   { id: 'sanat-gozlugu', title: 'Sanat Gozlugu', status: 'secondary', domain: 'Sanat', skillFocus: 'Temel sanat kavramlari (cizgi/sekil/renk)', routeKey: 'sanat-gozlugu', forestCategory: 'renk-cayiri' },
   { id: 'tabloda-ne-var', title: 'Tabloda Ne Var?', status: 'secondary', domain: 'Sanat', skillFocus: 'Sanat eseri inceleme / gorsel cozumleme', routeKey: 'tabloda-ne-var', forestCategory: 'renk-cayiri' },
+  { id: 'minik-muze', title: 'Minik Müze', status: 'secondary', domain: 'Sanat', skillFocus: 'Unlu eserleri dinleyerek tanima / sanatciya deger verme', routeKey: 'minik-muze', forestCategory: 'renk-cayiri' },
   { id: 'renk-atolyesi', title: 'Renk Atolyesi', status: 'creative', domain: 'Sanat', skillFocus: 'Sanat etkinligi / motif ve renk uygulama', routeKey: 'renk-atolyesi', forestCategory: 'renk-cayiri' },
   { id: 'hangi-calgi-caldi', title: 'Hangi Calgi Caldi?', status: 'secondary', domain: 'Muzik', skillFocus: 'Ses kaynagini ayirt etme (tini)', routeKey: 'hangi-calgi-caldi', forestCategory: 'ritim-kelebegi' },
   { id: 'ses-nasil', title: 'Ses Nasil?', status: 'secondary', domain: 'Muzik', skillFocus: 'Muziksel ozellikler (tempo/gurluk/ton)', routeKey: 'ses-nasil', forestCategory: 'ritim-kelebegi' },

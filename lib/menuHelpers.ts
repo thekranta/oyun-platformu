@@ -143,6 +143,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'kucuk-anlatici': { color: '#5C6BC0', icon: 'book-outline', displayTitle: 'Küçük Anlatıcı', subtitle: 'Sırala ve anlat' },
   'sanat-gozlugu': { color: '#7E57C2', icon: 'glasses', displayTitle: 'Sanat Gözlüğü', subtitle: 'Çizgi, şekil, renk' },
   'tabloda-ne-var': { color: '#5E35B1', icon: 'image', displayTitle: 'Tabloda Ne Var?', subtitle: 'Tabloyu incele' },
+  'minik-muze': { color: '#8D6E3F', icon: 'business', displayTitle: 'Minik Müze', subtitle: 'Ünlü tabloları dinle' },
   'renk-atolyesi': { color: '#EC407A', icon: 'color-palette', displayTitle: 'Renk Atölyesi', subtitle: 'Motifini renklendir' },
   'hangi-calgi-caldi': { color: '#F158B7', icon: 'musical-note', displayTitle: 'Hangi Çalgı Çaldı?', subtitle: 'Sesi tanı' },
   'ses-nasil': { color: '#E0359A', icon: 'ear', displayTitle: 'Ses Nasıl?', subtitle: 'Hızlı mı yavaş mı?' },
@@ -197,7 +198,7 @@ export const GAME_EMOJI: Record<string, string> = {
   // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
   'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖',
   // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)
-  'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'renk-atolyesi': '🎨',
+  'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'minik-muze': '🏛️', 'renk-atolyesi': '🎨',
   'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁',
   'odamin-krokisi': '📍', 'hayvan-jimnastigi': '🦘',
 };
