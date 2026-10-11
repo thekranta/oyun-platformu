@@ -82,13 +82,22 @@ async function playBundled(src: number): Promise<void> {
     // canlı sitede createAsync'in KENDİSİ hiç dönmediği (ağ isteği bile atılmadığı)
     // doğrulandı — bu yüzden TÜM fonksiyon tek bir üst zaman aşımıyla yarışa sokuluyor.
     // Herhangi bir adımda takılırsa CountdownOverlay yine de devam edebilsin diye.
+    // Zaman aşımı SABİT 8 sn değildir: 8 sn'yi aşan klipler (ör. Minik Müze'nin 9-11 sn'lik giriş anlatımı)
+    // 8. saniyede "bitti" sayılıp bir sonraki konuşma stopSpeech() ile kesiyordu. Yükleme için 8 sn beklenir;
+    // ses yüklenince süre klibin gerçek uzunluğu + 4 sn pay olarak yeniden kurulur.
     let timedOut = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let armTimeout: (ms: number) => void = () => { };
     const overallTimeout = new Promise<void>((resolve) => {
-        setTimeout(() => {
-            timedOut = true;
-            console.warn('🔊 TTS: 8sn içinde tamamlanmadı (createAsync veya oynatma takıldı), zaman aşımına uğradı');
-            resolve();
-        }, 8000);
+        armTimeout = (ms: number) => {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(() => {
+                timedOut = true;
+                console.warn(`🔊 TTS: ${ms}ms içinde tamamlanmadı (createAsync veya oynatma takıldı), zaman aşımına uğradı`);
+                resolve();
+            }, ms);
+        };
+        armTimeout(8000);
     });
 
     const actualPlayback = (async () => {
@@ -97,7 +106,7 @@ async function playBundled(src: number): Promise<void> {
                 await currentTtsSound.unloadAsync().catch(() => { });
                 currentTtsSound = null;
             }
-            const { sound } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: true, volume: 1.0 });
+            const { sound, status: loadedStatus } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: true, volume: 1.0 });
             if (timedOut || myRequestId !== ttsRequestId) {
                 // Üst zaman aşımı zaten devam etmişse YA DA biz yüklenirken daha yeni bir
                 // speak() çağrısı başlamışsa: bu geç gelen sesi sessizce boşalt, çalma.
@@ -105,6 +114,8 @@ async function playBundled(src: number): Promise<void> {
                 return;
             }
             currentTtsSound = sound;
+            const durationMs = loadedStatus.isLoaded && Number.isFinite(loadedStatus.durationMillis) ? (loadedStatus.durationMillis as number) : 0;
+            armTimeout(durationMs > 0 ? durationMs + 4000 : 20000);
             await new Promise<void>((resolve) => {
                 let done = false;
                 const finish = () => {
@@ -128,6 +139,7 @@ async function playBundled(src: number): Promise<void> {
     })();
 
     await Promise.race([overallTimeout, actualPlayback]);
+    if (timer) clearTimeout(timer);
 }
 
 /**
