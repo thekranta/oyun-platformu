@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Image, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { MUSEUM_DONE, MUSEUM_INTRO, PAINTINGS, Painting } from '../constants/minikMuze';
+import { lazyWithReload } from '../lib/lazyWithReload';
 import { isPaintingOpenForTier, paintingTierName, sortPaintingsByTier } from '../lib/minikMuzeAccess';
 import { focusTransform, fitContain } from '../lib/minikMuzeMath';
 import { openPricing } from '../lib/openPricing';
@@ -21,6 +22,8 @@ import { PAINTING_IMAGES } from './minikMuze/paintingImages';
 // ============================================
 
 const USE_NATIVE = Platform.OS !== 'web';
+// "Sen de çiz": mevcut Yaratıcı Çizim oyunu, köşede tablo referansıyla açılır (tembel yüklenir).
+const YaraticiCizim = lazyWithReload(() => import('./YaraticiCizim'));
 const HAPPY_VOICE = 'Speak in Turkish like a warm, gentle museum guide for small children. Calm and friendly.';
 const WALL = '#2B2119';
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
@@ -49,6 +52,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
     const [stage, setStage] = useState({ w: 0, h: 0 });
     const [viewed, setViewed] = useState<string[]>([]);
     const [lockedPainting, setLockedPainting] = useState<Painting | null>(null);
+    const [drawingFor, setDrawingFor] = useState<Painting | null>(null);
 
     const startRef = useRef(Date.now());
     const runRef = useRef(0);
@@ -150,6 +154,21 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
         const { width, height } = e.nativeEvent.layout;
         setStage((prev) => (Math.abs(prev.w - width) < 1 && Math.abs(prev.h - height) < 1 ? prev : { w: width, h: height }));
     };
+
+    // ------------------------------------------------------------ TABLODAN İLHAM AL (çizim)
+    if (drawingFor) {
+        return (
+            <View key="draw" style={styles.container}>
+                <React.Suspense fallback={<View style={styles.drawLoading}><ActivityIndicator size="large" color="#F4E7CF" /></View>}>
+                    <YaraticiCizim
+                        onGameEnd={onGameEnd}
+                        onExit={() => setDrawingFor(null)}
+                        reference={{ source: PAINTING_IMAGES[drawingFor.id], title: drawingFor.title, artist: drawingFor.artist, aspect: drawingFor.aspect }}
+                    />
+                </React.Suspense>
+            </View>
+        );
+    }
 
     // ------------------------------------------------------------ GALERİ
     if (!selected) {
@@ -260,6 +279,15 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                             <Ionicons name="refresh" size={26} color="#fff" />
                             <Text style={styles.bigBtnText}>Tekrar izle</Text>
                         </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.bigBtn, { backgroundColor: '#8E5BA8' }]}
+                            onPress={() => { runRef.current++; stopSpeech(); setDrawingFor(selected); }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Sen de çiz"
+                        >
+                            <Ionicons name="brush" size={26} color="#fff" />
+                            <Text style={styles.bigBtnText}>Sen de çiz!</Text>
+                        </TouchableOpacity>
                         <TouchableOpacity style={[styles.bigBtn, { backgroundColor: '#6A8F5B' }]} onPress={backToGallery} accessibilityRole="button" accessibilityLabel="Başka tablo">
                             <Ionicons name="images" size={26} color="#fff" />
                             <Text style={styles.bigBtnText}>Başka tablo</Text>
@@ -287,6 +315,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: WALL },
+    drawLoading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 16 : 44, paddingBottom: 8 },
     headerTitle: { fontSize: 22, fontWeight: '900', color: '#F4E7CF' },
     plaque: { flex: 1, marginHorizontal: 12, alignItems: 'center', backgroundColor: '#3C2F23', borderRadius: 12, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#6B5538' },

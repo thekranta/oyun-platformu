@@ -1,15 +1,16 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, ImageBackground, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, ImageBackground, ImageSourcePropType, PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
 import { asset } from '../lib/assetMap';
+import { MUSEUM_DRAW_INTRO } from '../constants/minikMuze';
 import ListenButton from './ListenButton';
 
-// Arka plan g�rseli
+// Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/yaratici_cizim_bg.webp');
 
 type Point = { x: number; y: number };
@@ -28,6 +29,8 @@ interface Props {
     extraData?: { cizimVerisi?: string; cizimResimBase64?: string; cizimResimFormat?: 'png' | 'jpeg'; zorlukSeviyesi?: number; kazanimOdagi?: string },
   ) => void;
   onExit?: () => void;
+  /** Minik Müze "tablodan ilham al": çizim sırasında köşede gösterilecek tablo (dokununca büyür). */
+  reference?: { source: ImageSourcePropType; title: string; artist: string; aspect: number };
 }
 
 // Pencil colors
@@ -64,7 +67,12 @@ const BRUSH_MODES: { mode: BrushMode; icon: IoniconName; label: string }[] = [
 const MIN_STEP = 2;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
-export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
+const DEFAULT_INTRO = 'Parmağınla istediğin resmi çiz, renkleri ve fırçaları dene!';
+const REFERENCE_INTRO = MUSEUM_DRAW_INTRO;
+
+export default function YaraticiCizim({ onGameEnd, onExit, reference }: Props) {
+  const introMessage = reference ? REFERENCE_INTRO : DEFAULT_INTRO;
+  const [refExpanded, setRefExpanded] = useState(false);
   const [gameReady, setGameReady] = useState(false);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [placedShapes, setPlacedShapes] = useState<PlacedShape[]>([]);
@@ -296,7 +304,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
       cizimResimBase64,
       cizimResimFormat: 'png',
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Yarat�c�l�k ve G�rsel �fade',
+      kazanimOdagi: reference ? `Sanat: Sanat eserinden ilham alarak resim yapma (SNAB.2, SNAB.3) — ${reference.title}` : 'Yaratıcılık ve Görsel İfade',
     });
     setSaved(true);
   };
@@ -408,7 +416,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
       <View style={styles.container}>
         {!gameReady && (
           <CountdownOverlay
-            message="Parmağınla istediğin resmi çiz, renkleri ve fırçaları dene!"
+            message={introMessage}
             countdownSeconds={5}
             interaction="draw"
             onComplete={() => { startTimeRef.current = Date.now(); setGameReady(true); }}
@@ -417,7 +425,20 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
 
         <GameExitButton onPress={onExit ?? (() => {})} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
 
-        <ListenButton onPress={() => speak('Parmağınla istediğin resmi çiz, renkleri ve fırçaları dene!', { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
+        {reference && (
+          <TouchableOpacity
+            onPress={() => setRefExpanded((v) => !v)}
+            activeOpacity={0.9}
+            accessibilityRole="button"
+            accessibilityLabel={`${reference.title} tablosu, büyütmek için dokun`}
+            style={[styles.refCard, refExpanded && styles.refCardOpen]}
+          >
+            <Image source={reference.source} style={{ width: refExpanded ? 300 : 120, height: (refExpanded ? 300 : 120) / reference.aspect, maxHeight: refExpanded ? 380 : 140 }} resizeMode="contain" />
+            <Text style={styles.refTitle} numberOfLines={1}>{reference.title} · {reference.artist}</Text>
+          </TouchableOpacity>
+        )}
+
+        <ListenButton onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
 
         <View ref={canvasRef} style={styles.canvas} {...panResponder.panHandlers}>
           <Svg width="100%" height="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -595,7 +616,7 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
               color="#fff"
             />
             <Text style={styles.modeText}>
-              {selectedShape ? 'Dokun: �ekil ekle' : BRUSH_MODES.find(b => b.mode === brushMode)?.label}
+              {selectedShape ? 'Dokun: Şekil ekle' : BRUSH_MODES.find(b => b.mode === brushMode)?.label}
             </Text>
           </View>
         )}
@@ -605,6 +626,9 @@ export default function YaraticiCizim({ onGameEnd, onExit }: Props) {
 }
 
 const styles = StyleSheet.create({
+  refCard: { position: 'absolute', top: 12, right: 12, zIndex: 20, backgroundColor: 'rgba(255,255,255,0.94)', borderRadius: 12, padding: 6, alignItems: 'center', borderWidth: 2, borderColor: '#8D6E3F', maxWidth: 320 },
+  refCardOpen: { padding: 8 },
+  refTitle: { fontSize: 11, fontWeight: '800', color: '#5B4B3A', marginTop: 4, maxWidth: 140 },
   bgContainer: { flex: 1, width: '100%', ...(Platform.OS === 'web' ? { height: '100vh' as any } : {}) },
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,

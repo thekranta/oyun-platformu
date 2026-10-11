@@ -38,6 +38,8 @@ export interface Painting {
 
 export const MUSEUM_INTRO = "Minik Müze'ye hoş geldin! Bir tabloya dokun, dinle ve keşfet.";
 export const MUSEUM_DONE = 'Aferin! Tabloyu birlikte inceledik.';
+/** "Sen de çiz" (Yaratıcı Çizim, tablo köşede) açılış cümlesi — components/YaraticiCizim.tsx okur. */
+export const MUSEUM_DRAW_INTRO = 'Tabloya bak ve ondan ilham alarak kendi resmini çiz!';
 
 export const PAINTINGS: Painting[] = [
     {
@@ -288,5 +290,6 @@ export const getPainting = (id: string): Painting | undefined => PAINTINGS.find(
 export const allMuseumTexts = (): string[] => [
     MUSEUM_INTRO,
     MUSEUM_DONE,
+    MUSEUM_DRAW_INTRO,
     ...PAINTINGS.flatMap((p) => p.segments.map((s) => s.text)),
 ];

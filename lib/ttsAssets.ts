@@ -887,6 +887,7 @@ export const TTS: Record<string, number> = {
   'tabloya-bak-kiz-sana-mi-bakiyor-neler-goruyorsun': require('../assets/sounds/tts/tabloya-bak-kiz-sana-mi-bakiyor-neler-goruyorsun.wav'),
   'tabloya-bak-ormanda-neler-oluyor-kaplan-ne-yapiyor-sence': require('../assets/sounds/tts/tabloya-bak-ormanda-neler-oluyor-kaplan-ne-yapiyor-sence.wav'),
   'tabloya-bak-suyun-ustunde-neler-yuzuyor-sen-de-bak-bakalim': require('../assets/sounds/tts/tabloya-bak-suyun-ustunde-neler-yuzuyor-sen-de-bak-bakalim.wav'),
+  'tabloya-bak-ve-ondan-ilham-alarak-kendi-resmini-ciz': require('../assets/sounds/tts/tabloya-bak-ve-ondan-ilham-alarak-kendi-resmini-ciz.wav'),
   'tabloya-bak-yasli-amcanin-etrafinda-kimler-var-sen-de-say-bakalim': require('../assets/sounds/tts/tabloya-bak-yasli-amcanin-etrafinda-kimler-var-sen-de-say-bakalim.wav'),
   'tabloya-bir-daha-bak-acele-etme-tekrar-dene': require('../assets/sounds/tts/tabloya-bir-daha-bak-acele-etme-tekrar-dene.mp3'),
   'tabloya-iyi-bak-bu-bir-insan-yuzu-ama-neyden-yapilmis-sen-de-bak-bakalim': require('../assets/sounds/tts/tabloya-iyi-bak-bu-bir-insan-yuzu-ama-neyden-yapilmis-sen-de-bak-bakalim.wav'),
