@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, G, Line, Path, Polygon } from 'react-native-svg';
 import { captureRef } from 'react-native-view-shot';
@@ -73,6 +73,7 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
   const sizeRef = useRef(size); sizeRef.current = size;
 
   const pic = PICTURES[picIdx];
+  const stepText = pic.steps[cur].text;
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
 
   const addPoint = (x: number, y: number) => {
@@ -105,6 +106,12 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
     onPanResponderRelease: (e) => { addPoint(e.nativeEvent.locationX, e.nativeEvent.locationY); finishStroke(); },
     onPanResponderTerminate: (e) => { addPoint(e.nativeEvent.locationX, e.nativeEvent.locationY); finishStroke(); },
   }), []);
+
+  // Her adım (ve resim değişimi) sesli yönerge olarak okunur; "Tekrar Dinle" geçerli adımı yineler.
+  useEffect(() => {
+    if (!gameReady) return;
+    speak(stepText, { instructions: HAPPY_VOICE });
+  }, [gameReady, picIdx, cur, stepText]);
 
   const toPath = (pts: Point[]): string => {
     if (!pts.length) return '';
@@ -175,7 +182,7 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
 
       <Text style={styles.stepText}>Adım {cur + 1}/{pic.steps.length}: {pic.steps[cur].text}</Text>
 
-      <ListenButton onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} color="#00ACC1" style={{ marginTop: 4, marginBottom: 8 }} />
+      <ListenButton onPress={() => speak(stepText, { instructions: HAPPY_VOICE })} color="#00ACC1" style={{ marginTop: 4, marginBottom: 8 }} />
 
       <View
         ref={canvasRef}
