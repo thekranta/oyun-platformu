@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import ListenButton from './ListenButton';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -234,14 +235,7 @@ export default function KucukAnlatici({ onGameEnd, onExit, childName }: Props) {
           <Text style={styles.prompt}>Hikâyeyi sırala 📖</Text>
           <Text style={styles.hint}>Sıradaki: {expected + 1}.</Text>
 
-          <TouchableOpacity
-            style={styles.listenBtn}
-            onPress={() => speak('Kartları doğru sıraya koy! Önce ne oldu?', { instructions: HAPPY_VOICE })}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="volume-high" size={18} color="#fff" />
-            <Text style={styles.listenText}>Tekrar Dinle</Text>
-          </TouchableOpacity>
+          <ListenButton onPress={() => speak('Kartları doğru sıraya koy! Önce ne oldu?', { instructions: HAPPY_VOICE })} color="#7E57C2" style={{ marginTop: 12, marginBottom: 4 }} />
 
           <View style={styles.row}>
             {cards.map((card) => {
@@ -300,8 +294,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 22, fontWeight: '900', color: '#5E35B1', marginTop: 12, textAlign: 'center', paddingHorizontal: 16 },
   hint: { fontSize: 15, fontWeight: '700', color: '#9575CD', marginTop: 2 },
 
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#7E57C2', paddingVertical: 9, paddingHorizontal: 18, borderRadius: 22, marginTop: 12, marginBottom: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 14, fontWeight: '800' },
 
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 10, marginTop: 12, maxWidth: 400 },
   card: { width: 82, height: 104, borderRadius: 20, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },

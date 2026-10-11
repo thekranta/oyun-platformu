@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import ListenButton from './ListenButton';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -298,14 +299,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
                 {/* Dynamic Question */}
                 <Animated.View style={[styles.questionContainer, { transform: [{ scale: questionPulse }] }]}>
                     <Text style={[styles.questionText, { color: questionColor }]}>{questionText}</Text>
-                    <TouchableOpacity
-                        style={styles.listenBtn}
-                        onPress={() => speak(questionText, { instructions: HAPPY_VOICE })}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="volume-high" size={18} color="#fff" />
-                        <Text style={styles.listenText}>Tekrar Dinle</Text>
-                    </TouchableOpacity>
+                    <ListenButton onPress={() => speak(questionText, { instructions: HAPPY_VOICE })} color="#42A5F5" style={{ marginTop: 10 }} />
                 </Animated.View>
 
                 {/* Split Comparison Area */}
@@ -414,17 +408,6 @@ const styles = StyleSheet.create({
         left: 16,
         zIndex: 20,
     },
-    listenBtn: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        backgroundColor: '#42A5F5',
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        borderRadius: 16,
-        marginTop: 10,
-    },
-    listenText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
     roundBadge: {
         backgroundColor: '#FFF',
         paddingHorizontal: 14,

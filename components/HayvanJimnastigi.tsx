@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import ListenButton from './ListenButton';
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -575,14 +575,7 @@ export default function HayvanJimnastigi({ onGameEnd, onExit, childName }: Props
         <View style={styles.playArea}>
           <Text style={[styles.soru, { color: tur.renk }]}>{tur.soru}</Text>
 
-          <TouchableOpacity
-            style={[styles.listenBtn, { backgroundColor: tur.renk }]}
-            onPress={() => speak(tur.soru, { instructions: HAPPY_VOICE })}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="volume-high" size={20} color="#fff" />
-            <Text style={styles.listenText}>Tekrar Dinle</Text>
-          </TouchableOpacity>
+          <ListenButton onPress={() => speak(tur.soru, { instructions: HAPPY_VOICE })} color={tur.renk} style={{ marginBottom: 22 }} />
 
           <Animated.View style={[styles.kartSatiri, { transform: [{ scale: bounce }] }]}>
             {kartlar.map((k) => {
@@ -678,8 +671,6 @@ const styles = StyleSheet.create({
 
   // Soru fazı
   soru: { fontSize: 21, fontWeight: '900', textAlign: 'center', maxWidth: 440, marginBottom: 12 },
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22, marginBottom: 22, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   kartSatiri: { flexDirection: 'row', justifyContent: 'center', gap: 18, flexWrap: 'wrap' },
   kart: { width: 150, height: 172, borderRadius: 28, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },
   kartYanlis: { backgroundColor: '#FFE0E0' },

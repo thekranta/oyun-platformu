@@ -10,16 +10,19 @@ interface ListenButtonProps {
     color?: string;
     style?: StyleProp<ViewStyle>;
     label?: string;
+    disabled?: boolean;
 }
 
-export default function ListenButton({ onPress, color = '#4CAF50', style, label = 'Tekrar Dinle' }: ListenButtonProps) {
+export default function ListenButton({ onPress, color = '#4CAF50', style, label = 'Tekrar Dinle', disabled = false }: ListenButtonProps) {
     return (
         <TouchableOpacity
             style={[styles.btn, { backgroundColor: color }, style]}
             onPress={onPress}
+            disabled={disabled}
             activeOpacity={0.85}
             accessibilityRole="button"
             accessibilityLabel={label}
+            accessibilityState={{ disabled }}
         >
             <Ionicons name="volume-high" size={20} color="#fff" />
             <Text style={styles.text}>{label}</Text>

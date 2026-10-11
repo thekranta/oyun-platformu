@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import ListenButton from './ListenButton';
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -605,15 +605,7 @@ export default function DavulUstasi({ onGameEnd, onExit, childName }: Props) {
           )}
         </View>
 
-        <TouchableOpacity
-          style={[styles.listenBtn, phase !== 'playing' && styles.listenBtnIdle]}
-          onPress={handleReplay}
-          disabled={phase !== 'playing'}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="volume-high" size={20} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={handleReplay} color={phase === 'playing' ? '#EF6C00' : '#D7CCC8'} disabled={phase !== 'playing'} style={{ marginTop: 26 }} />
       </View>
     </View>
   );
@@ -652,7 +644,4 @@ const styles = StyleSheet.create({
 
   ripple: { position: 'absolute', borderWidth: 4 },
 
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#EF6C00', paddingVertical: 10, paddingHorizontal: 22, borderRadius: 22, marginTop: 26, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenBtnIdle: { backgroundColor: '#D7CCC8' },
-  listenText: { color: '#fff', fontSize: 15, fontWeight: '800' },
 });

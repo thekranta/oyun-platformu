@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import ListenButton from './ListenButton';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, Ellipse, Path, Polygon, Rect } from 'react-native-svg';
@@ -556,10 +556,7 @@ export default function TablodaNeVar({ onGameEnd, onExit, childName }: Props) {
         <Text style={styles.prompt}>{current.soru}</Text>
         <Text style={styles.hint}>{current.ipucu}</Text>
 
-        <TouchableOpacity style={styles.listenBtn} onPress={() => speak(current.soru, { instructions: HAPPY_VOICE })} activeOpacity={0.85}>
-          <Ionicons name="volume-high" size={19} color="#fff" />
-          <Text style={styles.listenText}>Tekrar Dinle</Text>
-        </TouchableOpacity>
+        <ListenButton onPress={() => speak(current.soru, { instructions: HAPPY_VOICE })} color="#8D6E63" style={{ marginTop: 8 }} />
 
         {/* CEVAP ÇİPLERİ — renk lekesi / rakam / etiketli sembol (tablonun kopyası DEĞİL) */}
         <View style={styles.chips}>
@@ -606,8 +603,6 @@ const styles = StyleSheet.create({
   prompt: { fontSize: 20, fontWeight: '900', color: '#4E342E', marginTop: 10, textAlign: 'center', paddingHorizontal: 18 },
   hint: { fontSize: 13, fontWeight: '700', color: '#8D6E63', marginTop: 3, textAlign: 'center', paddingHorizontal: 18 },
 
-  listenBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#8D6E63', paddingVertical: 8, paddingHorizontal: 18, borderRadius: 22, marginTop: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 1, elevation: 3 },
-  listenText: { color: '#fff', fontSize: 14, fontWeight: '800' },
 
   chips: { flexDirection: 'row', justifyContent: 'center', gap: 12, marginTop: 12, flexWrap: 'wrap', maxWidth: 440, paddingHorizontal: 12 },
   chip: { width: 100, height: 96, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 5, borderWidth: 2, borderColor: '#E8DCC8', shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 5 },
