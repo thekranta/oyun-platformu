@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
@@ -24,6 +24,7 @@ import InAppNotice from './InAppNotice';
 import TeacherDrawings from './TeacherDrawings';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
+import { DEMO_CLASSES, demoAnalysis, demoPreview, demoRoster, demoScores, demoTotalGames } from '../lib/teacherDemo';
 import SinifBahcesiScreen from './rewardBoard/SinifBahcesiScreen';
 import { getMaarif } from '../constants/maarifMap';
 
@@ -153,6 +154,11 @@ export default function TeacherDashboard({
     const [searchingStudent, setSearchingStudent] = useState(false);
     const [analyzingId, setAnalyzingId] = useState<number | null>(null);
     const [notice, setNotice] = useState<string | null>(null);
+    // Demo: sinif basina ogrenci listesi (ekleme/cikarma sinif degisince kaybolmasin, sayilar tutarli kalsin).
+    const demoRosters = useRef<Record<string, StudentData[]>>({});
+    const bumpClassCount = (classId: string, delta: number) => {
+        setClasses((prev) => prev.map((c) => (c.id === classId ? { ...c, studentCount: Math.max(0, c.studentCount + delta) } : c)));
+    };
 
     const effectiveTier = getEffectiveOgretmenTier(subscriptionTier, packageExpiresAt);
     const flags = getOgretmenFlags(effectiveTier);
@@ -160,11 +166,7 @@ export default function TeacherDashboard({
 
     useEffect(() => {
         if (teacherId === 'demo-teacher') {
-            setClasses([
-                { id: 'demo-class-1', name: 'Papatyalar', studentCount: 12, emoji: '🌸' },
-                { id: 'demo-class-2', name: 'Kelebekler', studentCount: 8, emoji: '🦋' },
-                { id: 'demo-class-3', name: 'Yıldızlar', studentCount: 15, emoji: '⭐' },
-            ]);
+            setClasses(DEMO_CLASSES.map((c) => ({ id: c.id, name: c.name, studentCount: c.size, emoji: c.emoji })));
             setLoading(false);
         } else {
             fetchClasses();
@@ -205,12 +207,8 @@ export default function TeacherDashboard({
 
     const fetchStudents = async (classId: string) => {
         if (teacherId === 'demo-teacher') {
-            setStudents([
-                { id: '1', child_name: 'Ahmet', child_age_months: 48, email: 'ahmet@test.com', gameCount: 15 },
-                { id: '2', child_name: 'Ayşe', child_age_months: 52, email: 'ayse@test.com', gameCount: 23 },
-                { id: '3', child_name: 'Mehmet', child_age_months: 45, email: 'mehmet@test.com', gameCount: 8 },
-                { id: '4', child_name: 'Zeynep', child_age_months: 60, email: 'zeynep@test.com', gameCount: 31 },
-            ]);
+            if (!demoRosters.current[classId]) demoRosters.current[classId] = demoRoster(classId);
+            setStudents(demoRosters.current[classId]);
             return;
         }
 
@@ -270,6 +268,11 @@ export default function TeacherDashboard({
             setStudentPreview(null);
             return;
         }
+        if (teacherId === 'demo-teacher') {
+            // Demo: sunucuya e-posta gonderilmez; sabit bir cocuk onizlemesi doner.
+            setStudentPreview(demoPreview(email));
+            return;
+        }
         setSearchingStudent(true);
         try {
             // Dogrudan tablo sorgusu yerine dar kapsamli RPC: tek e-posta, yalnizca
@@ -305,10 +308,7 @@ export default function TeacherDashboard({
 
     const fetchStudentScores = async (student: StudentData) => {
         if (teacherId === 'demo-teacher') {
-            setStudentScores([
-                { id: 1, created_at: new Date().toISOString(), oyun_turu: 'hafiza', hamle_sayisi: 12, hata_sayisi: 2, sure: 45 },
-                { id: 2, created_at: new Date(Date.now() - 86400000).toISOString(), oyun_turu: 'siralama', hamle_sayisi: 8, hata_sayisi: 1, sure: 32 },
-            ]);
+            setStudentScores(demoScores(student));
             return;
         }
 
@@ -454,13 +454,16 @@ export default function TeacherDashboard({
         }
 
         if (teacherId === 'demo-teacher') {
-            setStudents([...students, {
-                id: `demo-${Date.now()}`,
+            const next = [...students, {
+                id: 'demo-new-' + Date.now(),
                 child_name: studentPreview.child_name ?? '',
                 child_age_months: studentPreview.child_age_months,
                 email: studentPreview.email,
                 gameCount: 0,
-            }]);
+            }];
+            demoRosters.current[selectedClass.id] = next;
+            setStudents(next);
+            bumpClassCount(selectedClass.id, 1);
             setNewStudentEmail('');
             setStudentPreview(null);
             setShowAddStudentModal(false);
@@ -481,6 +484,7 @@ export default function TeacherDashboard({
 
             if (response.ok) {
                 fetchStudents(selectedClass.id);
+                bumpClassCount(selectedClass.id, 1);
                 setNewStudentEmail('');
                 setStudentPreview(null);
                 setShowAddStudentModal(false);
@@ -512,7 +516,9 @@ export default function TeacherDashboard({
                     style: 'destructive',
                     onPress: async () => {
                         if (teacherId === 'demo-teacher') {
-                            setStudents(students.filter(s => s.id !== student.id));
+                            const next = students.filter(s => s.id !== student.id);
+                            if (selectedClass) { demoRosters.current[selectedClass.id] = next; bumpClassCount(selectedClass.id, -1); }
+                            setStudents(next);
                             if (selectedStudent?.id === student.id) {
                                 setSelectedStudent(null);
                                 setStudentScores([]);
@@ -521,13 +527,14 @@ export default function TeacherDashboard({
                         }
 
                         try {
-                            await fetch(
+                            const delResp = await fetch(
                                 `${SUPABASE_URL}/rest/v1/class_students?class_id=eq.${selectedClass?.id}&child_email=eq.${encodeURIComponent(student.email)}`,
                                 {
                                     method: 'DELETE',
                                     headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` },
                                 }
                             );
+                            if (delResp.ok && selectedClass) bumpClassCount(selectedClass.id, -1);
                             if (selectedClass) fetchStudents(selectedClass.id);
                             if (selectedStudent?.id === student.id) {
                                 setSelectedStudent(null);
@@ -545,6 +552,15 @@ export default function TeacherDashboard({
     const analyzeScore = async (score: GameScore) => {
         if (!flags.canSeeAiAnalysis) {
             showAlert(t('teacher.premiumFeatureTitle'), t('teacher.aiPremiumOnlyMessage'));
+            return;
+        }
+        if (teacherId === 'demo-teacher') {
+            // Demo: oturum/sunucu yok; ornek bir pedagojik yorum kisa bir bekleyisle gelir.
+            setAnalyzingId(score.id);
+            setTimeout(() => {
+                setStudentScores(prev => prev.map(s => s.id === score.id ? { ...s, yapay_zeka_yorumu: demoAnalysis(selectedStudent?.child_name, score) } : s));
+                setAnalyzingId(null);
+            }, 900);
             return;
         }
         setAnalyzingId(score.id);
@@ -639,7 +655,7 @@ export default function TeacherDashboard({
                     </View>
                     <View style={[styles.statCard, styles.statCardGreen]}>
                         <Text style={styles.statEmoji}>🎮</Text>
-                        <Text style={styles.statValue}>{students.reduce((s, st) => s + st.gameCount, 0)}</Text>
+                        <Text style={styles.statValue}>{teacherId === 'demo-teacher' ? demoTotalGames() : (selectedClass ? students.reduce((s, st) => s + st.gameCount, 0) : '—')}</Text>
                         <Text style={styles.statLabel}>{t('teacher.statGames')}</Text>
                     </View>
                 </View>
@@ -776,6 +792,10 @@ export default function TeacherDashboard({
                         initialTheme={selectedClass.reward_theme || 'bitki'}
                         roster={students}
                         onClose={() => setGardenOpen(false)}
+                        onThemeChange={(theme) => {
+                            setSelectedClass((prev) => (prev && prev.id === selectedClass.id ? { ...prev, reward_theme: theme } : prev));
+                            setClasses((prev) => prev.map((c) => (c.id === selectedClass.id ? { ...c, reward_theme: theme } : c)));
+                        }}
                         demo={teacherId === 'demo-teacher'}
                     />
                 )}

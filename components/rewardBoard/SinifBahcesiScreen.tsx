@@ -42,11 +42,13 @@ interface SinifBahcesiScreenProps {
     initialTheme: string;
     roster: RosterEntry[];
     onClose: () => void;
+    /** Tema basariyla degisince (sunucuya yazildiktan sonra) cagrilir: ust bilesen sinif kaydini guncelleyip yeniden acilista eski temaya donulmesini onler. */
+    onThemeChange?: (theme: string) => void;
     /** Satış gösterisi (demo öğretmen): sunucu çağrısı yapılmaz, ödül/tema yerelde çalışır. */
     demo?: boolean;
 }
 
-export default function SinifBahcesiScreen({ visible, classId, className, classEmoji, initialTheme, roster, onClose, demo }: SinifBahcesiScreenProps) {
+export default function SinifBahcesiScreen({ visible, classId, className, classEmoji, initialTheme, roster, onClose, onThemeChange, demo }: SinifBahcesiScreenProps) {
     const { t } = useTranslation();
     const { width } = useWindowDimensions();
     const [theme, setTheme] = useState<RewardConceptId>((initialTheme as RewardConceptId) || 'bitki');
@@ -113,12 +115,14 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
         if (id === theme) return;
         const prev = theme;
         setTheme(id);
-        if (demo) return;
+        if (demo) { onThemeChange?.(id); return; }
         const { error } = await supabase.rpc('teacher_set_reward_theme', { p_class_id: classId, p_theme: id });
         if (error) {
             setTheme(prev);
             setNotice(t('rewardBoard.themeChangeFailed'));
+            return;
         }
+        onThemeChange?.(id);
     };
 
     const openDayOverlay = () => {
