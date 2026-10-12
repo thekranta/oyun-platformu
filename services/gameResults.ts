@@ -186,10 +186,19 @@ export async function saveGameResult({
     };
 
     let uploadResult: { filePath: string; format: string } | null = null;
+    // Cizim gorseli kaydedilemezse nedeni cizim_verisi'ne yazilir (imageIssue): ogretmen panelinde cizim
+    // gorunmeyince sebebi tarayici konsoluna bakmadan veritabanindan okuyabilmek icin.
+    let imageIssue: string | null = null;
+    if (extraData?.cizimVerisi && !extraData?.cizimResimBase64) {
+      imageIssue = 'goruntu-uretilemedi';
+    } else if (extraData?.cizimResimBase64 && (!SUPABASE_URL || !SUPABASE_KEY)) {
+      imageIssue = 'depo-anahtari-yok';
+    }
     try {
       uploadResult = await uploadDrawingImage();
     } catch (error) {
       console.error('Cizim yukleme hatasi:', error);
+      imageIssue = 'yukleme: ' + (error instanceof Error ? error.message : String(error)).slice(0, 240);
     }
 
     const kayitVerisi: Record<string, any> = {
@@ -229,6 +238,11 @@ export async function saveGameResult({
         }
         cizimPayload.imagePath = uploadResult.filePath;
         cizimPayload.imageFormat = uploadResult.format;
+      } else if (imageIssue) {
+        if (typeof cizimPayload !== 'object' || cizimPayload === null) {
+          cizimPayload = { raw: extraData?.cizimVerisi || '' };
+        }
+        cizimPayload.imageIssue = imageIssue;
       }
       kayitVerisi.cizim_verisi = JSON.stringify(cizimPayload);
     }
