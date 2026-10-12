@@ -4,8 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
-    Alert,
-    Dimensions,
     Image,
     Linking,
     Modal,
@@ -24,6 +22,7 @@ import InAppNotice from './InAppNotice';
 import TeacherDrawings from './TeacherDrawings';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
+import InAppConfirm, { InAppConfirmState } from './InAppConfirm';
 import { DEMO_CLASSES, demoPreview, demoRoster, demoScores, demoSummary, demoTotalGames } from '../lib/teacherDemo';
 import { buildTeacherSummaryPrompt, SUMMARY_GAME_LIMIT, SUMMARY_MIN_GAMES } from '../lib/teacherSummary';
 import SinifBahcesiScreen from './rewardBoard/SinifBahcesiScreen';
@@ -44,23 +43,6 @@ const openPricing = () => {
 const getSessionToken = async () => {
     const { data } = await supabase.auth.getSession();
     return data.session?.access_token || SUPABASE_KEY || '';
-};
-
-// Web-compatible alert
-const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: 'default' | 'cancel' | 'destructive' }>) => {
-    if (Platform.OS === 'web') {
-        if (buttons && buttons.length > 1) {
-            const result = window.confirm(`${title}\n\n${message}`);
-            if (result) {
-                const action = buttons.find(b => b.style !== 'cancel');
-                action?.onPress?.();
-            }
-        } else {
-            window.alert(`${title}\n\n${message}`);
-        }
-    } else {
-        Alert.alert(title, message, buttons);
-    }
 };
 
 // Sunucu fonksiyonu henüz yoksa (SQL çalıştırılmadıysa) PostgREST PGRST202 döner: eski okuma yoluna düşülür.
@@ -134,8 +116,6 @@ export default function TeacherDashboard({
     onClose,
 }: TeacherDashboardProps) {
     const { t } = useTranslation();
-    const { width } = Dimensions.get('window');
-    const isMobile = width < 768;
 
     const [loading, setLoading] = useState(true);
     const [classes, setClasses] = useState<ClassData[]>([]);
@@ -156,6 +136,18 @@ export default function TeacherDashboard({
     const [summaryError, setSummaryError] = useState(false);
     const summaryCache = useRef<Record<string, string>>({});
     const [notice, setNotice] = useState<string | null>(null);
+    const [confirmState, setConfirmState] = useState<InAppConfirmState | null>(null);
+    const [studentsLoading, setStudentsLoading] = useState(false);
+    const [scoresLoading, setScoresLoading] = useState(false);
+    const [classesError, setClassesError] = useState(false);
+    const [savingClass, setSavingClass] = useState(false);
+    const [savingStudent, setSavingStudent] = useState(false);
+    const [searchedEmail, setSearchedEmail] = useState<string | null>(null);
+    const [searchFailed, setSearchFailed] = useState(false);
+    // Yarisan istekler: yalniz EN SON secime ait yanit ekrana yazilir (sinif/ogrenci hizli degisince eski veri gorunmesin).
+    const rosterReq = useRef(0);
+    const scoresReq = useRef(0);
+    const searchReq = useRef(0);
     // Demo: sinif basina ogrenci listesi (ekleme/cikarma sinif degisince kaybolmasin, sayilar tutarli kalsin).
     const demoRosters = useRef<Record<string, StudentData[]>>({});
     const bumpClassCount = (classId: string, delta: number) => {
@@ -175,8 +167,9 @@ export default function TeacherDashboard({
         }
     }, [teacherId]);
 
-    const fetchClasses = async () => {
-        setLoading(true);
+    const fetchClasses = async (silent = false) => {
+        if (!silent) setLoading(true);
+        setClassesError(false);
         try {
             const response = await fetch(
                 `${SUPABASE_URL}/rest/v1/classes?teacher_id=eq.${teacherId}&select=*`,
@@ -199,25 +192,39 @@ export default function TeacherDashboard({
                     };
                 }));
                 setClasses(classesWithCount);
+            } else {
+                // Süresi dolmuş oturum / RLS hatası: boş hesap gibi görünmesin, yeniden denenebilsin.
+                setClassesError(true);
             }
         } catch (error) {
             console.error('Sınıflar yüklenirken hata:', error);
+            setClassesError(true);
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchStudents = async (classId: string) => {
+    const fetchStudents = async (classId: string, silent = false) => {
+        const token = ++rosterReq.current;
+        if (!silent) setStudentsLoading(true);
+        try {
+            await loadStudents(classId, (list) => { if (token === rosterReq.current) setStudents(list); });
+        } finally {
+            if (token === rosterReq.current) setStudentsLoading(false);
+        }
+    };
+
+    const loadStudents = async (classId: string, apply: (list: StudentData[]) => void) => {
         if (teacherId === 'demo-teacher') {
             if (!demoRosters.current[classId]) demoRosters.current[classId] = demoRoster(classId);
-            setStudents(demoRosters.current[classId]);
+            apply(demoRosters.current[classId]);
             return;
         }
 
         // Yeni yol: yalnız gereken alanları veren sunucu fonksiyonu (onay durumu dahil).
         const roster = await supabase.rpc('teacher_class_roster', { p_class_id: classId });
         if (!roster.error && Array.isArray(roster.data)) {
-            setStudents(roster.data.map((r: any) => ({
+            apply(roster.data.map((r: any) => ({
                 id: r.student_id,
                 child_name: r.child_name ?? '',
                 child_age_months: r.child_age_months ?? null,
@@ -230,6 +237,7 @@ export default function TeacherDashboard({
         }
         if (roster.error && !isMissingFunction(roster.error)) {
             console.error('Öğrenciler yüklenirken hata:', roster.error);
+            setNotice(t('teacher.loadFailed'));
             return;
         }
 
@@ -249,7 +257,7 @@ export default function TeacherDashboard({
                 );
                 const profiles = await profilesResponse.json();
                 if (Array.isArray(profiles)) {
-                    setStudents(profiles.map((p: any) => ({
+                    apply(profiles.map((p: any) => ({
                         id: p.id || p.email,
                         child_name: p.child_name,
                         child_age_months: p.child_age_months,
@@ -258,10 +266,11 @@ export default function TeacherDashboard({
                     })));
                 }
             } else {
-                setStudents([]);
+                apply([]);
             }
         } catch (error) {
             console.error('Öğrenciler yüklenirken hata:', error);
+            setNotice(t('teacher.loadFailed'));
         }
     };
 
@@ -270,12 +279,15 @@ export default function TeacherDashboard({
             setStudentPreview(null);
             return;
         }
+        const token = ++searchReq.current;
         if (teacherId === 'demo-teacher') {
             // Demo: sunucuya e-posta gonderilmez; sabit bir cocuk onizlemesi doner.
             setStudentPreview(demoPreview(email));
+            setSearchedEmail(email);
             return;
         }
         setSearchingStudent(true);
+        setSearchFailed(false);
         try {
             // Dogrudan tablo sorgusu yerine dar kapsamli RPC: tek e-posta, yalnizca
             // 3 alan doner (bkz. supabase_migrations/fix_teacher_profiles_pii_exposure.sql).
@@ -292,6 +304,9 @@ export default function TeacherDashboard({
                 }
             );
             const data = await response.json();
+            if (token !== searchReq.current) return;      // daha yeni bir arama başladı: bu yanıtı yok say
+            setSearchedEmail(email);
+            if (!response.ok) { setSearchFailed(true); setStudentPreview(null); return; }
             if (Array.isArray(data) && data.length > 0) {
                 setStudentPreview({
                     child_name: data[0].child_name ?? null,
@@ -303,21 +318,42 @@ export default function TeacherDashboard({
             }
         } catch (error) {
             console.error('Öğrenci aranırken hata:', error);
+            if (token === searchReq.current) { setSearchFailed(true); setStudentPreview(null); }
         } finally {
-            setSearchingStudent(false);
+            if (token === searchReq.current) setSearchingStudent(false);
         }
     };
 
+    // E-posta yazıldıkça her tuşta değil, yazma durduktan 400 ms sonra ara (gereksiz istek + yarış yok).
+    useEffect(() => {
+        if (!showAddStudentModal) return;
+        const email = newStudentEmail.trim();
+        if (!EMAIL_RE.test(email)) { setSearchingStudent(false); return; }
+        const id = setTimeout(() => { searchStudentByEmail(email); }, 400);
+        return () => clearTimeout(id);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [newStudentEmail, showAddStudentModal]);
+
     const fetchStudentScores = async (student: StudentData) => {
+        const token = ++scoresReq.current;
+        setScoresLoading(true);
+        try {
+            await loadStudentScores(student, (list) => { if (token === scoresReq.current) setStudentScores(list); });
+        } finally {
+            if (token === scoresReq.current) setScoresLoading(false);
+        }
+    };
+
+    const loadStudentScores = async (student: StudentData, apply: (list: GameScore[]) => void) => {
         if (teacherId === 'demo-teacher') {
-            setStudentScores(demoScores(student));
+            apply(demoScores(student) as GameScore[]);
             return;
         }
 
         // Yeni yol: yalnız onaylı kayıt için, yalnız gereken kolonlar; yapay zekâ yorumunun yalnız AKADEMİK kısmı.
         const rpc = await supabase.rpc('teacher_student_scores', { p_student_id: student.id, p_limit: 20 });
         if (!rpc.error && Array.isArray(rpc.data)) {
-            setStudentScores(rpc.data.map((r: any) => ({
+            apply(rpc.data.map((r: any) => ({
                 id: r.score_id,
                 created_at: r.created_at,
                 oyun_turu: r.oyun_turu,
@@ -332,6 +368,7 @@ export default function TeacherDashboard({
         }
         if (rpc.error && !isMissingFunction(rpc.error)) {
             console.error('Skorlar yüklenirken hata:', rpc.error);
+            setNotice(t('teacher.loadFailed'));
             return;
         }
 
@@ -344,9 +381,10 @@ export default function TeacherDashboard({
                 { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
             );
             const data = await response.json();
-            if (Array.isArray(data)) setStudentScores(data);
+            if (Array.isArray(data)) apply(data);
         } catch (error) {
             console.error('Skorlar yüklenirken hata:', error);
+            setNotice(t('teacher.loadFailed'));
         }
     };
 
@@ -354,6 +392,10 @@ export default function TeacherDashboard({
         setSelectedClass(classData);
         setSelectedStudent(null);
         setStudentScores([]);
+        scoresReq.current++;
+        setScoresLoading(false);
+        setSummary(null);
+        setStudents([]);
         fetchStudents(classData.id);
     };
 
@@ -361,6 +403,7 @@ export default function TeacherDashboard({
         // Onaylanmamış / askıdaki / kardeşli kayıtta gösterilecek veri yoktur (durum rozeti açıklar).
         if ((student.status && student.status !== 'accepted') || student.hidden) return;
         setSelectedStudent(student);
+        setStudentScores([]);
         setSummaryError(false);
         const cached = summaryCache.current[student.id];
         setSummary(cached ? { studentId: student.id, text: cached } : null);
@@ -368,16 +411,17 @@ export default function TeacherDashboard({
     };
 
     const handleAddClass = async () => {
-        if (!newClassName.trim()) return;
+        const name = newClassName.trim();
+        if (!name || savingClass) return;
         if (classes.length >= flags.maxClasses) {
-            showAlert(t('teacher.premiumRequiredTitle'), t('teacher.classLimitMessage'));
+            setNotice(t('teacher.classLimitMessage'));
             return;
         }
 
         if (teacherId === 'demo-teacher') {
             const newClass = {
                 id: `demo-${Date.now()}`,
-                name: newClassName,
+                name,
                 studentCount: 0,
                 emoji: CLASS_EMOJIS[classes.length % CLASS_EMOJIS.length],
             };
@@ -387,6 +431,7 @@ export default function TeacherDashboard({
             return;
         }
 
+        setSavingClass(true);
         try {
             const response = await fetch(`${SUPABASE_URL}/rest/v1/classes`, {
                 method: 'POST',
@@ -396,65 +441,68 @@ export default function TeacherDashboard({
                     'Content-Type': 'application/json',
                     'Prefer': 'return=representation',
                 },
-                body: JSON.stringify({ teacher_id: teacherId, name: newClassName }),
+                body: JSON.stringify({ teacher_id: teacherId, name }),
             });
 
             if (response.ok) {
-                fetchClasses();
+                fetchClasses(true);
                 setNewClassName('');
                 setShowAddClassModal(false);
+            } else {
+                setNotice(t('teacher.addClassFailed'));
             }
         } catch (error) {
             console.error('Sınıf oluşturulurken hata:', error);
+            setNotice(t('teacher.addClassFailed'));
+        } finally {
+            setSavingClass(false);
         }
     };
 
     const handleDeleteClass = (classData: ClassData) => {
-        showAlert(
-            t('teacher.deleteClassTitle'),
-            t('teacher.deleteClassMessage', { name: classData.name }),
-            [
-                { text: t('teacher.cancel'), style: 'cancel' },
-                {
-                    text: t('teacher.delete'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        if (teacherId === 'demo-teacher') {
-                            setClasses(classes.filter(c => c.id !== classData.id));
-                            if (selectedClass?.id === classData.id) {
-                                setSelectedClass(null);
-                                setStudents([]);
-                            }
-                            return;
-                        }
-
-                        try {
-                            await fetch(`${SUPABASE_URL}/rest/v1/classes?id=eq.${classData.id}`, {
-                                method: 'DELETE',
-                                headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` },
-                            });
-                            fetchClasses();
-                            if (selectedClass?.id === classData.id) {
-                                setSelectedClass(null);
-                                setStudents([]);
-                            }
-                        } catch (error) {
-                            console.error('Sınıf silinirken hata:', error);
-                        }
-                    },
-                },
-            ]
-        );
+        setConfirmState({
+            title: t('teacher.deleteClassTitle'),
+            message: t('teacher.deleteClassMessage', { name: classData.name }),
+            confirmLabel: t('teacher.delete'),
+            cancelLabel: t('teacher.cancel'),
+            destructive: true,
+            onConfirm: async () => {
+                if (teacherId !== 'demo-teacher') {
+                    try {
+                        const resp = await fetch(`${SUPABASE_URL}/rest/v1/classes?id=eq.${classData.id}`, {
+                            method: 'DELETE',
+                            headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` },
+                        });
+                        if (!resp.ok) { setNotice(t('teacher.deleteFailed')); return; }
+                    } catch (error) {
+                        console.error('Sınıf silinirken hata:', error);
+                        setNotice(t('teacher.deleteFailed'));
+                        return;
+                    }
+                }
+                delete demoRosters.current[classData.id];
+                setClasses((prev) => prev.filter((c) => c.id !== classData.id));
+                if (selectedClass?.id === classData.id) {
+                    rosterReq.current++;
+                    scoresReq.current++;
+                    setSelectedClass(null);
+                    setStudents([]);
+                    setSelectedStudent(null);
+                    setStudentScores([]);
+                    setSummary(null);
+                }
+            },
+        });
     };
 
     const handleAddStudent = async () => {
-        if (!newStudentEmail.trim() || !selectedClass) return;
+        if (!newStudentEmail.trim() || !selectedClass || savingStudent) return;
         if (!studentPreview) {
-            showAlert(t('teacher.errorTitle'), t('teacher.studentNotFoundMessage'));
+            setNotice(t('teacher.studentNotFoundMessage'));
             return;
         }
         if (students.length >= flags.maxStudentsPerClass) {
-            showAlert(t('teacher.premiumRequiredTitle'), t('teacher.studentLimitMessage'));
+            setNotice(t('teacher.studentLimitMessage'));
             return;
         }
 
@@ -475,7 +523,9 @@ export default function TeacherDashboard({
             return;
         }
 
+        setSavingStudent(true);
         try {
+            // Önizlemede doğrulanan (sunucunun döndürdüğü) e-posta gönderilir; kutudaki ham metin değil.
             const response = await fetch(`${SUPABASE_URL}/rest/v1/class_students`, {
                 method: 'POST',
                 headers: {
@@ -484,11 +534,11 @@ export default function TeacherDashboard({
                     'Content-Type': 'application/json',
                     'Prefer': 'return=minimal',
                 },
-                body: JSON.stringify({ class_id: selectedClass.id, child_email: newStudentEmail }),
+                body: JSON.stringify({ class_id: selectedClass.id, child_email: studentPreview.email }),
             });
 
             if (response.ok) {
-                fetchStudents(selectedClass.id);
+                fetchStudents(selectedClass.id, true);
                 bumpClassCount(selectedClass.id, 1);
                 setNewStudentEmail('');
                 setStudentPreview(null);
@@ -507,57 +557,58 @@ export default function TeacherDashboard({
         } catch (error) {
             console.error('Öğrenci eklenirken hata:', error);
             setNotice(t('teacher.addFailed'));
+        } finally {
+            setSavingStudent(false);
         }
     };
 
     const handleRemoveStudent = (student: StudentData) => {
-        showAlert(
-            t('teacher.removeStudentTitle'),
-            t('teacher.removeStudentMessage', { name: student.child_name || student.email }),
-            [
-                { text: t('teacher.cancel'), style: 'cancel' },
-                {
-                    text: t('teacher.remove'),
-                    style: 'destructive',
-                    onPress: async () => {
-                        if (teacherId === 'demo-teacher') {
-                            const next = students.filter(s => s.id !== student.id);
-                            if (selectedClass) { demoRosters.current[selectedClass.id] = next; bumpClassCount(selectedClass.id, -1); }
-                            setStudents(next);
-                            if (selectedStudent?.id === student.id) {
-                                setSelectedStudent(null);
-                                setStudentScores([]);
+        setConfirmState({
+            title: t('teacher.removeStudentTitle'),
+            message: t('teacher.removeStudentMessage', { name: student.child_name || student.email }),
+            confirmLabel: t('teacher.remove'),
+            cancelLabel: t('teacher.cancel'),
+            destructive: true,
+            onConfirm: async () => {
+                const classId = selectedClass?.id;
+                if (!classId) return;
+                if (teacherId === 'demo-teacher') {
+                    const next = students.filter((s) => s.id !== student.id);
+                    demoRosters.current[classId] = next;
+                    bumpClassCount(classId, -1);
+                    setStudents(next);
+                } else {
+                    try {
+                        const resp = await fetch(
+                            `${SUPABASE_URL}/rest/v1/class_students?class_id=eq.${classId}&child_email=eq.${encodeURIComponent(student.email)}`,
+                            {
+                                method: 'DELETE',
+                                headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` },
                             }
-                            return;
-                        }
-
-                        try {
-                            const delResp = await fetch(
-                                `${SUPABASE_URL}/rest/v1/class_students?class_id=eq.${selectedClass?.id}&child_email=eq.${encodeURIComponent(student.email)}`,
-                                {
-                                    method: 'DELETE',
-                                    headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` },
-                                }
-                            );
-                            if (delResp.ok && selectedClass) bumpClassCount(selectedClass.id, -1);
-                            if (selectedClass) fetchStudents(selectedClass.id);
-                            if (selectedStudent?.id === student.id) {
-                                setSelectedStudent(null);
-                                setStudentScores([]);
-                            }
-                        } catch (error) {
-                            console.error('Öğrenci çıkarılırken hata:', error);
-                        }
-                    },
-                },
-            ]
-        );
+                        );
+                        if (!resp.ok) { setNotice(t('teacher.removeFailed')); return; }
+                        bumpClassCount(classId, -1);
+                        fetchStudents(classId, true);
+                    } catch (error) {
+                        console.error('Öğrenci çıkarılırken hata:', error);
+                        setNotice(t('teacher.removeFailed'));
+                        return;
+                    }
+                }
+                if (selectedStudent?.id === student.id) {
+                    scoresReq.current++;
+                    setSelectedStudent(null);
+                    setStudentScores([]);
+                    setSummary(null);
+                }
+            },
+        });
     };
 
     const generateSummary = async () => {
         if (!selectedStudent || summaryLoading) return;
         if (!flags.canSeeAiAnalysis) {
-            showAlert(t('teacher.premiumFeatureTitle'), t('teacher.aiPremiumOnlyMessage'));
+            setNotice(t('teacher.aiPremiumOnlyMessage'));
             return;
         }
         if (studentScores.length < SUMMARY_MIN_GAMES) return;
@@ -620,7 +671,7 @@ export default function TeacherDashboard({
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onClose} style={styles.backBtn}>
+                <TouchableOpacity onPress={onClose} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('teacher.back')}>
                     <Ionicons name="arrow-back" size={24} color="#FF6B6B" />
                 </TouchableOpacity>
                 <View style={styles.headerInfo}>
@@ -661,12 +712,20 @@ export default function TeacherDashboard({
                 <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>{t('teacher.myClassesTitle')}</Text>
-                        <TouchableOpacity style={styles.addClassBtn} onPress={() => setShowAddClassModal(true)}>
+                        <TouchableOpacity style={styles.addClassBtn} onPress={() => setShowAddClassModal(true)} accessibilityRole="button" accessibilityLabel={t('teacher.createClassTitle')}>
                             <Ionicons name="add-circle" size={32} color="#FF6B6B" />
                         </TouchableOpacity>
                     </View>
 
-                    {classes.length === 0 ? (
+                    {classes.length === 0 && classesError ? (
+                        <View style={styles.emptyCard}>
+                            <Text style={styles.emptyTitle}>{t('teacher.classesLoadFailedTitle')}</Text>
+                            <Text style={styles.emptyText}>{t('teacher.classesLoadFailedText')}</Text>
+                            <TouchableOpacity style={styles.analyzeBtn} onPress={() => fetchClasses()} accessibilityRole="button">
+                                <Text style={styles.analyzeBtnText}>{t('teacher.retry')}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    ) : classes.length === 0 ? (
                         <View style={styles.emptyCard}>
                             <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
                             <Text style={styles.emptyTitle}>{t('teacher.noClassesTitle')}</Text>
@@ -687,6 +746,8 @@ export default function TeacherDashboard({
                                     <TouchableOpacity
                                         style={styles.deleteClassBtn}
                                         onPress={() => handleDeleteClass(c)}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={t('teacher.deleteClassLabel', { name: c.name })}
                                     >
                                         <Ionicons name="trash-outline" size={16} color="#FF6B6B" />
                                     </TouchableOpacity>
@@ -703,12 +764,14 @@ export default function TeacherDashboard({
                             <Text style={styles.sectionTitle}>
                                 {t('teacher.classStudentsTitle', { emoji: selectedClass.emoji, name: selectedClass.name })}
                             </Text>
-                            <TouchableOpacity style={styles.addStudentBtn} onPress={() => setShowAddStudentModal(true)}>
+                            <TouchableOpacity style={styles.addStudentBtn} onPress={() => setShowAddStudentModal(true)} accessibilityRole="button" accessibilityLabel={t('teacher.addStudentTitle')}>
                                 <Ionicons name="person-add" size={24} color="#4ECDC4" />
                             </TouchableOpacity>
                         </View>
 
-                        {students.length === 0 ? (
+                        {studentsLoading ? (
+                            <View style={styles.emptyCard}><ActivityIndicator size="small" color="#FF6B6B" /></View>
+                        ) : students.length === 0 ? (
                             <View style={styles.emptyCard}>
                                 <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
                                 <Text style={styles.emptyTitle}>{t('teacher.noStudentsTitle')}</Text>
@@ -756,6 +819,8 @@ export default function TeacherDashboard({
                                         <TouchableOpacity
                                             style={styles.removeStudentBtn}
                                             onPress={() => handleRemoveStudent(s)}
+                                            accessibilityRole="button"
+                                            accessibilityLabel={t('teacher.removeStudentLabel', { name: s.child_name || s.email })}
                                         >
                                             <Ionicons name="close-circle" size={24} color="#FF6B6B" />
                                         </TouchableOpacity>
@@ -844,7 +909,9 @@ export default function TeacherDashboard({
                             </View>
                         )}
 
-                        {studentScores.length === 0 ? (
+                        {scoresLoading ? (
+                            <View style={styles.emptyCard}><ActivityIndicator size="small" color="#FF6B6B" /></View>
+                        ) : studentScores.length === 0 ? (
                             <View style={styles.emptyCard}>
                                 <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
                                 <Text style={styles.emptyText}>{t('teacher.noGameRecordsText')}</Text>
@@ -916,7 +983,6 @@ export default function TeacherDashboard({
                                 .sort((a, b) => b.errorRate - a.errorRate);
 
                             const maxRate = Math.max(...gameEntries.map(e => e.errorRate), 1);
-                            const colors = ['#FF6B6B', '#F7B731', '#4ECDC4', '#A8E6CF', '#9B59B6'];
 
                             return (
                                 <View style={styles.errorChartCard}>
@@ -1002,7 +1068,7 @@ export default function TeacherDashboard({
                             <TouchableOpacity style={styles.modalCancelBtn} onPress={() => setShowAddClassModal(false)}>
                                 <Text style={styles.modalCancelText}>{t('teacher.cancel')}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.modalConfirmBtn} onPress={handleAddClass}>
+                            <TouchableOpacity style={[styles.modalConfirmBtn, savingClass && styles.modalConfirmBtnDisabled]} onPress={handleAddClass} disabled={savingClass}>
                                 <Text style={styles.modalConfirmText}>{t('teacher.createButton')}</Text>
                             </TouchableOpacity>
                         </View>
@@ -1019,13 +1085,14 @@ export default function TeacherDashboard({
                         <Text style={styles.modalSubtitle}>{t('teacher.parentEmailHint')}</Text>
                         <TextInput
                             style={styles.modalInput}
-                            placeholder="ornek@email.com"
+                            placeholder={t('teacher.emailPlaceholder')}
                             placeholderTextColor="#999"
                             value={newStudentEmail}
                             onChangeText={(text) => {
                                 setNewStudentEmail(text);
-                                if (text.includes('@') && text.length > 5) searchStudentByEmail(text);
-                                else setStudentPreview(null);
+                                setStudentPreview(null);
+                                setSearchedEmail(null);
+                                setSearchFailed(false);
                             }}
                             keyboardType="email-address"
                             autoCapitalize="none"
@@ -1053,10 +1120,10 @@ export default function TeacherDashboard({
                                 </Text>
                             </View>
                         )}
-                        {newStudentEmail.includes('@') && !searchingStudent && !studentPreview && newStudentEmail.length > 5 && (
+                        {!searchingStudent && !studentPreview && newStudentEmail.length > 5 && (searchFailed || (searchedEmail !== null && searchedEmail === newStudentEmail.trim()) || (newStudentEmail.includes('@') && !EMAIL_RE.test(newStudentEmail.trim()))) && (
                             <View style={styles.notFoundCard}>
                                 <Text style={styles.notFoundEmoji}>❌</Text>
-                                <Text style={styles.notFoundText}>{EMAIL_RE.test(newStudentEmail.trim()) ? t('teacher.noRegisteredStudent') : t('teacher.invalidEmail')}</Text>
+                                <Text style={styles.notFoundText}>{searchFailed ? t('teacher.searchFailed') : EMAIL_RE.test(newStudentEmail.trim()) ? t('teacher.noRegisteredStudent') : t('teacher.invalidEmail')}</Text>
                             </View>
                         )}
                         <View style={styles.modalBtnRow}>
@@ -1067,9 +1134,9 @@ export default function TeacherDashboard({
                                 <Text style={styles.modalCancelText}>{t('teacher.cancel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.modalConfirmBtn, !studentPreview && styles.modalConfirmBtnDisabled]}
+                                style={[styles.modalConfirmBtn, (!studentPreview || savingStudent) && styles.modalConfirmBtnDisabled]}
                                 onPress={handleAddStudent}
-                                disabled={!studentPreview}
+                                disabled={!studentPreview || savingStudent}
                             >
                                 <Text style={styles.modalConfirmText}>{t('teacher.addButton')}</Text>
                             </TouchableOpacity>
@@ -1077,6 +1144,7 @@ export default function TeacherDashboard({
                     </View>
                 </View>
             </Modal>
+            <InAppConfirm state={confirmState} onClose={() => setConfirmState(null)} />
             <InAppNotice message={notice} onDismiss={() => setNotice(null)} />
         </View>
     );
