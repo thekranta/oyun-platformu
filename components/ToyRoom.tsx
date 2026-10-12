@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +19,14 @@ const firstGames = TOY_ROOM_FIRST_GAMES;
 const groups = TOY_ROOM_GROUPS;
 const TIER_LABELS: Record<VeliTier, string> = { free: 'Ücretsiz', tohum: 'Tohum', filiz: 'Filiz', fidan: 'Fidan', orman: 'Orman' };
 const PRICING_URL = 'https://childhoodtech.com/#pricing';
+// iPhone'da basili tutunca metin/emoji "Kopyala" menusu cikmasin (yetiskin menusu 1,2 sn basili tutularak acilir).
+// react-native-web WebkitTouchCallout stilini uretmez; bu yuzden DOM dugumune dogrudan yazilir.
+const noCalloutRef = (node: unknown) => {
+  if (Platform.OS !== 'web' || !node) return;
+  const el = node as { style?: { setProperty?: (k: string, v: string) => void } };
+  el.style?.setProperty?.('-webkit-touch-callout', 'none');
+  el.style?.setProperty?.('-webkit-user-select', 'none');
+};
 // Native'de uygulama içi satın alma ekranına git; web'de eski web ödeme sayfasına yönlendir.
 const openPricing = () => {
   if (Platform.OS !== 'web') { router.push('/paket-satin-al?kind=veli'); return; }
@@ -257,8 +266,8 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
       </View>
     </View>}
     <SafeAreaView edges={['top', 'right']} style={styles.controls}>
-      <Pressable accessibilityRole="button" accessibilityLabel={muted ? t('toyRoom.muteOn') : t('toyRoom.muteOff')} onPress={onMute} style={styles.control}><Text style={styles.controlText}>{muted ? '🔇' : '🔊'}</Text></Pressable>
-      <Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.adultMenuLabel')} delayLongPress={1200} onLongPress={() => setAdult(true)} style={styles.control}><Text style={styles.controlText}>⚙</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={muted ? t('toyRoom.muteOn') : t('toyRoom.muteOff')} onPress={onMute} ref={noCalloutRef} style={styles.control}><Text style={styles.controlText} selectable={false}>{muted ? '🔇' : '🔊'}</Text></Pressable>
+      <Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.adultMenuLabel')} delayLongPress={1200} onLongPress={() => setAdult(true)} ref={noCalloutRef} style={styles.control}><Ionicons name="settings-sharp" size={22} color="#706452" style={styles.noSelect} /></Pressable>
     </SafeAreaView>
     <Modal visible={adult} transparent animationType="fade" onRequestClose={() => setAdult(false)}>
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
@@ -313,7 +322,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#FAF2E4', overflow: 'hidden' },
   heading: { position: 'absolute', alignItems: 'center' }, eyebrow: { color: '#A27D59', letterSpacing: 3, fontWeight: '800' }, headline: { color: '#584B40', fontWeight: '900', letterSpacing: -1.2, marginTop: 6 }, greeting: { color: '#887864', fontSize: 14, marginTop: 6, textAlign: 'center' },
   toy: { alignItems: 'center' }, toyLabel: { fontWeight: '800', textAlign: 'center', paddingHorizontal: 5, lineHeight: 20 }, replacement: { position: 'absolute', right: 0, bottom: 0, borderRadius: 40, backgroundColor: '#FFF5DD', alignItems: 'center', justifyContent: 'center' },
-  controls: { position: 'absolute', right: 10, top: 10, flexDirection: 'row', gap: 6 }, control: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFFCC', borderRadius: 22 }, controlText: { fontSize: 21, color: '#706452' },
+  controls: { position: 'absolute', right: 10, top: 10, flexDirection: 'row', gap: 6 }, control: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFFCC', borderRadius: 22, userSelect: 'none' }, controlText: { fontSize: 21, color: '#706452', userSelect: 'none' }, noSelect: { userSelect: 'none' },
   overlay: { flex: 1, backgroundColor: '#40372999', justifyContent: 'center', alignItems: 'center', padding: 20 }, adult: { backgroundColor: '#FFFCF5', borderRadius: 26, padding: 22, width: '100%', maxWidth: 590, maxHeight: '90%' }, adultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, adultTitle: { fontSize: 23, fontWeight: '800', color: '#584B40' }, adultNote: { fontSize: 14, color: '#756753', lineHeight: 22, marginVertical: 14 }, adultActions: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' }, adultButton: { backgroundColor: '#EFE7D9', padding: 14, borderRadius: 15 }, search: { padding: 14, borderWidth: 1, borderColor: '#D7CBBA', borderRadius: 14, marginVertical: 16, fontSize: 16 }, gameRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderColor: '#EEE6D9', gap: 8 }, gameText: { fontSize: 15, color: '#584B40', flexShrink: 1 },
   gameRowLocked: { opacity: 0.55 }, gameTextLocked: { color: '#8A7A63' }, lockedHint: { fontSize: 12, color: '#A07D2F', fontWeight: '700' },
   upsellBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: '#2B2317B3', justifyContent: 'center', alignItems: 'center', padding: 24 },
