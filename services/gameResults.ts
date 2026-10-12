@@ -155,7 +155,8 @@ export async function saveGameResult({
         apikey: SUPABASE_KEY,
         Authorization: `Bearer ${authToken}`,
         'Content-Type': `image/${format}`,
-        'x-upsert': 'true',
+        // x-upsert YOK: upsert, INSERT'e ek olarak UPDATE/SELECT izni ister; 'cizimler' kovasında yalnız INSERT var
+        // (private_cizimler_bucket.sql) ve dosya adı Date.now() ile zaten benzersiz — upsert yüklemeyi sessizce reddettiriyordu.
       };
 
       if (Platform.OS === 'web') {
