@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { getMaarif } from '../constants/maarifMap';
 import { supabase } from '../lib/supabase';
 
@@ -41,6 +41,17 @@ export default function TeacherDrawings({ studentId, studentName, demo }: Props)
     const { t } = useTranslation();
     const [items, setItems] = useState<DrawingItem[] | null>(null);
     const [open, setOpen] = useState<DrawingItem | null>(null);
+    // Cizim tuvali ekran oranindadir (genelde genis): buyuk gorunum cizimin gercek oranini kullanir, kirpma/bosluk olmasin.
+    const [bigAspect, setBigAspect] = useState(1);
+    const { height: winH } = useWindowDimensions();
+
+    useEffect(() => {
+        if (!open) return;
+        let cancelled = false;
+        setBigAspect(1);
+        Image.getSize(open.url, (w, h) => { if (!cancelled && w > 0 && h > 0) setBigAspect(w / h); }, () => { });
+        return () => { cancelled = true; };
+    }, [open]);
 
     useEffect(() => {
         let cancelled = false;
@@ -92,7 +103,7 @@ export default function TeacherDrawings({ studentId, studentName, demo }: Props)
                         accessibilityRole="button"
                         accessibilityLabel={t('teacher.drawingOpen', { game: getMaarif(it.oyunTuru).displayName, date: dateText(it.createdAt) })}
                     >
-                        <Image source={{ uri: it.url }} style={styles.thumb} resizeMode="cover" />
+                        <Image source={{ uri: it.url }} style={styles.thumb} resizeMode="contain" />
                         <Text style={styles.thumbCaption} numberOfLines={1}>{dateText(it.createdAt)}</Text>
                     </TouchableOpacity>
                 ))}
@@ -103,7 +114,7 @@ export default function TeacherDrawings({ studentId, studentName, demo }: Props)
                     <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setOpen(null)} accessibilityLabel={t('teacher.drawingClose')} />
                     {open && (
                         <View style={styles.sheet}>
-                            <Image source={{ uri: open.url }} style={styles.big} resizeMode="contain" />
+                            <Image source={{ uri: open.url }} style={[styles.big, { aspectRatio: bigAspect, maxHeight: Math.max(220, winH * 0.7) }]} resizeMode="contain" />
                             <Text style={styles.bigCaption}>{getMaarif(open.oyunTuru).displayName} · {dateText(open.createdAt)}</Text>
                             <TouchableOpacity style={styles.closeBtn} onPress={() => setOpen(null)} accessibilityRole="button" accessibilityLabel={t('teacher.drawingClose')}>
                                 <Ionicons name="close" size={22} color="#333" />
@@ -127,7 +138,7 @@ const styles = StyleSheet.create({
     thumbCaption: { fontSize: 12, color: '#777', marginTop: 5, textAlign: 'center', fontWeight: '600' },
     backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center', padding: 16 },
     sheet: { width: '100%', maxWidth: 520, backgroundColor: '#fff', borderRadius: 22, padding: 14, alignItems: 'center' },
-    big: { width: '100%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#FFF8E7' },
+    big: { width: '100%', borderRadius: 14, backgroundColor: '#FFFEF9' },
     bigCaption: { fontSize: 14, fontWeight: '700', color: '#555', marginTop: 10 },
     closeBtn: { position: 'absolute', top: 10, right: 10, width: 36, height: 36, borderRadius: 18, backgroundColor: '#F1F1F1', alignItems: 'center', justifyContent: 'center' },
 });
