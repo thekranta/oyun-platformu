@@ -1,4 +1,4 @@
-import { DEMO_CLASSES, demoAnalysis, demoPreview, demoRoster, demoScores, demoTotalGames } from './teacherDemo';
+import { DEMO_CLASSES, demoPreview, demoRoster, demoScores, demoSummary, demoTotalGames } from './teacherDemo';
 
 describe('öğretmen satış demosu verisi tutarlılığı', () => {
     it('her sınıfın öğrenci listesi, sınıf kartındaki çocuk sayısına eşittir', () => {
@@ -41,12 +41,17 @@ describe('öğretmen satış demosu verisi tutarlılığı', () => {
         expect(demoPreview('x@y.com').child_name).toBeTruthy();
     });
 
-    it('örnek AI analizi sonuca göre değişir, ilk adı kullanır ve "undefined" içermez', () => {
-        const good = demoAnalysis('Ahmet Yılmaz', { hamle_sayisi: 10, hata_sayisi: 0, sure: 40 });
-        const mid = demoAnalysis('Ahmet Yılmaz', { hamle_sayisi: 12, hata_sayisi: 2, sure: 50 });
-        const hard = demoAnalysis('Ahmet Yılmaz', { hamle_sayisi: 14, hata_sayisi: 5 });
-        expect(new Set([good, mid, hard]).size).toBe(3);
-        for (const t of [good, mid, hard]) { expect(t.startsWith('Ahmet')).toBe(true); expect(t).not.toMatch(/undefined|NaN/); expect(t.length).toBeGreaterThan(80); }
-        expect(demoAnalysis(undefined, { hamle_sayisi: 1, hata_sayisi: 1 })).toMatch(/^Çocuk/);
+    it('demo gelişim özeti öğrencinin kendi geçmişinden hesaplanır: 4 başlık, öğrenciler arasında farklı, adı içermez', () => {
+        const roster = DEMO_CLASSES.flatMap((c) => demoRoster(c.id));
+        const texts = roster.map((s) => demoSummary(demoScores(s)));
+        for (const [i, t] of texts.entries()) {
+            expect(t).toContain('Genel görünüm:');
+            expect(t).toContain('Güçlü yönler:');
+            expect(t).toContain('Desteklenecek alanlar:');
+            expect(t).toContain('Sınıfta öneriler:');
+            expect(t).not.toMatch(/undefined|NaN|\[object/);
+            expect(t).not.toContain(roster[i].child_name.split(' ')[0] + ' ');
+        }
+        expect(new Set(texts).size).toBeGreaterThan(5);
     });
 });

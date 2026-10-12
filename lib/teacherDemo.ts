@@ -4,6 +4,8 @@
 //   * her öğrencinin "🎮 N" oyun sayısı = geçmişte görünen kayıt sayısı (en çok 20, gerçek panelle aynı sınır);
 //   * geçmiş yeterince uzun/çeşitli: hata dağılımı grafiği (≥3 kayıt) görünür.
 
+import { gameStats, selectSummaryGames } from './teacherSummary';
+
 export interface DemoClass { id: string; name: string; emoji: string; size: number }
 export interface DemoStudent { id: string; child_name: string; child_age_months: number; email: string; gameCount: number }
 export interface DemoScore {
@@ -100,18 +102,20 @@ export function demoPreview(email: string): { child_name: string; child_age_mont
     return { child_name: 'Elif Demir', child_age_months: 50, email: email.trim() };
 }
 
-/** "AI Analiz" demosu: oturum/sunucu gerekmez; sonuca göre kısa, gerçekçi bir pedagojik yorum. */
-export function demoAnalysis(childName: string | undefined, score: { hamle_sayisi: number; hata_sayisi: number; sure?: number }): string {
-    const first = (childName || 'Çocuk').trim().split(/\s+/)[0] || 'Çocuk';
-    const sure = score.sure && score.sure > 0 ? score.sure + ' saniyede' : 'kısa sürede';
-    if (score.hata_sayisi <= 1) {
-        return first + ' bu oyunu ' + sure + ' ve çok az hatayla tamamladı. Dikkatini sürdürme ve kuralı uygulama becerisi yaşına göre güçlü görünüyor. '
-            + 'Bir sonraki adımda biraz daha zorlayıcı bir seviye sunmak merakını ve özgüvenini destekleyebilir.';
-    }
-    if (score.hata_sayisi <= 3) {
-        return first + ' oyunu ' + sure + ' tamamladı; birkaç yanlışı kendi başına düzeltti. Dikkat ve deneme-yanılma becerisi gelişiyor. '
-            + 'Aynı oyunu birkaç gün tekrar oynatmak ve doğru seçimlerini sözlü olarak pekiştirmek faydalı olur.';
-    }
-    return first + ' bu oyunda zorlandı ve ' + score.hata_sayisi + ' hata yaptı. Bu, yeni bir beceriyle tanışırken beklenen bir durumdur. '
-        + 'Kısa oturumlarla, önce kolay örneklerden başlayarak ve yönergeyi birlikte tekrar ederek ilerlemek önerilir.';
+/** "Gelişim Özeti" demosu: oturum/sunucu gerekmez; öğrencinin gerçek (demo) geçmişinden hesaplanan kısa özet. */
+export function demoSummary(scores: DemoScore[]): string {
+    const stats = gameStats(selectSummaryGames(scores));
+    const best = stats[0];
+    const weak = stats.length > 1 ? stats[stats.length - 1] : null;
+    const n = Math.min(scores.length, 12);
+    const half = Math.floor(n / 2);
+    const recent = scores.slice(0, half), earlier = scores.slice(half, n);
+    const avg = (a: DemoScore[]) => (a.length ? a.reduce((x, g) => x + g.hata_sayisi, 0) / a.length : 0);
+    const trend = avg(recent) < avg(earlier) - 0.2 ? 'Son oyunlarda hata sayısı ilk oyunlara göre azalıyor; gelişim yönü olumlu.'
+        : avg(recent) > avg(earlier) + 0.2 ? 'Son oyunlarda hata sayısı biraz artmış; yeni ve daha zor içerikle karşılaşmış olabilir.'
+            : 'Hata düzeyi oyunlar boyunca dengeli seyrediyor.';
+    return 'Genel görünüm: Son ' + n + ' oyun birlikte değerlendirildi. ' + trend + '\n'
+        + 'Güçlü yönler: ' + best.name + ' oyununda en az hatayı yapıyor (' + best.area + ', ' + best.code + '). Kuralı anlama ve dikkatini sürdürme becerisi bu alanda belirgin.\n'
+        + 'Desteklenecek alanlar: ' + (weak ? weak.name + ' (' + weak.area + ', ' + weak.code + ') oyununda daha çok yanlış yapıyor; bu alan kısa tekrarlarla desteklenebilir.' : 'Daha fazla oyun çeşidi denendikçe destek gerektiren alanlar netleşecek.') + '\n'
+        + 'Sınıfta öneriler: ' + (weak ? weak.area + ' alanında 5-10 dakikalık küçük grup etkinliği; ' : '') + 'çocuğun güçlü olduğu oyunu arkadaşına anlatmasını isteme; haftalık kısa tekrar oyunu.';
 }

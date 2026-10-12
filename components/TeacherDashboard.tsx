@@ -24,7 +24,8 @@ import InAppNotice from './InAppNotice';
 import TeacherDrawings from './TeacherDrawings';
 import { asset } from '../lib/assetMap';
 import { getEffectiveOgretmenTier, getOgretmenFlags, OgretmenTier } from '../lib/subscriptionTiers';
-import { DEMO_CLASSES, demoAnalysis, demoPreview, demoRoster, demoScores, demoTotalGames } from '../lib/teacherDemo';
+import { DEMO_CLASSES, demoPreview, demoRoster, demoScores, demoSummary, demoTotalGames } from '../lib/teacherDemo';
+import { buildTeacherSummaryPrompt, SUMMARY_GAME_LIMIT, SUMMARY_MIN_GAMES } from '../lib/teacherSummary';
 import SinifBahcesiScreen from './rewardBoard/SinifBahcesiScreen';
 import { getMaarif } from '../constants/maarifMap';
 
@@ -149,7 +150,11 @@ export default function TeacherDashboard({
     const [newStudentEmail, setNewStudentEmail] = useState('');
     const [studentPreview, setStudentPreview] = useState<StudentPreview | null>(null);
     const [searchingStudent, setSearchingStudent] = useState(false);
-    const [analyzingId, setAnalyzingId] = useState<number | null>(null);
+    // Gelişim özeti (son 12 oyun): öğrenci başına tek AI çağrısı; oturum içinde öğrenci başına saklanır.
+    const [summary, setSummary] = useState<{ studentId: string; text: string } | null>(null);
+    const [summaryLoading, setSummaryLoading] = useState(false);
+    const [summaryError, setSummaryError] = useState(false);
+    const summaryCache = useRef<Record<string, string>>({});
     const [notice, setNotice] = useState<string | null>(null);
     // Demo: sinif basina ogrenci listesi (ekleme/cikarma sinif degisince kaybolmasin, sayilar tutarli kalsin).
     const demoRosters = useRef<Record<string, StudentData[]>>({});
@@ -356,6 +361,9 @@ export default function TeacherDashboard({
         // Onaylanmamış / askıdaki / kardeşli kayıtta gösterilecek veri yoktur (durum rozeti açıklar).
         if ((student.status && student.status !== 'accepted') || student.hidden) return;
         setSelectedStudent(student);
+        setSummaryError(false);
+        const cached = summaryCache.current[student.id];
+        setSummary(cached ? { studentId: student.id, text: cached } : null);
         fetchStudentScores(student);
     };
 
@@ -546,30 +554,34 @@ export default function TeacherDashboard({
         );
     };
 
-    const analyzeScore = async (score: GameScore) => {
+    const generateSummary = async () => {
+        if (!selectedStudent || summaryLoading) return;
         if (!flags.canSeeAiAnalysis) {
             showAlert(t('teacher.premiumFeatureTitle'), t('teacher.aiPremiumOnlyMessage'));
             return;
         }
-        if (teacherId === 'demo-teacher') {
-            // Demo: oturum/sunucu yok; ornek bir pedagojik yorum kisa bir bekleyisle gelir.
-            setAnalyzingId(score.id);
-            setTimeout(() => {
-                setStudentScores(prev => prev.map(s => s.id === score.id ? { ...s, yapay_zeka_yorumu: demoAnalysis(selectedStudent?.child_name, score) } : s));
-                setAnalyzingId(null);
-            }, 900);
-            return;
-        }
-        setAnalyzingId(score.id);
+        if (studentScores.length < SUMMARY_MIN_GAMES) return;
+        const studentId = selectedStudent.id;
+        setSummaryLoading(true);
+        setSummaryError(false);
         try {
-            const prompt = `Sen okul öncesi eğitim uzmanısın. Öğrenci: ${selectedStudent?.child_name} (${selectedStudent?.child_age_months} ay). Oyun: ${score.oyun_turu}, Süre: ${score.sure}sn, Hamle: ${score.hamle_sayisi}, Hata: ${score.hata_sayisi}. Kısa pedagojik analiz yap (3-4 cümle).`;
-            const text = await requestAiAnalysis(prompt, { temperature: 0.7, maxOutputTokens: 256 }, 'ogretmen_skor_analizi')
-                .catch(() => t('teacher.analysisFailedFallback'));
-            setStudentScores(prev => prev.map(s => s.id === score.id ? { ...s, yapay_zeka_yorumu: text } : s));
+            let text: string;
+            if (teacherId === 'demo-teacher') {
+                // Demo: oturum/sunucu yok; öğrencinin demo geçmişinden hesaplanan özet kısa bir bekleyişle gelir.
+                await new Promise<void>((resolve) => setTimeout(resolve, 900));
+                text = demoSummary(studentScores as never);
+            } else {
+                // Öğrencinin adı AI'ye gitmez (yalnız yaş + oyun verisi): bkz. lib/teacherSummary.ts
+                const prompt = buildTeacherSummaryPrompt(selectedStudent.child_age_months, studentScores);
+                text = await requestAiAnalysis(prompt, { temperature: 0.6, maxOutputTokens: 900 }, 'ogretmen_gelisim_ozeti');
+            }
+            summaryCache.current[studentId] = text;
+            setSummary({ studentId, text });
         } catch (error) {
-            console.error('AI hatası:', error);
+            console.error('Gelişim özeti hatası:', error);
+            setSummaryError(true);
         } finally {
-            setAnalyzingId(null);
+            setSummaryLoading(false);
         }
     };
 
@@ -799,6 +811,39 @@ export default function TeacherDashboard({
 
                         <TeacherDrawings key={selectedStudent.id} studentId={selectedStudent.id} studentName={selectedStudent.child_name} demo={teacherId === 'demo-teacher'} />
 
+                        {studentScores.length > 0 && (
+                            <View style={styles.summaryCard}>
+                                <View style={styles.summaryHeader}>
+                                    <Text style={styles.summaryTitle}>{'✨ ' + t('teacher.summaryTitle')}</Text>
+                                    <Text style={styles.summaryHint}>{t('teacher.summaryHint', { count: Math.min(studentScores.length, SUMMARY_GAME_LIMIT) })}</Text>
+                                </View>
+                                {studentScores.length < SUMMARY_MIN_GAMES ? (
+                                    <Text style={styles.summaryNote}>{t('teacher.summaryNeedMore', { count: SUMMARY_MIN_GAMES })}</Text>
+                                ) : summary && summary.studentId === selectedStudent.id ? (
+                                    <>
+                                        <Text style={styles.summaryText}>{summary.text}</Text>
+                                        <Text style={styles.summaryNote}>{t('teacher.summaryDisclaimer')}</Text>
+                                    </>
+                                ) : null}
+                                {summaryError && <Text style={styles.summaryError}>{t('teacher.summaryFailed')}</Text>}
+                                {studentScores.length >= SUMMARY_MIN_GAMES && (
+                                    <TouchableOpacity style={styles.analyzeBtn} onPress={generateSummary} disabled={summaryLoading} accessibilityRole="button">
+                                        {summaryLoading ? (
+                                            <>
+                                                <ActivityIndicator size="small" color="#FF6B6B" />
+                                                <Text style={styles.analyzeBtnText}>{t('teacher.summaryLoading')}</Text>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Text style={styles.analyzeBtnEmoji}>✨</Text>
+                                                <Text style={styles.analyzeBtnText}>{summary && summary.studentId === selectedStudent.id ? t('teacher.summaryRegenerate') : t('teacher.summaryButton')}</Text>
+                                            </>
+                                        )}
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        )}
+
                         {studentScores.length === 0 ? (
                             <View style={styles.emptyCard}>
                                 <Image source={asset('/branding/mascot/uyuyor.webp')} style={styles.emptyMascot} />
@@ -829,22 +874,6 @@ export default function TeacherDashboard({
                                             </Text>
                                         </View>
                                     </View>
-                                    {flags.canSeeAiAnalysis && (
-                                        <TouchableOpacity
-                                            style={styles.analyzeBtn}
-                                            onPress={() => analyzeScore(score)}
-                                            disabled={analyzingId === score.id}
-                                        >
-                                            {analyzingId === score.id ? (
-                                                <ActivityIndicator size="small" color="#FF6B6B" />
-                                            ) : (
-                                                <>
-                                                    <Text style={styles.analyzeBtnEmoji}>✨</Text>
-                                                    <Text style={styles.analyzeBtnText}>{t('teacher.aiAnalyzeButton')}</Text>
-                                                </>
-                                            )}
-                                        </TouchableOpacity>
-                                    )}
                                     {/* Yorum tek metinde hem akademik hem VELİ notu taşır; öğretmene yalnız akademik kısım gösterilir. */}
                                     {teacherView(score.yapay_zeka_yorumu) && (
                                         <View style={styles.aiResult}>
@@ -1167,6 +1196,13 @@ const styles = StyleSheet.create({
     scoreStatEmoji: { fontSize: 20, marginBottom: 4 },
     scoreStatValue: { fontSize: 20, fontWeight: '700', color: '#333' },
     errorText: { color: '#FF6B6B' },
+    summaryCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 16, marginBottom: 14, borderWidth: 2, borderColor: '#FFE5E5', gap: 10 },
+    summaryHeader: { gap: 2 },
+    summaryTitle: { fontSize: 17, fontWeight: '800', color: '#333' },
+    summaryHint: { fontSize: 12, color: '#888', fontWeight: '600' },
+    summaryText: { fontSize: 14, lineHeight: 21, color: '#444' },
+    summaryNote: { fontSize: 12, color: '#888', fontStyle: 'italic' },
+    summaryError: { fontSize: 13, color: '#D64545', fontWeight: '600' },
     analyzeBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFF0F0', padding: 12, borderRadius: 14, gap: 8 },
     analyzeBtnEmoji: { fontSize: 18 },
     analyzeBtnText: { fontSize: 15, fontWeight: '600', color: '#FF6B6B' },
