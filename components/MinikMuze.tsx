@@ -7,7 +7,7 @@ import { isPaintingOpenForTier, paintingTierName, sortPaintingsByTier } from '..
 import { focusTransform, fitContain } from '../lib/minikMuzeMath';
 import { openPricing } from '../lib/openPricing';
 import type { VeliTier } from '../lib/subscriptionTiers';
-import { speak, speakThenWait, stopSpeech } from '../services/speechService';
+import { consumeAudioBlocked, speak, speakThenWait, stopSpeech } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import ListenButton from './ListenButton';
@@ -53,6 +53,8 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
     const [viewed, setViewed] = useState<string[]>([]);
     const [lockedPainting, setLockedPainting] = useState<Painting | null>(null);
     const [drawingFor, setDrawingFor] = useState<Painting | null>(null);
+    // Mobil tarayici sesi engellediyse (dokunus gerekir) anlatim sessizce hizla ilerlemesin; cocuk dokunsun.
+    const [needsTap, setNeedsTap] = useState(false);
 
     const startRef = useRef(Date.now());
     const runRef = useRef(0);
@@ -93,12 +95,19 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
         stopSpeech();
         setSeg(index);
         setFinished(false);
+        setNeedsTap(false);
         setPlaying(true);
         const s = p.segments[index];
         animateFocus(s.focus);
         (async () => {
             await speakThenWait(s.text, 900, { instructions: HAPPY_VOICE });
             if (run !== runRef.current || !mountedRef.current) return;
+            if (consumeAudioBlocked()) {
+                // Ses engellendi: otomatik ilerlemeyi durdur, dokunusla (play dugmesi) bu parcadan devam edilir.
+                setPlaying(false);
+                setNeedsTap(true);
+                return;
+            }
             await wait(s.pauseAfterMs ?? 700);
             if (run !== runRef.current || !mountedRef.current) return;
             if (index < p.segments.length - 1) {
@@ -260,6 +269,10 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                     <Text style={[styles.subtitleText, sideBySide && styles.subtitleTextSide]}>{segment.text}</Text>
                 </View>
 
+                {needsTap && (
+                    <Text style={styles.tapHint} accessibilityLiveRegion="polite">Sesi duymak için ▶ düğmesine dokun</Text>
+                )}
+
                 <View style={styles.dots}>
                     {selected.segments.map((_, i) => (
                         <View key={i} style={[styles.dot, i === seg && { backgroundColor: '#FFD27A', width: 22 }, i < seg && { backgroundColor: '#B79B6B' }]} />
@@ -354,6 +367,7 @@ const styles = StyleSheet.create({
     artistCard: { alignItems: 'center', backgroundColor: '#3C2F23', borderRadius: 14, borderWidth: 1, borderColor: '#6B5538', paddingVertical: 8, paddingHorizontal: 16 },
     artistName: { fontSize: 16, fontWeight: '900', color: '#F4E7CF' },
     artistMeta: { fontSize: 12, color: '#CDB892', fontWeight: '600', marginTop: 2, textAlign: 'center' },
+    tapHint: { color: '#FFD27A', fontSize: 15, fontWeight: '800', textAlign: 'center' },
     dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
     dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#5B4A35' },
     controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap' },

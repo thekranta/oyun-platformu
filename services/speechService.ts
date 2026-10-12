@@ -68,11 +68,154 @@ let ttsRequestId = 0;
 // ve üst üste binmesin diye ayrıca izleniyor.
 let currentLiveAudio: HTMLAudioElement | null = null;
 
+// ============================================================================
+// Web ses kilidi (iOS Safari / mobil Chrome otomatik oynatma kurali)
+// ----------------------------------------------------------------------------
+// expo-av web'de HER ses icin yeni bir "new Audio()" olusturup play() cagirir. Mobil tarayicilar
+// (ozellikle iPhone: Safari ve iOS'taki Chrome) ses baslatmayi yalniz KULLANICI DOKUNUSU icinde ve
+// OGE BASINA serbest birakir: ilk klip dokunusla baslayinca calar, ama zamanlayiciyla otomatik ilerleyen
+// sonraki kliplar (Minik Muze anlatimi gibi) NotAllowedError ile reddedilir ve hata sessizce yutulur,
+// parcalar sessizce hizla gecer.
+// Cozum: tek bir paylasilan HTMLAudioElement. Uygulamadaki ILK dokunusta sessiz bir klip calinarak ogenin
+// kilidi acilir; sonra her klip ayni ogenin src'si degistirilip calinir (kilitli kalmaz). Native etkilenmez.
+// ============================================================================
+const IS_WEB = Platform.OS === 'web' && typeof document !== 'undefined' && typeof Audio !== 'undefined';
+// 44 baytlik sessiz WAV (veri yok): yalniz ogenin kilidini acmak icin.
+const SILENT_WAV = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+const UNLOCK_EVENTS = ['pointerdown', 'touchstart', 'touchend', 'click', 'keydown'] as const;
+
+let webAudio: HTMLAudioElement | null = null;
+let webUnlocked = false;
+let webBusy = false;                       // gercek bir klip yukleniyor/caliyor
+let webUnlockInstalled = false;
+let webPending: { rearm: (ms: number) => void } | null = null;
+let audioBlocked = false;
+const webUriCache = new Map<number, string>();
+
+function getWebAudio(): HTMLAudioElement {
+    if (!webAudio) {
+        webAudio = new Audio();
+        webAudio.preload = 'auto';
+        webAudio.setAttribute('playsinline', '');
+    }
+    return webAudio;
+}
+
+/** Son konusma tarayici tarafindan engellendiyse (dokunus gerekiyor) true doner ve bayragi sifirlar. */
+export function consumeAudioBlocked(): boolean {
+    const v = audioBlocked;
+    audioBlocked = false;
+    return v;
+}
+
+/** Ilk kullanici dokunusunda paylasilan ses ogesinin kilidini acar (tek seferlik, web). */
+export function installWebAudioUnlock(): void {
+    if (!IS_WEB || webUnlockInstalled) return;
+    webUnlockInstalled = true;
+    const removeAll = () => UNLOCK_EVENTS.forEach((e) => document.removeEventListener(e, handler, true));
+    const handler = () => {
+        if (webUnlocked) { removeAll(); return; }
+        if (webBusy) return;   // gercek klip zaten basladiysa kilit onunla acilir (play basarili olunca)
+        const a = getWebAudio();
+        a.src = SILENT_WAV;
+        const p = a.play();
+        if (p && typeof p.then === 'function') {
+            p.then(() => {
+                webUnlocked = true;
+                if (!webBusy) a.pause();
+                removeAll();
+            }).catch(() => { /* sonraki dokunusta tekrar denenir */ });
+        }
+    };
+    UNLOCK_EVENTS.forEach((e) => document.addEventListener(e, handler, true));
+}
+
+// Paketli klibin web URL'si: expo-av'in kaynak cozumlemesinden (status.uri) alinir, onbellege yazilir.
+async function resolveWebUri(src: number): Promise<string | undefined> {
+    const cached = webUriCache.get(src);
+    if (cached) return cached;
+    try {
+        const { sound, status } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: false });
+        const uri = status.isLoaded ? status.uri : undefined;
+        sound.unloadAsync().catch(() => { });
+        if (uri) webUriCache.set(src, uri);
+        return uri;
+    } catch {
+        return undefined;
+    }
+}
+
+async function playBundledWeb(src: number): Promise<void> {
+    const myId = ++ttsRequestId;
+    // Onceki bekleyen cagri yeni klip tarafindan ezilir; eskiden oldugu gibi en gec 8 sn'de cozulur.
+    webPending?.rearm(8000);
+    const uri = await resolveWebUri(src);
+    if (!uri || myId !== ttsRequestId) return;
+
+    const audio = getWebAudio();
+    await new Promise<void>((resolve) => {
+        let done = false;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const mine = () => myId === ttsRequestId;
+        const finish = () => {
+            if (done) return;
+            done = true;
+            if (timer) clearTimeout(timer);
+            audio.removeEventListener('ended', onEnded);
+            audio.removeEventListener('error', onEnded);
+            audio.removeEventListener('loadedmetadata', onMeta);
+            if (webPending === handle) webPending = null;
+            if (mine()) webBusy = false;
+            resolve();
+        };
+        const rearm = (ms: number) => {
+            if (done) return;
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(() => {
+                console.warn('🔊 TTS(web): ' + ms + 'ms icinde tamamlanmadi, zaman asimina ugradi');
+                finish();
+            }, ms);
+        };
+        const onEnded = () => { if (mine()) finish(); };
+        const onMeta = () => {
+            if (mine() && Number.isFinite(audio.duration) && audio.duration > 0) rearm(audio.duration * 1000 + 4000);
+        };
+        const handle = { rearm };
+        webPending = handle;
+        audio.addEventListener('ended', onEnded);
+        audio.addEventListener('error', onEnded);
+        audio.addEventListener('loadedmetadata', onMeta);
+        rearm(8000);   // yukleme zaman asimi; metadata gelince klip suresine gore yeniden kurulur
+
+        webBusy = true;
+        audio.src = uri;
+        const p = audio.play();
+        if (p && typeof p.then === 'function') {
+            p.then(() => {
+                webUnlocked = true;
+                audioBlocked = false;
+                onMeta();
+            }).catch((e: unknown) => {
+                if (!mine()) return;               // yeni klip eskisini ezdi (AbortError): yenisi surer
+                const name = (e as { name?: string } | null)?.name;
+                if (name === 'NotAllowedError') audioBlocked = true;
+                else if (name !== 'AbortError') console.warn('🔊 TTS(web): hazir klip calinamadi (sessiz gecildi):', e);
+                finish();
+            });
+        }
+    });
+}
+
 /**
  * Paketli (bundled) bir MP3 modülünü expo-av ile çalar. Hikaye anlatımlarındaki
  * (CevizMacera vb.) desenle birebir aynıdır: öncekini boşalt → oynat → bitince boşalt.
  */
 async function playBundled(src: number): Promise<void> {
+    // Web: her klip icin yeni HTMLAudioElement acan expo-av yerine paylasilan, "kilidi acilmis" oge kullanilir
+    // (bkz. yukaridaki "Web ses kilidi" bolumu): mobil tarayicilarda dokunussuz baslatilan 2. ve sonraki
+    // sesler aksi halde reddedilir.
+    if (IS_WEB) return playBundledWeb(src);
+
     const myRequestId = ++ttsRequestId;
 
     // Tarayıcı otomatik-oynatma engeli, ağ/decode hatası, sekme arka plana alınması
@@ -333,6 +476,11 @@ export async function speakThenWait(text: string, minMs = 1200, options: SpeechO
  * Stop any currently playing speech (hazır MP3 + eski tarayıcı speechSynthesis).
  */
 export function stopSpeech(): void {
+    if (webAudio && webBusy) {
+        webAudio.pause();
+        webBusy = false;
+        webPending?.rearm(8000);   // eskisi gibi: durdurulan cagri en gec 8 sn'de cozulur
+    }
     if (currentTtsSound) {
         const s = currentTtsSound;
         currentTtsSound = null;
@@ -377,6 +525,9 @@ export async function preloadCommonPhrases(childName: string): Promise<void> {
         generateSpeech(phrase).catch(() => { });
     });
 }
+
+// Tarayicida ilk dokunusta ses kilidini acmak icin dinleyiciyi hemen kur (web disinda no-op).
+installWebAudioUnlock();
 
 export default {
     speak,
