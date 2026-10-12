@@ -5,6 +5,7 @@ import DynamicBackground from '../components/DynamicBackground';
 import OwnerDashboard from '../components/OwnerDashboard';
 import { C, F } from '../components/owner/ownerTheme';
 import { asset } from '../lib/assetMap';
+import { PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
 import { supabase } from '../lib/supabase';
 
 /**
@@ -68,7 +69,7 @@ export default function OwnerDashboardRoute() {
     }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+        redirectTo: PASSWORD_RESET_REDIRECT,
       });
       if (error) throw error;
       alert('Şifre sıfırlama bağlantısı e-postanıza gönderildi.');

@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
-    Alert,
     Dimensions,
     KeyboardAvoidingView,
     Modal,
@@ -16,28 +16,12 @@ import {
     View
 } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
+import InAppNotice from '../components/InAppNotice';
 import TeacherDashboard from '../components/TeacherDashboard';
 import { supabase } from '../lib/supabase';
-import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, ensureTeacherFromMetadata, isEmailNotConfirmed, needsEmailConfirmation } from '../lib/authFlow';
+import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, ensureTeacherFromMetadata, isEmailNotConfirmed, needsEmailConfirmation, PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
+import { rememberResetReturn } from '../lib/resetReturn';
 import { OgretmenTier } from '../lib/subscriptionTiers';
-
-// Web-compatible alert function
-const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: 'cancel' | 'default' | 'destructive' }>) => {
-    if (Platform.OS === 'web') {
-        if (buttons && buttons.length > 1) {
-            const cancelButton = buttons.find(b => b.style === 'cancel');
-            const actionButton = buttons.find(b => b.style !== 'cancel');
-            const result = window.confirm(`${title}\n\n${message}\n\n[OK = ${actionButton?.text || 'Yes'}, Cancel = ${cancelButton?.text || 'Cancel'}]`);
-            if (result && actionButton?.onPress) {
-                actionButton.onPress();
-            }
-        } else {
-            window.alert(`${title}\n\n${message}`);
-        }
-    } else {
-        Alert.alert(title, message, buttons);
-    }
-};
 
 interface TeacherProfile {
     id: string;
@@ -50,6 +34,8 @@ interface TeacherProfile {
 
 export default function TeacherDashboardPage() {
     const router = useRouter();
+    const { t } = useTranslation();
+    const [notice, setNotice] = useState<string | null>(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -78,22 +64,10 @@ export default function TeacherDashboardPage() {
 
     // Kayıt fonksiyonu
     const handleRegister = async () => {
-        if (!regName.trim()) {
-            showAlert('Hata', 'Lütfen adınızı girin');
-            return;
-        }
-        if (!regEmail.trim()) {
-            showAlert('Hata', 'Lütfen email adresinizi girin');
-            return;
-        }
-        if (!regEmail.includes('@')) {
-            showAlert('Hata', 'Geçerli bir email adresi girin');
-            return;
-        }
-        if (regPassword.trim().length < 6) {
-            showAlert('Hata', 'Şifre en az 6 karakter olmalıdır');
-            return;
-        }
+        if (!regName.trim()) { setNotice(t('teacherAuth.needName')); return; }
+        if (!regEmail.trim()) { setNotice(t('teacherAuth.needEmail')); return; }
+        if (!regEmail.includes('@')) { setNotice(t('teacherAuth.validEmail')); return; }
+        if (regPassword.trim().length < 6) { setNotice(t('teacherAuth.shortPassword')); return; }
 
         setIsRegistering(true);
         try {
@@ -109,16 +83,16 @@ export default function TeacherDashboardPage() {
             });
 
             if (authError || !authData.user) {
-                showAlert('Hata', `Kayıt hatası: ${authError?.message || 'Bilinmeyen hata'}`);
-                setIsRegistering(false);
+                // Ham (İngilizce) sunucu mesajı kullanıcıya gösterilmez.
+                const raw = String(authError?.message || '').toLowerCase();
+                setNotice(raw.includes('already') || raw.includes('registered') ? t('teacherAuth.alreadyRegistered') : t('teacherAuth.signupFailed'));
                 return;
             }
 
             if (needsEmailConfirmation(authData)) {
-                showAlert('E-postanı doğrula', AUTH_MESSAGES.confirmSent);
+                setNotice(AUTH_MESSAGES.confirmSent);
                 setShowRegister(false);
                 setEmail(regEmail.trim());
-                setIsRegistering(false);
                 return;
             }
 
@@ -133,9 +107,9 @@ export default function TeacherDashboardPage() {
 
             if (insertError) {
                 console.error('Öğretmen profili oluşturma hatası:', insertError);
-                showAlert('Hata', 'Hesap oluşturuldu ancak profil kaydedilemedi.');
+                setNotice(t('teacherAuth.profileFailed'));
             } else {
-                showAlert('Başarılı', 'Kayıt tamamlandı! Artık giriş yapabilirsiniz.');
+                setNotice(t('teacherAuth.signupDone'));
                 setShowRegister(false);
                 setEmail(regEmail.trim());
                 setRegName('');
@@ -145,7 +119,7 @@ export default function TeacherDashboardPage() {
             }
         } catch (error) {
             console.error('Kayıt hatası:', error);
-            showAlert('Hata', `Kayıt sırasında bir hata oluştu: ${error}`);
+            setNotice(t('teacherAuth.networkError'));
         } finally {
             setIsRegistering(false);
         }
@@ -153,7 +127,7 @@ export default function TeacherDashboardPage() {
 
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) {
-            showAlert('Hata', 'Lütfen email ve şifrenizi girin');
+            setNotice(t('teacherAuth.needLogin'));
             return;
         }
 
@@ -166,11 +140,11 @@ export default function TeacherDashboardPage() {
             });
 
             if (isEmailNotConfirmed(authError)) {
-                showAlert('E-posta doğrulanmamış', AUTH_MESSAGES.notConfirmed);
+                setNotice(AUTH_MESSAGES.notConfirmed);
                 return;
             }
             if (authError || !authData.user) {
-                showAlert('Giriş Başarısız', 'Hatalı e-posta veya şifre.');
+                setNotice(t('teacherAuth.loginFailed'));
                 return;
             }
 
@@ -185,7 +159,7 @@ export default function TeacherDashboardPage() {
                 .single();
 
             if (teacherError || !teacherRow) {
-                showAlert('Yetki Yok', 'Bu hesabın öğretmen paneline erişim yetkisi yok.');
+                setNotice(t('teacherAuth.noAccess'));
                 await supabase.auth.signOut();
                 return;
             }
@@ -199,9 +173,10 @@ export default function TeacherDashboardPage() {
                 subscription_tier: teacherRow.subscription_tier,
                 package_expires_at: teacherRow.package_expires_at,
             });
+            setPassword('');
         } catch (error) {
             console.error('Giriş hatası:', error);
-            showAlert('Hata', `Giriş sırasında bir hata oluştu: ${error}`);
+            setNotice(t('teacherAuth.networkError'));
         } finally {
             setLoading(false);
         }
@@ -209,17 +184,29 @@ export default function TeacherDashboardPage() {
 
     const handleForgotPassword = async () => {
         if (!email.trim()) {
-            showAlert('Hata', 'Şifre sıfırlama bağlantısı için önce e-postanızı girin');
+            setNotice(t('teacherAuth.resetNeedEmail'));
             return;
         }
         try {
+            rememberResetReturn('/teacher-dashboard');
             const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-                redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+                redirectTo: PASSWORD_RESET_REDIRECT,
             });
             if (error) throw error;
-            showAlert('Gönderildi', 'Şifre sıfırlama bağlantısı e-postanıza gönderildi.');
-        } catch (error: any) {
-            showAlert('Hata', error.message || 'Bağlantı gönderilemedi.');
+            setNotice(t('teacherAuth.resetSent'));
+        } catch {
+            setNotice(t('teacherAuth.resetFailed'));
+        }
+    };
+
+    // Panel kapanınca (geri düğmesi / çıkış) gerçek hesapta oturum da kapanır: ortak okul tabletlerinde sonraki kişi
+    // açık öğretmen hesabını görmesin. Demo profilde sunucu oturumu yoktur.
+    const closePanel = async () => {
+        const wasDemo = profile?.id === 'demo-teacher';
+        setProfile(null);
+        setPassword('');
+        if (!wasDemo) {
+            try { await supabase.auth.signOut(); } catch { /* oturum zaten yok */ }
         }
     };
 
@@ -233,7 +220,7 @@ export default function TeacherDashboardPage() {
                 schoolName={profile.school_name}
                 subscriptionTier={profile.subscription_tier}
                 packageExpiresAt={profile.package_expires_at}
-                onClose={() => setProfile(null)}
+                onClose={closePanel}
             />
         );
     }
@@ -262,6 +249,8 @@ export default function TeacherDashboardPage() {
                     <TouchableOpacity
                         style={[styles.backButton, isLandscape && styles.backButtonLandscape]}
                         onPress={() => router.back()}
+                        accessibilityRole="button"
+                        accessibilityLabel={t('teacherAuth.back')}
                     >
                         <Ionicons name="arrow-back" size={24} color="#FF9800" />
                     </TouchableOpacity>
@@ -269,9 +258,9 @@ export default function TeacherDashboardPage() {
                     {/* Header */}
                     <View style={[styles.header, isLandscape && styles.headerLandscape]}>
                         <Text style={[styles.emoji, isSmallScreen && { fontSize: 40 }]}>👩‍🏫</Text>
-                        <Text style={[styles.title, isSmallScreen && { fontSize: 22 }]}>Öğretmen Paneli</Text>
+                        <Text style={[styles.title, isSmallScreen && { fontSize: 22 }]}>{t('teacherAuth.title')}</Text>
                         <Text style={styles.subtitle}>
-                            Öğrencilerinizin gelişimini takip edin
+                            {t('teacherAuth.subtitle')}
                         </Text>
                     </View>
 
@@ -281,16 +270,17 @@ export default function TeacherDashboardPage() {
                         isLandscape && styles.cardLandscape,
                         { maxWidth: isLandscape ? 400 : undefined }
                     ]}>
-                        <Text style={styles.cardTitle}>Giriş Yapın</Text>
+                        <Text style={styles.cardTitle}>{t('teacherAuth.cardTitle')}</Text>
                         <Text style={styles.cardSubtitle}>
-                            Kayıtlı öğretmen email adresinizi girin
+                            {t('teacherAuth.cardSubtitle')}
                         </Text>
 
                         <View style={styles.inputContainer}>
                             <Ionicons name="mail-outline" size={20} color="#607D8B" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Email adresiniz"
+                                placeholder={t('teacherAuth.emailPlaceholder')}
+                                accessibilityLabel={t('teacherAuth.emailPlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={email}
                                 onChangeText={setEmail}
@@ -304,7 +294,8 @@ export default function TeacherDashboardPage() {
                             <Ionicons name="lock-closed-outline" size={20} color="#607D8B" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Şifre"
+                                placeholder={t('teacherAuth.passwordPlaceholder')}
+                                accessibilityLabel={t('teacherAuth.passwordPlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={password}
                                 onChangeText={setPassword}
@@ -324,7 +315,7 @@ export default function TeacherDashboardPage() {
                                     <ActivityIndicator color="#fff" />
                                 ) : (
                                     <>
-                                        <Text style={styles.loginButtonText}>Giriş Yap</Text>
+                                        <Text style={styles.loginButtonText}>{t('teacherAuth.login')}</Text>
                                         <Ionicons name="arrow-forward" size={20} color="#fff" />
                                     </>
                                 )}
@@ -336,12 +327,12 @@ export default function TeacherDashboardPage() {
                                 onPress={useDemoProfile}
                             >
                                 <Ionicons name="flash" size={18} color="#FF9800" />
-                                <Text style={styles.demoButtonText}>Demo</Text>
+                                <Text style={styles.demoButtonText}>{t('teacherAuth.demo')}</Text>
                             </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotLink}>
-                            <Text style={styles.forgotLinkText}>Şifremi unuttum</Text>
+                            <Text style={styles.forgotLinkText}>{t('teacherAuth.forgot')}</Text>
                         </TouchableOpacity>
                     </View>
 
@@ -349,7 +340,7 @@ export default function TeacherDashboardPage() {
                     <View style={styles.info}>
                         <TouchableOpacity onPress={() => setShowRegister(true)}>
                             <Text style={styles.infoText}>
-                                Hesabınız yok mu? <Text style={{ color: '#FF9800', fontWeight: 'bold' }}>Kayıt Olun</Text>
+                                {t('teacherAuth.noAccount')} <Text style={{ color: '#FF9800', fontWeight: 'bold' }}>{t('teacherAuth.signUp')}</Text>
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -358,10 +349,11 @@ export default function TeacherDashboardPage() {
                 {/* Kayıt Modal */}
                 <Modal visible={showRegister} transparent animationType="fade">
                     <View style={styles.modalOverlay}>
+                        <InAppNotice message={notice} onDismiss={() => setNotice(null)} />
                         <View style={styles.modalContent}>
                             <View style={styles.modalHeader}>
-                                <Text style={styles.modalTitle}>👩‍🏫 Öğretmen Kayıt</Text>
-                                <TouchableOpacity onPress={() => setShowRegister(false)}>
+                                <Text style={styles.modalTitle}>{'👩‍🏫 ' + t('teacherAuth.regTitle')}</Text>
+                                <TouchableOpacity onPress={() => setShowRegister(false)} accessibilityRole="button" accessibilityLabel={t('teacherAuth.close')}>
                                     <Ionicons name="close" size={24} color="#607D8B" />
                                 </TouchableOpacity>
                             </View>
@@ -370,7 +362,8 @@ export default function TeacherDashboardPage() {
                                 <Ionicons name="person-outline" size={20} color="#607D8B" style={styles.inputIcon} />
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Adınız Soyadınız *"
+                                    placeholder={t('teacherAuth.regName')}
+                                    accessibilityLabel={t('teacherAuth.regName')}
                                     placeholderTextColor="#9E9E9E"
                                     value={regName}
                                     onChangeText={setRegName}
@@ -381,7 +374,8 @@ export default function TeacherDashboardPage() {
                                 <Ionicons name="mail-outline" size={20} color="#607D8B" style={styles.inputIcon} />
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Email Adresiniz *"
+                                    placeholder={t('teacherAuth.regEmail')}
+                                    accessibilityLabel={t('teacherAuth.regEmail')}
                                     placeholderTextColor="#9E9E9E"
                                     value={regEmail}
                                     onChangeText={setRegEmail}
@@ -394,7 +388,8 @@ export default function TeacherDashboardPage() {
                                 <Ionicons name="lock-closed-outline" size={20} color="#607D8B" style={styles.inputIcon} />
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Şifre (en az 6 karakter) *"
+                                    placeholder={t('teacherAuth.regPassword')}
+                                    accessibilityLabel={t('teacherAuth.regPassword')}
                                     placeholderTextColor="#9E9E9E"
                                     value={regPassword}
                                     onChangeText={setRegPassword}
@@ -407,7 +402,8 @@ export default function TeacherDashboardPage() {
                                 <Ionicons name="business-outline" size={20} color="#607D8B" style={styles.inputIcon} />
                                 <TextInput
                                     style={styles.input}
-                                    placeholder="Okul Adı (opsiyonel)"
+                                    placeholder={t('teacherAuth.regSchool')}
+                                    accessibilityLabel={t('teacherAuth.regSchool')}
                                     placeholderTextColor="#9E9E9E"
                                     value={regSchool}
                                     onChangeText={setRegSchool}
@@ -422,17 +418,17 @@ export default function TeacherDashboardPage() {
                                 {isRegistering ? (
                                     <ActivityIndicator color="#fff" />
                                 ) : (
-                                    <Text style={styles.loginButtonText}>🚀 Kayıt Ol</Text>
+                                    <Text style={styles.loginButtonText}>{'🚀 ' + t('teacherAuth.regButton')}</Text>
                                 )}
                             </TouchableOpacity>
 
                             <Text style={styles.registerNote}>
-                                Kayıt olduktan sonra Ücretsiz plana dahil olursunuz.
-                                Çınar (Sınıf) ve Meşe (Kurumsal) paketleri için childhoodtech.com adresini ziyaret edin.
+                                {t('teacherAuth.regNote')}
                             </Text>
                         </View>
                     </View>
                 </Modal>
+                {!showRegister && <InAppNotice message={notice} onDismiss={() => setNotice(null)} />}
             </KeyboardAvoidingView>
         </DynamicBackground>
     );

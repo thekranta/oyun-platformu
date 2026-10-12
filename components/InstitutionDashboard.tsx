@@ -75,6 +75,8 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
     const { width } = useWindowDimensions();
     const wide = width >= 900;
     const classCols = width >= 1100 ? 3 : width >= 700 ? 2 : 1;
+    // Yüzde işareti dile göre: Türkçe "%45", İngilizce "45%".
+    const pctText = (n: number) => (lang.startsWith('tr') ? '%' + n : n + '%');
 
     const [days, setDays] = useState<PeriodDays>(7);
     const [data, setData] = useState<DashData | null>(null);
@@ -167,7 +169,7 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
     const kpis = overview ? [
         {
             key: 'active', icon: 'people' as const, color: C.primary, bg: C.primarySoft, label: t('institution.kpiActive'),
-            value: formatInt(overview.activeChildren, lang), unit: `%${activePct}`,
+            value: formatInt(overview.activeChildren, lang), unit: pctText(activePct),
             sub: t('institution.kpiActiveSub', { total: formatInt(overview.childCount, lang) }),
             trend: trendLabel(overview.activeChildren, overview.prevActiveChildren), bar: activePct,
         },
@@ -185,7 +187,7 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
         },
         {
             key: 'acc', icon: 'checkmark-circle' as const, color: C.good, bg: C.goodSoft, label: t('institution.kpiAccuracy'),
-            value: acc === null ? '—' : `%${acc}`, unit: '',
+            value: acc === null ? '—' : pctText(acc), unit: '',
             sub: acc === null ? t('institution.kpiAccuracyNone') : '', trend: null, bar: acc,
         },
     ] : [];
@@ -206,8 +208,6 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                 return { icon: 'trending-down', color: C.warn, bg: C.warnSoft, title: t('institution.lowClass', { name: item.className, active: item.active, total: item.total }), sub: item.teacherName ? t('institution.withTeacher', { name: item.teacherName }) : undefined, cls: byId(item.classId) };
             case 'passiveChildren':
                 return { icon: 'person-remove', color: C.warn, bg: C.warnSoft, title: t('institution.passiveChildren', { count: item.count }) };
-            case 'hiddenChildren':
-                return { icon: 'lock-closed', color: C.neutral, bg: C.neutralSoft, title: t('institution.hiddenChildren', { count: item.count }) };
             default:
                 return { icon: 'calendar', color: C.warn, bg: C.warnSoft, title: item.daysLeft === 0 ? t('institution.packageExpiringToday') : t('institution.packageExpiring', { days: item.daysLeft }) };
         }
@@ -275,7 +275,7 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                                                 { height: h, backgroundColor: d.gameCount === 0 ? C.line : isPicked || isToday ? C.primaryDark : C.primary, opacity: isPicked || !pickedDay ? 1 : 0.45 },
                                             ]} />
                                         </View>
-                                        <Text style={[styles.barLabel, !showLabel && { opacity: 0 }, isToday && { color: C.primaryDark, fontWeight: '800' }]} numberOfLines={1}>
+                                        <Text style={[styles.barLabel, days === 30 && styles.barLabelWide, !showLabel && { opacity: 0 }, isToday && { color: C.primaryDark, fontWeight: '800' }]} numberOfLines={1}>
                                             {days === 7 ? wdLabel(dt) : `${dt.getDate()}.${dt.getMonth() + 1}`}
                                         </Text>
                                     </TouchableOpacity>
@@ -303,7 +303,7 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                                 <View style={{ flex: 1 }}>
                                     <View style={styles.areaTop}>
                                         <Text style={styles.areaName} numberOfLines={1}>{t(`institution.area.${a.alan}`, { defaultValue: a.alan })}</Text>
-                                        <Text style={styles.areaPct}>%{a.share}</Text>
+                                        <Text style={styles.areaPct}>{pctText(a.share)}</Text>
                                     </View>
                                     <View style={styles.areaTrack}><View style={[styles.areaFill, { width: `${Math.max(2, a.share)}%`, backgroundColor: meta.color }]} /></View>
                                 </View>
@@ -388,6 +388,9 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                             </TouchableOpacity>
                         );
                     })}
+                    {Array.from({ length: (classCols - (classes.length % classCols)) % classCols }, (_, i) => (
+                        <View key={'fill-' + i} style={{ width: classCols === 2 ? '48.8%' : '32.4%' }} />
+                    ))}
                 </View>
             )}
 
@@ -396,7 +399,7 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                 <Ionicons name="shield-checkmark" size={16} color={C.primary} />
                 <Text style={styles.footNoteText}>
                     {t('institution.privacyNote')}
-                    {overview && overview.hiddenCount > 0 ? ` ${t('institution.hiddenFootnote')}` : ''}
+                    {overview && overview.hiddenCount > 0 ? ` ${t('institution.hiddenFootnote', { count: overview.hiddenCount })}` : ''}
                 </Text>
             </View>
         </>
@@ -597,6 +600,7 @@ const styles = StyleSheet.create({
     barCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
     barSlot: { height: 132, justifyContent: 'flex-end', alignItems: 'center', width: '100%' },
     bar: { width: '72%', maxWidth: 34, borderTopLeftRadius: 6, borderTopRightRadius: 6 },
+    barLabelWide: { width: 44, marginHorizontal: -20, textAlign: 'center' },
     barLabel: { fontSize: 10.5, color: C.muted, marginTop: 6, height: 16, fontWeight: '700' },
     pickedBox: { marginTop: 8, backgroundColor: C.primarySoft, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
     pickedText: { fontSize: 12.5, fontWeight: '700', color: C.primaryDark },

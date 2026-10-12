@@ -69,7 +69,26 @@ describe('institutionStats yardımcıları', () => {
         expect(groupByArea([])).toEqual([]);
     });
 
-    it('buildAttention: pasif sınıf, düşük sınıf, pasif çocuk, kardeşli hesap, paket bitişi', () => {
+    it('groupByArea: yüzde payları TAM %100 eder (yuvarlama 99/101 üretmez) ve haritada olmayan oyun "Diğer" olur', () => {
+        const r = groupByArea([
+            { oyunTuru: 'miktar-avcisi', gameCount: 1, childCount: 1 },
+            { oyunTuru: 'hafiza', gameCount: 1, childCount: 1 },
+            { oyunTuru: 'davul-ustasi', gameCount: 1, childCount: 1 },
+        ]);
+        expect(r.reduce((s, x) => s + x.share, 0)).toBe(100);          // 3 eşit pay: 34 + 33 + 33
+        const r2 = groupByArea([
+            { oyunTuru: 'bu-oyun-haritada-yok', gameCount: 5, childCount: 2 },
+            { oyunTuru: 'miktar-avcisi', gameCount: 5, childCount: 2 },
+        ]);
+        expect(r2.map((x) => x.alan)).toContain('Diğer');
+        expect(r2.find((x) => x.alan === 'Diğer')?.gameCount).toBe(5);
+        expect(r2.reduce((s, x) => s + x.share, 0)).toBe(100);
+        // çok sayıda küçük pay
+        const many = groupByArea(Array.from({ length: 7 }, (_, i) => ({ oyunTuru: ['miktar-avcisi', 'hafiza', 'davul-ustasi', 'yapboz', 'siralama', 'ilk-harf', 'duygu-yuzleri'][i], gameCount: 3 + i, childCount: 1 })));
+        expect(many.reduce((s, x) => s + x.share, 0)).toBe(100);
+    });
+
+    it('buildAttention: pasif sınıf, düşük sınıf, pasif çocuk, paket bitişi (kardeşli hesap notu dikkat listesinde DEĞİL, dipnotta)', () => {
         const classes = [
             { id: 'a', name: 'A', teacherName: 'T1', childCount: 10, hiddenCount: 0, activeChildren: 0, gameCount: 0, lastPlayedAt: null },
             { id: 'b', name: 'B', teacherName: 'T2', childCount: 10, hiddenCount: 0, activeChildren: 2, gameCount: 5, lastPlayedAt: null },
@@ -78,7 +97,8 @@ describe('institutionStats yardımcıları', () => {
         const overview = parseOverview({ child_count: '30', active_children: '11', hidden_count: '2' });
         const soon = new Date(NOW.getTime() + 10 * 86400000).toISOString();
         const kinds = buildAttention({ expiresAt: soon }, overview, classes, NOW).map((i) => i.kind);
-        expect(kinds).toEqual(['idleClass', 'lowClass', 'passiveChildren', 'hiddenChildren', 'packageExpiring']);
+        expect(kinds).toEqual(['idleClass', 'lowClass', 'passiveChildren', 'packageExpiring']);
+        expect(kinds).not.toContain('hiddenChildren');
         // paket uzakta, sorun yok → boş
         const far = new Date(NOW.getTime() + 200 * 86400000).toISOString();
         expect(buildAttention({ expiresAt: far }, parseOverview({ child_count: 5, active_children: 5 }), [classes[2]], NOW)).toEqual([]);

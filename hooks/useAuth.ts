@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AUTH_MESSAGES, ensureProfileFromMetadata, isEmailNotConfirmed, needsEmailConfirmation } from '../lib/authFlow';
+import { AUTH_MESSAGES, ensureProfileFromMetadata, isEmailNotConfirmed, needsEmailConfirmation, PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
 import { calculateAgeInMonths } from '../lib/menuHelpers';
 import { supabase } from '../lib/supabase';
 import { VeliTier } from '../lib/subscriptionTiers';
@@ -146,7 +146,7 @@ export function useAuth({
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+        redirectTo: PASSWORD_RESET_REDIRECT,
       });
       if (error) throw error;
       showToast('Şifre sıfırlama bağlantısı e-postanıza gönderildi.', 'success');

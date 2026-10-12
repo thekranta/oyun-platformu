@@ -3,7 +3,7 @@ import VeliDashboard from '@/components/VeliDashboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { AUTH_MESSAGES, ensureProfileFromMetadata, isEmailNotConfirmed } from '../lib/authFlow';
+import { AUTH_MESSAGES, ensureProfileFromMetadata, isEmailNotConfirmed, PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
 import { supabase } from '../lib/supabase';
 import { VeliTier } from '../lib/subscriptionTiers';
 import {
@@ -150,7 +150,7 @@ export default function VeliDashboardPage() {
         }
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-                redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+                redirectTo: PASSWORD_RESET_REDIRECT,
             });
             if (error) throw error;
             showAlert('Gönderildi', 'Şifre sıfırlama bağlantısı e-postanıza gönderildi.');

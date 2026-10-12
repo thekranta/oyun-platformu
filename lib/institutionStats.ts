@@ -1,4 +1,4 @@
-import { getMaarif } from '../constants/maarifMap';
+import { MAARIF_MAP } from '../constants/maarifMap';
 
 // Kurum yönetim paneli (Meşe) — tipler + saf yardımcılar. Sunucu tarafı:
 // supabase_migrations/add_institutions.sql. Panel TOPLU özet gösterir; çizim, AI yorumu ve veli bilgisi YOK.
@@ -165,12 +165,20 @@ export const groupByArea = (rows: GameTypeRow[]): AreaShare[] => {
     const by = new Map<string, number>();
     let total = 0;
     for (const r of rows) {
-        const alan = getMaarif(r.oyunTuru).alan || 'Diğer';
+        // Haritada OLMAYAN oyun "Matematik" sayılmaz (getMaarif varsayılanı Matematik'tir); dürüstçe "Diğer" altında toplanır.
+        const alan = MAARIF_MAP[r.oyunTuru]?.alan || 'Diğer';
         by.set(alan, (by.get(alan) ?? 0) + r.gameCount);
         total += r.gameCount;
     }
-    return [...by.entries()]
-        .map(([alan, gameCount]) => ({ alan, gameCount, share: percent(gameCount, total) }))
+    const entries = [...by.entries()];
+    // En büyük kalan yöntemi: her pay aşağı yuvarlanır, kalan puanlar en büyük kesirlilere verilir → toplam TAM %100 (99/101 görünmez).
+    const base = entries.map(([alan, gameCount]) => ({ alan, gameCount, exact: total > 0 ? (gameCount / total) * 100 : 0 }));
+    const floors = base.map((b) => Math.floor(b.exact));
+    let left = total > 0 ? 100 - floors.reduce((a, b) => a + b, 0) : 0;
+    const order = base.map((b, i) => ({ i, frac: b.exact - Math.floor(b.exact) })).sort((a, b) => b.frac - a.frac || a.i - b.i);
+    for (const o of order) { if (left <= 0) break; floors[o.i] += 1; left -= 1; }
+    return base
+        .map((b, i) => ({ alan: b.alan, gameCount: b.gameCount, share: floors[i] }))
         .sort((a, b) => b.gameCount - a.gameCount || a.alan.localeCompare(b.alan, 'tr'));
 };
 
@@ -181,8 +189,7 @@ export type AttentionItem =
     | { kind: 'idleClass'; classId: string; className: string; teacherName: string | null }
     | { kind: 'lowClass'; classId: string; className: string; teacherName: string | null; active: number; total: number }
     | { kind: 'passiveChildren'; count: number }
-    | { kind: 'packageExpiring'; daysLeft: number }
-    | { kind: 'hiddenChildren'; count: number };
+    | { kind: 'packageExpiring'; daysLeft: number };
 
 export const PACKAGE_WARN_DAYS = 30;
 
@@ -201,7 +208,6 @@ export const buildAttention = (
     if (overview) {
         const passive = overview.childCount - overview.activeChildren;
         if (overview.childCount > 0 && passive > 0) items.push({ kind: 'passiveChildren', count: passive });
-        if (overview.hiddenCount > 0) items.push({ kind: 'hiddenChildren', count: overview.hiddenCount });
     }
     if (info.expiresAt) {
         const left = Math.ceil((new Date(info.expiresAt).getTime() - now.getTime()) / DAY_MS);

@@ -17,6 +17,7 @@ import UndoStrip from '../components/admin/UndoStrip';
 import { getMaarif } from '../constants/maarifMap';
 import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
 import { apiUrl } from '../lib/apiBase';
+import { PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
 import { supabase } from '../lib/supabase';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { ayristirAnaliz } from '../lib/admin/parseAnalysis';
@@ -97,7 +98,7 @@ export default function AdminPanel() {
     }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+        redirectTo: PASSWORD_RESET_REDIRECT,
       });
       if (error) throw error;
       alert('Şifre sıfırlama bağlantısı e-postanıza gönderildi.');

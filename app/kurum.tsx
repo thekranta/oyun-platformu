@@ -17,7 +17,10 @@ import {
 import InstitutionDashboard, { C } from '../components/InstitutionDashboard';
 import { asset } from '../lib/assetMap';
 import { isEmailNotConfirmed } from '../lib/authFlow';
+import { PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
 import { createInstitutionSource, fetchAdminInstitutions } from '../lib/institutionApi';
+import { rememberResetReturn } from '../lib/resetReturn';
+import { withTimeout } from '../lib/withTimeout';
 import { isInstitutionExpired } from '../lib/institutionStats';
 import { createDemoInstitution } from '../lib/institutionDemo';
 import { InstitutionInfo } from '../lib/institutionStats';
@@ -50,9 +53,9 @@ export default function KurumPage() {
         let cancelled = false;
         (async () => {
             try {
-                const { data } = await supabase.auth.getSession();
+                const { data } = await withTimeout(supabase.auth.getSession(), 8000);
                 if (data.session) {
-                    const list = await fetchAdminInstitutions();
+                    const list = await withTimeout(fetchAdminInstitutions(), 8000);
                     const active = (list ?? []).filter((i) => !isInstitutionExpired(i));
                     if (!cancelled && active.length > 0) {
                         setInstitutions(active);
@@ -82,6 +85,8 @@ export default function KurumPage() {
         try {
             const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
             if (isEmailNotConfirmed(authError)) { setError(t('institution.login.notConfirmed')); return; }
+            if (authError?.status === 429) { setError(t('institution.login.tooMany')); return; }
+            if (authError && (!authError.status || authError.status >= 500 || /fetch|network/i.test(authError.message))) { setError(t('institution.login.network')); return; }
             if (authError || !data.user) { setError(t('institution.login.invalid')); return; }
             const list = await fetchAdminInstitutions();
             if (list === undefined) {
@@ -104,7 +109,7 @@ export default function KurumPage() {
             setInstitutions(active);
             setPhase('panel');
         } catch {
-            setError(t('institution.login.invalid'));
+            setError(t('institution.login.network'));
         } finally {
             setBusy(false);
         }
@@ -115,8 +120,9 @@ export default function KurumPage() {
         setInfo(null);
         if (!email.trim()) { setError(t('institution.login.resetNeedEmail')); return; }
         try {
+            rememberResetReturn('/kurum');
             const { error: e } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-                redirectTo: 'https://oyun-platformu.vercel.app/reset-password',
+                redirectTo: PASSWORD_RESET_REDIRECT,
             });
             if (e) throw e;
             setInfo(t('institution.login.resetSent'));
@@ -128,7 +134,14 @@ export default function KurumPage() {
     // Kurum girişinden veli/öğretmen girişine dönüş. Kurum yöneticisi oturumu açıksa ana ekran onu veli/öğretmen
     // hesabı sanmasın diye oturum kapatılır (giriş ekranında zaten oturum yoksa zararsız).
     const goHome = async () => {
-        try { await supabase.auth.signOut(); } catch { /* sessiz */ }
+        try {
+            // Yalnız KURUM YÖNETİCİSİ oturumu kapatılır; aynı tarayıcıdaki öğretmen/veli oturumuna dokunulmaz.
+            const { data } = await withTimeout(supabase.auth.getSession(), 4000);
+            if (data.session) {
+                const list = await withTimeout(fetchAdminInstitutions(), 4000);
+                if (list && list.length > 0) await supabase.auth.signOut();
+            }
+        } catch { /* sessiz */ }
         router.replace('/');
     };
 
@@ -168,7 +181,8 @@ export default function KurumPage() {
                         style={styles.input}
                         value={email}
                         onChangeText={setEmail}
-                        placeholder="ornek@kurum.com"
+                        placeholder={t('institution.login.emailPlaceholder')}
+                        accessibilityLabel={t('institution.login.email')}
                         placeholderTextColor="#9AA6B8"
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -184,6 +198,7 @@ export default function KurumPage() {
                         value={password}
                         onChangeText={setPassword}
                         placeholder="••••••••"
+                        accessibilityLabel={t('institution.login.password')}
                         placeholderTextColor="#9AA6B8"
                         secureTextEntry
                         autoCapitalize="none"

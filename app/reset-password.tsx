@@ -2,6 +2,7 @@ import DynamicBackground from '@/components/DynamicBackground';
 import Toast from '@/components/Toast';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
+import { takeResetReturn } from '../lib/resetReturn';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
@@ -117,7 +118,7 @@ export default function ResetPassword() {
 
             // Redirect to login after a short delay
             setTimeout(() => {
-                router.replace('/');
+                router.replace(takeResetReturn() as '/');
             }, 2000);
         } catch (error: any) {
             console.error('Password reset error:', error);
@@ -155,7 +156,7 @@ export default function ResetPassword() {
                         </Text>
                         <TouchableOpacity
                             style={styles.gradientButton}
-                            onPress={() => router.replace('/')}
+                            onPress={() => router.replace(takeResetReturn() as '/')}
                             activeOpacity={0.8}
                         >
                             <Text style={styles.gradientButtonText}>Giriş Sayfasına Dön</Text>
@@ -258,7 +259,7 @@ export default function ResetPassword() {
                     {/* Back to Login Link */}
                     <TouchableOpacity
                         style={styles.backLink}
-                        onPress={() => router.replace('/')}
+                        onPress={() => router.replace(takeResetReturn() as '/')}
                     >
                         <Text style={styles.backLinkText}>← Giriş Sayfasına Dön</Text>
                     </TouchableOpacity>
