@@ -11,6 +11,7 @@ import { consumeAudioBlocked, speak, speakThenWait, stopSpeech } from '../servic
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import ListenButton from './ListenButton';
+import CreditsModal from './minikMuze/CreditsModal';
 import { PAINTING_IMAGES } from './minikMuze/paintingImages';
 
 // ============================================
@@ -55,6 +56,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
     const [drawingFor, setDrawingFor] = useState<Painting | null>(null);
     // Mobil tarayici sesi engellediyse (dokunus gerekir) anlatim sessizce hizla ilerlemesin; cocuk dokunsun.
     const [needsTap, setNeedsTap] = useState(false);
+    const [creditsOpen, setCreditsOpen] = useState(false);
 
     const startRef = useRef(Date.now());
     const runRef = useRef(0);
@@ -152,7 +154,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
         if (viewedRef.current.size === 0) { onExit?.(); return; }
         finishedRef.current = true;
         const duration = Math.floor((Date.now() - startRef.current) / 1000);
-        onGameEnd('minik-muze', duration, viewedRef.current.size, 0, undefined, {
+        onGameEnd('minik-muze', duration, viewedRef.current.size, 0, Array.from(viewedRef.current).join(','), {
             zorlukSeviyesi: 1,
             kazanimOdagi: 'Sanat: Sanat Eseri İnceleme ve Sanatçılara Değer Verme (SNAB.2, SNAB.3)',
             correct_answers: viewedRef.current.size,
@@ -191,7 +193,9 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                 <View style={styles.header}>
                     <GameExitButton onPress={finishAndExit} />
                     <Text style={styles.headerTitle}>🏛️ Minik Müze</Text>
-                    <View style={{ width: 44 }} />
+                    <TouchableOpacity onPress={() => setCreditsOpen(true)} style={styles.infoBtn} accessibilityRole="button" accessibilityLabel="Künye ve kaynaklar">
+                        <Ionicons name="information-circle-outline" size={26} color="#F4E7CF" />
+                    </TouchableOpacity>
                 </View>
                 <ScrollView contentContainerStyle={styles.gallery} showsVerticalScrollIndicator={false}>
                     {sortPaintingsByTier(PAINTINGS).map((p) => {
@@ -217,6 +221,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                         );
                     })}
                 </ScrollView>
+                <CreditsModal visible={creditsOpen} onClose={() => setCreditsOpen(false)} />
                 {lockedPainting && (
                     <View style={styles.lockOverlay}>
                         <View style={styles.lockCard} accessibilityViewIsModal>
@@ -247,7 +252,9 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                     <Text style={styles.plaqueTitle} numberOfLines={1}>{selected.title}</Text>
                     <Text style={styles.plaqueArtist} numberOfLines={1}>{selected.artist} · {selected.yearLabel}</Text>
                 </View>
-                <View style={{ width: 44 }} />
+                <TouchableOpacity onPress={() => setCreditsOpen(true)} style={styles.infoBtn} accessibilityRole="button" accessibilityLabel="Tablo künyesi">
+                    <Ionicons name="information-circle-outline" size={26} color="#F4E7CF" />
+                </TouchableOpacity>
             </View>
 
             <View style={[styles.body, sideBySide && styles.bodyRow]}>
@@ -322,6 +329,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                 )}
             </View>
             </View>
+            <CreditsModal visible={creditsOpen} onClose={() => setCreditsOpen(false)} only={selected} />
         </View>
     );
 }
@@ -330,6 +338,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: WALL },
     drawLoading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 16 : 44, paddingBottom: 8 },
+    infoBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
     headerTitle: { fontSize: 22, fontWeight: '900', color: '#F4E7CF' },
     plaque: { flex: 1, marginHorizontal: 12, alignItems: 'center', backgroundColor: '#3C2F23', borderRadius: 12, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#6B5538' },
     plaqueTitle: { fontSize: 17, fontWeight: '900', color: '#F4E7CF' },

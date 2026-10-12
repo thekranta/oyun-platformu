@@ -13,6 +13,7 @@
 import { getMaarif } from '../constants/maarifMap';
 import { parentView, teacherView } from '../lib/aiAudience';
 import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
+import { summarizeMuseum, WeeklyMuseum } from '../lib/minikMuzeReport';
 import { ReportEngine } from './ReportEngine';
 
 // ============== TİPLER ==============
@@ -23,6 +24,8 @@ export interface WeeklyGameLike {
     hata_sayisi?: number | null;
     sure?: number | null;
     response_time?: number | null;
+    /** Minik Mueze oturumlarinda dinlenen tablo kimlikleri (virgullu); diger oyunlarda baska anlamda olabilir. */
+    algilanan_kelime?: string | null;
 }
 
 export interface WeeklySkillArea {
@@ -97,6 +100,8 @@ export interface WeeklyReportData {
     dailyActivity: WeeklyActivityDay[];
     strengths: string[];
     homeActivities: WeeklyHomeActivity[];
+    /** Minik Mueze: bu hafta dinlenen tablolar (veli notu); hic yoksa null/yok. */
+    museum?: WeeklyMuseum | null;
     encouragingMessage: string;
     highlight: { emoji: string; title: string; description: string };
     maarifNote: string;
@@ -311,6 +316,7 @@ export function buildWeeklyReport(
         dailyActivity,
         strengths,
         homeActivities,
+        museum: summarizeMuseum(source),
         encouragingMessage,
         highlight: highlightFor(avgSuccess, gamesCount, activeDays),
         consistencyNote: consistencyNoteFor(hasWeekData, gamesCount, activeDays),
@@ -483,6 +489,12 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
         if (r.topGames.length) sections += sec('En Çok Oynanan Oyunlar', gamesInner);
         if (r.strengths.length) sections += sec('Güçlü Yönler', strengthsInner);
         if (!teacher && r.homeActivities.length) sections += sec('Evde Ne Yapabilirsiniz?', homeInner);
+        if (!teacher && r.museum && r.museum.paintings.length) {
+            const museumInner = '<div class="cap" style="margin:0 0 10px">Çocuğunuz Minik Müze\'de ünlü tabloları dinleyerek sanat eserlerini tanıdı.</div>'
+                + r.museum.paintings.map(p => '<div class="home"><span class="hem">🏛️</span><div class="hbody"><div class="ht"><span class="htitle">' + esc(p.title) + '</span></div><div class="hdesc">' + esc(p.artist) + '</div></div></div>').join('')
+                + '<div class="cap" style="margin-top:10px"><b>Evde:</b> ' + esc(r.museum.idea) + '</div>';
+            sections += sec('Minik Müze\'de Bu Hafta', museumInner);
+        }
         if (!teacher && r.aiNote) sections += sec('Uzman Değerlendirme Notu', `<div class="ai">${esc(r.aiNote).replace(/\n/g, '<br/>')}</div><div class="cap">Bu değerlendirme yalnızca bu haftaya değil, çocuğunuzun genel oyun geçmişine (son 12 oyun) dayanır — yukarıdaki haftalık istatistiklerden farklı bir zaman aralığını kapsayabilir.</div>`);
     } else {
         sections += lockedSection;
