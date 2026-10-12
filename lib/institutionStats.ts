@@ -11,6 +11,13 @@ export interface InstitutionInfo {
     classCount: number;
 }
 
+/** Kurum paketinin süresi dolmuş mu (expiresAt boşsa süresiz)? */
+export function isInstitutionExpired(info: { expiresAt: string | null }, now: number = Date.now()): boolean {
+    if (!info.expiresAt) return false;
+    const t = new Date(info.expiresAt).getTime();
+    return !isNaN(t) && t <= now;
+}
+
 export interface Overview {
     teacherCount: number;
     classCount: number;

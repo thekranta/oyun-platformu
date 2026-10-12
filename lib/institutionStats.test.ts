@@ -164,14 +164,27 @@ describe('demo kurum verisi (satış gösterisi)', () => {
         expect(await a.source.classes(7)).toEqual(await b.source.classes(7));
     });
 
-    it('çocuk adları yalnız ad + soyad baş harfi; e-posta/aile bilgisi yok', async () => {
+    it('çocuk adları ad + soyad (gerçek panelle aynı görünüm); e-posta/aile bilgisi yok', async () => {
         const { source } = createDemoInstitution(NOW);
         for (const c of await source.classes(7)) {
             for (const k of await source.classChildren(c.id, 7)) {
                 if (k.hidden) continue;
-                expect(k.name).toMatch(/^\S+ \S\.$/);
+                expect(k.name).toMatch(/^\S+ \S+$/);
                 expect(JSON.stringify(k)).not.toMatch(/@/);
             }
         }
     });
+});
+
+describe('isInstitutionExpired', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { isInstitutionExpired } = require('./institutionStats') as typeof import('./institutionStats');
+    const now = Date.UTC(2026, 9, 12);
+    it('süresiz (null) kurum dolmuş sayılmaz', () => { expect(isInstitutionExpired({ expiresAt: null }, now)).toBe(false); });
+    it('gelecekteki bitiş dolmamış, geçmiş ya da tam şimdi dolmuştur', () => {
+        expect(isInstitutionExpired({ expiresAt: '2026-12-01T00:00:00Z' }, now)).toBe(false);
+        expect(isInstitutionExpired({ expiresAt: '2026-10-11T23:59:59Z' }, now)).toBe(true);
+        expect(isInstitutionExpired({ expiresAt: new Date(now).toISOString() }, now)).toBe(true);
+    });
+    it('bozuk tarih dolmuş sayılmaz (panelden gereksiz yere atmasın)', () => { expect(isInstitutionExpired({ expiresAt: 'bozuk' }, now)).toBe(false); });
 });

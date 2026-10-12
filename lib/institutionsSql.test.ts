@@ -83,3 +83,22 @@ describe('add_institutions.sql güvenlik sözleşmesi', () => {
         expect(rollback).toContain('private.institution_students(uuid, uuid)');
     });
 });
+
+describe('fix_institution_expired_login.sql (süresi dolan yönetici girişi)', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require('node:fs') as typeof import('node:fs');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require('node:path') as typeof import('node:path');
+    const sql = fs.readFileSync(path.join(__dirname, '../supabase_migrations/fix_institution_expired_login.sql'), 'utf8');
+    it('yalnız liste fonksiyonunu değiştirir; üyelik auth.uid() ile bağlı, admin rolü şart', () => {
+        expect(sql).toMatch(/CREATE OR REPLACE FUNCTION public\.my_admin_institutions\(\)/);
+        expect(sql).toMatch(/SECURITY DEFINER SET search_path = public, pg_temp/);
+        expect(sql).toMatch(/auth\.uid\(\) IS NOT NULL/);
+        expect(sql).toMatch(/m\.user_id = auth\.uid\(\) AND m\.role = 'admin'/);
+        expect(sql).not.toMatch(/CREATE OR REPLACE FUNCTION public\.institution_(overview|classes|class_children|activity_daily|games_by_type)/);
+    });
+    it('anon/PUBLIC kapalı, yalnız authenticated çalıştırır', () => {
+        expect(sql).toMatch(/REVOKE ALL ON FUNCTION public\.my_admin_institutions\(\) FROM PUBLIC, anon/);
+        expect(sql).toMatch(/GRANT EXECUTE ON FUNCTION public\.my_admin_institutions\(\) TO authenticated/);
+    });
+});

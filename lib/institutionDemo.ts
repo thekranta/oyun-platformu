@@ -36,7 +36,7 @@ const CLASSES: ClassDef[] = [
 
 const GIRLS = ['Ada', 'Defne', 'Elif', 'Zeynep', 'Asya', 'Mina', 'Ecrin', 'Nehir', 'Azra', 'Lina', 'Ela', 'Duru', 'İpek', 'Nila', 'Sare', 'Mira', 'Ceren', 'Ayla', 'Derin', 'Güneş'];
 const BOYS = ['Mert', 'Efe', 'Kerem', 'Yusuf', 'Arda', 'Emir', 'Çınar', 'Atlas', 'Deniz', 'Kuzey', 'Bora', 'Ege', 'Toprak', 'Alp', 'Mirza', 'Ozan', 'Yiğit', 'Barış', 'Can', 'Poyraz'];
-const INITIALS = ['A', 'B', 'C', 'Ç', 'D', 'E', 'G', 'K', 'M', 'N', 'O', 'S', 'Ş', 'T', 'Y', 'Z'];
+const SURNAMES = ['Yılmaz', 'Kaya', 'Demir', 'Şahin', 'Çelik', 'Yıldız', 'Aydın', 'Özdemir', 'Arslan', 'Doğan', 'Kılıç', 'Aslan', 'Çetin', 'Koç', 'Kurt', 'Özkan', 'Şimşek', 'Polat', 'Erdoğan', 'Güneş'];
 
 // Tohumlu rastgele (mulberry32) — Math.random YOK: aynı veri her açılışta aynı çıkar.
 const rng = (seed: number) => () => {
@@ -78,7 +78,8 @@ function build(now: Date): { children: DemoChild[]; todayDow: number } {
             const hidden = i >= cls.count;
             const female = r() < 0.5;
             const first = (female ? GIRLS : BOYS)[Math.floor(r() * 20)];
-            const name = hidden ? null : `${first} ${INITIALS[Math.floor(r() * INITIALS.length)]}.`;
+            // Gerçek panel de çocuğun tam adını gösterir (institution_class_children); demo aynı görünümü taşır.
+            const name = hidden ? null : `${first} ${SURNAMES[Math.floor(r() * SURNAMES.length)]}`;
             const age = Math.round(cls.minAge + r() * (cls.maxAge - cls.minAge));
             // bazı çocuklar 2+ haftadır bırakmış (pasif): dormantFrom gün öncesinden beri hiç oynamıyor (7 günlük eğilimi bozmaz)
             const dormantFrom = cls.profile !== 'idle' && r() < 0.1 ? Math.floor(15 + r() * 20) : null;

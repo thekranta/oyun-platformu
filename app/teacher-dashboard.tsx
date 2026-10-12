@@ -21,6 +21,7 @@ import TeacherDashboard from '../components/TeacherDashboard';
 import { supabase } from '../lib/supabase';
 import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, ensureTeacherFromMetadata, isEmailNotConfirmed, needsEmailConfirmation } from '../lib/authFlow';
 import { createInstitutionSource, fetchAdminInstitutions } from '../lib/institutionApi';
+import { isInstitutionExpired } from '../lib/institutionStats';
 import { createDemoInstitution } from '../lib/institutionDemo';
 import { InstitutionInfo } from '../lib/institutionStats';
 import { OgretmenTier } from '../lib/subscriptionTiers';
@@ -69,7 +70,7 @@ export default function TeacherDashboardPage() {
         setInstitutions([]);
         if (!profile || isDemoProfile) return;
         let cancelled = false;
-        fetchAdminInstitutions().then((list) => { if (!cancelled && list) setInstitutions(list); });
+        fetchAdminInstitutions().then((list) => { if (!cancelled && list) setInstitutions(list.filter((i) => !isInstitutionExpired(i))); });
         return () => { cancelled = true; };
     }, [profile, isDemoProfile]);
 

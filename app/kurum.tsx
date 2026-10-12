@@ -18,6 +18,7 @@ import InstitutionDashboard, { C } from '../components/InstitutionDashboard';
 import { asset } from '../lib/assetMap';
 import { isEmailNotConfirmed } from '../lib/authFlow';
 import { createInstitutionSource, fetchAdminInstitutions } from '../lib/institutionApi';
+import { isInstitutionExpired } from '../lib/institutionStats';
 import { createDemoInstitution } from '../lib/institutionDemo';
 import { InstitutionInfo } from '../lib/institutionStats';
 import { supabase } from '../lib/supabase';
@@ -52,11 +53,14 @@ export default function KurumPage() {
                 const { data } = await supabase.auth.getSession();
                 if (data.session) {
                     const list = await fetchAdminInstitutions();
-                    if (!cancelled && list && list.length > 0) {
-                        setInstitutions(list);
+                    const active = (list ?? []).filter((i) => !isInstitutionExpired(i));
+                    if (!cancelled && active.length > 0) {
+                        setInstitutions(active);
                         setPhase('panel');
                         return;
                     }
+                    // Yalnız süresi dolmuş kurum(lar): oturumu bozmadan giriş ekranında nedeni söyle.
+                    if (!cancelled && list && list.length > 0) setError(t('institution.login.expired'));
                 }
             } catch {
                 /* giriş ekranına düşer */
@@ -90,8 +94,14 @@ export default function KurumPage() {
                 await supabase.auth.signOut();
                 return;
             }
+            const active = list.filter((i) => !isInstitutionExpired(i));
+            if (active.length === 0) {
+                setError(t('institution.login.expired'));
+                await supabase.auth.signOut();
+                return;
+            }
             setPassword('');
-            setInstitutions(list);
+            setInstitutions(active);
             setPhase('panel');
         } catch {
             setError(t('institution.login.invalid'));

@@ -216,7 +216,7 @@ export default function InstitutionDashboard({ institution, source, onClose, onO
     };
 
     // ---------------------------------------------------------------- render
-    const content = (
+    const fullContent = (
         <>
             {/* KPI */}
             <View style={styles.kpiGrid}>
@@ -403,6 +403,17 @@ export default function InstitutionDashboard({ institution, source, onClose, onO
             </View>
         </>
     );
+
+    // Yeni kurulmuş kurum (sınıf yok ya da hiç görünür çocuk yok): boş sayılar + "her şey yolunda 🎉" yerine karşılama kartı.
+    const isEmptyInstitution = !source.isDemo && !!overview && (overview.classCount === 0 || (overview.childCount === 0 && overview.hiddenCount === 0));
+    const content = isEmptyInstitution ? (
+        <View style={[styles.card, styles.stateCard]}>
+            <Ionicons name="sparkles" size={36} color={C.primary} />
+            <Text style={styles.stateTitle}>{t('institution.emptyTitle')}</Text>
+            <Text style={styles.stateText}>{t('institution.emptyText')}</Text>
+            <Text style={[styles.stateText, { marginTop: 4 }]}>{t('institution.emptySteps')}</Text>
+        </View>
+    ) : fullContent;
 
     const visibleKids = (kids ?? []).filter((k) => !onlyPassive || (!k.hidden && (k.gameCount ?? 0) === 0));
 
