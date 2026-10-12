@@ -33,8 +33,6 @@ interface Props {
     source: InstitutionDataSource;
     /** Verilirse sol üstte geri düğmesi çıkar. */
     onClose?: () => void;
-    /** Verilirse üst çubukta "Öğretmen Paneli" düğmesi çıkar. */
-    onOpenTeacherPanel?: () => void;
     /** Verilirse üst çubukta "Çıkış" düğmesi çıkar (kurum girişinden gelen oturum). */
     onSignOut?: () => void;
 }
@@ -71,7 +69,7 @@ const parseDay = (iso: string): Date => {
     return new Date(y, (m || 1) - 1, d || 1);
 };
 
-export default function InstitutionDashboard({ institution, source, onClose, onOpenTeacherPanel, onSignOut }: Props) {
+export default function InstitutionDashboard({ institution, source, onClose, onSignOut }: Props) {
     const { t, i18n } = useTranslation();
     const lang = i18n.language || 'tr';
     const { width } = useWindowDimensions();
@@ -434,12 +432,6 @@ export default function InstitutionDashboard({ institution, source, onClose, onO
                     <TouchableOpacity onPress={onSignOut} style={[styles.switchBtn, styles.signOutBtn]} accessibilityRole="button" accessibilityLabel={t('institution.signOut')}>
                         <Ionicons name="log-out-outline" size={18} color={C.muted} />
                         {width >= 520 && <Text style={[styles.switchText, { color: C.muted }]}>{t('institution.signOut')}</Text>}
-                    </TouchableOpacity>
-                )}
-                {onOpenTeacherPanel && (
-                    <TouchableOpacity onPress={onOpenTeacherPanel} style={styles.switchBtn} accessibilityRole="button" accessibilityLabel={t('institution.teacherPanel')}>
-                        <Ionicons name="school" size={16} color={C.primaryDark} />
-                        {width >= 520 && <Text style={styles.switchText}>{t('institution.teacherPanel')}</Text>}
                     </TouchableOpacity>
                 )}
             </View>

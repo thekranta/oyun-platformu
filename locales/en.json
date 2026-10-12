@@ -317,8 +317,6 @@
   "institution": {
     "panelTitle": "Institution Panel",
     "subtitle": "Institution overview",
-    "openButton": "Institution Panel",
-    "openHint": "See your institution's activity summary and classes",
     "signOut": "Sign out",
     "login": {
       "title": "Institution Sign-in",
@@ -344,7 +342,6 @@
       "backToLogin": "Back to sign-in",
       "backHome": "Back to parent / teacher sign-in"
     },
-    "teacherPanel": "Teacher Panel",
     "back": "Back",
     "demoBadge": "DEMO DATA",
     "demoNote": "All data on this screen is sample data and does not belong to real children.",

@@ -317,8 +317,6 @@
   "institution": {
     "panelTitle": "Kurum Paneli",
     "subtitle": "Kurum yönetim özeti",
-    "openButton": "Kurum Paneli",
-    "openHint": "Kurumunuzun etkinlik özetini ve sınıfları görün",
     "signOut": "Çıkış",
     "login": {
       "title": "Kurum Girişi",
@@ -344,7 +342,6 @@
       "backToLogin": "Girişe dön",
       "backHome": "Veli / öğretmen girişine dön"
     },
-    "teacherPanel": "Öğretmen Paneli",
     "back": "Geri",
     "demoBadge": "DEMO VERİ",
     "demoNote": "Bu ekrandaki tüm veriler örnek amaçlıdır; gerçek çocuklara ait değildir.",

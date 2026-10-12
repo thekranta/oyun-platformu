@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -16,14 +16,9 @@ import {
     View
 } from 'react-native';
 import DynamicBackground from '../components/DynamicBackground';
-import InstitutionDashboard from '../components/InstitutionDashboard';
 import TeacherDashboard from '../components/TeacherDashboard';
 import { supabase } from '../lib/supabase';
 import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, ensureTeacherFromMetadata, isEmailNotConfirmed, needsEmailConfirmation } from '../lib/authFlow';
-import { createInstitutionSource, fetchAdminInstitutions } from '../lib/institutionApi';
-import { isInstitutionExpired } from '../lib/institutionStats';
-import { createDemoInstitution } from '../lib/institutionDemo';
-import { InstitutionInfo } from '../lib/institutionStats';
 import { OgretmenTier } from '../lib/subscriptionTiers';
 
 // Web-compatible alert function
@@ -59,26 +54,7 @@ export default function TeacherDashboardPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [profile, setProfile] = useState<TeacherProfile | null>(null);
-    // Kurum paneli: yalnız kurum YÖNETİCİSİ olan hesapta (ya da demo profilde) açılır.
-    const [institutions, setInstitutions] = useState<InstitutionInfo[]>([]);
-    const [institutionOpen, setInstitutionOpen] = useState(false);
-    const isDemoProfile = profile?.id === 'demo-teacher';
-    const demoInstitution = useMemo(() => (isDemoProfile ? createDemoInstitution() : null), [isDemoProfile]);
-
-    useEffect(() => {
-        setInstitutionOpen(false);
-        setInstitutions([]);
-        if (!profile || isDemoProfile) return;
-        let cancelled = false;
-        fetchAdminInstitutions().then((list) => { if (!cancelled && list) setInstitutions(list.filter((i) => !isInstitutionExpired(i))); });
-        return () => { cancelled = true; };
-    }, [profile, isDemoProfile]);
-
-    const activeInstitution = demoInstitution?.info ?? institutions[0] ?? null;
-    const institutionSource = useMemo(
-        () => demoInstitution?.source ?? (institutions[0] ? createInstitutionSource(institutions[0].id) : null),
-        [demoInstitution, institutions],
-    );
+    // NOT: Kurum paneli ogretmen panelinin icinde DEGIL; yalniz ayri /kurum girisinden acilir (app/kurum.tsx).
 
     // Registration states
     const [showRegister, setShowRegister] = useState(false);
@@ -248,16 +224,6 @@ export default function TeacherDashboardPage() {
     };
 
     // Show dashboard if profile is loaded
-    if (profile && institutionOpen && activeInstitution && institutionSource) {
-        return (
-            <InstitutionDashboard
-                institution={activeInstitution}
-                source={institutionSource}
-                onClose={() => setInstitutionOpen(false)}
-                onOpenTeacherPanel={() => setInstitutionOpen(false)}
-            />
-        );
-    }
     if (profile) {
         return (
             <TeacherDashboard
@@ -268,7 +234,6 @@ export default function TeacherDashboardPage() {
                 subscriptionTier={profile.subscription_tier}
                 packageExpiresAt={profile.package_expires_at}
                 onClose={() => setProfile(null)}
-                onOpenInstitution={activeInstitution ? () => setInstitutionOpen(true) : undefined}
             />
         );
     }
