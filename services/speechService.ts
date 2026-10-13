@@ -2,7 +2,7 @@
  * Unified Speech Service
  * ----------------------
  * Seslendirme önceliği:
- *   1) HAZIR KLİP (assets/sounds/tts/<slug>.wav — klon "Hikaye Sesi") — çevrimdışı,
+ *   1) HAZIR KLİP (assets/sounds/tts/<slug>.mp3 — klon "Hikaye Sesi") — çevrimdışı,
  *      ücretsiz, tutarlı. Metin ttsSlug() ile bir dosya adına (slug) çevrilir;
  *      lib/ttsAssets.ts içinde varsa expo-av ile çalınır (web + native).
  *   2) Canlı OpenAI proxy (/api/tts) — yalnızca geçerli anahtar varsa. Şu an anahtar
