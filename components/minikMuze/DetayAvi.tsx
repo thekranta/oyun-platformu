@@ -42,11 +42,28 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
     const runRef = useRef(0);
     const mountedRef = useRef(true);
     const pulse = useRef(new Animated.Value(0)).current;
+    const stageRef = useRef<View>(null);
 
     const target = targets[idx];
     const img = fitContain(stage.w - 16, stage.h - 16, painting.aspect);
 
     useEffect(() => () => { mountedRef.current = false; runRef.current++; stopSpeech(); }, []);
+
+    // Web: onLayout bazı açılışlarda hiç gelmiyor (sahne ölçüsü tahmin değerinde kalıp tablo kırpılıyordu);
+    // sahneyi doğrudan DOM'dan ölç ve boyut değişince güncelle. Native'de onLayout yeterli.
+    useEffect(() => {
+        if (Platform.OS !== 'web' || typeof ResizeObserver === 'undefined') return;
+        const node = stageRef.current as unknown as HTMLElement | null;
+        if (!node) return;
+        const measure = () => {
+            const r = node.getBoundingClientRect();
+            setStage((prev) => (Math.abs(prev.w - r.width) < 1 && Math.abs(prev.h - r.height) < 1 ? prev : { w: r.width, h: r.height }));
+        };
+        measure();
+        const ro = new ResizeObserver(measure);
+        ro.observe(node);
+        return () => ro.disconnect();
+    }, []);
 
     // Parlayan ipucu halkası nabız gibi atar
     useEffect(() => {
@@ -136,9 +153,10 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
                 <View style={{ width: 44 }} />
             </View>
 
-            <View style={styles.stage} onLayout={onStageLayout}>
+            <View ref={stageRef} style={styles.stage} onLayout={onStageLayout}>
                 {img.w > 0 && (
-                    <View style={{ width: img.w, height: img.h }}>
+                    // Mutlak konum: görsel kutusu sahnenin (flex) boyutunu belirlemez; sahne ölçüsü hep gerçek yerleşimden gelir.
+                    <View style={{ position: 'absolute', left: (stage.w - img.w) / 2, top: (stage.h - img.h) / 2, width: img.w, height: img.h }}>
                         <Image source={PAINTING_IMAGES[painting.id]} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={painting.title + ' tablosu'} />
                         {foundRings.map((s, i) => <View key={'f' + i} pointerEvents="none" style={ringStyle(s, '#7CFF8A')} />)}
                         {hintSpot && (
