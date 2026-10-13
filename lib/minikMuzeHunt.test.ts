@@ -51,9 +51,8 @@ describe('Detay Avı verisi', () => {
         expect(getHunt('yok')).toBeUndefined();
     });
 
-    it('Mona Lisa (ücretsiz) ve Tohum düzeyi tabloların hepsinde av var', () => {
-        const open = PAINTINGS.filter((p) => p.tier !== 'fidan').map((p) => p.id);
-        for (const id of open) expect({ id, var: ids.includes(id) }).toEqual({ id, var: true });
+    it('tüm tabloların (ücretsiz, Tohum ve Fidan) hepsinde av var', () => {
+        for (const p of PAINTINGS) expect({ id: p.id, var: ids.includes(p.id) }).toEqual({ id: p.id, var: true });
     });
 
     it('hedef alanları görselin içinde ve makul büyüklükte', () => {
