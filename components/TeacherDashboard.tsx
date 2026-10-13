@@ -31,6 +31,7 @@ import { getMaarifInfo } from '../lib/maarifInfo';
 import { ReportEngine } from '../services/ReportEngine';
 import DevelopmentRadar from './DevelopmentRadar';
 import { chunkIds, CLASS_COUNT_PAGE_SIZE, countByClass } from '../lib/classCounts';
+import { maskEmail } from '../lib/maskEmail';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -76,6 +77,11 @@ interface ClassData {
 }
 
 type EnrolStatus = 'pending' | 'accepted' | 'suspended';
+
+// Ekranda gösterilen öğrenci adı: isim yoksa e-posta; veli onayı bekleyen öğrencinin e-postası
+// MASKELİ gösterilir (veri minimizasyonu). İşlemler (silme vb.) yine gerçek e-postayı kullanır.
+const studentDisplayName = (s: { child_name: string; email: string; status?: EnrolStatus }) =>
+    s.child_name || (s.status === 'pending' ? maskEmail(s.email) : s.email) || '—';
 
 interface StudentData {
     id: string;
@@ -585,7 +591,7 @@ export default function TeacherDashboard({
     const handleRemoveStudent = (student: StudentData) => {
         setConfirmState({
             title: t('teacher.removeStudentTitle'),
-            message: t('teacher.removeStudentMessage', { name: student.child_name || student.email }),
+            message: t('teacher.removeStudentMessage', { name: studentDisplayName(student) }),
             confirmLabel: t('teacher.remove'),
             cancelLabel: t('teacher.cancel'),
             destructive: true,
@@ -825,7 +831,7 @@ export default function TeacherDashboard({
                                                 </Text>
                                             </View>
                                             <View style={styles.studentInfo}>
-                                                <Text style={styles.studentName}>{s.child_name || s.email}</Text>
+                                                <Text style={styles.studentName}>{studentDisplayName(s)}</Text>
                                                 {lockedLabel
                                                     ? <Text style={styles.statusBadgeText}>{lockedLabel}</Text>
                                                     : <Text style={styles.studentAge}>{getAgeText(s.child_age_months)}</Text>}
@@ -840,7 +846,7 @@ export default function TeacherDashboard({
                                             style={styles.removeStudentBtn}
                                             onPress={() => handleRemoveStudent(s)}
                                             accessibilityRole="button"
-                                            accessibilityLabel={t('teacher.removeStudentLabel', { name: s.child_name || s.email })}
+                                            accessibilityLabel={t('teacher.removeStudentLabel', { name: studentDisplayName(s) })}
                                         >
                                             <Ionicons name="close-circle" size={24} color="#FF6B6B" />
                                         </TouchableOpacity>
