@@ -31,7 +31,11 @@ interface Props {
 export default function DetayAvi({ painting, targets, onExit, onCompleted }: Props) {
     // İlk tahmin: ölçü (onLayout) gecikirse / hiç gelmezse görsel yine de çizilir; gerçek ölçü gelince düzelir.
     const win = useWindowDimensions();
-    const [stage, setStage] = useState({ w: win.width - 16, h: Math.max(200, win.height - 270) });
+    // Yatay ve kısa ekran (telefon yan): alt panel tablonun yanına geçer, tablo şerit kalmaz (MinikMuze ile aynı eşik).
+    const sideBySide = win.width > win.height && win.height < 620;
+    const [stage, setStage] = useState(sideBySide
+        ? { w: win.width * 0.6 - 16, h: Math.max(120, win.height - 90) }
+        : { w: win.width - 16, h: Math.max(200, win.height - 270) });
     const [idx, setIdx] = useState(0);
     const [wrong, setWrong] = useState(0);
     const [foundRings, setFoundRings] = useState<HuntSpot[]>([]);
@@ -144,7 +148,7 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
 
     return (
         <View key="hunt" style={styles.container}>
-            <View style={styles.header}>
+            <View style={[styles.header, sideBySide && styles.headerSide]}>
                 <GameExitButton onPress={onExit} accessibilityLabel="Tabloya dön" />
                 <View style={styles.plaque}>
                     <Text style={styles.plaqueTitle} numberOfLines={1}>🔍 Detay Avı</Text>
@@ -153,11 +157,12 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
                 <View style={{ width: 44 }} />
             </View>
 
+            <View style={[styles.body, sideBySide && styles.bodyRow]}>
             <View ref={stageRef} style={styles.stage} onLayout={onStageLayout}>
                 {img.w > 0 && (
                     // Mutlak konum: görsel kutusu sahnenin (flex) boyutunu belirlemez; sahne ölçüsü hep gerçek yerleşimden gelir.
                     <View style={{ position: 'absolute', left: (stage.w - img.w) / 2, top: (stage.h - img.h) / 2, width: img.w, height: img.h }}>
-                        <Image source={PAINTING_IMAGES[painting.id]} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityLabel={painting.title + ' tablosu'} />
+                        <Image source={PAINTING_IMAGES[painting.id]} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={painting.title + ' tablosu'} />
                         {foundRings.map((s, i) => <View key={'f' + i} pointerEvents="none" style={ringStyle(s, '#7CFF8A')} />)}
                         {hintSpot && (
                             <Animated.View
@@ -179,9 +184,9 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
                 )}
             </View>
 
-            <View style={styles.bottom}>
-                <View style={styles.subtitle}>
-                    <Text style={styles.subtitleText}>{done ? HUNT_DONE : target?.prompt}</Text>
+            <View style={[styles.bottom, sideBySide && { ...styles.bottomSide, width: Math.min(380, win.width * 0.4) }]}>
+                <View style={[styles.subtitle, sideBySide && styles.subtitleSide]}>
+                    <Text style={[styles.subtitleText, sideBySide && styles.subtitleTextSide]}>{done ? HUNT_DONE : target?.prompt}</Text>
                 </View>
                 <View style={styles.dots}>
                     {targets.map((_, i) => (
@@ -205,6 +210,7 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
                     </View>
                 )}
             </View>
+            </View>
         </View>
     );
 }
@@ -212,6 +218,12 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: WALL },
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 16 : 44, paddingBottom: 8 },
+    headerSide: { paddingTop: Platform.OS === 'web' ? 8 : 12, paddingBottom: 4 },
+    body: { flex: 1 },
+    bodyRow: { flexDirection: 'row' },
+    bottomSide: { justifyContent: 'center', paddingHorizontal: 10, paddingTop: 0, paddingBottom: 12 },
+    subtitleSide: { minHeight: 0, paddingVertical: 10, paddingHorizontal: 12 },
+    subtitleTextSide: { fontSize: 17, lineHeight: 23 },
     plaque: { flex: 1, marginHorizontal: 12, alignItems: 'center', backgroundColor: '#3C2F23', borderRadius: 12, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#6B5538' },
     plaqueTitle: { fontSize: 17, fontWeight: '900', color: '#F4E7CF' },
     plaqueArtist: { fontSize: 12, color: '#CDB892', marginTop: 1, fontWeight: '600' },
