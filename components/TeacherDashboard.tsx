@@ -30,6 +30,7 @@ import { getMaarif } from '../constants/maarifMap';
 import { getMaarifInfo } from '../lib/maarifInfo';
 import { ReportEngine } from '../services/ReportEngine';
 import DevelopmentRadar from './DevelopmentRadar';
+import { chunkIds, CLASS_COUNT_PAGE_SIZE, countByClass } from '../lib/classCounts';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -170,6 +171,26 @@ export default function TeacherDashboard({
         }
     }, [teacherId]);
 
+    // Sınıf başına öğrenci sayısı: parça başına tek istek (sunucu satır sınırına karşı sayfalı), RLS yalnız öğretmenin sınıflarını verir.
+    const fetchStudentCounts = async (classIds: string[]): Promise<Record<string, number>> => {
+        if (classIds.length === 0) return {};
+        const headers = { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` };
+        const rows: { class_id: string }[] = [];
+        await Promise.all(chunkIds(classIds).map(async (chunk) => {
+            for (let offset = 0; ; offset += CLASS_COUNT_PAGE_SIZE) {
+                const resp = await fetch(
+                    `${SUPABASE_URL}/rest/v1/class_students?class_id=in.(${chunk.join(',')})&select=class_id&order=id&limit=${CLASS_COUNT_PAGE_SIZE}&offset=${offset}`,
+                    { headers }
+                );
+                const page = await resp.json();
+                if (!Array.isArray(page)) throw new Error('class_students count failed');
+                rows.push(...page);
+                if (page.length < CLASS_COUNT_PAGE_SIZE) break;
+            }
+        }));
+        return countByClass(rows, classIds);
+    };
+
     const fetchClasses = async (silent = false) => {
         if (!silent) setLoading(true);
         setClassesError(false);
@@ -180,19 +201,15 @@ export default function TeacherDashboard({
             );
             const data = await response.json();
             if (Array.isArray(data)) {
-                const classesWithCount = await Promise.all(data.map(async (c: any, idx: number) => {
-                    const countResp = await fetch(
-                        `${SUPABASE_URL}/rest/v1/class_students?class_id=eq.${c.id}&select=id`,
-                        { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
-                    );
-                    const countData = await countResp.json();
-                    return {
-                        id: c.id,
-                        name: c.name,
-                        studentCount: Array.isArray(countData) ? countData.length : 0,
-                        emoji: CLASS_EMOJIS[idx % CLASS_EMOJIS.length],
-                        reward_theme: c.reward_theme,
-                    };
+                // N+1 yok: tüm sınıfların öğrenci satırları parça parça (in.(...)) toplu çekilir, sayım istemcide yapılır.
+                // Sayım isteği başarısızsa hata fırlar (catch -> classesError): sayılar sessizce 0 yazılmaz.
+                const counts = await fetchStudentCounts(data.map((c: any) => c.id));
+                const classesWithCount = data.map((c: any, idx: number) => ({
+                    id: c.id,
+                    name: c.name,
+                    studentCount: counts[c.id] ?? 0,
+                    emoji: CLASS_EMOJIS[idx % CLASS_EMOJIS.length],
+                    reward_theme: c.reward_theme,
                 }));
                 setClasses(classesWithCount);
             } else {
