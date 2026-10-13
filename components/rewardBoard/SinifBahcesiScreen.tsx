@@ -7,11 +7,15 @@ import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensi
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '../../lib/supabase';
 import { REWARD_CONCEPT_LIST, getRewardConcept } from './conceptRegistry';
 import RewardCard from './RewardCard';
 import { stageForCount } from './stageMath';
 import type { RewardConceptId, RewardStage } from './types';
+
+// Uyarı yazısı bu kadar ms sonra kendiliğinden kapanır (eski hata sonraki işlemde ekranda kalmasın).
+const NOTICE_DURATION_MS = 5000;
 
 const isMissingFunction = (error: { code?: string; message?: string } | null | undefined) =>
     !!error && (error.code === 'PGRST202' || /Could not find the function|schema cache/i.test(error.message || ''));
@@ -63,6 +67,18 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
         if (visible) setTheme((initialTheme as RewardConceptId) || 'bitki');
     }, [visible, initialTheme, classId]);
 
+    // Ekran her açılıp kapanırken eski uyarıyı temizle.
+    useEffect(() => {
+        setNotice(null);
+    }, [visible, classId]);
+
+    // Uyarıyı zaman aşımıyla otomatik kapat (yeni uyarı gelince süre yeniden başlar).
+    useEffect(() => {
+        if (!notice) return;
+        const id = setTimeout(() => setNotice(null), NOTICE_DURATION_MS);
+        return () => clearTimeout(id);
+    }, [notice]);
+
     const loadSummary = async () => {
         if (demo) return;
         const { data, error } = await supabase.rpc('teacher_class_reward_summary', { p_class_id: classId });
@@ -88,6 +104,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
     );
 
     const handleAward = async (studentId: string) => {
+        setNotice(null);
         if (demo) {
             setSummary((prev) => {
                 const count = (prev[studentId]?.today_count ?? 0) + 1;
@@ -113,6 +130,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
 
     const handleThemeChange = async (id: RewardConceptId) => {
         if (id === theme) return;
+        setNotice(null);
         const prev = theme;
         setTheme(id);
         if (demo) { onThemeChange?.(id); return; }
@@ -126,6 +144,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
     };
 
     const openDayOverlay = () => {
+        setNotice(null);
         setShuffledIds([...visibleStudents.map((s) => s.id)].sort(() => Math.random() - 0.5));
         setDayOverlayOpen(true);
     };
@@ -158,6 +177,9 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
                     <Rect x={0} y={0} width="100%" height="100%" fill="url(#bg)" />
                 </Svg>
 
+                {/* Çentik / Dynamic Island / durum çubuğu / ana ekran çubuğu için güvenli alan: arka plan
+                    (Svg) tam ekran taşar, içerik güvenli alanın içinde kalır. Web'de boşluk sıfırdır. */}
+                <SafeAreaView style={styles.safe}>
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.iconBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel={t('rewardBoard.closeAccessibility')}>
                         <Ionicons name="close" size={22} color="#333" />
@@ -197,7 +219,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
                     </View>
                 )}
 
-                {!!notice && <Text style={styles.noticeText}>{notice}</Text>}
+                {!!notice && <Text style={styles.noticeText} accessibilityRole="alert">{notice}</Text>}
 
                 {/* ScrollView + flexGrow:1 justifyContent:'center': az öğrenci varken bahçe ekranın
                     ortasında toplu durur (tek kart boş ekranda kaybolmaz), çok öğrenci varken
@@ -228,6 +250,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
                         </View>
                     )}
                 </ScrollView>
+                </SafeAreaView>
 
                 <Modal visible={dayOverlayOpen} transparent animationType="fade" onRequestClose={() => setDayOverlayOpen(false)}>
                     <View style={styles.overlayBg}>
@@ -254,6 +277,7 @@ export default function SinifBahcesiScreen({ visible, classId, className, classE
 
 const styles = StyleSheet.create({
     root: { flex: 1, backgroundColor: '#fff' },
+    safe: { flex: 1 },
     header: {
         flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
         paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12,
