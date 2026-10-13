@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -22,6 +23,7 @@ import { createInstitutionSource, fetchAdminInstitutions } from '../lib/institut
 import { rememberResetReturn } from '../lib/resetReturn';
 import { withTimeout } from '../lib/withTimeout';
 import { isInstitutionExpired } from '../lib/institutionStats';
+import { pickInstitution, resolveSelectedId } from '../lib/institutionSelect';
 import { createDemoInstitution } from '../lib/institutionDemo';
 import { InstitutionInfo } from '../lib/institutionStats';
 import { supabase } from '../lib/supabase';
@@ -35,11 +37,21 @@ import { supabase } from '../lib/supabase';
 
 type Phase = 'checking' | 'login' | 'panel';
 
+// Çoklu kurum yöneticisi: son seçilen kurum hatırlanır (yalnız kolaylık; geçersizse ilk kuruma düşülür).
+const SELECTED_KEY = 'kurum_selected_institution';
+const readSelected = async (): Promise<string | null> => {
+    try { return await AsyncStorage.getItem(SELECTED_KEY); } catch { return null; }
+};
+const writeSelected = async (id: string) => {
+    try { await AsyncStorage.setItem(SELECTED_KEY, id); } catch { /* sessiz */ }
+};
+
 export default function KurumPage() {
     const { t } = useTranslation();
     const router = useRouter();
     const [phase, setPhase] = useState<Phase>('checking');
     const [institutions, setInstitutions] = useState<InstitutionInfo[]>([]);
+    const [selectedId, setSelectedId] = useState<string | null>(null);
     const [demo, setDemo] = useState(false);
 
     const [email, setEmail] = useState('');
@@ -58,7 +70,10 @@ export default function KurumPage() {
                     const list = await withTimeout(fetchAdminInstitutions(), 8000);
                     const active = (list ?? []).filter((i) => !isInstitutionExpired(i));
                     if (!cancelled && active.length > 0) {
+                        const saved = await readSelected();
+                        if (cancelled) return;
                         setInstitutions(active);
+                        setSelectedId(resolveSelectedId(active, saved));
                         setPhase('panel');
                         return;
                     }
@@ -74,8 +89,16 @@ export default function KurumPage() {
     }, []);
 
     const demoInstitution = useMemo(() => (demo ? createDemoInstitution() : null), [demo]);
-    const real = institutions[0] ?? null;
-    const realSource = useMemo(() => (real ? createInstitutionSource(real.id) : null), [real]);
+    const real = useMemo(() => pickInstitution(institutions, selectedId), [institutions, selectedId]);
+    const realId = real?.id ?? null;
+    const realSource = useMemo(() => (realId ? createInstitutionSource(realId) : null), [realId]);
+
+    const selectInstitution = (id: string) => {
+        const next = resolveSelectedId(institutions, id);
+        if (!next || next === realId) return;
+        setSelectedId(next);
+        writeSelected(next);
+    };
 
     const signIn = async () => {
         setError(null);
@@ -105,8 +128,10 @@ export default function KurumPage() {
                 await supabase.auth.signOut();
                 return;
             }
+            const saved = await readSelected();
             setPassword('');
             setInstitutions(active);
+            setSelectedId(resolveSelectedId(active, saved));
             setPhase('panel');
         } catch {
             setError(t('institution.login.network'));
@@ -148,12 +173,23 @@ export default function KurumPage() {
     const signOut = async () => {
         try { await supabase.auth.signOut(); } catch { /* sessiz */ }
         setInstitutions([]);
+        setSelectedId(null);
         setPassword('');
         setPhase('login');
     };
 
     if (phase === 'panel' && real && realSource) {
-        return <InstitutionDashboard institution={real} source={realSource} onSignOut={signOut} />;
+        // key: kurum değişince panel baştan kurulur — önceki kurumun verisi (özet, sınıflar, çocuklar) bir an bile görünmez.
+        return (
+            <InstitutionDashboard
+                key={real.id}
+                institution={real}
+                source={realSource}
+                institutions={institutions}
+                onSelectInstitution={selectInstitution}
+                onSignOut={signOut}
+            />
+        );
     }
     if (demoInstitution) {
         return <InstitutionDashboard institution={demoInstitution.info} source={demoInstitution.source} onClose={() => setDemo(false)} />;

@@ -35,6 +35,10 @@ interface Props {
     onClose?: () => void;
     /** Verilirse üst çubukta "Çıkış" düğmesi çıkar (kurum girişinden gelen oturum). */
     onSignOut?: () => void;
+    /** Hesap birden çok kurumun yöneticisiyse tümü; 2+ ise başlığın altında kurum seçici çıkar. */
+    institutions?: InstitutionInfo[];
+    /** Seçicide başka bir kurum seçilince çağrılır (üst bileşen `key` ile paneli baştan kurar). */
+    onSelectInstitution?: (id: string) => void;
 }
 
 interface DashData { overview: Overview | null; daily: DailyPoint[]; types: GameTypeRow[]; classes: ClassRow[] }
@@ -69,7 +73,7 @@ const parseDay = (iso: string): Date => {
     return new Date(y, (m || 1) - 1, d || 1);
 };
 
-export default function InstitutionDashboard({ institution, source, onClose, onSignOut }: Props) {
+export default function InstitutionDashboard({ institution, source, onClose, onSignOut, institutions, onSelectInstitution }: Props) {
     const { t, i18n } = useTranslation();
     const lang = i18n.language || 'tr';
     const { width } = useWindowDimensions();
@@ -333,7 +337,15 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                                 </>
                             );
                             return a.cls ? (
-                                <TouchableOpacity key={idx} style={styles.attRow} onPress={() => openChildren(a.cls!)} activeOpacity={0.7}>{inner}</TouchableOpacity>
+                                <TouchableOpacity
+                                    key={idx}
+                                    style={styles.attRow}
+                                    onPress={() => openChildren(a.cls!)}
+                                    activeOpacity={0.7}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={a.sub ? `${a.title}. ${a.sub}` : a.title}
+                                    accessibilityHint={t('institution.openClassHint')}
+                                >{inner}</TouchableOpacity>
                             ) : <View key={idx} style={styles.attRow}>{inner}</View>;
                         })}
                     </View>
@@ -364,6 +376,8 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                                 onPress={() => openChildren(c)}
                                 style={[styles.classCard, { width: classCols === 1 ? '100%' : classCols === 2 ? '48.8%' : '32.4%' }]}
                                 accessibilityRole="button"
+                                accessibilityLabel={t('institution.classCardLabel', { name: c.name, count: c.childCount, active: c.activeChildren, health: t(`institution.health.${h}`) })}
+                                accessibilityHint={t('institution.openClassHint')}
                             >
                                 <View style={styles.classTop}>
                                     <View style={styles.classEmojiBox}><Text style={styles.classEmoji}>{classEmoji(c.id)}</Text></View>
@@ -439,6 +453,30 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                 )}
             </View>
 
+            {/* Kurum seçici: yalnız hesap birden çok kurumun yöneticisiyse */}
+            {!!institutions && institutions.length > 1 && !!onSelectInstitution && (
+                <View style={styles.pickerStrip}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pickerRow} accessibilityRole="radiogroup" accessibilityLabel={t('institution.pickerLabel')}>
+                        <Ionicons name="business" size={16} color={C.muted} style={{ marginRight: 2 }} />
+                        {institutions.map((i) => {
+                            const on = i.id === institution.id;
+                            return (
+                                <TouchableOpacity
+                                    key={i.id}
+                                    style={[styles.filterChip, styles.pickerChip, on && styles.filterChipOn]}
+                                    onPress={() => onSelectInstitution(i.id)}
+                                    accessibilityRole="radio"
+                                    accessibilityState={{ checked: on, selected: on }}
+                                    accessibilityLabel={t('institution.pickerItem', { name: i.name })}
+                                >
+                                    <Text style={[styles.filterText, on && styles.filterTextOn]} numberOfLines={1}>{i.name}</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
+            )}
+
             <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                 {source.isDemo && (
                     <View style={styles.demoBanner}>
@@ -449,9 +487,9 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
 
                 {/* Dönem seçici */}
                 <View style={styles.toolbar}>
-                    <View style={styles.segment}>
+                    <View style={styles.segment} accessibilityRole="radiogroup" accessibilityLabel={t('institution.periodLabel')}>
                         {([7, 30] as PeriodDays[]).map((d) => (
-                            <TouchableOpacity key={d} onPress={() => setDays(d)} style={[styles.segBtn, days === d && styles.segBtnOn]} accessibilityRole="button" accessibilityState={{ selected: days === d }}>
+                            <TouchableOpacity key={d} onPress={() => setDays(d)} style={[styles.segBtn, days === d && styles.segBtnOn]} accessibilityRole="radio" accessibilityState={{ checked: days === d, selected: days === d }}>
                                 <Text style={[styles.segText, days === d && styles.segTextOn]}>{t(`institution.period${d}`)}</Text>
                             </TouchableOpacity>
                         ))}
@@ -464,7 +502,7 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                         <Ionicons name="cloud-offline" size={36} color={C.muted} />
                         <Text style={styles.stateTitle}>{t('institution.errorTitle')}</Text>
                         <Text style={styles.stateText}>{t('institution.errorText')}</Text>
-                        <TouchableOpacity style={styles.retryBtn} onPress={load}><Text style={styles.retryText}>{t('institution.retry')}</Text></TouchableOpacity>
+                        <TouchableOpacity style={styles.retryBtn} onPress={load} accessibilityRole="button"><Text style={styles.retryText}>{t('institution.retry')}</Text></TouchableOpacity>
                     </View>
                 ) : !data ? (
                     <View style={[styles.card, styles.stateCard]}>
@@ -479,20 +517,26 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
             {/* Sınıf ayrıntısı */}
             <Modal visible={!!openClass} transparent animationType="slide" onRequestClose={closeChildren}>
                 <View style={styles.modalBackdrop}>
-                    <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={closeChildren} accessibilityLabel={t('institution.close')} />
-                    <View style={[styles.sheet, width >= 700 && styles.sheetWide]}>
+                    <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={closeChildren} accessibilityRole="button" accessibilityLabel={t('institution.close')} />
+                    <View style={[styles.sheet, width >= 700 && styles.sheetWide]} accessibilityViewIsModal>
                         <View style={styles.sheetHead}>
                             <View style={{ flex: 1 }}>
-                                <Text style={styles.sheetTitle} numberOfLines={1}>{openClass ? `${classEmoji(openClass.id)} ${t('institution.childrenTitle', { name: openClass.name })}` : ''}</Text>
+                                <Text style={styles.sheetTitle} numberOfLines={1} accessibilityRole="header">{openClass ? `${classEmoji(openClass.id)} ${t('institution.childrenTitle', { name: openClass.name })}` : ''}</Text>
                                 {openClass?.teacherName ? <Text style={styles.sheetSub}>{t('institution.withTeacher', { name: openClass.teacherName })}</Text> : null}
                             </View>
                             <TouchableOpacity onPress={closeChildren} style={styles.sheetClose} accessibilityRole="button" accessibilityLabel={t('institution.close')}>
                                 <Ionicons name="close" size={22} color={C.ink} />
                             </TouchableOpacity>
                         </View>
-                        <View style={styles.filterRow}>
+                        <View style={styles.filterRow} accessibilityRole="radiogroup" accessibilityLabel={t('institution.filterLabel')}>
                             {[false, true].map((v) => (
-                                <TouchableOpacity key={String(v)} style={[styles.filterChip, onlyPassive === v && styles.filterChipOn]} onPress={() => setOnlyPassive(v)}>
+                                <TouchableOpacity
+                                    key={String(v)}
+                                    style={[styles.filterChip, onlyPassive === v && styles.filterChipOn]}
+                                    onPress={() => setOnlyPassive(v)}
+                                    accessibilityRole="radio"
+                                    accessibilityState={{ checked: onlyPassive === v, selected: onlyPassive === v }}
+                                >
                                     <Text style={[styles.filterText, onlyPassive === v && styles.filterTextOn]}>{v ? t('institution.filterPassive') : t('institution.filterAll')}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -501,7 +545,7 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                             {kidsFailed ? (
                                 <View style={styles.stateCardPlain}>
                                     <Text style={styles.stateTitle}>{t('institution.errorTitle')}</Text>
-                                    <TouchableOpacity style={styles.retryBtn} onPress={() => openClass && openChildren(openClass)}><Text style={styles.retryText}>{t('institution.retry')}</Text></TouchableOpacity>
+                                    <TouchableOpacity style={styles.retryBtn} onPress={() => openClass && openChildren(openClass)} accessibilityRole="button"><Text style={styles.retryText}>{t('institution.retry')}</Text></TouchableOpacity>
                                 </View>
                             ) : kids === null ? (
                                 <View style={styles.stateCardPlain}><ActivityIndicator color={C.primary} /></View>
@@ -512,8 +556,18 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                                 const hs = HEALTH_STYLE[h];
                                 const a = accuracy(k.correctTotal, k.errorTotal);
                                 const initial = (k.name ?? '?').trim().charAt(0).toLocaleUpperCase('tr-TR');
+                                // Ekran okuyucu satırı tek cümlede okusun: ad, yaş, son oyun, oyun sayısı, doğruluk.
+                                const kidLabel = k.hidden
+                                    ? `${t('institution.childrenHidden')}, ${t('institution.childrenHiddenNote')}`
+                                    : [
+                                        k.name,
+                                        k.ageMonths !== null ? ageText(k.ageMonths) : '',
+                                        recencyText(k.lastPlayedAt),
+                                        t('institution.gamesShort', { count: k.gameCount ?? 0 }),
+                                        a === null ? '' : t('institution.accuracyShort', { value: a }),
+                                    ].filter(Boolean).join(', ');
                                 return (
-                                    <View key={k.id} style={styles.kidRow}>
+                                    <View key={k.id} style={styles.kidRow} accessible accessibilityLabel={kidLabel}>
                                         <View style={[styles.avatar, { backgroundColor: hs.bg }]}>
                                             {k.hidden ? <Ionicons name="lock-closed" size={16} color={hs.fg} /> : <Text style={[styles.avatarText, { color: hs.fg }]}>{initial}</Text>}
                                         </View>
@@ -663,6 +717,9 @@ const styles = StyleSheet.create({
     sheetTitle: { fontSize: 18, fontWeight: '800', color: C.ink },
     sheetSub: { fontSize: 12.5, color: C.muted, marginTop: 2, fontWeight: '600' },
     sheetClose: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' },
+    pickerStrip: { backgroundColor: C.card, borderBottomWidth: 1, borderBottomColor: C.line },
+    pickerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 8 },
+    pickerChip: { maxWidth: 260 },
     filterRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
     filterChip: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 7, backgroundColor: C.bg },
     filterChipOn: { backgroundColor: C.primarySoft },
