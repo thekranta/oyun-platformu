@@ -27,6 +27,9 @@ import { DEMO_CLASSES, demoPreview, demoRoster, demoScores, demoSummary, demoTot
 import { buildTeacherSummaryPrompt, SUMMARY_GAME_LIMIT, SUMMARY_MIN_GAMES } from '../lib/teacherSummary';
 import SinifBahcesiScreen from './rewardBoard/SinifBahcesiScreen';
 import { getMaarif } from '../constants/maarifMap';
+import { getMaarifInfo } from '../lib/maarifInfo';
+import { ReportEngine } from '../services/ReportEngine';
+import DevelopmentRadar from './DevelopmentRadar';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
@@ -909,6 +912,20 @@ export default function TeacherDashboard({
                             </View>
                         )}
 
+                        {/* Gelişim radar grafiği: velideki ile aynı hesap ve aynı bileşen */}
+                        {studentScores.length >= 3 && (
+                            <View style={styles.summaryCard}>
+                                <View style={styles.summaryHeader}>
+                                    <Text style={styles.summaryTitle}>{'🎯 ' + t('teacher.radarTitle')}</Text>
+                                    <Text style={styles.summaryHint}>{t('teacher.radarHint', { count: studentScores.length })}</Text>
+                                </View>
+                                <DevelopmentRadar
+                                    data={ReportEngine.generateParentReport(selectedStudent.child_name, studentScores.map((s) => ({ ...s, sure: s.sure ?? 0 }))).radarChartData}
+                                    textColor="#333"
+                                />
+                            </View>
+                        )}
+
                         {scoresLoading ? (
                             <View style={styles.emptyCard}><ActivityIndicator size="small" color="#FF6B6B" /></View>
                         ) : studentScores.length === 0 ? (
@@ -925,6 +942,20 @@ export default function TeacherDashboard({
                                             {new Date(score.created_at).toLocaleDateString('tr-TR')}
                                         </Text>
                                     </View>
+                                    {/* Oyunun Maarif Modeli karşılığı: kod + Maarif belgesindeki resmi metin */}
+                                    {(() => {
+                                        const m = getMaarifInfo(score.oyun_turu);
+                                        return (
+                                            <View style={styles.maarifBox}>
+                                                <Text style={styles.maarifLabel}>{t('teacher.maarifLabel')}</Text>
+                                                <View style={styles.maarifTop}>
+                                                    {m.code && <View style={styles.maarifCodeChip}><Text style={styles.maarifCodeText}>{m.code}</Text></View>}
+                                                    <Text style={styles.maarifAlan}>{m.alan + ' · ' + m.surec}</Text>
+                                                </View>
+                                                <Text style={styles.maarifText}>{m.text}</Text>
+                                            </View>
+                                        );
+                                    })()}
                                     <View style={styles.scoreStats}>
                                         <View style={styles.scoreStat}>
                                             <Text style={styles.scoreStatEmoji}>⏱️</Text>
@@ -1277,6 +1308,13 @@ const styles = StyleSheet.create({
     aiResult: { marginTop: 14, padding: 14, backgroundColor: '#F8F9FA', borderRadius: 14, borderLeftWidth: 4, borderLeftColor: '#4ECDC4' },
     aiResultTitle: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 8 },
     aiResultText: { fontSize: 14, color: '#555', lineHeight: 22 },
+    maarifBox: { marginBottom: 14, padding: 12, backgroundColor: '#F4F8FF', borderRadius: 14, borderWidth: 1, borderColor: '#DCE8FA', gap: 6 },
+    maarifLabel: { fontSize: 11, fontWeight: '700', color: '#5B7BA8', letterSpacing: 0.3 },
+    maarifTop: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8 },
+    maarifCodeChip: { backgroundColor: '#1E5FB4', borderRadius: 10, paddingHorizontal: 9, paddingVertical: 3 },
+    maarifCodeText: { color: '#fff', fontSize: 12, fontWeight: '800', letterSpacing: 0.4 },
+    maarifAlan: { fontSize: 13, fontWeight: '700', color: '#2C4A73', flexShrink: 1 },
+    maarifText: { fontSize: 13, color: '#44546A', lineHeight: 19 },
 
     // Modal
     modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center' },
