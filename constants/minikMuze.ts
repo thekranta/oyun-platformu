@@ -36,6 +36,8 @@ export interface Painting {
     segments: PaintingSegment[];
 }
 
+import { allHuntTexts } from './minikMuzeHunt';
+
 export const MUSEUM_INTRO = "Minik Müze'ye hoş geldin! Bir tabloya dokun, dinle ve keşfet.";
 export const MUSEUM_DONE = 'Aferin! Tabloyu birlikte inceledik.';
 /** "Sen de çiz" (Yaratıcı Çizim, tablo köşede) açılış cümlesi — components/YaraticiCizim.tsx okur. */
@@ -435,5 +437,6 @@ export const allMuseumTexts = (): string[] => [
     MUSEUM_INTRO,
     MUSEUM_DONE,
     MUSEUM_DRAW_INTRO,
+    ...allHuntTexts(),
     ...PAINTINGS.flatMap((p) => p.segments.map((s) => s.text)),
 ];

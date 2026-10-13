@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Easing, Image, LayoutChangeEvent, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { MUSEUM_DONE, MUSEUM_INTRO, PAINTINGS, Painting } from '../constants/minikMuze';
+import { getHunt } from '../constants/minikMuzeHunt';
 import { lazyWithReload } from '../lib/lazyWithReload';
 import { isPaintingOpenForTier, paintingTierName, sortPaintingsByTier } from '../lib/minikMuzeAccess';
 import { focusTransform, fitContain } from '../lib/minikMuzeMath';
@@ -12,6 +13,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import ListenButton from './ListenButton';
 import CreditsModal from './minikMuze/CreditsModal';
+import DetayAvi from './minikMuze/DetayAvi';
 import { PAINTING_IMAGES } from './minikMuze/paintingImages';
 
 // ============================================
@@ -54,6 +56,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
     const [viewed, setViewed] = useState<string[]>([]);
     const [lockedPainting, setLockedPainting] = useState<Painting | null>(null);
     const [drawingFor, setDrawingFor] = useState<Painting | null>(null);
+    const [huntFor, setHuntFor] = useState<Painting | null>(null);
     // Mobil tarayici sesi engellediyse (dokunus gerekir) anlatim sessizce hizla ilerlemesin; cocuk dokunsun.
     const [needsTap, setNeedsTap] = useState(false);
     const [creditsOpen, setCreditsOpen] = useState(false);
@@ -166,6 +169,26 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
         setStage((prev) => (Math.abs(prev.w - width) < 1 && Math.abs(prev.h - height) < 1 ? prev : { w: width, h: height }));
     };
 
+    // ------------------------------------------------------------ DETAY AVI (tabloda söylenen ayrıntıyı bul)
+    if (huntFor) {
+        const targets = getHunt(huntFor.id);
+        if (targets) {
+            return (
+                <DetayAvi
+                    key={'hunt-' + huntFor.id}
+                    painting={huntFor}
+                    targets={targets}
+                    onExit={() => setHuntFor(null)}
+                    onCompleted={(id) => {
+                        // Avı bitiren çocuk tabloyu da incelemiş sayılır (müze kaydı ve veli notu için).
+                        viewedRef.current.add(id);
+                        setViewed(Array.from(viewedRef.current));
+                    }}
+                />
+            );
+        }
+    }
+
     // ------------------------------------------------------------ TABLODAN İLHAM AL (çizim)
     if (drawingFor) {
         return (
@@ -252,6 +275,11 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                     <Text style={styles.plaqueTitle} numberOfLines={1}>{selected.title}</Text>
                     <Text style={styles.plaqueArtist} numberOfLines={1}>{selected.artist} · {selected.yearLabel}</Text>
                 </View>
+                {getHunt(selected.id) && (
+                    <TouchableOpacity onPress={() => { runRef.current++; stopSpeech(); setPlaying(false); setHuntFor(selected); }} style={styles.infoBtn} accessibilityRole="button" accessibilityLabel="Detay Avı">
+                        <Ionicons name="search" size={24} color="#F4E7CF" />
+                    </TouchableOpacity>
+                )}
                 <TouchableOpacity onPress={() => setCreditsOpen(true)} style={styles.infoBtn} accessibilityRole="button" accessibilityLabel="Tablo künyesi">
                     <Ionicons name="information-circle-outline" size={26} color="#F4E7CF" />
                 </TouchableOpacity>
@@ -299,6 +327,17 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                             <Ionicons name="refresh" size={26} color="#fff" />
                             <Text style={styles.bigBtnText}>Tekrar izle</Text>
                         </TouchableOpacity>
+                        {getHunt(selected.id) && (
+                            <TouchableOpacity
+                                style={[styles.bigBtn, { backgroundColor: '#2F7F86' }]}
+                                onPress={() => { runRef.current++; stopSpeech(); setHuntFor(selected); }}
+                                accessibilityRole="button"
+                                accessibilityLabel="Detay Avı"
+                            >
+                                <Ionicons name="search" size={26} color="#fff" />
+                                <Text style={styles.bigBtnText}>Detay Avı</Text>
+                            </TouchableOpacity>
+                        )}
                         <TouchableOpacity
                             style={[styles.bigBtn, { backgroundColor: '#8E5BA8' }]}
                             onPress={() => { runRef.current++; stopSpeech(); setDrawingFor(selected); }}
