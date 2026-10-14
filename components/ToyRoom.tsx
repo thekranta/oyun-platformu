@@ -6,7 +6,7 @@ import { AccessibilityInfo, Animated, Linking, Modal, Platform, Pressable, Scrol
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
-import { TOY_ROOM_FIRST_GAMES, TOY_ROOM_GROUPS } from '@/constants/toyRoomLayout';
+import { roomGames } from '@/lib/toyRoomSelection';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import { requiredVeliTierForGame, summarizePackage, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
@@ -15,8 +15,6 @@ type Props = { name: string; muted: boolean; round: number; onShuffle: () => voi
 type ToyKind = 'puzzle' | 'paint' | 'animal' | 'drum' | 'blocks' | 'train' | 'crayons' | 'rabbit' | 'xylophone' | 'rings' | 'gift' | 'bear';
 const native = Platform.OS !== 'web';
 const allPlayable = GAME_CATALOG.filter(g => !!GAME_RENDERERS[g.routeKey]);
-const firstGames = TOY_ROOM_FIRST_GAMES;
-const groups = TOY_ROOM_GROUPS;
 const TIER_LABELS: Record<VeliTier, string> = { free: 'Ücretsiz', tohum: 'Tohum', filiz: 'Filiz', fidan: 'Fidan', orman: 'Orman' };
 const PRICING_URL = 'https://childhoodtech.com/#pricing';
 // iPhone'da basili tutunca metin/emoji "Kopyala" menusu cikmasin (yetiskin menusu 1,2 sn basili tutularak acilir).
@@ -32,9 +30,9 @@ const openPricing = () => {
   if (Platform.OS !== 'web') { router.push('/paket-satin-al?kind=veli'); return; }
   Linking.openURL(PRICING_URL).catch(() => {});
 };
-const kinds: ToyKind[] = ['puzzle', 'paint', 'animal', 'drum', 'blocks'];
+const kinds: ToyKind[] = ['puzzle', 'paint', 'animal', 'blocks'];
 // Keep the original set on opening; the gift alternates illustrated toy sets.
-const alternateKinds: ToyKind[] = ['train', 'crayons', 'rabbit', 'xylophone', 'rings'];
+const alternateKinds: ToyKind[] = ['train', 'crayons', 'rabbit', 'rings'];
 const colors = ['#507C72', '#AD594F', '#8666A1', '#AA7940', '#487C9C'];
 const title = (game: GameCatalogItem) => GAME_CARD_META[game.id]?.displayTitle || game.title;
 
@@ -202,6 +200,19 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
     : allPlayable.filter(g => veliTierMeetsMinimum(subscriptionTier, requiredVeliTierForGame(g)));
   const [bounds, setBounds] = useState({ width: 0, height: 0 });
   const [adult, setAdult] = useState(false);
+  const [storiesOpen, setStoriesOpen] = useState(false);
+  const [accessNote, setAccessNote] = useState<string | null>(null);
+  const english = i18n.language?.startsWith('en');
+  const stories = allPlayable.filter(g => g.status === 'story');
+  const music = allPlayable.find(g => g.id === 'muzik-calar');
+  const openGame = (game: GameCatalogItem) => {
+    if (subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, requiredVeliTierForGame(game))) {
+      setAccessNote(english ? 'Ask a grown-up to check your package in the existing adult menu.' : 'Bu içerik için mevcut yetişkin menüsünden paket bilgilerinizi kontrol edebilirsiniz.');
+      return;
+    }
+    setStoriesOpen(false);
+    onGame(game.routeKey);
+  };
   const [locked, setLocked] = useState<{ game: string; tier: VeliTier } | null>(null);
   useEffect(() => { if (!adult) setLocked(null); }, [adult]);
   const [query, setQuery] = useState('');
@@ -213,23 +224,15 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
     const listener = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
     return () => { active = false; listener.remove(); };
   }, []);
-  const games = groups.map((group, i) => {
-    const pool = playable.filter(g => group.includes(g.forestCategory) && g.id !== firstGames[i]);
-    // Sabit ilk oyun döngünün başında: round 0'da o görünür, sonra havuz dönerken tekrar sıraya girer
-    // (yoksa küçük havuzlu ücretsiz pakette ilk oyunlar "Başka oyuncaklar"a basınca odadan kalıcı
-    // kaybolurdu). Havuz boşsa odayı çökertmek yerine sabit oyunda kalır.
-    const first = playable.find(g => g.id === firstGames[i]) ?? playable[0];
-    const cycle = [first, ...pool];
-    return cycle[round % cycle.length];
-  });
+  const games = roomGames(playable, round);
   const portrait = bounds.height > bounds.width;
   const sceneWidth = portrait ? 400 : 1000;
-  const sceneHeight = portrait ? 720 : 600;
+  const sceneHeight = portrait ? 800 : 600;
   const scale = Math.min(bounds.width / sceneWidth, bounds.height / sceneHeight);
   const positions = portrait
-    ? [{ x: 25, y: 180 }, { x: 235, y: 180 }, { x: 25, y: 355 }, { x: 235, y: 355 }, { x: 25, y: 530 }]
-    : [{ x: 95, y: 145 }, { x: 413, y: 112 }, { x: 725, y: 145 }, { x: 195, y: 350 }, { x: 620, y: 350 }];
-  const moving = !calm && !reduceMotion && !adult;
+    ? [{ x: 25, y: 180 }, { x: 235, y: 180 }, { x: 25, y: 345 }, { x: 235, y: 345 }]
+    : [{ x: 95, y: 145 }, { x: 413, y: 112 }, { x: 725, y: 145 }, { x: 620, y: 350 }];
+  const moving = !calm && !reduceMotion && !adult && !storiesOpen && !accessNote;
   const toySize = portrait ? 140 : 175;
   // Yetişkin arama TÜM kataloğu gösterir (tier'a göre gizlemez) — kilitli oyunlar
   // 🔒 ile işaretlenip hangi paketle açıldığı söylenir, böylece veli neyin kilitli
@@ -260,15 +263,28 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
       {games.map((game, i) => <View key={`${round}-${i}`} style={{ position: 'absolute', left: positions[i].x, top: positions[i].y }}>
         <Plaything kind={(round % 2 === 0 ? kinds : alternateKinds)[i]} label={title(game)} color={colors[i]} size={toySize} moving={moving} onPress={() => onGame(game.routeKey)} replacement={round > 0 ? GAME_EMOJI[game.id] || '🧸' : undefined}/>
       </View>)}
-      <View pointerEvents="none" style={{ position: 'absolute', left: portrait ? 148 : 425, top: portrait ? 380 : 329, width: portrait ? 104 : 155, height: portrait ? 100 : 155 }}><ToyArt kind="bear"/></View>
-      <View style={{ position: 'absolute', left: portrait ? 238 : 825, top: portrait ? 530 : 415 }}>
-        <Plaything kind="gift" label={t('toyRoom.moreToys')} color="#9A5B4B" moving={moving} size={portrait ? 132 : 140} onPress={onShuffle}/>
+      <View style={{ position: 'absolute', left: portrait ? 25 : 195, top: portrait ? 510 : 350 }}>
+        <Plaything kind="drum" label={english ? 'Music Box' : 'Müzik Kutusu'} color="#AA7940" size={toySize} moving={moving} onPress={() => { if (music) openGame(music); }}/>
+      </View>
+      <View style={{ position: 'absolute', left: portrait ? 235 : 410, top: portrait ? 510 : 350 }}>
+        <Plaything kind="bear" label={english ? 'Values Stories' : 'Değerler Hikâyeleri'} color="#8666A1" size={toySize} moving={moving} onPress={() => setStoriesOpen(true)}/>
+      </View>
+      <View style={{ position: 'absolute', left: portrait ? 134 : 825, top: portrait ? 665 : 415 }}>
+        <Plaything kind="gift" label={t('toyRoom.moreToys')} color="#9A5B4B" moving={moving} size={portrait ? 100 : 140} onPress={onShuffle}/>
       </View>
     </View>}
     <SafeAreaView edges={['top', 'right']} style={styles.controls}>
       <Pressable accessibilityRole="button" accessibilityLabel={muted ? t('toyRoom.muteOn') : t('toyRoom.muteOff')} onPress={onMute} ref={noCalloutRef} style={styles.control}><Text style={styles.controlText} selectable={false}>{muted ? '🔇' : '🔊'}</Text></Pressable>
       <Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.adultMenuLabel')} delayLongPress={1200} onLongPress={() => setAdult(true)} ref={noCalloutRef} style={styles.control}><Ionicons name="settings-sharp" size={22} color="#706452" style={styles.noSelect} /></Pressable>
     </SafeAreaView>
+    <Modal visible={storiesOpen || !!accessNote} transparent animationType="fade" onRequestClose={() => { setAccessNote(null); setStoriesOpen(false); }}>
+      <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
+        <View style={styles.adultHeader}><Text style={styles.adultTitle}>{english ? 'Values Stories' : 'Değerler Hikâyeleri'}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} style={styles.control} onPress={() => {setStoriesOpen(false); setAccessNote(null);}}><Text style={styles.controlText}>✕</Text></Pressable></View>
+        {accessNote ? <Text style={styles.adultNote}>{accessNote}</Text> : <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', paddingVertical: 16, gap: 20 }}>
+          {stories.map((game, i) => <Plaything key={game.id} kind={(['bear', 'rabbit', 'animal', 'paint'] as ToyKind[])[i % 4]} label={title(game)} color={colors[i % colors.length]} size={125} moving={!reduceMotion && !calm} onPress={() => openGame(game)} replacement={GAME_EMOJI[game.id]}/>)}
+        </ScrollView>}
+      </View></View>
+    </Modal>
     <Modal visible={adult} transparent animationType="fade" onRequestClose={() => setAdult(false)}>
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
         <View style={styles.adultHeader}><Text style={styles.adultTitle}>{t('toyRoom.adultTitle')}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} onPress={() => setAdult(false)} style={styles.control}><Text style={styles.controlText}>✕</Text></Pressable></View>
