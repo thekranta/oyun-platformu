@@ -202,11 +202,13 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   const [adult, setAdult] = useState(false);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [accessNote, setAccessNote] = useState<string | null>(null);
+  const [blockedTitle, setBlockedTitle] = useState('');
   const english = i18n.language?.startsWith('en');
   const stories = allPlayable.filter(g => g.status === 'story');
   const music = allPlayable.find(g => g.id === 'muzik-calar');
   const openGame = (game: GameCatalogItem) => {
     if (subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, requiredVeliTierForGame(game))) {
+      setBlockedTitle(title(game));
       setAccessNote(english ? 'Ask a grown-up to check your package in the existing adult menu.' : 'Bu içerik için mevcut yetişkin menüsünden paket bilgilerinizi kontrol edebilirsiniz.');
       return;
     }
@@ -279,7 +281,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
     </SafeAreaView>
     <Modal visible={storiesOpen || !!accessNote} transparent animationType="fade" onRequestClose={() => { setAccessNote(null); setStoriesOpen(false); }}>
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
-        <View style={styles.adultHeader}><Text style={styles.adultTitle}>{english ? 'Values Stories' : 'Değerler Hikâyeleri'}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} style={styles.control} onPress={() => {setStoriesOpen(false); setAccessNote(null);}}><Text style={styles.controlText}>✕</Text></Pressable></View>
+        <View style={styles.adultHeader}><Text style={styles.adultTitle}>{accessNote ? blockedTitle : english ? 'Values Stories' : 'Değerler Hikâyeleri'}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} style={styles.control} onPress={() => {setStoriesOpen(false); setAccessNote(null);}}><Text style={styles.controlText}>✕</Text></Pressable></View>
         {accessNote ? <Text style={styles.adultNote}>{accessNote}</Text> : <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', paddingVertical: 16, gap: 20 }}>
           {stories.map((game, i) => <Plaything key={game.id} kind={(['bear', 'rabbit', 'animal', 'paint'] as ToyKind[])[i % 4]} label={title(game)} color={colors[i % colors.length]} size={125} moving={!reduceMotion && !calm} onPress={() => openGame(game)} replacement={GAME_EMOJI[game.id]}/>)}
         </ScrollView>}

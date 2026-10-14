@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { GAME_CATALOG } from '../constants/gameCatalog';
-import { TOY_ROOM_FIRST_GAMES, TOY_ROOM_GROUPS } from '../constants/toyRoomLayout';
 import {
     FREE_GAME_IDS,
     FREE_SHOWCASE_GAME_IDS,
@@ -9,6 +8,10 @@ import {
     veliTierMeetsMinimum,
     VeliTier,
 } from './subscriptionTiers';
+import { roomGames } from './toyRoomSelection';
+
+// Odanın ilk sayfası (round 0): lib/toyRoomSelection.ts içindeki sabit açılış oyunları.
+const ROOM_OPENING = ['yapboz', 'yaratici-cizim', 'hafiza-2', 'siralama'];
 
 const TIERS: VeliTier[] = ['free', 'tohum', 'filiz', 'fidan', 'orman'];
 const openGames = (tier: VeliTier) =>
@@ -51,21 +54,36 @@ describe('ücretsiz paket başlangıç seti', () => {
 });
 
 describe('çocuk odası her pakette çökmez', () => {
-    it('ilk açılışın sabit oyunları her pakette açık', () => {
+    it('ilk açılışın (round 0) 4 oyunu her pakette tam ve açık', () => {
         for (const tier of TIERS) {
-            const open = new Set(openGames(tier).map(g => g.id));
-            expect(TOY_ROOM_FIRST_GAMES.filter(id => !open.has(id))).toEqual([]);
+            const open = openGames(tier);
+            const first = roomGames(open, 0).map(g => g.id);
+            expect({ tier, first }).toEqual({ tier, first: ROOM_OPENING });
         }
     });
 
-    it('her oda grubunda (ilk oyun hariç) en az bir açık oyun kalır', () => {
+    it('her pakette her sayfa 4 açık oyun gösterir; sabit Müzik Kutusu / hikâye oyunları dönen yuvalarda çıkmaz', () => {
         for (const tier of TIERS) {
             const open = openGames(tier);
-            TOY_ROOM_GROUPS.forEach((group, i) => {
-                const pool = open.filter(g => group.includes(g.forestCategory) && g.id !== TOY_ROOM_FIRST_GAMES[i]);
-                expect({ tier, grup: i, sayi: pool.length > 0 }).toEqual({ tier, grup: i, sayi: true });
-            });
+            const openIds = new Set(open.map(g => g.id));
+            for (let round = 0; round < 60; round++) {
+                const page = roomGames(open, round);
+                expect({ tier, round, adet: page.length }).toEqual({ tier, round, adet: 4 });
+                expect(new Set(page.map(g => g.id)).size).toBe(4);
+                for (const g of page) {
+                    expect(openIds.has(g.id)).toBe(true);
+                    expect(['story', 'music']).not.toContain(g.status);
+                }
+            }
         }
+    });
+
+    it('sabit iki oyuncağın hedefleri katalogda: Müzik Kutusu (Fidan) ve en az bir hikâye (Filiz)', () => {
+        const music = GAME_CATALOG.find(g => g.id === 'muzik-calar');
+        expect(music && requiredVeliTierForGame(music)).toBe('fidan');
+        const stories = GAME_CATALOG.filter(g => g.status === 'story');
+        expect(stories.length).toBeGreaterThan(0);
+        for (const s of stories) expect(requiredVeliTierForGame(s)).toBe('filiz');
     });
 });
 
@@ -81,7 +99,7 @@ describe('ücretsiz set gerçekten oynanabilir (renderer kayıtlı)', () => {
         expect(missing).toEqual([]);
     });
 
-    it('ilk açılışın sabit oyunlarının renderer kaydı var', () => {
-        expect(TOY_ROOM_FIRST_GAMES.filter(id => !hasRenderer(id))).toEqual([]);
+    it('ilk açılış oyunlarının renderer kaydı var', () => {
+        expect(ROOM_OPENING.filter(id => !hasRenderer(id))).toEqual([]);
     });
 });

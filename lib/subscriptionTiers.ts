@@ -127,7 +127,7 @@ export function summarizePackage(
 // Ücretsiz hesabın (subscription_tier='free') oynayabildiği başlangıç seti: 10 oyun, farklı alanlardan
 // (bulmaca, çizim, bellek, ritim, matematik ×2, harf, duygu, hareket/müzik, örüntü). Geri kalan tüm
 // sıradan oyunlar Tohum ister ("100+ oyuna tam erişim"). Çocuk odası ilk açılışta
-// TOY_ROOM_FIRST_GAMES'i sabit gösterir ve her oda grubunda en az bir açık oyun olmalı — bu
+// lib/toyRoomSelection.ts'teki 4 açılış oyununu gösterir ve her pakette her sayfa 4 açık oyun içermeli — bu
 // kısıtlar lib/freeTier.test.ts ile korunur; seti değiştirirken testi çalıştırın.
 export const FREE_GAME_IDS: ReadonlySet<string> = new Set([
     'yapboz', 'yaratici-cizim', 'hafiza-2', 'davul-ustasi', 'siralama',
