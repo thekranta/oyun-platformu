@@ -183,6 +183,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'zilofon-ustasi', title: 'Zilofon Ustasi', status: 'secondary', domain: 'Muzik', skillFocus: 'Duyulan ezgiyi tuslu calgida calma', routeKey: 'zilofon-ustasi', forestCategory: 'ritim-kelebegi' },
   { id: 'davul-ustasi', title: 'Davul Ustasi', status: 'secondary', domain: 'Muzik', skillFocus: 'Ritim tekrari / muziksel calma', routeKey: 'davul-ustasi', forestCategory: 'ritim-kelebegi' },
   { id: 'odamin-krokisi', title: 'Odamin Krokisi', status: 'secondary', domain: 'Kavram', skillFocus: 'Kendi krokisini olusturma / mekansal temsil', routeKey: 'odamin-krokisi', forestCategory: 'kesif-kucaklamasi' },
+  { id: 'spor-gunu', title: 'Spor Gunu', status: 'secondary', domain: 'Saglik', skillFocus: 'Ic/dis mekanda hareket / beden degisimini fark etme', routeKey: 'spor-gunu', forestCategory: 'kosu-kirazi' },
   { id: 'hayvan-jimnastigi', title: 'Hayvan Jimnastigi', status: 'secondary', domain: 'Saglik', skillFocus: 'Buyuk kas becerileri / hareket taklidi', routeKey: 'hayvan-jimnastigi', forestCategory: 'kosu-kirazi' },
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim', forestCategory: 'renk-cayiri' },

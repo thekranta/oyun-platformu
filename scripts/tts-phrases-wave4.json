@@ -1,0 +1,127 @@
+[
+  {
+    "text": "Bugün spor günü! Bedenini hareket ettirelim.",
+    "game": "SporGunu",
+    "slug": "bugun-spor-gunu-bedenini-hareket-ettirelim"
+  },
+  {
+    "text": "Bugün hava nasıl? İçeride mi, dışarıda mı oynayalım?",
+    "game": "SporGunu",
+    "slug": "bugun-hava-nasil-iceride-mi-disarida-mi-oynayalim"
+  },
+  {
+    "text": "Dışarıda güvenli bir yerde oyna. Yanında bir büyüğün olsun.",
+    "game": "SporGunu",
+    "slug": "disarida-guvenli-bir-yerde-oyna-yaninda-bir-buyugun-olsun"
+  },
+  {
+    "text": "Hangi hareketi yapalım? Birini seç.",
+    "game": "SporGunu",
+    "slug": "hangi-hareketi-yapalim-birini-sec"
+  },
+  {
+    "text": "Bitirince yaptım düğmesine bas.",
+    "game": "SporGunu",
+    "slug": "bitirince-yaptim-dugmesine-bas"
+  },
+  {
+    "text": "Harika hareket ettin!",
+    "game": "SporGunu",
+    "slug": "harika-hareket-ettin"
+  },
+  {
+    "text": "Şimdi elini kalbine koy. Kalbine dokun, nasıl atıyor?",
+    "game": "SporGunu",
+    "slug": "simdi-elini-kalbine-koy-kalbine-dokun-nasil-atiyor"
+  },
+  {
+    "text": "Bedenin ne dedi? Bir karta dokun.",
+    "game": "SporGunu",
+    "slug": "bedenin-ne-dedi-bir-karta-dokun"
+  },
+  {
+    "text": "Evet, bedenin sana haber veriyor.",
+    "game": "SporGunu",
+    "slug": "evet-bedenin-sana-haber-veriyor"
+  },
+  {
+    "text": "Kalbin neden hızlı attı? Bir karta dokun.",
+    "game": "SporGunu",
+    "slug": "kalbin-neden-hizli-atti-bir-karta-dokun"
+  },
+  {
+    "text": "Evet! Hareket edince kalp hızlanır, nefes de hızlanır.",
+    "game": "SporGunu",
+    "slug": "evet-hareket-edince-kalp-hizlanir-nefes-de-hizlanir"
+  },
+  {
+    "text": "Hmm, hareket edince kalbimiz hızlanır. Bir daha düşün.",
+    "game": "SporGunu",
+    "slug": "hmm-hareket-edince-kalbimiz-hizlanir-bir-daha-dusun"
+  },
+  {
+    "text": "Şimdi su iç ve biraz dinlen. Spor günü bitti, aferin!",
+    "game": "SporGunu",
+    "slug": "simdi-su-ic-ve-biraz-dinlen-spor-gunu-bitti-aferin"
+  },
+  {
+    "text": "Yerinde yürüyelim. Yavaş yavaş, adım adım.",
+    "game": "SporGunu",
+    "slug": "yerinde-yuruyelim-yavas-yavas-adim-adim"
+  },
+  {
+    "text": "Yerinde zıplayalım! Hop hop hop!",
+    "game": "SporGunu",
+    "slug": "yerinde-ziplayalim-hop-hop-hop"
+  },
+  {
+    "text": "Olduğun yerde koş! Hızlı hızlı!",
+    "game": "SporGunu",
+    "slug": "oldugun-yerde-kos-hizli-hizli"
+  },
+  {
+    "text": "Parkta yürüyüşe çıkalım. Yavaş yavaş yürü.",
+    "game": "SporGunu",
+    "slug": "parkta-yuruyuse-cikalim-yavas-yavas-yuru"
+  },
+  {
+    "text": "Topu at ve tut! At, tut, at, tut!",
+    "game": "SporGunu",
+    "slug": "topu-at-ve-tut-at-tut-at-tut"
+  },
+  {
+    "text": "İp atlayalım! Hop hop hop, hızlı hızlı!",
+    "game": "SporGunu",
+    "slug": "ip-atlayalim-hop-hop-hop-hizli-hizli"
+  },
+  {
+    "text": "Kalbim hızlı atıyor.",
+    "game": "SporGunu",
+    "slug": "kalbim-hizli-atiyor"
+  },
+  {
+    "text": "Nefesim hızlandı.",
+    "game": "SporGunu",
+    "slug": "nefesim-hizlandi"
+  },
+  {
+    "text": "Isındım.",
+    "game": "SporGunu",
+    "slug": "isindim"
+  },
+  {
+    "text": "Çünkü çok hareket ettim.",
+    "game": "SporGunu",
+    "slug": "cunku-cok-hareket-ettim"
+  },
+  {
+    "text": "Çünkü uyudum.",
+    "game": "SporGunu",
+    "slug": "cunku-uyudum"
+  },
+  {
+    "text": "Çünkü sessizce oturdum.",
+    "game": "SporGunu",
+    "slug": "cunku-sessizce-oturdum"
+  }
+]

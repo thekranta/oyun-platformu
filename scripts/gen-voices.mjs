@@ -134,6 +134,9 @@ async function main() {
     // Dalga 2: Deney Atölyesi
     const WAVE3 = join(__dirname, 'tts-phrases-wave3.json');
     if (existsSync(WAVE3)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE3, 'utf8')));
+    // Dalga 3: Spor Günü
+    const WAVE4 = join(__dirname, 'tts-phrases-wave4.json');
+    if (existsSync(WAVE4)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE4, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

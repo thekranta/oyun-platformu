@@ -132,6 +132,8 @@ const ASSET_MAP: Record<string, AssetSource> = {
   '/sounds/sfx/zilo-6.wav': require('../assets/sounds/sfx/zilo-6.mp3'),
   '/sounds/sfx/zilo-7.wav': require('../assets/sounds/sfx/zilo-7.mp3'),
   '/sounds/sfx/zilo-8.wav': require('../assets/sounds/sfx/zilo-8.mp3'),
+  '/sounds/sfx/kalp-yavas.wav': require('../assets/sounds/sfx/kalp-yavas.mp3'),
+  '/sounds/sfx/kalp-hizli.wav': require('../assets/sounds/sfx/kalp-hizli.mp3'),
   '/sounds/songs/ADIL_OYUN_GUZEL_OYUN.mp3': require('../assets/sounds/songs/ADIL_OYUN_GUZEL_OYUN.mp3'),
   '/sounds/songs/AZ_AZ_KULLANIRIM.mp3': require('../assets/sounds/songs/AZ_AZ_KULLANIRIM.mp3'),
   '/sounds/songs/BEKLERIM_SAKINCE.mp3': require('../assets/sounds/songs/BEKLERIM_SAKINCE.mp3'),

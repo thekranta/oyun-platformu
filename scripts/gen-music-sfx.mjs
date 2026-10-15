@@ -161,4 +161,25 @@ ZILO.forEach((f, i) => {
   }));
 });
 
-
+// ---- 5) Kalp atışı — "Spor Günü" (kalbine dokun: yavaş = hafif hareket, hızlı = yoğun hareket) ----
+console.log('Kalp atışları:');
+{
+  const mix = (totalMs, parts) => {
+    const out = new Float64Array(secs(totalMs));
+    for (const [ms, smp] of parts) {
+      const off = secs(ms);
+      for (let i = 0; i < smp.length && off + i < out.length; i++) out[off + i] += smp[i];
+    }
+    return Array.from(out);
+  };
+  // "lub-dub": derin tok iki vuruş (düşük frekans, kısa sönüm)
+  const lub = hit({ partials: [{ freq: 55, gain: 1 }, { freq: 95, gain: 0.45 }], tau: 0.07, ms: 260, noise: { amount: 0.12, ms: 10 }, peak: 0.6 });
+  const dub = hit({ partials: [{ freq: 70, gain: 1 }, { freq: 110, gain: 0.4 }], tau: 0.06, ms: 220, noise: { amount: 0.1, ms: 8 }, peak: 0.42 });
+  const beats = (period, count) => {
+    const parts = [];
+    for (let b = 0; b < count; b++) { parts.push([b * period, lub]); parts.push([b * period + 170, dub]); }
+    return mix(count * period + 300, parts);
+  };
+  write('kalp-yavas', beats(1000, 4));   // ~60 atış/dk, 4 sn
+  write('kalp-hizli', beats(460, 8));    // ~130 atış/dk, ~4 sn
+}

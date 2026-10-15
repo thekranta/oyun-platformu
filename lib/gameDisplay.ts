@@ -57,7 +57,7 @@ const GAME_EMOJI: Record<string, string> = {
     // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)
     'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'minik-muze': '🏛️', 'renk-atolyesi': '🎨',
     'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁', 'zilofon-ustasi': '🎹',
-    'odamin-krokisi': '📍', 'hayvan-jimnastigi': '🦘',
+    'odamin-krokisi': '📍', 'hayvan-jimnastigi': '🦘', 'spor-gunu': '🏃',
 };
 
 export interface GameDisplay {
