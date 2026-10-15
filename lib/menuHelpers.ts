@@ -137,6 +137,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'minik-anketci': { color: '#00897B', icon: 'people', displayTitle: 'Minik Anketçi', subtitle: 'Sor, say, yorumla' },
   'grafik-ustasi': { color: '#1E88E5', icon: 'bar-chart', displayTitle: 'Grafik Ustası', subtitle: 'Grafiği oku' },
   'resimde-ne-oluyor': { color: '#3949AB', icon: 'image', displayTitle: 'Resimde Ne Oluyor?', subtitle: 'Resimden anlam' },
+  'deney-atolyesi': { color: '#2E7D32', icon: 'flask', displayTitle: 'Deney Atölyesi', subtitle: 'Dene, gözle, yaz' },
   'iz-dedektifi': { color: '#6D4C41', icon: 'paw', displayTitle: 'İz Dedektifi', subtitle: 'İzi kime ait bul' },
   'mevsim-bahcesi': { color: '#FF7043', icon: 'leaf', displayTitle: 'Mevsim Bahçesi', subtitle: 'Mevsimi bul' },
   'manzara-kasifi': { color: '#00897B', icon: 'earth', displayTitle: 'Manzara Kaşifi', subtitle: 'Manzarayı tanı' },
@@ -198,7 +199,7 @@ export const GAME_EMOJI: Record<string, string> = {
   // Yeni oyunlar (Sosyal / Matematik)
   'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊', 'minik-anketci': '📋',
   // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
-  'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
+  'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'deney-atolyesi': '🔬', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
   // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
   'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖', 'masal-sahnesi': '🎭',
   // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)

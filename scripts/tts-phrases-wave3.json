@@ -1,0 +1,217 @@
+[
+  {
+    "text": "Bilim insanı gibi deney yapacağız. Önce merak et, sonra dene!",
+    "game": "DeneyAtolyesi",
+    "slug": "bilim-insani-gibi-deney-yapacagiz-once-merak-et-sonra-dene"
+  },
+  {
+    "text": "Soruya uygun aleti seç.",
+    "game": "DeneyAtolyesi",
+    "slug": "soruya-uygun-aleti-sec"
+  },
+  {
+    "text": "Bununla olmaz. Soruya tekrar bak.",
+    "game": "DeneyAtolyesi",
+    "slug": "bununla-olmaz-soruya-tekrar-bak"
+  },
+  {
+    "text": "Üç malzeme seç. Hepsini deneyeceğiz.",
+    "game": "DeneyAtolyesi",
+    "slug": "uc-malzeme-sec-hepsini-deneyecegiz"
+  },
+  {
+    "text": "Şimdi her birini dene. Dokun!",
+    "game": "DeneyAtolyesi",
+    "slug": "simdi-her-birini-dene-dokun"
+  },
+  {
+    "text": "Defterine yaz. Ne oldu?",
+    "game": "DeneyAtolyesi",
+    "slug": "defterine-yaz-ne-oldu"
+  },
+  {
+    "text": "Doğru yazdın!",
+    "game": "DeneyAtolyesi",
+    "slug": "dogru-yazdin"
+  },
+  {
+    "text": "Defterine bakalım. Bir daha dene.",
+    "game": "DeneyAtolyesi",
+    "slug": "defterine-bakalim-bir-daha-dene"
+  },
+  {
+    "text": "Deneyini tamamladın. Tam bir bilim insanısın!",
+    "game": "DeneyAtolyesi",
+    "slug": "deneyini-tamamladin-tam-bir-bilim-insanisin"
+  },
+  {
+    "text": "İki buz aynı boyda olmalı. Böylece adil deney yaparız.",
+    "game": "DeneyAtolyesi",
+    "slug": "iki-buz-ayni-boyda-olmali-boylece-adil-deney-yapariz"
+  },
+  {
+    "text": "Bu ikisi aynı boyda değil. Aynı boyda iki buz seç.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-ikisi-ayni-boyda-degil-ayni-boyda-iki-buz-sec"
+  },
+  {
+    "text": "Birini güneşe koy. Diğeri gölgede kalsın.",
+    "game": "DeneyAtolyesi",
+    "slug": "birini-gunese-koy-digeri-golgede-kalsin"
+  },
+  {
+    "text": "Biraz bekleyelim.",
+    "game": "DeneyAtolyesi",
+    "slug": "biraz-bekleyelim"
+  },
+  {
+    "text": "Hangisi daha çok erimiş? Dokun.",
+    "game": "DeneyAtolyesi",
+    "slug": "hangisi-daha-cok-erimis-dokun"
+  },
+  {
+    "text": "Evet! Güneşteki buz daha çok erimiş.",
+    "game": "DeneyAtolyesi",
+    "slug": "evet-gunesteki-buz-daha-cok-erimis"
+  },
+  {
+    "text": "Buzlara bir daha bak.",
+    "game": "DeneyAtolyesi",
+    "slug": "buzlara-bir-daha-bak"
+  },
+  {
+    "text": "Buz güneşte mi, gölgede mi daha çok erir? Adil bir deney yapalım.",
+    "game": "DeneyAtolyesi",
+    "slug": "buz-guneste-mi-golgede-mi-daha-cok-erir-adil-bir-deney-yapalim"
+  },
+  {
+    "text": "Harika bir deney oldu. Aferin!",
+    "game": "DeneyAtolyesi",
+    "slug": "harika-bir-deney-oldu-aferin"
+  },
+  {
+    "text": "Hangi şeyler mıknatısa yapışır? Birlikte deneyelim.",
+    "game": "DeneyAtolyesi",
+    "slug": "hangi-seyler-miknatisa-yapisir-birlikte-deneyelim"
+  },
+  {
+    "text": "Yapıştı!",
+    "game": "DeneyAtolyesi",
+    "slug": "yapisti"
+  },
+  {
+    "text": "Yapışmadı.",
+    "game": "DeneyAtolyesi",
+    "slug": "yapismadi"
+  },
+  {
+    "text": "Bu bir ataş.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-atas"
+  },
+  {
+    "text": "Bu bir cıvata.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-civata"
+  },
+  {
+    "text": "Bu bir kâğıt.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-k-git"
+  },
+  {
+    "text": "Bu bir tahta.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-tahta"
+  },
+  {
+    "text": "Bu bir yün yumağı.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-yun-yumagi"
+  },
+  {
+    "text": "Bu bir balon.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-balon"
+  },
+  {
+    "text": "Işık hangi şeylerin içinden geçer? Birlikte deneyelim.",
+    "game": "DeneyAtolyesi",
+    "slug": "isik-hangi-seylerin-icinden-gecer-birlikte-deneyelim"
+  },
+  {
+    "text": "Işık geçti!",
+    "game": "DeneyAtolyesi",
+    "slug": "isik-gecti"
+  },
+  {
+    "text": "Işık geçmedi.",
+    "game": "DeneyAtolyesi",
+    "slug": "isik-gecmedi"
+  },
+  {
+    "text": "Bu bir kavanoz.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-kavanoz"
+  },
+  {
+    "text": "Bu bir pencere.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-pencere"
+  },
+  {
+    "text": "Bu bir kitap.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-kitap"
+  },
+  {
+    "text": "Bu bir karton kutu.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-karton-kutu"
+  },
+  {
+    "text": "Bu bir tuğla.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-tugla"
+  },
+  {
+    "text": "Hangi şeyler suyu emer? Birlikte deneyelim.",
+    "game": "DeneyAtolyesi",
+    "slug": "hangi-seyler-suyu-emer-birlikte-deneyelim"
+  },
+  {
+    "text": "Suyu emdi!",
+    "game": "DeneyAtolyesi",
+    "slug": "suyu-emdi"
+  },
+  {
+    "text": "Suyu emmedi.",
+    "game": "DeneyAtolyesi",
+    "slug": "suyu-emmedi"
+  },
+  {
+    "text": "Bu bir sünger.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-sunger"
+  },
+  {
+    "text": "Bu bir kâğıt havlu.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-k-git-havlu"
+  },
+  {
+    "text": "Bu bir çorap.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-corap"
+  },
+  {
+    "text": "Bu bir tabak.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-tabak"
+  },
+  {
+    "text": "Bu bir poşet.",
+    "game": "DeneyAtolyesi",
+    "slug": "bu-bir-poset"
+  }
+]

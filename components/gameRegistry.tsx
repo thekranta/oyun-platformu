@@ -125,6 +125,7 @@ const HarfVagonlari = lazyWithReload(() => import('./HarfVagonlari'));
 const ZilofonUstasi = lazyWithReload(() => import('./ZilofonUstasi'));
 const MinikAnketci = lazyWithReload(() => import('./MinikAnketci'));
 const MasalSahnesi = lazyWithReload(() => import('./MasalSahnesi'));
+const DeneyAtolyesi = lazyWithReload(() => import('./DeneyAtolyesi'));
 const ResimdeNeTers = lazyWithReload(() => import('./ResimdeNeTers'));
 const SonraNeOlur = lazyWithReload(() => import('./SonraNeOlur'));
 const MinikMarket = lazyWithReload(() => import('./MinikMarket'));
@@ -487,6 +488,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'minik-anketci': (c) => <MinikAnketci onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'grafik-ustasi': (c) => <GrafikUstasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'resimde-ne-oluyor': (c) => <ResimdeNeOluyor onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'deney-atolyesi': (c) => <DeneyAtolyesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'iz-dedektifi': (c) => <IzDedektifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'mevsim-bahcesi': (c) => <MevsimBahcesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'manzara-kasifi': (c) => <ManzaraKasifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

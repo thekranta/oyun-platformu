@@ -162,6 +162,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
 
   // ---------- Yeni oyunlar (Turkce / Fen / Sosyal - tap) ----------
   { id: 'resimde-ne-oluyor', title: 'Resimde Ne Oluyor', status: 'secondary', domain: 'Dil', skillFocus: 'Gorsel okuma / resimden anlam uretme', routeKey: 'resimde-ne-oluyor', forestCategory: 'masal-kovugu' },
+  { id: 'deney-atolyesi', title: 'Deney Atolyesi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Deney yapma / malzeme secme / sonucu kaydetme', routeKey: 'deney-atolyesi', forestCategory: 'kesif-kucaklamasi' },
   { id: 'iz-dedektifi', title: 'Iz Dedektifi', status: 'secondary', domain: 'Bilissel', skillFocus: 'Bilimsel cikarim / iz-canli iliskisi', routeKey: 'iz-dedektifi', forestCategory: 'kesif-kucaklamasi' },
   { id: 'mevsim-bahcesi', title: 'Mevsim Bahcesi', status: 'secondary', domain: 'Kavram', skillFocus: 'Mevsim / zaman kavrami', routeKey: 'mevsim-bahcesi', forestCategory: 'kesif-kucaklamasi' },
   { id: 'manzara-kasifi', title: 'Manzara Kasifi', status: 'secondary', domain: 'Kavram', skillFocus: 'Cografi mekan / manzara tanima', routeKey: 'manzara-kasifi', forestCategory: 'kesif-kucaklamasi' },
