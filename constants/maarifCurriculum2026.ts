@@ -167,9 +167,9 @@ export const MAARIF_CIKTILAR_2026: Record<string, MaarifCikti2026> = {
     'SDB.2': { code: 'SDB.2', alan: 'Sosyal-Duygusal', resmi: false, aciklama: '[Benlik Becerileri] Kendini Düzenleme (öz düzenleme): Kişisel hedeflere ulaşabilmek için duygu, düşünce ve davranışların fark edilip değerlendirilmesi ve kontrol edilmesi' },
     'SDB.3': { code: 'SDB.3', alan: 'Sosyal-Duygusal', resmi: false, aciklama: '[Sosyal Yaşam Becerileri] İletişim: Duygu, düşünce veya bilgilerin sözlü ya da sözsüz olarak başkalarına iletilmesi' },
     'SDB.4': { code: 'SDB.4', alan: 'Sosyal-Duygusal', resmi: false, aciklama: '[Sosyal Yaşam Becerileri] İş Birliği: Ortak bir hedefe ulaşmak için iki veya daha fazla kişinin birlikte çalışabilmesi' },
-    'SDB.5': { code: 'SDB.5', alan: 'Sosyal-Duygusal', resmi: false, aciklama: '[Sosyal Yaşam Becerileri] Sosyal Farkındalık: Farklı geçmiş, kültür ve yaşam koşullarına sahip bireyler dahil başkalarının bakış açılarını anlama ve onlara duyarlı davranma' },
+    'SDB.5': { code: 'SDB.5', alan: 'Sosyal-Duygusal', resmi: false, aciklama: '[Sosyal Yaşam Becerileri] Sosyal Farkındalık: Farklı geçmiş, kültür ve yaşam koşullarına sahip bireyler de dâhil olmak üzere başkalarının bakış açılarını anlama ve onlara karşı duyarlı davranma' },
     'SDB.6': { code: 'SDB.6', alan: 'Sosyal-Duygusal', resmi: false, aciklama: '[Ortak / Birleşik Beceriler] Uyum: Kişinin kendisiyle ve çevresiyle dengeli bir ilişki kurması ve bu ilişkiyi sürdürebilmesi' },
-    'SDB.7': { code: 'SDB.7', alan: 'Sosyal-Duygusal', resmi: false, aciklama: '[Ortak / Birleşik Beceriler] Sorumlu Karar Verme: Farklı durumlarda ahlaki sorumluluk alarak davranışları ve ilişkilerinde doğru ve yapıcı seçimler yapma becerisi' },
+    'SDB.7': { code: 'SDB.7', alan: 'Sosyal-Duygusal', resmi: false, aciklama: '[Ortak / Birleşik Beceriler] Sorumlu Karar Verme: Kişinin farklı durumlarda ahlaki sorumluluk alarak kendi davranışları ve insanlarla olan ilişkilerinde doğru ve yapıcı seçimler yapma becerisi' },
 };
 
 /** Bir çıktı kodu 2026 belgesinde (kanonik listede) var mı? false => uydurma. */
