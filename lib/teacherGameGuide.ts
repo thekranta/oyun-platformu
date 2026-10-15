@@ -154,3 +154,34 @@ export function guideAlanlar(list: GuideCode[]): string[] {
 }
 
 export const missingCount = (list: GuideCode[]): number => list.filter(c => c.missing === true).length;
+
+export interface AlanSummary {
+    alan: string;
+    /** Bu alandaki (oyunu olan) kazanım sayısı. */
+    kod: number;
+    /** Bu alandaki oyun sayısı. */
+    oyun: number;
+    /** Öğrenci verildiyse: oynanıp oynanmadığı bilinebilen kazanım sayısı (kayıt tutulmayan oyunlar hariç). */
+    izlenebilir: number | null;
+    /** Öğrenci verildiyse: en az bir oyunun oynandığı kazanım sayısı. */
+    oynanan: number | null;
+    /** Öğrenci verildiyse: hiç oyun oynanmamış (eksik) kazanım sayısı. */
+    eksik: number | null;
+}
+
+/** Alan başına özet (öğretmen paneli grafiği için): kazanım/oyun sayısı ve öğrenci verildiyse kapsama. */
+export function alanSummary(list: GuideCode[]): AlanSummary[] {
+    const hasStudent = list.some(c => c.missing !== null || c.playedGames !== null);
+    return guideAlanlar(list).map(alan => {
+        const codes = list.filter(c => c.alan === alan);
+        const izlenebilir = codes.filter(c => c.missing !== null);
+        return {
+            alan,
+            kod: codes.length,
+            oyun: codes.reduce((n, c) => n + c.games.length, 0),
+            izlenebilir: hasStudent ? izlenebilir.length : null,
+            oynanan: hasStudent ? izlenebilir.filter(c => c.missing === false).length : null,
+            eksik: hasStudent ? izlenebilir.filter(c => c.missing === true).length : null,
+        };
+    });
+}

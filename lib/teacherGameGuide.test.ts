@@ -1,7 +1,7 @@
 import { GAME_CATALOG } from '../constants/gameCatalog';
 import { MAARIF_CIKTILAR_2026 } from '../constants/maarifCurriculum2026';
 import { MAARIF_MAP } from '../constants/maarifMap';
-import { ALAN_ORDER, buildGuide, countPlays, filterGuide, guideAlanlar, missingCount, stripOfficial, UNTRACKED_GAMES } from './teacherGameGuide';
+import { ALAN_ORDER, alanSummary, buildGuide, countPlays, filterGuide, guideAlanlar, missingCount, stripOfficial, UNTRACKED_GAMES } from './teacherGameGuide';
 
 describe('öğretmen oyun rehberi: her oyun listede', () => {
     it('katalogdaki HER oyunun geçerli bir Maarif kaydı var (yeni oyun eklerken maarifMap unutulmasın)', () => {
@@ -122,5 +122,29 @@ describe('arama ve süzgeç', () => {
         expect(filterGuide(guide, { onlyMissing: true }).every(c => c.missing === true)).toBe(true);
         expect(filterGuide(buildGuide(), { onlyMissing: true })).toEqual([]);   // öğrenci yokken eksik kavramı yok
         expect(guideAlanlar(guide)).toEqual(ALAN_ORDER.filter(a => guide.some(c => c.alan === a)));
+    });
+});
+
+describe('alan özeti (grafik verisi)', () => {
+    it('öğrenci yokken kazanım ve oyun sayıları; toplamlar rehberle tutarlı', () => {
+        const guide = buildGuide();
+        const sum = alanSummary(guide);
+        expect(sum.map(s => s.alan)).toEqual(guideAlanlar(guide));
+        expect(sum.reduce((n, s) => n + s.kod, 0)).toBe(guide.length);
+        expect(sum.reduce((n, s) => n + s.oyun, 0)).toBe(GAME_CATALOG.length);
+        for (const s of sum) { expect(s.izlenebilir).toBeNull(); expect(s.oynanan).toBeNull(); expect(s.eksik).toBeNull(); }
+    });
+
+    it('öğrenci varken oynanan + eksik = izlenebilir; oynadıkça kapsama artar', () => {
+        const none = alanSummary(buildGuide({}));
+        for (const s of none) {
+            expect(s.oynanan).toBe(0);
+            expect((s.oynanan ?? 0) + (s.eksik ?? 0)).toBe(s.izlenebilir);
+        }
+        const mat = (list: ReturnType<typeof alanSummary>) => list.find(s => s.alan === 'Matematik')!;
+        const played = alanSummary(buildGuide({ hafiza: 2, siralama: 1 }));
+        expect(mat(played).oynanan!).toBeGreaterThan(0);
+        expect(mat(played).eksik!).toBeLessThan(mat(none).eksik!);
+        expect((mat(played).oynanan ?? 0) + (mat(played).eksik ?? 0)).toBe(mat(played).izlenebilir);
     });
 });
