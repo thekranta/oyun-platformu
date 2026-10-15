@@ -37,6 +37,7 @@ export interface Painting {
 }
 
 import { allHuntTexts } from './minikMuzeHunt';
+import { allPuzzleTexts } from './minikMuzeYapboz';
 
 export const MUSEUM_INTRO = "Minik Müze'ye hoş geldin! Bir tabloya dokun, dinle ve keşfet.";
 export const MUSEUM_DONE = 'Aferin! Tabloyu birlikte inceledik.';
@@ -438,5 +439,6 @@ export const allMuseumTexts = (): string[] => [
     MUSEUM_DONE,
     MUSEUM_DRAW_INTRO,
     ...allHuntTexts(),
+    ...allPuzzleTexts(),
     ...PAINTINGS.flatMap((p) => p.segments.map((s) => s.text)),
 ];

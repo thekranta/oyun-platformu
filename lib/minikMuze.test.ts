@@ -1,4 +1,5 @@
 import { allHuntTexts } from '../constants/minikMuzeHunt';
+import { allPuzzleTexts } from '../constants/minikMuzeYapboz';
 import { MUSEUM_DONE, MUSEUM_DRAW_INTRO, MUSEUM_INTRO, PAINTINGS, allMuseumTexts, getPainting } from '../constants/minikMuze';
 import { fitContain, focusTransform } from './minikMuzeMath';
 
@@ -72,7 +73,7 @@ describe('Minik Müze veri bütünlüğü', () => {
         expect(all).toContain(MUSEUM_INTRO);
         expect(all).toContain(MUSEUM_DONE);
         expect(all).toContain(MUSEUM_DRAW_INTRO);
-        expect(all).toHaveLength(3 + allHuntTexts().length + PAINTINGS.reduce((n, p) => n + p.segments.length, 0));
+        expect(all).toHaveLength(3 + allHuntTexts().length + allPuzzleTexts().length + PAINTINGS.reduce((n, p) => n + p.segments.length, 0));
     });
 });
 

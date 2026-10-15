@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, LayoutChangeEvent, Platform, Pressable, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, Image, Platform, Pressable, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { HUNT_DONE, HUNT_HELP, HUNT_INTRO, HUNT_WRONG } from '../../constants/minikMuzeHunt';
 import { Painting } from '../../constants/minikMuze';
 import { HuntSpot, HuntTarget, hintLevel, hitTest, nearestSpot, nextTargetIndex } from '../../lib/minikMuzeHunt';
@@ -9,6 +9,7 @@ import { speak, speakThenWait, stopSpeech } from '../../services/speechService';
 import GameExitButton from '../GameExitButton';
 import ListenButton from '../ListenButton';
 import { PAINTING_IMAGES } from './paintingImages';
+import { useStageSize } from './useStageSize';
 
 // ============================================
 // 🔍 DETAY AVI — tabloda söylenen ayrıntıyı bul ve dokun (Minik Müze, Sanat: SNAB.2 sanat eseri inceleme).
@@ -33,7 +34,7 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
     const win = useWindowDimensions();
     // Yatay ve kısa ekran (telefon yan): alt panel tablonun yanına geçer, tablo şerit kalmaz (MinikMuze ile aynı eşik).
     const sideBySide = win.width > win.height && win.height < 620;
-    const [stage, setStage] = useState(sideBySide
+    const { ref: stageRef, size: stage, onLayout: onStageLayout } = useStageSize(sideBySide
         ? { w: win.width * 0.6 - 16, h: Math.max(120, win.height - 90) }
         : { w: win.width - 16, h: Math.max(200, win.height - 270) });
     const [idx, setIdx] = useState(0);
@@ -46,28 +47,11 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
     const runRef = useRef(0);
     const mountedRef = useRef(true);
     const pulse = useRef(new Animated.Value(0)).current;
-    const stageRef = useRef<View>(null);
 
     const target = targets[idx];
     const img = fitContain(stage.w - 16, stage.h - 16, painting.aspect);
 
     useEffect(() => () => { mountedRef.current = false; runRef.current++; stopSpeech(); }, []);
-
-    // Web: onLayout bazı açılışlarda hiç gelmiyor (sahne ölçüsü tahmin değerinde kalıp tablo kırpılıyordu);
-    // sahneyi doğrudan DOM'dan ölç ve boyut değişince güncelle. Native'de onLayout yeterli.
-    useEffect(() => {
-        if (Platform.OS !== 'web' || typeof ResizeObserver === 'undefined') return;
-        const node = stageRef.current as unknown as HTMLElement | null;
-        if (!node) return;
-        const measure = () => {
-            const r = node.getBoundingClientRect();
-            setStage((prev) => (Math.abs(prev.w - r.width) < 1 && Math.abs(prev.h - r.height) < 1 ? prev : { w: r.width, h: r.height }));
-        };
-        measure();
-        const ro = new ResizeObserver(measure);
-        ro.observe(node);
-        return () => ro.disconnect();
-    }, []);
 
     // Parlayan ipucu halkası nabız gibi atar
     useEffect(() => {
@@ -134,11 +118,6 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
         } else {
             speak(HUNT_WRONG, { instructions: HAPPY_VOICE });
         }
-    };
-
-    const onStageLayout = (e: LayoutChangeEvent) => {
-        const { width, height } = e.nativeEvent.layout;
-        setStage((prev) => (Math.abs(prev.w - width) < 1 && Math.abs(prev.h - height) < 1 ? prev : { w: width, h: height }));
     };
 
     const ringStyle = (s: HuntSpot, color: string, extra?: object) => {

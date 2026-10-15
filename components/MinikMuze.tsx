@@ -14,6 +14,7 @@ import GameExitButton from './GameExitButton';
 import ListenButton from './ListenButton';
 import CreditsModal from './minikMuze/CreditsModal';
 import DetayAvi from './minikMuze/DetayAvi';
+import TabloYapbozu from './minikMuze/TabloYapbozu';
 import { PAINTING_IMAGES } from './minikMuze/paintingImages';
 
 // ============================================
@@ -57,6 +58,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
     const [lockedPainting, setLockedPainting] = useState<Painting | null>(null);
     const [drawingFor, setDrawingFor] = useState<Painting | null>(null);
     const [huntFor, setHuntFor] = useState<Painting | null>(null);
+    const [puzzleFor, setPuzzleFor] = useState<Painting | null>(null);
     // Mobil tarayici sesi engellediyse (dokunus gerekir) anlatim sessizce hizla ilerlemesin; cocuk dokunsun.
     const [needsTap, setNeedsTap] = useState(false);
     const [creditsOpen, setCreditsOpen] = useState(false);
@@ -189,6 +191,22 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
         }
     }
 
+    // ------------------------------------------------------------ TABLO YAPBOZU (tablonun parçalarını yerine koy)
+    if (puzzleFor) {
+        return (
+            <TabloYapbozu
+                key={'puzzle-' + puzzleFor.id}
+                painting={puzzleFor}
+                onExit={() => setPuzzleFor(null)}
+                onCompleted={(id) => {
+                    // Yapbozu bitiren çocuk tabloyu da incelemiş sayılır (müze kaydı ve veli notu için).
+                    viewedRef.current.add(id);
+                    setViewed(Array.from(viewedRef.current));
+                }}
+            />
+        );
+    }
+
     // ------------------------------------------------------------ TABLODAN İLHAM AL (çizim)
     if (drawingFor) {
         return (
@@ -275,6 +293,9 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                     <Text style={styles.plaqueTitle} numberOfLines={1}>{selected.title}</Text>
                     <Text style={styles.plaqueArtist} numberOfLines={1}>{selected.artist} · {selected.yearLabel}</Text>
                 </View>
+                <TouchableOpacity onPress={() => { runRef.current++; stopSpeech(); setPlaying(false); setPuzzleFor(selected); }} style={styles.infoBtn} accessibilityRole="button" accessibilityLabel="Tablo Yapbozu">
+                    <Ionicons name="extension-puzzle" size={24} color="#F4E7CF" />
+                </TouchableOpacity>
                 {getHunt(selected.id) && (
                     <TouchableOpacity onPress={() => { runRef.current++; stopSpeech(); setPlaying(false); setHuntFor(selected); }} style={styles.infoBtn} accessibilityRole="button" accessibilityLabel="Detay Avı">
                         <Ionicons name="search" size={24} color="#F4E7CF" />
@@ -326,6 +347,15 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                         <TouchableOpacity style={styles.bigBtn} onPress={() => playSegment(selected, 0)} accessibilityRole="button" accessibilityLabel="Tekrar izle">
                             <Ionicons name="refresh" size={26} color="#fff" />
                             <Text style={styles.bigBtnText}>Tekrar izle</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.bigBtn, { backgroundColor: '#C2602F' }]}
+                            onPress={() => { runRef.current++; stopSpeech(); setPuzzleFor(selected); }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Tablo Yapbozu"
+                        >
+                            <Ionicons name="extension-puzzle" size={26} color="#fff" />
+                            <Text style={styles.bigBtnText}>Yapboz</Text>
                         </TouchableOpacity>
                         {getHunt(selected.id) && (
                             <TouchableOpacity
