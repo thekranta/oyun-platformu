@@ -50,8 +50,13 @@ describe('oyun açıklaması resmi metni tekrar etmez', () => {
     it('stripOfficial yalnız oyuna özgü kısmı bırakır', () => {
         const off = 'Sayıları farklı durumlarda doğru kullanabilme';
         expect(stripOfficial(off + '; nicelikleri karşılaştırır (çok/az)', off)).toBe('Nicelikleri karşılaştırır (çok/az)');
-        expect(stripOfficial(off + ' (nesne sayısını söyler)', off)).toBe('(nesne sayısını söyler)');
+        expect(stripOfficial(off + ' (nesne sayısını söyler)', off)).toBe('Nesne sayısını söyler');
+        expect(stripOfficial(off + ' (nesne sayısını söyler, sayı-nicelik ilişkisi) (performansa göre uyarlanır zorluk)', off))
+            .toBe('Nesne sayısını söyler, sayı-nicelik ilişkisi (performansa göre uyarlanır zorluk)');
+        expect(stripOfficial(off + '; nicelikleri karşılaştırır (çok/az) (performansa göre uyarlanır)', off)).toBe('Nicelikleri karşılaştırır (çok/az) (performansa göre uyarlanır)');
         expect(stripOfficial(off, off)).toBe('');
+        // eğik çizgi çevresindeki boşluk farkı (resmi metin 'olaylara / olgulara', oyun açıklaması 'olaylara/olgulara') yok sayılır
+        expect(stripOfficial('Fene yönelik olaylara/olgulara bakabilme; fen olayını gözlemler', 'Fene yönelik olaylara / olgulara bakabilme')).toBe('Fen olayını gözlemler');
         expect(stripOfficial('Başka bir açıklama', off)).toBe('Başka bir açıklama');
         expect(stripOfficial('x', undefined)).toBe('x');
     });

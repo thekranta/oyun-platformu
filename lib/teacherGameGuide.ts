@@ -52,8 +52,22 @@ export interface GuideCode {
  * kartın başlığında resmi metin zaten var, bu yüzden tekrarı atılır ve yalnız oyuna özgü kısım kalır.
  */
 export function stripOfficial(detail: string, official?: string): string {
-    if (!official || !detail.startsWith(official)) return detail;
-    const rest = detail.slice(official.length).replace(/^[s;:,.-–]+/, '').trim();
+    if (!official) return detail;
+    // Resmi metin ile oyun açıklaması aynı cümleyi bazen "olaylara / olgulara" bazen "olaylara/olgulara" yazar: eğik çizgi ve boşluk farkı yok sayılır.
+    const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = official.trim().split(/\s*\/\s*/).map(part => esc(part).replace(/\s+/g, '\\s+')).join('\\s*/\\s*');
+    const m = new RegExp('^' + pattern).exec(detail);
+    if (!m) return detail;
+    let rest = detail.slice(m[0].length).replace(/^[\s;:,.\-–]+/, '').trim();
+    // "(nesne sayısını söyler) (performansa göre uyarlanır)" gibi baştaki parantezli parça açıklamanın kendisidir: parantezi aç.
+    if (rest.startsWith('(')) {
+        const close = rest.indexOf(')');
+        if (close > 0) {
+            const inner = rest.slice(1, close).trim();
+            const after = rest.slice(close + 1).trim();
+            rest = inner + (after ? ' ' + after : '');
+        }
+    }
     return rest ? rest.charAt(0).toLocaleUpperCase('tr') + rest.slice(1) : '';
 }
 
