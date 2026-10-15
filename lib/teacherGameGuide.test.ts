@@ -1,7 +1,7 @@
 import { GAME_CATALOG } from '../constants/gameCatalog';
 import { MAARIF_CIKTILAR_2026 } from '../constants/maarifCurriculum2026';
 import { MAARIF_MAP } from '../constants/maarifMap';
-import { ALAN_ORDER, alanSummary, buildGuide, countPlays, filterGuide, guideAlanlar, missingCount, stripOfficial, UNTRACKED_GAMES } from './teacherGameGuide';
+import { ALAN_ORDER, alanSummary, buildClassGuide, buildGuide, classAlanSummary, countPlays, filterGuide, guideAlanlar, missingCount, stripOfficial, UNTRACKED_GAMES } from './teacherGameGuide';
 
 describe('öğretmen oyun rehberi: her oyun listede', () => {
     it('katalogdaki HER oyunun geçerli bir Maarif kaydı var (yeni oyun eklerken maarifMap unutulmasın)', () => {
@@ -146,5 +146,50 @@ describe('alan özeti (grafik verisi)', () => {
         expect(mat(played).oynanan!).toBeGreaterThan(0);
         expect(mat(played).eksik!).toBeLessThan(mat(none).eksik!);
         expect((mat(played).oynanan ?? 0) + (mat(played).eksik ?? 0)).toBe(mat(played).izlenebilir);
+    });
+});
+
+describe('sınıf görünümü', () => {
+    const yapbozCode = MAARIF_MAP['yapboz'].cikti;
+    const hafizaCode = MAARIF_MAP['hafiza-2'].cikti;
+    const kids: Record<string, number>[] = [{ yapboz: 3 }, { yapboz: 1, 'hafiza-2': 2 }, {}, {}];
+
+    it('kazanımda kaç çocuğun oynadığı sayılır; kimse oynamadıysa eksik', () => {
+        const g = buildClassGuide(kids);
+        const y = g.find(c => c.key === yapbozCode)!;
+        expect(y.classSize).toBe(4);
+        expect(y.classPlayedBy).toBeGreaterThanOrEqual(2);
+        expect(y.missing).toBe(false);
+        expect(y.games.find(x => x.id === 'yapboz')).toMatchObject({ plays: 4, classPlayedBy: 2 });
+        const h = g.find(c => c.key === hafizaCode)!;
+        expect(h.games.find(x => x.id === 'hafiza-2')).toMatchObject({ plays: 2, classPlayedBy: 1 });
+        // kimsenin oynamadığı bir kazanım
+        const nobody = g.filter(c => c.classPlayedBy === 0);
+        expect(nobody.length).toBeGreaterThan(0);
+        expect(nobody.every(c => c.missing === true)).toBe(true);
+    });
+
+    it('boş sınıf: eksik/ortalama hesaplanmaz, çökmez', () => {
+        const g = buildClassGuide([]);
+        expect(g.every(c => c.missing === null)).toBe(true);
+        const s = classAlanSummary([]);
+        expect(s.every(x => x.ortKapsama === null)).toBe(true);
+    });
+
+    it('alan özeti: ortalama kapsama 0..1, oynanan + eksik = izlenebilir, çok oynayan sınıfta ortalama artar', () => {
+        const none = classAlanSummary([{}, {}]);
+        for (const s of none) { expect(s.ortKapsama).toBe(0); expect((s.oynanan ?? 0) + (s.eksik ?? 0)).toBe(s.izlenebilir); }
+        const some = classAlanSummary(kids);
+        const mat = (l: ReturnType<typeof classAlanSummary>) => l.find(x => x.alan === 'Matematik')!;
+        expect(mat(some).ortKapsama!).toBeGreaterThan(0);
+        expect(mat(some).ortKapsama!).toBeLessThanOrEqual(1);
+        expect(mat(some).oynanan!).toBeGreaterThan(mat(none).oynanan!);
+    });
+
+    it('süzgeç: yalnız-eksikler sınıfta kimsenin oynamadığı kazanımları getirir', () => {
+        const g = buildClassGuide(kids);
+        const only = filterGuide(g, { onlyMissing: true });
+        expect(only.length).toBe(missingCount(g));
+        expect(only.every(c => c.classPlayedBy === 0)).toBe(true);
     });
 });

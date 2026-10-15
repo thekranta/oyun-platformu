@@ -25,6 +25,8 @@ export interface GuideGame {
     tier: VeliTier;
     /** Öğrenci verildiyse oynanma sayısı; verilmediyse ya da kayıt tutulmayan oyunda null. */
     plays: number | null;
+    /** Sınıf görünümünde: bu oyunu en az bir kez oynayan çocuk sayısı (diğer görünümlerde null). */
+    classPlayedBy: number | null;
 }
 
 export interface GuideCode {
@@ -40,6 +42,9 @@ export interface GuideCode {
     missing: boolean | null;
     /** Öğrenci verildiyse bu kazanımda oynanan farklı oyun sayısı. */
     playedGames: number | null;
+    /** Sınıf görünümünde: bu kazanımdaki bir oyunu en az bir kez oynayan çocuk sayısı ve sınıf mevcudu (diğerlerinde null). */
+    classPlayedBy: number | null;
+    classSize: number | null;
 }
 
 /**
@@ -110,6 +115,7 @@ export function buildGuide(plays?: Record<string, number> | null, catalog: GameC
             detail: stripOfficial(entry.ciktiAciklama, MAARIF_CIKTILAR_2026[entry.cikti]?.aciklama),
             tier: requiredVeliTierForGame(g),
             plays: plays && tracked ? (plays[g.id] ?? 0) : null,
+            classPlayedBy: null,
         };
         const list = groups.get(entry.cikti);
         if (list) list.push(game); else groups.set(entry.cikti, [game]);
@@ -127,6 +133,8 @@ export function buildGuide(plays?: Record<string, number> | null, catalog: GameC
             games: games.sort((a, b) => a.name.localeCompare(b.name, 'tr')),
             missing: plays && trackedGames.length > 0 ? trackedGames.every(g => (g.plays ?? 0) === 0) : null,
             playedGames: plays ? trackedGames.filter(g => (g.plays ?? 0) > 0).length : null,
+            classPlayedBy: null,
+            classSize: null,
         });
     }
     return out.sort((a, b) => alanRank(a.alan) - alanRank(b.alan) || codeCompare(a.key, b.key));
@@ -165,8 +173,10 @@ export interface AlanSummary {
     izlenebilir: number | null;
     /** Öğrenci verildiyse: en az bir oyunun oynandığı kazanım sayısı. */
     oynanan: number | null;
-    /** Öğrenci verildiyse: hiç oyun oynanmamış (eksik) kazanım sayısı. */
+    /** Öğrenci verildiyse: hiç oyun oynanmamış (eksik) kazanım sayısı. Sınıf görünümünde: hiçbir çocuğun oynamadığı kazanım sayısı. */
     eksik: number | null;
+    /** Yalnız sınıf görünümünde: çocukların ortalama kapsaması (0-1; her çocuğun oynadığı kazanım oranının ortalaması). */
+    ortKapsama: number | null;
 }
 
 /** Alan başına özet (öğretmen paneli grafiği için): kazanım/oyun sayısı ve öğrenci verildiyse kapsama. */
@@ -182,6 +192,55 @@ export function alanSummary(list: GuideCode[]): AlanSummary[] {
             izlenebilir: hasStudent ? izlenebilir.length : null,
             oynanan: hasStudent ? izlenebilir.filter(c => c.missing === false).length : null,
             eksik: hasStudent ? izlenebilir.filter(c => c.missing === true).length : null,
+            ortKapsama: null,
+        };
+    });
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Sınıf görünümü: sınıftaki çocukların oyun geçmişleri birleştirilir (çocuk başına oynanma sayıları dizisi).
+// "Hangi kazanımı hiçbir çocuk oynamadı?" ve "alan başına ortalama kapsama" öğretmenin sınıfa toplu etkinlik planlamasına yarar.
+// ---------------------------------------------------------------------------------------------------------------------
+
+/** Sınıf rehberi: her kazanımda kaç çocuğun oynadığı; hiç kimse oynamadıysa missing=true. perStudent: çocuk başına countPlays sonucu. */
+export function buildClassGuide(perStudent: Record<string, number>[], catalog: GameCatalogItem[] = GAME_CATALOG): GuideCode[] {
+    const n = perStudent.length;
+    const played = (p: Record<string, number>, id: string) => (p[id] ?? 0) > 0;
+    return buildGuide({}, catalog).map(c => {
+        const tracked = c.games.filter(g => g.plays !== null);
+        const games = c.games.map(g => g.plays === null
+            ? g
+            : { ...g, plays: perStudent.reduce((s, p) => s + (p[g.id] ?? 0), 0), classPlayedBy: perStudent.filter(p => played(p, g.id)).length });
+        const playedBy = tracked.length > 0 ? perStudent.filter(p => tracked.some(g => played(p, g.id))).length : null;
+        return {
+            ...c,
+            games,
+            classPlayedBy: playedBy,
+            classSize: n,
+            missing: playedBy === null || n === 0 ? null : playedBy === 0,
+            playedGames: tracked.length > 0 ? tracked.filter(g => perStudent.some(p => played(p, g.id))).length : null,
+        };
+    });
+}
+
+/** Sınıf için alan özeti: kapsanan kazanım (en az bir çocuk oynadı), kimsenin oynamadığı kazanım ve ortalama kapsama. */
+export function classAlanSummary(perStudent: Record<string, number>[], classGuide: GuideCode[] = buildClassGuide(perStudent)): AlanSummary[] {
+    return guideAlanlar(classGuide).map(alan => {
+        const codes = classGuide.filter(c => c.alan === alan);
+        const tracked = codes.filter(c => c.missing !== null);
+        let ort: number | null = null;
+        if (perStudent.length > 0 && tracked.length > 0) {
+            const perChild = perStudent.map(p => tracked.filter(c => c.games.some(g => g.plays !== null && (p[g.id] ?? 0) > 0)).length / tracked.length);
+            ort = perChild.reduce((a, b) => a + b, 0) / perChild.length;
+        }
+        return {
+            alan,
+            kod: codes.length,
+            oyun: codes.reduce((n, c) => n + c.games.length, 0),
+            izlenebilir: tracked.length,
+            oynanan: tracked.filter(c => c.missing === false).length,
+            eksik: tracked.filter(c => c.missing === true).length,
+            ortKapsama: ort,
         };
     });
 }

@@ -140,6 +140,9 @@ export default function TeacherDashboard({
     const [guideLoading, setGuideLoading] = useState(false);
     const [guideFailed, setGuideFailed] = useState(false);
     const guideReq = useRef(0);
+    // Oyun Rehberi "Sınıf" görünümü: sınıftaki onaylı çocukların oyun geçmişi (tembel yüklenir, 4'lü paralel)
+    const [guideClass, setGuideClass] = useState<{ loading: boolean; done: number; total: number; failed: number; perStudent: Record<string, number>[] | null }>({ loading: false, done: 0, total: 0, failed: 0, perStudent: null });
+    const guideClassReq = useRef(0);
     const [students, setStudents] = useState<StudentData[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
     const [studentScores, setStudentScores] = useState<GameScore[]>([]);
@@ -423,7 +426,34 @@ export default function TeacherDashboard({
         }
     };
 
+    const classGuideStudents = () => students.filter((s) => !s.hidden && (s.status === undefined || s.status === 'accepted'));
+
+    const requestGuideClass = async () => {
+        const list = classGuideStudents();
+        const token = ++guideClassReq.current;
+        if (list.length === 0) { setGuideClass({ loading: false, done: 0, total: 0, failed: 0, perStudent: [] }); return; }
+        setGuideClass({ loading: true, done: 0, total: list.length, failed: 0, perStudent: null });
+        const results: Record<string, number>[] = [];
+        let done = 0, failed = 0, next = 0;
+        const worker = async () => {
+            while (next < list.length) {
+                const st = list[next++];
+                let ok = false;
+                try {
+                    await loadStudentScores(st, (rows) => { ok = true; results.push(countPlays(rows)); }, 100);
+                } catch { /* tek çocuğun hatası tüm görünümü düşürmesin */ }
+                if (!ok) failed++;
+                done++;
+                if (token === guideClassReq.current) setGuideClass((p) => ({ ...p, done, failed }));
+            }
+        };
+        await Promise.all(Array.from({ length: Math.min(4, list.length) }, worker));
+        if (token === guideClassReq.current) setGuideClass({ loading: false, done, total: list.length, failed, perStudent: results });
+    };
+
     const openGuide = async () => {
+        guideClassReq.current++;
+        setGuideClass({ loading: false, done: 0, total: 0, failed: 0, perStudent: null });
         setGuideOpen(true);
         setGuidePlays(null);
         setGuideTotal(0);
@@ -1151,12 +1181,14 @@ export default function TeacherDashboard({
 
             <TeacherGameGuide
                 visible={guideOpen}
-                onClose={() => { setGuideOpen(false); guideReq.current++; setGuideLoading(false); }}
+                onClose={() => { setGuideOpen(false); guideReq.current++; guideClassReq.current++; setGuideLoading(false); }}
                 student={selectedStudent ? { name: selectedStudent.child_name } : null}
                 plays={guidePlays}
                 playsLoading={guideLoading}
                 playsTotal={guideTotal}
                 loadFailed={guideFailed}
+                classScope={selectedClass && classGuideStudents().length > 0 ? { name: selectedClass.name, ...guideClass } : null}
+                onRequestClass={requestGuideClass}
             />
 
             {/* Add Class Modal */}
