@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
 import { isGameLocked, pinnedLocks, roomGames } from '@/lib/toyRoomSelection';
+import { useStageSize } from '@/components/minikMuze/useStageSize';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import { requiredVeliTierForGame, summarizePackage, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
@@ -200,7 +201,9 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   const playable = subscriptionTier === undefined
     ? allPlayable
     : allPlayable.filter(g => veliTierMeetsMinimum(subscriptionTier, requiredVeliTierForGame(g)));
-  const [bounds, setBounds] = useState({ width: 0, height: 0 });
+  // Oda ölçüsü: web'de onLayout bazı açılışlarda hiç gelmiyor (oda boş kalırdı); useStageSize DOM'dan da ölçer.
+  const { ref: rootRef, size: rootSize, onLayout: onRootLayout } = useStageSize({ w: 0, h: 0 });
+  const bounds = { width: rootSize.w, height: rootSize.h };
   const [adult, setAdult] = useState(false);
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [accessNote, setAccessNote] = useState<string | null>(null);
@@ -245,7 +248,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   // 🔒 ile işaretlenip hangi paketle açıldığı söylenir, böylece veli neyin kilitli
   // olduğunu görüp paket yükseltmeyi değerlendirebilir.
   const filtered = allPlayable.filter(g => title(g).toLocaleLowerCase('tr').includes(query.toLocaleLowerCase('tr')));
-  return <View style={styles.root} onLayout={e => setBounds(e.nativeEvent.layout)}>
+  return <View ref={rootRef} style={styles.root} onLayout={onRootLayout}>
     {bounds.width > 0 && <View style={{ position: 'absolute', width: sceneWidth, height: sceneHeight, left: (bounds.width - sceneWidth) / 2, top: (bounds.height - sceneHeight) / 2, transform: [{ scale }] }}>
       <Svg width={sceneWidth} height={sceneHeight} style={StyleSheet.absoluteFill} viewBox={`0 0 ${sceneWidth} ${sceneHeight}`} pointerEvents="none">
         <Defs><LinearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><Stop stopColor="#FFF8EB"/><Stop offset="1" stopColor="#F4E8D6"/></LinearGradient></Defs>
