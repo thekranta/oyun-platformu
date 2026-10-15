@@ -208,7 +208,6 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   const [storiesOpen, setStoriesOpen] = useState(false);
   const [accessNote, setAccessNote] = useState<string | null>(null);
   const [blockedTitle, setBlockedTitle] = useState('');
-  const english = i18n.language?.startsWith('en');
   const stories = allPlayable.filter(g => g.status === 'story');
   const music = allPlayable.find(g => g.id === 'muzik-calar');
   // Paket yetmiyorsa oyuncak odada görünür ama kilit rozeti taşır (dokununca yetişkin notu çıkar).
@@ -217,7 +216,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   const openGame = (game: GameCatalogItem) => {
     if (subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, requiredVeliTierForGame(game))) {
       setBlockedTitle(title(game));
-      setAccessNote(english ? 'Ask a grown-up to check your package in the existing adult menu.' : 'Bu içerik için mevcut yetişkin menüsünden paket bilgilerinizi kontrol edebilirsiniz.');
+      setAccessNote(t('toyRoom.accessNote'));
       return;
     }
     setStoriesOpen(false);
@@ -274,10 +273,10 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
         <Plaything kind={(round % 2 === 0 ? kinds : alternateKinds)[i]} label={title(game)} color={colors[i]} size={toySize} moving={moving} onPress={() => onGame(game.routeKey)} replacement={round > 0 ? GAME_EMOJI[game.id] || '🧸' : undefined}/>
       </View>)}
       <View style={{ position: 'absolute', left: portrait ? 25 : 195, top: portrait ? 510 : 350 }}>
-        <Plaything kind="drum" label={english ? 'Music Box' : 'Müzik Kutusu'} color="#AA7940" size={toySize} moving={moving} locked={musicLocked} onPress={() => { if (music) openGame(music); }}/>
+        <Plaything kind="drum" label={t('toyRoom.musicBox')} color="#AA7940" size={toySize} moving={moving} locked={musicLocked} onPress={() => { if (music) openGame(music); }}/>
       </View>
       <View style={{ position: 'absolute', left: portrait ? 235 : 410, top: portrait ? 510 : 350 }}>
-        <Plaything kind="bear" label={english ? 'Values Stories' : 'Değerler Hikâyeleri'} color="#8666A1" size={toySize} moving={moving} locked={storiesLocked} onPress={() => setStoriesOpen(true)}/>
+        <Plaything kind="bear" label={t('toyRoom.valuesStories')} color="#8666A1" size={toySize} moving={moving} locked={storiesLocked} onPress={() => setStoriesOpen(true)}/>
       </View>
       <View style={{ position: 'absolute', left: portrait ? 134 : 825, top: portrait ? 665 : 415 }}>
         <Plaything kind="gift" label={t('toyRoom.moreToys')} color="#9A5B4B" moving={moving} size={portrait ? 100 : 140} onPress={onShuffle}/>
@@ -289,7 +288,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
     </SafeAreaView>
     <Modal visible={storiesOpen || !!accessNote} transparent animationType="fade" onRequestClose={() => { setAccessNote(null); setStoriesOpen(false); }}>
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
-        <View style={styles.adultHeader}><Text style={styles.adultTitle}>{accessNote ? blockedTitle : english ? 'Values Stories' : 'Değerler Hikâyeleri'}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} style={styles.control} onPress={() => {setStoriesOpen(false); setAccessNote(null);}}><Text style={styles.controlText}>✕</Text></Pressable></View>
+        <View style={styles.adultHeader}><Text style={styles.adultTitle}>{accessNote ? blockedTitle : t('toyRoom.valuesStories')}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} style={styles.control} onPress={() => {setStoriesOpen(false); setAccessNote(null);}}><Text style={styles.controlText}>✕</Text></Pressable></View>
         {accessNote ? <Text style={styles.adultNote}>{accessNote}</Text> : <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', paddingVertical: 16, gap: 20 }}>
           {stories.map((game, i) => <Plaything key={game.id} kind={(['bear', 'rabbit', 'animal', 'paint'] as ToyKind[])[i % 4]} label={title(game)} color={colors[i % colors.length]} size={125} moving={!reduceMotion && !calm} onPress={() => openGame(game)} replacement={GAME_EMOJI[game.id]} locked={gameLocked(game)}/>)}
         </ScrollView>}
