@@ -26,6 +26,7 @@
     "greetingDefault": "MİNİK DÜNYAM",
     "headline": "Bugün ne oynayalım?",
     "subtitle": "İstediğin oyuncağa dokun.",
+    "lockedToy": "{{name}}, kilitli",
     "moreToys": "Başka oyuncaklar",
     "adultTitle": "Yetişkinler için",
     "backToRoom": "Odaya dön",

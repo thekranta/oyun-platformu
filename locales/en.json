@@ -26,6 +26,7 @@
     "greetingDefault": "MY LITTLE WORLD",
     "headline": "What shall we play today?",
     "subtitle": "Touch the toy you want.",
+    "lockedToy": "{{name}}, locked",
     "moreToys": "More toys",
     "adultTitle": "For grown-ups",
     "backToRoom": "Back to the room",

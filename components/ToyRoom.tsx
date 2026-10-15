@@ -6,7 +6,7 @@ import { AccessibilityInfo, Animated, Linking, Modal, Platform, Pressable, Scrol
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
-import { roomGames } from '@/lib/toyRoomSelection';
+import { isGameLocked, pinnedLocks, roomGames } from '@/lib/toyRoomSelection';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import { requiredVeliTierForGame, summarizePackage, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
@@ -163,7 +163,8 @@ function ToyArt({ kind }: { kind: ToyKind }) {
   </Svg>;
 }
 
-function Plaything({ kind, label, onPress, moving, size, color, replacement }: { kind: ToyKind; label: string; onPress: () => void; moving: boolean; size: number; color: string; replacement?: string }) {
+function Plaything({ kind, label, onPress, moving, size, color, replacement, locked }: { kind: ToyKind; label: string; onPress: () => void; moving: boolean; size: number; color: string; replacement?: string; locked?: boolean }) {
+  const { t } = useTranslation();
   const scale = useRef(new Animated.Value(1)).current;
   const lift = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -176,11 +177,12 @@ function Plaything({ kind, label, onPress, moving, size, color, replacement }: {
     return () => animation.stop();
   }, [lift, moving]);
   return <Animated.View style={{ width: size, transform: [{ translateY: lift }, { scale }] }}>
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress}
+    <Pressable accessibilityRole="button" accessibilityLabel={locked ? t('toyRoom.lockedToy', { name: label }) : label} onPress={onPress}
       onPressIn={() => { if (moving) Animated.spring(scale, { toValue: 0.9, useNativeDriver: native }).start(); }}
       onPressOut={() => Animated.spring(scale, { toValue: 1, friction: 4, useNativeDriver: native }).start()} style={styles.toy}>
       <View style={{ width: size, height: size * 0.9 }}>
         <ToyArt kind={kind}/>
+        {locked && <View pointerEvents="none" style={[styles.lockBadge, { width: size * 0.28, height: size * 0.28 }]}><Ionicons name="lock-closed" size={size * 0.16} color="#fff" /></View>}
         {replacement && <View style={[styles.replacement, { width: size * 0.31, height: size * 0.31 }]}><Text style={{ fontSize: size * 0.2 }}>{replacement}</Text></View>}
       </View>
       <Text numberOfLines={2} style={[styles.toyLabel, { color, fontSize: Math.max(11, Math.min(16, size * 0.105)) }]}>{label}</Text>
@@ -206,6 +208,9 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   const english = i18n.language?.startsWith('en');
   const stories = allPlayable.filter(g => g.status === 'story');
   const music = allPlayable.find(g => g.id === 'muzik-calar');
+  // Paket yetmiyorsa oyuncak odada görünür ama kilit rozeti taşır (dokununca yetişkin notu çıkar).
+  const gameLocked = (g: GameCatalogItem) => isGameLocked(g, subscriptionTier);
+  const { musicLocked, storiesLocked } = pinnedLocks(allPlayable, subscriptionTier);
   const openGame = (game: GameCatalogItem) => {
     if (subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, requiredVeliTierForGame(game))) {
       setBlockedTitle(title(game));
@@ -266,10 +271,10 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
         <Plaything kind={(round % 2 === 0 ? kinds : alternateKinds)[i]} label={title(game)} color={colors[i]} size={toySize} moving={moving} onPress={() => onGame(game.routeKey)} replacement={round > 0 ? GAME_EMOJI[game.id] || '🧸' : undefined}/>
       </View>)}
       <View style={{ position: 'absolute', left: portrait ? 25 : 195, top: portrait ? 510 : 350 }}>
-        <Plaything kind="drum" label={english ? 'Music Box' : 'Müzik Kutusu'} color="#AA7940" size={toySize} moving={moving} onPress={() => { if (music) openGame(music); }}/>
+        <Plaything kind="drum" label={english ? 'Music Box' : 'Müzik Kutusu'} color="#AA7940" size={toySize} moving={moving} locked={musicLocked} onPress={() => { if (music) openGame(music); }}/>
       </View>
       <View style={{ position: 'absolute', left: portrait ? 235 : 410, top: portrait ? 510 : 350 }}>
-        <Plaything kind="bear" label={english ? 'Values Stories' : 'Değerler Hikâyeleri'} color="#8666A1" size={toySize} moving={moving} onPress={() => setStoriesOpen(true)}/>
+        <Plaything kind="bear" label={english ? 'Values Stories' : 'Değerler Hikâyeleri'} color="#8666A1" size={toySize} moving={moving} locked={storiesLocked} onPress={() => setStoriesOpen(true)}/>
       </View>
       <View style={{ position: 'absolute', left: portrait ? 134 : 825, top: portrait ? 665 : 415 }}>
         <Plaything kind="gift" label={t('toyRoom.moreToys')} color="#9A5B4B" moving={moving} size={portrait ? 100 : 140} onPress={onShuffle}/>
@@ -283,7 +288,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
         <View style={styles.adultHeader}><Text style={styles.adultTitle}>{accessNote ? blockedTitle : english ? 'Values Stories' : 'Değerler Hikâyeleri'}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} style={styles.control} onPress={() => {setStoriesOpen(false); setAccessNote(null);}}><Text style={styles.controlText}>✕</Text></Pressable></View>
         {accessNote ? <Text style={styles.adultNote}>{accessNote}</Text> : <ScrollView contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', paddingVertical: 16, gap: 20 }}>
-          {stories.map((game, i) => <Plaything key={game.id} kind={(['bear', 'rabbit', 'animal', 'paint'] as ToyKind[])[i % 4]} label={title(game)} color={colors[i % colors.length]} size={125} moving={!reduceMotion && !calm} onPress={() => openGame(game)} replacement={GAME_EMOJI[game.id]}/>)}
+          {stories.map((game, i) => <Plaything key={game.id} kind={(['bear', 'rabbit', 'animal', 'paint'] as ToyKind[])[i % 4]} label={title(game)} color={colors[i % colors.length]} size={125} moving={!reduceMotion && !calm} onPress={() => openGame(game)} replacement={GAME_EMOJI[game.id]} locked={gameLocked(game)}/>)}
         </ScrollView>}
       </View></View>
     </Modal>
@@ -339,6 +344,7 @@ const styles = StyleSheet.create({
   pkgTop: { fontSize: 13, fontWeight: '800', color: '#507C72' },
   root: { flex: 1, backgroundColor: '#FAF2E4', overflow: 'hidden' },
   heading: { position: 'absolute', alignItems: 'center' }, eyebrow: { color: '#A27D59', letterSpacing: 3, fontWeight: '800' }, headline: { color: '#584B40', fontWeight: '900', letterSpacing: -1.2, marginTop: 6 }, greeting: { color: '#887864', fontSize: 14, marginTop: 6, textAlign: 'center' },
+  lockBadge: { position: 'absolute', right: 2, top: 2, borderRadius: 40, backgroundColor: '#6B5A4A', borderWidth: 2, borderColor: '#FFF5DD', alignItems: 'center', justifyContent: 'center' },
   toy: { alignItems: 'center' }, toyLabel: { fontWeight: '800', textAlign: 'center', paddingHorizontal: 5, lineHeight: 20 }, replacement: { position: 'absolute', right: 0, bottom: 0, borderRadius: 40, backgroundColor: '#FFF5DD', alignItems: 'center', justifyContent: 'center' },
   controls: { position: 'absolute', right: 10, top: 10, flexDirection: 'row', gap: 6 }, control: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFFCC', borderRadius: 22, userSelect: 'none' }, controlText: { fontSize: 21, color: '#706452', userSelect: 'none' }, noSelect: { userSelect: 'none' },
   overlay: { flex: 1, backgroundColor: '#40372999', justifyContent: 'center', alignItems: 'center', padding: 20 }, adult: { backgroundColor: '#FFFCF5', borderRadius: 26, padding: 22, width: '100%', maxWidth: 590, maxHeight: '90%' }, adultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, adultTitle: { fontSize: 23, fontWeight: '800', color: '#584B40' }, adultNote: { fontSize: 14, color: '#756753', lineHeight: 22, marginVertical: 14 }, adultActions: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' }, adultButton: { backgroundColor: '#EFE7D9', padding: 14, borderRadius: 15 }, search: { padding: 14, borderWidth: 1, borderColor: '#D7CBBA', borderRadius: 14, marginVertical: 16, fontSize: 16 }, gameRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderColor: '#EEE6D9', gap: 8 }, gameText: { fontSize: 15, color: '#584B40', flexShrink: 1 },
