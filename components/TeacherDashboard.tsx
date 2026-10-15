@@ -30,6 +30,8 @@ import { getMaarif } from '../constants/maarifMap';
 import { getMaarifInfo } from '../lib/maarifInfo';
 import { ReportEngine } from '../services/ReportEngine';
 import DevelopmentRadar from './DevelopmentRadar';
+import TeacherGameGuide from './TeacherGameGuide';
+import { countPlays } from '../lib/teacherGameGuide';
 import { chunkIds, CLASS_COUNT_PAGE_SIZE, countByClass } from '../lib/classCounts';
 import { maskEmail } from '../lib/maskEmail';
 
@@ -131,6 +133,13 @@ export default function TeacherDashboard({
     const [classes, setClasses] = useState<ClassData[]>([]);
     const [selectedClass, setSelectedClass] = useState<ClassData | null>(null);
     const [gardenOpen, setGardenOpen] = useState(false);
+    // Oyun Rehberi: açılırken seçili öğrencinin son 100 oyun kaydından oynanma sayıları (eksik kazanım işaretlemesi için)
+    const [guideOpen, setGuideOpen] = useState(false);
+    const [guidePlays, setGuidePlays] = useState<Record<string, number> | null>(null);
+    const [guideTotal, setGuideTotal] = useState(0);
+    const [guideLoading, setGuideLoading] = useState(false);
+    const [guideFailed, setGuideFailed] = useState(false);
+    const guideReq = useRef(0);
     const [students, setStudents] = useState<StudentData[]>([]);
     const [selectedStudent, setSelectedStudent] = useState<StudentData | null>(null);
     const [studentScores, setStudentScores] = useState<GameScore[]>([]);
@@ -370,14 +379,14 @@ export default function TeacherDashboard({
         }
     };
 
-    const loadStudentScores = async (student: StudentData, apply: (list: GameScore[]) => void) => {
+    const loadStudentScores = async (student: StudentData, apply: (list: GameScore[]) => void, limit = 20) => {
         if (teacherId === 'demo-teacher') {
             apply(demoScores(student) as GameScore[]);
             return;
         }
 
         // Yeni yol: yalnız onaylı kayıt için, yalnız gereken kolonlar; yapay zekâ yorumunun yalnız AKADEMİK kısmı.
-        const rpc = await supabase.rpc('teacher_student_scores', { p_student_id: student.id, p_limit: 20 });
+        const rpc = await supabase.rpc('teacher_student_scores', { p_student_id: student.id, p_limit: limit });
         if (!rpc.error && Array.isArray(rpc.data)) {
             apply(rpc.data.map((r: any) => ({
                 id: r.score_id,
@@ -403,7 +412,7 @@ export default function TeacherDashboard({
         const studentAge = student.child_age_months;
         try {
             const response = await fetch(
-                `${SUPABASE_URL}/rest/v1/oyun_skorlari?ogrenci_adi=eq.${encodeURIComponent(studentName)}&ogrenci_yasi=eq.${studentAge}&order=created_at.desc&limit=20`,
+                `${SUPABASE_URL}/rest/v1/oyun_skorlari?ogrenci_adi=eq.${encodeURIComponent(studentName)}&ogrenci_yasi=eq.${studentAge}&order=created_at.desc&limit=${limit}`,
                 { headers: { 'apikey': SUPABASE_KEY!, 'Authorization': `Bearer ${await getSessionToken()}` } }
             );
             const data = await response.json();
@@ -411,6 +420,31 @@ export default function TeacherDashboard({
         } catch (error) {
             console.error('Skorlar yüklenirken hata:', error);
             setNotice(t('teacher.loadFailed'));
+        }
+    };
+
+    const openGuide = async () => {
+        setGuideOpen(true);
+        setGuidePlays(null);
+        setGuideTotal(0);
+        setGuideFailed(false);
+        const student = selectedStudent;
+        if (!student) { setGuideLoading(false); return; }
+        const token = ++guideReq.current;
+        setGuideLoading(true);
+        let ok = false;
+        try {
+            await loadStudentScores(student, (list) => {
+                if (token !== guideReq.current) return;
+                ok = true;
+                setGuidePlays(countPlays(list));
+                setGuideTotal(list.length);
+            }, 100);
+        } finally {
+            if (token === guideReq.current) {
+                setGuideLoading(false);
+                if (!ok) setGuideFailed(true);
+            }
         }
     };
 
@@ -733,6 +767,16 @@ export default function TeacherDashboard({
                         <Text style={styles.statLabel}>{t('teacher.statGames')}</Text>
                     </View>
                 </View>
+
+                {/* Oyun Rehberi: oyunlar + Maarif kodu/metni; "evde şu oyunu oynayın" demek için */}
+                <TouchableOpacity style={styles.guideBanner} onPress={openGuide} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel={t('teacher.guide.openTitle')}>
+                    <Text style={styles.guideBannerEmoji}>📚</Text>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.guideBannerTitle}>{t('teacher.guide.openTitle')}</Text>
+                        <Text style={styles.guideBannerSubtitle}>{t('teacher.guide.openSubtitle')}</Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={22} color="#2C5FA8" />
+                </TouchableOpacity>
 
                 {/* Classes Section */}
                 <View style={styles.section}>
@@ -1105,6 +1149,16 @@ export default function TeacherDashboard({
                 <View style={{ height: 40 }} />
             </ScrollView>
 
+            <TeacherGameGuide
+                visible={guideOpen}
+                onClose={() => { setGuideOpen(false); guideReq.current++; setGuideLoading(false); }}
+                student={selectedStudent ? { name: selectedStudent.child_name } : null}
+                plays={guidePlays}
+                playsLoading={guideLoading}
+                playsTotal={guideTotal}
+                loadFailed={guideFailed}
+            />
+
             {/* Add Class Modal */}
             <Modal visible={showAddClassModal} transparent animationType="fade">
                 <View style={styles.modalOverlay}>
@@ -1297,6 +1351,15 @@ const styles = StyleSheet.create({
     premiumBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF3CD', padding: 14, borderRadius: 16, marginBottom: 16, gap: 10 },
     premiumBannerEmoji: { fontSize: 20 },
     premiumBannerText: { fontSize: 14, color: '#856404', fontWeight: '500' },
+
+    // Oyun Rehberi giriş bandı
+    guideBanner: {
+        flexDirection: 'row', alignItems: 'center', backgroundColor: '#EEF4FF', padding: 16, borderRadius: 20,
+        marginBottom: 22, gap: 14, borderWidth: 2, borderColor: '#CFE0FA',
+    },
+    guideBannerEmoji: { fontSize: 32 },
+    guideBannerTitle: { fontSize: 17, fontWeight: '800', color: '#1E4E8C' },
+    guideBannerSubtitle: { fontSize: 12.5, color: '#5A7FB0', marginTop: 2, lineHeight: 17 },
 
     // Sınıf Bahçesi giriş bandı
     gardenBanner: {
