@@ -24,6 +24,7 @@
 // Yeni oyun eklerken: buraya bir kayıt ekle -> analiz + rozet otomatik doğru olur.
 // ============================================================
 
+import { normalizeOyunTuru } from '../lib/normalizeOyunTuru';
 import { isValidCikti2026 } from './maarifCurriculum2026';
 
 export interface MaarifEntry {
@@ -234,6 +235,8 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
 // Katalog kimliği ile skor kaydındaki ad farklı olan oyunlar: aynı Maarif kaydını paylaşır (kopya yok, takma ad).
 MAARIF_MAP['miktar-karsilastirma'] = MAARIF_MAP['miktar-avcisi'];
 MAARIF_MAP['aile-sepeti-macerasi'] = MAARIF_MAP['aile-sepeti'];
+// KodlamaOyunu.tsx skoru 'Kodlama Oyunu' adıyla yazar (normalize: 'kodlama-oyunu'); katalog kimliği 'kodlama' (Minik Kaşif).
+MAARIF_MAP['kodlama-oyunu'] = MAARIF_MAP['kodlama'];
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */
 // Geliştirme-zamanı bekçisi: bir oyunun `cikti` kodu kanonik curriculum'da
@@ -249,5 +252,9 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
 }
 
 export function getMaarif(oyunTuru: string): MaarifEntry {
-  return MAARIF_MAP[oyunTuru] ?? { ...DEFAULT_MAARIF, displayName: oyunTuru };
+  const direct = MAARIF_MAP[oyunTuru];
+  if (direct) return direct;
+  // Skor kaydındaki ad görünen ad ya da "kimlik - ek" olabilir ('Yapboz - Karpuz' -> yapboz): normalize ederek ara.
+  const key = normalizeOyunTuru(oyunTuru);
+  return MAARIF_MAP[key] ?? MAARIF_MAP[key.split('---')[0]] ?? { ...DEFAULT_MAARIF, displayName: oyunTuru };
 }

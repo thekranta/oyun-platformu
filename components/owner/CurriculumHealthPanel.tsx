@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { CurriculumHealthData, fetchCurriculumHealthData, GameCoverage, CodeCoverage } from '../../lib/owner/curriculumHealth';
+import { CurriculumHealthResult, fetchCurriculumHealthData, GameCoverage, CodeCoverage } from '../../lib/owner/curriculumHealth';
 import { C, F, S, codeColor } from './ownerTheme';
 
 const MAX_ROWS = 10;
 
 export default function CurriculumHealthPanel() {
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<CurriculumHealthData | null>(null);
+  const [data, setData] = useState<CurriculumHealthResult | null>(null);
 
   useEffect(() => {
     fetchCurriculumHealthData().then((d) => {
@@ -27,7 +27,14 @@ export default function CurriculumHealthPanel() {
   return (
     <View style={st.card}>
       <Text style={st.heading}>📚 Müfredat Sağlığı</Text>
-      <Text style={st.totalValue}>{data.kapsananKod} / {data.toplamKod} kod kapsanıyor (%{data.kapsamOrani})</Text>
+      <Text style={st.totalValue}>{data.resmi.resmiKapsanan} / {data.resmi.resmiToplam} resmi Maarif kodu kapsanıyor (%{data.resmi.resmiToplam > 0 ? Math.round((data.resmi.resmiKapsanan / data.resmi.resmiToplam) * 100) : 0})</Text>
+      <Text style={st.subNote}>
+        Sosyal-duygusal beceriler (resmi kod yok): {data.resmi.beceriKapsanan} / {data.resmi.beceriToplam} kapsanıyor
+        {data.kayitHatasi ? '' : ` · ${data.skorSayisi} oyun kaydına göre`}
+      </Text>
+      {data.kayitHatasi && (
+        <Text style={st.warnText}>Oyun kayıtları alınamadı ya da hiç kayıt okunamadı (oturum/yetki?); oynanma sayıları güvenilir değil, "hiç oynanmamış oyunlar" listesi gösterilmiyor.</Text>
+      )}
 
       <Text style={st.groupLabel}>Alan bazlı kapsam</Text>
       {data.alanlar.map((a) => (
@@ -36,7 +43,7 @@ export default function CurriculumHealthPanel() {
 
       <CodeList title="Kapsanmayan kodlar" items={data.bosluklar} emptyText="Tüm kodlar en az bir oyunla kapsanıyor. 🎉" />
       <CodeList title="Kırılgan kodlar (tek oyunlu)" items={data.kirilgan} emptyText="Tüm kapsanan kodların en az 2 oyunu var." />
-      <GameList title="Hiç oynanmamış oyunlar" items={data.oynanmayanOyunlar} emptyText="Kapsanan tüm oyunlar en az bir kez oynanmış." />
+      {!data.kayitHatasi && <GameList title="Hiç oynanmamış oyunlar" items={data.oynanmayanOyunlar} emptyText="Kapsanan tüm oyunlar en az bir kez oynanmış." />}
     </View>
   );
 }
@@ -61,7 +68,7 @@ function CodeList({ title, items, emptyText }: { title: string; items: CodeCover
       {items.length === 0 && <Text style={st.emptyText}>{emptyText}</Text>}
       {items.slice(0, MAX_ROWS).map((c) => (
         <View key={c.code} style={st.listRow}>
-          <Text style={[st.chip, { backgroundColor: codeColor(c.code) + '26', color: codeColor(c.code) }]}>{c.code}</Text>
+          <Text style={[st.chip, { backgroundColor: codeColor(c.code) + '26', color: codeColor(c.code) }]}>{c.resmi ? c.code : 'Beceri'}</Text>
           <Text style={st.listText} numberOfLines={1}>
             {c.aciklama}{c.oyunlar.length === 1 ? ` — ${c.oyunlar[0].displayName}` : ''}
           </Text>
@@ -94,7 +101,9 @@ const st = StyleSheet.create({
     borderWidth: 1, borderColor: C.line,
   },
   heading: { fontSize: F.body, fontWeight: '700', color: C.ink, marginBottom: 2 },
-  totalValue: { fontSize: F.head, fontWeight: '800', color: C.accent, marginBottom: S.sm },
+  totalValue: { fontSize: F.head, fontWeight: '800', color: C.accent, marginBottom: 2 },
+  subNote: { fontSize: F.meta, color: C.inkMid, marginBottom: S.sm },
+  warnText: { fontSize: F.meta, color: '#B45309', marginBottom: S.sm, lineHeight: 17 },
   groupLabel: { fontSize: F.meta, fontWeight: '600', color: C.inkMid, marginTop: S.sm, marginBottom: 4 },
   alanRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   alanLabel: { fontSize: F.meta, color: C.ink, width: 110 },

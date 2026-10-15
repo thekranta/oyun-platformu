@@ -1,4 +1,4 @@
-import { attachPlayCounts, computeCodeCoverage, summarize } from './curriculumHealth';
+import { attachPlayCounts, CodeCoverage, computeCodeCoverage, foldScoreName, officialSplit, recordsUnreliable, summarize } from './curriculumHealth';
 import { MaarifCikti2026 } from '../../constants/maarifCurriculum2026';
 import { MaarifEntry } from '../../constants/maarifMap';
 
@@ -89,5 +89,50 @@ describe('summarize', () => {
             toplamKod: 0, kapsananKod: 0, kapsamOrani: 0,
             alanlar: [], bosluklar: [], kirilgan: [], oynanmayanOyunlar: [],
         });
+    });
+});
+
+describe('takma adlar ve kayıt adı katlama', () => {
+    const shared: MaarifEntry = { displayName: 'Ortak Oyun', alan: 'Fen', surec: 'x', cikti: 'AAA.2', ciktiAciklama: '' };
+    const MAP2: Record<string, MaarifEntry> = { 'oyun-eski': shared, 'oyun-yeni': shared, 'oyun-b': GAME_MAP['oyun-b'] };
+
+    it('aynı kaydı paylaşan anahtarlar TEK oyun sayılır (çift sayım yok)', () => {
+        const cov = computeCodeCoverage(CIKTILAR, MAP2);
+        const aaa2 = cov.find((c) => c.code === 'AAA.2')!;
+        expect(aaa2.oyunlar).toHaveLength(1);
+        expect(aaa2.oyunlar[0]).toMatchObject({ oyunTuru: 'oyun-eski', aliases: ['oyun-yeni'] });
+    });
+
+    it('oynanma sayısı takma adların toplamıdır', () => {
+        const cov = attachPlayCounts(computeCodeCoverage(CIKTILAR, MAP2), { 'oyun-eski': 2, 'oyun-yeni': 3 });
+        expect(cov.find((c) => c.code === 'AAA.2')!.oyunlar[0].oynanmaSayisi).toBe(5);
+    });
+
+    it('foldScoreName: "kimlik - ek" kayıtları kimliğe katlar, bilinmeyen adı olduğu gibi bırakır', () => {
+        const map: Record<string, MaarifEntry> = { yapboz: shared };
+        expect(foldScoreName('Yapboz - Karpuz', map)).toBe('yapboz');
+        expect(foldScoreName('Yapboz', map)).toBe('yapboz');
+        expect(foldScoreName('Başka - Şey', map)).toBe('baska---sey');
+        expect(foldScoreName('', map)).toBe('bilinmeyen-oyun');
+    });
+});
+
+describe('officialSplit', () => {
+    it('resmi kodları platform becerilerinden ayırır', () => {
+        const cov: CodeCoverage[] = [
+            { code: 'MAB.1', alan: 'Matematik', aciklama: '', resmi: true, oyunlar: [{ oyunTuru: 'a', displayName: 'A', oynanmaSayisi: 0 }] },
+            { code: 'MAB.2', alan: 'Matematik', aciklama: '', resmi: true, oyunlar: [] },
+            { code: 'SDB.1', alan: 'Sosyal-Duygusal', aciklama: '', resmi: false, oyunlar: [{ oyunTuru: 'b', displayName: 'B', oynanmaSayisi: 0 }] },
+            { code: 'SDB.2', alan: 'Sosyal-Duygusal', aciklama: '', resmi: false, oyunlar: [] },
+        ];
+        expect(officialSplit(cov)).toEqual({ resmiToplam: 2, resmiKapsanan: 1, beceriToplam: 2, beceriKapsanan: 1 });
+    });
+});
+
+describe('recordsUnreliable', () => {
+    it('hata ya da sıfır satır güvenilmez; satır varsa güvenilir', () => {
+        expect(recordsUnreliable({ ok: false, rows: 500 })).toBe(true);
+        expect(recordsUnreliable({ ok: true, rows: 0 })).toBe(true);
+        expect(recordsUnreliable({ ok: true, rows: 12 })).toBe(false);
     });
 });
