@@ -128,6 +128,9 @@ async function main() {
     // Dalga 1 (2026-10): Harf Vagonları / Zilofon Ustası / Minik Anketçi
     const WAVE1 = join(__dirname, 'tts-phrases-wave1.json');
     if (existsSync(WAVE1)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE1, 'utf8')));
+    // Dalga 2: Masal Sahnesi
+    const WAVE2 = join(__dirname, 'tts-phrases-wave2.json');
+    if (existsSync(WAVE2)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE2, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

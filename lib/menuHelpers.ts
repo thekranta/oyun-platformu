@@ -142,6 +142,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'manzara-kasifi': { color: '#00897B', icon: 'earth', displayTitle: 'Manzara Kaşifi', subtitle: 'Manzarayı tanı' },
   'muzik-durunca-don': { color: '#F158B7', icon: 'musical-notes', displayTitle: 'Müzik Durunca Don', subtitle: 'Dur ve don!' },
   'sakinlesme-bahcesi': { color: '#4DB6AC', icon: 'flower-outline', displayTitle: 'Sakinleşme Bahçesi', subtitle: 'Sakinleşmeyi öğren' },
+  'masal-sahnesi': { color: '#7E57C2', icon: 'color-wand', displayTitle: 'Masal Sahnesi', subtitle: 'Dinle, sahneyi kur' },
   'kucuk-anlatici': { color: '#5C6BC0', icon: 'book-outline', displayTitle: 'Küçük Anlatıcı', subtitle: 'Sırala ve anlat' },
   'sanat-gozlugu': { color: '#7E57C2', icon: 'glasses', displayTitle: 'Sanat Gözlüğü', subtitle: 'Çizgi, şekil, renk' },
   'tabloda-ne-var': { color: '#5E35B1', icon: 'image', displayTitle: 'Tabloda Ne Var?', subtitle: 'Tabloyu incele' },
@@ -199,7 +200,7 @@ export const GAME_EMOJI: Record<string, string> = {
   // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
   'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
   // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
-  'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖',
+  'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖', 'masal-sahnesi': '🎭',
   // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)
   'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'minik-muze': '🏛️', 'renk-atolyesi': '🎨',
   'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁', 'zilofon-ustasi': '🎹',

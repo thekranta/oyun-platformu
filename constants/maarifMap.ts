@@ -216,6 +216,7 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   // ---------- Yeni oyunlar (Müzik / Sosyal-Duygusal / Dil - tap) ----------
   'muzik-durunca-don': { displayName: 'Müzik Durunca Don', alan: 'Müzik', surec: 'Müziksel Hareket', cikti: 'MHB.2', ciktiAciklama: 'Müzik eserleriyle hareket/dans edebilme; müzik durunca hareketini durdurur (dur/başla öz-düzenleme)' },
   'sakinlesme-bahcesi': { displayName: 'Sakinleşme Bahçesi', alan: 'Sosyal-Duygusal', surec: 'Benlik Becerileri', cikti: 'SDB.2', ciktiAciklama: 'Kendini Düzenleme: kişisel hedeflere ulaşabilmek için duygu, düşünce ve davranışların fark edilip kontrol edilmesi; büyük duyguları tanıyıp uygun sakinleşme stratejisini (derin nefes/say/sarıl/yardım iste) seçer', deger: 'Öz Düzenleme', badgeAlan: 'Sosyal-Duygusal' },
+  'masal-sahnesi': { displayName: 'Masal Sahnesi', alan: 'Türkçe', surec: 'Dinleme / İzleme', cikti: 'TADB.3', ciktiAciklama: 'Dinledikleri / izledikleri materyalleri çözümleyebilme (TADB.3) ve yeni anlamlar oluşturabilme (TADB.2); masalı dinleyip karakter, mekân, zaman ve olayı sahneye yerleştirir, kapaktan tahmin eder', badgeAlan: 'Dil (Dinleme)' },
   'kucuk-anlatici': { displayName: 'Küçük Anlatıcı', alan: 'Türkçe', surec: 'Konuşma', cikti: 'TAKB.1', ciktiAciklama: 'Konuşma sürecini yönetebilme; olayları önce-sonra sırasına dizip kendi cümleleriyle anlatır (sözlü anlatım)', badgeAlan: 'Dil (Anlatım)' },
 
   // ---------- Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap) ----------

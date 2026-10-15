@@ -1,182 +1,227 @@
 [
   {
     "text": "Bu trenin vagonları harf! Harfleri doğru sıraya dizelim.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-trenin-vagonlari-harf-harfleri-dogru-siraya-dizelim"
   },
   {
     "text": "Bu trenin vagonları harf! Ayır düğmesine bas.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-trenin-vagonlari-harf-ayir-dugmesine-bas"
   },
   {
     "text": "Şimdi vagonları doğru sıraya diz.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "simdi-vagonlari-dogru-siraya-diz"
   },
   {
     "text": "Olsun! Başka vagonu dene.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "olsun-baska-vagonu-dene"
   },
   {
     "text": "Aferin! Tren yola çıktı.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "aferin-tren-yola-cikti"
   },
   {
     "text": "Kelimeler harflerden oluşur! Aferin! Tren yola çıktı.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "kelimeler-harflerden-olusur-aferin-tren-yola-cikti"
   },
   {
     "text": "Bu bir ayı! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-ayi-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir arı! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-ari-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir elma! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-elma-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir kedi! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-kedi-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir araba! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-araba-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir balon! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-balon-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir kalem! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-kalem-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir kitap! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-kitap-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir çiçek! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-cicek-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Bu bir balık! Harfleri sırayla vagonlara koy.",
-    "game": "HarfVagonlari"
+    "game": "HarfVagonlari",
+    "slug": "bu-bir-balik-harfleri-sirayla-vagonlara-koy"
   },
   {
     "text": "Önce ben çalacağım, sen dinle. Sonra sen de aynı sesleri çalacaksın.",
-    "game": "ZilofonUstasi"
+    "game": "ZilofonUstasi",
+    "slug": "once-ben-calacagim-sen-dinle-sonra-sen-de-ayni-sesleri-calacaksin"
   },
   {
     "text": "Dinle bakalım!",
-    "game": "ZilofonUstasi"
+    "game": "ZilofonUstasi",
+    "slug": "dinle-bakalim"
   },
   {
     "text": "Şimdi sıra sende! Duyduğun sesleri çal.",
-    "game": "ZilofonUstasi"
+    "game": "ZilofonUstasi",
+    "slug": "simdi-sira-sende-duydugun-sesleri-cal"
   },
   {
     "text": "Bir daha dinleyelim.",
-    "game": "ZilofonUstasi"
+    "game": "ZilofonUstasi",
+    "slug": "bir-daha-dinleyelim"
   },
   {
     "text": "Bu sefer birlikte çalalım. Parlayan çubuğa dokun.",
-    "game": "ZilofonUstasi"
+    "game": "ZilofonUstasi",
+    "slug": "bu-sefer-birlikte-calalim-parlayan-cubuga-dokun"
   },
   {
     "text": "Harika! Ezgiyi kulağınla yakaladın.",
-    "game": "ZilofonUstasi"
+    "game": "ZilofonUstasi",
+    "slug": "harika-ezgiyi-kulaginla-yakaladin"
   },
   {
     "text": "Aferin! Aynı sesleri çaldın.",
-    "game": "ZilofonUstasi"
+    "game": "ZilofonUstasi",
+    "slug": "aferin-ayni-sesleri-caldin"
   },
   {
     "text": "Çok güzel çaldın!",
-    "game": "ZilofonUstasi"
+    "game": "ZilofonUstasi",
+    "slug": "cok-guzel-caldin"
   },
   {
     "text": "Arkadaşlarına sor, cevapları say ve en çok seçileni bul.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "arkadaslarina-sor-cevaplari-say-ve-en-cok-secileni-bul"
   },
   {
     "text": "Arkadaşlarına sor: En çok hangi meyveyi seviyorlar?",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "arkadaslarina-sor-en-cok-hangi-meyveyi-seviyorlar"
   },
   {
     "text": "Şimdi sor: En çok hangi hayvanı seviyorlar?",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "simdi-sor-en-cok-hangi-hayvani-seviyorlar"
   },
   {
     "text": "Şimdi sor: En çok hangi rengi seviyorlar?",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "simdi-sor-en-cok-hangi-rengi-seviyorlar"
   },
   {
     "text": "Şimdi sor: En çok hangi oyuncağı seviyorlar?",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "simdi-sor-en-cok-hangi-oyuncagi-seviyorlar"
   },
   {
     "text": "Son soru: Hangi dondurmayı en az seviyorlar?",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "son-soru-hangi-dondurmayi-en-az-seviyorlar"
   },
   {
     "text": "Arkadaşlarına dokun. Hepsine sor.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "arkadaslarina-dokun-hepsine-sor"
   },
   {
     "text": "Bu bilgiyi nereden öğrendik? Doğru kartı seç.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "bu-bilgiyi-nereden-ogrendik-dogru-karti-sec"
   },
   {
     "text": "Evet! Arkadaşlarımıza sorduk.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "evet-arkadaslarimiza-sorduk"
   },
   {
     "text": "Hmm, biz arkadaşlarımıza sormuştuk. Tekrar bak.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "hmm-biz-arkadaslarimiza-sormustuk-tekrar-bak"
   },
   {
     "text": "En çok seçilen hangisi? Dokun.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "en-cok-secilen-hangisi-dokun"
   },
   {
     "text": "En az seçilen hangisi? Dokun.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "en-az-secilen-hangisi-dokun"
   },
   {
     "text": "Doğru! Sütunu en yüksek olan en çok seçilmiş.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "dogru-sutunu-en-yuksek-olan-en-cok-secilmis"
   },
   {
     "text": "Doğru! Sütunu en kısa olan en az seçilmiş.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "dogru-sutunu-en-kisa-olan-en-az-secilmis"
   },
   {
     "text": "Sütunlara bir daha bak.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "sutunlara-bir-daha-bak"
   },
   {
     "text": "Neden en çok seçilmiş olabilir?",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "neden-en-cok-secilmis-olabilir"
   },
   {
     "text": "Evet! Çünkü daha çok arkadaşım onu seçti.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "evet-cunku-daha-cok-arkadasim-onu-secti"
   },
   {
     "text": "Hmm, sayılara bakalım.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "hmm-sayilara-bakalim"
   },
   {
     "text": "Çünkü çok arkadaşım onu seçti.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "cunku-cok-arkadasim-onu-secti"
   },
   {
     "text": "Çünkü çok büyük.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "cunku-cok-buyuk"
   },
   {
     "text": "Çünkü çok güzel.",
-    "game": "MinikAnketci"
+    "game": "MinikAnketci",
+    "slug": "cunku-cok-guzel"
   }
 ]

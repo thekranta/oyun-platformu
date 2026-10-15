@@ -169,6 +169,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   // ---------- Yeni oyunlar (Muzik / Sosyal-duygusal / Dil - tap) ----------
   { id: 'muzik-durunca-don', title: 'Muzik Durunca Don', status: 'secondary', domain: 'Muzik', skillFocus: 'Muzik ve hareket / dur-basla oz-duzenleme', routeKey: 'muzik-durunca-don', forestCategory: 'ritim-kelebegi' },
   { id: 'sakinlesme-bahcesi', title: 'Sakinlesme Bahcesi', status: 'secondary', domain: 'Sosyal-duygusal', skillFocus: 'Oz duzenleme / sakinlesme stratejisi', routeKey: 'sakinlesme-bahcesi', forestCategory: 'duygu-pinari' },
+  { id: 'masal-sahnesi', title: 'Masal Sahnesi', status: 'secondary', domain: 'Dil', skillFocus: 'Dinleme / masal cozumleme (karakter-mekan-zaman-olay)', routeKey: 'masal-sahnesi', forestCategory: 'masal-kovugu' },
   { id: 'kucuk-anlatici', title: 'Kucuk Anlatici', status: 'secondary', domain: 'Dil', skillFocus: 'Sozlu anlatim / oyku siralama', routeKey: 'kucuk-anlatici', forestCategory: 'masal-kovugu' },
 
   // ---------- Yeni oyunlar (Sanat / Muzik / Sosyal / Hareket ve Saglik - tap) ----------
