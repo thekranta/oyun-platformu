@@ -150,12 +150,14 @@ export const GAME_CATALOG: GameCatalogItem[] = [
 
   // ---------- Yeni oyunlar (Turkce / Fen - tap) ----------
   { id: 'kafiye-bahcesi', title: 'Kafiye Bahcesi', status: 'secondary', domain: 'Dil', skillFocus: 'Kafiye / ses farkindaligi', routeKey: 'kafiye-bahcesi', forestCategory: 'harf-cicegi' },
+  { id: 'harf-vagonlari', title: 'Harf Vagonlari', status: 'secondary', domain: 'Dil', skillFocus: 'Sozcuk-harf iliskisi / harflerden sozcuk kurma', routeKey: 'harf-vagonlari', forestCategory: 'harf-cicegi' },
   { id: 'resimde-ne-ters', title: 'Resimde Ne Ters', status: 'secondary', domain: 'Dil', skillFocus: 'Gorsel dikkat / uyumsuzu bulma', routeKey: 'resimde-ne-ters', forestCategory: 'dikkat-dalgasi' },
   { id: 'sonra-ne-olur', title: 'Sonra Ne Olur', status: 'secondary', domain: 'Bilissel', skillFocus: 'Neden-sonuc / tahmin', routeKey: 'sonra-ne-olur', forestCategory: 'bulmaca-yolu' },
 
   // ---------- Yeni oyunlar (Sosyal / Matematik - tap) ----------
   { id: 'minik-market', title: 'Minik Market', status: 'secondary', domain: 'Kavram', skillFocus: 'Para-alisveris / ihtiyac (pratik yasam)', routeKey: 'minik-market', forestCategory: 'sayi-agaci' },
   { id: 'hazine-haritasi', title: 'Hazine Haritasi', status: 'secondary', domain: 'Kavram', skillFocus: 'Kroki/harita okuma / uzamsal yon', routeKey: 'hazine-haritasi', forestCategory: 'kesif-kucaklamasi' },
+  { id: 'minik-anketci', title: 'Minik Anketci', status: 'secondary', domain: 'Matematik', skillFocus: 'Veri toplama / bulguyu yorumlama', routeKey: 'minik-anketci', forestCategory: 'sayi-agaci' },
   { id: 'grafik-ustasi', title: 'Grafik Ustasi', status: 'secondary', domain: 'Matematik', skillFocus: 'Veri okuma / basit grafik', routeKey: 'grafik-ustasi', forestCategory: 'bulmaca-yolu' },
 
   // ---------- Yeni oyunlar (Turkce / Fen / Sosyal - tap) ----------
@@ -176,6 +178,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'renk-atolyesi', title: 'Renk Atolyesi', status: 'creative', domain: 'Sanat', skillFocus: 'Sanat etkinligi / motif ve renk uygulama', routeKey: 'renk-atolyesi', forestCategory: 'renk-cayiri' },
   { id: 'hangi-calgi-caldi', title: 'Hangi Calgi Caldi?', status: 'secondary', domain: 'Muzik', skillFocus: 'Ses kaynagini ayirt etme (tini)', routeKey: 'hangi-calgi-caldi', forestCategory: 'ritim-kelebegi' },
   { id: 'ses-nasil', title: 'Ses Nasil?', status: 'secondary', domain: 'Muzik', skillFocus: 'Muziksel ozellikler (tempo/gurluk/ton)', routeKey: 'ses-nasil', forestCategory: 'ritim-kelebegi' },
+  { id: 'zilofon-ustasi', title: 'Zilofon Ustasi', status: 'secondary', domain: 'Muzik', skillFocus: 'Duyulan ezgiyi tuslu calgida calma', routeKey: 'zilofon-ustasi', forestCategory: 'ritim-kelebegi' },
   { id: 'davul-ustasi', title: 'Davul Ustasi', status: 'secondary', domain: 'Muzik', skillFocus: 'Ritim tekrari / muziksel calma', routeKey: 'davul-ustasi', forestCategory: 'ritim-kelebegi' },
   { id: 'odamin-krokisi', title: 'Odamin Krokisi', status: 'secondary', domain: 'Kavram', skillFocus: 'Kendi krokisini olusturma / mekansal temsil', routeKey: 'odamin-krokisi', forestCategory: 'kesif-kucaklamasi' },
   { id: 'hayvan-jimnastigi', title: 'Hayvan Jimnastigi', status: 'secondary', domain: 'Saglik', skillFocus: 'Buyuk kas becerileri / hareket taklidi', routeKey: 'hayvan-jimnastigi', forestCategory: 'kosu-kirazi' },

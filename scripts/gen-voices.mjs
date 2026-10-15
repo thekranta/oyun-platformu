@@ -125,6 +125,9 @@ async function main() {
     // Maarif bosluk oyunlari (Sanat / Muzik / kroki / jimnastik)
     const NG5 = join(__dirname, 'tts-phrases-newgames5.json');
     if (existsSync(NG5)) phrases = phrases.concat(JSON.parse(readFileSync(NG5, 'utf8')));
+    // Dalga 1 (2026-10): Harf Vagonları / Zilofon Ustası / Minik Anketçi
+    const WAVE1 = join(__dirname, 'tts-phrases-wave1.json');
+    if (existsSync(WAVE1)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE1, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

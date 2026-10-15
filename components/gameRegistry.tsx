@@ -121,6 +121,9 @@ const ZitlariEslestir = lazyWithReload(() => import('./ZitlariEslestir'));
 const YapbozOyunu = lazyWithReload(() => import('./YapbozOyunu'));
 const YaraticiCizim = lazyWithReload(() => import('./YaraticiCizim'));
 const KafiyeBahcesi = lazyWithReload(() => import('./KafiyeBahcesi'));
+const HarfVagonlari = lazyWithReload(() => import('./HarfVagonlari'));
+const ZilofonUstasi = lazyWithReload(() => import('./ZilofonUstasi'));
+const MinikAnketci = lazyWithReload(() => import('./MinikAnketci'));
 const ResimdeNeTers = lazyWithReload(() => import('./ResimdeNeTers'));
 const SonraNeOlur = lazyWithReload(() => import('./SonraNeOlur'));
 const MinikMarket = lazyWithReload(() => import('./MinikMarket'));
@@ -474,11 +477,13 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'gunum': (c) => <Gunum onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'renk-tonlari': (c) => <RenkTonlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'sicak-soguk': (c) => <SicakSoguk onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'harf-vagonlari': (c) => <HarfVagonlari onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'kafiye-bahcesi': (c) => <KafiyeBahcesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'resimde-ne-ters': (c) => <ResimdeNeTers onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'sonra-ne-olur': (c) => <SonraNeOlur onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'minik-market': (c) => <MinikMarket onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'hazine-haritasi': (c) => <HazineHaritasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'minik-anketci': (c) => <MinikAnketci onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'grafik-ustasi': (c) => <GrafikUstasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'resimde-ne-oluyor': (c) => <ResimdeNeOluyor onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'iz-dedektifi': (c) => <IzDedektifi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
@@ -493,6 +498,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'renk-atolyesi': (c) => <RenkAtolyesi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'hangi-calgi-caldi': (c) => <HangiCalgiCaldi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'ses-nasil': (c) => <SesNasil onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  'zilofon-ustasi': (c) => <ZilofonUstasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'davul-ustasi': (c) => <DavulUstasi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'odamin-krokisi': (c) => <OdaminKrokisi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'hayvan-jimnastigi': (c) => <HayvanJimnastigi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

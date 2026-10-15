@@ -1,0 +1,182 @@
+[
+  {
+    "text": "Bu trenin vagonları harf! Harfleri doğru sıraya dizelim.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu trenin vagonları harf! Ayır düğmesine bas.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Şimdi vagonları doğru sıraya diz.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Olsun! Başka vagonu dene.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Aferin! Tren yola çıktı.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Kelimeler harflerden oluşur! Aferin! Tren yola çıktı.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir ayı! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir arı! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir elma! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir kedi! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir araba! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir balon! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir kalem! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir kitap! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir çiçek! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Bu bir balık! Harfleri sırayla vagonlara koy.",
+    "game": "HarfVagonlari"
+  },
+  {
+    "text": "Önce ben çalacağım, sen dinle. Sonra sen de aynı sesleri çalacaksın.",
+    "game": "ZilofonUstasi"
+  },
+  {
+    "text": "Dinle bakalım!",
+    "game": "ZilofonUstasi"
+  },
+  {
+    "text": "Şimdi sıra sende! Duyduğun sesleri çal.",
+    "game": "ZilofonUstasi"
+  },
+  {
+    "text": "Bir daha dinleyelim.",
+    "game": "ZilofonUstasi"
+  },
+  {
+    "text": "Bu sefer birlikte çalalım. Parlayan çubuğa dokun.",
+    "game": "ZilofonUstasi"
+  },
+  {
+    "text": "Harika! Ezgiyi kulağınla yakaladın.",
+    "game": "ZilofonUstasi"
+  },
+  {
+    "text": "Aferin! Aynı sesleri çaldın.",
+    "game": "ZilofonUstasi"
+  },
+  {
+    "text": "Çok güzel çaldın!",
+    "game": "ZilofonUstasi"
+  },
+  {
+    "text": "Arkadaşlarına sor, cevapları say ve en çok seçileni bul.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Arkadaşlarına sor: En çok hangi meyveyi seviyorlar?",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Şimdi sor: En çok hangi hayvanı seviyorlar?",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Şimdi sor: En çok hangi rengi seviyorlar?",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Şimdi sor: En çok hangi oyuncağı seviyorlar?",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Son soru: Hangi dondurmayı en az seviyorlar?",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Arkadaşlarına dokun. Hepsine sor.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Bu bilgiyi nereden öğrendik? Doğru kartı seç.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Evet! Arkadaşlarımıza sorduk.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Hmm, biz arkadaşlarımıza sormuştuk. Tekrar bak.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "En çok seçilen hangisi? Dokun.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "En az seçilen hangisi? Dokun.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Doğru! Sütunu en yüksek olan en çok seçilmiş.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Doğru! Sütunu en kısa olan en az seçilmiş.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Sütunlara bir daha bak.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Neden en çok seçilmiş olabilir?",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Evet! Çünkü daha çok arkadaşım onu seçti.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Hmm, sayılara bakalım.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Çünkü çok arkadaşım onu seçti.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Çünkü çok büyük.",
+    "game": "MinikAnketci"
+  },
+  {
+    "text": "Çünkü çok güzel.",
+    "game": "MinikAnketci"
+  }
+]

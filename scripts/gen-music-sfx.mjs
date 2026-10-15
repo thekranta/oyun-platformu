@@ -150,4 +150,15 @@ write('motif-cikan', melody([523.25, 587.33, 659.25, 698.46, 783.99], { noteMs: 
 write('motif-inen', melody([783.99, 698.46, 659.25, 587.33, 523.25], { noteMs: 300, tau: 0.22 }));
 
 console.log('\n✅ Müzik SFX üretildi → assets/sounds/sfx/');
-console.log('   Sonraki adım: lib/assetMap.ts içine require girdilerini ekle.');
+console.log('   Sonraki adım: lib/assetMap.ts içine require girdilerini ekle.');// ---- 4) Zilofon çubukları — "Zilofon Ustası" (do-re-mi-fa-sol-la-si-do, 5. oktav) ----
+console.log('Zilofon çubukları:');
+const ZILO = [523.25, 587.33, 659.25, 698.46, 783.99, 880.0, 987.77, 1046.5];
+ZILO.forEach((f, i) => {
+  // Çubuk modu: temel + ~2.76x + ~5.4x kısmi ton (metalofon/zilofon tınısı), kısa-orta çınlama
+  write('zilo-' + (i + 1), hit({
+    partials: [{ freq: f, gain: 1 }, { freq: f * 2.76, gain: 0.32 }, { freq: f * 5.4, gain: 0.12 }],
+    tau: 0.32, ms: 900, noise: { amount: 0.08, ms: 8 }, peak: 0.45,
+  }));
+});
+
+

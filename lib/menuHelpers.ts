@@ -129,10 +129,12 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'renk-tonlari': { color: '#8E24AA', icon: 'contrast', displayTitle: 'Renk Tonları', subtitle: 'Açıktan koyuya' },
   'sicak-soguk': { color: '#EF5350', icon: 'thermometer', displayTitle: 'Sıcak mı Soğuk mu?', subtitle: 'Sıcaklığı ayır' },
   'kafiye-bahcesi': { color: '#EC407A', icon: 'flower', displayTitle: 'Kafiye Bahçesi', subtitle: 'Kafiyeyi bul' },
+  'harf-vagonlari': { color: '#F57C00', icon: 'train', displayTitle: 'Harf Vagonları', subtitle: 'Harflerden kelime kur' },
   'resimde-ne-ters': { color: '#5C6BC0', icon: 'search', displayTitle: 'Resimde Ne Ters?', subtitle: 'Yanlışı bul' },
   'sonra-ne-olur': { color: '#5E35B1', icon: 'sparkles', displayTitle: 'Sonra Ne Olur?', subtitle: 'Sonrasını tahmin et' },
   'minik-market': { color: '#43A047', icon: 'cart', displayTitle: 'Minik Market', subtitle: 'Alışveriş yap' },
   'hazine-haritasi': { color: '#8D6E63', icon: 'map', displayTitle: 'Hazine Haritası', subtitle: 'Haritayı takip et' },
+  'minik-anketci': { color: '#00897B', icon: 'people', displayTitle: 'Minik Anketçi', subtitle: 'Sor, say, yorumla' },
   'grafik-ustasi': { color: '#1E88E5', icon: 'bar-chart', displayTitle: 'Grafik Ustası', subtitle: 'Grafiği oku' },
   'resimde-ne-oluyor': { color: '#3949AB', icon: 'image', displayTitle: 'Resimde Ne Oluyor?', subtitle: 'Resimden anlam' },
   'iz-dedektifi': { color: '#6D4C41', icon: 'paw', displayTitle: 'İz Dedektifi', subtitle: 'İzi kime ait bul' },
@@ -147,6 +149,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'renk-atolyesi': { color: '#EC407A', icon: 'color-palette', displayTitle: 'Renk Atölyesi', subtitle: 'Motifini renklendir' },
   'hangi-calgi-caldi': { color: '#F158B7', icon: 'musical-note', displayTitle: 'Hangi Çalgı Çaldı?', subtitle: 'Sesi tanı' },
   'ses-nasil': { color: '#E0359A', icon: 'ear', displayTitle: 'Ses Nasıl?', subtitle: 'Hızlı mı yavaş mı?' },
+  'zilofon-ustasi': { color: '#8E24AA', icon: 'musical-note', displayTitle: 'Zilofon Ustası', subtitle: 'Ezgiyi çal' },
   'davul-ustasi': { color: '#C2185B', icon: 'musical-notes', displayTitle: 'Davul Ustası', subtitle: 'Ritmi tekrarla' },
   'odamin-krokisi': { color: '#00897B', icon: 'location', displayTitle: 'Odamın Krokisi', subtitle: 'Kendi krokini yap' },
   'hayvan-jimnastigi': { color: '#EF5350', icon: 'fitness', displayTitle: 'Hayvan Jimnastiği', subtitle: 'Hayvan gibi hareket et' },
@@ -190,16 +193,16 @@ export const GAME_EMOJI: Record<string, string> = {
   'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
   'bayrak-boya': '🎨',
   // Yeni oyunlar (Türkçe / Fen)
-  'kafiye-bahcesi': '🌸', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
+  'kafiye-bahcesi': '🌸', 'harf-vagonlari': '🚂', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
   // Yeni oyunlar (Sosyal / Matematik)
-  'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊',
+  'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊', 'minik-anketci': '📋',
   // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
   'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
   // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
   'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖',
   // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)
   'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'minik-muze': '🏛️', 'renk-atolyesi': '🎨',
-  'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁',
+  'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁', 'zilofon-ustasi': '🎹',
   'odamin-krokisi': '📍', 'hayvan-jimnastigi': '🦘',
 };
 

@@ -47,16 +47,16 @@ const GAME_EMOJI: Record<string, string> = {
     'dunya-bayraklari': '🌍', 'dunya-selamlari': '👋', 'dunya-yapilari': '🏛️', 'dunya-yiyecekleri': '🍽️',
     'bayrak-boya': '🎨',
     // Yeni oyunlar (Türkçe / Fen)
-    'kafiye-bahcesi': '🌸', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
+    'kafiye-bahcesi': '🌸', 'harf-vagonlari': '🚂', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
     // Yeni oyunlar (Sosyal / Matematik)
-    'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊',
+    'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊', 'minik-anketci': '📋',
     // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
     'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
     // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)
     'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖',
     // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)
     'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'minik-muze': '🏛️', 'renk-atolyesi': '🎨',
-    'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁',
+    'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁', 'zilofon-ustasi': '🎹',
     'odamin-krokisi': '📍', 'hayvan-jimnastigi': '🦘',
 };
 

@@ -67,6 +67,9 @@ export function useRoundGame({ oyunAdi, totalRounds, kazanimOdagi, onGameEnd, zo
     setShowConfetti(true);
   }, []);
 
+  /** Hamle sayacı (doğru ara adımlar için; son doğruda markCorrect zaten sayar). */
+  const markMove = useCallback(() => { movesRef.current += 1; }, []);
+
   /** Yanlış dokunuş: yalnızca sayaç (kilitlemez, ceza yok). */
   const markWrong = useCallback(() => {
     movesRef.current += 1;
@@ -88,6 +91,6 @@ export function useRoundGame({ oyunAdi, totalRounds, kazanimOdagi, onGameEnd, zo
     locked, setLocked,
     showConfetti, setShowConfetti,
     isMountedRef, later,
-    markCorrect, markWrong, advance, finish,
+    markCorrect, markWrong, markMove, advance, finish,
   };
 }
