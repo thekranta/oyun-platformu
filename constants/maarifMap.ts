@@ -227,7 +227,13 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'davul-ustasi': { displayName: 'Davul Ustası', alan: 'Müzik', surec: 'Müziksel Çalma', cikti: 'MÇB.2', ciktiAciklama: 'Çalgıları çalma becerilerini sergileyebilme; duyduğu ritim kalıbını pede vurarak aynı sırayla tekrarlar', badgeAlan: 'Müzik' },
   'odamin-krokisi': { displayName: 'Odamın Krokisi', alan: 'Sosyal', surec: 'Harita', cikti: 'SAB.13', ciktiAciklama: 'Yakın çevresinde bulunan belirli bir kişi/nesne/mekânın konumunu gösteren kendi krokisini oluşturabilme; odasının planına eşyaları yönergeye göre yerleştirir', badgeAlan: 'Kavram (Konum)' },
   'hayvan-jimnastigi': { displayName: 'Hayvan Jimnastiği', alan: 'Hareket ve Sağlık', surec: 'Aktif Yaşam İçin Motor Beceriler', cikti: 'HSAB.1', ciktiAciklama: 'Farklı çevre ve fiziksel etkinliklerde temel hareket becerilerini sergileyebilme; hayvan hareketlerini (zıplama, ağır adım, tek ayakta denge, yan yürüme) tanıyıp taklit eder', badgeAlan: 'Sağlık' },
+  // Müzik Kutusu (muzik-calar): 40+ şarkıyı seçip dinleme; skor kaydı tutmaz (onGameEnd yok) ama öğretmen rehberinde görünür.
+  'muzik-calar': { displayName: 'Müzik Kutusu', alan: 'Müzik', surec: 'Müziksel Dinleme', cikti: 'MDB.1', ciktiAciklama: 'Çeşitli müzik eserlerini dinleyebilme; değerler, matematik ve fen temalı çocuk şarkıları arasından seçip dinler', badgeAlan: 'Müzik' },
 };
+
+// Katalog kimliği ile skor kaydındaki ad farklı olan oyunlar: aynı Maarif kaydını paylaşır (kopya yok, takma ad).
+MAARIF_MAP['miktar-karsilastirma'] = MAARIF_MAP['miktar-avcisi'];
+MAARIF_MAP['aile-sepeti-macerasi'] = MAARIF_MAP['aile-sepeti'];
 
 /** Oyun türünün Maarif kaydını döndürür; yoksa varsayılan (MAB.2). */
 // Geliştirme-zamanı bekçisi: bir oyunun `cikti` kodu kanonik curriculum'da
