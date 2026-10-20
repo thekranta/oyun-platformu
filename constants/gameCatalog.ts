@@ -181,6 +181,7 @@ export const GAME_CATALOG: GameCatalogItem[] = [
   { id: 'hangi-calgi-caldi', title: 'Hangi Calgi Caldi?', status: 'secondary', domain: 'Muzik', skillFocus: 'Ses kaynagini ayirt etme (tini)', routeKey: 'hangi-calgi-caldi', forestCategory: 'ritim-kelebegi' },
   { id: 'ses-nasil', title: 'Ses Nasil?', status: 'secondary', domain: 'Muzik', skillFocus: 'Muziksel ozellikler (tempo/gurluk/ton)', routeKey: 'ses-nasil', forestCategory: 'ritim-kelebegi' },
   { id: 'zilofon-ustasi', title: 'Zilofon Ustasi', status: 'secondary', domain: 'Muzik', skillFocus: 'Duyulan ezgiyi tuslu calgida calma', routeKey: 'zilofon-ustasi', forestCategory: 'ritim-kelebegi' },
+  { id: 'kurdele-dansi', title: 'Kurdele Dansi', status: 'secondary', domain: 'Muzik', skillFocus: 'Muzigin ozelligini hareketle ifade (tempo, gurluk, ses kalinligi, yon) / muzikle hareket', routeKey: 'kurdele-dansi', forestCategory: 'ritim-kelebegi' },
   { id: 'davul-ustasi', title: 'Davul Ustasi', status: 'secondary', domain: 'Muzik', skillFocus: 'Ritim tekrari / muziksel calma', routeKey: 'davul-ustasi', forestCategory: 'ritim-kelebegi' },
   { id: 'odamin-krokisi', title: 'Odamin Krokisi', status: 'secondary', domain: 'Kavram', skillFocus: 'Kendi krokisini olusturma / mekansal temsil', routeKey: 'odamin-krokisi', forestCategory: 'kesif-kucaklamasi' },
   { id: 'spor-gunu', title: 'Spor Gunu', status: 'secondary', domain: 'Saglik', skillFocus: 'Ic/dis mekanda hareket / beden degisimini fark etme', routeKey: 'spor-gunu', forestCategory: 'kosu-kirazi' },

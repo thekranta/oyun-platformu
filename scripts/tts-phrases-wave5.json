@@ -1,0 +1,67 @@
+[
+  {
+    "text": "Kurdeleni parmağınla sürükle. Müzik nasıl çalıyorsa kurdelen de öyle dans etsin!",
+    "game": "KurdeleDansi",
+    "slug": "kurdeleni-parmaginla-surukle-muzik-nasil-caliyorsa-kurdelen-de-oyle-dans-etsin"
+  },
+  {
+    "text": "Müziği dinle, kurdelen onunla dans etsin.",
+    "game": "KurdeleDansi",
+    "slug": "muzigi-dinle-kurdelen-onunla-dans-etsin"
+  },
+  {
+    "text": "Şimdi birinci müzik.",
+    "game": "KurdeleDansi",
+    "slug": "simdi-birinci-muzik"
+  },
+  {
+    "text": "Şimdi ikinci müzik.",
+    "game": "KurdeleDansi",
+    "slug": "simdi-ikinci-muzik"
+  },
+  {
+    "text": "Bir daha dinleyelim. Kurdelen müziği taklit etsin.",
+    "game": "KurdeleDansi",
+    "slug": "bir-daha-dinleyelim-kurdelen-muzigi-taklit-etsin"
+  },
+  {
+    "text": "Olsun, birlikte yapalım. Soluk kurdeleyi takip et.",
+    "game": "KurdeleDansi",
+    "slug": "olsun-birlikte-yapalim-soluk-kurdeleyi-takip-et"
+  },
+  {
+    "text": "Kendi dansını kur. Üç hareket seç.",
+    "game": "KurdeleDansi",
+    "slug": "kendi-dansini-kur-uc-hareket-sec"
+  },
+  {
+    "text": "Şimdi dansçı senin dansını yapıyor!",
+    "game": "KurdeleDansi",
+    "slug": "simdi-dansci-senin-dansini-yapiyor"
+  },
+  {
+    "text": "Harika bir dans oldu!",
+    "game": "KurdeleDansi",
+    "slug": "harika-bir-dans-oldu"
+  },
+  {
+    "text": "Aferin! Yavaş müzikte yavaş, hızlı müzikte hızlı dans ettin.",
+    "game": "KurdeleDansi",
+    "slug": "aferin-yavas-muzikte-yavas-hizli-muzikte-hizli-dans-ettin"
+  },
+  {
+    "text": "Aferin! Kısık müzikte küçük, yüksek müzikte büyük dans ettin.",
+    "game": "KurdeleDansi",
+    "slug": "aferin-kisik-muzikte-kucuk-yuksek-muzikte-buyuk-dans-ettin"
+  },
+  {
+    "text": "Aferin! Kalın seste aşağıda, ince seste yukarıda dans ettin.",
+    "game": "KurdeleDansi",
+    "slug": "aferin-kalin-seste-asagida-ince-seste-yukarida-dans-ettin"
+  },
+  {
+    "text": "Aferin! Çıkan müzikte yukarı, inen müzikte aşağı dans ettin.",
+    "game": "KurdeleDansi",
+    "slug": "aferin-cikan-muzikte-yukari-inen-muzikte-asagi-dans-ettin"
+  }
+]

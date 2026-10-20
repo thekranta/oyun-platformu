@@ -152,6 +152,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'hangi-calgi-caldi': { color: '#F158B7', icon: 'musical-note', displayTitle: 'Hangi Çalgı Çaldı?', subtitle: 'Sesi tanı' },
   'ses-nasil': { color: '#E0359A', icon: 'ear', displayTitle: 'Ses Nasıl?', subtitle: 'Hızlı mı yavaş mı?' },
   'zilofon-ustasi': { color: '#8E24AA', icon: 'musical-note', displayTitle: 'Zilofon Ustası', subtitle: 'Ezgiyi çal' },
+  'kurdele-dansi': { color: '#EC407A', icon: 'ribbon', displayTitle: 'Kurdele Dansı', subtitle: 'Müzikle dans et' },
   'davul-ustasi': { color: '#C2185B', icon: 'musical-notes', displayTitle: 'Davul Ustası', subtitle: 'Ritmi tekrarla' },
   'odamin-krokisi': { color: '#00897B', icon: 'location', displayTitle: 'Odamın Krokisi', subtitle: 'Kendi krokini yap' },
   'spor-gunu': { color: '#E53935', icon: 'walk', displayTitle: 'Spor Günü', subtitle: 'Hareket et, kalbini dinle' },
@@ -205,7 +206,7 @@ export const GAME_EMOJI: Record<string, string> = {
   'muzik-durunca-don': '🎵', 'sakinlesme-bahcesi': '🫧', 'kucuk-anlatici': '📖', 'masal-sahnesi': '🎭',
   // Yeni oyunlar (Sanat / Müzik / Sosyal / Hareket ve Sağlık - tap)
   'sanat-gozlugu': '👓', 'tabloda-ne-var': '🖼️', 'minik-muze': '🏛️', 'renk-atolyesi': '🎨',
-  'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁', 'zilofon-ustasi': '🎹',
+  'hangi-calgi-caldi': '🔔', 'ses-nasil': '👂', 'davul-ustasi': '🥁', 'zilofon-ustasi': '🎹', 'kurdele-dansi': '🎀',
   'odamin-krokisi': '📍', 'hayvan-jimnastigi': '🦘', 'spor-gunu': '🏃',
 };
 
