@@ -146,6 +146,9 @@ async function main() {
     // Fen grubu (2026-10-21): Akıllı Sınıflandır set soruları + Sihirli Şişeler yönergeleri
     const WAVE7 = join(__dirname, 'tts-phrases-wave7.json');
     if (existsSync(WAVE7)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE7, 'utf8')));
+    // Uzay Blokları yeniden tasarımı (2026-10-21): nasıl oynanır + çıkmaz uyarısı
+    const WAVE8 = join(__dirname, 'tts-phrases-wave8.json');
+    if (existsSync(WAVE8)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE8, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }
