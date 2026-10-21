@@ -1,16 +1,18 @@
-
-import React, { useCallback, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
 import { speak, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { buildRound, SETS, type Round } from '../constants/akilliSiniflandir';
 
 // Akıllı Sınıflandır — UYARLANIR (adaptif) zorluk. Maarif: FAB.2
 // (Nesneleri benzerlik ve farklılıklarına göre sınıflandırabilme).
-// Nesneyi doğru sepete ayır. Zorlukla kategoriler incelir: hayvan/yiyecek →
+// Nesneyi doğru sepete ayır. Zorlukla gruplar incelir: hayvan/yiyecek →
 // meyve/sebze → karada/denizde → canlı/cansız (soyut).
+// Çocuk okuma bilmediği için sepetlerde YAZI yok: büyük renkli kart + örnek emojiler; grup adı
+// sete özel SESLİ soruyla söylenir (içerik ve sorular constants/akilliSiniflandir.ts'te — #58).
 
 interface Props {
     onGameEnd: (
@@ -30,59 +32,19 @@ const INSTRUCTION_TEXT = 'Nesneyi doğru gruba ayır! Sen başardıkça gruplar 
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 7000;
 
-interface CatSet {
-    cats: { key: string; label: string }[];
-    items: { emoji: string; cat: string }[];
-}
-
-// Zorluk arttıkça kategoriler daha soyut/yakın
-const SETS: CatSet[] = [
-    {
-        cats: [{ key: 'hayvan', label: '🐾 Hayvan' }, { key: 'yiyecek', label: '🍽️ Yiyecek' }],
-        items: [
-            ...['🐶', '🐱', '🐰', '🐻', '🦊', '🐸', '🐔', '🐴'].map(e => ({ emoji: e, cat: 'hayvan' })),
-            ...['🍎', '🍌', '🍰', '🥕', '🍞', '🧀', '🍇', '🍕'].map(e => ({ emoji: e, cat: 'yiyecek' })),
-        ],
-    },
-    {
-        cats: [{ key: 'meyve', label: '🍎 Meyve' }, { key: 'sebze', label: '🥕 Sebze' }],
-        items: [
-            ...['🍎', '🍌', '🍇', '🍓', '🍊', '🍑', '🍉', '🍐'].map(e => ({ emoji: e, cat: 'meyve' })),
-            ...['🥕', '🥦', '🌽', '🥔', '🍅', '🧅', '🥬', '🫑'].map(e => ({ emoji: e, cat: 'sebze' })),
-        ],
-    },
-    {
-        cats: [{ key: 'kara', label: '🌳 Karada' }, { key: 'deniz', label: '🌊 Denizde' }],
-        items: [
-            ...['🐶', '🐴', '🐘', '🦁', '🐰', '🦒', '🐷', '🐮'].map(e => ({ emoji: e, cat: 'kara' })),
-            ...['🐟', '🐙', '🐳', '🦀', '🐠', '🦈', '🐬', '🦑'].map(e => ({ emoji: e, cat: 'deniz' })),
-        ],
-    },
-    {
-        cats: [{ key: 'canli', label: '🌱 Canlı' }, { key: 'cansiz', label: '🪨 Cansız' }],
-        items: [
-            ...['🐶', '🌳', '🐝', '🐟', '🌻', '🐔', '🧒', '🐰'].map(e => ({ emoji: e, cat: 'canli' })),
-            ...['🪨', '🚗', '🪑', '📱', '⚽', '🥄', '👟', '🔑'].map(e => ({ emoji: e, cat: 'cansiz' })),
-        ],
-    },
-];
-
-interface Round { emoji: string; cats: { key: string; label: string }[]; answer: string; }
-
-function buildRound(diff: number): Round {
-    const set = SETS[Math.min(diff - 1, SETS.length - 1)];
-    const item = set.items[Math.floor(Math.random() * set.items.length)];
-    return { emoji: item.emoji, cats: set.cats, answer: item.cat };
-}
+// Sepet kartı kenarı: geniş ekranda 150; dar telefonda iki kart yan yana sığacak kadar.
+const CARD = Math.min(150, Math.floor((Dimensions.get('window').width - 32 - 14) / 2));
+const emblemSize = (n: number) => (n <= 1 ? 76 : n === 2 ? 56 : 40);
 
 export default function AkilliSiniflandir({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
-    const START_DIFF = 2;
+    // En kolay grupla (hayvan/yiyecek) başla; eskiden en kavramsal grupla (meyve/sebze) başlıyordu.
+    const START_DIFF = 1;
     const { recordLevel } = useAdaptiveDifficulty({
         minDifficulty: 1, maxDifficulty: 5, checkpointEvery: 3, startDifficulty: START_DIFF,
     });
 
     const [round, setRound] = useState(1);
-    const [current, setCurrent] = useState(() => buildRound(START_DIFF));
+    const [current, setCurrent] = useState<Round>(() => buildRound(START_DIFF));
     const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
     const [selected, setSelected] = useState<string | null>(null);
     const [gameReady, setGameReady] = useState(false);
@@ -102,6 +64,14 @@ export default function AkilliSiniflandir({ onGameEnd, onExit, childName = 'Kü�
     React.useEffect(() => () => { timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
     const startTimer = (t: ReturnType<typeof setTimeout>) => { timersRef.current.push(t); return t; };
 
+    // Sete özel sesli soru: oyun başlayınca ve grup seti değişince (zorluk arttıkça yeni grup adı
+    // hiç söylenmiyordu). Tekrar Dinle de aynı soruyu okur.
+    const prompt = SETS[current.setIndex].prompt;
+    useEffect(() => {
+        if (!gameReady) return;
+        speak(prompt, { instructions: HAPPY_VOICE });
+    }, [gameReady, prompt]);
+
     const nextRound = useCallback((solvedInDiff: number) => {
         const timeMs = Date.now() - levelStartRef.current;
         const nextDiff = recordLevel({ correct: 1, total: 1, errors: levelErrorsRef.current, timeMs, targetMs: TARGET_MS });
@@ -118,7 +88,7 @@ export default function AkilliSiniflandir({ onGameEnd, onExit, childName = 'Kü�
         levelStartRef.current = Date.now();
         diffRef.current = nextDiff;
         setRound(r => r + 1);
-        setCurrent(buildRound(nextDiff));
+        setCurrent((prev) => buildRound(nextDiff, prev.emoji)); // aynı nesne art arda gelmesin
         setSelected(null);
         setFeedback('idle');
         lockRef.current = false;
@@ -162,16 +132,14 @@ export default function AkilliSiniflandir({ onGameEnd, onExit, childName = 'Kü�
                     </View>
                 </View>
 
-                <Text style={styles.question}>Bu hangi gruba ait?</Text>
-
-                <ListenButton onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} color="#66BB6A" style={{ marginBottom: 16 }} />
+                <ListenButton onPress={() => speak(prompt, { instructions: HAPPY_VOICE })} color="#66BB6A" style={{ marginBottom: 16 }} />
 
                 {/* Nesne */}
                 <Animated.View style={[styles.itemCard, { transform: [{ scale: bump }, { translateX: shake }] }]}>
                     <Text style={styles.itemEmoji}>{current.emoji}</Text>
                 </Animated.View>
 
-                {/* Kategoriler */}
+                {/* Sepetler: yazısız, büyük renkli kartlar + örnek emojiler */}
                 <View style={styles.catsRow}>
                     {current.cats.map((cat) => {
                         const isSel = selected === cat.key;
@@ -180,20 +148,31 @@ export default function AkilliSiniflandir({ onGameEnd, onExit, childName = 'Kü�
                         return (
                             <TouchableOpacity
                                 key={cat.key}
-                                style={[styles.catBtn, showCorrect && styles.catCorrect, showWrong && styles.catWrong]}
+                                style={[
+                                    styles.catCard,
+                                    { width: CARD, height: CARD, backgroundColor: cat.bg, borderColor: cat.border },
+                                    showCorrect && styles.catCorrect,
+                                    showWrong && styles.catWrong,
+                                ]}
                                 onPress={() => handlePick(cat.key)}
                                 activeOpacity={0.85}
                                 disabled={feedback === 'correct'}
+                                accessibilityRole="button"
+                                accessibilityLabel={cat.a11y}
                             >
-                                <Text style={[styles.catText, (showCorrect || showWrong) && { color: '#fff' }]}>{cat.label}</Text>
+                                <View style={styles.emblemRow}>
+                                    {cat.emblem.map((e, i) => (
+                                        <Text key={i} style={{ fontSize: emblemSize(cat.emblem.length) }}>{e}</Text>
+                                    ))}
+                                </View>
+                                {showCorrect && <View style={styles.checkBadge}><Text style={styles.checkText}>✓</Text></View>}
                             </TouchableOpacity>
                         );
                     })}
                 </View>
 
-                <Text style={styles.hint}>
-                    {feedback === 'correct' ? 'Harika! 🎉' : feedback === 'wrong' ? 'Tekrar düşün 👀' : 'Doğru sepeti seç'}
-                </Text>
+                {/* Yazı yok: yalnız emoji geri bildirimi (satır boşken de yer tutar) */}
+                <Text style={styles.hint}>{feedback === 'correct' ? '🎉' : feedback === 'wrong' ? '🤔' : ''}</Text>
 
                 <View style={styles.progressDots}>
                     {Array.from({ length: TOTAL_ROUNDS }, (_, i) => (
@@ -221,8 +200,6 @@ const styles = StyleSheet.create({
     roundBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
 
-    question: { fontSize: 20, fontWeight: '800', color: '#37474F', marginTop: 6, marginBottom: 16, textAlign: 'center' },
-
     itemCard: {
         width: 150, height: 150, borderRadius: 28, backgroundColor: '#FFFDF5', borderWidth: 4, borderColor: '#81C784',
         alignItems: 'center', justifyContent: 'center', elevation: 5,
@@ -230,18 +207,23 @@ const styles = StyleSheet.create({
     },
     itemEmoji: { fontSize: 90 },
 
-    catsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 28 },
-    catBtn: {
-        minWidth: 140, paddingVertical: 18, paddingHorizontal: 16, borderRadius: 18, backgroundColor: '#E8F5E9',
-        borderWidth: 3, borderColor: '#66BB6A', alignItems: 'center', justifyContent: 'center', elevation: 4,
+    catsRow: { flexDirection: 'row', justifyContent: 'center', gap: 14, marginTop: 24 },
+    catCard: {
+        borderRadius: 28, borderWidth: 5, alignItems: 'center', justifyContent: 'center', padding: 8,
+        elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.18, shadowRadius: 5,
     },
-    catCorrect: { backgroundColor: '#4CAF50', borderColor: '#2E7D32' },
-    catWrong: { backgroundColor: '#EF5350', borderColor: '#C62828' },
-    catText: { fontSize: 18, fontWeight: '800', color: '#2E7D32' },
+    catCorrect: { borderColor: '#2E7D32', borderWidth: 7 },
+    catWrong: { borderColor: '#C62828', borderWidth: 7, opacity: 0.85 },
+    emblemRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 4 },
+    checkBadge: {
+        position: 'absolute', top: 8, right: 8, width: 34, height: 34, borderRadius: 17, backgroundColor: '#4CAF50',
+        alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff',
+    },
+    checkText: { color: '#fff', fontSize: 20, fontWeight: '900' },
 
-    hint: { fontSize: 15, color: '#5D4037', marginTop: 18, fontWeight: '600', minHeight: 22, textAlign: 'center' },
+    hint: { fontSize: 28, marginTop: 14, minHeight: 36, textAlign: 'center' },
 
-    progressDots: { flexDirection: 'row', gap: 6, marginTop: 14 },
+    progressDots: { flexDirection: 'row', gap: 6, marginTop: 10 },
     pDot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#E0E0E0' },
     pDotDone: { backgroundColor: '#66BB6A' },
     pDotCurrent: { backgroundColor: '#FF9800', transform: [{ scale: 1.3 }] },
