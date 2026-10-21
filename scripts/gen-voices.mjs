@@ -140,6 +140,9 @@ async function main() {
     // Dalga 3: Kurdele Dansı
     const WAVE5 = join(__dirname, 'tts-phrases-wave5.json');
     if (existsSync(WAVE5)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE5, 'utf8')));
+    // Sesli düzeltme grubu (2026-10-21): Ne İşe Yarar? yeni komut + çift cümleleri
+    const WAVE6 = join(__dirname, 'tts-phrases-wave6.json');
+    if (existsSync(WAVE6)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE6, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }
