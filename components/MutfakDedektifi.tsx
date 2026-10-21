@@ -4,7 +4,6 @@
  * Dokunarak seçim mekanikli - Sesli yönlendirme ile
  */
 
-import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -25,17 +24,11 @@ import CountdownOverlay from './CountdownOverlay';
 import { asset } from '../lib/assetMap';
 import GameExitButton from './GameExitButton';
 import ListenButton from './ListenButton';
+import { generateLevel as generateFoods, type FoodItem } from '../constants/mutfakDedektifi';
 
 const { width, height } = Dimensions.get('window');
 
 // ============== TYPES ==============
-interface FoodItem {
-    id: string;
-    name: string;
-    emoji: string;
-    category: 'meyve' | 'sebze';
-    isDistractor?: boolean;
-}
 
 interface TargetArea {
     id: string;
@@ -55,30 +48,8 @@ interface DragLog {
 }
 
 // ============== GAME DATA - Soft-UI 3D Style ==============
-const ALL_FOODS: FoodItem[] = [
-    // Meyveler (10 Adet)
-    { id: 'elma', name: 'Elma', emoji: '🍎', category: 'meyve' },
-    { id: 'muz', name: 'Muz', emoji: '🍌', category: 'meyve' },
-    { id: 'cilek', name: 'Çilek', emoji: '🍓', category: 'meyve' },
-    { id: 'portakal', name: 'Portakal', emoji: '🍊', category: 'meyve' },
-    { id: 'uzum', name: 'Üzüm', emoji: '🍇', category: 'meyve' },
-    { id: 'karpuz', name: 'Karpuz', emoji: '🍉', category: 'meyve' },
-    { id: 'armut', name: 'Armut', emoji: '🍐', category: 'meyve' },
-    { id: 'kiraz', name: 'Kiraz', emoji: '🍒', category: 'meyve' },
-    { id: 'ananas', name: 'Ananas', emoji: '🍍', category: 'meyve' },
-    { id: 'kivi', name: 'Kivi', emoji: '🥝', category: 'meyve' },
-    // Sebzeler (10 Adet)
-    { id: 'havuc', name: 'Havuç', emoji: '🥕', category: 'sebze' },
-    { id: 'brokoli', name: 'Brokoli', emoji: '🥦', category: 'sebze' },
-    { id: 'domates', name: 'Domates', emoji: '🍅', category: 'sebze' }, // Çeldirici!
-    { id: 'salatalik', name: 'Salatalık', emoji: '🥒', category: 'sebze' },
-    { id: 'patates', name: 'Patates', emoji: '🥔', category: 'sebze' },
-    { id: 'sogan', name: 'Soğan', emoji: '🧅', category: 'sebze' },
-    { id: 'misir', name: 'Mısır', emoji: '🌽', category: 'sebze' },
-    { id: 'patlican', name: 'Patlıcan', emoji: '🍆', category: 'sebze' },
-    { id: 'biber', name: 'Biber', emoji: '🌶️', category: 'sebze' },
-    { id: 'mantar', name: 'Mantar', emoji: '🍄', category: 'sebze' },
-];
+// Yiyecek havuzu ve seviye üretimi constants/mutfakDedektifi.ts'te (domates/biber/mantar yok,
+// aynı tahtada meyve-sebze renk çakışması yok, Fisher–Yates karıştırma — #60).
 
 const TARGET_AREAS: TargetArea[] = [
     { id: 'meyve', category: 'meyve', name: 'Meyve Sepeti', emoji: '🍎', color: '#FFB6C1', icon: '🪤' },
@@ -232,30 +203,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     }, []);
 
     // ============== LEVEL GENERATION ==============
-    const generateLevel = useCallback((lvl: number) => {
-        const itemCount = Math.min(3 + lvl - 1, 6); // 3, 4, 5, 6
-        const hasDistractor = lvl >= 2;
-
-        const selectedFoods: FoodItem[] = [];
-
-        // Select items from both categories
-        const meyveler = ALL_FOODS.filter(f => f.category === 'meyve').sort(() => Math.random() - 0.5);
-        const sebzeler = ALL_FOODS.filter(f => f.category === 'sebze').sort(() => Math.random() - 0.5);
-
-        const halfCount = Math.floor(itemCount / 2);
-        selectedFoods.push(...meyveler.slice(0, halfCount));
-        selectedFoods.push(...sebzeler.slice(0, itemCount - halfCount));
-
-        // Add Domates as distractor (looks like fruit but is vegetable!)
-        if (hasDistractor && !selectedFoods.find(f => f.id === 'domates')) {
-            const domates = ALL_FOODS.find(f => f.id === 'domates');
-            if (domates) {
-                selectedFoods.push({ ...domates, isDistractor: true });
-            }
-        }
-
-        return selectedFoods.sort(() => Math.random() - 0.5);
-    }, []);
+    const generateLevel = useCallback((lvl: number) => generateFoods(lvl), []);
 
     // Check previous session for initial level (DDA persistence)
     useEffect(() => {
@@ -544,11 +492,8 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                 <View style={styles.gameContent}>
                     {/* Header */}
                     <View style={styles.header}>
-                        <View style={styles.headerLeft}>
-                            <TouchableOpacity style={styles.repeatBtn} onPress={() => speak(introMessage)}>
-                                <Ionicons name="volume-high" size={20} color="#fff" />
-                            </TouchableOpacity>
-                        </View>
+                        {/* Soldaki küçük hoparlör düğmesi kaldırıldı: aşağıdaki "Tekrar Dinle" ile aynı işi yapıyordu */}
+                        <View style={{ width: 44 }} />
 
                         <View style={styles.levelBadge}>
                             <Text style={styles.levelEmoji}>⭐</Text>
@@ -730,21 +675,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginBottom: 15,
     },
-    headerLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-    },
-    repeatBtn: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.2)',
-    },
     levelBadge: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -829,7 +759,7 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     placedEmoji: {
-        fontSize: 22,
+        fontSize: 28,
     },
     basketImage: {
         width: 80,
@@ -848,10 +778,10 @@ const styles = StyleSheet.create({
         gap: 12,
     },
     foodItem: {
-        width: 75,
-        height: 85,
+        width: 92,
+        height: 100,
         backgroundColor: '#fff',
-        borderRadius: 20,
+        borderRadius: 24,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
@@ -863,7 +793,7 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255,255,255,0.8)',
     },
     foodEmoji: {
-        fontSize: 36,
+        fontSize: 52,
     },
     foodName: {
         fontSize: 11,
