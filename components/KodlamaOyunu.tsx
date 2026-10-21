@@ -11,7 +11,6 @@ import {
   View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { Audio } from 'expo-av';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
@@ -97,8 +96,10 @@ import ListenButton from './ListenButton';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
+// Komut/yönerge/hikâye sesleri hazır klonlanmış kliplerle iOS ve Android'de de çalar (eskiden
+// yalnız webde açıktı; telefonda yön komutları ve "Tekrar dene!" sessizdi — #10). Tüm bu
+// metinlerin kliplerinin var olduğu Oyun_Test_Listesi taramasında doğrulandı.
 const speakTeacher = async (text: string) => {
-  if (Platform.OS !== 'web') return;
   try {
     await speak(text, { instructions: HAPPY_VOICE });
   } catch (e) {
@@ -129,39 +130,11 @@ const getThemeBg = (theme: string) => {
 
 // ============== RESPONSIVE - Büyütülmüş Grid ==============
 const GRID_SIZE = Math.min(width * 0.85, height * 0.45, 340);  // Daha büyük grid
-const BTN_SIZE = Math.min(width * 0.13, 48);
+const BTN_SIZE = Math.min(width * 0.12, 48);
 const DPAD_SIZE = Math.min(width * 0.18, 68);
 
-// ============== ARKA PLAN MÜZİĞİ ==============
-let bgMusic: Audio.Sound | null = null;
-let bgMusicLoadToken = 0;
-
-const startBgMusic = async () => {
-  if (Platform.OS !== 'web') return;
-  if (bgMusic) return;
-
-  const token = ++bgMusicLoadToken;
-  try {
-    const { sound } = await Audio.Sound.createAsync(asset('/sounds/background.mp3'), { shouldPlay: true, isLooping: true, volume: 0.3 });
-    if (token !== bgMusicLoadToken) {
-      sound.unloadAsync();
-      return;
-    }
-    bgMusic = sound;
-  } catch { }
-};
-
-const stopBgMusic = () => {
-  bgMusicLoadToken++;
-  if (bgMusic) {
-    bgMusic.unloadAsync().catch(() => { });
-    bgMusic = null;
-  }
-};
-
-const setBgMusicVolume = (on: boolean) => {
-  bgMusic?.setVolumeAsync(on ? 0.3 : 0).catch(() => { });
-};
+// Arka plan müziği: uygulama genelindeki SoundProvider zaten çalıyor. Eskiden bu oyun webde
+// AYNI müziği ikinci kez başlatıyordu (iki kopya üst üste, #10) — kaldırıldı.
 
 // ============== COMPONENT ==============
 interface Props {
@@ -225,19 +198,6 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
     timersRef.current.forEach(clearTimeout);
     stopSpeech();
   }, []);
-
-  // Arka plan müziği başlat
-  useEffect(() => {
-    if (soundOn) {
-      startBgMusic();
-    }
-    return () => { stopBgMusic(); };
-  }, []);
-
-  // Ses açıp kapatınca müzik
-  useEffect(() => {
-    setBgMusicVolume(soundOn);
-  }, [soundOn]);
 
   // Player position
   useEffect(() => {
@@ -485,10 +445,8 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
       <ScrollView style={st.scroll} contentContainerStyle={st.container} showsVerticalScrollIndicator={false}>
         {/* Top */}
         <View style={st.top}>
-          <GameExitButton
-            onPress={() => { stopBgMusic(); stopSpeech(); onExit?.(); }}
-            style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }}
-          />
+          {/* Çıkış butonu satırın İÇİNDE (eskiden absolute idi ve seviye düğmelerinin üstüne biniyordu) */}
+          <GameExitButton onPress={() => { stopSpeech(); onExit?.(); }} />
 
           <View style={st.levels}>
             {LEVELS.map((l, i) => (
