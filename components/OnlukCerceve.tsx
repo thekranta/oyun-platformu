@@ -14,7 +14,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
 
 // EksikSayiBul.tsx'teki NUMBER_WORDS ile aynı desen — bu sayıların ses klipleri
@@ -100,11 +100,16 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
     const countPulse = useRef(new Animated.Value(1)).current;
     // Unmount'ta temizlenecek zamanlayicilar
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+    const mountedRef = useRef(true);
+    const endedRef = useRef(false);
 
-    // Unmount cleanup: bekleyen setTimeout'lari temizle
+    // Unmount cleanup: bekleyen setTimeout'lari temizle; cikista ses de kesilsin
+    // ('Aferin!' sayidan sonra zincirleme calindigi icin cikistan sonra tek basina calmasin).
+    // Oyun BITTIYSE 'Tebrikler!' sonuc ekraninda calmaya devam eder (kesilmez).
     useEffect(() => () => {
-         
+        mountedRef.current = false;
         timersRef.current.forEach(clearTimeout);
+        if (!endedRef.current) stopSpeech();
     }, []);
 
     const pulseCount = () => {
@@ -155,22 +160,26 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
             pan.setValue({ x: 0, y: 0 });
 
             const newCount = currentCount + 1;
-            speak(NUMBER_WORDS[newCount] ?? String(newCount));
+            const spokenCount = speak(NUMBER_WORDS[newCount] ?? String(newCount));
             if (newCount === target) {
                 setShowConfetti(true);
                 setShowSuccess(true);
-                speak('Aferin!');
+                // 'Aferin!' son sayıyı KESMESİN (hedef 1 ise sayı hiç duyulmuyordu): sayı bitince
+                // söylenir (en geç 1,4 sn sonra). Sonraki tura geçiş de buna göre 1,5 → 2,4 sn.
+                Promise.race([spokenCount.catch(() => undefined), new Promise<void>(r => setTimeout(r, 1400))])
+                    .then(() => { if (mountedRef.current) speak('Aferin!'); });
                 setRoundData(prev => [...prev, { round, target, result: 'success' }]);
                 timersRef.current.push(setTimeout(() => {
                     if (round < 10) setRound(r => r + 1);
                     else {
                         const duration = Math.floor((Date.now() - startTime) / 1000);
+                        endedRef.current = true;
                         speak('Tebrikler!');
                         onGameEnd(oyunAdi, duration, 10, mistakes, undefined, {
                             zorlukSeviyesi: 1, kazanimOdagi: 'MAB.1 Sayı Kompozisyonu'
                         });
                     }
-                }, 1500));
+                }, 2400));
             }
         }
     }, [round, mistakes, startTime, onGameEnd, pan]);

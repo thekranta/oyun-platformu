@@ -6,7 +6,7 @@ import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import JuicyProgressBar from './JuicyProgressBar';
 import { asset } from '../lib/assetMap';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
@@ -56,28 +56,43 @@ const DraggableOption = ({
   disabled,
   dropZone,
   onDrop,
+  onTap,
 }: {
   value: number;
   disabled: boolean;
   dropZone: DropZone | null;
   onDrop: (value: number) => void;
+  onTap: (value: number) => void;
 }) => {
   const pan = useRef(new Animated.ValueXY()).current;
   const [isDragging, setIsDragging] = useState(false);
+  // Parmak DRAG_THRESHOLD'u aşmadan kalktıysa bu bir DOKUNMA: sayı sesle söylenir (#9).
+  const movedRef = useRef(false);
 
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        onStartShouldSetPanResponder: () => false,
-        onMoveShouldSetPanResponder: (_evt, gesture) =>
-          !disabled && (Math.abs(gesture.dx) > DRAG_THRESHOLD || Math.abs(gesture.dy) > DRAG_THRESHOLD),
+        onStartShouldSetPanResponder: () => !disabled,
+        onMoveShouldSetPanResponder: () => !disabled,
         onPanResponderGrant: () => {
-          setIsDragging(true);
+          movedRef.current = false;
           pan.setValue({ x: 0, y: 0 });
         },
         onPanResponderTerminationRequest: () => false,
-        onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
+        onPanResponderMove: (_evt, gesture) => {
+          if (!movedRef.current) {
+            if (Math.abs(gesture.dx) <= DRAG_THRESHOLD && Math.abs(gesture.dy) <= DRAG_THRESHOLD) return;
+            movedRef.current = true;
+            setIsDragging(true);
+          }
+          pan.setValue({ x: gesture.dx, y: gesture.dy });
+        },
         onPanResponderRelease: (_evt, gesture) => {
+          if (!movedRef.current) {
+            onTap(value);
+            return;
+          }
+          movedRef.current = false;
           setIsDragging(false);
           const { moveX, moveY } = gesture;
           const isInside =
@@ -92,11 +107,12 @@ const DraggableOption = ({
           Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false, friction: 6 }).start();
         },
         onPanResponderTerminate: () => {
+          movedRef.current = false;
           setIsDragging(false);
           Animated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false, friction: 6 }).start();
         },
       }),
-    [disabled, dropZone, onDrop, pan, value],
+    [disabled, dropZone, onDrop, onTap, pan, value],
   );
 
   return (
@@ -147,8 +163,9 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
   // Asama-gecis/oyun-bitis setTimeout'lari; unmount'ta temizlenmezse cocuk cikis
   // yaptiktan sonra goNextStage/onGameEnd tetikleniyordu.
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const mountedRef = useRef(true);
   useEffect(() => () => {
-     
+    mountedRef.current = false;
     timersRef.current.forEach(clearTimeout);
   }, []);
   const [dropZone, setDropZone] = useState<DropZone | null>(null);
@@ -182,9 +199,22 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
     }
   };
 
+  const speakValue = (value: number) => speak(NUMBER_WORDS[value] ?? String(value));
+
+  // Doğru bırakışta önce sayı söylenir, BİTİNCE 'Aferin!' (aynı anda başlarsa Aferin sayıyı
+  // kesiyordu, çocuk hangi sayıyı koyduğunu duymuyordu — #9). Her adım üst sınırla beklenir:
+  // ses takılırsa oyun durmasın. Çıkıldıysa aşama atlanmaz.
+  const celebrateAndAdvance = async (spoken: Promise<void>, isLast: boolean) => {
+    const cap = (p: Promise<void>, ms: number) =>
+      Promise.race([p.catch(() => undefined), new Promise<void>(resolve => setTimeout(resolve, ms))]);
+    await cap(spoken, 1500);
+    await cap(speakThenWait('Aferin!', isLast ? 1400 : 700), 2600);
+    if (mountedRef.current) goNextStage();
+  };
+
   const handleDrop = (value: number) => {
     if (placedNumber !== null) return;
-    speak(NUMBER_WORDS[value] ?? String(value));
+    const spoken = speakValue(value);
     setMoves(prev => {
       const next = prev + 1;
       movesRef.current = next;
@@ -193,17 +223,13 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
     if (value === missingNumber) {
       setPlacedNumber(value);
       setFeedback('correct');
-      speak('Aferin!');
       Animated.sequence([
         Animated.spring(correctScale, { toValue: 1.12, useNativeDriver: true, friction: 5 }),
         Animated.spring(correctScale, { toValue: 1, useNativeDriver: true, friction: 5 }),
       ]).start();
-      if (currentStage === TOTAL_STAGES - 1) {
-        setShowConfetti(true);
-        timersRef.current.push(setTimeout(goNextStage, 1600));
-      } else {
-        timersRef.current.push(setTimeout(goNextStage, 1000));
-      }
+      const isLast = currentStage === TOTAL_STAGES - 1;
+      if (isLast) setShowConfetti(true);
+      celebrateAndAdvance(spoken, isLast);
     } else {
       setErrors(prev => {
         const next = prev + 1;
@@ -304,6 +330,7 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
                   disabled={placedNumber !== null}
                   dropZone={dropZone}
                   onDrop={handleDrop}
+                  onTap={speakValue}
                 />
               );
             })}
