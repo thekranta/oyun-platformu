@@ -293,6 +293,25 @@ describe('ekran düzeni', () => {
     });
   });
 
+  it('kısa oyun alanında (bölünmüş ekran, büyük yazı boyutu, küçük telefon) tahta küçülür ama tepsi taşmaz', () => {
+    // Eskiden 360 px'in altındaki yüksekliklerde 4-5. kademede parçalar alttaki düğme çubuğunun altına taşıp dokunulamaz kalıyordu.
+    const shortSizes: [number, number][] = [[320, 300], [320, 340], [360, 320], [390, 340], [300, 360]];
+    shortSizes.forEach(([w, h]) => {
+      for (let d = 1; d <= 5; d++) {
+        for (let seed = 1; seed <= 12; seed++) {
+          const level = generateLevel(d, seeded(seed * 17 + d));
+          const layout = computeLayout(w, h, level.board, level.pieces.map((p) => maxDim(p.shapeId)));
+          const b = layout.board;
+          layout.slots.forEach((s, i) => {
+            const ctx = { w, h, d, seed, i };
+            expect({ ...ctx, inside: s.x >= -0.5 && s.y >= -0.5 && s.x + s.w <= w + 0.5 && s.y + s.h <= h + 0.5 }).toEqual({ ...ctx, inside: true });
+            expect({ ...ctx, overlapsBoard: s.x < b.x + b.w && b.x < s.x + s.w && s.y < b.y + b.h && b.y < s.y + s.h }).toEqual({ ...ctx, overlapsBoard: false });
+          });
+        }
+      }
+    });
+  });
+
   it('dikey telefonda hücre ve tepsi hücresi dokunmaya yetecek kadar büyük', () => {
     for (let d = 1; d <= 5; d++) {
       const level = generateLevel(d, seeded(d));

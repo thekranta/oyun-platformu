@@ -464,15 +464,22 @@ function flowSlots(sizes: number[], maxW: number): { slots: Rect[]; height: numb
   return { slots, height: Math.max(0, y - SLOT_GAP) };
 }
 
-/**
- * width×height: oyun alanı (başlık ve düğme çubuğu hariç). Dar/dikey ekranda tahta üstte, tepsi altta;
- * geniş ekranda (tablet, web) tahta solda, tepsi sağda. `slotDims`: parçaların maxDim değerleri.
- */
-export function computeLayout(width: number, height: number, board: Board, slotDims: number[], maxCell = 100): Layout {
-  const wide = width >= height * 1.15;
+/** Tahtaya ayrılan pay: tepsi en küçük parça boyunda bile sığmazsa (kısa ekran, bölünmüş ekran, büyük yazı boyutu) sıradaki küçük paya geçilir. */
+const TALL_BOARD_SHARES = [0.58, 0.5, 0.44, 0.38];
+const WIDE_BOARD_SHARES = [0.52, 0.44, 0.36];
+
+function layoutWithShare(
+  width: number,
+  height: number,
+  board: Board,
+  slotDims: number[],
+  maxCell: number,
+  wide: boolean,
+  share: number,
+): { layout: Layout; fits: boolean } {
   const boardRegion: Rect = wide
-    ? { x: 0, y: 0, w: Math.floor(width * 0.52), h: height }
-    : { x: 0, y: 0, w: width, h: Math.floor(height * 0.58) };
+    ? { x: 0, y: 0, w: Math.floor(width * share), h: height }
+    : { x: 0, y: 0, w: width, h: Math.floor(height * share) };
   const trayRegion: Rect = wide
     ? { x: boardRegion.w, y: 0, w: width - boardRegion.w, h: height }
     : { x: 0, y: boardRegion.h, w: width, h: height - boardRegion.h };
@@ -494,15 +501,33 @@ export function computeLayout(width: number, height: number, board: Board, slotD
   const availH = trayRegion.h - 2 * PAD;
   let trayCell = MIN_TRAY_CELL;
   let flow = flowSlots(slotDims.map((d) => d * MIN_TRAY_CELL + 2 * SLOT_PAD), availW);
+  let fits = flow.height <= availH;
   for (let tc = Math.min(Math.floor(cell * 0.8), 56); tc >= MIN_TRAY_CELL; tc--) {
     const f = flowSlots(slotDims.map((d) => d * tc + 2 * SLOT_PAD), availW);
     if (f.height <= availH) {
       trayCell = tc;
       flow = f;
+      fits = true;
       break;
     }
   }
   const offsetY = trayRegion.y + PAD + Math.max(0, (availH - flow.height) / 2);
   const slots = flow.slots.map((s) => ({ x: trayRegion.x + PAD + s.x, y: offsetY + s.y, w: s.w, h: s.h }));
-  return { cell, board: boardRect, trayCell, slots, wide };
+  return { layout: { cell, board: boardRect, trayCell, slots, wide }, fits };
+}
+
+/**
+ * width×height: oyun alanı (başlık ve düğme çubuğu hariç). Dar/dikey ekranda tahta üstte, tepsi altta;
+ * geniş ekranda (tablet, web) tahta solda, tepsi sağda. `slotDims`: parçaların maxDim değerleri.
+ * Tepsi sığmazsa tahta küçülür; yine de sığmayacak kadar küçük ekranda son (en küçük tahta) düzen döner.
+ */
+export function computeLayout(width: number, height: number, board: Board, slotDims: number[], maxCell = 100): Layout {
+  const wide = width >= height * 1.15;
+  let last: Layout | null = null;
+  for (const share of wide ? WIDE_BOARD_SHARES : TALL_BOARD_SHARES) {
+    const r = layoutWithShare(width, height, board, slotDims, maxCell, wide, share);
+    if (r.fits) return r.layout;
+    last = r.layout;
+  }
+  return last as Layout;
 }

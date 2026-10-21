@@ -62,6 +62,10 @@ const { height: screenH } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
 // Dokunmatikte parça parmağın altında kalıp görünmesin diye bu kadar yukarıda sürüklenir; fare imleciyle gerekmez.
 const hasTouch = !isWeb || (typeof navigator !== 'undefined' && (navigator as any).maxTouchPoints > 0);
+// Mobil tarayıcıda 100vh araç çubukları açıkken bile "büyük" görüntü alanıdır: alttaki düğme çubuğu tarayıcı çubuğunun
+// altında kalabilir. Destekleniyorsa 100dvh (dinamik görüntü alanı) kullanılır.
+const WEB_FULL_HEIGHT =
+    typeof CSS !== 'undefined' && (CSS as any).supports?.('height', '100dvh') ? '100dvh' : '100vh';
 const LIFT = hasTouch ? 56 : 0;
 const DRAG_THRESHOLD = 8;
 const BOARDS_PER_GAME = 3;
@@ -107,8 +111,13 @@ interface Snap {
 }
 
 interface Gesture extends DragInfo {
+    /** Sürüklemeyi başlatan parmağın kimliği: başka bir parmak (avuç içi, baş parmak) araya girerse yok sayılır. */
+    touchId: number | string | undefined;
     startX: number;
     startY: number;
+    /** Sürükleyen parmağın son bilinen konumu (kök alan koordinatı). */
+    lastX: number;
+    lastY: number;
     dragging: boolean;
     origin: Placement | null;
     originIndex: number;
@@ -137,7 +146,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
     const [drag, setDrag] = useState<DragInfo | null>(null);
     const [preview, setPreview] = useState<{ row: number; col: number; valid: boolean; cells: Cell[] } | null>(null);
     const [hintPlacement, setHintPlacement] = useState<Placement | null>(null);
-    const [popId, setPopId] = useState<number | null>(null);
     const [size, setSize] = useState({ w: 0, h: 0 });
     const [gameReady, setGameReady] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -161,6 +169,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
     const completingRef = useRef(false);
     const mountedRef = useRef(true);
     const finishedRef = useRef(false);
+    // Üç tahta bitti, kutlama ve 'Tebrikler!' sürüyor: bu sırada çıkılırsa oyun yine de kaydedilir.
+    const finalPendingRef = useRef(false);
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     // Sayaçlar (render dışı; kayıt ve tek seferlik sesler için)
@@ -189,8 +199,10 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
     const rocketAnim = useRef(new Animated.Value(0)).current;
     const starAnim = useRef(new Animated.Value(0)).current;
     const pulse = useRef(new Animated.Value(0.5)).current;
-    const popAnim = useRef(new Animated.Value(1)).current;
-    const starPop = useRef(new Animated.Value(1)).current;
+    // Her parçanın / yıldızın KENDİ animasyon değeri: tek ortak değer, yerel sürücüde bir önceki parçayı/yıldızı
+    // bir iki kare küçültüp titretebiliyordu (setValue React yeniden hedeflemeden önce uygulanır).
+    const popAnims = useRef<Record<number, Animated.Value>>({});
+    const starPops = useRef(Array.from({ length: BOARDS_PER_GAME }, () => new Animated.Value(1))).current;
     const undoPulse = useRef(new Animated.Value(1)).current;
     const boardFade = useRef(new Animated.Value(1)).current;
     const ghostPos = useRef(new Animated.ValueXY({ x: -1000, y: -1000 })).current;
@@ -234,6 +246,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
         return buildOccupancy(levelRef.current.board, rest);
     };
     const rotAnimOf = (id: number) => (rotAnims.current[id] ??= new Animated.Value(0));
+    const popAnimOf = (id: number) => (popAnims.current[id] ??= new Animated.Value(1));
     const spinPiece = (id: number) => {
         const v = rotAnimOf(id);
         v.setValue(-90);
@@ -276,10 +289,16 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
         return () => loop.stop();
     }, [deadEnd, undoPulse]);
 
-    useEffect(() => () => {
-        mountedRef.current = false;
-        timersRef.current.forEach(clearTimeout);
-        stopSpeech();
+    useEffect(() => {
+        // Fast Refresh (geliştirme) efekti yeniden çalıştırır: bayrak yeniden kurulmazsa zamanlayıcılar ve
+        // sonraki tahtaya geçiş sessizce işlevsiz kalırdı.
+        mountedRef.current = true;
+        const timers = timersRef.current; // aynı dizi (yalnız push edilir): sonradan eklenenler de temizlenir
+        return () => {
+            mountedRef.current = false;
+            timers.forEach(clearTimeout);
+            stopSpeech();
+        };
     }, []);
 
     // Geri sayım bitince oyun başlar: süre BURADAN sayılır; nasıl oynandığı bir kez sesle anlatılır.
@@ -305,7 +324,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
             return;
         }
         node.measure?.((_x: number, _y: number, _w: number, _h: number, pageX: number, pageY: number) => {
-            rootRectRef.current = { x: pageX, y: pageY };
+            if (Number.isFinite(pageX) && Number.isFinite(pageY)) rootRectRef.current = { x: pageX, y: pageY };
         });
     };
     const handleRootLayout = (e: LayoutChangeEvent) => {
@@ -449,9 +468,9 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
         markInteraction();
         FeedbackService.playSuccess({ intensity: 'light' });
         playSound('correct').catch(() => { });
-        popAnim.setValue(0.6);
-        setPopId(pieceId);
-        Animated.spring(popAnim, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+        const pop = popAnimOf(pieceId);
+        pop.setValue(0.6);
+        Animated.spring(pop, { toValue: 1, friction: 4, useNativeDriver: true }).start();
 
         if (Object.keys(next).length === lv.pieces.length) {
             handleBoardComplete();
@@ -510,12 +529,29 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
         setDrag(null);
     };
 
+    // Parmak kalktığında hareketi bitirir: kısa dokunuş = döndür, sürükleme = bırak.
+    const finishGesture = (g: Gesture, x: number, y: number) => {
+        if (!g.dragging) {
+            // Kısa dokunuş: tepsideki parça döner (tahtadaki parçaya dokunmak bir şey yapmaz).
+            if (g.source === 'tray') rotatePiece(g.pieceId);
+            return;
+        }
+        updateDrag(g, x, y);
+        endDrag(g);
+    };
+    // Aynı hareketin parmağı mı? Kimlik yoksa (bazı ortamlarda) hepsi aynı sayılır.
+    const sameTouch = (g: Gesture, e: GestureResponderEvent) => {
+        const id = (e.nativeEvent as any).identifier;
+        return g.touchId == null || id == null || id === g.touchId;
+    };
+
     // Tek sürükleme yöneticisi: işleyiciler her render'da yenilenen H.current üzerinden çalışır (bayat closure yok).
     const H = useRef<{
         start: (e: GestureResponderEvent) => boolean;
         grant: (e: GestureResponderEvent) => void;
         move: (e: GestureResponderEvent) => void;
-        release: (e: GestureResponderEvent) => void;
+        end: (e: GestureResponderEvent) => void;
+        release: () => void;
         terminate: () => void;
     }>(null as any);
     H.current = {
@@ -534,8 +570,11 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
                 pieceId: hit.pieceId,
                 source: hit.source,
                 cells,
+                touchId: (e.nativeEvent as any).identifier,
                 startX: p.x,
                 startY: p.y,
+                lastX: p.x,
+                lastY: p.y,
                 dragging: false,
                 origin: hit.placement ?? null,
                 originIndex: -1,
@@ -545,26 +584,31 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
         },
         move: (e) => {
             const g = gestureRef.current;
-            if (!g) return;
+            // Her parmak ayrı hareket olayı üretir: sürükleyen parmak dışındakiler (dinlenen avuç içi, baş parmak) hayaleti titretmesin.
+            if (!g || !sameTouch(g, e)) return;
             const p = toRoot(e);
+            g.lastX = p.x;
+            g.lastY = p.y;
             if (!g.dragging) {
                 if (Math.hypot(p.x - g.startX, p.y - g.startY) < DRAG_THRESHOLD) return;
                 beginDrag(g);
             }
             updateDrag(g, p.x, p.y);
         },
-        release: (e) => {
+        // Sürükleyen parmak kalkınca bırakılır; başka bir parmak hâlâ ekrandaysa 'release' beklenmez
+        // (o yalnız TÜM parmaklar kalkınca gelir ve konumu yanlış parmağınki olurdu).
+        end: (e) => {
+            const g = gestureRef.current;
+            if (!g || !sameTouch(g, e)) return;
+            gestureRef.current = null;
+            const p = toRoot(e);
+            finishGesture(g, p.x, p.y);
+        },
+        // Tüm parmaklar kalktı ve 'end' bu hareketi kapatmadıysa son bilinen konumla bitir.
+        release: () => {
             const g = gestureRef.current;
             gestureRef.current = null;
-            if (!g) return;
-            if (!g.dragging) {
-                // Kısa dokunuş: tepsideki parça döner (tahtadaki parçaya dokunmak bir şey yapmaz).
-                if (g.source === 'tray') rotatePiece(g.pieceId);
-                return;
-            }
-            const p = toRoot(e);
-            updateDrag(g, p.x, p.y);
-            endDrag(g);
+            if (g) finishGesture(g, g.lastX, g.lastY);
         },
         terminate: () => {
             const g = gestureRef.current;
@@ -578,7 +622,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (e) => H.current.grant(e),
         onPanResponderMove: (e) => H.current.move(e),
-        onPanResponderRelease: (e) => H.current.release(e),
+        onPanResponderEnd: (e) => H.current.end(e),
+        onPanResponderRelease: () => H.current.release(),
         onPanResponderTerminate: () => H.current.terminate(),
     })).current;
 
@@ -651,7 +696,6 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
             setPreview(null);
             previewRef.current = '';
             setDrag(null);
-            setPopId(null);
             boardNoRef.current += 1;
             boardInvalidRef.current = 0;
             boardDeadEndsRef.current = 0;
@@ -706,6 +750,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
     };
 
     const handleFinal = () => {
+        finalPendingRef.current = true;
         setRocketLaunch(true);
         rocketAnim.setValue(0);
         Animated.timing(rocketAnim, { toValue: -screenH, duration: 2000, useNativeDriver: true }).start(() => setShowConfetti(true));
@@ -718,9 +763,11 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
         finish();
     };
 
-    const popStar = () => {
-        starPop.setValue(0.4);
-        Animated.spring(starPop, { toValue: 1, friction: 3, useNativeDriver: true }).start();
+    const popStar = (index: number) => {
+        const v = starPops[index];
+        if (!v) return;
+        v.setValue(0.4);
+        Animated.spring(v, { toValue: 1, friction: 3, useNativeDriver: true }).start();
     };
 
     function handleBoardComplete() {
@@ -747,7 +794,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
             timeMs: ms,
         });
         setBoardsDone((n) => n + 1);
-        popStar();
+        popStar(boardNoRef.current);
         FeedbackService.animateSuccess({ glow: glowAnim });
         if (boardNoRef.current + 1 >= BOARDS_PER_GAME) {
             handleFinal();
@@ -759,6 +806,11 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
 
     const handleExit = () => {
         stopSpeech();
+        // Oyun tamamlandıysa (kutlama sürerken) çıkış sonucu kaybettirmesin: kayıt gönderilir, sonuç ekranına geçilir.
+        if (finalPendingRef.current) {
+            finishGame();
+            return;
+        }
         onExit();
     };
 
@@ -789,14 +841,13 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
                 if (!level.board.playable[r][c]) continue;
                 const owner = occ[r][c];
                 const piece = owner !== null ? level.pieces.find((p) => p.id === owner) : undefined;
-                const popping = owner !== null && owner === popId;
                 cells.push(
                     <Animated.View
                         key={`${r}-${c}`}
                         style={[
                             styles.boardCell,
                             { left: b.x + c * cell, top: b.y + r * cell, width: cell, height: cell },
-                            popping && { transform: [{ scale: popAnim }] },
+                            owner !== null && { transform: [{ scale: popAnimOf(owner) }] },
                         ]}
                     >
                         {piece ? (
@@ -842,7 +893,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
             const slot = layout.slots[i];
             if (!slot) return null;
             const isPlaced = !!placed[piece.id];
-            const lifted = drag?.source === 'tray' && drag.pieceId === piece.id;
+            // Tahtadan yakalanan parça da tepsideki yuvasında soluk görünür (hayaletle yan yana tam opaklık çift görünüyordu).
+            const lifted = drag?.pieceId === piece.id;
             const isHint = hintPlacement?.pieceId === piece.id;
             const cells = rotateBy(piece.cells, rot[piece.id] ?? 0);
             const spin = rotAnimOf(piece.id).interpolate({ inputRange: [-90, 0], outputRange: ['-90deg', '0deg'] });
@@ -899,6 +951,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
                     message={INTRO_TEXT}
                     childName={childName}
                     countdownSeconds={5}
+                    interaction="drag"
                     onComplete={handleReady}
                 />
             )}
@@ -912,7 +965,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
                         {Array.from({ length: BOARDS_PER_GAME }, (_, i) => {
                             const lit = i < boardsDone;
                             return (
-                                <Animated.View key={i} style={lit && i === boardsDone - 1 ? { transform: [{ scale: starPop }] } : undefined}>
+                                <Animated.View key={i} style={{ transform: [{ scale: starPops[i] }] }}>
                                     <Ionicons name={lit ? 'star' : 'star-outline'} size={30} color={lit ? '#FFD700' : 'rgba(255,255,255,0.45)'} />
                                 </Animated.View>
                             );
@@ -999,7 +1052,7 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        ...(isWeb ? { height: '100vh' as any } : {}),
+        ...(isWeb ? { height: WEB_FULL_HEIGHT as any } : {}),
     },
     darkOverlay: {
         ...StyleSheet.absoluteFillObject,
