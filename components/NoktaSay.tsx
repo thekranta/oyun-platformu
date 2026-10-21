@@ -6,6 +6,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { buildNumberOptions } from '../lib/answerOptions';
 
 // ============================================
 // ⚫ NOKTA SAY - Nokta sayma → rakam (Matematik/MAB.1)
@@ -20,18 +21,6 @@ const TOTAL_ROUNDS = 8;
 const COLORS = ['#FF6B6B', '#4FACFE', '#66BB6A', '#FFA726', '#AB47BC'];
 
 const maxCount = (round: number) => (round <= 3 ? 3 : round <= 6 ? 4 : 5);
-
-const buildOptions = (correct: number, cap: number): number[] => {
-  const set = new Set<number>([correct]);
-  let d = 1;
-  while (set.size < 3) {
-    if (correct - d >= 1) set.add(correct - d);
-    if (set.size < 3 && correct + d <= cap) set.add(correct + d);
-    d++;
-    if (d > cap) break;
-  }
-  return Array.from(set).sort((a, b) => a - b);
-};
 
 interface Props {
   onGameEnd: (
@@ -75,7 +64,7 @@ export default function NoktaSay({ onGameEnd, onExit, childName }: Props) {
     const c = 1 + Math.floor(Math.random() * cap);
     setCount(c);
     setColor(COLORS[(round - 1) % COLORS.length]);
-    setOptions(buildOptions(c, cap));
+    setOptions(buildNumberOptions(c, { min: 1, max: cap }));
     setLocked(false);
     setWrong(null);
     pop.setValue(0.85);

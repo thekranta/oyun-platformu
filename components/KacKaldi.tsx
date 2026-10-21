@@ -6,6 +6,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { buildNumberOptions } from '../lib/answerOptions';
 
 // ============================================
 // ➖ KAÇ KALDI? - 5'e kadar çıkarma (Matematik/MAB.1)
@@ -19,18 +20,6 @@ const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher.
 const TOTAL_ROUNDS = 8;
 const MAX_OBJECTS = 5;
 const OBJECTS = ['🍎', '🐤', '🎈', '🍪', '⭐', '🐟'];
-
-const buildOptions = (correct: number): number[] => {
-  const set = new Set<number>([correct]);
-  let d = 1;
-  while (set.size < 3) {
-    if (correct - d >= 0) set.add(correct - d);
-    if (set.size < 3 && correct + d <= 5) set.add(correct + d);
-    d++;
-    if (d > 6) break;
-  }
-  return Array.from(set).sort((a, b) => a - b);
-};
 
 interface Props {
   onGameEnd: (
@@ -82,7 +71,7 @@ export default function KacKaldi({ onGameEnd, onExit, childName }: Props) {
     setTotal(n);
     setGone(g);
     setObj(OBJECTS[Math.floor(Math.random() * OBJECTS.length)]);
-    setOptions(buildOptions(n - g));
+    setOptions(buildNumberOptions(n - g, { min: 1, max: MAX_OBJECTS }));
     setLocked(false);
     setWrong(null);
     setPhase('watch');

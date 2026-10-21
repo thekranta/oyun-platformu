@@ -6,6 +6,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { buildNumberOptions } from '../lib/answerOptions';
 
 // ============================================
 // 🍪 EŞİT PAYLAŞTIR - Eşit paylaşım / bölme sezgisi (Matematik, MAB.4)
@@ -26,18 +27,6 @@ const OBJECTS = ['🍪', '🍎', '🍓', '⭐', '🎈'];
 const SHARE_PROMPT = 'Hepsini iki tabağa eşit paylaştır. Tabağa dokun, birer tane ver!';
 const COUNT_PROMPT = 'Her tabağa kaç düştü?';
 const PLATE_W = Math.min((SCREEN_W - 56) / 2, 160);
-
-const buildOptions = (answer: number): number[] => {
-  const set = new Set<number>([answer]);
-  let d = 1;
-  while (set.size < 3) {
-    if (answer - d >= 1) set.add(answer - d);
-    if (set.size < 3 && answer + d <= 5) set.add(answer + d);
-    d++;
-    if (d > 6) break;
-  }
-  return Array.from(set).sort((a, b) => a - b);
-};
 
 type Side = 'left' | 'right';
 
@@ -88,7 +77,7 @@ export default function EsitPaylastir({ onGameEnd, onExit, childName }: Props) {
     setLeft(0);
     setRight(0);
     setBusy(false);
-    setOptions(buildOptions(total / 2));
+    setOptions(buildNumberOptions(total / 2, { min: 1, max: 5 }));
     setLocked(false);
     setWrong(null);
     speak(SHARE_PROMPT, { instructions: HAPPY_VOICE });
