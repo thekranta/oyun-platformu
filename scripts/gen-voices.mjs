@@ -143,6 +143,9 @@ async function main() {
     // Sesli düzeltme grubu (2026-10-21): Ne İşe Yarar? yeni komut + çift cümleleri
     const WAVE6 = join(__dirname, 'tts-phrases-wave6.json');
     if (existsSync(WAVE6)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE6, 'utf8')));
+    // Fen grubu (2026-10-21): Akıllı Sınıflandır set soruları + Sihirli Şişeler yönergeleri
+    const WAVE7 = join(__dirname, 'tts-phrases-wave7.json');
+    if (existsSync(WAVE7)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE7, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

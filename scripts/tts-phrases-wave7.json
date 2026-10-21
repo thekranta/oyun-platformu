@@ -1,0 +1,22 @@
+[
+  {
+    "text": "Hayvan mı, yiyecek mi? Doğru sepete koy!",
+    "game": "AkilliSiniflandir",
+    "slug": "hayvan-mi-yiyecek-mi-dogru-sepete-koy"
+  },
+  {
+    "text": "Meyve mi, sebze mi? Doğru sepete koy!",
+    "game": "AkilliSiniflandir",
+    "slug": "meyve-mi-sebze-mi-dogru-sepete-koy"
+  },
+  {
+    "text": "Bir şişeye dokun, sonra sıvıyı dökmek istediğin şişeye dokun.",
+    "game": "SihirliSiseler",
+    "slug": "bir-siseye-dokun-sonra-siviyi-dokmek-istedigin-siseye-dokun"
+  },
+  {
+    "text": "Olmadı. Aynı renge ya da boş şişeye dökebilirsin.",
+    "game": "SihirliSiseler",
+    "slug": "olmadi-ayni-renge-ya-da-bos-siseye-dokebilirsin"
+  }
+]
