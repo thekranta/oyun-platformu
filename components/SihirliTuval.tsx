@@ -201,7 +201,6 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     const [regions, setRegions] = useState<ColorRegion[]>(SPACE_ADVENTURE_REGIONS.map(r => ({ ...r })));
     const [selectedColorNumber, setSelectedColorNumber] = useState<number | null>(null);
     const [, setMoveHistory] = useState<MoveData[]>([]);
-    const [errors, setErrors] = useState(0);
     const [correctAnswers, setCorrectAnswers] = useState(0);
     const [gameStart] = useState(Date.now());
     // finishGame timer setInterval'inden cagrildiginda state'i eski closure'dan okur
@@ -219,11 +218,11 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     // farkli bir ekrana geciyordu; once tuval bir sure acikca gorunsun.
     const showCompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [lastColorSelectTime, setLastColorSelectTime] = useState<number>(Date.now());
-    const [score, setScore] = useState(0);
+    // Çocuğa Puan / Bilişsel Hız / Hata sayısı gösterilmez (Oyun_Test_Listesi #28 ilkesi); bu metrikler
+    // yalnız veli raporu için kaydedilir (finishGame).
     const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error'; regionId: string } | null>(null);
     const [timeLeft, setTimeLeft] = useState(300); // 5 dakika
     const [isGameComplete, setIsGameComplete] = useState(false);
-    const [cognitiveSpeed, setCognitiveSpeed] = useState(0);
     const [gameReady, setGameReady] = useState(false);
 
     // Animations
@@ -272,15 +271,6 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
 
         return () => clearInterval(timer);
     }, [isGameComplete, gameReady]);
-
-    // Calculate cognitive speed whenever correctAnswers changes
-    useEffect(() => {
-        const elapsedTime = (Date.now() - gameStart) / 1000;
-        if (elapsedTime > 0 && correctAnswers > 0) {
-            const speed = correctAnswers / elapsedTime;
-            setCognitiveSpeed(Math.round(speed * 100) / 100);
-        }
-    }, [correctAnswers, gameStart]);
 
     // Check game completion
     useEffect(() => {
@@ -416,16 +406,13 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
             ));
             // Bir dogru tiklama = bir dogru karar (bolge sayisi kadar degil; onceden
             // yildiz gibi cok bolgeli renklerde correct_answers sisiyordu).
-            const filledCount = regions.filter(r => r.colorNumber === selectedColorNumber).length;
             correctAnswersRef.current += 1;
             setCorrectAnswers(prev => prev + 1);
-            setScore(prev => prev + (10 * filledCount));
             playSuccessFeedback();
             speak('Aferin!');
             setShowFeedback({ type: 'success', regionId });
         } else {
             errorsRef.current += 1;
-            setErrors(prev => prev + 1);
             playErrorFeedback();
             setShowFeedback({ type: 'error', regionId });
         }
@@ -498,7 +485,8 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
 
             {/* Header */}
             <View style={styles.header}>
-                <GameExitButton onPress={handleExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
+                {/* Çıkış butonu satırın İÇİNDE: mutlak konumdayken zamanlayıcıya biniyor ve iOS'ta durum çubuğuna giriyordu */}
+                <GameExitButton onPress={handleExit} />
 
                 <View style={styles.timerContainer}>
                     <Text style={styles.timerIcon}>🚀</Text>
@@ -506,11 +494,6 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
                         <View style={[styles.timerFill, { width: `${(timeLeft / 300) * 100}%` }]} />
                     </View>
                     <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-                </View>
-
-                <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreIcon}>⭐</Text>
-                    <Text style={styles.scoreText}>{score}</Text>
                 </View>
             </View>
 
@@ -653,21 +636,10 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
                         <Text style={styles.completeText}>Harika bir astronot oldun!</Text>
                         <View style={styles.statsRow}>
                             <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Puan</Text>
-                                <Text style={styles.statValue}>{score}</Text>
-                            </View>
-                            <View style={styles.statBox}>
                                 <Text style={styles.statLabel}>Doğru</Text>
                                 <Text style={[styles.statValue, { color: '#4CAF50' }]}>{correctAnswers}</Text>
                             </View>
-                            <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Hata</Text>
-                                <Text style={[styles.statValue, { color: '#F44336' }]}>{errors}</Text>
-                            </View>
                         </View>
-                        <Text style={styles.cognitiveLabel}>
-                            ⚡ Bilişsel Hız: {cognitiveSpeed.toFixed(3)}
-                        </Text>
                     </View>
                 </View>
             )}
@@ -697,7 +669,8 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
+        gap: 12,
         paddingTop: Platform.OS === 'web' ? 12 : 48,
         paddingHorizontal: 12,
         paddingBottom: 8,
@@ -733,25 +706,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
     },
-    scoreContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 18,
-        gap: 4,
-        elevation: 5,
-    },
-    scoreIcon: {
-        fontSize: 16,
-    },
-    scoreText: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-
     // Title
     title: {
         fontSize: isWeb ? 22 : 17,
@@ -1023,11 +977,5 @@ const styles = StyleSheet.create({
         fontSize: 22,
         fontWeight: 'bold',
         color: '#FFF',
-    },
-    cognitiveLabel: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#FFD700',
-        marginTop: 8,
     },
 });
