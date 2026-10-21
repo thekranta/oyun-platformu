@@ -193,8 +193,13 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
         }
     };
 
+    // Konumlar yalnız oyun alanının BOYUTU gerçekten değişince (ilk ölçüm, pencere/ekran
+    // döndürme) yeniden üretilir; aynı boyutta tekrar gelen onLayout sayıları yerinden oynatmaz.
+    const lastSizeRef = useRef({ w: 0, h: 0 });
     const onContainerLayout = (event: any) => {
         const { width: w, height: h } = event.nativeEvent.layout;
+        if (Math.abs(w - lastSizeRef.current.w) < 1 && Math.abs(h - lastSizeRef.current.h) < 1) return;
+        lastSizeRef.current = { w, h };
         setContainerSize({ width: w, height: h });
 
         // Regenerate positions when container size changes
@@ -227,11 +232,15 @@ export default function SiralamaOyunu({ onGameEnd, onExit, childName }: Siralama
 
             <View style={styles.headerContainer}>
                 <Text style={styles.baslik}>🔢 Sayıları Sırala</Text>
-                {showHint && (
-                    <Text style={styles.bilgi}>
-                        Sıradaki sayı: <Text style={[styles.bilgiVurgulu, { color: currentColors.bg }]}>{beklenenSayi}</Text>
-                    </Text>
-                )}
+                {/* İpucu satırı görünse de görünmese de AYNI yeri kaplar: yükseklik değişirse oyun
+                    alanı yeniden ölçülüp sayılar rastgele yer değiştiriyordu (#5). */}
+                <View style={styles.bilgiSatiri}>
+                    {showHint && (
+                        <Text style={styles.bilgi}>
+                            Sıradaki sayı: <Text style={[styles.bilgiVurgulu, { color: currentColors.bg }]}>{beklenenSayi}</Text>
+                        </Text>
+                    )}
+                </View>
                 <ListenButton onPress={() => speechService.speak('Sayıları birden beşe kadar sırayla bul ve dokun!', { instructions: HAPPY_VOICE })} color="#1565C0" style={{ marginTop: 12 }} />
             </View>
 
@@ -314,9 +323,14 @@ const styles = StyleSheet.create({
         textShadowOffset: { width: 1, height: 1 },
         textShadowRadius: 2,
     },
+    bilgiSatiri: {
+        height: 40,
+        marginTop: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     bilgi: {
         fontSize: 20,
-        marginTop: 8,
         color: '#555',
     },
     bilgiVurgulu: {
