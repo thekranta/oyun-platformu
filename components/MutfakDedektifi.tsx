@@ -186,7 +186,9 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
     const [mavisMessage, setMavisMessage] = useState('🍎🥕');
     const [levelTimes, setLevelTimes] = useState<number[]>([]); // Track time for each level
     const introMessage = 'Meyveleri sepete, sebzeleri kasaya koy. Bir yiyeceğe dokun, sonra nereye gideceğine dokun!';
-    const fullIntroMessage = childName ? `Merhaba ${childName}! ${introMessage}` : introMessage;
+    // Tekrar Dinle YALNIZ klibi olan yönergeyi okur. Eskiden "Merhaba <isim>! ..." diye kişiselleştirilmiş
+    // metin okunuyordu; bunun klibi olmadığı için hazır sesin yerine yabancı (canlı) ses çalıyordu (#60).
+    // Çocuğun adı yalnız ekranda (CountdownOverlay) yazılır.
 
     // Floating animations for decorations
     const floatAnim1 = useRef(new Animated.Value(0)).current;
@@ -543,7 +545,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                     {/* Header */}
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
-                            <TouchableOpacity style={styles.repeatBtn} onPress={() => speak(fullIntroMessage)}>
+                            <TouchableOpacity style={styles.repeatBtn} onPress={() => speak(introMessage)}>
                                 <Ionicons name="volume-high" size={20} color="#fff" />
                             </TouchableOpacity>
                         </View>
@@ -557,7 +559,7 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                         <View style={{ width: 44 }} />
                     </View>
 
-                    <ListenButton onPress={() => speak(fullIntroMessage, { instructions: HAPPY_VOICE })} color="#5D4037" style={{ marginTop: 12, alignSelf: 'center' }} />
+                    <ListenButton onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} color="#5D4037" style={{ marginTop: 12, alignSelf: 'center' }} />
 
                     {/* Target Areas - Yeni sepet görselleri ile */}
                     <View style={styles.targetsContainer}>

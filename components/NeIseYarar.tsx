@@ -6,11 +6,13 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { INTRO_TEXT, PAIRS, PROMPT_TEXT } from '../constants/neIseYarar';
 
 // ============================================
 // 🔗 NE İŞE YARAR? - İlişkili ikilileri eşleştir (Matematik/MAB.3 ilişki)
-// Birbiriyle giden nesneleri eşle (şemsiye-yağmur, arı-bal). Günlük yaşam
+// Birlikte olan nesneleri eşle (şemsiye-yağmur, arı-bal). Günlük yaşam
 // ilişkisi kurma; farklı ama İLİŞKİLİ öğeler (opposite/aynı değil). Görsel.
+// Metinler ve çiftler constants/neIseYarar.ts'te; eşleşince çiftin kendi cümlesi okunur.
 // ============================================
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -19,20 +21,7 @@ const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher.
 const TOTAL_ROUNDS = 4;
 const PAIRS_PER_ROUND = 3;
 
-interface Item { emoji: string; name: string }
-interface Pair { a: Item; b: Item }
-
-const PAIRS: Pair[] = [
-  { a: { emoji: '☂️', name: 'Şemsiye' }, b: { emoji: '🌧️', name: 'Yağmur' } },
-  { a: { emoji: '🐝', name: 'Arı' }, b: { emoji: '🍯', name: 'Bal' } },
-  { a: { emoji: '🪥', name: 'Diş fırçası' }, b: { emoji: '🦷', name: 'Diş' } },
-  { a: { emoji: '🔑', name: 'Anahtar' }, b: { emoji: '🔒', name: 'Kilit' } },
-  { a: { emoji: '🧦', name: 'Çorap' }, b: { emoji: '👟', name: 'Ayakkabı' } },
-  { a: { emoji: '🐄', name: 'İnek' }, b: { emoji: '🥛', name: 'Süt' } },
-  { a: { emoji: '🌱', name: 'Fidan' }, b: { emoji: '💧', name: 'Su' } },
-];
-
-interface Card { cardId: number; pairId: number; emoji: string; name: string }
+interface Card { cardId: number; pairId: number; emoji: string; name: string; sentence: string }
 
 const shuffle = <T,>(arr: T[]): T[] => {
   const a = [...arr];
@@ -47,8 +36,8 @@ const buildRound = (): Card[] => {
   const chosen = shuffle(PAIRS).slice(0, PAIRS_PER_ROUND);
   const cards: Card[] = [];
   chosen.forEach((p, pairId) => {
-    cards.push({ cardId: 0, pairId, emoji: p.a.emoji, name: p.a.name });
-    cards.push({ cardId: 0, pairId, emoji: p.b.emoji, name: p.b.name });
+    cards.push({ cardId: 0, pairId, emoji: p.a.emoji, name: p.a.name, sentence: p.sentence });
+    cards.push({ cardId: 0, pairId, emoji: p.b.emoji, name: p.b.name, sentence: p.sentence });
   });
   return shuffle(cards).map((c, i) => ({ ...c, cardId: i }));
 };
@@ -94,7 +83,7 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
     setFirstId(null);
     setWrongIds([]);
     setLocked(false);
-    speak('Eşleşenleri bul!', { instructions: HAPPY_VOICE });
+    speak(PROMPT_TEXT, { instructions: HAPPY_VOICE });
   }, [round, gameReady]);
 
   const finish = () => {
@@ -132,7 +121,8 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
       next.add(card.cardId);
       setMatched(next);
       setFirstId(null);
-      const fb = `${firstCard.name} ile ${card.name} birbirine gider!`;
+      // Sıradan bağımsız, çiftin kendi cümlesi (örn. "Arı bal yapar!"); iki kart da aynı cümleyi taşır.
+      const fb = card.sentence;
       if (next.size >= cards.length) {
         const roundDone = round >= TOTAL_ROUNDS;
         if (roundDone) setShowConfetti(true);
@@ -159,7 +149,7 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
       {showConfetti && <ConfettiCannon count={120} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Eşleşenleri bul! Şemsiye - yağmur gibi."
+          message={INTRO_TEXT}
           childName={childName}
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}
@@ -172,9 +162,9 @@ export default function NeIseYarar({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>Eşleşenleri bul!</Text>
+      <Text style={styles.prompt}>{PROMPT_TEXT}</Text>
 
-      <ListenButton onPress={() => speak('Eşleşenleri bul!', { instructions: HAPPY_VOICE })} color="#00695C" style={{ marginTop: 4, marginBottom: 8 }} />
+      <ListenButton onPress={() => speak(PROMPT_TEXT, { instructions: HAPPY_VOICE })} color="#00695C" style={{ marginTop: 4, marginBottom: 8 }} />
 
       <View style={styles.grid}>
         {cards.map((card) => {
