@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Animated,
     Dimensions,
@@ -10,12 +10,34 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
-import { speak, stopSpeech } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
+import {
+    applyPour,
+    bottleCount,
+    generate,
+    hint as findHint,
+    isBottleComplete,
+    isSolved,
+    pourCount,
+    solve,
+    tierForAge,
+    type Bottle,
+    type Move,
+} from '../lib/sihirliSiseler';
+import { COMPLETE_TEXT, HOW_TO_TEXT, INTRO_TEXT, INVALID_TEXT, WIN_TEXT } from '../constants/sihirliSiseler';
+
+// Sihirli Şişeler — Fen/FAB.2 (renklere göre gruplama).
+// Oyun mantığı lib/sihirliSiseler.ts'te (kademe tablosu, üretim, dökme kuralı, BFS çözücü/ipucu),
+// seslendirilen metinler constants/sihirliSiseler.ts'te. Bu dosya yalnız görünüm ve etkileşimdir.
+// Oyun_Test_Listesi #59 ("çok zor, bug ve hata çok") düzeltmeleri: kolay kademe tablosu + 2 boş şişe,
+// çözülebilir ve zaten çözülmemiş bulmaca, geri al / ipucu, geçersiz hamlede geri bildirim, tamamlanan
+// şişeyi kilitleme, dökme animasyonu, kutlamanın görünmesi ve doğru kayıt alanları.
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
@@ -24,6 +46,8 @@ const BACKGROUND_IMAGE = asset('/backgrounds/games/sihirli_siseler_bg.webp');
 
 const { width, height } = Dimensions.get('window');
 const isWeb = Platform.OS === 'web';
+// Karakterler yalnız geniş web ekranında: dar ekranda şişelerin üstüne biniyorlardı.
+const SHOW_CHARACTERS = isWeb && width >= 700;
 
 // High-contrast color palette with symbols for accessibility
 const LIQUID_COLORS = [
@@ -36,26 +60,18 @@ const LIQUID_COLORS = [
     { main: '#00BCD4', light: '#4DD0E1', dark: '#0097A7', symbol: '✦', name: 'Turkuaz' },  // Cyan - Sparkle
 ];
 
-// Responsive sizing
-const BOTTLE_HEIGHT = isWeb ? Math.min(220, height * 0.32) : 180;
-const BOTTLE_WIDTH = isWeb ? Math.min(70, width * 0.08) : 55;
-const LAYER_HEIGHT = BOTTLE_HEIGHT / 4.5;
-const MAX_LAYERS = 4;
+// Katman yüksekliği SABİT; şişe boyu kapasiteye göre değişir (kapasite 2 → kısa şişe, 4 → uzun).
+// Gövde iç yüksekliği tam kapasite × katman: eskiden üst katman kırpılıyordu (≈%72 görünüyordu).
+const LAYER_HEIGHT = isWeb ? 40 : 38;
+const BODY_BORDER = 3;
+const NECK_HEIGHT = 18;
+const IDLE_HINT_MS = 12000;
 
-interface Bottle {
-    id: number;
-    layers: number[]; // Color indices, bottom to top
-}
-
-interface GameState {
-    bottles: Bottle[];
-    selectedBottle: number | null;
-    moves: number;
-    startTime: number;
-    moveHistory: string[];
-    undoCount: number;
-    isComplete: boolean;
-}
+// Tamamlanmış şişedeki baloncuklar: sabit konumlar (eskiden her render'da Math.random ile titriyordu).
+const BUBBLES = [
+    { left: 8, bottom: 14, size: 7 }, { left: 22, bottom: 30, size: 5 }, { left: 14, bottom: 52, size: 9 },
+    { left: 28, bottom: 68, size: 5 }, { left: 10, bottom: 84, size: 6 },
+];
 
 interface SihirliSiselerProps {
     childName: string;
@@ -65,584 +81,424 @@ interface SihirliSiselerProps {
     onGameEnd?: (data: any) => void;
 }
 
-// Supabase config
-
 export default function SihirliSiseler({ childName, childAge, email, onClose, onGameEnd }: SihirliSiselerProps) {
-    const [gameState, setGameState] = useState<GameState>({
-        bottles: [],
-        selectedBottle: null,
-        moves: 0,
-        startTime: Date.now(),
-        moveHistory: [],
-        undoCount: 0,
-        isComplete: false,
-    });
-    const [showCelebration, setShowCelebration] = useState(false);
-    const [confettiPieces, setConfettiPieces] = useState<any[]>([]);
-    const [completedBottles, setCompletedBottles] = useState(0); // Track for interactive elements
+    const tier = useMemo(() => tierForAge(childAge), [childAge]);
+    const cap = tier.capacity;
+    const nBottles = bottleCount(tier);
+    // Dokunma hedefi ≥48 px: eskiden web'de width*0.08 ≈ 31 px'e düşüyordu.
+    const bottleW = Math.max(48, Math.min(72, Math.floor((width - 32) / nBottles) - 12));
+    const bodyH = cap * LAYER_HEIGHT + BODY_BORDER * 2;
+
+    const initialRef = useRef<Bottle[]>([]);
+    const [bottles, setBottles] = useState<Bottle[]>([]);
+    const [selected, setSelected] = useState<number | null>(null);
+    const [history, setHistory] = useState<Bottle[][]>([]);
+    const [hintMove, setHintMove] = useState<Move | null>(null);
+    const [busy, setBusy] = useState(false);
+    const [pouring, setPouring] = useState<{ from: number; to: number } | null>(null);
+    const [shakeIdx, setShakeIdx] = useState<number | null>(null);
     const [gameReady, setGameReady] = useState(false);
+    const [celebrating, setCelebrating] = useState(false);
+    const [idleTick, setIdleTick] = useState(0);
 
-    // Animations
-    const pourAnim = useRef(new Animated.Value(0)).current;
-    const selectedGlow = useRef(new Animated.Value(0)).current;
-    const selectedGlowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+    // Sayaçlar (render dışı; kayıt ve tek seferlik sesler için)
+    const movesRef = useRef(0);
+    const invalidRef = useRef(0);
+    const undoRef = useRef(0);
+    const hintRef = useRef(0);
+    const restartRef = useRef(0);
+    const sequenceRef = useRef<string[]>([]);
+    const startTimeRef = useRef(Date.now());
+    const finishedRef = useRef(false);
+    const mountedRef = useRef(true);
+    const spokeHowToRef = useRef(false);
+    const spokeInvalidRef = useRef(false);
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+    // Animasyonlar
+    const tilt = useRef(new Animated.Value(0)).current;
+    const shake = useRef(new Animated.Value(0)).current;
+    const pulse = useRef(new Animated.Value(0.5)).current;
     const celebrateScale = useRef(new Animated.Value(0)).current;
-    const bottleAnims = useRef<Animated.Value[]>([]);
 
-    // Geri bildirim earcon'ları global SoundContext'ten (yerel ölü Audio.Sound ref'leri kaldırıldı)
     const { playSound: playGlobalSfx } = useSound();
 
-    // Get difficulty based on age
-    const getDifficulty = useCallback(() => {
-        if (childAge <= 42) return { bottles: 4, colors: 2, empty: 1 };
-        if (childAge <= 54) return { bottles: 5, colors: 3, empty: 1 };
-        if (childAge <= 66) return { bottles: 6, colors: 4, empty: 2 };
-        return { bottles: 7, colors: 5, empty: 2 };
-    }, [childAge]);
+    const schedule = (fn: () => void, ms: number) => {
+        const t = setTimeout(() => { if (mountedRef.current) fn(); }, ms);
+        timersRef.current.push(t);
+    };
 
-    // Initialize game
-    const initializeGame = useCallback(() => {
-        // Her renk tam olarak bir siseyi doldurur (colors*MAX_LAYERS katman). Dolu sise
-        // sayisi renk sayisina esittir; toplam = colors + empty. Eskiden filledBottles
-        // bottleCount-empty ile hesaplaniyordu ve renk sayisini asinca fazladan bos sise
-        // olusuyordu (ilan edilenden kolay oyun).
-        const { colors, empty } = getDifficulty();
-        const filledBottles = colors;
-
-        // Create layers for each color
-        const allLayers: number[] = [];
-        for (let color = 0; color < colors; color++) {
-            for (let i = 0; i < MAX_LAYERS; i++) {
-                allLayers.push(color);
-            }
-        }
-
-        // Shuffle layers
-        for (let i = allLayers.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [allLayers[i], allLayers[j]] = [allLayers[j], allLayers[i]];
-        }
-
-        // Distribute to bottles
-        const bottles: Bottle[] = [];
-        for (let i = 0; i < filledBottles; i++) {
-            bottles.push({
-                id: i,
-                layers: allLayers.slice(i * MAX_LAYERS, (i + 1) * MAX_LAYERS),
-            });
-        }
-
-        // Add empty bottles
-        for (let i = 0; i < empty; i++) {
-            bottles.push({
-                id: filledBottles + i,
-                layers: [],
-            });
-        }
-
-        // Initialize bottle animations
-        bottleAnims.current = bottles.map(() => new Animated.Value(0));
-
-        setGameState({
-            bottles,
-            selectedBottle: null,
-            moves: 0,
-            startTime: Date.now(),
-            moveHistory: [],
-            undoCount: 0,
-            isComplete: false,
-        });
-        setShowCelebration(false);
-    }, [getDifficulty]);
-
+    // İlk bulmaca (kademe yaşa göre sabit)
     useEffect(() => {
-        initializeGame();
-    }, [initializeGame]);
+        const fresh = generate(tier);
+        initialRef.current = fresh.map((b) => [...b]);
+        setBottles(fresh);
+    }, [tier]);
 
-    // Unmount'ta secili sise glow loop'unu ve konusmayi durdur
     useEffect(() => () => {
-
-        selectedGlowLoopRef.current?.stop();
+        mountedRef.current = false;
+        timersRef.current.forEach(clearTimeout);
         stopSpeech();
     }, []);
 
-    // Geri bildirim sesi: şişe tamamlanınca/kazanınca global 'correct' earcon'u çalar.
-    const playSound = async (type: 'pour' | 'complete' | 'win') => {
-        if (type === 'complete' || type === 'win') {
-            playGlobalSfx('correct').catch(() => { });
+    // Seçili/ipucu halkaları yanıp söner
+    useEffect(() => {
+        const loop = Animated.loop(Animated.sequence([
+            Animated.timing(pulse, { toValue: 1, duration: 500, useNativeDriver: true }),
+            Animated.timing(pulse, { toValue: 0.45, duration: 500, useNativeDriver: true }),
+        ]));
+        loop.start();
+        return () => loop.stop();
+    }, [pulse]);
+
+    // Geri sayım bitince oyunu başlat: süre BURADAN sayılır (eskiden geri sayım da süreye giriyordu);
+    // nasıl oynandığı bir kez sesle anlatılır.
+    const handleReady = () => {
+        startTimeRef.current = Date.now();
+        setGameReady(true);
+        if (!spokeHowToRef.current) {
+            spokeHowToRef.current = true;
+            speak(HOW_TO_TEXT, { instructions: HAPPY_VOICE });
         }
     };
 
-    // Check if a bottle is complete (all same color)
-    const isBottleComplete = (bottle: Bottle): boolean => {
-        if (bottle.layers.length !== MAX_LAYERS) return false;
-        return bottle.layers.every(layer => layer === bottle.layers[0]);
+    const markInteraction = () => setIdleTick((n) => n + 1);
+
+    // ---- İpucu ----
+    const showHint = (auto = false) => {
+        if (busy || celebrating || finishedRef.current) return;
+        const m = findHint(bottles, cap);
+        if (!m) return;
+        if (!auto) hintRef.current += 1;
+        setSelected(null);
+        setHintMove(m);
     };
+    const showHintRef = useRef(showHint);
+    showHintRef.current = showHint;
 
-    // Check if game is won
-    const checkWin = (bottles: Bottle[]): boolean => {
-        return bottles.every(bottle =>
-            bottle.layers.length === 0 || isBottleComplete(bottle)
-        );
-    };
+    // 12 sn hareketsizlikte otomatik ipucu (sayılmaz); her dokunuşta zamanlayıcı sıfırlanır.
+    useEffect(() => {
+        if (!gameReady || celebrating || busy || hintMove) return;
+        const t = setTimeout(() => showHintRef.current(true), IDLE_HINT_MS);
+        return () => clearTimeout(t);
+    }, [gameReady, celebrating, busy, hintMove, idleTick, bottles, selected]);
 
-    // Handle bottle tap
-    const handleBottleTap = (bottleIndex: number) => {
-        if (gameState.isComplete) return;
-
-        const { selectedBottle, bottles } = gameState;
-
-        if (selectedBottle === null) {
-            // Select bottle if it has layers
-            if (bottles[bottleIndex].layers.length > 0) {
-                setGameState(prev => ({ ...prev, selectedBottle: bottleIndex }));
-
-                // Glow animation
-                const glowLoop = Animated.loop(
-                    Animated.sequence([
-                        Animated.timing(selectedGlow, { toValue: 1, duration: 500, useNativeDriver: true }),
-                        Animated.timing(selectedGlow, { toValue: 0.5, duration: 500, useNativeDriver: true }),
-                    ])
-                );
-                selectedGlowLoopRef.current = glowLoop;
-                glowLoop.start();
-            }
-        } else if (selectedBottle === bottleIndex) {
-            // Deselect
-            setGameState(prev => ({ ...prev, selectedBottle: null }));
-            selectedGlow.stopAnimation();
-            selectedGlow.setValue(0);
-        } else {
-            // Try to pour
-            const sourceBottle = bottles[selectedBottle];
-            const targetBottle = bottles[bottleIndex];
-
-            const canPour =
-                targetBottle.layers.length < MAX_LAYERS &&
-                (targetBottle.layers.length === 0 ||
-                    targetBottle.layers[targetBottle.layers.length - 1] === sourceBottle.layers[sourceBottle.layers.length - 1]);
-
-            if (canPour) {
-                // Pour animation
-                animatePour(selectedBottle, bottleIndex);
-
-                // Update game state
-                const newBottles = [...bottles];
-                const topColor = sourceBottle.layers[sourceBottle.layers.length - 1];
-
-                // Count consecutive same-color layers from top
-                let pourCount = 0;
-                for (let i = sourceBottle.layers.length - 1; i >= 0; i--) {
-                    if (sourceBottle.layers[i] === topColor &&
-                        targetBottle.layers.length + pourCount < MAX_LAYERS) {
-                        pourCount++;
-                    } else {
-                        break;
-                    }
-                }
-
-                // Transfer layers
-                const pouredLayers = newBottles[selectedBottle].layers.splice(-pourCount);
-                newBottles[bottleIndex].layers.push(...pouredLayers);
-
-                const newMoves = gameState.moves + 1;
-                const newHistory = [...gameState.moveHistory, `${selectedBottle}->${bottleIndex}`];
-
-                // Check for completed bottle and update count
-                if (isBottleComplete(newBottles[bottleIndex])) {
-                    playSound('complete');
-                    speak('Aferin!');
-                    animateBottleComplete(bottleIndex);
-                    // Update completed bottles count for interactive elements
-                    const totalCompleted = newBottles.filter(b => isBottleComplete(b)).length;
-                    setCompletedBottles(totalCompleted);
-                }
-
-                // Check for win
-                const won = checkWin(newBottles);
-
-                setGameState(prev => ({
-                    ...prev,
-                    bottles: newBottles,
-                    selectedBottle: null,
-                    moves: newMoves,
-                    moveHistory: newHistory,
-                    isComplete: won,
-                }));
-
-                selectedGlow.stopAnimation();
-                selectedGlow.setValue(0);
-
-                if (won) {
-                    handleWin(newMoves, newHistory);
-                }
-
-                playSound('pour');
-            } else {
-                // Invalid move - deselect
-                setGameState(prev => ({ ...prev, selectedBottle: null }));
-                selectedGlow.stopAnimation();
-                selectedGlow.setValue(0);
-            }
-        }
-    };
-
-    // Pour animation
-    const animatePour = (from: number, to: number) => {
-        pourAnim.setValue(0);
-        Animated.timing(pourAnim, {
-            toValue: 1,
-            duration: 400,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    // Bottle complete animation
-    const animateBottleComplete = (bottleIndex: number) => {
-        if (bottleAnims.current[bottleIndex]) {
-            Animated.sequence([
-                Animated.timing(bottleAnims.current[bottleIndex], {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(bottleAnims.current[bottleIndex], {
-                    toValue: 0,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-            ]).start();
-        }
-    };
-
-    // Handle win
-    const handleWin = async (moves: number, history: string[]) => {
-        playSound('win');
-        speak('Tebrikler!');
-        setShowCelebration(true);
-
-        // Celebration animation
-        Animated.spring(celebrateScale, {
-            toValue: 1,
-            friction: 4,
-            useNativeDriver: true,
-        }).start();
-
-        // Generate confetti
-        const pieces = Array.from({ length: 50 }, (_, i) => ({
-            id: i,
-            x: Math.random() * width,
-            y: -20,
-            color: LIQUID_COLORS[i % LIQUID_COLORS.length].main,
-            rotation: Math.random() * 360,
-            scale: 0.5 + Math.random() * 0.5,
-        }));
-        setConfettiPieces(pieces);
-
-        // Calculate response time
-        const responseTime = Date.now() - gameState.startTime;
-        const { colors } = getDifficulty();
-
-        // Determine strategy
+    // ---- Kayıt ----
+    const buildGameData = () => {
+        const responseTime = Date.now() - startTimeRef.current;
+        const moves = Math.max(1, movesRef.current);
         const avgMoveTime = responseTime / moves;
-        const strategy = avgMoveTime > 5000 ? 'methodical' : 'trial_error';
-
-        // Save to Supabase - include all required fields
-        const difficulty = getDifficulty();
-        const gameData = {
+        const optimal = solve(initialRef.current, cap)?.length ?? moves;
+        // Verimlilik: en kısa çözüme oranı; ipucu başına -5 (ipucuyla çözmek de öğrenmedir ama ayrı görünür).
+        const efficiency = Math.round(100 * Math.min(1, optimal / moves));
+        return {
             ogrenci_adi: childName,
             email: email || '',
             yas: childAge,
             oyun_turu: 'sihirli-siseler',
-            sure: Math.round(responseTime / 1000), // Duration in seconds
-            hata_sayisi: 0, // No errors in this game type
-            correct_answers: difficulty.colors, // Number of completed bottles
-            response_time: responseTime, // Total time in ms
-            cognitive_speed_score: Math.max(0, 100 - Math.round(moves / difficulty.colors * 10)), // Score based on efficiency
-            zorluk_seviyesi: difficulty.bottles, // Difficulty level = number of bottles
+            sure: Math.round(responseTime / 1000),
+            total_moves: movesRef.current,            // gameRegistry bu alanı okuyor (eskiden hiç gönderilmiyordu → hamle hep 0)
+            hata_sayisi: invalidRef.current,          // geçersiz hamle sayısı (eskiden sabit 0)
+            correct_answers: tier.colors,
+            response_time: responseTime,
+            cognitive_speed_score: Math.max(0, efficiency - hintRef.current * 5),
+            zorluk_seviyesi: tier.level,
             round_history: JSON.stringify({
-                strategy,
-                total_moves: moves,
-                undo_count: gameState.undoCount,
-                move_sequence: history,
-                difficulty: difficulty,
+                strategy: avgMoveTime > 5000 ? 'methodical' : 'trial_error',
+                total_moves: movesRef.current,
+                invalid_moves: invalidRef.current,
+                undo_count: undoRef.current,
+                hint_count: hintRef.current,
+                restart_count: restartRef.current,
+                optimal_moves: optimal,
+                move_sequence: sequenceRef.current,
+                difficulty: { level: tier.level, colors: tier.colors, capacity: cap, empty: tier.empty, bottles: nBottles },
                 avg_move_time_ms: Math.round(avgMoveTime),
             }),
         };
-
-        // Tek kayıt yolu: onGameEnd → saveGameResult. Önceki doğrudan fetch POST'u ile
-        // birlikte her tamamlanan oyun iki satır yazıyordu (raporda çift sayım). gameData'nın
-        // tüm alanları (sure, response_time, cognitive_speed_score, round_history…) gameRegistry
-        // wrapper'ı üzerinden onGameEnd/extraData ile iletiliyor.
-        onGameEnd?.(gameData);
     };
 
-    // Render a single bottle
-    const renderBottle = (bottle: Bottle, index: number) => {
-        const isSelected = gameState.selectedBottle === index;
-        const isComplete = isBottleComplete(bottle);
+    // ---- Kazanma: kutlama GÖRÜNÜR, 'Tebrikler!' bitene kadar beklenir, sonra sonuç ekranına geçilir ----
+    const handleWin = () => {
+        if (finishedRef.current) return;
+        finishedRef.current = true;
+        setCelebrating(true);
+        Animated.spring(celebrateScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+        const finish = async () => {
+            await speakThenWait(WIN_TEXT, 2800, { instructions: HAPPY_VOICE }).catch(() => undefined);
+            if (!mountedRef.current) return;
+            onGameEnd?.(buildGameData());
+        };
+        finish();
+    };
 
-        const bottleScale = bottleAnims.current[index]?.interpolate({
-            inputRange: [0, 1],
-            outputRange: [1, 1.1],
-        }) || 1;
+    // ---- Dökme (kaynak şişe hedefe doğru yatar, sonra katmanlar yer değiştirir) ----
+    const doPour = (from: number, to: number, result: { bottles: Bottle[]; count: number }) => {
+        setBusy(true);
+        setSelected(null);
+        setPouring({ from, to });
+        tilt.setValue(0);
+        Animated.timing(tilt, { toValue: 1, duration: 230, useNativeDriver: true }).start();
+        const before = bottles;
+        schedule(() => {
+            setHistory((h) => [...h, before]);
+            setBottles(result.bottles);
+            movesRef.current += 1;
+            sequenceRef.current.push(`${from}->${to}`);
+            Animated.timing(tilt, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+            const newlyComplete = isBottleComplete(result.bottles[to], cap) && !isBottleComplete(before[to], cap);
+            if (isSolved(result.bottles, cap)) handleWin();
+            else if (newlyComplete) speak(COMPLETE_TEXT);          // yalnız ilk tamamlanışta; kilitli şişe tekrar tetiklemez
+            schedule(() => { setPouring(null); setBusy(false); markInteraction(); }, 220);
+        }, 230);
+    };
+
+    // ---- Dokunma ----
+    const handleBottleTap = (index: number) => {
+        if (!gameReady || busy || celebrating) return;
+        markInteraction();
+        setHintMove(null);
+        const tapped = bottles[index];
+
+        if (selected === null) {
+            // Boş ya da tamamlanmış şişe seçilemez
+            if (!tapped || tapped.length === 0 || isBottleComplete(tapped, cap)) return;
+            setSelected(index);
+            return;
+        }
+        if (selected === index) { setSelected(null); return; }
+
+        const result = applyPour(bottles, selected, index, cap);
+        if (!result) {
+            // Geçersiz hamle: seçim KORUNUR, şişe sallanır, 'wrong' sesi; ilk seferde sesli açıklama.
+            invalidRef.current += 1;
+            setShakeIdx(selected);
+            shake.setValue(0);
+            Animated.sequence([
+                Animated.timing(shake, { toValue: 8, duration: 60, useNativeDriver: true }),
+                Animated.timing(shake, { toValue: -8, duration: 60, useNativeDriver: true }),
+                Animated.timing(shake, { toValue: 6, duration: 50, useNativeDriver: true }),
+                Animated.timing(shake, { toValue: 0, duration: 50, useNativeDriver: true }),
+            ]).start();
+            schedule(() => setShakeIdx(null), 260);
+            playGlobalSfx('wrong').catch(() => { });
+            if (!spokeInvalidRef.current) {
+                spokeInvalidRef.current = true;
+                speak(INVALID_TEXT, { instructions: HAPPY_VOICE });
+            }
+            return;
+        }
+        doPour(selected, index, result);
+    };
+
+    const handleUndo = () => {
+        if (busy || celebrating || history.length === 0) return;
+        markInteraction();
+        const prev = history[history.length - 1];
+        setHistory((h) => h.slice(0, -1));
+        setBottles(prev);
+        setSelected(null);
+        setHintMove(null);
+        undoRef.current += 1;
+    };
+
+    // Baştan: AYNI bulmaca yeniden başlar (eskiden yenile düğmesi yeni rastgele bulmaca üretiyordu).
+    const handleRestart = () => {
+        if (busy || celebrating) return;
+        markInteraction();
+        setBottles(initialRef.current.map((b) => [...b]));
+        setHistory([]);
+        setSelected(null);
+        setHintMove(null);
+        restartRef.current += 1;
+    };
+
+    // ---- Görünüm ----
+    const completedCount = bottles.filter((b) => isBottleComplete(b, cap)).length;
+
+    const renderBottle = (bottle: Bottle, index: number) => {
+        const complete = isBottleComplete(bottle, cap);
+        const isSelected = selected === index;
+        const isTarget = selected !== null && selected !== index && pourCount(bottles, selected, index, cap) > 0;
+        const dimmed = selected !== null && selected !== index && !isTarget && !complete;
+        const isHintFrom = hintMove?.[0] === index;
+        const isHintTo = hintMove?.[1] === index;
+        const dir = pouring && pouring.from === index ? (pouring.to > index ? 1 : -1) : 0;
+
+        const transform: any[] = [];
+        if (isSelected) transform.push({ translateY: -14 });
+        if (dir !== 0) {
+            transform.push({ translateX: tilt.interpolate({ inputRange: [0, 1], outputRange: [0, dir * 14] }) });
+            transform.push({ rotate: tilt.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${dir * 26}deg`] }) });
+        }
+        if (shakeIdx === index) transform.push({ translateX: shake });
 
         return (
             <TouchableOpacity
-                key={bottle.id}
+                key={index}
                 onPress={() => handleBottleTap(index)}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
+                disabled={complete}
+                accessibilityRole="button"
+                accessibilityLabel={complete ? 'Tamamlanan şişe' : bottle.length === 0 ? 'Boş şişe' : 'Şişe'}
             >
                 <Animated.View
                     style={[
                         styles.bottle,
-                        isSelected && styles.bottleSelected,
-                        isComplete && styles.bottleComplete,
-                        {
-                            transform: [{ scale: bottleScale }],
-                            shadowOpacity: isSelected ? 0.6 : 0.3,
-                        },
+                        { width: bottleW, height: bodyH + NECK_HEIGHT },
+                        dimmed && styles.bottleDimmed,
+                        { transform },
                     ]}
                 >
-                    {/* Bottle neck */}
+                    {/* Boyun */}
                     <View style={styles.bottleNeck} />
 
-                    {/* Bottle body with layers */}
-                    <View style={styles.bottleBody}>
-                        {/* Glass reflection */}
+                    {/* Gövde + sıvı katmanları */}
+                    <View style={[styles.bottleBody, { width: bottleW, height: bodyH }, complete && styles.bottleBodyComplete]}>
                         <View style={styles.glassReflection} />
-
-                        {/* Liquid layers */}
-                        {bottle.layers.map((colorIndex, layerIndex) => (
-                            <Animated.View
+                        {bottle.map((colorIndex, layerIndex) => (
+                            <View
                                 key={layerIndex}
                                 style={[
                                     styles.liquidLayer,
                                     {
                                         backgroundColor: LIQUID_COLORS[colorIndex].main,
                                         bottom: layerIndex * LAYER_HEIGHT,
-                                        borderTopLeftRadius: layerIndex === bottle.layers.length - 1 ? 8 : 0,
-                                        borderTopRightRadius: layerIndex === bottle.layers.length - 1 ? 8 : 0,
                                         height: LAYER_HEIGHT,
+                                        borderTopLeftRadius: layerIndex === bottle.length - 1 ? 8 : 0,
+                                        borderTopRightRadius: layerIndex === bottle.length - 1 ? 8 : 0,
                                     },
                                 ]}
                             >
-                                {/* Liquid shine */}
                                 <View style={[styles.liquidShine, { backgroundColor: LIQUID_COLORS[colorIndex].light }]} />
-
-                                {/* Symbol for colorblind accessibility */}
+                                {/* Renk körlüğü için simge */}
                                 <Text style={styles.layerSymbol}>{LIQUID_COLORS[colorIndex].symbol}</Text>
-
-                                {/* Separator line between layers */}
-                                {layerIndex < bottle.layers.length - 1 && (
-                                    <View style={styles.layerSeparator} />
-                                )}
-                            </Animated.View>
+                                {layerIndex < bottle.length - 1 && <View style={styles.layerSeparator} />}
+                            </View>
                         ))}
-
-                        {/* Bubbles for complete bottles */}
-                        {isComplete && (
-                            <View style={styles.bubbleContainer}>
-                                {[...Array(5)].map((_, i) => (
-                                    <Animated.View
-                                        key={i}
-                                        style={[
-                                            styles.bubble,
-                                            {
-                                                left: 10 + Math.random() * 25,
-                                                bottom: 20 + Math.random() * 100,
-                                                width: 4 + Math.random() * 8,
-                                                height: 4 + Math.random() * 8,
-                                            },
-                                        ]}
-                                    />
+                        {complete && (
+                            <View style={styles.bubbleContainer} pointerEvents="none">
+                                {BUBBLES.map((b, i) => (
+                                    <View key={i} style={[styles.bubble, { left: b.left, bottom: b.bottom, width: b.size, height: b.size }]} />
                                 ))}
                             </View>
                         )}
                     </View>
 
-                    {/* Selection glow */}
-                    {isSelected && (
-                        <Animated.View
-                            style={[
-                                styles.selectionGlow,
-                                { opacity: selectedGlow },
-                            ]}
-                        />
-                    )}
+                    {/* Halkalar: seçili (altın), geçerli hedef (yeşil), ipucu (mavi/yeşil) */}
+                    {isSelected && <View pointerEvents="none" style={[styles.ring, { borderColor: '#FFC107' }]} />}
+                    {isTarget && <Animated.View pointerEvents="none" style={[styles.ring, { borderColor: '#2ECC71', opacity: pulse }]} />}
+                    {isHintFrom && <Animated.View pointerEvents="none" style={[styles.ring, { borderColor: '#29B6F6', opacity: pulse }]} />}
+                    {isHintTo && <Animated.View pointerEvents="none" style={[styles.ring, { borderColor: '#2ECC71', opacity: pulse }]} />}
+                    {complete && <View style={styles.doneBadge}><Text style={styles.doneBadgeText}>✓</Text></View>}
                 </Animated.View>
             </TouchableOpacity>
         );
     };
 
+    const canUndo = history.length > 0 && !busy && !celebrating;
+
     return (
         <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
             <View style={styles.darkOverlay} />
-            {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay
-                    message="Sihirli Şişeler oyununa hoş geldin! Aynı renk sıvıları birleştir!"
+                    message={INTRO_TEXT}
                     childName={childName}
                     countdownSeconds={5}
-                    onComplete={() => setGameReady(true)}
+                    onComplete={handleReady}
                 />
             )}
             <View style={styles.background}>
-                {/* Gradient-like Lab Atmosphere */}
                 <View style={styles.labGradient} />
-
-                {/* Lab Equipment Decorations */}
-                <View style={[styles.labDecor, { left: 20, top: height * 0.15 }]}>
-                    <Text style={styles.labDekorEmoji}>🔬</Text>
-                </View>
-                <View style={[styles.labDecor, { right: 20, top: height * 0.2 }]}>
-                    <Text style={styles.labDekorEmoji}>⚗️</Text>
-                </View>
-                <View style={[styles.labDecor, { left: 30, bottom: height * 0.25 }]}>
-                    <Text style={styles.labDekorEmoji}>🧬</Text>
-                </View>
-                <View style={[styles.labDecor, { right: 30, bottom: height * 0.3 }]}>
-                    <Text style={styles.labDekorEmoji}>💡</Text>
-                </View>
-
-                {/* Bubbles floating in background */}
+                <View style={[styles.labDecor, { left: 20, top: height * 0.15 }]}><Text style={styles.labDekorEmoji}>🔬</Text></View>
+                <View style={[styles.labDecor, { right: 20, top: height * 0.2 }]}><Text style={styles.labDekorEmoji}>⚗️</Text></View>
+                <View style={[styles.labDecor, { left: 30, bottom: height * 0.25 }]}><Text style={styles.labDekorEmoji}>🧬</Text></View>
+                <View style={[styles.labDecor, { right: 30, bottom: height * 0.3 }]}><Text style={styles.labDekorEmoji}>💡</Text></View>
                 {[...Array(8)].map((_, i) => (
                     <View
                         key={i}
-                        style={[
-                            styles.bgBubble,
-                            {
-                                left: `${10 + (i * 12)}%`,
-                                top: `${20 + (i % 3) * 25}%`,
-                                width: 10 + (i % 4) * 8,
-                                height: 10 + (i % 4) * 8,
-                                opacity: 0.3 + (i % 3) * 0.1,
-                            },
-                        ]}
+                        style={[styles.bgBubble, {
+                            left: `${10 + (i * 12)}%`, top: `${20 + (i % 3) * 25}%`,
+                            width: 10 + (i % 4) * 8, height: 10 + (i % 4) * 8, opacity: 0.3 + (i % 3) * 0.1,
+                        }]}
                     />
                 ))}
             </View>
 
-            {/* Left Side Interactive Character - Pıtır */}
-            {isWeb && (
-                <View style={styles.leftCharacter}>
-                    <Text style={[
-                        styles.characterEmoji,
-                        completedBottles > 0 && styles.characterHappy,
-                    ]}>
-                        🐥
-                    </Text>
-
-                    {completedBottles > 0 && (
-                        <View style={styles.speechBubble}>
-                            <Text style={styles.speechText}>
-                                {completedBottles === 1 ? 'Harika!' : completedBottles >= 2 ? 'Süpersin!' : '👍'}
-                            </Text>
-                        </View>
+            {/* Karakterler (yalnız geniş web): dokunmayı yutmasınlar */}
+            {SHOW_CHARACTERS && (
+                <View style={styles.leftCharacter} pointerEvents="none">
+                    <Text style={[styles.characterEmoji, completedCount > 0 && styles.characterHappy]}>🐥</Text>
+                    {completedCount > 0 && (
+                        <View style={styles.speechBubble}><Text style={styles.speechText}>{completedCount === 1 ? 'Harika!' : 'Süpersin!'}</Text></View>
                     )}
-                    {/* Glowing lamp that reacts to progress */}
-                    <View style={[
-                        styles.reactiveLamp,
-                        { backgroundColor: completedBottles > 0 ? '#FFD700' : '#555' },
-                        completedBottles > 2 && styles.lampGlowing,
-                    ]}>
-                        <Text style={styles.lampEmoji}>💡</Text>
-                    </View>
+                </View>
+            )}
+            {SHOW_CHARACTERS && (
+                <View style={styles.rightCharacter} pointerEvents="none">
+                    <Text style={[styles.characterEmoji, completedCount > 1 && styles.characterHappy]}>🐸</Text>
+                    {completedCount > 1 && (
+                        <View style={styles.speechBubble}><Text style={styles.speechText}>{completedCount >= 3 ? 'Dahisin!' : 'Çok iyi! 🎉'}</Text></View>
+                    )}
                 </View>
             )}
 
-            {/* Right Side Interactive Character - Filo */}
-            {isWeb && (
-                <View style={styles.rightCharacter}>
-                    <Text style={[
-                        styles.characterEmoji,
-                        completedBottles > 1 && styles.characterHappy,
-                    ]}>
-                        🐸
-                    </Text>
-
-                    {completedBottles > 1 && (
-                        <View style={styles.speechBubble}>
-                            <Text style={styles.speechText}>
-                                {completedBottles >= 3 ? 'Dahisin!' : 'Çok iyi! 🎉'}
-                            </Text>
-                        </View>
-                    )}
-                    {/* Progress indicator */}
-                    <View style={styles.progressMeter}>
-                        <View style={[styles.progressFill, { height: `${Math.min(completedBottles * 25, 100)}%` }]} />
-                    </View>
-                </View>
-            )}
-
-            {/* Header - simplified */}
+            {/* Başlık: çıkış butonu satırın içinde (iOS'ta durum çubuğuyla çakışmaz) */}
             <View style={styles.header}>
-                <GameExitButton onPress={onClose} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
+                <GameExitButton onPress={onClose} />
                 <Text style={styles.title}>🧪 Sihirli Şişeler</Text>
-                <TouchableOpacity onPress={initializeGame} style={styles.restartIconButton}>
-                    <Ionicons name="refresh" size={24} color="#fff" />
+                <View style={{ width: 44 }} />
+            </View>
+
+            <ListenButton onPress={() => speak(INTRO_TEXT, { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ alignSelf: 'center', marginTop: 12 }} />
+
+            {/* Şişeler */}
+            <View style={styles.bottlesContainer}>
+                <View style={[styles.bottlesGrid, isWeb && styles.bottlesGridWeb]}>
+                    {bottles.map((bottle, index) => renderBottle(bottle, index))}
+                </View>
+            </View>
+
+            {/* Yazısız ikon düğmeleri: Geri al · İpucu · Baştan */}
+            <View style={styles.actionBar}>
+                <TouchableOpacity
+                    style={[styles.actionBtn, !canUndo && styles.actionBtnOff]}
+                    onPress={handleUndo}
+                    disabled={!canUndo}
+                    accessibilityRole="button"
+                    accessibilityLabel="Geri al"
+                >
+                    <Ionicons name="arrow-undo" size={28} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: '#FFB300' }]}
+                    onPress={() => showHint(false)}
+                    disabled={busy || celebrating}
+                    accessibilityRole="button"
+                    accessibilityLabel="İpucu"
+                >
+                    <Text style={styles.actionEmoji}>💡</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.actionBtn, { backgroundColor: '#FF7043' }, (busy || celebrating) && styles.actionBtnOff]}
+                    onPress={handleRestart}
+                    disabled={busy || celebrating}
+                    accessibilityRole="button"
+                    accessibilityLabel="Baştan başla"
+                >
+                    <Ionicons name="refresh" size={28} color="#fff" />
                 </TouchableOpacity>
             </View>
 
-            <ListenButton onPress={() => speak('Sihirli Şişeler oyununa hoş geldin! Aynı renk sıvıları birleştir!', { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ alignSelf: 'center', marginTop: 12 }} />
-
-            {/* Bottles Grid - Centered with responsive gap */}
-            <View style={styles.bottlesContainer}>
-                <View style={[styles.bottlesGrid, isWeb && styles.bottlesGridWeb]}>
-                    {gameState.bottles.map((bottle, index) => renderBottle(bottle, index))}
-                </View>
-            </View>
-
-
-            {/* Celebration Overlay */}
-            {showCelebration && (
+            {/* Kutlama: confetti + kart; 'Tebrikler!' bitince sonuç ekranına geçilir */}
+            {celebrating && (
                 <View style={styles.celebrationOverlay}>
-                    {/* Confetti */}
-                    {confettiPieces.map(piece => (
-                        <Animated.View
-                            key={piece.id}
-                            style={[
-                                styles.confetti,
-                                {
-                                    left: piece.x,
-                                    top: piece.y + (Date.now() % 1000) * 0.5,
-                                    backgroundColor: piece.color,
-                                    transform: [
-                                        { rotate: `${piece.rotation}deg` },
-                                        { scale: piece.scale },
-                                    ],
-                                },
-                            ]}
-                        />
-                    ))}
-
-                    {/* Win message */}
-                    <Animated.View
-                        style={[
-                            styles.winCard,
-                            { transform: [{ scale: celebrateScale }] },
-                        ]}
-                    >
+                    <ConfettiCannon count={120} origin={{ x: width / 2, y: 0 }} autoStart fadeOut />
+                    <Animated.View style={[styles.winCard, { transform: [{ scale: celebrateScale }] }]}>
                         <Text style={styles.winEmoji}>🏆</Text>
                         <Text style={styles.winTitle}>{childName}, Harika Bir Kimyagersin!</Text>
-                        <Text style={styles.winStats}>
-                            🎯 {gameState.moves} hamlede tamamladın!
-                        </Text>
-                        <TouchableOpacity
-                            style={styles.playAgainButton}
-                            onPress={() => {
-                                setShowCelebration(false);
-                                initializeGame();
-                            }}
-                        >
-                            <Text style={styles.playAgainText}>Tekrar Oyna 🔄</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.exitButton}
-                            onPress={onClose}
-                        >
-                            <Text style={styles.exitText}>Ana Menü 🏠</Text>
-                        </TouchableOpacity>
+                        <Text style={styles.winStats}>🎯 {movesRef.current} hamlede tamamladın!</Text>
                     </Animated.View>
                 </View>
             )}
@@ -664,137 +520,36 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         overflow: 'hidden',
     },
-    bgCircle1: {
-        position: 'absolute',
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: 'rgba(156, 204, 101, 0.3)',
-        top: -100,
-        right: -50,
-    },
-    bgCircle2: {
-        position: 'absolute',
-        width: 200,
-        height: 200,
-        borderRadius: 100,
-        backgroundColor: 'rgba(129, 199, 132, 0.3)',
-        bottom: 100,
-        left: -50,
-    },
-    bgCircle3: {
-        position: 'absolute',
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        backgroundColor: 'rgba(165, 214, 167, 0.4)',
-        top: height / 2,
-        right: -30,
-    },
-    // Lab-themed background styles
+    // Lab temalı arka plan
     labGradient: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: '#E3F2FD',
     },
-    labDecor: {
-        position: 'absolute',
-        zIndex: 1,
-    },
-    labDekorEmoji: {
-        fontSize: 40,
-        opacity: 0.3,
-    },
+    labDecor: { position: 'absolute', zIndex: 1 },
+    labDekorEmoji: { fontSize: 40, opacity: 0.3 },
     bgBubble: {
         position: 'absolute',
         backgroundColor: 'rgba(100, 181, 246, 0.3)',
         borderRadius: 50,
     },
-    // Interactive character styles
-    leftCharacter: {
-        position: 'absolute',
-        left: 20,
-        top: height * 0.35,
-        alignItems: 'center',
-        zIndex: 10,
-    },
-    rightCharacter: {
-        position: 'absolute',
-        right: 20,
-        top: height * 0.35,
-        alignItems: 'center',
-        zIndex: 10,
-    },
-    characterEmoji: {
-        fontSize: 60,
-    },
-    characterHappy: {
-        transform: [{ scale: 1.2 }],
-    },
-    characterName: {
-        fontSize: 14,
-        fontWeight: 'bold',
-        color: '#2E7D32',
-        marginTop: 5,
-    },
+    // Karakterler
+    leftCharacter: { position: 'absolute', left: 20, top: height * 0.35, alignItems: 'center', zIndex: 10 },
+    rightCharacter: { position: 'absolute', right: 20, top: height * 0.35, alignItems: 'center', zIndex: 10 },
+    characterEmoji: { fontSize: 60 },
+    characterHappy: { transform: [{ scale: 1.2 }] },
     speechBubble: {
-        backgroundColor: '#fff',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 15,
-        marginTop: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        backgroundColor: '#fff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, marginTop: 8,
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3,
     },
-    speechText: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#4CAF50',
-    },
-    reactiveLamp: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        marginTop: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    lampGlowing: {
-        shadowColor: '#FFD700',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.8,
-        shadowRadius: 15,
-    },
-    lampEmoji: {
-        fontSize: 20,
-    },
-    progressMeter: {
-        width: 30,
-        height: 80,
-        backgroundColor: 'rgba(0,0,0,0.1)',
-        borderRadius: 15,
-        marginTop: 10,
-        overflow: 'hidden',
-        justifyContent: 'flex-end',
-    },
-    progressFill: {
-        width: '100%',
-        backgroundColor: '#4CAF50',
-        borderRadius: 15,
-    },
-    bottlesGridWeb: {
-        gap: 25,
-        maxWidth: 700,
-    },
+    speechText: { fontSize: 12, fontWeight: 'bold', color: '#4CAF50' },
+
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
-        paddingBottom: 15,
+        paddingHorizontal: 16,
+        paddingTop: Platform.OS === 'ios' ? 56 : 36,
+        paddingBottom: 12,
         backgroundColor: '#4CAF50',
         borderBottomLeftRadius: 25,
         borderBottomRightRadius: 25,
@@ -803,57 +558,18 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 8,
         elevation: 8,
+        zIndex: 20,
     },
-    restartIconButton: {
-        padding: 8,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        borderRadius: 20,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#fff',
-    },
-    statsContainer: {
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 15,
-    },
-    statsText: {
-        color: '#fff',
-        fontWeight: '600',
-        fontSize: 14,
-    },
-    instructions: {
-        textAlign: 'center',
-        fontSize: 18,
-        color: '#2E7D32',
-        marginTop: 20,
-        fontWeight: '500',
-    },
-    bottlesContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-    },
-    bottlesGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'center',
-        gap: 15,
-    },
-    bottle: {
-        width: BOTTLE_WIDTH,
-        height: BOTTLE_HEIGHT,
-        alignItems: 'center',
-        marginHorizontal: 8,
-        marginVertical: 10,
-    },
+    title: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
+
+    bottlesContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16 },
+    bottlesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
+    bottlesGridWeb: { gap: 24, maxWidth: 700 },
+    bottle: { alignItems: 'center', marginHorizontal: 6, marginVertical: 14 },
+    bottleDimmed: { opacity: 0.45 },
     bottleNeck: {
         width: 30,
-        height: 20,
+        height: NECK_HEIGHT,
         backgroundColor: 'rgba(255,255,255,0.6)',
         borderTopLeftRadius: 6,
         borderTopRightRadius: 6,
@@ -862,13 +578,11 @@ const styles = StyleSheet.create({
         borderBottomWidth: 0,
     },
     bottleBody: {
-        width: BOTTLE_WIDTH,
-        height: BOTTLE_HEIGHT - 25,
         backgroundColor: 'rgba(255,255,255,0.7)',
         borderRadius: 12,
         borderTopLeftRadius: 8,
         borderTopRightRadius: 8,
-        borderWidth: 3,
+        borderWidth: BODY_BORDER,
         borderColor: 'rgba(255,255,255,0.9)',
         overflow: 'hidden',
         shadowColor: '#000',
@@ -877,158 +591,51 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 6,
     },
+    bottleBodyComplete: { borderColor: '#FFD700' },
     glassReflection: {
-        position: 'absolute',
-        left: 5,
-        top: 10,
-        width: 8,
-        height: '60%',
-        backgroundColor: 'rgba(255,255,255,0.5)',
-        borderRadius: 4,
-        zIndex: 10,
+        position: 'absolute', left: 5, top: 10, width: 8, height: '60%',
+        backgroundColor: 'rgba(255,255,255,0.5)', borderRadius: 4, zIndex: 10,
     },
-    liquidLayer: {
-        position: 'absolute',
-        left: 3,
-        right: 3,
-        height: LAYER_HEIGHT,
-    },
-    liquidShine: {
-        position: 'absolute',
-        left: 5,
-        top: 5,
-        width: 15,
-        height: 8,
-        borderRadius: 4,
-        opacity: 0.5,
-    },
+    liquidLayer: { position: 'absolute', left: 0, right: 0 },
+    liquidShine: { position: 'absolute', left: 5, top: 5, width: 15, height: 8, borderRadius: 4, opacity: 0.5 },
     layerSymbol: {
-        position: 'absolute',
-        right: 8,
-        top: '50%',
-        marginTop: -8,
-        fontSize: 14,
-        color: 'rgba(255,255,255,0.8)',
-        textShadowColor: 'rgba(0,0,0,0.3)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
+        position: 'absolute', right: 6, top: '50%', marginTop: -8, fontSize: 14, color: 'rgba(255,255,255,0.8)',
+        textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 2,
     },
-    layerSeparator: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 2,
-        backgroundColor: 'rgba(255,255,255,0.4)',
+    layerSeparator: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, backgroundColor: 'rgba(255,255,255,0.4)' },
+    ring: {
+        position: 'absolute', left: -4, right: -4, top: -4, bottom: -4,
+        borderWidth: 4, borderRadius: 16,
     },
-    bottleSelected: {
-        transform: [{ scale: 1.05 }],
+    doneBadge: {
+        position: 'absolute', top: 24, left: '50%', marginLeft: -13, width: 26, height: 26, borderRadius: 13,
+        backgroundColor: '#FFC107', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff',
     },
-    bottleComplete: {
-        borderColor: '#FFD700',
-        shadowColor: '#FFD700',
-        shadowOpacity: 0.5,
+    doneBadgeText: { color: '#fff', fontSize: 15, fontWeight: '900' },
+    bubbleContainer: { ...StyleSheet.absoluteFillObject },
+    bubble: { position: 'absolute', backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: 10 },
+
+    actionBar: { flexDirection: 'row', justifyContent: 'center', gap: 18, paddingBottom: 28, paddingTop: 6 },
+    actionBtn: {
+        width: 60, height: 60, borderRadius: 30, backgroundColor: '#5C6BC0', alignItems: 'center', justifyContent: 'center',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 5,
     },
-    selectionGlow: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(255,215,0,0.3)',
-        borderRadius: 15,
-    },
-    bubbleContainer: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    bubble: {
-        position: 'absolute',
-        backgroundColor: 'rgba(255,255,255,0.6)',
-        borderRadius: 10,
-    },
-    actionButtons: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        paddingBottom: 40,
-        gap: 15,
-    },
-    restartButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FF7043',
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        borderRadius: 25,
-        gap: 8,
-        shadowColor: '#FF7043',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
-        elevation: 5,
-    },
-    buttonText: {
-        color: '#fff',
-        fontWeight: 'bold',
-        fontSize: 16,
-    },
+    actionBtnOff: { opacity: 0.4 },
+    actionEmoji: { fontSize: 30 },
+
     celebrationOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0,0,0,0.7)',
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    confetti: {
-        position: 'absolute',
-        width: 12,
-        height: 12,
-        borderRadius: 2,
+        zIndex: 50,
     },
     winCard: {
-        backgroundColor: '#fff',
-        borderRadius: 30,
-        padding: 30,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.3,
-        shadowRadius: 20,
-        elevation: 15,
+        backgroundColor: '#fff', borderRadius: 30, padding: 30, alignItems: 'center',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 15,
         maxWidth: width - 60,
     },
-    winEmoji: {
-        fontSize: 80,
-        marginBottom: 10,
-    },
-    winTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#2E7D32',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    winStats: {
-        fontSize: 18,
-        color: '#666',
-        marginBottom: 25,
-    },
-    playAgainButton: {
-        backgroundColor: '#4CAF50',
-        paddingHorizontal: 40,
-        paddingVertical: 15,
-        borderRadius: 30,
-        marginBottom: 12,
-    },
-    playAgainText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    exitButton: {
-        backgroundColor: '#FF7043',
-        paddingHorizontal: 40,
-        paddingVertical: 12,
-        borderRadius: 25,
-    },
-    exitText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
+    winEmoji: { fontSize: 80, marginBottom: 10 },
+    winTitle: { fontSize: 24, fontWeight: 'bold', color: '#2E7D32', textAlign: 'center', marginBottom: 10 },
+    winStats: { fontSize: 18, color: '#666' },
 });
-
