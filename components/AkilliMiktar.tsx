@@ -3,8 +3,10 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
-import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { RESPONSIVE_ADAPTIVE, useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { buildCompareRound, type CompareRound } from '../lib/akilliRounds';
 import { speak } from '../services/speechService';
+import AdaptiveLevelBadge from './AdaptiveLevelBadge';
 import ListenButton from './ListenButton';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
@@ -14,6 +16,7 @@ const speakQuestion = (more: boolean) => speak(more ? 'Hangisinde daha ÇOK var?
 // Akıllı Miktar — UYARLANIR (adaptif) zorluk. Maarif: MAB.1
 // (Ritmik ve algısal sayabilme; nicelik karşılaştırma).
 // Zorluk arttıkça sayılar büyür ve iki taraf birbirine YAKLAŞIR (ayırt etmesi zorlaşır).
+// Her 2 turda bir uyarlanır; tur üretimi lib/akilliRounds.ts, seviye rozeti AdaptiveLevelBadge.
 
 interface Props {
     onGameEnd: (
@@ -28,41 +31,19 @@ interface Props {
     childName?: string;
 }
 
-const TOTAL_ROUNDS = 9;
-const TARGET_MS = 7000;
+const TOTAL_ROUNDS = 10;        // her 2 turda bir uyarlama (RESPONSIVE_ADAPTIVE)
+const TARGET_MS = 6000;
 const OBJECT = '🍎';
 
-const CFG: Record<number, { lo: number; hi: number; minGap: number; maxGap: number }> = {
-    1: { lo: 1, hi: 5, minGap: 3, maxGap: 9 },
-    2: { lo: 1, hi: 6, minGap: 2, maxGap: 9 },
-    3: { lo: 2, hi: 8, minGap: 2, maxGap: 4 },
-    4: { lo: 3, hi: 9, minGap: 1, maxGap: 2 },
-    5: { lo: 5, hi: 10, minGap: 1, maxGap: 1 },
-};
-
-interface Round { left: number; right: number; more: boolean; }
-
-function buildRound(diff: number): Round {
-    const c = CFG[diff] || CFG[2];
-    let left = 0, right = 0;
-    for (let i = 0; i < 40; i++) {
-        left = c.lo + Math.floor(Math.random() * (c.hi - c.lo + 1));
-        right = c.lo + Math.floor(Math.random() * (c.hi - c.lo + 1));
-        const gap = Math.abs(left - right);
-        if (left !== right && gap >= c.minGap && gap <= c.maxGap) break;
-    }
-    if (left === right) right = left + 1; // güvenlik
-    return { left, right, more: Math.random() > 0.5 };
-}
+type Round = CompareRound;
 
 export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
-    const START_DIFF = 2;
-    const { recordLevel } = useAdaptiveDifficulty({
-        minDifficulty: 1, maxDifficulty: 5, checkpointEvery: 3, startDifficulty: START_DIFF,
-    });
+    const START_DIFF = RESPONSIVE_ADAPTIVE.startDifficulty ?? 2;
+    const { recordLevel } = useAdaptiveDifficulty(RESPONSIVE_ADAPTIVE);
 
     const [round, setRound] = useState(1);
-    const [current, setCurrent] = useState(() => buildRound(START_DIFF));
+    const [current, setCurrent] = useState(() => buildCompareRound(START_DIFF));
+    const [displayDiff, setDisplayDiff] = useState(START_DIFF);
     const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
     const [selectedSide, setSelectedSide] = useState<'left' | 'right' | null>(null);
     const [gameReady, setGameReady] = useState(false);
@@ -84,8 +65,8 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
     const correctSide = (r: Round): 'left' | 'right' =>
         r.more ? (r.left > r.right ? 'left' : 'right') : (r.left < r.right ? 'left' : 'right');
 
-    const nextRound = useCallback((solvedInDiff: number) => {
-        const timeMs = Date.now() - levelStartRef.current;
+    const nextRound = useCallback((solvedInDiff: number, timeMs: number, solved: Round) => {
+        // Süre, doğru cevabın verildiği andan ölçülür (850 ms'lik kutlama bekleyişi eklenmez).
         const nextDiff = recordLevel({ correct: 1, total: 1, errors: levelErrorsRef.current, timeMs, targetMs: TARGET_MS });
 
         if (round >= TOTAL_ROUNDS) {
@@ -99,8 +80,9 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
         levelErrorsRef.current = 0;
         levelStartRef.current = Date.now();
         diffRef.current = nextDiff;
+        setDisplayDiff(nextDiff);
         setRound(r => r + 1);
-        const next = buildRound(nextDiff);
+        const next = buildCompareRound(nextDiff, solved);
         setCurrent(next);
         speakQuestion(next.more);
         setSelectedSide(null);
@@ -118,7 +100,9 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
             setFeedback('correct');
             speak('Harika!');
             const solvedInDiff = diffRef.current;
-            startTimer(setTimeout(() => nextRound(solvedInDiff), 850));
+            const timeMs = Date.now() - levelStartRef.current;
+            const solved = current;
+            startTimer(setTimeout(() => nextRound(solvedInDiff, timeMs, solved), 850));
         } else {
             levelErrorsRef.current += 1;
             totalErrorsRef.current += 1;
@@ -160,8 +144,11 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
             <Animated.View style={[styles.container, { transform: [{ translateX: shake }] }]}>
                 <View style={styles.header}>
                     <Text style={styles.title}>📈 Akıllı Miktar</Text>
-                    <View style={styles.roundBadge}>
-                        <Text style={styles.roundText}>{round}/{TOTAL_ROUNDS}</Text>
+                    <View style={styles.headerRight}>
+                        <AdaptiveLevelBadge level={displayDiff} />
+                        <View style={styles.roundBadge}>
+                            <Text style={styles.roundText}>{round}/{TOTAL_ROUNDS}</Text>
+                        </View>
                     </View>
                 </View>
 
@@ -200,7 +187,8 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
-    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, zIndex: 20 },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     title: { fontSize: 20, fontWeight: 'bold', color: '#3e2723' },
     roundBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },

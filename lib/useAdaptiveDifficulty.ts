@@ -35,6 +35,20 @@ export interface AdaptiveOptions {
     accuracyWeight?: number;  // varsayılan 0.7 (skorda doğruluk ağırlığı)
 }
 
+/**
+ * "Hissedilir" ayar: her 2 seviyede bir değerlendirir (eski 3'lüde 9 turluk oyunda zorluk en
+ * fazla 2 kez değişiyordu, çocuk fark etmiyordu — Oyun_Test_Listesi #20/#21) ve düşme eşiğini
+ * 0.45 → 0.55'e çıkarır (hem yavaş hem hatalı iki tur artık gerçekten kolaylaştırır).
+ * 10 turluk oyunda 4 değerlendirme (2., 4., 6., 8. turlardan sonra) yapılır.
+ */
+export const RESPONSIVE_ADAPTIVE: AdaptiveOptions = {
+    minDifficulty: 1,
+    maxDifficulty: 5,
+    startDifficulty: 2,
+    checkpointEvery: 2,
+    lowerThreshold: 0.55,
+};
+
 export interface AdaptiveApi {
     difficulty: number;                        // sıradaki seviyenin zorluğu
     level: number;                             // tamamlanan seviye sayısı
@@ -97,6 +111,21 @@ export function adjustDifficulty(
     return current;
 }
 
+/**
+ * Bir seviye kaydedildikten sonra sıradaki zorluğu belirler (saf; hook ve testler paylaşır).
+ * `history` bu seviye DAHİL tüm geçmiştir. Checkpoint değilse zorluk aynı kalır (score=null).
+ */
+export function difficultyAfterLevel(
+    history: LevelOutcome[],
+    current: number,
+    cfg: Required<Pick<AdaptiveOptions,
+        'minDifficulty' | 'maxDifficulty' | 'checkpointEvery' | 'raiseThreshold' | 'lowerThreshold' | 'accuracyWeight'>>,
+): { next: number; score: number | null } {
+    if (history.length % cfg.checkpointEvery !== 0) return { next: current, score: null };
+    const score = performanceScore(history.slice(-cfg.checkpointEvery), cfg.accuracyWeight);
+    return { next: adjustDifficulty(current, score, cfg), score };
+}
+
 export function useAdaptiveDifficulty(options: AdaptiveOptions = {}): AdaptiveApi {
     const minD = options.minDifficulty ?? 1;
     const maxD = options.maxDifficulty ?? 5;
@@ -123,19 +152,15 @@ export function useAdaptiveDifficulty(options: AdaptiveOptions = {}): AdaptiveAp
         trajectoryRef.current.push(difficultyRef.current);
 
         const count = historyRef.current.length;
-        let next = difficultyRef.current;
-
-        if (count % checkpointEvery === 0) {
-            const recent = historyRef.current.slice(-checkpointEvery);
-            const score = performanceScore(recent, accuracyWeight);
-            setLastScore(score);
-            next = adjustDifficulty(difficultyRef.current, score, {
-                minDifficulty: minD,
-                maxDifficulty: maxD,
-                raiseThreshold,
-                lowerThreshold,
-            });
-        }
+        const { next, score } = difficultyAfterLevel(historyRef.current, difficultyRef.current, {
+            minDifficulty: minD,
+            maxDifficulty: maxD,
+            checkpointEvery,
+            raiseThreshold,
+            lowerThreshold,
+            accuracyWeight,
+        });
+        if (score !== null) setLastScore(score);
 
         difficultyRef.current = next;
         setDifficulty(next);

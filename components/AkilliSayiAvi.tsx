@@ -2,14 +2,17 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
-import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { RESPONSIVE_ADAPTIVE, useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { buildCountRound } from '../lib/akilliRounds';
 import { speak } from '../services/speechService';
+import AdaptiveLevelBadge from './AdaptiveLevelBadge';
 import ListenButton from './ListenButton';
 
 // Akıllı Sayı Avı — UYARLANIR (adaptif) zorluk gösterim oyunu.
 // Maarif: MAB.1 (Ritmik ve algısal sayabilme; sayı-nicelik ilişkisi).
-// Her seviye sonunda performans (doğru/hata/süre) motora bildirilir; her 3
-// seviyede bir sayı aralığı ve seçenek yakınlığı çocuğa göre ayarlanır.
+// Her seviye sonunda performans (doğru/hata/süre) motora bildirilir; her 2
+// seviyede bir sayı aralığı, seçenek sayısı ve çeldirici yakınlığı çocuğa göre ayarlanır
+// (tur üretimi: lib/akilliRounds.ts; seviye rozeti: AdaptiveLevelBadge).
 
 interface Props {
     onGameEnd: (
@@ -24,48 +27,20 @@ interface Props {
     childName?: string;
 }
 
-const TOTAL_ROUNDS = 9;         // 3 checkpoint (her 3 seviyede uyarlama)
+const TOTAL_ROUNDS = 10;        // her 2 turda bir uyarlama (RESPONSIVE_ADAPTIVE)
 const OBJECT = '🍎';
-const TARGET_MS = 7000;         // "hızlı" eşiği (hız değerlendirmesi için)
-
-// Zorluğa göre sayı aralığı
-const RANGE_BY_DIFF: Record<number, [number, number]> = {
-    1: [1, 3], 2: [1, 5], 3: [2, 6], 4: [4, 8], 5: [5, 10],
-};
+// "Hızlı" eşiği (hız değerlendirmesi için): nesne sayısıyla artar (3 → 5,6 sn, 9 → 9,8 sn)
+const targetMsFor = (count: number) => 3500 + count * 700;
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const INSTRUCTION_TEXT = 'Nesneleri say ve doğru sayıya dokun! Sen başardıkça oyun akıllanır 📈';
 
-const shuffle = <T,>(arr: T[]): T[] => {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-};
-
-function buildRound(diff: number): { count: number; options: number[] } {
-    const [lo, hi] = RANGE_BY_DIFF[diff] || [1, 5];
-    const count = lo + Math.floor(Math.random() * (hi - lo + 1));
-
-    const pool: number[] = [];
-    for (let n = 1; n <= 10; n++) if (n !== count) pool.push(n);
-    // Yüksek zorlukta çeldiriciler sayıya YAKIN (ayırt etmesi zor), düşükte uzak
-    if (diff >= 4) pool.sort((a, b) => Math.abs(a - count) - Math.abs(b - count));
-    else shuffle(pool);
-    const options = shuffle([count, ...pool.slice(0, 3)]);
-    return { count, options };
-}
-
 export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
-    const START_DIFF = 2;
-    const { recordLevel } = useAdaptiveDifficulty({
-        minDifficulty: 1, maxDifficulty: 5, checkpointEvery: 3, startDifficulty: START_DIFF,
-    });
+    const START_DIFF = RESPONSIVE_ADAPTIVE.startDifficulty ?? 2;
+    const { recordLevel } = useAdaptiveDifficulty(RESPONSIVE_ADAPTIVE);
 
     const [round, setRound] = useState(1);
-    const [current, setCurrent] = useState(() => buildRound(START_DIFF));
+    const [current, setCurrent] = useState(() => buildCountRound(START_DIFF));
     const [displayDiff, setDisplayDiff] = useState(START_DIFF);
     const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
     const [selected, setSelected] = useState<number | null>(null);
@@ -86,11 +61,11 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
 
     const startTimer = (t: ReturnType<typeof setTimeout>) => { timersRef.current.push(t); return t; };
 
-    const nextRound = useCallback((solvedInDiff: number) => {
-        // Seviye sonucu motora bildirilir; sıradaki zorluk döner
-        const timeMs = Date.now() - levelStartRef.current;
+    const nextRound = useCallback((solvedInDiff: number, timeMs: number, solvedCount: number) => {
+        // Seviye sonucu motora bildirilir; sıradaki zorluk döner (süre, doğru cevabın verildiği
+        // andan ölçülür: 850 ms'lik kutlama bekleyişi çocuğun süresine eklenmez)
         const errs = levelErrorsRef.current;
-        const nextDiff = recordLevel({ correct: 1, total: 1, errors: errs, timeMs, targetMs: TARGET_MS });
+        const nextDiff = recordLevel({ correct: 1, total: 1, errors: errs, timeMs, targetMs: targetMsFor(solvedCount) });
 
         if (round >= TOTAL_ROUNDS) {
             const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
@@ -103,7 +78,7 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
         levelErrorsRef.current = 0;
         levelStartRef.current = Date.now();
         setRound(r => r + 1);
-        setCurrent(buildRound(nextDiff));
+        setCurrent(buildCountRound(nextDiff, solvedCount));
         setDisplayDiff(nextDiff);
         setSelected(null);
         setFeedback('idle');
@@ -124,7 +99,9 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
                 Animated.timing(bump, { toValue: 1, duration: 140, useNativeDriver: true }),
             ]).start();
             const solvedInDiff = displayDiff;
-            startTimer(setTimeout(() => nextRound(solvedInDiff), 850));
+            const timeMs = Date.now() - levelStartRef.current;
+            const solvedCount = current.count;
+            startTimer(setTimeout(() => nextRound(solvedInDiff, timeMs, solvedCount), 850));
         } else {
             levelErrorsRef.current += 1;
             totalErrorsRef.current += 1;
@@ -144,8 +121,11 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
                 {/* Header */}
                 <View style={styles.header}>
                     <Text style={styles.title}>📈 Akıllı Sayı Avı</Text>
-                    <View style={styles.roundBadge}>
-                        <Text style={styles.roundText}>{round}/{TOTAL_ROUNDS}</Text>
+                    <View style={styles.headerRight}>
+                        <AdaptiveLevelBadge level={displayDiff} />
+                        <View style={styles.roundBadge}>
+                            <Text style={styles.roundText}>{round}/{TOTAL_ROUNDS}</Text>
+                        </View>
                     </View>
                 </View>
 
@@ -209,7 +189,8 @@ export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
-    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, zIndex: 20 },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
     title: { fontSize: 20, fontWeight: 'bold', color: '#3e2723' },
     roundBadge: { backgroundColor: '#E3F2FD', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     roundText: { fontSize: 14, fontWeight: 'bold', color: '#1976D2' },
