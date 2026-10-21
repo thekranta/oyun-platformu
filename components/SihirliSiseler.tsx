@@ -203,7 +203,9 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
             response_time: responseTime,
             cognitive_speed_score: Math.max(0, efficiency - hintRef.current * 5),
             zorluk_seviyesi: tier.level,
-            round_history: JSON.stringify({
+            // Nesne olarak verilir: services/gameResults.ts kaydederken JSON.stringify eder
+            // (önceden burada da stringify edildiği için veritabanına iki kez kodlanıyordu).
+            round_history: {
                 strategy: avgMoveTime > 5000 ? 'methodical' : 'trial_error',
                 total_moves: movesRef.current,
                 invalid_moves: invalidRef.current,
@@ -214,7 +216,7 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 move_sequence: sequenceRef.current,
                 difficulty: { level: tier.level, colors: tier.colors, capacity: cap, empty: tier.empty, bottles: nBottles },
                 avg_move_time_ms: Math.round(avgMoveTime),
-            }),
+            },
         };
     };
 
