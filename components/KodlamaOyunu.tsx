@@ -13,7 +13,6 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { useSound } from './SoundContext';
 
 // Arka plan görseli
 const BACKGROUND_IMAGE = asset('/backgrounds/games/kodlama_bg.webp');
@@ -128,10 +127,15 @@ const getThemeBg = (theme: string) => {
   }
 };
 
-// ============== RESPONSIVE - Büyütülmüş Grid ==============
-const GRID_SIZE = Math.min(width * 0.85, height * 0.45, 340);  // Daha büyük grid
-const BTN_SIZE = Math.min(width * 0.12, 48);
-const DPAD_SIZE = Math.min(width * 0.18, 68);
+// ============== RESPONSIVE ==============
+// Dikey bütçe: bütün oyun (üst sıra, noktalar, Tekrar Dinle, ızgara, komut çubuğu, iki sıra tuş) KAYDIRMADAN ekrana
+// sığmalı. iPhone SE'de (375x667) ▶️ düğmesine ulaşmak için kaydırmak gerekiyordu (test listesi #10, 2026-10-23).
+// Izgara, kalan yüksekliğe göre küçülür; tuşlar yüksekliğe de bağlıdır.
+const BTN_SIZE = Math.min(width * 0.12, 44);
+const DPAD_SIZE = Math.min(width * 0.18, height * 0.095, 68);
+const CHROME_HEIGHT = 30 /* üst boşluk */ + BTN_SIZE /* üst sıra */ + 6 /* noktalar */ + 44 /* Tekrar Dinle */
+    + 44 /* komut çubuğu */ + (DPAD_SIZE * 2 + 10) /* iki sıra tuş */ + 16 /* ızgara dolgusu */ + 60 /* sıralar arası boşluk + alt pay */;
+const GRID_SIZE = Math.max(180, Math.min(width * 0.85, height - CHROME_HEIGHT, 340));
 
 // Arka plan müziği: uygulama genelindeki SoundProvider zaten çalıyor. Eskiden bu oyun webde
 // AYNI müziği ikinci kez başlatıyordu (iki kopya üst üste, #10) — kaldırıldı.
@@ -152,11 +156,8 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
   const [commands, setCommands] = useState<Direction[]>([]);
   const [status, setStatus] = useState<GameStatus>(GameStatus.PLANNING);
   const [step, setStep] = useState(-1);
-  // Oyun seçme menüsündeki genel ses aç/kapa durumunu başlangıç değeri olarak kullan —
-  // önceden her zaman true ile başlıyordu, menüde sessize alınmış olsa bile oyuna girince
-  // arka plan müziği yeniden çalmaya başlıyordu.
-  const { isMuted: globalMuted } = useSound();
-  const [soundOn, setSoundOn] = useState(!globalMuted);
+  // Sağ üstte ana ekranın ortak ses düğmesi durur (GameSoundButton: müzik/efekt). Eskiden bu oyunun KENDİ ses
+  // düğmesi de aynı köşedeydi ve iki simge üst üste biniyordu; sesli yönergeler artık her zaman çalar (diğer oyunlar gibi).
   const [showWin, setShowWin] = useState(false);
 
   // Editor
@@ -217,13 +218,13 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
   // çaldığına göre YANLIŞ (eski) metni duyabiliyordu — Oyun_Test_Listesi geri bildirimiyle
   // doğrulandı: ekranda doğru yönerge yazarken sesli olarak hâlâ eski seviye hikayesi çalıyordu.
   useEffect(() => {
-    if (!soundOn || !gameReady) return;
+    if (!gameReady) return;
     if (mode === GameMode.PLAY && status === GameStatus.PLANNING && commands.length === 0) {
       const t = setTimeout(() => speakTeacher(level.story || 'Hadi oynayalım!'), 300);
       timersRef.current.push(t);
       return () => clearTimeout(t);
     }
-  }, [level, status, soundOn, mode, commands.length, gameReady]);
+  }, [level, status, mode, commands.length, gameReady]);
 
   // Auto next level
   const nextLevel = useCallback(() => {
@@ -272,10 +273,8 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
     if (status === GameStatus.RUNNING || commands.length >= 10) return;
     setCommands(c => [...c, d]);
     setMoves(m => m + 1);
-    if (soundOn) {
-      const txt: Record<Direction, string> = { UP: 'Yukarı!', DOWN: 'Aşağı!', LEFT: 'Sol!', RIGHT: 'Sağ!' };
-      speakTeacher(txt[d]);
-    }
+    const txt: Record<Direction, string> = { UP: 'Yukarı!', DOWN: 'Aşağı!', LEFT: 'Sol!', RIGHT: 'Sağ!' };
+    speakTeacher(txt[d]);
   };
 
   // moves eklenen komutlari sayar; undo/clear ile geri alinan komutlar dusulmezse
@@ -309,7 +308,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
       if (c === CellType.GOAL) g = { x, y };
       if (c === CellType.WALL) obs.push({ x, y });
     }));
-    if (!s || !g) { if (soundOn) speakTeacher('Tavşan ve hedef koy!'); return; }
+    if (!s || !g) { speakTeacher('Tavşan ve hedef koy!'); return; }
     const custom: LevelConfig = { id: 'custom', name: 'Haritam', gridSize: 4, startPos: s, goalPos: g, obstacles: obs, story: 'Kendi haritanda oyna!', theme: 'room', emoji: '✨' };
     setLevel(custom);
     setMode(GameMode.PLAY);
@@ -354,7 +353,7 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
     const iv = setInterval(() => {
       if (i >= commands.length) {
         clearInterval(iv);
-        setStatus(GameStatus.LOST); setErrors(e => e + 1); if (soundOn) speakTeacher('Tekrar dene!');
+        setStatus(GameStatus.LOST); setErrors(e => e + 1); speakTeacher('Tekrar dene!');
         return;
       }
       const d = commands[i];
@@ -362,13 +361,13 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
       setPlayerPos(prev => {
         const n = nextPos(prev, d);
         if (isGoal(n)) {
-          timersRef.current.push(setTimeout(() => { setStatus(GameStatus.WON); setShowWin(true); confetti.current?.start(); if (soundOn) speak('Aferin!', { instructions: HAPPY_VOICE }); }, 150));
+          timersRef.current.push(setTimeout(() => { setStatus(GameStatus.WON); setShowWin(true); confetti.current?.start(); speak('Aferin!', { instructions: HAPPY_VOICE }); }, 150));
           return n;
         }
         if (valid(n)) return n;
         clearInterval(iv);
         setErrors(e => e + 1);
-        timersRef.current.push(setTimeout(() => { setStatus(GameStatus.LOST); if (soundOn) speakTeacher('Tekrar dene!'); }, 150));
+        timersRef.current.push(setTimeout(() => { setStatus(GameStatus.LOST); speakTeacher('Tekrar dene!'); }, 150));
         return prev;
       });
       i++;
@@ -457,9 +456,8 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
             ))}
           </View>
 
-          <TouchableOpacity style={[st.soundBtn, !soundOn && st.soundOff]} onPress={() => { setSoundOn(!soundOn); if (soundOn) stopSpeech(); }}>
-            <Text style={st.soundTxt}>{soundOn ? '🔊' : '🔇'}</Text>
-          </TouchableOpacity>
+          {/* Seviye düğmelerini ortada tutan boşluk; sağ üst köşede ortak ses düğmesi durur (GameSoundButton) */}
+          <View style={{ width: 44, height: 44 }} />
         </View>
 
         {/* Progress */}
@@ -523,26 +521,25 @@ export default function KodlamaOyunu({ onGameEnd, onExit, childName = 'Kodlamac�
               {commands.length > 0 && status !== GameStatus.RUNNING && <TouchableOpacity style={st.undoBtn} onPress={undo}><Text style={st.undoTxt}>⌫</Text></TouchableOpacity>}
             </View>
 
-            {/* DPad */}
+            {/* DPad — üst sıra: sıfırla · yukarı · ▶️ başlat (ayrı bir sıra gerekmesin, kaydırmadan sığsın) */}
             <View style={st.dpad}>
               <View style={st.drow}>
-                <View style={st.dspace} />
+                <TouchableOpacity style={[st.dbtn, st.resetBtn]} onPress={clear} accessibilityLabel="Baştan başla"><Text style={st.actTxt}>🔄</Text></TouchableOpacity>
                 <TouchableOpacity style={[st.dbtn, { backgroundColor: '#FF9800' }]} onPress={() => addCmd(Direction.UP)} disabled={status === GameStatus.RUNNING}><Text style={st.dtxt}>⬆️</Text></TouchableOpacity>
-                <View style={st.dspace} />
+                <TouchableOpacity
+                  style={[st.dbtn, st.goBtn, (status === GameStatus.RUNNING || commands.length === 0) && st.goOff]}
+                  onPress={run}
+                  disabled={status === GameStatus.RUNNING || commands.length === 0}
+                  accessibilityLabel="Başlat"
+                >
+                  <Text style={st.goTxt}>{status === GameStatus.RUNNING ? '🏃' : '▶️'}</Text>
+                </TouchableOpacity>
               </View>
               <View style={st.drow}>
                 <TouchableOpacity style={[st.dbtn, { backgroundColor: '#E91E63' }]} onPress={() => addCmd(Direction.LEFT)} disabled={status === GameStatus.RUNNING}><Text style={st.dtxt}>⬅️</Text></TouchableOpacity>
                 <TouchableOpacity style={[st.dbtn, { backgroundColor: '#9C27B0' }]} onPress={() => addCmd(Direction.DOWN)} disabled={status === GameStatus.RUNNING}><Text style={st.dtxt}>⬇️</Text></TouchableOpacity>
                 <TouchableOpacity style={[st.dbtn, { backgroundColor: '#4CAF50' }]} onPress={() => addCmd(Direction.RIGHT)} disabled={status === GameStatus.RUNNING}><Text style={st.dtxt}>➡️</Text></TouchableOpacity>
               </View>
-            </View>
-
-            {/* Acts */}
-            <View style={st.acts}>
-              <TouchableOpacity style={st.resetBtn} onPress={clear}><Text style={st.actTxt}>🔄</Text></TouchableOpacity>
-              <TouchableOpacity style={[st.goBtn, (status === GameStatus.RUNNING || commands.length === 0) && st.goOff]} onPress={run} disabled={status === GameStatus.RUNNING || commands.length === 0}>
-                <Text style={st.goTxt}>{status === GameStatus.RUNNING ? '🏃' : '▶️'}</Text>
-              </TouchableOpacity>
             </View>
           </>
         )}
@@ -573,9 +570,6 @@ const st = StyleSheet.create({
   lvlLock: { opacity: 0.4 },
   lvlEmoji: { fontSize: BTN_SIZE * 0.5 },
   editBtn: { backgroundColor: '#FFF8E1' },
-  soundBtn: { width: BTN_SIZE, height: BTN_SIZE, borderRadius: BTN_SIZE / 2, backgroundColor: '#64B5F6', justifyContent: 'center', alignItems: 'center' },
-  soundOff: { backgroundColor: '#BDBDBD' },
-  soundTxt: { fontSize: BTN_SIZE * 0.5 },
   check: { position: 'absolute', bottom: -2, right: -2, backgroundColor: '#4CAF50', width: 14, height: 14, borderRadius: 7, justifyContent: 'center', alignItems: 'center' },
   checkTxt: { color: '#FFF', fontSize: 8, fontWeight: 'bold' },
 
@@ -624,15 +618,13 @@ const st = StyleSheet.create({
   // DPad - net kenarlıklı, ferah aralıklı büyük dokunma hedefleri
   dpad: { gap: 10 },
   drow: { flexDirection: 'row', gap: 10 },
-  dspace: { width: DPAD_SIZE, height: DPAD_SIZE },
   dbtn: { width: DPAD_SIZE, height: DPAD_SIZE, borderRadius: 14, justifyContent: 'center', alignItems: 'center', elevation: 3, borderWidth: 3, borderColor: 'rgba(255,255,255,0.6)' },
   dtxt: { fontSize: DPAD_SIZE * 0.5 },
 
-  // Acts
-  acts: { flexDirection: 'row', gap: 8 },
-  resetBtn: { width: DPAD_SIZE * 0.85, height: DPAD_SIZE * 0.85, borderRadius: 18, backgroundColor: '#ECEFF1', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#B0BEC5' },
-  actTxt: { fontSize: DPAD_SIZE * 0.35 },
-  goBtn: { paddingHorizontal: 28, height: DPAD_SIZE * 0.85, borderRadius: 18, backgroundColor: '#4CAF50', justifyContent: 'center', alignItems: 'center', borderBottomWidth: 2, borderBottomColor: '#2E7D32' },
-  goOff: { backgroundColor: '#BDBDBD', borderBottomColor: '#9E9E9E' },
-  goTxt: { fontSize: DPAD_SIZE * 0.35 },
+  // Sıfırla / başlat (üst tuş sırasında, ok tuşlarıyla aynı boyutta)
+  resetBtn: { backgroundColor: '#ECEFF1' },
+  actTxt: { fontSize: DPAD_SIZE * 0.4 },
+  goBtn: { backgroundColor: '#4CAF50' },
+  goOff: { backgroundColor: '#BDBDBD' },
+  goTxt: { fontSize: DPAD_SIZE * 0.45 },
 });

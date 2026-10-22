@@ -315,8 +315,11 @@ export default function ShadowDetective({ config, onGameEnd, onExit, childName =
             {/* Header - Sadece geri butonu ve tur */}
             <View style={styles.header}>
                 <GameExitButton onPress={onExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
+                {/* Çıkış düğmesi sol üstte (16+44 px), ortak ses düğmesi sağ üstte durur: tur hapı iki yan boşluk arasında ortalanır,
+                    çıkış düğmesinin altında kalmaz. */}
+                <View style={{ width: 52 }} />
                 <Text style={styles.roundText}>🔍 Tur {round}/{TOTAL}</Text>
-                <View style={{ width: 36 }} />
+                <View style={{ width: 52 }} />
             </View>
 
             <ListenButton onPress={() => speak('Gölge Dedektifi oyununa hoş geldin! Hayvanları gölgeleriyle eşleştir!', { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ alignSelf: 'center', marginTop: 12 }} />
@@ -404,9 +407,10 @@ const styles = StyleSheet.create({
         height: '100%',
         resizeMode: 'cover',
     },
+    // Soluk örtü: renkli arka plan hayvanları/gölgeleri bastırıyordu (test listesi #12, #13): beyaz örtü arka planı soldurur.
     blurOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        backgroundColor: 'rgba(255,255,255,0.62)',
     },
 
     header: {
