@@ -149,6 +149,9 @@ async function main() {
     // Uzay Blokları yeniden tasarımı (2026-10-21): nasıl oynanır + çıkmaz uyarısı
     const WAVE8 = join(__dirname, 'tts-phrases-wave8.json');
     if (existsSync(WAVE8)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE8, 'utf8')));
+    // Akıllı Hafıza temalı varyant girişleri + rakam+ek (1'den, 6'dan) bozuk okunduğu için sözcükle söyletilen klipler (2026-10-23)
+    const WAVE9 = join(__dirname, 'tts-phrases-wave9.json');
+    if (existsSync(WAVE9)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE9, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }
