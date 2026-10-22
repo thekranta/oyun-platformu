@@ -203,13 +203,12 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     const [, setMoveHistory] = useState<MoveData[]>([]);
     const [correctAnswers, setCorrectAnswers] = useState(0);
     const [gameStart] = useState(Date.now());
-    // finishGame timer setInterval'inden cagrildiginda state'i eski closure'dan okur
+    // finishGame tamamlanma timeout'undan cagrildiginda state'i eski closure'dan okur
     // (hepsi 0). Guncel metrikleri bu ref'lerden aliyoruz.
     const correctAnswersRef = useRef(0);
     const errorsRef = useRef(0);
     const moveHistoryRef = useRef<MoveData[]>([]);
-    // finishGame hem sayac (timeLeft<=1) hem tamamlanma timeout'undan cagrilabilir;
-    // tek sefer calismasini garanti eder (cift onGameEnd/cift kayit olmaz).
+    // finishGame'in tek sefer calismasini garanti eder (cift onGameEnd/cift kayit olmaz).
     const finishedRef = useRef(false);
     // Tamamlanma sonrasi finishGame'i geciktiren setTimeout; cikista/unmount'ta temizlenir.
     const completeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -221,7 +220,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     // Çocuğa Puan / Bilişsel Hız / Hata sayısı gösterilmez (Oyun_Test_Listesi #28 ilkesi); bu metrikler
     // yalnız veli raporu için kaydedilir (finishGame).
     const [showFeedback, setShowFeedback] = useState<{ type: 'success' | 'error'; regionId: string } | null>(null);
-    const [timeLeft, setTimeLeft] = useState(300); // 5 dakika
+    // Geri sayım / süre sınırı yok: çocuk istediği kadar boyar (Uzay Blokları ile aynı ilke); süre yalnız kayıt içindir.
     const [isGameComplete, setIsGameComplete] = useState(false);
     const [gameReady, setGameReady] = useState(false);
 
@@ -254,24 +253,6 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
         };
     }, [selectedColorNumber]);
 
-    // Timer - only starts when game is ready
-    useEffect(() => {
-        if (isGameComplete || !gameReady) return;
-
-        const timer = setInterval(() => {
-            setTimeLeft(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    finishGame();
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, [isGameComplete, gameReady]);
-
     // Check game completion
     useEffect(() => {
         const allFilled = regions.every(r => r.isFilled);
@@ -297,7 +278,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
         if (finishedRef.current) return;
         finishedRef.current = true;
         const duration = Math.floor((Date.now() - gameStart) / 1000);
-        // Guncel degerler ref'lerden (timer setInterval closure'i eski state tutar)
+        // Guncel degerler ref'lerden (setTimeout closure'i eski state tutar)
         const history = moveHistoryRef.current;
         const correct = correctAnswersRef.current;
         const errorCount = errorsRef.current;
@@ -436,12 +417,6 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
         return '#333333';
     };
 
-    const formatTime = (seconds: number): string => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
     // Unique color numbers için progress hesapla
     const uniqueColorNumbers = [...new Set(SPACE_ADVENTURE_REGIONS.map(r => r.colorNumber))];
     const filledColorNumbers = [...new Set(regions.filter(r => r.isFilled).map(r => r.colorNumber))];
@@ -487,14 +462,6 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
             <View style={styles.header}>
                 {/* Çıkış butonu satırın İÇİNDE: mutlak konumdayken zamanlayıcıya biniyor ve iOS'ta durum çubuğuna giriyordu */}
                 <GameExitButton onPress={handleExit} />
-
-                <View style={styles.timerContainer}>
-                    <Text style={styles.timerIcon}>🚀</Text>
-                    <View style={styles.timerBar}>
-                        <View style={[styles.timerFill, { width: `${(timeLeft / 300) * 100}%` }]} />
-                    </View>
-                    <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-                </View>
             </View>
 
             <ListenButton onPress={() => speak('Sihirli Tuval oyununa hoş geldin! Renkleri numaralarına göre boyama yapalım.', { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
@@ -675,36 +642,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingBottom: 8,
         zIndex: 20,
-    },
-    timerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 18,
-        gap: 6,
-        elevation: 5,
-    },
-    timerIcon: {
-        fontSize: 16,
-    },
-    timerBar: {
-        width: 50,
-        height: 6,
-        backgroundColor: '#E0E0E0',
-        borderRadius: 3,
-        overflow: 'hidden',
-    },
-    timerFill: {
-        height: '100%',
-        backgroundColor: '#4CAF50',
-        borderRadius: 3,
-    },
-    timerText: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#333',
     },
     // Title
     title: {
