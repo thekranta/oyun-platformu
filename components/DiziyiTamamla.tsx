@@ -97,6 +97,8 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const currentPattern = patterns[currentStage];
+    // Uzun diziler (6'dan fazla kutu, '?' dahil) telefonda 3 satıra inip ekrandan taşıyordu: kutular küçülür, ~5 kutu/satır sığar.
+    const compactSequence = currentPattern.sequence.length + 1 > 6;
 
     const shuffledOptions = React.useMemo(() => {
         const options = [...currentPattern.options];
@@ -242,12 +244,12 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                     <Text style={styles.sectionLabel}>Dizi</Text>
                     <View style={styles.sequenceContainer}>
                         {currentPattern.sequence.map((shape, index) => (
-                            <View key={index} style={styles.sequenceItem}>
-                                <Image source={SHAPES[shape]} style={styles.sequenceImage} />
+                            <View key={index} style={[styles.sequenceItem, compactSequence && styles.sequenceItemCompact]}>
+                                <Image source={SHAPES[shape]} style={[styles.sequenceImage, compactSequence && styles.sequenceImageCompact]} />
                             </View>
                         ))}
-                        <View style={[styles.sequenceItem, styles.questionMark]}>
-                            <Text style={styles.questionMarkText}>?</Text>
+                        <View style={[styles.sequenceItem, compactSequence && styles.sequenceItemCompact, styles.questionMark]}>
+                            <Text style={[styles.questionMarkText, compactSequence && styles.questionMarkTextCompact]}>?</Text>
                         </View>
                     </View>
                 </View>
@@ -413,6 +415,19 @@ const styles = StyleSheet.create({
         fontSize: 45,
         fontWeight: 'bold',
         color: '#FF8C00',
+    },
+    sequenceItemCompact: {
+        width: 52,
+        height: 52,
+        borderRadius: 12,
+        margin: 3,
+    },
+    sequenceImageCompact: {
+        width: 40,
+        height: 40,
+    },
+    questionMarkTextCompact: {
+        fontSize: 30,
     },
     optionsContainer: {
         flexDirection: 'row',

@@ -262,7 +262,8 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
       <View style={styles.container}>
         <View style={styles.header}>
           <Image source={PLATFORM_LOGO} style={styles.logo} resizeMode="contain" />
-          <View>
+          {/* flex: 1 → dar ekranda (320-360 px) altyazı ekran dışına taşmak yerine ikinci satıra sarılır */}
+          <View style={{ flex: 1 }}>
             <Text style={styles.title}>Eksik Sayıyı Bul</Text>
             <Text style={styles.subtitle}>{numbers[0]}-{numbers[numbers.length - 1]} arasında eksik sayıyı sürükle bırak.</Text>
           </View>
@@ -362,7 +363,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingHorizontal: 8,
+    // Sol üstte DynamicBackground'ın çıkış düğmesi (16+44 px) durur: logo onun SAĞINDAN başlar, köşesini örtmez.
+    paddingLeft: 56,
+    paddingRight: 8,
   },
   logo: {
     width: 64,

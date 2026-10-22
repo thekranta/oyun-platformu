@@ -3,12 +3,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import { getMaarif } from '../constants/maarifMap';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
 import { speak } from '../services/speechService';
 import ListenButton from './ListenButton';
 
-// Akıllı Hafıza — UYARLANIR (adaptif) zorluk. Maarif: MAB.2
-// (Nesnelerin özelliklerini çözümleyip eşleştirebilme; görsel bellek).
+// Akıllı Hafıza — UYARLANIR (adaptif) zorluk. Maarif kodu varyanta göre constants/maarifMap.ts'te
+// (görsel bellek / eşleştirme; taşıt ve şekil temalı varyantlar aynı bileşeni paylaşır).
 // Her tahtayı (çift eşleştirme) temizle. Zorlukla çift sayısı artar.
 
 interface Props {
@@ -22,6 +23,14 @@ interface Props {
     ) => void;
     onExit?: () => void;
     childName?: string;
+    /** Temalı varyant: kart resimleri (en az 5 çift için 5+ emoji). Varsayılan: hayvanlar. */
+    emojiSet?: string[];
+    /** Varyant oyun kimliği (analitik ve Maarif kaydı ayrı izlenir). */
+    oyunAdi?: string;
+    /** Başlık metni (varyantta tema adı). */
+    title?: string;
+    /** Giriş sesi + Tekrar Dinle metni (klibi üretilmiş olmalı). */
+    introMessage?: string;
 }
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
@@ -41,21 +50,27 @@ const shuffle = <T,>(arr: T[]): T[] => {
     return a;
 };
 
-function buildBoard(diff: number): Card[] {
+function buildBoard(diff: number, pool: string[] = ANIMALS): Card[] {
     const pairs = PAIRS_BY_DIFF[diff] || 3;
-    const emojis = shuffle(ANIMALS).slice(0, pairs);
+    const emojis = shuffle(pool).slice(0, pairs);
     const deck = shuffle(emojis.flatMap(e => [e, e]));
     return deck.map((emoji, id) => ({ id, emoji, matched: false, flipped: false }));
 }
 
-export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
+export default function AkilliHafiza({
+    onGameEnd, onExit, childName = 'Küçük Kaşif',
+    emojiSet = ANIMALS, oyunAdi = 'akilli-hafiza', title = '📈 Akıllı Hafıza', introMessage = INSTRUCTION_TEXT,
+}: Props) {
     const START_DIFF = 2;
     const { recordLevel } = useAdaptiveDifficulty({
         minDifficulty: 1, maxDifficulty: 5, checkpointEvery: 2, startDifficulty: START_DIFF,
     });
 
+    // Tema havuzu ilk render'da sabitlenir (host oyun ortasında yeniden render ederse tahta karışmasın).
+    const poolRef = useRef(emojiSet);
+
     const [round, setRound] = useState(1);
-    const [cards, setCards] = useState<Card[]>(() => buildBoard(START_DIFF));
+    const [cards, setCards] = useState<Card[]>(() => buildBoard(START_DIFF, emojiSet));
     const [gameReady, setGameReady] = useState(false);
 
     const cardsRef = useRef(cards);
@@ -79,9 +94,10 @@ export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük 
 
         if (round >= TOTAL_ROUNDS) {
             const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-            onGameEnd('akilli-hafiza', duration, totalMovesRef.current, totalErrorsRef.current, undefined, {
+            onGameEnd(oyunAdi, duration, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: diffRef.current,
-                kazanimOdagi: 'MAB.2 Görsel bellek / eşleştirme (uyarlanır zorluk)',
+                // Kod varyanta göre constants/maarifMap.ts'ten gelir (akilli-hafiza/-tasit MAB.10, -sekil MAB.9).
+                kazanimOdagi: `${getMaarif(oyunAdi).cikti} Görsel bellek / eşleştirme (uyarlanır zorluk)`,
             });
             return;
         }
@@ -89,11 +105,11 @@ export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük 
         diffRef.current = nextDiff;
         startTimer(setTimeout(() => {
             setRound(r => r + 1);
-            setCards(buildBoard(nextDiff));
+            setCards(buildBoard(nextDiff, poolRef.current));
             levelStartRef.current = Date.now();
             lockRef.current = false;
         }, 700));
-    }, [round, recordLevel, onGameEnd]);
+    }, [round, recordLevel, onGameEnd, oyunAdi]);
 
     const handleTap = (id: number) => {
         if (lockRef.current) return;
@@ -145,7 +161,7 @@ export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük 
         <DynamicBackground onExit={onExit}>
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>📈 Akıllı Hafıza</Text>
+                    <Text style={styles.title}>{title}</Text>
                     <View style={styles.roundBadge}>
                         <Text style={styles.roundText}>{round}/{TOTAL_ROUNDS}</Text>
                     </View>
@@ -153,7 +169,7 @@ export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük 
 
                 <Text style={styles.question}>Aynı ikilileri bul 🧠</Text>
 
-                <ListenButton onPress={() => speak(INSTRUCTION_TEXT, { instructions: HAPPY_VOICE })} color="#5C6BC0" style={{ marginBottom: 16 }} />
+                <ListenButton onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} color="#5C6BC0" style={{ marginBottom: 16 }} />
 
                 <View style={[styles.grid, { maxWidth: cols * (cellSize + 12) + 8 }]}>
                     {cards.map((card) => {
@@ -183,7 +199,7 @@ export default function AkilliHafiza({ onGameEnd, onExit, childName = 'Küçük 
 
             {!gameReady && (
                 <CountdownOverlay
-                    message={INSTRUCTION_TEXT}
+                    message={introMessage}
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

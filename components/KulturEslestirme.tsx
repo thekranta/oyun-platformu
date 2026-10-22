@@ -2,7 +2,10 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
-import GameExitButton from './GameExitButton';
+import ListenButton from './ListenButton';
+import { speak } from '../services/speechService';
+
+const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 // KulturEslestirme — MONTESSORI genel kültürel eşleştirme (emoji öğeler).
 // Hedefteki öğenin (emoji + ad) aynısını koleksiyondan bul. Puan/yarış YOK,
@@ -146,18 +149,18 @@ export default function KulturEslestirme({ onGameEnd, onExit, childName = 'Küç
     };
 
     return (
-        <DynamicBackground>
+        // Çıkış düğmesini DynamicBackground ekran köşesine koyar (diğer oyunlarla aynı yer); başlık satırı onun sağında başlar.
+        <DynamicBackground onExit={onExit}>
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <GameExitButton
-                        onPress={onExit ?? (() => {})}
-                        style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }}
-                    />
                     <Text style={styles.title}>{title}</Text>
                     <View style={styles.countBadge}>
                         <Text style={styles.countText}>{found.size}/{board.length}</Text>
                     </View>
                 </View>
+
+                {/* Giriş yönergesini yeniden dinle (giriş sesiyle aynı klip) */}
+                <ListenButton onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} color="#00796B" style={{ marginBottom: 12, alignSelf: 'center' }} />
 
                 {target && !allDone && (
                     <View style={styles.targetCard}>
@@ -217,7 +220,8 @@ export default function KulturEslestirme({ onGameEnd, onExit, childName = 'Küç
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
-    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+    // Sol üstte çıkış düğmesi (16+44 px), sağ üstte ortak ses düğmesi (10+40 px) durur: başlık ve rozet ikisinin arasında kalır.
+    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingLeft: 56, paddingRight: 40 },
     title: { fontSize: 19, fontWeight: 'bold', color: '#263238' },
     countBadge: { backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     countText: { fontSize: 14, fontWeight: 'bold', color: '#00796B' },

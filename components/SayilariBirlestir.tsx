@@ -41,7 +41,8 @@ const LINE_WIDTH = 9;
 const TARGET_HIT = 0.65;
 const START_HIT = 0.8;
 
-const INSTRUCTION = "Sayıları 1'den 5'e çizgi çizerek birleştir!";
+// Ekrandaki yönerge, giriş sesi (CountdownOverlay) ve Tekrar Dinle AYNI metindir (aynı klip). Rakam+ek ("1'den 5'e") TTS'te bozuk okunuyor, sözcükle yazılı.
+const INSTRUCTION = 'Sayıları küçükten büyüğe doğru çizerek birleştir!';
 
 // Türkçe ünsüz uyumu: sert ünsüzle biten sayı okunuşları (üç, dört, beş) '-ten' alır
 const ayrilmaEki = (n: number) => ([3, 4, 5].includes(n) ? 'ten' : 'den');
@@ -410,7 +411,7 @@ export default function SayilariBirlestir({ onGameEnd, onExit }: Props) {
             {!gameReady && (
                 <CountdownOverlay
                     interaction="draw"
-                    message="Sayıları küçükten büyüğe doğru çizerek birleştir!"
+                    message={INSTRUCTION}
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}
                 />

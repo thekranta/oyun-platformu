@@ -104,6 +104,7 @@ const AkilliAgirHafif = lazyWithReload(() => import('./AkilliAgirHafif'));
 const DunyaBayraklari = lazyWithReload(() => import('./DunyaBayraklari'));
 const DunyaSelamlari = lazyWithReload(() => import('./DunyaSelamlari'));
 import KulturEslestirme, { YAPILAR, YIYECEKLER } from './KulturEslestirme';
+import { ORUNTU_BASAMAKLARI, ORUNTU_IKILI, ORUNTU_UCLU } from '../constants/oruntuOyunlari';
 const BayrakBoya = lazyWithReload(() => import('./BayrakBoya'));
 const RenkliBaglantalar = lazyWithReload(() => import('./RenkliBaglantalar'));
 const RenkSepetleri = lazyWithReload(() => import('./RenkSepetleri'));
@@ -218,6 +219,29 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'akilli-farkli': (c) => <AkilliFarkli onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-cikarma': (c) => <AkilliCikarma onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-hafiza': (c) => <AkilliHafiza onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
+  // Akıllı Hafıza'nın temalı varyantları (aynı uyarlanır zorluk motoru; yalnız kart resimleri/ad/giriş sesi farklı).
+  'akilli-hafiza-tasit': (c) => (
+    <AkilliHafiza
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      childName={c.ad}
+      emojiSet={['🚗', '🚌', '🚜', '✈️', '🚂', '🚲', '⛵', '🚁']}
+      oyunAdi="akilli-hafiza-tasit"
+      title="🚗 Akıllı Taşıt Çiftleri"
+      introMessage="Taşıt Çiftlerine hoş geldin! Kartları çevir, aynı ikilileri hatırla ve eşleştir! Sen başardıkça zorlaşır"
+    />
+  ),
+  'akilli-hafiza-sekil': (c) => (
+    <AkilliHafiza
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      childName={c.ad}
+      emojiSet={['🟢', '🟦', '🔺', '🔶', '⭐', '❤️']}
+      oyunAdi="akilli-hafiza-sekil"
+      title="🔷 Akıllı Şekil Çiftleri"
+      introMessage="Şekil Çiftlerine hoş geldin! Kartları çevir, aynı ikilileri hatırla ve eşleştir! Sen başardıkça zorlaşır"
+    />
+  ),
   'akilli-harf': (c) => <AkilliHarf onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-siniflandir': (c) => <AkilliSiniflandir onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'akilli-once-sonra': (c) => <AkilliOnceSonra onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
@@ -268,6 +292,37 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
         { sequence: ['ucgen', 'kare', 'yildiz', 'ucgen', 'kare'], answer: 'yildiz', options: ['yildiz', 'ucgen', 'kare', 'daire'] },
         { sequence: ['yildiz', 'kare', 'daire', 'yildiz', 'kare'], answer: 'daire', options: ['daire', 'yildiz', 'kare', 'ucgen'] },
       ]}
+    />
+  ),
+  // Yalnız AB, 5 aşama (dizi uzar, seçenek sayısı artar). Setler: constants/oruntuOyunlari.ts (kuralı testle doğrulanır).
+  'diziyi-tamamla-4': (c) => (
+    <DiziyiTamamla
+      onGameEnd={c.onGameEnd}
+      onLogout={c.onExit}
+      oyunAdi="diziyi-tamamla-4"
+      title="İkili Örüntü 🔁"
+      introMessage="Sırada hangi şekil var, hep beraber bulalım!"
+      patterns={ORUNTU_IKILI}
+    />
+  ),
+  // AB ile başlar, ABB'ye kademeli geçer.
+  'diziyi-tamamla-5': (c) => (
+    <DiziyiTamamla
+      onGameEnd={c.onGameEnd}
+      onLogout={c.onExit}
+      oyunAdi="diziyi-tamamla-5"
+      title="Örüntü Basamakları 🪜"
+      patterns={ORUNTU_BASAMAKLARI}
+    />
+  ),
+  // ABC, daha büyük yaş grubu.
+  'diziyi-tamamla-6': (c) => (
+    <DiziyiTamamla
+      onGameEnd={c.onGameEnd}
+      onLogout={c.onExit}
+      oyunAdi="diziyi-tamamla-6"
+      title="Üçlü Örüntü 🔺"
+      patterns={ORUNTU_UCLU}
     />
   ),
   'diziyi-tamamla-3': (c) => (
