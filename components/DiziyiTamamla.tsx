@@ -89,7 +89,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
     const [isCorrect, setIsCorrect] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
 
-    const { playSound, stopSound, isMuted, toggleMute } = useSound();
+    const { playSound, isMuted, toggleMute } = useSound();
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -108,12 +108,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
         return options;
     }, [currentPattern]);
 
-    useEffect(() => {
-        playSound('background');
-        return () => {
-            stopSound('background');
-        };
-    }, []);
+    // Arka plan müziğini ana ekran yönetir (lib/musicPolicy.ts): oyun müziği kendisi açıp kapatmaz.
 
     // Unmount'ta bekleyen setTimeout'lari temizle
     useEffect(() => () => {

@@ -11,6 +11,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
+    useWindowDimensions,
     Vibration,
     View,
 } from 'react-native';
@@ -139,6 +140,9 @@ const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n
 export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', childAge = 48 }: UzayBloklariProps) {
     const startDifficulty = startDifficultyForAge(childAge);
     const adaptive = useAdaptiveDifficulty({ ...ADAPTIVE, startDifficulty });
+    // Sağ üst köşede ana ekranın ses düğmesi durur (GameSoundButton): dar ekranda başlık sıkışınca yazı gizlenir.
+    const { width: winW } = useWindowDimensions();
+    const narrow = winW < 360;
 
     const [level, setLevel] = useState<Level>(() => generateLevel(startDifficulty));
     const [placed, setPlaced] = useState<Record<number, Placement>>({});
@@ -966,12 +970,12 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
                             const lit = i < boardsDone;
                             return (
                                 <Animated.View key={i} style={{ transform: [{ scale: starPops[i] }] }}>
-                                    <Ionicons name={lit ? 'star' : 'star-outline'} size={30} color={lit ? '#FFD700' : 'rgba(255,255,255,0.45)'} />
+                                    <Ionicons name={lit ? 'star' : 'star-outline'} size={narrow ? 24 : 30} color={lit ? '#FFD700' : 'rgba(255,255,255,0.45)'} />
                                 </Animated.View>
                             );
                         })}
                     </View>
-                    <ListenButton onPress={() => speak(HOW_TO_TEXT, { instructions: HAPPY_VOICE })} color="#BF40BF" />
+                    <ListenButton onPress={() => speak(HOW_TO_TEXT, { instructions: HAPPY_VOICE })} color="#BF40BF" compact={narrow} />
                 </View>
             </SafeAreaView>
 
@@ -1074,7 +1078,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 12,
+        paddingLeft: 12,
+        paddingRight: 58, // sağ üstte ana ekranın ses düğmesi (40 px + kenar boşluğu) durur
         paddingTop: isWeb ? 14 : 8,
         paddingBottom: 8,
     },

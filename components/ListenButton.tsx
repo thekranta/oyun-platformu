@@ -11,12 +11,14 @@ interface ListenButtonProps {
     style?: StyleProp<ViewStyle>;
     label?: string;
     disabled?: boolean;
+    /** Yalnız simge (dar başlık satırları): yazı gizlenir, erişilebilirlik etiketi kalır. */
+    compact?: boolean;
 }
 
-export default function ListenButton({ onPress, color = '#4CAF50', style, label = 'Tekrar Dinle', disabled = false }: ListenButtonProps) {
+export default function ListenButton({ onPress, color = '#4CAF50', style, label = 'Tekrar Dinle', disabled = false, compact = false }: ListenButtonProps) {
     return (
         <TouchableOpacity
-            style={[styles.btn, { backgroundColor: color }, style]}
+            style={[styles.btn, compact && styles.btnCompact, { backgroundColor: color }, style]}
             onPress={onPress}
             disabled={disabled}
             activeOpacity={0.85}
@@ -25,7 +27,7 @@ export default function ListenButton({ onPress, color = '#4CAF50', style, label 
             accessibilityState={{ disabled }}
         >
             <Ionicons name="volume-high" size={20} color="#fff" />
-            <Text style={styles.text}>{label}</Text>
+            {!compact && <Text style={styles.text}>{label}</Text>}
         </TouchableOpacity>
     );
 }
@@ -43,6 +45,10 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.18,
         shadowRadius: 1,
         elevation: 3,
+    },
+    btnCompact: {
+        gap: 0,
+        paddingHorizontal: 12,
     },
     text: {
         color: '#fff',

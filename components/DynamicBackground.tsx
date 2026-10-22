@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, View } from 'react-native';
 import GameExitButton from './GameExitButton';
-import MusicButton from './MusicButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -270,9 +269,6 @@ export default function DynamicBackground({ children, onExit, decor = true }: Dy
                     </FloatingItem>
                 </View>
             )}
-
-            {/* Global Music Button */}
-            <MusicButton />
 
             {/* Global Exit Button */}
             {onExit && (

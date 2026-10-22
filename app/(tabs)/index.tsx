@@ -2,6 +2,7 @@ import ToyRoom from '@/components/ToyRoom';
 import DynamicBackground from '@/components/DynamicBackground';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import GameErrorBoundary from '@/components/GameErrorBoundary';
+import GameSoundButton from '@/components/GameSoundButton';
 import { useSound } from '@/components/SoundContext';
 import Toast from '@/components/Toast';
 import { useRouter } from 'expo-router';
@@ -13,6 +14,7 @@ import {
   getTodayKey,
 } from '../../lib/menuHelpers';
 import { useAuth } from '../../hooks/useAuth';
+import { useMusicScene } from '../../hooks/useMusicScene';
 import { asset } from '../../lib/assetMap';
 import { changeLanguage, SupportedLanguage } from '../../lib/i18n';
 import { supabase } from '../../lib/supabase';
@@ -248,6 +250,8 @@ export default function App() {
   const router = useRouter();
   const { isMuted, toggleMute, resumeAfterInteraction } = useSound();
   const [asama, setAsama] = useState('giris');
+  // Arka plan müziği: menüde kısık, çoğu oyunda çok kısık, diğer her yerde sessiz (lib/musicPolicy.ts).
+  useMusicScene(asama);
   const [toyRound, setToyRound] = useState(0);
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');
@@ -519,6 +523,8 @@ export default function App() {
             tier: gameTier,
           })}
         </React.Suspense>
+        {/* Oyun içi standart ses düğmesi (müziğin çaldığı oyunlarda görünür) */}
+        <GameSoundButton />
       </GameErrorBoundary>
     );
   }

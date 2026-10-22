@@ -1,43 +1,74 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState, Platform, View } from 'react-native';
 import { asset } from '../lib/assetMap';
+import { DUCK_HOLD_MS, IDLE_SILENCE_MS, rampMs, targetVolume, type MusicScene, type MusicState } from '../lib/musicPolicy';
+import { isSpeechActive, subscribeSpeech } from '../services/speechActivity';
+
+// Arka plan müziği ve kısa efekt sesleri (doğru/yanlış).
+//
+// MÜZİK POLİTİKASI (lib/musicPolicy.ts): müzik "sahne"ye bağlıdır. Sahne belirtmeyen her ekran SESSİZDİR;
+// ana ekran (app/(tabs)/index.tsx, hooks/useMusicScene.ts) menüde 'menu', oyunlarda 'game', müzik/hikaye/mikrofon
+// oyunlarında ve diğer ekranlarda 'off' bildirir. Müzik konuşma (services/speechActivity.ts) sürerken kesilir,
+// hareketsizlikte (45 sn) ve uygulama arka plandayken susar, kullanıcı kapattığında kapalı kalır (tercih
+// cihazda saklanır). Oyunlar müziği kendileri açıp kapatmaz: playSound('background') / stopSound('background')
+// artık etkisizdir.
 
 type SoundName = 'background' | 'correct' | 'wrong';
 
+const MUTE_KEY = 'sound.muted.v1';
+
 interface SoundContextType {
+    /** Müzik ve efekt sesleri kapalı mı (yönerge/konuşma sesi bundan etkilenmez). Kalıcı tercih. */
     isMuted: boolean;
     playSound: (name: SoundName) => Promise<void>;
     stopSound: (name: SoundName) => Promise<void>;
     toggleMute: () => Promise<void>;
-    changeVolume: (val: number) => Promise<void>;
-    isPlaying: boolean;
-    volume: number;
-    toggleSound: () => Promise<void>;
+    /** İlk dokunuşu bildirir (tarayıcı otomatik oynatma engeli); her dokunuş zaten bunu yapar. */
     resumeAfterInteraction: () => Promise<void>;
+    scene: MusicScene;
+    setMusicScene: (scene: MusicScene) => void;
 }
 
 const SoundContext = createContext<SoundContextType | undefined>(undefined);
 
 export function SoundProvider({ children }: { children: React.ReactNode }) {
-    const [backgroundSound, setBackgroundSound] = useState<Audio.Sound | null>(null);
-    // Unmount temizligi mount'ta ([]) backgroundSound=null closure'ini yakaliyordu; yuklenen
-    // Sound hic unload edilmiyordu (sizinti). Bu ref her zaman guncel Sound'u tutar.
-    const backgroundSoundRef = useRef<Audio.Sound | null>(null);
-    // Dogru/yanlis earcon'lari: ilk kullanımda tembel yüklenir, unmount'ta boşaltılır.
-    const sfxRef = useRef<{ correct: Audio.Sound | null; wrong: Audio.Sound | null }>({ correct: null, wrong: null });
-    const isMutedRef = useRef(false);
     const [isMuted, setIsMuted] = useState(false);
-    const [volume, setVolume] = useState(0.5);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const hasInteracted = useRef(false);
+    const [scene, setScene] = useState<MusicScene>('off');
+    const [interacted, setInteracted] = useState(false);
+    const [idle, setIdle] = useState(false);
+    const [speaking, setSpeaking] = useState(isSpeechActive());
+    const [appActive, setAppActive] = useState(true);
+    const [muteLoaded, setMuteLoaded] = useState(false);
 
+    const isMutedRef = useRef(false);
+    const lastActivityRef = useRef(Date.now());
+    // Müzik: tek Sound nesnesi (hiç boşaltılmaz: mobil tarayıcılarda bir kez "kilidi açılan" öğe yeniden kullanılır).
+    const musicRef = useRef<Audio.Sound | null>(null);
+    const musicLoadingRef = useRef<Promise<Audio.Sound | null> | null>(null);
+    const volumeRef = useRef(0);
+    const playingRef = useRef(false);
+    const rampTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const applyIdRef = useRef(0);
+    // Doğru/yanlış earcon'ları: ilk kullanımda tembel yüklenir, unmount'ta boşaltılır.
+    const sfxRef = useRef<{ correct: Audio.Sound | null; wrong: Audio.Sound | null }>({ correct: null, wrong: null });
+
+    // Ses kipi uygulama açılışında kurulur (yönerge sesi sessiz modda da çalsın): müzik tembel yüklense de değişmez.
     useEffect(() => {
-        loadBackgroundSound();
+        Audio.setAudioModeAsync({
+            playsInSilentModeIOS: true,
+            staysActiveInBackground: true,
+            shouldDuckAndroid: true,
+            interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+            interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+            playThroughEarpieceAndroid: false,
+        }).catch((error) => console.log('⚠️ Ses kipi ayarlanamadı:', error));
         return () => {
-            if (backgroundSoundRef.current) {
-                backgroundSoundRef.current.unloadAsync();
-                backgroundSoundRef.current = null;
-            }
+            if (rampTimerRef.current) clearInterval(rampTimerRef.current);
+            applyIdRef.current += 1;
+            musicRef.current?.unloadAsync().catch(() => { });
+            musicRef.current = null;
             const sfx = sfxRef.current;
             sfx.correct?.unloadAsync().catch(() => { });
             sfx.wrong?.unloadAsync().catch(() => { });
@@ -45,155 +76,191 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
         };
     }, []);
 
-    // Update volume when it changes
+    // Kalıcı tercih: kapatan bir sonraki açılışta müziği kendiliğinden açmaz.
     useEffect(() => {
-        if (backgroundSound) {
-            backgroundSound.setVolumeAsync(volume);
-        }
-    }, [volume, backgroundSound]);
+        AsyncStorage.getItem(MUTE_KEY)
+            .then((v) => {
+                if (v === '1') {
+                    isMutedRef.current = true;
+                    setIsMuted(true);
+                }
+            })
+            .catch(() => { })
+            .finally(() => setMuteLoaded(true));
+    }, []);
 
-    // Update play state when mute changes
+    // Konuşma sürerken müzik kesilir; bitince kısa bir bekleme sonrası döner.
     useEffect(() => {
-        if (backgroundSound && hasInteracted.current) {
-            if (isMuted) {
-                backgroundSound.pauseAsync();
-                setIsPlaying(false);
+        let hold: ReturnType<typeof setTimeout> | null = null;
+        const off = subscribeSpeech((active) => {
+            if (active) {
+                if (hold) { clearTimeout(hold); hold = null; }
+                setSpeaking(true);
             } else {
-                backgroundSound.playAsync().then(() => setIsPlaying(true));
+                hold = setTimeout(() => { hold = null; setSpeaking(false); }, DUCK_HOLD_MS);
             }
+        });
+        if (isSpeechActive()) setSpeaking(true);
+        return () => {
+            off();
+            if (hold) clearTimeout(hold);
+        };
+    }, []);
+
+    // Uygulama/sekme arka plandayken müzik çalmaz.
+    useEffect(() => {
+        if (Platform.OS === 'web' && typeof document !== 'undefined') {
+            const onVisibility = () => setAppActive(!document.hidden);
+            document.addEventListener('visibilitychange', onVisibility);
+            onVisibility();
+            return () => document.removeEventListener('visibilitychange', onVisibility);
         }
-    }, [isMuted, backgroundSound]);
+        const sub = AppState.addEventListener('change', (state) => setAppActive(state === 'active'));
+        return () => sub.remove();
+    }, []);
 
-    const loadBackgroundSound = async () => {
-        try {
-            await Audio.setAudioModeAsync({
-                playsInSilentModeIOS: true,
-                staysActiveInBackground: true,
-                shouldDuckAndroid: true,
-                interruptionModeIOS: InterruptionModeIOS.DoNotMix,
-                interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
-                playThroughEarpieceAndroid: false,
-            });
+    // Dokunuş = etkinlik: ilk dokunuş müziğe izin verir, hareketsizlik sonrası ilk dokunuş müziği geri getirir.
+    const noteActivity = useCallback(() => {
+        lastActivityRef.current = Date.now();
+        setInteracted(true);
+        setIdle(false);
+    }, []);
 
-            // Load sound but don't play yet - wait for user interaction
-            const { sound } = await Audio.Sound.createAsync(
-                asset('/sounds/background.mp3'),
-                { shouldPlay: false, isLooping: true, volume: 0.5 }
-            );
-            setBackgroundSound(sound);
-            backgroundSoundRef.current = sound;
-            console.log("✅ Background sound loaded (waiting for user interaction)");
-        } catch (error) {
-            console.log("⚠️ Error loading background sound:", error);
-        }
-    };
+    useEffect(() => {
+        if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+        const events = ['pointerdown', 'keydown', 'touchstart'] as const;
+        events.forEach((e) => document.addEventListener(e, noteActivity, { passive: true, capture: true }));
+        return () => events.forEach((e) => document.removeEventListener(e, noteActivity, true));
+    }, [noteActivity]);
 
-    // Call this after first user interaction to start music
-    const resumeAfterInteraction = async () => {
-        if (hasInteracted.current) return; // Already interacted
-        hasInteracted.current = true;
+    useEffect(() => {
+        const timer = setInterval(() => {
+            if (Date.now() - lastActivityRef.current > IDLE_SILENCE_MS) setIdle(true);
+        }, 5000);
+        return () => clearInterval(timer);
+    }, []);
 
-        try {
-            if (backgroundSound && !isMuted) {
-                console.log("🎵 Starting background music after user interaction");
-                await backgroundSound.playAsync();
-                setIsPlaying(true);
-            }
-        } catch (error) {
-            console.log("❌ Error starting background music:", error);
-        }
-    };
-
-    const playSound = async (name: SoundName) => {
-        if (isMuted && name === 'background') return;
-
-        try {
-            if (name === 'background') {
-                // Background sound is already playing from loadBackgroundSound
-                // Just ensure it's playing if not muted
-                if (backgroundSound) {
-                    const status = await backgroundSound.getStatusAsync();
-                    if (status.isLoaded && !status.isPlaying && !isMuted) {
-                        await backgroundSound.playAsync();
-                    }
-                } else {
-                    // If sound not loaded yet, this branch won't help
-                    // The sound will start when user interacts via resumeAfterInteraction
-                    console.log("Background sound not loaded yet");
+    const ensureMusic = useCallback(async (): Promise<Audio.Sound | null> => {
+        if (musicRef.current) return musicRef.current;
+        if (!musicLoadingRef.current) {
+            musicLoadingRef.current = (async () => {
+                try {
+                    const { sound } = await Audio.Sound.createAsync(
+                        asset('/sounds/background.mp3'),
+                        { shouldPlay: false, isLooping: true, volume: 0 },
+                    );
+                    musicRef.current = sound;
+                    return sound;
+                } catch (error) {
+                    console.log('⚠️ Arka plan müziği yüklenemedi:', error);
+                    return null;
+                } finally {
+                    musicLoadingRef.current = null;
                 }
-            } else if (name === 'correct' || name === 'wrong') {
-                // Kısa earcon: sessizdeyken çalınmaz; tembel yüklenir, tekrarında başa sarılır.
-                if (isMutedRef.current) return;
-                let sfx = sfxRef.current[name];
-                if (!sfx) {
-                    const src = name === 'correct' ? asset('/sounds/sfx/correct.wav') : asset('/sounds/sfx/wrong.wav');
-                    const { sound } = await Audio.Sound.createAsync(src, { shouldPlay: false, volume: 0.9 });
-                    sfxRef.current[name] = sound;
-                    sfx = sound;
-                }
-                await sfx.replayAsync();
+            })();
+        }
+        return musicLoadingRef.current;
+    }, []);
+
+    // Müziği hedef ses düzeyine yumuşakça götürür (sıfıra inince durdurur). Yeni bir istek eskisini iptal eder.
+    const applyTarget = useCallback(async (state: MusicState) => {
+        const target = targetVolume(state);
+        const from = volumeRef.current;
+        const myId = ++applyIdRef.current;
+        if (rampTimerRef.current) {
+            clearInterval(rampTimerRef.current);
+            rampTimerRef.current = null;
+        }
+        if (target === 0 && from === 0 && !playingRef.current) return;
+
+        const sound = target > 0 ? await ensureMusic() : musicRef.current;
+        if (!sound || myId !== applyIdRef.current) return;
+
+        try {
+            if (target > 0 && !playingRef.current) {
+                await sound.setVolumeAsync(volumeRef.current);
+                await sound.playAsync();
+                playingRef.current = true;
+                if (myId !== applyIdRef.current) return;
             }
+        } catch (error) {
+            console.log('⚠️ Arka plan müziği başlatılamadı:', error);
+            return;
+        }
+
+        const startVolume = volumeRef.current;
+        const ms = rampMs(state, startVolume, target);
+        const startedAt = Date.now();
+        rampTimerRef.current = setInterval(() => {
+            const p = Math.min(1, (Date.now() - startedAt) / ms);
+            const v = startVolume + (target - startVolume) * p;
+            volumeRef.current = v;
+            sound.setVolumeAsync(v).catch(() => { });
+            if (p >= 1) {
+                if (rampTimerRef.current) clearInterval(rampTimerRef.current);
+                rampTimerRef.current = null;
+                if (target === 0) {
+                    sound.pauseAsync().catch(() => { });
+                    playingRef.current = false;
+                }
+            }
+        }, 50);
+    }, [ensureMusic]);
+
+    useEffect(() => {
+        if (!muteLoaded) return; // kayıtlı tercih okunmadan çalma
+        applyTarget({ scene, muted: isMuted, interacted, idle, speaking, appActive });
+    }, [scene, isMuted, interacted, idle, speaking, appActive, muteLoaded, applyTarget]);
+
+    const playSound = useCallback(async (name: SoundName) => {
+        if (name === 'background') return; // müziği sahne politikası yönetir
+        if (isMutedRef.current) return;
+        try {
+            let sfx = sfxRef.current[name];
+            if (!sfx) {
+                const src = name === 'correct' ? asset('/sounds/sfx/correct.wav') : asset('/sounds/sfx/wrong.wav');
+                const { sound } = await Audio.Sound.createAsync(src, { shouldPlay: false, volume: 0.9 });
+                sfxRef.current[name] = sound;
+                sfx = sound;
+            }
+            await sfx.replayAsync();
         } catch (error) {
             console.log(`Error playing sound ${name}:`, error);
         }
-    };
+    }, []);
 
-    const stopSound = async (name: SoundName) => {
-        try {
-            if (name === 'background') {
-                if (backgroundSound) {
-                    await backgroundSound.pauseAsync();
-                }
-            }
-        } catch (error) {
-            console.log(`Error stopping sound ${name}:`, error);
-        }
-    };
+    const stopSound = useCallback(async (_name: SoundName) => {
+        // Müziği sahne politikası yönetir; oyunların kendi başına durdurması kaldırıldı.
+    }, []);
 
-    const toggleMute = async () => {
-        try {
-            const newMutedState = !isMuted;
-            isMutedRef.current = newMutedState;
-            setIsMuted(newMutedState);
+    const toggleMute = useCallback(async () => {
+        const next = !isMutedRef.current;
+        isMutedRef.current = next;
+        setIsMuted(next);
+        AsyncStorage.setItem(MUTE_KEY, next ? '1' : '0').catch(() => { });
+    }, []);
 
-            if (backgroundSound) {
-                if (newMutedState) {
-                    await backgroundSound.pauseAsync();
-                } else {
-                    await backgroundSound.playAsync();
-                }
-            }
-        } catch (error) {
-            console.log("Error toggling mute:", error);
-        }
-    };
+    const resumeAfterInteraction = useCallback(async () => {
+        noteActivity();
+    }, [noteActivity]);
 
-    const changeVolume = async (val: number) => {
-        try {
-            const newVolume = Math.max(0, Math.min(1, val));
-            setVolume(newVolume);
+    const setMusicScene = useCallback((next: MusicScene) => setScene(next), []);
 
-            if (backgroundSound) {
-                await backgroundSound.setVolumeAsync(newVolume);
-            }
-        } catch (error) {
-            console.log("Error changing volume:", error);
-        }
-    };
+    const value = useMemo<SoundContextType>(() => ({
+        isMuted,
+        playSound,
+        stopSound,
+        toggleMute,
+        resumeAfterInteraction,
+        scene,
+        setMusicScene,
+    }), [isMuted, playSound, stopSound, toggleMute, resumeAfterInteraction, scene, setMusicScene]);
 
     return (
-        <SoundContext.Provider value={{
-            isMuted,
-            playSound,
-            stopSound,
-            toggleMute,
-            changeVolume,
-            isPlaying,
-            volume,
-            toggleSound: toggleMute,
-            resumeAfterInteraction,
-        }}>
-            {children}
+        <SoundContext.Provider value={value}>
+            {Platform.OS === 'web' ? children : (
+                <View style={{ flex: 1 }} onTouchStart={noteActivity}>{children}</View>
+            )}
         </SoundContext.Provider>
     );
 }
@@ -205,4 +272,3 @@ export function useSound() {
     }
     return context;
 }
-

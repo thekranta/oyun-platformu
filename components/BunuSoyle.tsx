@@ -6,7 +6,6 @@ import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, Touchable
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import JuicyProgressBar from './JuicyProgressBar';
-import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { apiUrl } from '../lib/apiBase';
 import { supabase } from '../lib/supabase';
@@ -42,7 +41,6 @@ interface StageResult {
 }
 
 export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
-    const { stopSound, playSound } = useSound();
     const [currentStage, setCurrentStage] = useState(0);
     const [gameReady, setGameReady] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
@@ -122,8 +120,6 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
                 recordingRef.current.stopAndUnloadAsync().catch(() => { });
                 recordingRef.current = null;
             }
-            // Çıkışta müziği tekrar başlat (eğer durdurulmuşsa)
-            playSound('background');
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStage]);
@@ -156,9 +152,6 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         startingRef.current = true;
         pendingStopRef.current = false;
         try {
-            // Kayıt başlarken arka plan müziğini durdur
-            await stopSound('background');
-
             console.log('🎙️ Kayıt başlatılıyor...');
             console.log('İzin durumu:', permissionResponse?.status);
 
@@ -278,9 +271,6 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
         }
 
         setIsRecording(false);
-
-        // Kayıt bitince arka plan müziğini tekrar başlat
-        playSound('background');
 
         if (shouldAnalyze && audioUri) {
             setRecordingStatus('Analiz Ediliyor...');

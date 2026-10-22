@@ -18,6 +18,7 @@ import { Platform } from 'react-native';
 import { TTS } from '../lib/ttsAssets';
 import { supabase } from '../lib/supabase';
 import { apiUrl } from '../lib/apiBase';
+import { beginSpeech, resetSpeech } from './speechActivity';
 
 // Canlı proxy yolu için blob önbelleği (aynı metni tekrar üretmemek için)
 const audioCache = new Map<string, string>();
@@ -393,6 +394,19 @@ export async function speak(
     text: string,
     options: SpeechOptions = {}
 ): Promise<void> {
+    // Konuşma sürerken arka plan müziği kesilir (bkz. services/speechActivity.ts, components/SoundContext.tsx).
+    const end = beginSpeech();
+    try {
+        await speakInner(text, options);
+    } finally {
+        end();
+    }
+}
+
+async function speakInner(
+    text: string,
+    options: SpeechOptions = {}
+): Promise<void> {
     // 1) HAZIR MP3 var mı?
     const bundled = TTS[ttsSlug(text)];
     if (bundled != null) {
@@ -494,6 +508,8 @@ export function stopSpeech(): void {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
     }
+    // Kesilen konuşmanın speak() sözü 8 sn'ye kadar geç çözülebilir: müzik o kadar sessiz kalmasın.
+    resetSpeech();
 }
 
 /**
