@@ -5,7 +5,6 @@ import { FeedbackService } from '../services/FeedbackService';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import JuicyProgressBar from './JuicyProgressBar';
-import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { speak } from '../services/speechService';
 import ListenButton from './ListenButton';
@@ -63,7 +62,6 @@ interface Card {
 export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük Kaşif', emojiSet, oyunAdi = 'hafiza', title = '🧠 Çiftini Bul!', introMessage = 'Hafıza Oyununa hoş geldin! Kartların çiftlerini bulmaya çalış!' }: HafizaOyunuProps) {
     // Bu ekran DynamicBackground kullanmadığı için global ses düğmesini hiç göstermiyordu —
     // arka plan müziği kapatılamıyordu. Kendi ses aç/kapa butonunu ekliyoruz.
-    const { isMuted, toggleMute } = useSound();
     // Emoji seti verilirse görsel yerine emoji kartlar kullan (temalı varyant)
     const gorseller: { id: number; name: string; source?: any; emoji?: string }[] =
         emojiSet && emojiSet.length >= 5
@@ -338,9 +336,6 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
                 {onExit && (
                     <GameExitButton onPress={onExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
                 )}
-                <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
-                    <Text style={styles.soundButtonText}>{isMuted ? '🔇' : '🔊'}</Text>
-                </TouchableOpacity>
                 <View style={styles.centerContainer}>
                     <Text style={styles.congratsTitle}>🎉 Harika!</Text>
                     <Text style={styles.congratsText}>
@@ -365,9 +360,6 @@ export default function HafizaOyunu({ onGameEnd, onExit, childName = 'Küçük K
             {onExit && (
                 <GameExitButton onPress={onExit} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
             )}
-            <TouchableOpacity style={styles.soundButton} onPress={toggleMute}>
-                <Text style={styles.soundButtonText}>{isMuted ? '🔇' : '🔊'}</Text>
-            </TouchableOpacity>
             {/* Countdown Overlay */}
             {!gameReady && (
                 <CountdownOverlay

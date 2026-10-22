@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -7,13 +6,11 @@ import {
     Platform,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { useSound } from './SoundContext';
 import { speak, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
 
@@ -37,7 +34,6 @@ interface OnlukCerceveProps {
 }
 
 export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', fruitWord = 'elma', oyunAdi = 'Onluk Çerçeve', targetRange, introMessage = 'Söylenen sayı kadar meyveyi çerçeveye koy!' }: OnlukCerceveProps) {
-    const { isMuted, toggleMute } = useSound();
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
     useEffect(() => {
@@ -239,9 +235,8 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
                     <View style={styles.roundBadge}>
                         <Text style={styles.roundText}>🎯 Tur {round}/10</Text>
                     </View>
-                    <TouchableOpacity onPress={toggleMute} style={styles.headerBtn}>
-                        <Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={26} color="#4CAF50" />
-                    </TouchableOpacity>
+                    {/* Sağ üstte ana ekranın ses düğmesi durur (GameSoundButton); başlığı ortada tutan boşluk. */}
+                    <View style={styles.headerBtn} />
                 </View>
 
                 <ListenButton onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />

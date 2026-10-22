@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
@@ -12,7 +11,6 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
 import ListenButton from './ListenButton';
 
@@ -32,7 +30,6 @@ type QuestionType = 'next' | 'prev' | 'between';
 interface Question { type: QuestionType; numbers: (number | null)[]; correctAnswer: number; options: number[]; }
 
 export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps) {
-    const { isMuted, toggleMute } = useSound();
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
     useEffect(() => {
@@ -152,7 +149,8 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
                 <View style={styles.header}>
                     <GameExitButton onPress={onExit} />
                     <View style={styles.roundBadge}><Text style={styles.roundText}>🔢 Tur {round}/10</Text></View>
-                    <TouchableOpacity onPress={toggleMute}><Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={26} color="#FF9800" /></TouchableOpacity>
+                    {/* Sağ üstte ana ekranın ses düğmesi durur (GameSoundButton); başlığı ortada tutan boşluk. */}
+                    <View style={{ width: 26, height: 26 }} />
                 </View>
 
                 {/* Main */}

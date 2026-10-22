@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import ListenButton from './ListenButton';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -13,7 +12,6 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
@@ -45,7 +43,6 @@ interface RoundData {
 const DEFAULT_FRUITS = { left: '🍎', right: '🍊' };
 
 export default function QuantityComparison({ onGameEnd, onExit, childName = 'Çocuk', fruits = DEFAULT_FRUITS, oyunAdi = 'miktar-avcisi', introMessage = 'Miktar Avcısı oyununa hoş geldin! Hangisi daha çok veya az, bul!' }: QuantityComparisonProps) {
-    const { isMuted, toggleMute } = useSound();
     const [gameReady, setGameReady] = useState(false);
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
@@ -290,9 +287,8 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
                     <View style={styles.roundBadge}>
                         <Text style={styles.roundText}>🎯 Tur {round}/10</Text>
                     </View>
-                    <TouchableOpacity onPress={toggleMute} style={styles.headerBtn}>
-                        <Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={24} color="#5D4037" />
-                    </TouchableOpacity>
+                    {/* Sağ üstte ana ekranın ses düğmesi durur (GameSoundButton); başlığı ortada tutan boşluk. */}
+                    <View style={styles.headerBtn} />
                 </View>
                 <GameExitButton onPress={onExit} style={styles.exitBtn} />
 

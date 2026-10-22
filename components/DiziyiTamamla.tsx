@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -89,7 +88,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
     const [isCorrect, setIsCorrect] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
 
-    const { playSound, isMuted, toggleMute } = useSound();
+    const { playSound } = useSound();
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -227,14 +226,8 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                 <GameExitButton onPress={onLogout} />
                 <Text style={styles.title}>{title}</Text>
 
-                <View style={styles.soundContainer}>
-                    <TouchableOpacity
-                        onPress={toggleMute}
-                        style={styles.modernSoundButton}
-                    >
-                        <Ionicons name={isMuted ? "volume-mute" : "volume-high"} size={24} color="#2C3E50" />
-                    </TouchableOpacity>
-                </View>
+                {/* Sağ üstte ana ekranın ses düğmesi durur (GameSoundButton); başlığı ortada tutan boşluk. */}
+                <View style={styles.soundContainer} />
             </View>
 
             {/* Progress Bar */}

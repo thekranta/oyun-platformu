@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import GameExitButton from './GameExitButton';
 import {
@@ -9,7 +8,6 @@ import {
     Platform,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -107,7 +105,7 @@ function DraggableOption({ value, size, onDrop, disabled }: { value: number; siz
 }
 
 export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }: TartiDengesiProps) {
-    const { isMuted, toggleMute, playSound } = useSound();
+    const { playSound } = useSound();
     const [gameReady, setGameReady] = useState(false);
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
@@ -258,7 +256,8 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
                 <View style={styles.header}>
                     <GameExitButton onPress={onExit} />
                     <View style={styles.roundBadge}><Text style={styles.roundText}>⚖️ Tur {round}/10</Text></View>
-                    <TouchableOpacity onPress={toggleMute}><Ionicons name={isMuted ? 'volume-mute-outline' : 'volume-high-outline'} size={26} color="#9C27B0" /></TouchableOpacity>
+                    {/* Sağ üstte ana ekranın ses düğmesi durur (GameSoundButton); başlığı ortada tutan boşluk. */}
+                    <View style={{ width: 26, height: 26 }} />
                 </View>
 
                 <View style={styles.mainArea}>
