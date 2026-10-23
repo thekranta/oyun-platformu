@@ -6,11 +6,13 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { buildRound, needsCompactDots } from '../lib/sayiyiBulRounds';
 
 // ============================================
 // 🔢 SAYIYI BUL - Rakam → nicelik (Matematik/MAB.1)
 // Büyük bir rakam gösterilir; çocuk O KADAR nesne içeren grubu seçer.
 // Sayı-nicelik ilişkisi (Çiftlikte Sayalım'ın tersi yönü). Görsel.
+// Sayılar 1-10: ilk turlar küçük sayılarla başlar, son iki tur 6-10 (lib/sayiyiBulRounds.ts).
 // ============================================
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -19,28 +21,6 @@ const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher.
 const TOTAL_ROUNDS = 8;
 const DOT_COLORS = ['#FF6B6B', '#4FACFE', '#66BB6A', '#FFA726', '#AB47BC'];
 
-const maxCount = (round: number) => (round <= 3 ? 3 : round <= 6 ? 4 : 5);
-
-const shuffle = <T,>(arr: T[]): T[] => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
-
-const buildCounts = (correct: number, cap: number): number[] => {
-  const set = new Set<number>([correct]);
-  let d = 1;
-  while (set.size < 3) {
-    if (correct - d >= 1) set.add(correct - d);
-    if (set.size < 3 && correct + d <= cap) set.add(correct + d);
-    d++;
-    if (d > cap) break;
-  }
-  return shuffle(Array.from(set));
-};
 
 interface Props {
   onGameEnd: (
@@ -71,6 +51,7 @@ export default function SayiyiBul({ onGameEnd, onExit, childName }: Props) {
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
   const isMountedRef = useRef(true);
+  const prevTargetRef = useRef(0);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const numBounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
@@ -79,11 +60,11 @@ export default function SayiyiBul({ onGameEnd, onExit, childName }: Props) {
 
   useEffect(() => {
     if (!gameReady) return;
-    const cap = maxCount(round);
-    const c = 1 + Math.floor(Math.random() * cap);
+    const { target: c, options: opts } = buildRound(round, prevTargetRef.current);
+    prevTargetRef.current = c;
     setTarget(c);
     setColor(DOT_COLORS[(round - 1) % DOT_COLORS.length]);
-    setOptions(buildCounts(c, cap));
+    setOptions(opts);
     setLocked(false);
     setWrong(null);
     numBounce.setValue(0.8);
@@ -129,6 +110,8 @@ export default function SayiyiBul({ onGameEnd, onExit, childName }: Props) {
     }
   };
 
+  const compact = needsCompactDots(options); // 10 noktalı kutu olan turda tüm kutularda küçük nokta (boyut cevabı ele vermesin)
+
   return (
     <View style={styles.container}>
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
@@ -160,9 +143,9 @@ export default function SayiyiBul({ onGameEnd, onExit, childName }: Props) {
           return (
             <Animated.View key={n} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
               <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(n)} activeOpacity={0.85}>
-                <View style={styles.dots}>
+                <View style={[styles.dots, compact && styles.dotsCompact]}>
                   {Array.from({ length: n }).map((_, i) => (
-                    <View key={i} style={[styles.dot, { backgroundColor: color }]} />
+                    <View key={i} style={[styles.dot, compact && styles.dotCompact, { backgroundColor: color }]} />
                   ))}
                 </View>
               </TouchableOpacity>
@@ -189,4 +172,6 @@ const styles = StyleSheet.create({
   optWrong: { backgroundColor: '#FFE0E0' },
   dots: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, maxWidth: 96 },
   dot: { width: 26, height: 26, borderRadius: 13 },
+  dotsCompact: { maxWidth: 98, gap: 4 },
+  dotCompact: { width: 16, height: 16, borderRadius: 8 },
 });
