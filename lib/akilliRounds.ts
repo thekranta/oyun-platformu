@@ -89,10 +89,15 @@ export const COMPARE_CFG: Record<number, CompareConfig> = {
   5: { lo: 4, hi: 10, minGap: 1, maxGap: 1 },
 };
 
+/** Arka arkaya en çok bu kadar tur aynı soru ("çok" ya da "az") sorulur; 3. tur mutlaka diğerine döner. */
+export const MAX_SAME_QUESTION_RUN = 2;
+
 export interface CompareRound {
   left: number;
   right: number;
   more: boolean;
+  /** Bu soru türü (more) bu tur dahil kaç tur üst üste soruldu. */
+  run: number;
 }
 
 export function buildCompareRound(diff: number, prev?: CompareRound, rng: Rng = Math.random): CompareRound {
@@ -109,5 +114,10 @@ export function buildCompareRound(diff: number, prev?: CompareRound, rng: Rng = 
   const fresh = prev ? pairs.filter(([l, r]) => !(l === prev.left && r === prev.right)) : pairs;
   const usable = fresh.length ? fresh : pairs;
   const [left, right] = usable[Math.floor(rng() * usable.length)];
-  return { left, right, more: rng() > 0.5 };
+  // Soru türü yazı-turaydı; 8 tur üst üste "çok" gelebiliyordu. Aynı soru en çok MAX_SAME_QUESTION_RUN tur üst üste gelir.
+  // Tur başına rng çağrısı sayısı aynı kalır (çift + soru), tohumlu testlerdeki çift dizisi bozulmaz.
+  let more = rng() > 0.5;
+  if (prev && more === prev.more && (prev.run ?? 1) >= MAX_SAME_QUESTION_RUN) more = !more;
+  const run = prev && more === prev.more ? (prev.run ?? 1) + 1 : 1;
+  return { left, right, more, run };
 }

@@ -144,4 +144,36 @@ describe('Akıllı Miktar turları', () => {
       }
     }
   });
+
+  // Test notu 21-D1: ilk 8 turda hiç "az" sorulmadı. Soru türü yazı-turaydı; artık aynı soru en çok iki tur üst üste gelir.
+  it('hep "çok" çıkaran rastgelede bile 3. tur "az"a döner (en çok 2 aynı soru üst üste)', () => {
+    const hepCok = () => 0.9;
+    let prev = buildCompareRound(2, undefined, hepCok);
+    const diziCok = [prev.more];
+    for (let i = 1; i < 10; i++) { prev = buildCompareRound(2, prev, hepCok); diziCok.push(prev.more); }
+    expect(diziCok).toEqual([true, true, false, true, true, false, true, true, false, true]);
+
+    const hepAz = () => 0.1;
+    prev = buildCompareRound(2, undefined, hepAz);
+    const diziAz = [prev.more];
+    for (let i = 1; i < 10; i++) { prev = buildCompareRound(2, prev, hepAz); diziAz.push(prev.more); }
+    expect(diziAz).toEqual([false, false, true, false, false, true, false, false, true, false]);
+  });
+
+  it('10 turluk oyunlarda üç aynı soru üst üste gelmez, ilk 8 turda hem "çok" hem "az" vardır, karışım dengeli kalır', () => {
+    let toplam = 0, cok = 0;
+    for (const diff of DIFFS) {
+      for (let tohum = 1; tohum <= 500; tohum++) {
+        const rng = seeded(tohum);
+        let prev = buildCompareRound(diff, undefined, rng);
+        const dizi = [prev.more];
+        for (let i = 1; i < 10; i++) { prev = buildCompareRound(diff, prev, rng); dizi.push(prev.more); }
+        for (let i = 2; i < dizi.length; i++) expect(dizi[i] === dizi[i - 1] && dizi[i] === dizi[i - 2]).toBe(false);
+        expect(dizi.slice(0, 8).some((m) => m)).toBe(true);
+        expect(dizi.slice(0, 8).some((m) => !m)).toBe(true);
+        toplam += dizi.length; cok += dizi.filter(Boolean).length;
+      }
+    }
+    expect(cok / toplam).toBeGreaterThan(0.46); expect(cok / toplam).toBeLessThan(0.54);
+  });
 });
