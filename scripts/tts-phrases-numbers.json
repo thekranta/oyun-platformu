@@ -4,11 +4,11 @@
     "slug": "1-tane-aferin"
   },
   {
-    "text": "İki tane! Aferin.",
+    "text": "iki tane! Aferin.",
     "slug": "2-tane-aferin"
   },
   {
-    "text": "Üç tane! Aferin.",
+    "text": "üç tane! Aferin.",
     "slug": "3-tane-aferin"
   },
   {
@@ -16,7 +16,7 @@
     "slug": "4-tane-aferin"
   },
   {
-    "text": "Beş tane! Aferin.",
+    "text": "beş tane, aferin.",
     "slug": "5-tane-aferin"
   },
   {
@@ -178,5 +178,41 @@
   {
     "text": "On tane olanı bul.",
     "slug": "10-tane-olani-bul"
+  },
+  {
+    "text": "altı tane, aferin.",
+    "slug": "6-tane-aferin"
+  },
+  {
+    "text": "yedi tane, aferin.",
+    "slug": "7-tane-aferin"
+  },
+  {
+    "text": "sekiz tane, aferin.",
+    "slug": "8-tane-aferin"
+  },
+  {
+    "text": "dokuz tane, aferin.",
+    "slug": "9-tane-aferin"
+  },
+  {
+    "text": "Altı! Altı tane olanı bul.",
+    "slug": "6-6-tane-olani-bul"
+  },
+  {
+    "text": "Altı tane olanı bul.",
+    "slug": "6-tane-olani-bul"
+  },
+  {
+    "text": "Sekiz! Sekiz tane olanı bul.",
+    "slug": "8-8-tane-olani-bul"
+  },
+  {
+    "text": "Dokuz tane olanı bul.",
+    "slug": "9-tane-olani-bul"
+  },
+  {
+    "text": "On! On tane olanı bul.",
+    "slug": "10-10-tane-olani-bul"
   }
 ]

@@ -161,7 +161,7 @@ export default function AkilliAgirHafif({ onGameEnd, onExit, childName }: Props)
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Hangisi en ağır? En ağır olana dokun! Sen başardıkça oyun akıllanır 📈"
+          message="Hangisi en ağır? En ağır olana dokun!"
           childName={childName}
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}

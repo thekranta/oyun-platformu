@@ -27,7 +27,7 @@ interface Props {
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 10000;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Olayları önceden sonraya doğru sırayla dokun! Sen başardıkça zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Olayları önceden sonraya doğru sırayla dokun!';
 
 // Kronolojik olay dizileri (önce → sonra)
 const SEQ3: string[][] = [
@@ -194,7 +194,7 @@ export default function AkilliOnceSonra({ onGameEnd, onExit, childName = 'Küç�
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Olayları önceden sonraya doğru sırayla dokun! Sen başardıkça zorlaşır 📈"
+                    message="Olayları önceden sonraya doğru sırayla dokun!"
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

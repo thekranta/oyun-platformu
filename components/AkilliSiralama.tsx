@@ -28,7 +28,7 @@ const TOTAL_ROUNDS = 9;
 const TARGET_MS = 10000;
 const DOT = '🔵';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Kartları en azdan en çoğa doğru sırayla dokun! Sen başardıkça zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Kartları en azdan en çoğa doğru sırayla dokun!';
 
 const shuffle = <T,>(arr: T[]): T[] => {
     const a = [...arr];
@@ -190,7 +190,7 @@ export default function AkilliSiralama({ onGameEnd, onExit, childName = 'Küçü
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Kartları en azdan en çoğa doğru sırayla dokun! Sen başardıkça zorlaşır 📈"
+                    message="Kartları en azdan en çoğa doğru sırayla dokun!"
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

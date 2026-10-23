@@ -27,7 +27,7 @@ interface Props {
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 9000;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Renk örüntüsünü çöz ve sıradakini bul! Sen başardıkça zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Renk örüntüsünü çöz ve sıradakini bul!';
 const PALETTE = ['🔴', '🔵', '🟡', '🟢', '🟣', '🟠'];
 
 const shuffle = <T,>(arr: T[]): T[] => {
@@ -193,7 +193,7 @@ export default function AkilliOruntu({ onGameEnd, onExit, childName = 'Küçük 
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Renk örüntüsünü çöz ve sıradakini bul! Sen başardıkça zorlaşır 📈"
+                    message="Renk örüntüsünü çöz ve sıradakini bul!"
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

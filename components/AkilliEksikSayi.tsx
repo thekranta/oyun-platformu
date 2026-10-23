@@ -162,7 +162,7 @@ export default function AkilliEksikSayi({ onGameEnd, onExit, childName = 'Küç�
                     cocuk icin gereksizdi, gorev zaten CountdownOverlay + Tekrar Dinle
                     ile sesli veriliyor (her tur ayni gorev oldugundan tur-basi ayrica
                     seslendirmeye gerek yok). */}
-                <ListenButton onPress={() => speak('Diziye bak, eksik sayıyı bul! Sen başardıkça zorlaşır', { instructions: HAPPY_VOICE })} color="#1976D2" style={{ marginTop: 12 }} />
+                <ListenButton onPress={() => speak('Diziye bak, eksik sayıyı bul!', { instructions: HAPPY_VOICE })} color="#1976D2" style={{ marginTop: 12 }} />
 
                 {/* Dizi */}
                 <Animated.View style={[styles.seqCard, { transform: [{ scale: bump }, { translateX: shake }] }]}>
@@ -210,7 +210,7 @@ export default function AkilliEksikSayi({ onGameEnd, onExit, childName = 'Küç�
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Diziye bak, eksik sayıyı bul! Sen başardıkça zorlaşır 📈"
+                    message="Diziye bak, eksik sayıyı bul!"
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

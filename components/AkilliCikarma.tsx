@@ -28,7 +28,7 @@ const TOTAL_ROUNDS = 9;
 const TARGET_MS = 9000;
 const OBJECT = '🍪';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Bazıları gitti! Kalanları say ve doğru sayıya dokun. Sen başardıkça zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Bazıları gitti! Kalanları say ve doğru sayıya dokun.';
 
 const CFG: Record<number, { max: number; near: boolean }> = {
     1: { max: 4, near: false },

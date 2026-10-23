@@ -175,7 +175,7 @@ export default function AkilliMiktar({ onGameEnd, onExit, childName = 'Küçük 
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Hangi tarafta daha çok (veya az) var? Say ve dokun! Sen başardıkça zorlaşır 📈"
+                    message="Hangi tarafta daha çok (veya az) var? Say ve dokun!"
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); speakQuestion(current.more); }}

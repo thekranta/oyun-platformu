@@ -281,7 +281,7 @@ export default function AkilliKutuyuBul({ onGameEnd, onExit, childName }: Props)
 
             {!gameReady && (
                 <CountdownOverlay
-                    message="Sana söylenen şeyi bul ve dokun! Sen başardıkça oyun akıllanır 📈"
+                    message="Sana söylenen şeyi bul ve dokun!"
                     childName={childName}
                     countdownSeconds={5}
                     onComplete={() => { setGameReady(true); if (currentQuestion) speak(currentQuestion.question); }}

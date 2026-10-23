@@ -27,7 +27,7 @@ interface Props {
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 7000;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Diğerlerinden farklı olan tek nesneyi bul! Sen başardıkça zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Diğerlerinden farklı olan tek nesneyi bul!';
 // Renk çemberi (hue sırası) — komşular benzer, karşıttlar çok farklı
 const PALETTE = ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣'];
 

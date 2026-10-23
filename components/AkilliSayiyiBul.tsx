@@ -5,6 +5,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { needsCompactDots } from '../lib/sayiyiBulRounds';
 import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
 
@@ -176,7 +177,7 @@ export default function AkilliSayiyiBul({ onGameEnd, onExit, childName }: Props)
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Büyük sayıya bak! O kadar nokta olan kutuyu bul. Sen başardıkça oyun akıllanır."
+          message="Büyük sayıya bak! O kadar nokta olan kutuyu bul."
           childName={childName}
           countdownSeconds={5}
           onComplete={() => { levelStartRef.current = Date.now(); setGameReady(true); }}
@@ -200,13 +201,14 @@ export default function AkilliSayiyiBul({ onGameEnd, onExit, childName }: Props)
 
       <View style={styles.options}>
         {options.map((n) => {
+          const compact = needsCompactDots(options); // 10 noktalı kutu olan turda tüm kutularda küçük nokta
           const isWrong = wrong === n;
           return (
             <Animated.View key={n} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
               <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(n)} activeOpacity={0.85}>
-                <View style={styles.dots}>
+                <View style={[styles.dots, compact && styles.dotsCompact]}>
                   {Array.from({ length: n }).map((_, i) => (
-                    <View key={i} style={[styles.dot, { backgroundColor: color }]} />
+                    <View key={i} style={[styles.dot, compact && styles.dotCompact, { backgroundColor: color }]} />
                   ))}
                 </View>
               </TouchableOpacity>
@@ -234,4 +236,6 @@ const styles = StyleSheet.create({
   optWrong: { backgroundColor: '#FFE0E0' },
   dots: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, maxWidth: 96 },
   dot: { width: 26, height: 26, borderRadius: 13 },
+  dotsCompact: { maxWidth: 98, gap: 4 },
+  dotCompact: { width: 16, height: 16, borderRadius: 8 },
 });

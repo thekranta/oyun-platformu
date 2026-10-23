@@ -23,3 +23,13 @@ describe('Akıllı Sayıyı Bul klipleri', () => {
     expect(keys.has(ttsSlug(`${n} tane olanı bul.`))).toBe(true);
   });
 });
+
+// Çiftlikte Sayalım (1-5) ve Akıllı Çiftlikte Sayalım (1-9) her doğru cevapta "<n> tane! Aferin." der. 8 klibi eksikti (o turda ses sessiz kalıyordu).
+describe('Çiftlikte Sayalım "tane aferin" klipleri', () => {
+  const registry = readFileSync(join(__dirname, 'ttsAssets.ts'), 'utf8');
+  const keys = new Set([...registry.matchAll(/^\s*'([a-z0-9-]+)'\s*:/gm)].map((m) => m[1]));
+
+  it.each(Array.from({ length: 9 }, (_, i) => i + 1))('%i tane için klip var', (n) => {
+    expect(keys.has(ttsSlug(`${n} tane! Aferin.`))).toBe(true);
+  });
+});

@@ -229,7 +229,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       emojiSet={['🚗', '🚌', '🚜', '✈️', '🚂', '🚲', '⛵', '🚁']}
       oyunAdi="akilli-hafiza-tasit"
       title="🚗 Akıllı Taşıt Çiftleri"
-      introMessage="Taşıt Çiftlerine hoş geldin! Kartları çevir, aynı ikilileri hatırla ve eşleştir! Sen başardıkça zorlaşır"
+      introMessage="Taşıt Çiftlerine hoş geldin! Kartları çevir, aynı ikilileri hatırla ve eşleştir!"
     />
   ),
   'akilli-hafiza-sekil': (c) => (
@@ -248,7 +248,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       }}
       oyunAdi="akilli-hafiza-sekil"
       title="📐 Akıllı Şekil Çiftleri"
-      introMessage="Şekil Çiftlerine hoş geldin! Kartları çevir, aynı ikilileri hatırla ve eşleştir! Sen başardıkça zorlaşır"
+      introMessage="Şekil Çiftlerine hoş geldin! Kartları çevir, aynı ikilileri hatırla ve eşleştir!"
     />
   ),
   'akilli-harf': (c) => <AkilliHarf onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,

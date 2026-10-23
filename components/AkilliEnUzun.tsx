@@ -24,7 +24,7 @@ const TOTAL_ROUNDS = 9;        // 3 checkpoint (her 3 seviyede uyarlama)
 const TARGET_MS = 6000;        // "hızlı" eşiği (hız değerlendirmesi için)
 const COLORS = ['#FF6B6B', '#4FACFE', '#66BB6A', '#FFA726', '#AB47BC'];
 const ENDS = ['🐛', '🚂', '🐍', '✏️', '🖍️'];
-const INSTRUCTION_TEXT = 'Çubuklardan en uzun olanına dokun! Sen başardıkça zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Çubuklardan en uzun olanına dokun!';
 
 // Zorluğa göre: çubuk sayısı + en uzun çubuk ile komşusu arasındaki fark (gap, px).
 // Yüksek zorlukta hem çubuk sayısı artar hem de uzunluklar birbirine yaklaşır.

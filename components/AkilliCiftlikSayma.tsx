@@ -152,7 +152,7 @@ export default function AkilliCiftlikSayma({ onGameEnd, onExit, childName }: Pro
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Çiftlikteki hayvanları say ve doğru sayıya dokun! Sen başardıkça oyun akıllanır 📈"
+          message="Çiftlikteki hayvanları say ve doğru sayıya dokun!"
           childName={childName}
           countdownSeconds={5}
           onComplete={() => { levelStartRef.current = Date.now(); startTimeRef.current = Date.now(); setGameReady(true); }}

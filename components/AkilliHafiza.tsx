@@ -36,7 +36,7 @@ interface Props {
 }
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Kartları çevir, aynı ikilileri hatırla ve eşleştir! Sen başardıkça zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Kartları çevir, aynı ikilileri hatırla ve eşleştir!';
 const TOTAL_ROUNDS = 6;
 const ANIMALS = ['🐶', '🐱', '🐭', '🐰', '🦊', '🐻', '🐼', '🐸'];
 const PAIRS_BY_DIFF: Record<number, number> = { 1: 2, 2: 3, 3: 3, 4: 4, 5: 5 };

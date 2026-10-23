@@ -28,7 +28,7 @@ interface Props {
 }
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Nesneyi doğru gruba ayır! Sen başardıkça gruplar zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Nesneyi doğru gruba ayır!';
 const TOTAL_ROUNDS = 9;
 const TARGET_MS = 7000;
 

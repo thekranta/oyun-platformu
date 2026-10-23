@@ -19,7 +19,7 @@ import ListenButton from './ListenButton';
 const { width: SCREEN_W } = Dimensions.get('window');
 const USE_NATIVE = Platform.OS !== 'web';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Birbirinin aynısı iki resmi bul! Sen başardıkça zorlaşır 📈';
+const INSTRUCTION_TEXT = 'Birbirinin aynısı iki resmi bul!';
 const TOTAL_ROUNDS = 9; // 3 checkpoint (her 3 turda bir uyarlama)
 const TARGET_MS = 8000; // "hızlı" eşiği (hız değerlendirmesi için)
 const ITEMS = ['🍎', '🍌', '🐶', '🐱', '⭐', '🌸', '🚗', '🎈', '🐟', '🦋', '🍓', '🌈', '🐝', '🍉', '🚀', '🧸', '🐸', '🍕'];

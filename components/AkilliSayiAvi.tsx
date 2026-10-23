@@ -33,7 +33,7 @@ const OBJECT = '🍎';
 const targetMsFor = (count: number) => 3500 + count * 700;
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const INSTRUCTION_TEXT = 'Nesneleri say ve doğru sayıya dokun! Sen başardıkça oyun akıllanır 📈';
+const INSTRUCTION_TEXT = 'Nesneleri say ve doğru sayıya dokun!';
 
 export default function AkilliSayiAvi({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
     const START_DIFF = RESPONSIVE_ADAPTIVE.startDifficulty ?? 2;
