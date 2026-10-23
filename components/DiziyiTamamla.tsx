@@ -8,7 +8,7 @@ import { asset } from '../lib/assetMap';
 import { speak } from '../services/speechService';
 import ListenButton from './ListenButton';
 
-export type ShapeType = 'kare' | 'ucgen' | 'daire' | 'yildiz';
+export type ShapeType = 'kare' | 'ucgen' | 'daire' | 'yildiz' | 'dikdortgen';
 
 export interface Pattern {
     sequence: ShapeType[];
@@ -30,6 +30,7 @@ const SHAPES = {
     ucgen: asset('/images/ucgen.webp'),
     daire: asset('/images/daire.webp'),
     yildiz: asset('/images/yildiz.webp'),
+    dikdortgen: asset('/images/dikdortgen.webp'),
 };
 
 const DEFAULT_PATTERNS: Pattern[] = [

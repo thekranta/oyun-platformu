@@ -1,9 +1,10 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
+import { ORUNTU_BASAMAKLARI, ORUNTU_IKILI, ORUNTU_UCLU } from '../constants/oruntuOyunlari';
 
 // Kullanıcı kuralı (2026-10-23): yeni geometri oyunlarında temel şekiller kare, daire, üçgen ve dikdörtgen.
 // Bu test kuralı Akıllı Şekil Çiftleri üzerinde güvenceye alır; yeni geometri oyunu eklenince burada bir blok daha açılır.
-// (Eski oyunlar kuralın dışındadır: Diziyi Tamamla ailesi yıldız da kullanır; bilerek dokunulmadı.)
+// (Eski oyunlar kuralın dışındadır: ilk üç Diziyi Tamamla oyunu yıldız da kullanır; bilerek dokunulmadı.)
 
 const ROOT = join(__dirname, '..');
 const oku = (...p: string[]) => readFileSync(join(ROOT, ...p), 'utf8').split('\r\n').join('\n');
@@ -39,5 +40,30 @@ describe('geometri temel şekilleri: Akıllı Şekil Çiftleri', () => {
             expect(existsSync(join(ROOT, 'assets', 'images', `${s}.webp`))).toBe(true);
             expect(harita).toContain(`'/images/${s}.webp'`);
         }
+    });
+});
+
+describe('geometri temel şekilleri: İkili Örüntü, Örüntü Basamakları, Üçlü Örüntü', () => {
+    const SETLER: [string, { sequence: string[]; answer: string; options: string[] }[]][] = [
+        ['İkili Örüntü', ORUNTU_IKILI],
+        ['Örüntü Basamakları', ORUNTU_BASAMAKLARI],
+        ['Üçlü Örüntü', ORUNTU_UCLU],
+    ];
+
+    it.each(SETLER)('%s: dizi, cevap ve seçeneklerde yalnız dört temel şekil var', (_ad, set) => {
+        for (const p of set) {
+            for (const s of [...p.sequence, p.answer, ...p.options]) expect(TEMEL_SEKILLER).toContain(s);
+        }
+    });
+
+    it('dikdörtgen üç oyunun dizilerinde de gerçekten kullanılıyor (yıldızın yerini aldı)', () => {
+        for (const [, set] of SETLER) {
+            expect(set.some((p) => p.sequence.includes('dikdortgen'))).toBe(true);
+        }
+    });
+
+    it('DiziyiTamamla dikdörtgen görselini çizebilir', () => {
+        const kaynak = oku('components', 'DiziyiTamamla.tsx');
+        expect(kaynak).toContain("dikdortgen: asset('/images/dikdortgen.webp')");
     });
 });

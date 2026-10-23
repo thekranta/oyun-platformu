@@ -38,7 +38,7 @@ describe.each(SETLER)('%s', (_ad, set) => {
         expect(new Set(p.options).size).toBe(p.options.length);
         expect(p.options.length).toBeGreaterThanOrEqual(2);
         // Cevap dizideki tek bir doğru seçenektir; diğer seçenekler cevaba eşit olamaz (zaten tekrar yok) ve geçerli şekil olmalı.
-        for (const o of p.options) expect(['kare', 'ucgen', 'daire', 'yildiz']).toContain(o);
+        for (const o of p.options) expect(['kare', 'ucgen', 'daire', 'dikdortgen']).toContain(o);
     });
 
     it('kural dizide en az İKİ tam tekrar boyunca görünür', () => {
