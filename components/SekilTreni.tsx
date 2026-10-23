@@ -1,12 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Polygon, RadialGradient, Rect, Stop } from 'react-native-svg';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { LOCO_W, WAGON_MAX, trainLayout } from '../lib/sekilTreniLayout';
 
 // ============================================
 // 🚂 ŞEKİL TRENİ - Geometrik şekil tanıma (Matematik/MAB.2)
@@ -99,6 +100,7 @@ const shuffle = <T,>(arr: T[]): T[] => {
 };
 
 const optionCount = (round: number) => (round <= 2 ? 2 : round <= 5 ? 3 : 4);
+// Tüm vagonlar TEK sırada: 4 seçenekli turlarda dördüncü vagon artık aşağıda tek başına kalmaz (lib/sekilTreniLayout.ts).
 
 interface Props {
   onGameEnd: (
@@ -122,6 +124,9 @@ export default function SekilTreni({ onGameEnd, onExit, childName }: Props) {
   const [locked, setLocked] = useState(false);
   const [wrongKey, setWrongKey] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const { width: winW } = useWindowDimensions();
+  const { showLoco, gap, wagon } = trainLayout(winW, optionCount(round));
+  const k = wagon / WAGON_MAX;
 
   const [startTime] = useState(Date.now());
   const movesRef = useRef(0);
@@ -218,16 +223,19 @@ export default function SekilTreni({ onGameEnd, onExit, childName }: Props) {
       <ListenButton onPress={() => speak(`${target.name} nerede?`, { instructions: HAPPY_VOICE })} color="#FF8A00" style={{ marginTop: 14 }} />
 
       {/* Tren */}
-      <View style={styles.train}>
-        <Text style={styles.loco}>🚂</Text>
+      <View style={[styles.train, { gap }]}>
+        {showLoco && <Text allowFontScaling={false} style={styles.loco}>🚂</Text>}
         {options.map((s) => {
           const isWrong = wrongKey === s.key;
           const isCorrectPick = locked && s.key === target.key;
           return (
             <Animated.View key={s.key} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-              <TouchableOpacity style={[styles.wagon, isWrong && styles.wagonWrong, isCorrectPick && styles.wagonCorrect]} onPress={() => handlePick(s)} activeOpacity={0.85}>
-                <ShapeSvg type={s.key} size={58} color={color} />
-                <View style={styles.wheels}><View style={styles.wheel} /><View style={styles.wheel} /></View>
+              <TouchableOpacity style={[styles.wagon, { width: wagon, height: wagon, paddingTop: Math.round(6 * k) }, isWrong && styles.wagonWrong, isCorrectPick && styles.wagonCorrect]} onPress={() => handlePick(s)} activeOpacity={0.85}>
+                <ShapeSvg type={s.key} size={Math.round(58 * k)} color={color} />
+                <View style={[styles.wheels, { gap: Math.round(22 * k) }]}>
+                  <View style={[styles.wheel, { width: Math.round(14 * k), height: Math.round(14 * k), borderRadius: Math.round(7 * k) }]} />
+                  <View style={[styles.wheel, { width: Math.round(14 * k), height: Math.round(14 * k), borderRadius: Math.round(7 * k) }]} />
+                </View>
                 {isCorrectPick && (
                   <View style={styles.correctBadge}>
                     <Ionicons name="checkmark-circle" size={26} color="#2E7D32" />
@@ -252,8 +260,8 @@ const styles = StyleSheet.create({
   targetCard: { width: 160, height: 160, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 6 },
   targetName: { fontSize: 20, fontWeight: '900', marginTop: 2 },
 
-  train: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 24, maxWidth: 480, paddingHorizontal: 10 },
-  loco: { fontSize: 52 },
+  train: { flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 24, maxWidth: 480, paddingHorizontal: 10 },
+  loco: { fontSize: 40, width: LOCO_W, textAlign: 'center', lineHeight: 48 },
   wagon: { width: 92, height: 92, borderRadius: 16, backgroundColor: '#FFE0B2', borderWidth: 3, borderColor: '#EFB47A', alignItems: 'center', justifyContent: 'center', paddingTop: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 4 },
   wagonWrong: { borderColor: '#FF6B6B' },
   wagonCorrect: { borderColor: '#4CAF50', borderWidth: 4, backgroundColor: '#DFF3E0' },
