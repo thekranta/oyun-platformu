@@ -31,6 +31,7 @@ const ASSET_MAP: Record<string, AssetSource> = {
   '/images/avokado.webp': require('../assets/images/avokado.webp'),
   '/images/cilek.webp': require('../assets/images/cilek.webp'),
   '/images/daire.webp': require('../assets/images/daire.webp'),
+  '/images/dikdortgen.webp': require('../assets/images/dikdortgen.webp'),
   '/images/elma.webp': require('../assets/images/elma.webp'),
   '/images/ev.webp': require('../assets/images/ev.webp'),
   '/images/icon.png': require('../assets/images/icon.png'),

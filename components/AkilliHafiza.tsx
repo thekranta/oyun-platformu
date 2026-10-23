@@ -1,6 +1,6 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ImageSourcePropType, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { getMaarif } from '../constants/maarifMap';
@@ -23,8 +23,10 @@ interface Props {
     ) => void;
     onExit?: () => void;
     childName?: string;
-    /** Temalı varyant: kart resimleri (en az 5 çift için 5+ emoji). Varsayılan: hayvanlar. */
+    /** Temalı varyant: kart resimleri (emoji ya da `cardImages` anahtarı). Varsayılan: hayvanlar. Çift sayısı havuzla sınırlıdır. */
     emojiSet?: string[];
+    /** Emoji yerine görsel kullanan tema (ör. şekiller): `emojiSet` öğesi → görsel. Kart yüzü bu görselle çizilir. */
+    cardImages?: Record<string, ImageSourcePropType>;
     /** Varyant oyun kimliği (analitik ve Maarif kaydı ayrı izlenir). */
     oyunAdi?: string;
     /** Başlık metni (varyantta tema adı). */
@@ -59,7 +61,7 @@ function buildBoard(diff: number, pool: string[] = ANIMALS): Card[] {
 
 export default function AkilliHafiza({
     onGameEnd, onExit, childName = 'Küçük Kaşif',
-    emojiSet = ANIMALS, oyunAdi = 'akilli-hafiza', title = '📈 Akıllı Hafıza', introMessage = INSTRUCTION_TEXT,
+    emojiSet = ANIMALS, cardImages, oyunAdi = 'akilli-hafiza', title = '📈 Akıllı Hafıza', introMessage = INSTRUCTION_TEXT,
 }: Props) {
     const START_DIFF = 2;
     const { recordLevel } = useAdaptiveDifficulty({
@@ -174,15 +176,18 @@ export default function AkilliHafiza({
                 <View style={[styles.grid, { maxWidth: cols * (cellSize + 12) + 8 }]}>
                     {cards.map((card) => {
                         const show = card.flipped || card.matched;
+                        const img = cardImages?.[card.emoji];
                         return (
                             <TouchableOpacity
                                 key={card.id}
-                                style={[styles.cell, { width: cellSize, height: cellSize }, show && styles.cellOpen, card.matched && styles.cellMatched]}
+                                style={[styles.cell, { width: cellSize, height: cellSize }, show && styles.cellOpen, card.matched && styles.cellMatched, !!img && show && styles.cellImage]}
                                 onPress={() => handleTap(card.id)}
                                 activeOpacity={0.9}
                                 disabled={show || lockRef.current}
                             >
-                                <Text style={[styles.cellEmoji, { fontSize: cellSize * 0.5 }]}>{show ? card.emoji : '❓'}</Text>
+                                {show && img
+                                    ? <Image source={img} style={{ width: cellSize * 0.78, height: cellSize * 0.78 }} resizeMode="contain" accessibilityLabel={card.emoji} />
+                                    : <Text style={[styles.cellEmoji, { fontSize: cellSize * 0.5 }]}>{show ? card.emoji : '❓'}</Text>}
                             </TouchableOpacity>
                         );
                     })}
@@ -225,6 +230,8 @@ const styles = StyleSheet.create({
     },
     cellOpen: { backgroundColor: '#FFFDF5', borderColor: '#FFB74D' },
     cellMatched: { backgroundColor: '#E8F5E9', borderColor: '#66BB6A', opacity: 0.85 },
+    // Görselli kartlar (şekiller beyaz zeminli çizilidir): açık/eşleşmiş kartta beyaz zemin, kenar rengi korunur.
+    cellImage: { backgroundColor: '#FFFFFF' },
     cellEmoji: { color: '#fff' },
 
     hint: { fontSize: 15, color: '#5D4037', marginTop: 18, fontWeight: '600', minHeight: 22, textAlign: 'center' },

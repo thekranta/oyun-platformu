@@ -2,6 +2,7 @@ import React from 'react';
 import { GameResultExtraData } from '../services/gameResults';
 import { lazyWithReload } from '../lib/lazyWithReload';
 import type { VeliTier } from '../lib/subscriptionTiers';
+import { asset } from '../lib/assetMap';
 
 const AdaletHikayesi = lazyWithReload(() => import('./AdaletHikayesi'));
 const AileSepetiMacerasi = lazyWithReload(() => import('./AileSepetiMacerasi'));
@@ -236,9 +237,17 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       onGameEnd={c.onGameEnd}
       onExit={c.onExit}
       childName={c.ad}
-      emojiSet={['🟢', '🟦', '🔺', '🔶', '⭐', '❤️']}
+      // Geometri kuralı (kullanıcı, 2026-10-23): temel şekiller kare, daire, üçgen ve dikdörtgen. Emojide dikdörtgen yok,
+      // bu yüzden kartlar assets/images şekil görselleriyle çizilir; 4 şekil = en çok 4 çift (zorluk 4-5'te de 4 çift).
+      emojiSet={['kare', 'daire', 'ucgen', 'dikdortgen']}
+      cardImages={{
+        kare: asset('/images/kare.webp'),
+        daire: asset('/images/daire.webp'),
+        ucgen: asset('/images/ucgen.webp'),
+        dikdortgen: asset('/images/dikdortgen.webp'),
+      }}
       oyunAdi="akilli-hafiza-sekil"
-      title="🔷 Akıllı Şekil Çiftleri"
+      title="📐 Akıllı Şekil Çiftleri"
       introMessage="Şekil Çiftlerine hoş geldin! Kartları çevir, aynı ikilileri hatırla ve eşleştir! Sen başardıkça zorlaşır"
     />
   ),

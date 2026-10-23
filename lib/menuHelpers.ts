@@ -194,7 +194,7 @@ export const GAME_EMOJI: Record<string, string> = {
   // Adaptif oyunlar
   'akilli-sayi-avi': '🔢', 'akilli-miktar': '⚖️', 'akilli-oruntu': '🔵',
   'akilli-eksik-sayi': '❓', 'akilli-siralama': '📊', 'akilli-toplama': '➕', 'akilli-farkli': '🔎',
-  'akilli-cikarma': '➖', 'akilli-hafiza': '🧠', 'akilli-hafiza-tasit': '🚗', 'akilli-hafiza-sekil': '🔷',
+  'akilli-cikarma': '➖', 'akilli-hafiza': '🧠', 'akilli-hafiza-tasit': '🚗', 'akilli-hafiza-sekil': '📐',
   'akilli-harf': '🔤', 'akilli-siniflandir': '🗂️', 'akilli-once-sonra': '⏳',
   'akilli-ayi-ailesi': '🐻', 'akilli-ciftlik-sayma': '🐔', 'akilli-neredeyim': '📦',
   'akilli-sayiyi-bul': '🔢', 'akilli-en-uzun': '📏', 'akilli-agir-hafif': '🏋️', 'akilli-ikizleri-bul': '👯', 'akilli-kutuyu-bul': '📦',
