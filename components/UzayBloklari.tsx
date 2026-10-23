@@ -1056,6 +1056,8 @@ export default function UzayBloklari({ onGameEnd, onExit, childName = 'Tuna', ch
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        // Genişlik yoksa react-native-web ImageBackground görseli kendi boyutunda (1024 px) soldan çizer: arka plan ekranın yarısında kalıyordu.
+        width: '100%',
         ...(isWeb ? { height: WEB_FULL_HEIGHT as any } : {}),
     },
     darkOverlay: {
