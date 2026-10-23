@@ -11,7 +11,7 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak } from '../services/speechService';
+import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
 
 const NUMBER_WORDS: Record<number, string> = {
@@ -72,6 +72,12 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
     const [gameReady, setGameReady] = useState(false);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    // Oyundan çıkıldıktan sonra geç çözülen konuşma sözü durum güncellemesin / oyunu bitirmesin.
+    const aliveRef = useRef(true);
+    useEffect(() => {
+        aliveRef.current = true;
+        return () => { aliveRef.current = false; };
+    }, []);
 
     useEffect(() => {
         setFeedback(null);
@@ -113,22 +119,25 @@ export default function SayiKomsulari({ onGameEnd, onExit }: SayiKomsulariProps)
 
     const handleAnswer = (val: number) => {
         if (feedback) return;
-        speak(NUMBER_WORDS[val] ?? String(val));
         setDroppedAnswer(val);
         if (val === question?.correctAnswer) {
             setFeedback('correct');
             setShowConfetti(true);
-            // Seçilen sayının sesi bitsin diye "Aferin!" bir tık geciktirilir (aksi halde üst üste biner).
-            setTimeout(() => speak('Aferin!'), 700);
-            setTimeout(() => {
-                setShowConfetti(false);
-                if (round < 10) setRound(r => r + 1);
-                else {
-                    const d = Math.floor((Date.now() - startTime) / 1000);
-                    onGameEnd('Sayı Komşuları', d, 10, mistakes, undefined, { zorlukSeviyesi: 1, kazanimOdagi: 'MAB.4 Sayı Sıralama' });
-                }
-            }, 1200);
+            // Önce seçilen sayı SONUNA KADAR duyulur, ardından "Aferin!"; tur "Aferin!" bitince ilerler. (Eskiden "Aferin!" sabit
+            // 700 ms sonra çalıyordu ve bazı sayıları — ör. "beş" — yarıda kesiyordu: test listesi #16.)
+            speakThenWait(NUMBER_WORDS[val] ?? String(val), 600)
+                .then(() => (aliveRef.current ? speakThenWait('Aferin!', 900) : undefined))
+                .then(() => {
+                    if (!aliveRef.current) return;
+                    setShowConfetti(false);
+                    if (round < 10) setRound(r => r + 1);
+                    else {
+                        const d = Math.floor((Date.now() - startTime) / 1000);
+                        onGameEnd('Sayı Komşuları', d, 10, mistakes, undefined, { zorlukSeviyesi: 1, kazanimOdagi: 'MAB.4 Sayı Sıralama' });
+                    }
+                });
         } else {
+            speak(NUMBER_WORDS[val] ?? String(val));
             setFeedback('wrong');
             setMistakes(m => m + 1);
             setTimeout(() => { setFeedback(null); setDroppedAnswer(null); }, 800);
