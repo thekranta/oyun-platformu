@@ -4,6 +4,7 @@ import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { buildOruntuRound, type OruntuRound } from '../lib/akilliOruntuRounds';
 import { speak } from '../services/speechService';
 import ListenButton from './ListenButton';
 
@@ -28,36 +29,9 @@ const TOTAL_ROUNDS = 9;
 const TARGET_MS = 9000;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const INSTRUCTION_TEXT = 'Renk örüntüsünü çöz ve sıradakini bul!';
-const PALETTE = ['🔴', '🔵', '🟡', '🟢', '🟣', '🟠'];
+type Round = OruntuRound;
 
-const shuffle = <T,>(arr: T[]): T[] => {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-};
-
-interface Round { shown: string[]; answer: string; options: string[]; }
-
-function buildRound(diff: number): Round {
-    const colorsCount = diff <= 2 ? 2 : diff <= 4 ? 3 : 4;
-    const unitLen = diff <= 2 ? 2 : 3;
-    const colors = shuffle(PALETTE).slice(0, colorsCount);
-    const unit = colors.slice(0, unitLen);          // örüntü birimi (sıra karışık paletten)
-    const reps = 2;
-    const p = Math.floor(Math.random() * unitLen);  // kısmi tekrar → cevap değişkenliği
-    const shownCount = reps * unitLen + p;
-    const shown = Array.from({ length: shownCount }, (_, i) => unit[i % unitLen]);
-    const answer = unit[shownCount % unitLen];
-
-    const optionCount = diff >= 3 ? 4 : 3;
-    const distractPool = [...colors.filter(c => c !== answer), ...PALETTE.filter(c => !colors.includes(c))];
-    const distractors = shuffle(distractPool).slice(0, optionCount - 1);
-    const options = shuffle([answer, ...distractors]);
-    return { shown, answer, options };
-}
+const buildRound = buildOruntuRound; // zorluk seviyeleri ve tur üretimi: lib/akilliOruntuRounds.ts (testli)
 
 export default function AkilliOruntu({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
     const START_DIFF = 2;
