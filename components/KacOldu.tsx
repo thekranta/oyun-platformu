@@ -6,18 +6,29 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { buildKacOlduRounds, KAC_OLDU_ROUNDS } from '../lib/kacOlduRounds';
 
 // ============================================
 // ➕ KAÇ OLDU? - 5'e kadar toplama (Matematik/MAB.1)
 // İki grubu birleştirip hepsini sayar, toplam rakamı seçer. Sayı-nicelik
 // birleştirme (erken toplama). Görsel: nesneler görünür, çocuk sayar.
+// Turlar lib/kacOlduRounds.ts'te: toplamlar (2-5) dengeli, art arda aynı toplam yok.
 // ============================================
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const USE_NATIVE = Platform.OS !== 'web';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const TOTAL_ROUNDS = 8;
+const TOTAL_ROUNDS = KAC_OLDU_ROUNDS;
 const OBJECTS = ['🍎', '🍓', '🐤', '⭐', '🎈', '🍪'];
+
+const shuffleObjects = (): string[] => {
+  const a = [...OBJECTS];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
 
 const buildOptions = (correct: number): number[] => {
   const set = new Set<number>([correct]);
@@ -61,6 +72,9 @@ export default function KacOldu({ onGameEnd, onExit, childName }: Props) {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const pop = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
+  // 8 turun toplamları baştan dengeli seçilir (2,3,4,5 ikişer kez); nesne sırası da karışık, art arda aynı nesne gelmez.
+  const roundsRef = useRef(buildKacOlduRounds());
+  const objectsRef = useRef(shuffleObjects());
 
   useEffect(() => () => {
     isMountedRef.current = false;
@@ -70,14 +84,11 @@ export default function KacOldu({ onGameEnd, onExit, childName }: Props) {
 
   useEffect(() => {
     if (!gameReady) return;
-    // a+b <= 5, her ikisi de >=1
-    const na = 1 + Math.floor(Math.random() * 3); // 1-3
-    const maxB = Math.min(3, 5 - na);
-    const nb = 1 + Math.floor(Math.random() * maxB);
-    setA(na);
-    setB(nb);
-    setObj(OBJECTS[Math.floor(Math.random() * OBJECTS.length)]);
-    setOptions(buildOptions(na + nb));
+    const r = roundsRef.current[round - 1];
+    setA(r.a);
+    setB(r.b);
+    setObj(objectsRef.current[(round - 1) % objectsRef.current.length]);
+    setOptions(buildOptions(r.total));
     setLocked(false);
     setWrong(null);
     pop.setValue(0.85);
