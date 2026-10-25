@@ -11,7 +11,8 @@ import ListenButton from './ListenButton';
 // 🔤 İLK HARF - İlk ses/harf farkındalığı (Dil / Erken Okuryazarlık, TAEOB)
 // Bir harf gösterilir; çocuk O HARFLE BAŞLAYAN resmi bulur (A → Arı).
 // Gerçek okuryazarlık becerisi (harf-ses ilişkisi), "aynısını bul" DEĞİL.
-// Resim adları etiketli; ses de harfi söyler.
+// Resimlerin altında YAZI yok (kullanıcı notu 2026-10-25: okuyarak değil, adını bilerek ilk sesi bulsun); ses harfin ADINI söyler
+// (Y 'ye', K 'ke': tek harf 'ı' / 'kiğ' diye okunuyordu; klip metinleri scripts/tts-phrases-dynamic.json'da, dosya adı ekran metninin slug'ı kalır).
 // ============================================
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -187,9 +188,8 @@ export default function IlkHarf({ onGameEnd, onExit, childName }: Props) {
             const isWrong = wrong === w.emoji;
             return (
               <Animated.View key={w.emoji} style={isWrong ? { transform: [{ translateX: shake }] } : undefined}>
-                <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(w)} activeOpacity={0.85}>
+                <TouchableOpacity style={[styles.optCard, isWrong && styles.optWrong]} onPress={() => handlePick(w)} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel={w.name}>
                   <Text style={styles.optEmoji}>{w.emoji}</Text>
-                  <Text style={styles.optName}>{w.name}</Text>
                 </TouchableOpacity>
               </Animated.View>
             );
@@ -214,8 +214,7 @@ const styles = StyleSheet.create({
   letterBig: { fontSize: 88, fontWeight: '900', color: '#EC407A' },
 
   options: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 14, marginTop: 22, maxWidth: 460, paddingHorizontal: 12 },
-  optCard: { width: 120, height: 128, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
+  optCard: { width: 112, height: 112, borderRadius: 24, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.14, shadowRadius: 1, elevation: 4 },
   optWrong: { backgroundColor: '#FFE0E0' },
-  optEmoji: { fontSize: 62 },
-  optName: { fontSize: 15, fontWeight: '800', color: '#5A3A66' },
+  optEmoji: { fontSize: 66 },
 });

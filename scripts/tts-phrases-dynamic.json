@@ -300,8 +300,9 @@
     "game": "IlkHarf"
   },
   {
-    "text": "K ile başlayan resmi bul!",
-    "game": "IlkHarf"
+    "text": "Ke ile başlayan resmi bul!",
+    "game": "IlkHarf",
+    "slug": "k-ile-baslayan-resmi-bul"
   },
   {
     "text": "M ile başlayan resmi bul!",
@@ -316,8 +317,9 @@
     "game": "IlkHarf"
   },
   {
-    "text": "Y ile başlayan resmi bul!",
-    "game": "IlkHarf"
+    "text": "Ye ile başlayan resmi bul!",
+    "game": "IlkHarf",
+    "slug": "y-ile-baslayan-resmi-bul"
   },
   {
     "text": "G ile başlayan resmi bul!",
@@ -364,16 +366,19 @@
     "game": "IlkHarf"
   },
   {
-    "text": "Aferin! Kedi, K ile başlar.",
-    "game": "IlkHarf"
+    "text": "Aferin! Kedi, ke ile başlar.",
+    "game": "IlkHarf",
+    "slug": "aferin-kedi-k-ile-baslar"
   },
   {
-    "text": "Aferin! Köpek, K ile başlar.",
-    "game": "IlkHarf"
+    "text": "Aferin! Köpek, ke ile başlar.",
+    "game": "IlkHarf",
+    "slug": "aferin-kopek-k-ile-baslar"
   },
   {
-    "text": "Aferin! Kelebek, K ile başlar.",
-    "game": "IlkHarf"
+    "text": "Aferin! Kelebek, ke ile başlar.",
+    "game": "IlkHarf",
+    "slug": "aferin-kelebek-k-ile-baslar"
   },
   {
     "text": "Aferin! Muz, M ile başlar.",
@@ -404,16 +409,19 @@
     "game": "IlkHarf"
   },
   {
-    "text": "Aferin! Yıldız, Y ile başlar.",
-    "game": "IlkHarf"
+    "text": "Aferin! Yıldız, ye ile başlar.",
+    "game": "IlkHarf",
+    "slug": "aferin-yildiz-y-ile-baslar"
   },
   {
-    "text": "Aferin! Yılan, Y ile başlar.",
-    "game": "IlkHarf"
+    "text": "Aferin! Yılan, ye ile başlar.",
+    "game": "IlkHarf",
+    "slug": "aferin-yilan-y-ile-baslar"
   },
   {
-    "text": "Aferin! Yumurta, Y ile başlar.",
-    "game": "IlkHarf"
+    "text": "Aferin! Yumurta, ye ile başlar.",
+    "game": "IlkHarf",
+    "slug": "aferin-yumurta-y-ile-baslar"
   },
   {
     "text": "Aferin! Güneş, G ile başlar.",
