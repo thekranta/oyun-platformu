@@ -199,7 +199,7 @@ export default function AkilliEnUzun({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#FFF6EF', alignItems: 'center' },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingLeft: 16, paddingRight: 56, paddingTop: 44, paddingBottom: 8 },
     title: { fontSize: 16, fontWeight: '900', color: '#3e2723', flex: 1, textAlign: 'center' },
     roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
     roundText: { fontSize: 15, fontWeight: '900', color: '#C2410C' },

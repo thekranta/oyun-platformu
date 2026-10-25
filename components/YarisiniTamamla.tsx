@@ -231,8 +231,8 @@ export default function YarisiniTamamla({ onGameEnd, onExit, childName }: Props)
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F0FB', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
-  title: { fontSize: 18, fontWeight: '900', color: '#5E35B1' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingLeft: 16, paddingRight: 56, paddingTop: 44, paddingBottom: 6 },
+  title: { flexShrink: 1, fontSize: 18, fontWeight: '900', color: '#5E35B1' },
   headerActions: { flexDirection: 'row', gap: 8 },
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },

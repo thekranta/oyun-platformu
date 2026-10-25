@@ -471,6 +471,10 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 10,
+        paddingRight: 44,
+        // Çıkış düğmesi (44 px) absolute sol üstte: başlık ve palet onun altında kalmasın.
+        paddingLeft: 52,
+        minHeight: 44,
     },
     exitBtn: {
         position: 'absolute',

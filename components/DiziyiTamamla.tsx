@@ -320,9 +320,12 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: '#2C3E50',
+        flexShrink: 1,
+        textAlign: 'center',
     },
     soundContainer: {
         position: 'relative',
+        width: 56,
     },
     modernSoundButton: {
         width: 44,

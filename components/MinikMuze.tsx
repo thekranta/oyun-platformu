@@ -406,7 +406,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: WALL },
     drawLoading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: Platform.OS === 'web' ? 16 : 44, paddingBottom: 8 },
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 16, paddingRight: 56, paddingTop: Platform.OS === 'web' ? 16 : 44, paddingBottom: 8 },
     infoBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
     headerTitle: { fontSize: 22, fontWeight: '900', color: '#F4E7CF' },
     plaque: { flex: 1, marginHorizontal: 12, alignItems: 'center', backgroundColor: '#3C2F23', borderRadius: 12, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#6B5538' },

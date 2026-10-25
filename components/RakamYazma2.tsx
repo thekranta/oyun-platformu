@@ -428,6 +428,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 10,
+        paddingRight: 40,
     },
     exitBtn: {
         position: 'absolute',

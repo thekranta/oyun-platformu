@@ -182,7 +182,7 @@ export default function BayrakBoya({ onGameEnd, onExit, childName = 'Küçük Ka
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16, alignItems: 'center' },
-    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingRight: 44 },
     title: { fontSize: 19, fontWeight: 'bold', color: '#263238' },
     countBadge: { backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     countText: { fontSize: 14, fontWeight: 'bold', color: '#00796B' },

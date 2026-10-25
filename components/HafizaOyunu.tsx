@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
     soundButtonText: { fontSize: 24 },
     gameContainer: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', minHeight: height - 100 },
     centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
+    topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, paddingRight: 44, backgroundColor: 'rgba(255,255,255,0.8)' },
     header: { marginBottom: 20, alignItems: 'center' },
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 5, color: '#fff', textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 1, height: 1 }, textShadowRadius: 3 },
     grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', width: '100%', maxWidth: 800 },

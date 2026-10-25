@@ -163,7 +163,7 @@ export default function GruplamaOyunu({ onGameEnd, onExit }: GruplamaOyunuProps)
 }
 
 const styles = StyleSheet.create({
-    topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, backgroundColor: 'rgba(255,255,255,0.8)' },
+    topBar: { width: '100%', paddingTop: 40, paddingBottom: 10, paddingRight: 44, backgroundColor: 'rgba(255,255,255,0.8)' },
     merkezContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
     header: { marginBottom: 20 },
     baslik: { fontSize: 24, fontWeight: 'bold', marginBottom: 5 },

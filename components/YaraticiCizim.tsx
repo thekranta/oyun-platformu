@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
   },
   container: { flex: 1 },
   canvas: {
-    flex: 1, backgroundColor: '#fffef9', marginTop: 10, marginHorizontal: 10, marginBottom: 85,
+    flex: 1, backgroundColor: '#fffef9', marginTop: Platform.OS === 'web' ? 10 : 58, marginHorizontal: 10, marginBottom: 85,
     borderRadius: 20, borderWidth: 3, borderColor: '#f2e4cf', overflow: 'hidden', elevation: 4,
   },
   floatingToolbar: {

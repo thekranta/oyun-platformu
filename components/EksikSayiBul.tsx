@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     gap: 12,
     // Sol üstte DynamicBackground'ın çıkış düğmesi (16+44 px) durur: logo onun SAĞINDAN başlar, köşesini örtmez.
     paddingLeft: 56,
-    paddingRight: 8,
+    paddingRight: 56,
   },
   logo: {
     width: 64,

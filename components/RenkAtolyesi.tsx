@@ -488,8 +488,8 @@ export default function RenkAtolyesi({ onGameEnd, onExit, childName }: Props) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFF1F6', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 6 },
-  title: { fontSize: 19, fontWeight: '900', color: '#C2185B' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingLeft: 16, paddingRight: 56, paddingTop: 44, paddingBottom: 6 },
+  title: { fontSize: 19, fontWeight: '900', color: '#C2185B', flexShrink: 1 },
   headerActions: { flexDirection: 'row', gap: 8 },
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },

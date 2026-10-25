@@ -558,6 +558,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 15,
+        paddingRight: 56,
         paddingTop: Platform.OS === 'web' ? 20 : 50,
         paddingBottom: 10,
     },
