@@ -36,7 +36,7 @@ const TARGET_MS = 7000;
 
 // Sepet kartı kenarı: geniş ekranda 150; dar telefonda iki kart yan yana sığacak kadar.
 const CARD = Math.min(150, Math.floor((Dimensions.get('window').width - 32 - 14) / 2));
-const emblemSize = (n: number) => (n <= 1 ? 76 : n === 2 ? 56 : 40);
+const emblemSize = (n: number) => (n <= 1 ? 76 : n === 2 ? 46 : 40);   // iki örnek yan yana sığsın (56'da alt alta düşüyordu)
 
 interface Rect { x: number; y: number; w: number; h: number }
 // Bırakma isabeti: sepet dikdörtgeni parmağa dostu olsun diye her yandan genişletilir (iki sepet arası 14 px; çakışırsa merkeze yakın olan).
