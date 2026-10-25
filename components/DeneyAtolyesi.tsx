@@ -39,6 +39,12 @@ const shuffle = <T,>(arr: T[]): T[] => {
   return a;
 };
 
+/** Ekranda gösterilen kısa soru: ilk cümle ("Işık hangi şeylerin içinden geçer?"); "Birlikte deneyelim." gibi devamı düşer. */
+const firstSentence = (text: string): string => {
+  const m = text.match(/^[^.?!]*[.?!]/);
+  return m ? m[0].trim() : text;
+};
+
 interface Props {
   onGameEnd: RoundGameEnd;
   onExit?: () => void;
@@ -128,7 +134,13 @@ export default function DeneyAtolyesi({ onGameEnd, onExit, childName }: Props) {
     if (!t.correct) {
       game.markWrong();
       flashWrong('tool-' + t.emoji);
-      speak(K.aletYanlis, { instructions: HAPPY_VOICE });
+      // 'Soruya tekrar bak' diyorduk ama soru ne ekranda ne seste kalıyordu (kullanıcı notu 2026-10-25): soru yeniden okunur.
+      const myToken = ++tokenRef.current;
+      (async () => {
+        await speakThenWait(K.aletYanlis, 1300, { instructions: HAPPY_VOICE });
+        if (tokenRef.current !== myToken) return;
+        speak(exp.question, { instructions: HAPPY_VOICE });
+      })();
       return;
     }
     game.markMove();
@@ -283,10 +295,21 @@ export default function DeneyAtolyesi({ onGameEnd, onExit, childName }: Props) {
       speak(line, { instructions: HAPPY_VOICE });
       return;
     }
-    const line = phase === 'tool' ? K.aletSec : phase === 'pick' ? K.malzemeSec : phase === 'test' ? K.dene : K.defter;
+    if (phase === 'tool') {
+      // Çocuk soruyu unutmuş olabilir: önce soru, sonra komut (eskiden yalnız 'Soruya uygun aleti seç.' okunuyordu).
+      const myToken = ++tokenRef.current;
+      (async () => {
+        await speakThenWait(exp.question, 1200, { instructions: HAPPY_VOICE });
+        if (tokenRef.current !== myToken) return;
+        speak(K.aletSec, { instructions: HAPPY_VOICE });
+      })();
+      return;
+    }
+    const line = phase === 'pick' ? K.malzemeSec : phase === 'test' ? K.dene : K.defter;
     speak(line, { instructions: HAPPY_VOICE });
   };
 
+  const questionLine = firstSentence(isIce ? ICE_TEST.question : exp.question);
   const cardW = Math.min(112, Math.floor((Math.min(SCREEN_W, 440) - 24 - 24) / 3));
   const chosen = shelf.filter((m) => picked.includes(m.emoji));
   const badge = (m: Material) => (m.yes ? RESULT_BADGE[exp.effect].yes : RESULT_BADGE[exp.effect].no);
@@ -321,6 +344,8 @@ export default function DeneyAtolyesi({ onGameEnd, onExit, childName }: Props) {
             </View>
           )}
         </Animated.View>
+        {/* Soru ekranda kalır: alet seçerken ve deneyde çocuk neyi denediğini hatırlasın */}
+        <Text style={styles.questionText}>{questionLine}</Text>
         <ListenButton onPress={replayPrompt} color="#00897B" style={{ marginTop: 10 }} />
 
         {/* ---- Alet seçimi ---- */}
@@ -511,6 +536,7 @@ const styles = StyleSheet.create({
   stage: { minWidth: 200, paddingHorizontal: 28, paddingVertical: 16, borderRadius: 30, backgroundColor: '#fff', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
   toolRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   stageEmoji: { fontSize: 64 },
+  questionText: { marginTop: 10, fontSize: 17, fontWeight: '800', color: '#00695C', textAlign: 'center', maxWidth: 320, paddingHorizontal: 12 },
 
   cards: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 20, maxWidth: 440 },
   card: { minHeight: 112, borderRadius: 22, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', padding: 8, borderWidth: 3, borderColor: '#C8E6C9', shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.14, shadowRadius: 2, elevation: 4 },
