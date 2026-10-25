@@ -8,10 +8,13 @@ import ListenButton from './ListenButton';
 
 // ============================================
 // 📊 GRAFİK USTASI - Veri düzenleme + grafik okuma (Matematik/MAB.11, ikincil MAB.13)
-// İki aşama: (1) karışık meyveleri türüne göre DOKUNARAK sütunlara diz (basit piktograf kur);
+// İki aşama: (1) karışık meyveleri türüne göre sütunlara YERLEŞTİR (sıradaki meyve vurgulanır, çocuk hangi sütuna ait olduğunu
+//            seçip o sütuna dokunur; yanlış sütun sallanır) — basit piktograf kur;
 //            (2) 2 sütunda "daha çok / daha az", 3 sütunda "en çok / en az" sorusuna en uzun/en kısa sütuna dokunarak yanıt ver.
 // Veri okuryazarlığına giriş. Tamamen görsel; sütun yüksekliği doğal hata kontrolüdür
 // (özdeş ögeyi bulmak değil, çocuğun kendi kurduğu grafiği okuması). NON-adaptif.
+// Not (kullanıcı notu 2026-10-25): önceden meyveye dokununca sütuna KENDİLİĞİNDEN giriyordu; "türüne göre yerleştir" demek
+// ama seçim yaptırmamak mantık hatasıydı.
 // ============================================
 
 const { width: SCREEN_W } = Dimensions.get('window');
@@ -79,6 +82,7 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
   const [phase, setPhase] = useState<'build' | 'read'>('build');
   const [pile, setPile] = useState<PileItem[]>([]);
   const [placed, setPlaced] = useState<Record<string, number>>({});
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [locked, setLocked] = useState(false);
   const [wrongKey, setWrongKey] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -117,6 +121,7 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
     Object.keys(FRUITS).forEach((k) => popAnims[k].setValue(1));
     setPlaced(p);
     setPile(shuffle(items));
+    setSelectedId(null);
     setPhase('build');
     setLocked(false);
     setWrongKey(null);
@@ -135,15 +140,35 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
     });
   };
 
-  // AŞAMA 1 — Yığındaki meyveye dokun → kendi türünün sütununa eklenir (yanlış hamle YOK).
-  const handleBuild = (item: PileItem) => {
-    if (phase !== 'build' || locked) return;
+  const runShake = () => {
+    Animated.sequence([
+      Animated.timing(shake, { toValue: 7, duration: 55, useNativeDriver: USE_NATIVE }),
+      Animated.timing(shake, { toValue: -7, duration: 55, useNativeDriver: USE_NATIVE }),
+      Animated.timing(shake, { toValue: 0, duration: 55, useNativeDriver: USE_NATIVE }),
+    ]).start();
+  };
+
+  // Sıradaki meyve: çocuğun yığından seçtiği (seçmediyse yığındaki ilk) meyve.
+  const currentItem = pile.find((x) => x.id === selectedId) ?? pile[0] ?? null;
+
+  // AŞAMA 1 — Vurgulu meyvenin türünü seç: o türün sütununa dokun. Doğruysa meyve sütuna girer; yanlış sütun sallanır.
+  const handlePlace = (colKey: string) => {
+    if (phase !== 'build' || locked || !currentItem) return;
     movesRef.current += 1;
-    setPlaced((prev) => ({ ...prev, [item.key]: (prev[item.key] || 0) + 1 }));
-    const av = popAnims[item.key];
+    if (currentItem.key !== colKey) {
+      errorsRef.current += 1;
+      setWrongKey(colKey);
+      runShake();
+      const t = setTimeout(() => setWrongKey(null), 450);
+      timersRef.current.push(t);
+      return;
+    }
+    setPlaced((prev) => ({ ...prev, [colKey]: (prev[colKey] || 0) + 1 }));
+    const av = popAnims[colKey];
     av.setValue(0.2);
     Animated.spring(av, { toValue: 1, friction: 5, tension: 140, useNativeDriver: USE_NATIVE }).start();
-    setPile((prev) => prev.filter((x) => x.id !== item.id));
+    setPile((prev) => prev.filter((x) => x.id !== currentItem.id));
+    setSelectedId(null);
     remainingRef.current -= 1;
     if (remainingRef.current <= 0) {
       // Grafik tamam → okuma aşamasına geç, soruyu seslendir.
@@ -170,11 +195,7 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
     } else {
       errorsRef.current += 1;
       setWrongKey(key);
-      Animated.sequence([
-        Animated.timing(shake, { toValue: 7, duration: 55, useNativeDriver: USE_NATIVE }),
-        Animated.timing(shake, { toValue: -7, duration: 55, useNativeDriver: USE_NATIVE }),
-        Animated.timing(shake, { toValue: 0, duration: 55, useNativeDriver: USE_NATIVE }),
-      ]).start();
+      runShake();
       const t = setTimeout(() => setWrongKey(null), 450);
       timersRef.current.push(t);
     }
@@ -212,10 +233,10 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
           return (
             <Animated.View key={c.key} style={[styles.colWrap, isWrong ? { transform: [{ translateX: shake }] } : null]}>
               <TouchableOpacity
-                activeOpacity={readable ? 0.8 : 1}
-                disabled={!readable || locked}
-                onPress={() => handleRead(c.key)}
-                style={[styles.colTouch, readable && styles.colReadable]}
+                activeOpacity={0.8}
+                disabled={locked}
+                onPress={() => (readable ? handleRead(c.key) : handlePlace(c.key))}
+                style={[styles.colTouch, readable ? styles.colReadable : styles.colBuild]}
               >
                 <View style={styles.stack}>
                   {Array.from({ length: count }).map((_, i) => {
@@ -246,10 +267,15 @@ export default function GrafikUstasi({ onGameEnd, onExit, childName }: Props) {
       {/* Alt bölge: kurma aşamasında meyve yığını; okuma aşamasında ipucu */}
       {phase === 'build' ? (
         <View style={styles.bottomZone}>
-          <Text style={styles.pileHint}>Meyveye dokun 👆</Text>
+          <Text style={styles.pileHint}>Meyve hangi sütuna gider? 👆</Text>
           <View style={styles.pile}>
             {pile.map((item) => (
-              <TouchableOpacity key={item.id} style={styles.pileChip} onPress={() => handleBuild(item)} activeOpacity={0.7}>
+              <TouchableOpacity
+                key={item.id}
+                style={[styles.pileChip, currentItem?.id === item.id && styles.pileChipActive]}
+                onPress={() => setSelectedId(item.id)}
+                activeOpacity={0.7}
+              >
                 <Text style={styles.pileEmoji}>{FRUITS[item.key].emoji}</Text>
               </TouchableOpacity>
             ))}
@@ -276,6 +302,8 @@ const styles = StyleSheet.create({
   colWrap: { alignItems: 'center' },
   colTouch: { alignItems: 'center', paddingHorizontal: 6, paddingVertical: 6, borderRadius: 18, borderWidth: 3, borderColor: 'transparent' },
   colReadable: { backgroundColor: '#fff', borderColor: '#1E88E5', shadowColor: '#1E88E5', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6, elevation: 4 },
+  // Kurma aşamasında sütun "buraya koy" hedefi: hafif beyaz zemin + kesik çizgili çerçeve.
+  colBuild: { backgroundColor: 'rgba(255,255,255,0.55)', borderColor: '#90CAF9', borderStyle: 'dashed' },
   // column-reverse + flex-start → hücreler ortak tabandan yukarı doğru dizilir (piktograf çubuğu).
   stack: { height: 180, flexDirection: 'column-reverse', justifyContent: 'flex-start', alignItems: 'center' },
   cell: { width: 46, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center', marginVertical: 2, borderWidth: 2, borderColor: 'rgba(255,255,255,0.7)' },
@@ -288,6 +316,8 @@ const styles = StyleSheet.create({
   pileHint: { fontSize: 14, fontWeight: '800', color: '#5C6BC0', marginBottom: 8 },
   readHint: { fontSize: 16, fontWeight: '900', color: '#1565C0', marginTop: 6 },
   pile: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10, maxWidth: 440 },
-  pileChip: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 4 },
+  pileChip: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#fff', borderWidth: 3, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.16, shadowRadius: 1, elevation: 4 },
+  // Sıradaki (yerleştirilecek) meyve: mavi çerçeve + hafif büyük.
+  pileChipActive: { borderColor: '#1E88E5', backgroundColor: '#E3F2FF', transform: [{ scale: 1.15 }] },
   pileEmoji: { fontSize: 30 },
 });
