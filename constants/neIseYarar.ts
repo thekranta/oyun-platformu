@@ -3,7 +3,8 @@
 // Eşleşme sonrası eskiden dokunulan sıraya göre "Diş ile Diş fırçası birbirine gider!" gibi 14
 // ayrı cümle okunuyordu (Oyun_Test_Listesi #41: "birbiriyle giden ne demek? çocuk anlamaz",
 // 5 klipte kuyruk). Artık her çiftin sıradan BAĞIMSIZ, çocuğun günlük hayatından tek cümlesi var
-// (7 klip); komut da "birlikte olan iki resmi bul" diye anlaşılır söylenir.
+// (7 klip). Komut önce "birlikte olan iki resmi bul" yapıldı, ama o da anlaşılmadı (kullanıcı notu 2026-10-25:
+// "birlikte olan ne demek? komutta hata var"); okul öncesinde eşleştirme için hep söylenen "birbirine uyan"a çevrildi.
 // Klip kuralları: ≤110 karakter, rakam yok (bkz. neIseYarar.test.ts).
 
 export interface Item { emoji: string; name: string }
@@ -25,9 +26,9 @@ export const PAIRS: Pair[] = [
 ];
 
 /** Açılış yönergesi (CountdownOverlay mesajı; ekranda da yazar). */
-export const INTRO_TEXT = 'Birlikte olan iki resmi bul! Mesela şemsiye ile yağmur.';
+export const INTRO_TEXT = 'Birbirine uyan iki resmi bul! Mesela şemsiye ile yağmur.';
 /** Her turun başında, Tekrar Dinle düğmesinde ve ekran başlığında kullanılan komut. */
-export const PROMPT_TEXT = 'Birlikte olan iki resmi bul!';
+export const PROMPT_TEXT = 'Birbirine uyan iki resmi bul!';
 
 /** Bu oyunun seslendirdiği bütün metinler (klip üretimi + test için tek kaynak). */
 export const ALL_NE_ISE_YARAR_KLIPLERI: string[] = [

@@ -10,7 +10,7 @@ import { INTRO_TEXT, PAIRS, PROMPT_TEXT } from '../constants/neIseYarar';
 
 // ============================================
 // 🔗 NE İŞE YARAR? - İlişkili ikilileri eşleştir (Matematik/MAB.3 ilişki)
-// Birlikte olan nesneleri eşle (şemsiye-yağmur, arı-bal). Günlük yaşam
+// Birbirine uyan nesneleri eşle (şemsiye-yağmur, arı-bal). Günlük yaşam
 // ilişkisi kurma; farklı ama İLİŞKİLİ öğeler (opposite/aynı değil). Görsel.
 // Metinler ve çiftler constants/neIseYarar.ts'te; eşleşince çiftin kendi cümlesi okunur.
 // ============================================

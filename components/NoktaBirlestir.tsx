@@ -27,7 +27,7 @@ const PICTURES: Pic[] = [
   { key: 'kare', name: 'kare', dots: [[85, 85], [215, 85], [215, 215], [85, 215]] },
   { key: 'dikdortgen', name: 'dikdörtgen', dots: [[55, 100], [245, 100], [245, 200], [55, 200]] },
   { key: 'besgen', name: 'beşgen', dots: [[150, 60], [236, 122], [203, 223], [97, 223], [64, 122]] },
-  { key: 'yildiz', name: 'yıldız', emoji: '⭐', dots: [[150, 55], [195, 190], [75, 110], [225, 110], [105, 190]] },
+  { key: 'altigen', name: 'altıgen', dots: [[150, 60], [224, 102], [224, 188], [150, 230], [76, 188], [76, 102]] },
 ];
 
 interface Props {

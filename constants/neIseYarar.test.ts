@@ -35,6 +35,14 @@ describe('Ne İşe Yarar içeriği', () => {
     });
   });
 
+  it('REGRESYON (#41, 2. not): çocuğun anlamadığı "birlikte olan" kalıbı komutlarda yok; komut "birbirine uyan" der', () => {
+    ALL_NE_ISE_YARAR_KLIPLERI.forEach((t) => {
+      expect(/birlikte\s+olan/i.test(t)).toBe(false);
+    });
+    expect(PROMPT_TEXT).toMatch(/birbirine uyan/i);
+    expect(INTRO_TEXT).toMatch(/birbirine uyan/i);
+  });
+
   it('klip sayısı: 2 komut + 7 cümle', () => {
     expect(ALL_NE_ISE_YARAR_KLIPLERI).toHaveLength(2 + PAIRS.length);
     expect(ALL_NE_ISE_YARAR_KLIPLERI.slice(0, 2)).toEqual([INTRO_TEXT, PROMPT_TEXT]);
