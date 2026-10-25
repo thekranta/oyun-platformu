@@ -351,7 +351,7 @@ export default function KutuyuBul({ onGameEnd, onExit, questions = QUESTIONS, oy
                         ]}
                     >
                         <Text style={[styles.feedbackText, isPortrait && styles.feedbackTextSmall]}>
-                            🎉 Harika!
+                            🎉
                         </Text>
                     </Animated.View>
                 )}
@@ -465,17 +465,18 @@ const styles = StyleSheet.create({
     boxItem: {
         fontSize: 24,
     },
+    // Kutu overflow: 'hidden' olduğu için işaretler kutunun DIŞINA (-10) taşarsa kırpılıyordu: içeride dururlar.
     correctIndicator: {
         position: 'absolute',
-        top: -10,
-        right: -10,
+        top: 3,
+        right: 3,
         backgroundColor: '#fff',
         borderRadius: 16,
     },
     wrongIndicator: {
         position: 'absolute',
-        top: -8,
-        right: -8,
+        top: 3,
+        right: 3,
         backgroundColor: '#fff',
         borderRadius: 14,
     },

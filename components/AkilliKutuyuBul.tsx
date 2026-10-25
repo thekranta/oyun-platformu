@@ -274,7 +274,7 @@ export default function AkilliKutuyuBul({ onGameEnd, onExit, childName }: Props)
 
                 {foundCorrect && (
                     <Animated.View style={[styles.feedbackContainer, { opacity: feedbackAnim, transform: [{ scale: feedbackAnim }] }]}>
-                        <Text style={[styles.feedbackText, isPortrait && styles.feedbackTextSmall]}>🎉 Harika!</Text>
+                        <Text style={[styles.feedbackText, isPortrait && styles.feedbackTextSmall]}>🎉</Text>
                     </Animated.View>
                 )}
             </View>
@@ -308,8 +308,8 @@ const styles = StyleSheet.create({
     wrongBox: { borderColor: '#f44336', backgroundColor: '#FFEBEE', opacity: 0.6 },
     boxContent: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 2 },
     boxItem: { fontSize: 24 },
-    correctIndicator: { position: 'absolute', top: -10, right: -10, backgroundColor: '#fff', borderRadius: 16 },
-    wrongIndicator: { position: 'absolute', top: -8, right: -8, backgroundColor: '#fff', borderRadius: 14 },
+    correctIndicator: { position: 'absolute', top: 3, right: 3, backgroundColor: '#fff', borderRadius: 16 },
+    wrongIndicator: { position: 'absolute', top: 3, right: 3, backgroundColor: '#fff', borderRadius: 14 },
     feedbackContainer: { position: 'absolute', bottom: 60, left: 0, right: 0, alignItems: 'center' },
     feedbackText: { fontSize: 24, fontWeight: 'bold', color: '#4CAF50', backgroundColor: 'rgba(255,255,255,0.95)', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 22, overflow: 'hidden' },
     feedbackTextSmall: { fontSize: 18, paddingHorizontal: 20, paddingVertical: 10 },
