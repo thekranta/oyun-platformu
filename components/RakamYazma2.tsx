@@ -1,14 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Svg, { Circle, Polyline } from 'react-native-svg';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { createTracker, numberParts, scaleParts } from '../lib/rakamIzleme';
 
 // Rakam Yazma 6-10 — "Rakam Yazma" oyununun büyük sayılarla temalı varyantı.
-// Aynı çizim/kapsama mekaniği; 6, 7, 8, 9 ve iki basamaklı 10 için yeni şablonlar.
+// Kabul (Oyun_Test_Listesi #81, 2026-10-25: "çizimin kabulü ile ilgili sorun var, farklı bir değerlendirme yapmalıyız"):
+// eskiden "hedef noktaların %85'ine herhangi bir sırayla değmek" yeterliydi (karalama da geçiyordu) ve ekrandaki soluk rakam bir
+// yazı tipi harfiydi, kabul edilen yol ise ona bağlı olmayan ideal noktalardı. Artık rehber = değerlendirilen yol (aynı noktalardan
+// çizilen kalın iz); çocuk izi SIRAYLA takip eder (ters yön ve halkada herhangi bir başlangıç serbest), karalama/yanlış rakam/aşırı
+// mürekkep kabul edilmez. Mantık lib/rakamIzleme.ts'te (testli).
 
 type Point = { x: number; y: number };
 type Stroke = { color: string; size: number; points: Point[] };
@@ -26,7 +32,6 @@ interface Props {
 }
 
 const MIN_STEP = 2;
-const SUCCESS_THRESHOLD = 0.85; // iki basamaklı 10 için biraz daha hoşgörülü
 
 const FIRST_NUMBER = 6;
 const LAST_NUMBER = 10;
@@ -41,84 +46,21 @@ const PEN_COLORS = [
     { color: '#F44336', name: 'Kırmızı' },
 ];
 
-// --- Şablon yardımcıları (normalize 0-1 koordinatlar) ---
-const seg = (x0: number, y0: number, x1: number, y1: number, num: number): Point[] =>
-    Array.from({ length: num }, (_, i) => {
-        const t = num <= 1 ? 0 : i / (num - 1);
-        return { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t };
-    });
-
-const qbez = (x0: number, y0: number, x1: number, y1: number, x2: number, y2: number, num: number): Point[] =>
-    Array.from({ length: num }, (_, i) => {
-        const t = i / (num - 1);
-        const u = 1 - t;
-        return { x: u * u * x0 + 2 * u * t * x1 + t * t * x2, y: u * u * y0 + 2 * u * t * y1 + t * t * y2 };
-    });
-
-const ring = (cx: number, cy: number, rx: number, ry: number, num: number): Point[] =>
-    Array.from({ length: num }, (_, i) => {
-        const a = (i / num) * 2 * Math.PI;
-        return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) };
-    });
-
-// Tek bir basamağın (0,1,6,7,8,9) çizim noktaları — cx/cy merkez, s ölçek
-const digitPoints = (d: number, cx: number, cy: number, s: number): Point[] => {
-    switch (d) {
-        case 0:
-            return ring(cx, cy, s * 0.55, s * 0.82, 26);
-        case 1:
-            return [
-                ...seg(cx, cy - s * 0.85, cx, cy + s * 0.85, 20),
-                ...seg(cx, cy - s * 0.85, cx - s * 0.32, cy - s * 0.52, 4), // üst bayrak
-            ];
-        case 6:
-            return [
-                ...qbez(cx + s * 0.38, cy - s * 0.78, cx - s * 0.62, cy - s * 0.35, cx - s * 0.46, cy + s * 0.3, 14),
-                ...ring(cx, cy + s * 0.36, s * 0.48, s * 0.5, 16),
-            ];
-        case 7:
-            return [
-                ...seg(cx - s * 0.48, cy - s * 0.78, cx + s * 0.5, cy - s * 0.78, 12),
-                ...seg(cx + s * 0.5, cy - s * 0.78, cx - s * 0.18, cy + s * 0.82, 16),
-            ];
-        case 8:
-            return [
-                ...ring(cx, cy - s * 0.42, s * 0.4, s * 0.42, 14),
-                ...ring(cx, cy + s * 0.4, s * 0.52, s * 0.5, 16),
-            ];
-        case 9:
-            return [
-                ...ring(cx, cy - s * 0.35, s * 0.48, s * 0.5, 16),
-                ...qbez(cx + s * 0.46, cy - s * 0.35, cx + s * 0.5, cy + s * 0.4, cx - s * 0.22, cy + s * 0.82, 12),
-            ];
-        default:
-            return [];
-    }
-};
-
-const createNumberPoints = (num: number): Point[] => {
-    if (num >= 10) {
-        // İki basamaklı: "1" solda, "0" sağda
-        return [
-            ...digitPoints(1, 0.34, 0.5, 0.24),
-            ...digitPoints(0, 0.66, 0.5, 0.24),
-        ];
-    }
-    return digitPoints(num, 0.5, 0.5, 0.35);
-};
-
 export default function RakamYazma2({ onGameEnd, onExit }: Props) {
     const [canvasSize, setCanvasSize] = useState({ width: 300, height: 300 });
     const [currentNumber, setCurrentNumber] = useState(FIRST_NUMBER);
     const [strokes, setStrokes] = useState<Stroke[]>([]);
     const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
     const liveStrokeRef = useRef<Stroke | null>(null);
-    const coveredPointsRef = useRef<Set<number>>(new Set());
-    const [coveredCount, setCoveredCount] = useState(0);
+    const [progress, setProgress] = useState(0);          // % (sırayla izlenen kısım)
+    const progressRef = useRef(0);
+    const [visited, setVisited] = useState<Point[][]>([]); // yeşil gösterilen, sırayla geçilmiş noktalar (parça başına)
     const startTimeRef = useRef(Date.now());
     const [successAnim] = useState(new Animated.Value(0));
     const [showSuccess, setShowSuccess] = useState(false);
+    const [showRetry, setShowRetry] = useState(false);
     const [gameReady, setGameReady] = useState(false);
+    const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const [selectedColor, setSelectedColor] = useState(PEN_COLORS[0].color);
 
@@ -135,25 +77,42 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
     }, []);
 
     useEffect(() => () => {
+        timersRef.current.forEach(clearTimeout);
         stopSpeech();
     }, []);
 
-    const targetPoints = useMemo(() => {
-        const points = createNumberPoints(currentNumber);
-        return points.map(p => ({ x: p.x * canvasSize.width, y: p.y * canvasSize.height }));
-    }, [currentNumber, canvasSize]);
+    // Rehber = değerlendirilen yol: rakamın parçaları tuval ölçüsünde; izleme yarıçapı tuvalin kısa kenarına göre.
+    const parts = useMemo(() => scaleParts(numberParts(currentNumber), canvasSize.width, canvasSize.height), [currentNumber, canvasSize]);
+    const radius = useMemo(() => Math.max(Math.min(canvasSize.width, canvasSize.height) * 0.093, 24), [canvasSize]);
+    const tracker = useMemo(() => createTracker(parts, { radius }), [parts, radius]);
 
-    const hitRadius = useMemo(() => {
-        return Math.max(Math.min(canvasSize.width, canvasSize.height) * 0.12, 35);
-    }, [canvasSize]);
+    // İlerleme yüzdesi değişince (en çok %100 kez) yeşil iz ve çubuk güncellenir.
+    const syncProgress = useCallback(() => {
+        const pct = Math.round(tracker.progress() * 100);
+        if (pct === progressRef.current) return;
+        progressRef.current = pct;
+        setProgress(pct);
+        setVisited(tracker.visited());
+    }, [tracker]);
 
-    const resetForNextNumber = useCallback((nextNum: number) => {
-        coveredPointsRef.current = new Set();
-        setCoveredCount(0);
+    const clearCanvas = useCallback(() => {
         setStrokes([]);
         setLiveStroke(null);
         liveStrokeRef.current = null;
-        setCurrentNumber(nextNum);
+        tracker.reset();
+        progressRef.current = 0;
+        setProgress(0);
+        setVisited([]);
+    }, [tracker]);
+
+    const resetForNextNumber = useCallback((nextNum: number) => {
+        setStrokes([]);
+        setLiveStroke(null);
+        liveStrokeRef.current = null;
+        progressRef.current = 0;
+        setProgress(0);
+        setVisited([]);
+        setCurrentNumber(nextNum);   // yeni rakamın izleyicisi parts/radius değişince useMemo ile yeniden kurulur
     }, []);
 
     const handleSuccess = useCallback(() => {
@@ -177,23 +136,8 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
         });
     }, [currentNumber, onGameEnd, resetForNextNumber, successAnim]);
 
-    const checkAndUpdateCoverage = useCallback((x: number, y: number, points: Point[], radius: number) => {
-        let updated = false;
-        points.forEach((p, idx) => {
-            if (!coveredPointsRef.current.has(idx)) {
-                const dist = Math.sqrt(Math.pow(x - p.x, 2) + Math.pow(y - p.y, 2));
-                if (dist < radius) {
-                    coveredPointsRef.current.add(idx);
-                    updated = true;
-                }
-            }
-        });
-        if (updated) {
-            setCoveredCount(coveredPointsRef.current.size);
-        }
-    }, []);
-
-    const addPoint = useCallback((x: number, y: number, points: Point[], radius: number, color: string) => {
+    // Çizim noktası ekle: iki nokta arası MIN_STEP px'te bir doldurulur, her nokta izleyiciye verilir.
+    const addPoint = useCallback((x: number, y: number, color: string) => {
         const strokeSize = Math.max(canvasSize.width * 0.04, 12);
         const baseStroke = liveStrokeRef.current ?? { color, size: strokeSize, points: [] as Point[] };
         const currentPoints: Point[] = [...baseStroke.points];
@@ -209,18 +153,19 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
                 const px = last.x + dx * ratio;
                 const py = last.y + dy * ratio;
                 currentPoints.push({ x: px, y: py });
-                checkAndUpdateCoverage(px, py, points, radius);
+                tracker.feed({ x: px, y: py });
             }
         }
         currentPoints.push({ x, y });
-        checkAndUpdateCoverage(x, y, points, radius);
+        tracker.feed({ x, y });
+        syncProgress();
 
         const nextStroke = { ...baseStroke, color, points: currentPoints };
         liveStrokeRef.current = nextStroke;
         setLiveStroke(nextStroke);
-    }, [checkAndUpdateCoverage, canvasSize]);
+    }, [tracker, syncProgress, canvasSize]);
 
-    const finishStroke = useCallback((points: Point[]) => {
+    const finishStroke = useCallback(() => {
         const completed = liveStrokeRef.current;
         if (completed) {
             setStrokes(prev => [...prev, completed]);
@@ -228,57 +173,51 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
         setLiveStroke(null);
         liveStrokeRef.current = null;
 
-        const coverage = coveredPointsRef.current.size / points.length;
-        if (coverage >= SUCCESS_THRESHOLD) {
+        if (tracker.complete()) {
             handleSuccess();
+        } else if (tracker.shouldReset()) {
+            // Karalama (çok mürekkep ya da çoğu iz dışı): temizle, kısa bir "tekrar dene" göster.
+            clearCanvas();
+            setShowRetry(true);
+            timersRef.current.push(setTimeout(() => setShowRetry(false), 1500));
         }
-    }, [handleSuccess]);
+    }, [tracker, handleSuccess, clearCanvas]);
 
-    const panResponder = useMemo(
-        () =>
-            PanResponder.create({
-                onStartShouldSetPanResponder: () => !showSuccess,
-                onMoveShouldSetPanResponder: () => !showSuccess,
-                onPanResponderGrant: e => {
-                    if (showSuccess) return;
-                    const { locationX, locationY } = e.nativeEvent;
-                    addPoint(locationX, locationY, targetPoints, hitRadius, selectedColor);
-                },
-                onPanResponderMove: e => {
-                    if (showSuccess) return;
-                    const { locationX, locationY } = e.nativeEvent;
-                    addPoint(locationX, locationY, targetPoints, hitRadius, selectedColor);
-                },
-                onPanResponderRelease: () => {
-                    if (showSuccess) return;
-                    finishStroke(targetPoints);
-                },
-                // Tek tuval PanResponder'i (kardesi yok) ama savunma amacli: yaniti
-                // birakmaz; zorla calinirsa release'deki gibi kapsama kontrolunu calistirir.
-                onPanResponderTerminationRequest: () => false,
-                onPanResponderTerminate: () => {
-                    if (showSuccess) return;
-                    finishStroke(targetPoints);
-                },
-            }),
-        [targetPoints, hitRadius, selectedColor, addPoint, finishStroke, showSuccess],
-    );
+    // PanResponder bir kez kurulur; işleyiciler her render'da H.current'ta tazelenir (sürükleme sırasında state değişse de kopmaz).
+    const H = useRef({ showSuccess, selectedColor, addPoint, finishStroke, tracker });
+    H.current = { showSuccess, selectedColor, addPoint, finishStroke, tracker };
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => !H.current.showSuccess,
+            onMoveShouldSetPanResponder: () => !H.current.showSuccess,
+            onPanResponderGrant: e => {
+                if (H.current.showSuccess) return;
+                H.current.tracker.lift();
+                const { locationX, locationY } = e.nativeEvent;
+                H.current.addPoint(locationX, locationY, H.current.selectedColor);
+            },
+            onPanResponderMove: e => {
+                if (H.current.showSuccess) return;
+                const { locationX, locationY } = e.nativeEvent;
+                H.current.addPoint(locationX, locationY, H.current.selectedColor);
+            },
+            onPanResponderRelease: () => {
+                if (H.current.showSuccess) return;
+                H.current.finishStroke();
+            },
+            // Tek tuval PanResponder'i ama savunma amacli: yaniti birakmaz; zorla calinirsa release gibi sonuclandirir.
+            onPanResponderTerminationRequest: () => false,
+            onPanResponderTerminate: () => {
+                if (H.current.showSuccess) return;
+                H.current.finishStroke();
+            },
+        }),
+    ).current;
 
-    const clearCanvas = () => {
-        setStrokes([]);
-        setLiveStroke(null);
-        liveStrokeRef.current = null;
-        coveredPointsRef.current = new Set();
-        setCoveredCount(0);
-    };
-
-    const progress = Math.round((coveredCount / targetPoints.length) * 100);
-    const isTwoDigit = currentNumber >= 10;
-    const templateFontSize = isTwoDigit
-        ? Math.min(canvasSize.height * 0.6, canvasSize.width * 0.42)
-        : Math.min(canvasSize.height * 0.85, canvasSize.width * 0.75);
     const step = currentNumber - FIRST_NUMBER + 1;
     const totalSteps = LAST_NUMBER - FIRST_NUMBER + 1;
+    const trackWidth = radius * 1.1;
+    const toPoints = (pts: Point[], closed: boolean) => (closed && pts.length ? [...pts, pts[0]] : pts).map((p) => `${p.x},${p.y}`).join(' ');
 
     return (
         <DynamicBackground>
@@ -316,57 +255,95 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
                         { width: canvasSize.width, height: canvasSize.height },
                     ]}
                 >
-                    {/* Faded number template */}
-                    <View style={styles.templateOverlay}>
-                        <Text
-                            style={[
-                                styles.templateText,
-                                { fontSize: templateFontSize, lineHeight: templateFontSize * 1.05 },
-                            ]}
-                        >
-                            {currentNumber}
-                        </Text>
+                    {/* İzlenecek rakam: kalın soluk iz + kesikli orta çizgi; sırayla geçilen kısım yeşile döner */}
+                    <View style={styles.templateOverlay} pointerEvents="none">
+                        <Svg width={canvasSize.width} height={canvasSize.height}>
+                            {parts.map((part, i) => (
+                                <Polyline
+                                    key={`iz-${currentNumber}-${i}`}
+                                    points={toPoints(part.points, part.closed)}
+                                    fill="none"
+                                    stroke="#D7DCE0"
+                                    strokeWidth={trackWidth}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            ))}
+                            {visited.map((pts, i) => (pts.length > 1 ? (
+                                <Polyline
+                                    key={`yesil-${currentNumber}-${i}`}
+                                    points={pts.map((p) => `${p.x},${p.y}`).join(' ')}
+                                    fill="none"
+                                    stroke="#A5D6A7"
+                                    strokeWidth={trackWidth}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                />
+                            ) : pts.length === 1 ? (
+                                <Circle key={`yesil-${currentNumber}-${i}`} cx={pts[0].x} cy={pts[0].y} r={trackWidth / 2} fill="#A5D6A7" />
+                            ) : null))}
+                            {parts.map((part, i) => (
+                                <Polyline
+                                    key={`orta-${currentNumber}-${i}`}
+                                    points={toPoints(part.points, part.closed)}
+                                    fill="none"
+                                    stroke="#90A4AE"
+                                    strokeWidth={2}
+                                    strokeDasharray="2 8"
+                                    strokeLinecap="round"
+                                />
+                            ))}
+                        </Svg>
                     </View>
 
-                    {/* Drawing canvas */}
+                    {/* Drawing canvas: çizilenler tek bir pointerEvents="none" kabında → dokunuş hedefi hep tuval (locationX/Y tuvale göre) */}
                     <View {...panResponder.panHandlers} style={styles.canvas}>
-                        {strokes.map((stroke, i) => (
-                            <React.Fragment key={i}>
-                                {stroke.points.map((p, j) => (
-                                    <View
-                                        key={`${i}-${j}`}
-                                        style={[
-                                            styles.point,
-                                            {
-                                                left: p.x - stroke.size / 2,
-                                                top: p.y - stroke.size / 2,
-                                                width: stroke.size,
-                                                height: stroke.size,
-                                                borderRadius: stroke.size / 2,
-                                                backgroundColor: stroke.color,
-                                            },
-                                        ]}
-                                    />
-                                ))}
-                            </React.Fragment>
-                        ))}
-                        {liveStroke?.points.map((p, i) => (
-                            <View
-                                key={`live-${i}`}
-                                style={[
-                                    styles.point,
-                                    {
-                                        left: p.x - liveStroke.size / 2,
-                                        top: p.y - liveStroke.size / 2,
-                                        width: liveStroke.size,
-                                        height: liveStroke.size,
-                                        borderRadius: liveStroke.size / 2,
-                                        backgroundColor: liveStroke.color,
-                                    },
-                                ]}
-                            />
-                        ))}
+                        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                            {strokes.map((stroke, i) => (
+                                <React.Fragment key={i}>
+                                    {stroke.points.map((p, j) => (
+                                        <View
+                                            key={`${i}-${j}`}
+                                            style={[
+                                                styles.point,
+                                                {
+                                                    left: p.x - stroke.size / 2,
+                                                    top: p.y - stroke.size / 2,
+                                                    width: stroke.size,
+                                                    height: stroke.size,
+                                                    borderRadius: stroke.size / 2,
+                                                    backgroundColor: stroke.color,
+                                                },
+                                            ]}
+                                        />
+                                    ))}
+                                </React.Fragment>
+                            ))}
+                            {liveStroke?.points.map((p, i) => (
+                                <View
+                                    key={`live-${i}`}
+                                    style={[
+                                        styles.point,
+                                        {
+                                            left: p.x - liveStroke.size / 2,
+                                            top: p.y - liveStroke.size / 2,
+                                            width: liveStroke.size,
+                                            height: liveStroke.size,
+                                            borderRadius: liveStroke.size / 2,
+                                            backgroundColor: liveStroke.color,
+                                        },
+                                    ]}
+                                />
+                            ))}
+                        </View>
                     </View>
+
+                    {/* Karalama temizlendi: kısa ipucu (yazısız çocuk için de görsel: sarı kutu) */}
+                    {showRetry && (
+                        <View style={styles.retryBox} pointerEvents="none">
+                            <Text style={styles.retryText}>Rakamın izinden git 🙂</Text>
+                        </View>
+                    )}
 
                     {/* Success overlay */}
                     {showSuccess && (
@@ -486,19 +463,21 @@ const styles = StyleSheet.create({
     },
     templateOverlay: {
         ...StyleSheet.absoluteFillObject,
-        justifyContent: 'center',
-        alignItems: 'center',
         zIndex: 0,
-    },
-    templateText: {
-        fontWeight: '900',
-        color: 'rgba(0, 0, 0, 0.18)',
-        textAlign: 'center',
-        includeFontPadding: false,
-        textAlignVertical: 'center',
     },
     canvas: { flex: 1, zIndex: 5 },
     point: { position: 'absolute' },
+    retryBox: {
+        position: 'absolute',
+        alignSelf: 'center',
+        top: 12,
+        backgroundColor: '#FFF59D',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 16,
+        zIndex: 15,
+    },
+    retryText: { fontSize: 16, fontWeight: '800', color: '#5D4037' },
     successOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(255,255,255,0.95)',
