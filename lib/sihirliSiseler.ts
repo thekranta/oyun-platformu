@@ -21,12 +21,35 @@ export interface Tier {
   empty: number;
 }
 
-/** Yaşa (ay) göre kademe. Hepsinde 2 boş şişe; kapasite ve renk sayısı yaşla artar. */
+/** Kademe tablosu (1 en kolay). Hepsinde 2 boş şişe; kapasite ve renk sayısı kademeyle artar. */
+export const TIERS: Tier[] = [
+  { level: 1, colors: 2, capacity: 2, empty: 2 },
+  { level: 2, colors: 2, capacity: 3, empty: 2 },
+  { level: 3, colors: 3, capacity: 3, empty: 2 },
+  { level: 4, colors: 3, capacity: 4, empty: 2 },
+];
+
+/** Kademe numarasından (1-4) kademe; sınır dışı değerler uca sıkıştırılır. */
+export const tierForLevel = (level: number): Tier => TIERS[Math.max(1, Math.min(level, TIERS.length)) - 1];
+
+/** Yaşa (ay) göre kademe. */
 export function tierForAge(ageMonths: number): Tier {
-  if (ageMonths <= 42) return { level: 1, colors: 2, capacity: 2, empty: 2 };
-  if (ageMonths <= 54) return { level: 2, colors: 2, capacity: 3, empty: 2 };
-  if (ageMonths <= 66) return { level: 3, colors: 3, capacity: 3, empty: 2 };
-  return { level: 4, colors: 3, capacity: 4, empty: 2 };
+  if (ageMonths <= 42) return TIERS[0];
+  if (ageMonths <= 54) return TIERS[1];
+  if (ageMonths <= 66) return TIERS[2];
+  return TIERS[3];
+}
+
+/** Oyun 3 sahnedir (kullanıcı notu #59, 2026-10-25: "bunu da 3 sahneli bir oyun yapalım"). */
+export const SCENE_COUNT = 3;
+
+/**
+ * Sahnelerin kademeleri: ilk sahne yaş kademesinin bir altı (en kolayda aynı) ısınma, sonraki ikisi yaş kademesi.
+ * Hiçbir sahne yaş kademesinden ZOR değildir ("çok zor" şikâyeti #59'daydı; her kademe zaten sayımla doğrulandı).
+ */
+export function sceneTiers(ageMonths: number): Tier[] {
+  const base = tierForAge(ageMonths);
+  return [tierForLevel(base.level - 1), base, base];
 }
 
 /** Kademe başına en çok gereken hamle (testlerde tam/örneklem sayımla doğrulanır). */

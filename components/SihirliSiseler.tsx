@@ -25,6 +25,8 @@ import {
     isBottleComplete,
     isSolved,
     pourCount,
+    SCENE_COUNT,
+    sceneTiers,
     solve,
     tierForAge,
     type Bottle,
@@ -38,6 +40,9 @@ import { COMPLETE_TEXT, HOW_TO_TEXT, INTRO_TEXT, INVALID_TEXT, WIN_TEXT } from '
 // Oyun_Test_Listesi #59 ("çok zor, bug ve hata çok") düzeltmeleri: kolay kademe tablosu + 2 boş şişe,
 // çözülebilir ve zaten çözülmemiş bulmaca, geri al / ipucu, geçersiz hamlede geri bildirim, tamamlanan
 // şişeyi kilitleme, dökme animasyonu, kutlamanın görünmesi ve doğru kayıt alanları.
+// 2026-10-25 (kullanıcı: "bunu da 3 sahneli bir oyun yapalım"): oyun 3 sahne (3 ayrı bulmaca) oynar; sahne kademeleri
+// lib/sihirliSiseler.sceneTiers'ta (hiçbiri yaş kademesinden zor değil). Sayaçlar sahneler boyunca birikir; 'Tebrikler!' ve
+// sonuç ekranı yalnız 3. sahne bitince gelir, ara sahnelerde 'Aferin!' ile sıradaki bulmacaya geçilir.
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
@@ -82,7 +87,10 @@ interface SihirliSiselerProps {
 }
 
 export default function SihirliSiseler({ childName, childAge, email, onClose, onGameEnd }: SihirliSiselerProps) {
-    const tier = useMemo(() => tierForAge(childAge), [childAge]);
+    const baseTier = useMemo(() => tierForAge(childAge), [childAge]);
+    const tiers = useMemo(() => sceneTiers(childAge), [childAge]);
+    const [scene, setScene] = useState(0);
+    const tier = tiers[scene];
     const cap = tier.capacity;
     const nBottles = bottleCount(tier);
     // Dokunma hedefi ≥48 px: eskiden web'de width*0.08 ≈ 31 px'e düşüyordu.
@@ -108,6 +116,8 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
     const hintRef = useRef(0);
     const restartRef = useRef(0);
     const sequenceRef = useRef<string[]>([]);
+    const optimalRef = useRef<number[]>([]);   // sahne başına en kısa çözüm hamlesi (toplamı verimlilik için; sahne no ile yazılır → çift çalışmada şişmez)
+    const advancingRef = useRef(false);    // ara sahne geçişi sürerken ikinci kazanma tetiklenmesin
     const startTimeRef = useRef(Date.now());
     const finishedRef = useRef(false);
     const mountedRef = useRef(true);
@@ -128,12 +138,19 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
         timersRef.current.push(t);
     };
 
-    // İlk bulmaca (kademe yaşa göre sabit)
+    // Her sahnenin bulmacası: sahne değişince (ve ilk açılışta) yeni bulmaca; seçim/geçmiş/ipucu sıfırlanır.
     useEffect(() => {
         const fresh = generate(tier);
         initialRef.current = fresh.map((b) => [...b]);
+        optimalRef.current[scene] = solve(fresh, tier.capacity)?.length ?? 0;
         setBottles(fresh);
-    }, [tier]);
+        setHistory([]);
+        setSelected(null);
+        setHintMove(null);
+        setPouring(null);
+        setBusy(false);
+        advancingRef.current = false;
+    }, [scene, tier]);   // 2. ve 3. sahne aynı kademeyi kullanabilir: yenilemeyi sahne numarası da tetikler
 
     useEffect(() => () => {
         mountedRef.current = false;
@@ -188,7 +205,9 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
         const responseTime = Date.now() - startTimeRef.current;
         const moves = Math.max(1, movesRef.current);
         const avgMoveTime = responseTime / moves;
-        const optimal = solve(initialRef.current, cap)?.length ?? moves;
+        // 3 sahnenin en kısa çözüm hamleleri toplamı (her sahne açılırken optimalRef'e eklenir).
+        const optimalSum = optimalRef.current.reduce((sum, n) => sum + (n || 0), 0);
+        const optimal = optimalSum > 0 ? optimalSum : moves;
         // Verimlilik: en kısa çözüme oranı; ipucu başına -5 (ipucuyla çözmek de öğrenmedir ama ayrı görünür).
         const efficiency = Math.round(100 * Math.min(1, optimal / moves));
         return {
@@ -199,10 +218,10 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
             sure: Math.round(responseTime / 1000),
             total_moves: movesRef.current,            // gameRegistry bu alanı okuyor (eskiden hiç gönderilmiyordu → hamle hep 0)
             hata_sayisi: invalidRef.current,          // geçersiz hamle sayısı (eskiden sabit 0)
-            correct_answers: tier.colors,
+            correct_answers: tiers.reduce((sum, t) => sum + t.colors, 0),   // 3 sahnede ayrılan toplam renk sayısı
             response_time: responseTime,
             cognitive_speed_score: Math.max(0, efficiency - hintRef.current * 5),
-            zorluk_seviyesi: tier.level,
+            zorluk_seviyesi: baseTier.level,
             // Nesne olarak verilir: services/gameResults.ts kaydederken JSON.stringify eder
             // (önceden burada da stringify edildiği için veritabanına iki kez kodlanıyordu).
             round_history: {
@@ -214,18 +233,33 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 restart_count: restartRef.current,
                 optimal_moves: optimal,
                 move_sequence: sequenceRef.current,
-                difficulty: { level: tier.level, colors: tier.colors, capacity: cap, empty: tier.empty, bottles: nBottles },
+                difficulty: {
+                    level: baseTier.level, colors: baseTier.colors, capacity: baseTier.capacity, empty: baseTier.empty, bottles: bottleCount(baseTier),
+                    scenes: tiers.map((t) => ({ level: t.level, colors: t.colors, capacity: t.capacity, bottles: bottleCount(t) })),
+                },
                 avg_move_time_ms: Math.round(avgMoveTime),
             },
         };
     };
 
-    // ---- Kazanma: kutlama GÖRÜNÜR, 'Tebrikler!' bitene kadar beklenir, sonra sonuç ekranına geçilir ----
+    // ---- Kazanma: kutlama GÖRÜNÜR. Ara sahnede 'Aferin!' sonrası sıradaki bulmaca açılır; son sahnede
+    // 'Tebrikler!' bitene kadar beklenir, sonra sonuç ekranına geçilir ----
     const handleWin = () => {
-        if (finishedRef.current) return;
-        finishedRef.current = true;
+        if (finishedRef.current || advancingRef.current) return;
         setCelebrating(true);
+        celebrateScale.setValue(0);
         Animated.spring(celebrateScale, { toValue: 1, friction: 4, useNativeDriver: true }).start();
+        if (scene < SCENE_COUNT - 1) {
+            advancingRef.current = true;
+            (async () => {
+                await speakThenWait(COMPLETE_TEXT, 1800, { instructions: HAPPY_VOICE }).catch(() => undefined);
+                if (!mountedRef.current) return;
+                setCelebrating(false);
+                setScene((s) => s + 1);
+            })();
+            return;
+        }
+        finishedRef.current = true;
         const finish = async () => {
             await speakThenWait(WIN_TEXT, 2800, { instructions: HAPPY_VOICE }).catch(() => undefined);
             if (!mountedRef.current) return;
@@ -449,7 +483,15 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
             {/* Başlık: çıkış butonu satırın içinde (iOS'ta durum çubuğuyla çakışmaz) */}
             <View style={styles.header}>
                 <GameExitButton onPress={onClose} />
-                <Text style={styles.title}>🧪 Sihirli Şişeler</Text>
+                <View style={styles.titleBox}>
+                    <Text style={styles.title}>🧪 Sihirli Şişeler</Text>
+                    {/* Sahne göstergesi: 3 nokta (biten dolu, şimdiki büyük) */}
+                    <View style={styles.sceneDots} accessibilityLabel={`Sahne ${scene + 1} / ${SCENE_COUNT}`}>
+                        {Array.from({ length: SCENE_COUNT }, (_, i) => (
+                            <View key={i} style={[styles.sceneDot, i < scene && styles.sceneDotDone, i === scene && styles.sceneDotCurrent]} />
+                        ))}
+                    </View>
+                </View>
                 <View style={{ width: 44 }} />
             </View>
 
@@ -498,9 +540,19 @@ export default function SihirliSiseler({ childName, childAge, email, onClose, on
                 <View style={styles.celebrationOverlay}>
                     <ConfettiCannon count={120} origin={{ x: width / 2, y: 0 }} autoStart fadeOut />
                     <Animated.View style={[styles.winCard, { transform: [{ scale: celebrateScale }] }]}>
-                        <Text style={styles.winEmoji}>🏆</Text>
-                        <Text style={styles.winTitle}>{childName}, Harika Bir Kimyagersin!</Text>
-                        <Text style={styles.winStats}>🎯 {movesRef.current} hamlede tamamladın!</Text>
+                        {scene < SCENE_COUNT - 1 ? (
+                            <>
+                                <Text style={styles.winEmoji}>🌟</Text>
+                                <Text style={styles.winTitle}>Aferin! {scene + 1}. sahne tamam!</Text>
+                                <Text style={styles.winStats}>Sıradaki bulmaca geliyor…</Text>
+                            </>
+                        ) : (
+                            <>
+                                <Text style={styles.winEmoji}>🏆</Text>
+                                <Text style={styles.winTitle}>{childName}, Harika Bir Kimyagersin!</Text>
+                                <Text style={styles.winStats}>🎯 3 sahneyi {movesRef.current} hamlede tamamladın!</Text>
+                            </>
+                        )}
                     </Animated.View>
                 </View>
             )}
@@ -563,6 +615,11 @@ const styles = StyleSheet.create({
         zIndex: 20,
     },
     title: { fontSize: 22, fontWeight: 'bold', color: '#fff' },
+    titleBox: { alignItems: 'center' },
+    sceneDots: { flexDirection: 'row', gap: 7, marginTop: 6 },
+    sceneDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: 'rgba(255,255,255,0.4)' },
+    sceneDotDone: { backgroundColor: '#FFE082' },
+    sceneDotCurrent: { backgroundColor: '#fff', transform: [{ scale: 1.35 }] },
 
     bottlesContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16 },
     bottlesGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },

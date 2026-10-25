@@ -7,8 +7,11 @@ import {
   isSolved,
   MAX_OPTIMAL_MOVES,
   pourCount,
+  SCENE_COUNT,
+  sceneTiers,
   solve,
   tierForAge,
+  tierForLevel,
   validTargets,
   type Bottle,
 } from './sihirliSiseler';
@@ -154,5 +157,49 @@ describe('bulmaca üretimi', () => {
     const keys = new Set<string>();
     for (let i = 0; i < 200; i++) keys.add(JSON.stringify(generate(tierForAge(60), rng)));
     expect(keys.size).toBeGreaterThan(20);
+  });
+});
+
+describe('3 sahne (#59, 2026-10-25)', () => {
+  it('her yaşta 3 sahne var; ilk sahne yaş kademesinin bir altı (en kolayda aynı), sonrakiler yaş kademesi', () => {
+    expect(SCENE_COUNT).toBe(3);
+    AGES.forEach((age) => {
+      const base = tierForAge(age);
+      const scenes = sceneTiers(age);
+      expect(scenes).toHaveLength(SCENE_COUNT);
+      expect(scenes.map((t) => t.level)).toEqual([Math.max(1, base.level - 1), base.level, base.level]);
+    });
+  });
+
+  it('hiçbir sahne yaş kademesinden zor değildir ve sahneler zorlukta azalmaz', () => {
+    AGES.forEach((age) => {
+      const base = tierForAge(age);
+      const scenes = sceneTiers(age);
+      scenes.forEach((t) => expect(t.level).toBeLessThanOrEqual(base.level));
+      for (let i = 1; i < scenes.length; i++) {
+        expect(scenes[i].colors * scenes[i].capacity).toBeGreaterThanOrEqual(scenes[i - 1].colors * scenes[i - 1].capacity);
+      }
+    });
+  });
+
+  it('tierForLevel uçlara sıkıştırır', () => {
+    expect(tierForLevel(0).level).toBe(1);
+    expect(tierForLevel(1).level).toBe(1);
+    expect(tierForLevel(4).level).toBe(4);
+    expect(tierForLevel(9).level).toBe(4);
+  });
+
+  it('her sahnenin bulmacası çözülebilir, zaten çözülmüş değil ve kademenin hamle sınırında (çeşitli tohumlarla)', () => {
+    AGES.forEach((age) => {
+      sceneTiers(age).forEach((tier, sceneIdx) => {
+        for (let s = 1; s <= 60; s++) {
+          const puzzle = generate(tier, seeded(s * 31 + sceneIdx));
+          expect(isSolved(puzzle, tier.capacity)).toBe(false);
+          const path = solve(puzzle, tier.capacity);
+          expect(path).not.toBeNull();
+          expect(path!.length).toBeLessThanOrEqual(MAX_OPTIMAL_MOVES[tier.level]);
+        }
+      });
+    });
   });
 });
