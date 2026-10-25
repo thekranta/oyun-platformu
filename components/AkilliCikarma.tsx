@@ -1,15 +1,17 @@
 
-import React, { useCallback, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
+import { CROSS_DELAY_MS, END_PAUSE_MS, CROSS_POP_MS, FADED_OPACITY, FADE_MS, goneIndexes, holdMs, staggerMs } from '../lib/akilliCikarmaAnim';
 import { speak } from '../services/speechService';
 import ListenButton from './ListenButton';
 
 // Akıllı Çıkarma — UYARLANIR (adaptif) zorluk. Maarif: MAB.7
 // (Matematiksel problemler ve çözümlerine ilişkin stratejiler geliştirebilme).
-// "Kaç tane kaldı?": bazı nesneler gitti (soluk), kalanları say. Zorlukla sayılar büyür.
+// "Kaç tane kaldı?": ÖNCE tüm nesneler görünür, sonra bazıları sırayla soluklaşır ve üstüne çarpı gelir (animasyon),
+// seçenekler animasyon bitince açılır; çocuk kalanları sayar. Zorlukla sayılar büyür. (Süreler: lib/akilliCikarmaAnim.ts)
 
 interface Props {
     onGameEnd: (
@@ -93,8 +95,47 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
     const bump = useRef(new Animated.Value(1)).current;
     const shake = useRef(new Animated.Value(0)).current;
 
+    // Tur animasyonu: 'show' = hepsi görünüyor / giden nesneler soluyor (seçenekler kapalı), 'ready' = seçenekler açık.
+    const [phase, setPhase] = useState<'show' | 'ready'>('show');
+    const phaseRef = useRef<'show' | 'ready'>('show');
+    const fade = useRef(Array.from({ length: 9 }, () => new Animated.Value(1))).current;          // nesne saydamlığı
+    const crossScale = useRef(Array.from({ length: 9 }, () => new Animated.Value(0))).current;    // çarpı belirme
+    const resetAnim = () => {
+        fade.forEach(v => v.setValue(1));
+        crossScale.forEach(v => v.setValue(0));
+        phaseRef.current = 'show';
+        setPhase('show');
+    };
+
     React.useEffect(() => () => { timersRef.current.forEach(clearTimeout); }, []);
     const startTimer = (t: ReturnType<typeof setTimeout>) => { timersRef.current.push(t); return t; };
+
+    // Her turda (ve oyun başlayınca): önce hepsi sakin görünür, sonra giden nesneler sırayla solar ve çarpı gelir;
+    // animasyon bitince seçenekler açılır ve süre ölçümü (uyarlanır zorluk) O ANDA başlar.
+    useEffect(() => {
+        if (!gameReady) return;
+        resetAnim();
+        const gone = goneIndexes(current.total, current.removed);
+        const anim = Animated.sequence([
+            Animated.delay(holdMs(current.total)),
+            Animated.stagger(staggerMs(current.removed), gone.map(i => Animated.parallel([
+                Animated.timing(fade[i], { toValue: FADED_OPACITY, duration: FADE_MS, useNativeDriver: true }),
+                Animated.sequence([
+                    Animated.delay(CROSS_DELAY_MS),
+                    Animated.timing(crossScale[i], { toValue: 1, duration: CROSS_POP_MS, easing: Easing.out(Easing.back(2)), useNativeDriver: true }),   // spring DEĞİL: yayın durulması saniyelerce sürüp seçenekleri geciktiriyordu
+                ]),
+            ]))),
+            Animated.delay(END_PAUSE_MS),
+        ]);
+        anim.start(({ finished }) => {
+            if (!finished) return;
+            phaseRef.current = 'ready';
+            setPhase('ready');
+            levelStartRef.current = Date.now();
+        });
+        return () => anim.stop();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [round, gameReady]);
 
     const nextRound = useCallback((solvedInDiff: number) => {
         const timeMs = Date.now() - levelStartRef.current;
@@ -111,6 +152,7 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
         levelErrorsRef.current = 0;
         levelStartRef.current = Date.now();
         diffRef.current = nextDiff;
+        resetAnim();   // yeni turun ilk karesinde önceki turun soluk/çarpı hâli görünmesin; seçenekler animasyon bitene dek kapalı
         setRound(r => r + 1);
         setCurrent(buildRound(nextDiff));
         setSelected(null);
@@ -119,7 +161,7 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
     }, [round, recordLevel, onGameEnd]);
 
     const handlePick = (n: number) => {
-        if (lockRef.current || feedback === 'correct') return;
+        if (lockRef.current || feedback === 'correct' || phaseRef.current !== 'ready') return;
         totalMovesRef.current += 1;
         setSelected(n);
 
@@ -167,8 +209,10 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
                             const gone = i >= current.total - current.removed;
                             return (
                                 <View key={i} style={styles.objSlot}>
-                                    <Text style={[styles.object, gone && styles.objGone]}>{OBJECT}</Text>
-                                    {gone && <Text style={styles.cross}>✖️</Text>}
+                                    <Animated.Text style={[styles.object, gone && { opacity: fade[i] }]}>{OBJECT}</Animated.Text>
+                                    {gone && (
+                                        <Animated.Text style={[styles.cross, { opacity: crossScale[i], transform: [{ scale: crossScale[i] }] }]}>✖️</Animated.Text>
+                                    )}
                                 </View>
                             );
                         })}
@@ -177,7 +221,7 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
                 </Animated.View>
 
                 {/* Seçenekler */}
-                <View style={styles.optionsRow}>
+                <View style={[styles.optionsRow, { opacity: phase === 'ready' ? 1 : 0.2 }]} pointerEvents={phase === 'ready' ? 'auto' : 'none'}>
                     {current.options.map((n) => {
                         const isSel = selected === n;
                         const showCorrect = feedback !== 'idle' && n === current.answer && (isSel || feedback === 'correct');
@@ -236,7 +280,6 @@ const styles = StyleSheet.create({
     objectsWrap: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 6 },
     objSlot: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
     object: { fontSize: 36 },
-    objGone: { opacity: 0.22 },
     cross: { position: 'absolute', fontSize: 20 },
     caption: { fontSize: 12, color: '#8D6E63', textAlign: 'center', marginTop: 10, fontStyle: 'italic' },
 
