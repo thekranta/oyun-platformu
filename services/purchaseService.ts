@@ -22,14 +22,13 @@ import Purchases, {
   PurchasesOffering,
   PurchasesPackage,
 } from 'react-native-purchases';
-import type { OgretmenTier, VeliTier } from '../lib/subscriptionTiers';
+
+// NOT: web paketine bu dosya GİRMEZ — Metro web'de purchaseService.web.ts'i seçer (react-native-purchases
+// tarayıcıda ~1,2 MB tutuyordu). Buraya dışa aktarım ekleyince web dosyasına da ekle; parity testi sınar.
+export { activeOgretmenTierFromCustomerInfo, activeVeliTierFromCustomerInfo } from './purchaseTiers';
 
 const IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY;
 const ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
-
-// En yüksekten en düşüğe: entitlements.active içinde birden fazlası varsa en üsttekini seçeriz.
-const VELI_TIERS_DESC: VeliTier[] = ['orman', 'fidan', 'filiz', 'tohum'];
-const OGRETMEN_TIERS_DESC: OgretmenTier[] = ['mese', 'cinar'];
 
 let configuredForUser: string | null = null;
 
@@ -84,18 +83,4 @@ export async function purchase(pkg: PurchasesPackage): Promise<PurchaseResult> {
 export async function restore(): Promise<CustomerInfo | null> {
   if (!isPurchasesAvailable()) return null;
   return Purchases.restorePurchases();
-}
-
-export function activeVeliTierFromCustomerInfo(info: CustomerInfo): VeliTier | null {
-  for (const tier of VELI_TIERS_DESC) {
-    if (info.entitlements.active[tier]) return tier;
-  }
-  return null;
-}
-
-export function activeOgretmenTierFromCustomerInfo(info: CustomerInfo): OgretmenTier | null {
-  for (const tier of OGRETMEN_TIERS_DESC) {
-    if (info.entitlements.active[tier]) return tier;
-  }
-  return null;
 }
