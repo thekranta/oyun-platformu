@@ -27,6 +27,14 @@ export const IDLE_SILENCE_MS = 45_000;
 /** Konuşma bitince müzik hemen dönmez: art arda gelen klipler arasındaki kısa boşlukta müzik "nefes almasın". */
 export const DUCK_HOLD_MS = 700;
 
+/**
+ * Web'de müzik dosyası (≈1,2 MB) ağdan iner ve ilk konuşma kliplerinin yolunu kesmesin: indirme bir konuşma bitince
+ * (MUSIC_LOAD_SETTLE_MS sonra), konuşma hiç olmazsa en geç MUSIC_LOAD_FALLBACK_MS sonra başlar. Native'de dosya
+ * paketin içinde, bekleme yok.
+ */
+export const MUSIC_LOAD_FALLBACK_MS = 8_000;
+export const MUSIC_LOAD_SETTLE_MS = 1_500;
+
 export interface MusicState {
   scene: MusicScene;
   /** Kullanıcı sesi kapattı (kalıcı tercih). */

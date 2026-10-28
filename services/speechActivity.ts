@@ -58,3 +58,31 @@ export function subscribeSpeech(listener: Listener): () => void {
     listeners.delete(listener);
   };
 }
+
+/**
+ * Bir konuşma bitip `settleMs` geçene kadar bekler (araya yeni konuşma girerse sayaç sıfırlanır); hiç konuşma
+ * olmazsa en geç `fallbackMs` sonra çözülür (o anda konuşma sürüyorsa bitmesini bekler). Büyük bir dosyanın
+ * (arka plan müziği) indirmesi ilk konuşma kliplerinin yolunu kesmesin diye kullanılır.
+ */
+export function waitForQuietWindow(fallbackMs: number, settleMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    let settle: ReturnType<typeof setTimeout> | null = null;
+    let off: () => void = () => { };
+    const done = () => {
+      clearTimeout(fallback);
+      if (settle) clearTimeout(settle);
+      off();
+      resolve();
+    };
+    const fallback = setTimeout(() => {
+      if (!speaking) done();
+    }, fallbackMs);
+    off = subscribeSpeech((active) => {
+      if (settle) {
+        clearTimeout(settle);
+        settle = null;
+      }
+      if (!active) settle = setTimeout(done, settleMs);
+    });
+  });
+}

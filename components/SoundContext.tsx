@@ -3,8 +3,8 @@ import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from 'expo-av';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, Platform, View } from 'react-native';
 import { asset } from '../lib/assetMap';
-import { DUCK_HOLD_MS, IDLE_SILENCE_MS, rampMs, targetVolume, type MusicScene, type MusicState } from '../lib/musicPolicy';
-import { isSpeechActive, subscribeSpeech } from '../services/speechActivity';
+import { DUCK_HOLD_MS, IDLE_SILENCE_MS, MUSIC_LOAD_FALLBACK_MS, MUSIC_LOAD_SETTLE_MS, rampMs, targetVolume, type MusicScene, type MusicState } from '../lib/musicPolicy';
+import { isSpeechActive, subscribeSpeech, waitForQuietWindow } from '../services/speechActivity';
 
 // Arka plan müziği ve kısa efekt sesleri (doğru/yanlış).
 //
@@ -145,6 +145,9 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
         if (!musicLoadingRef.current) {
             musicLoadingRef.current = (async () => {
                 try {
+                    // Web'de dosya ağdan iner: ilk konuşma kliplerinin yolunu kesmesin diye bir konuşma bitene (en geç
+                    // birkaç saniyeye) kadar beklenir. Native'de dosya paketin içinde, bekleme yok.
+                    if (Platform.OS === 'web') await waitForQuietWindow(MUSIC_LOAD_FALLBACK_MS, MUSIC_LOAD_SETTLE_MS);
                     const { sound } = await Audio.Sound.createAsync(
                         asset('/sounds/background.mp3'),
                         { shouldPlay: false, isLooping: true, volume: 0 },
