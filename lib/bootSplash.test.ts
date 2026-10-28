@@ -131,17 +131,18 @@ describe('public/index.html komut dosyası (sahte DOM ile)', () => {
 
     it('dil: kayıtlı seçim önceliklidir; yoksa cihaz dili İngilizceyse EN, aksi halde TR; depolama engelliyse cihaz dili', () => {
         run({ stored: 'en', language: 'tr-TR' });
-        expect(els['boot-title'].textContent).toBe('Preschool Academy');
+        expect(els['boot-title'].textContent).toBe('MiniZeka');
+        expect(els['boot-msg'].textContent).toBe('Loading…');
         expect(els['boot-msg'].textContent).toBe('Loading…');
         run({ stored: 'tr', language: 'en-US' });
-        expect(els['boot-title'].textContent).toBe('Okul Öncesi Akademi');
+        expect(els['boot-msg'].textContent).toBe('Yükleniyor…');
         expect(els['boot-msg'].textContent).toBe('Yükleniyor…');
         run({ stored: null, language: 'en-GB' });
-        expect(els['boot-title'].textContent).toBe('Preschool Academy');
+        expect(els['boot-msg'].textContent).toBe('Loading…');
         run({ stored: 'de', language: 'fr-FR' });
-        expect(els['boot-title'].textContent).toBe('Okul Öncesi Akademi');
+        expect(els['boot-msg'].textContent).toBe('Yükleniyor…');
         run({ throwStorage: true, language: 'en-US' });
-        expect(els['boot-title'].textContent).toBe('Preschool Academy');
+        expect(els['boot-msg'].textContent).toBe('Loading…');
     });
 
     it('yavaş bağlantı: 8 sn sonra bilgi, 25 sn sonra "Yenile" düğmesi; düğme sayfayı yeniler', () => {
