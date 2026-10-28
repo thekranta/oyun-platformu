@@ -208,6 +208,7 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
         } else {
             setFeedback('wrong');
             setMistakes(m => m + 1);
+            speak('Tekrar dene!');
             timersRef.current.push(setTimeout(() => {
                 setFeedback(null);
                 setSelectedSide(null);

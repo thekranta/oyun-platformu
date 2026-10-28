@@ -76,7 +76,7 @@ function ShapeSvg({ type, size, color }: { type: string; size: number; color: st
       )}
       {type === 'ucgen' && (
         <>
-          <Polygon points="50,10 90,86 10,86" fill={`url(#${gradId})`} stroke={stroke} strokeWidth={4} strokeLinejoin="round" />
+          <Polygon points="50,10 90,86 10,86" fill={`url(#${gradId})`} stroke={stroke} strokeWidth={4} strokeLinejoin="miter" strokeMiterlimit={10} />
           <Polygon points="50,10 90,86 10,86" fill={`url(#${glossId})`} />
         </>
       )}

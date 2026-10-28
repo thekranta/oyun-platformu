@@ -516,7 +516,7 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 
 ## VERİLER:
 - Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
-- Oyun: Uzay Blokları: Yıldız Mimarı
+- Oyun: Uzay Blokları
 - Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
 ${gelisimBolumu}

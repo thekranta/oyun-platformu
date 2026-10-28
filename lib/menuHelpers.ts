@@ -26,7 +26,7 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'akilli-ciftlik-sayma': { color: '#7CB342', icon: 'paw', displayTitle: 'Akıllı Çiftlikte Sayalım', subtitle: 'Uyarlanır zorluk' },
   'akilli-neredeyim': { color: '#6D4C41', icon: 'locate', displayTitle: 'Akıllı Neredeyim?', subtitle: 'Uyarlanır zorluk' },
   'akilli-sayiyi-bul': { color: '#1E88E5', icon: 'keypad', displayTitle: 'Akıllı Sayıyı Bul', subtitle: 'Uyarlanır zorluk' },
-  'akilli-en-uzun': { color: '#0D9488', icon: 'resize-outline', displayTitle: 'Akıllı En Uzun', subtitle: 'Uyarlanır zorluk' },
+  'akilli-en-uzun': { color: '#0D9488', icon: 'resize-outline', displayTitle: 'Akıllı En Uzun Hangisi?', subtitle: 'Uyarlanır zorluk' },
   'akilli-ikizleri-bul': { color: '#D81B60', icon: 'copy', displayTitle: 'Akıllı İkizleri Bul', subtitle: 'Uyarlanır zorluk' },
   'dunya-bayraklari': { color: '#00897B', icon: 'flag', displayTitle: 'Dünya Bayrakları', subtitle: 'Kültürleri keşfet' },
   'dunya-selamlari': { color: '#00ACC1', icon: 'hand-left', displayTitle: 'Dünya Selamları', subtitle: 'Merhaba de' },

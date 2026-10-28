@@ -104,7 +104,7 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'renkli-baglantalar': { displayName: 'Renkli Bağlantılar', alan: 'Matematik', surec: 'Matematiksel Temsil', cikti: 'MAB.10', ciktiAciklama: 'Matematikle ilgili temsilleri değerlendirebilme; eşleştirme ve dikkat' },
   'mutfak-dedektifi': { displayName: 'Mutfak Dedektifi', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Fene yönelik nesneleri benzerlik ve farklılıklarına göre sınıflandırabilme; görsel dikkat ve kategori ayırt etme' },
   'sihirli-tuval': { displayName: 'Sihirli Tuval: Sayılarla Boyama', alan: 'Matematik', surec: 'Matematiksel Temsil', cikti: 'MAB.9', ciktiAciklama: 'Matematikle ilgili temsillerden yararlanabilme; çeşitli semboller arasından belirtilen matematiksel temsili gösterir' },
-  'uzay-bloklari': { displayName: 'Uzay Blokları: Yıldız Mimarı', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Parça-bütün özelliklerini çözümleyebilme; bir bütünü oluşturan parçaları gösterir, ilişkili parçaları birleştirir' },
+  'uzay-bloklari': { displayName: 'Uzay Blokları', alan: 'Matematik', surec: 'Matematiksel Muhakeme', cikti: 'MAB.2', ciktiAciklama: 'Parça-bütün özelliklerini çözümleyebilme; bir bütünü oluşturan parçaları gösterir, ilişkili parçaları birleştirir' },
 
   // ---------- Fen ----------
   'gruplama': { displayName: 'Gruplama', alan: 'Fen', surec: 'Sınıflandırma', cikti: 'FAB.2', ciktiAciklama: 'Fene yönelik nesne, olayları benzerlik ve farklılıklarına göre sınıflandırabilme' },

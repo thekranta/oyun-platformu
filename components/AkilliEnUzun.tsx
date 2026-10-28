@@ -171,7 +171,7 @@ export default function AkilliEnUzun({ onGameEnd, onExit, childName }: Props) {
 
             <View style={styles.header}>
                 <GameExitButton onPress={onExit ?? (() => {})} />
-                <Text style={styles.title}>📈 Akıllı En Uzun</Text>
+                <Text style={styles.title}>📈 Akıllı En Uzun Hangisi?</Text>
                 <View style={styles.roundBadge}><Text style={styles.roundText}>{round}/{TOTAL_ROUNDS}</Text></View>
             </View>
 

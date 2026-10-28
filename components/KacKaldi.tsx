@@ -1,16 +1,18 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
 import { buildNumberOptions } from '../lib/answerOptions';
+import { CROSS_DELAY_MS, CROSS_POP_MS, END_PAUSE_MS, FADED_OPACITY, FADE_MS, goneIndexes, holdMs, staggerMs } from '../lib/akilliCikarmaAnim';
 
 // ============================================
 // ➖ KAÇ KALDI? - 5'e kadar çıkarma (Matematik/MAB.1)
-// Nesneler önce hep birlikte görünür; birkaçı animasyonla kaybolur (soluk kalır),
+// Nesneler önce hep birlikte görünür; giden nesneler sırayla soluklaşır ve üstlerine çarpı gelir
+// (Akıllı Çıkarma ile aynı animasyon, süreler lib/akilliCikarmaAnim.ts), sayılar animasyon bitince açılır;
 // çocuk geriye kaç tane KALDIĞINI sayar. Sayı-nicelik/çıkarma sezgisi.
 // ============================================
 
@@ -54,8 +56,9 @@ export default function KacKaldi({ onGameEnd, onExit, childName }: Props) {
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const pop = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
-  // Her nesnenin kaybolma ilerlemesi: 0 = yerinde, 1 = gitti (soluk + küçük + hafif yukarıda)
-  const vanish = useRef(Array.from({ length: MAX_OBJECTS }, () => new Animated.Value(0))).current;
+  // Her nesnenin saydamlığı (1 = yerinde, FADED_OPACITY = gitti) ve üstüne gelen çarpının belirmesi (0 → 1)
+  const fade = useRef(Array.from({ length: MAX_OBJECTS }, () => new Animated.Value(1))).current;
+  const crossScale = useRef(Array.from({ length: MAX_OBJECTS }, () => new Animated.Value(0))).current;
 
   useEffect(() => () => {
     isMountedRef.current = false;
@@ -75,25 +78,31 @@ export default function KacKaldi({ onGameEnd, onExit, childName }: Props) {
     setLocked(false);
     setWrong(null);
     setPhase('watch');
-    vanish.forEach((v) => v.setValue(0));
+    fade.forEach((v) => v.setValue(1));
+    crossScale.forEach((v) => v.setValue(0));
     pop.setValue(0.85);
     Animated.spring(pop, { toValue: 1, friction: 5, useNativeDriver: USE_NATIVE }).start();
 
-    // Önce tüm nesneler görünür; kısa bir bekleyişten sonra "gidecek" olanlar tek tek yok olur,
-    // animasyon bitince soru sorulur (docx #49: "bazı nesneler gitti" demek yerine animasyon).
-    const remainingNow = n - g;
+    // Önce tüm nesneler sakince görünür (çocuk sayabilsin); sonra "gidecek" olanlar tek tek soluklaşır ve üstüne
+    // çarpı gelir (Akıllı Çıkarma ile aynı), animasyon bitince sayılar açılır ve soru sorulur
+    // (docx #49: "bazı nesneler gitti" demek yerine animasyon; çarpı: test listesi 49-K1).
+    const gonePositions = goneIndexes(n, g);
     timersRef.current.push(setTimeout(() => {
       if (!isMountedRef.current || myRun !== runIdRef.current) return;
-      const anims = [];
-      for (let i = remainingNow; i < n; i++) {
-        anims.push(Animated.timing(vanish[i], { toValue: 1, duration: 650, useNativeDriver: USE_NATIVE }));
-      }
-      Animated.stagger(400, anims).start(() => {
+      const anims = gonePositions.map((i) => Animated.parallel([
+        Animated.timing(fade[i], { toValue: FADED_OPACITY, duration: FADE_MS, useNativeDriver: USE_NATIVE }),
+        Animated.sequence([
+          Animated.delay(CROSS_DELAY_MS),
+          // spring DEĞİL: yayın durulması saniyelerce sürüp sayıların açılmasını geciktirir
+          Animated.timing(crossScale[i], { toValue: 1, duration: CROSS_POP_MS, easing: Easing.out(Easing.back(2)), useNativeDriver: USE_NATIVE }),
+        ]),
+      ]));
+      Animated.sequence([Animated.stagger(staggerMs(g), anims), Animated.delay(END_PAUSE_MS)]).start(() => {
         if (!isMountedRef.current || myRun !== runIdRef.current) return;
         setPhase('count');
         speak('Kaç tane kaldı? Say bakalım!', { instructions: HAPPY_VOICE });
       });
-    }, 1000));
+    }, holdMs(n)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [round, gameReady]);
 
@@ -158,23 +167,14 @@ export default function KacKaldi({ onGameEnd, onExit, childName }: Props) {
 
       <Animated.View style={[styles.card, { transform: [{ scale: pop }] }]}>
         {Array.from({ length: total }).map((_, i) => {
-          const v = vanish[i];
+          const isGone = i >= remaining;
           return (
-            <Animated.Text
-              key={i}
-              style={[
-                styles.obj,
-                {
-                  opacity: v.interpolate({ inputRange: [0, 1], outputRange: [1, 0.18] }),
-                  transform: [
-                    { scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 0.6] }) },
-                    { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) },
-                  ],
-                },
-              ]}
-            >
-              {obj}
-            </Animated.Text>
+            <View key={i} style={styles.objSlot}>
+              <Animated.Text style={[styles.obj, isGone && { opacity: fade[i] }]}>{obj}</Animated.Text>
+              {isGone && (
+                <Animated.Text style={[styles.cross, { opacity: crossScale[i], transform: [{ scale: crossScale[i] }] }]}>✖️</Animated.Text>
+              )}
+            </View>
           );
         })}
       </Animated.View>
@@ -209,8 +209,10 @@ const styles = StyleSheet.create({
   roundText: { fontSize: 15, fontWeight: '900', color: '#00695C' },
 
   prompt: { fontSize: 22, fontWeight: '900', color: '#00695C', marginTop: 10 },
-  card: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: '#fff', borderRadius: 24, minHeight: 130, width: '86%', maxWidth: 400, marginTop: 10, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
-  obj: { fontSize: 46 },
+  card: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: '#fff', borderRadius: 24, minHeight: 130, width: '86%', maxWidth: 400, marginTop: 10, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.14, shadowRadius: 10, elevation: 6 },
+  objSlot: { width: 50, height: 56, alignItems: 'center', justifyContent: 'center' },
+  obj: { fontSize: 42 },
+  cross: { position: 'absolute', fontSize: 24 },
 
   numbers: { flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 20 },
   numBtn: { width: 78, height: 78, borderRadius: 22, backgroundColor: '#26A69A', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 5 },

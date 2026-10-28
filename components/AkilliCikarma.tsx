@@ -217,7 +217,6 @@ export default function AkilliCikarma({ onGameEnd, onExit, childName = 'Küçük
                             );
                         })}
                     </View>
-                    <Text style={styles.caption}>✖️ olanlar gitti — kalanları say</Text>
                 </Animated.View>
 
                 {/* Seçenekler */}
@@ -281,7 +280,6 @@ const styles = StyleSheet.create({
     objSlot: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center' },
     object: { fontSize: 36 },
     cross: { position: 'absolute', fontSize: 20 },
-    caption: { fontSize: 12, color: '#8D6E63', textAlign: 'center', marginTop: 10, fontStyle: 'italic' },
 
     optionsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 12, marginTop: 20 },
     optionBtn: {
