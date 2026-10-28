@@ -16,6 +16,11 @@ jest.mock('expo-av', () => ({
         },
     },
 }));
+// Kaynak çözümleme (expo-av createAsync ile AYNI Asset.fromModule yolu) eşzamanlıdır: ses nesnesi/ağ isteği açmaz.
+const mockGetNativeSource = jest.fn((src: number) => ({ uri: 'http://app/clip-' + src + '.mp3' }));
+jest.mock('expo-av/build/AV', () => ({
+    getNativeSourceFromSource: (src: number) => mockGetNativeSource(src),
+}));
 jest.mock('expo-file-system/legacy', () => ({}));
 jest.mock('../lib/supabase', () => ({ supabase: {} }));
 jest.mock('../lib/apiBase', () => ({ apiUrl: (p: string) => p }));
@@ -78,6 +83,8 @@ beforeEach(() => {
     FakeAudio.instances = [];
     FakeAudio.gesture = false;
     docListeners.clear();
+    mockGetNativeSource.mockClear();
+    mockGetNativeSource.mockImplementation((src: number) => ({ uri: 'http://app/clip-' + src + '.mp3' }));
     (global as unknown as { document: unknown }).document = fakeDocument;
     (global as unknown as { Audio: unknown }).Audio = FakeAudio;
 });
@@ -154,5 +161,125 @@ describe('web ses kilidi (iPhone otomatik oynatma kuralı)', () => {
         expect(audio.paused).toBe(false);
         svc.stopSpeech();
         expect(audio.paused).toBe(true);
+    });
+});
+
+describe('klip yolu: eşzamanlı çözümleme ve önceden indirilen klibin bellekten çalınması', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = global as any;
+    let fetchMock: jest.Mock;
+    let createUrl: jest.Mock;
+    let savedFetch: unknown;
+    let savedCreate: unknown;
+    let savedRevoke: unknown;
+
+    beforeEach(() => {
+        savedFetch = g.fetch;
+        savedCreate = URL.createObjectURL;
+        savedRevoke = URL.revokeObjectURL;
+        let n = 0;
+        createUrl = jest.fn(() => 'blob:clip-' + ++n);
+        (URL as unknown as { createObjectURL: unknown }).createObjectURL = createUrl;
+        (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = jest.fn();
+        fetchMock = jest.fn(async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) }));
+        g.fetch = fetchMock;
+    });
+    afterEach(() => {
+        g.fetch = savedFetch;
+        (URL as unknown as { createObjectURL: unknown }).createObjectURL = savedCreate;
+        (URL as unknown as { revokeObjectURL: unknown }).revokeObjectURL = savedRevoke;
+    });
+
+    it('klip adresi eşzamanlı çözülür: createAsync (fazladan yükleme) hiç çağrılmaz', async () => {
+        const svc = loadService();
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { Audio } = require('expo-av');
+        tap();
+        await flush();
+        const done = svc.speak('bir');
+        await flush();
+        FakeAudio.instances[0].finish();
+        await done;
+        expect(Audio.Sound.createAsync).not.toHaveBeenCalled();
+        expect(FakeAudio.instances[0].playLog).toContain('http://app/clip-1.mp3');
+    });
+
+    it('eşzamanlı çözümleme alınamazsa eski yol (createAsync status.uri) yedek olarak çalışır', async () => {
+        mockGetNativeSource.mockImplementation(() => { throw new Error('kayıt yok'); });
+        const svc = loadService();
+        tap();
+        await flush();
+        const done = svc.speak('iki');
+        await flush();
+        FakeAudio.instances[0].finish();
+        await done;
+        expect(FakeAudio.instances[0].playLog).toContain('http://app/clip-2.mp3');
+    });
+
+    it('önceden indirilen klip bellekten (blob) çalınır; diğeri doğrudan adresten', async () => {
+        const svc = loadService();
+        tap();
+        await flush();
+        svc.preloadClips(['bir']);
+        await flush();
+        await flush();
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(fetchMock).toHaveBeenCalledWith('http://app/clip-1.mp3');
+
+        const a = svc.speak('bir');
+        await flush();
+        FakeAudio.instances[0].finish();
+        await a;
+        const b = svc.speak('iki');
+        await flush();
+        FakeAudio.instances[0].finish();
+        await b;
+        const played = FakeAudio.instances[0].playLog.filter((x) => x.startsWith('blob:') || x.includes('clip-'));
+        expect(played).toEqual(['blob:clip-1', 'http://app/clip-2.mp3']);
+    });
+
+    it('klip hâlâ iniyorsa ikinci kez istenmez: inmesi beklenir ve inen blob çalınır', async () => {
+        let release!: () => void;
+        fetchMock.mockImplementation(() => new Promise((resolve) => {
+            release = () => resolve({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) });
+        }));
+        const svc = loadService();
+        tap();
+        await flush();
+        svc.preloadClips(['uc']);
+        await flush();
+        const done = svc.speak('uc');
+        await flush();
+        expect(FakeAudio.instances[0].playLog.filter((x) => x.includes('clip-3') || x.startsWith('blob:'))).toEqual([]);   // henüz başlamadı
+        release();
+        await flush();
+        await flush();
+        FakeAudio.instances[0].finish();
+        await done;
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(FakeAudio.instances[0].playLog.filter((x) => x.startsWith('blob:'))).toEqual(['blob:clip-1']);
+    });
+
+    it('iniyor olan klip çok gecikirse 1,5 sn sonra doğrudan adresten çalınır', async () => {
+        fetchMock.mockImplementation(() => new Promise(() => { /* hiç dönmez */ }));
+        const svc = loadService();
+        tap();
+        await flush();
+        svc.preloadClips(['bir']);
+        await flush();
+        const done = svc.speak('bir');
+        await flush();
+        jest.advanceTimersByTime(1600);
+        await flush();
+        FakeAudio.instances[0].finish();
+        await done;
+        expect(FakeAudio.instances[0].playLog).toContain('http://app/clip-1.mp3');
+    });
+
+    it('bilinmeyen slug önceden indirmede yok sayılır', async () => {
+        const svc = loadService();
+        svc.preloadClips(['yok-boyle-klip']);
+        await flush();
+        expect(fetchMock).not.toHaveBeenCalled();
     });
 });

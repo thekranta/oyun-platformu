@@ -14,6 +14,7 @@ import {
   getTodayKey,
 } from '../../lib/menuHelpers';
 import { useAuth } from '../../hooks/useAuth';
+import { useClipPreload } from '../../hooks/useClipPreload';
 import { useMusicScene } from '../../hooks/useMusicScene';
 import { asset } from '../../lib/assetMap';
 import { changeLanguage, SupportedLanguage } from '../../lib/i18n';
@@ -252,6 +253,8 @@ export default function App() {
   const [asama, setAsama] = useState('giris');
   // Arka plan müziği: menüde kısık, çoğu oyunda çok kısık, diğer her yerde sessiz (lib/musicPolicy.ts).
   useMusicScene(asama);
+  // Web: ortak geri bildirim klipleri girişte/menüde, oyunun klipleri oyun açılırken önceden iner (services/clipPreload.ts).
+  useClipPreload(asama);
   const [toyRound, setToyRound] = useState(0);
   const [ad, setAd] = useState('');
   const [yas, setYas] = useState('');

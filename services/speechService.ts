@@ -13,12 +13,14 @@
  */
 
 import { Audio as ExpoAudio } from 'expo-av';
+import { getNativeSourceFromSource } from 'expo-av/build/AV';
 import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 import { TTS } from '../lib/ttsAssets';
 import { supabase } from '../lib/supabase';
 import { apiUrl } from '../lib/apiBase';
 import { beginSpeech, resetSpeech } from './speechActivity';
+import { markClipInUse, pendingClip, preloadClipUris, readyClipUrl } from './webClipCache';
 
 // Canlı proxy yolu için blob önbelleği (aynı metni tekrar üretmemek için)
 const audioCache = new Map<string, string>();
@@ -92,6 +94,8 @@ let webUnlockInstalled = false;
 let webPending: { rearm: (ms: number) => void } | null = null;
 let audioBlocked = false;
 const webUriCache = new Map<number, string>();
+// Iniyor olan (onceden yuklenen) bir klip icin calmadan once en cok bu kadar beklenir (ms); sonra dogrudan adresten calinir.
+const PENDING_CLIP_WAIT_MS = 1500;
 
 function getWebAudio(): HTMLAudioElement {
     if (!webAudio) {
@@ -131,10 +135,26 @@ export function installWebAudioUnlock(): void {
     UNLOCK_EVENTS.forEach((e) => document.addEventListener(e, handler, true));
 }
 
-// Paketli klibin web URL'si: expo-av'in kaynak cozumlemesinden (status.uri) alinir, onbellege yazilir.
-async function resolveWebUri(src: number): Promise<string | undefined> {
+// Paketli klibin web URL'si, EŞZAMANLI: expo-av'in createAsync'te kullandigi kaynak cozumlemesinin (Asset.fromModule)
+// ayni fonksiyonu; ses nesnesi acmaz, aga dokunmaz. (Eskiden her yeni klip icin createAsync ile dosya bir kez
+// fazladan yuklenip atiliyor, sonra calmak icin yeniden isteniyordu.)
+function clipUri(src: number): string | undefined {
     const cached = webUriCache.get(src);
     if (cached) return cached;
+    try {
+        const uri = getNativeSourceFromSource(src)?.uri;
+        if (uri) {
+            webUriCache.set(src, uri);
+            return uri;
+        }
+    } catch { /* yedek yola dus */ }
+    return undefined;
+}
+
+// Yedek yol: kaynak cozumlemesi eszamanli alinamazsa expo-av'in status.uri'si kullanilir (eski davranis).
+async function resolveWebUri(src: number): Promise<string | undefined> {
+    const quick = clipUri(src);
+    if (quick) return quick;
     try {
         const { sound, status } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: false });
         const uri = status.isLoaded ? status.uri : undefined;
@@ -150,8 +170,22 @@ async function playBundledWeb(src: number): Promise<void> {
     const myId = ++ttsRequestId;
     // Onceki bekleyen cagri yeni klip tarafindan ezilir; eskiden oldugu gibi en gec 8 sn'de cozulur.
     webPending?.rearm(8000);
-    const uri = await resolveWebUri(src);
+    const uri = clipUri(src) ?? await resolveWebUri(src);
     if (!uri || myId !== ttsRequestId) return;
+
+    // Onceden indirilmis klip bellekten (blob) calinir: aga dokunmaz, aninda baslar. Su an iniyorsa ayni dosyayi
+    // ikinci kez istemek yerine kisa sure beklenir; gecikirse dogrudan adresten calinir (eski davranis).
+    let playUrl = readyClipUrl(uri);
+    if (!playUrl) {
+        const pending = pendingClip(uri);
+        if (pending) {
+            playUrl = await Promise.race([
+                pending,
+                new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), PENDING_CLIP_WAIT_MS)),
+            ]);
+            if (myId !== ttsRequestId) return;
+        }
+    }
 
     const audio = getWebAudio();
     await new Promise<void>((resolve) => {
@@ -166,7 +200,10 @@ async function playBundledWeb(src: number): Promise<void> {
             audio.removeEventListener('error', onEnded);
             audio.removeEventListener('loadedmetadata', onMeta);
             if (webPending === handle) webPending = null;
-            if (mine()) webBusy = false;
+            if (mine()) {
+                webBusy = false;
+                markClipInUse(undefined);
+            }
             resolve();
         };
         const rearm = (ms: number) => {
@@ -189,7 +226,8 @@ async function playBundledWeb(src: number): Promise<void> {
         rearm(8000);   // yukleme zaman asimi; metadata gelince klip suresine gore yeniden kurulur
 
         webBusy = true;
-        audio.src = uri;
+        audio.src = playUrl ?? uri;
+        markClipInUse(playUrl);
         const p = audio.play();
         if (p && typeof p.then === 'function') {
             p.then(() => {
@@ -542,6 +580,23 @@ export async function preloadCommonPhrases(childName: string): Promise<void> {
     });
 }
 
+/**
+ * Hazır klipleri (slug listesi) arka planda ÖNCEDEN indirir: web'de bellek önbelleğine alınır, sonra çalınırken
+ * ağa hiç dokunulmaz (bkz. services/webClipCache.ts). Native'de klipler zaten uygulama paketinde: no-op.
+ * urgent: sıradaki indirmelerin önüne geç (oyun açılırken oyunun klipleri).
+ */
+export function preloadClips(slugs: readonly string[], opts: { urgent?: boolean } = {}): void {
+    if (!IS_WEB) return;
+    const uris: string[] = [];
+    for (const slug of slugs) {
+        const src = TTS[slug];
+        if (src == null) continue;
+        const uri = clipUri(src);
+        if (uri) uris.push(uri);
+    }
+    if (uris.length > 0) preloadClipUris(uris, opts);
+}
+
 // Tarayicida ilk dokunusta ses kilidini acmak icin dinleyiciyi hemen kur (web disinda no-op).
 installWebAudioUnlock();
 
@@ -552,5 +607,6 @@ export default {
     stopSpeech,
     clearSpeechCache,
     preloadCommonPhrases,
+    preloadClips,
     ttsSlug,
 };
