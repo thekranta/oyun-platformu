@@ -2,6 +2,7 @@
  * Web klip önbelleği: önceden indirme kuyruğu (eşzamanlılık, öncelik), bellek sınırı, hata/veri tasarrufu korumaları.
  */
 import {
+    MAX_BYTES,
     MAX_CLIPS,
     __resetWebClipCacheForTests,
     markClipInUse,
@@ -108,6 +109,24 @@ describe('webClipCache', () => {
         expect(readyClipUrl('k1')).toBeUndefined();                  // sıradaki en eski bırakıldı
         expect(readyClipUrl('k' + (total - 1))).toBeDefined();
         expect(revoked.length).toBe(2);
+    });
+
+    it('bayt sınırı aşılınca (büyük hikâye anlatımları) en eskiler bırakılır, çalan korunur', async () => {
+        const big = 10 * 1024 * 1024;
+        g.fetch = jest.fn((uri: string) => new Promise((resolve) => {
+            calls.push({ uri, resolve: (ok = true) => resolve({ ok, arrayBuffer: async () => new ArrayBuffer(big) }) });
+        }));
+        expect(MAX_BYTES).toBeLessThan(3 * big);                     // 3 x 10 MB sınırı aşar
+        for (const u of ['b0', 'b1', 'b2']) {
+            preloadClipUris([u]);
+            while (calls.length) { calls.shift()?.resolve(); await settle(); }
+            if (u === 'b0') markClipInUse(readyClipUrl('b0'));       // b0 çalıyor
+        }
+        await settle();
+        expect(readyClipUrl('b0')).toBeDefined();                    // çalan korundu
+        expect(readyClipUrl('b1')).toBeUndefined();                  // en eski çalmayan bırakıldı
+        expect(readyClipUrl('b2')).toBeDefined();
+        expect(revoked).toEqual(['blob:2']);
     });
 
     it('veri tasarrufu açıkken, 2G\'de, arka plan sekmesinde ve fetch yokken önceden indirme yapılmaz', () => {

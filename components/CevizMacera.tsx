@@ -8,7 +8,9 @@ import DynamicBackground from './DynamicBackground';
 import { useSound } from './SoundContext';
 import { asset } from '../lib/assetMap';
 import { supabase } from '../lib/supabase';
+import { useStoryPreload } from '../hooks/useStoryPreload';
 import { speak, stopSpeech } from '../services/speechService';
+import { playableAudioSource } from '../services/storyPreload';
 import ListenButton from './ListenButton';
 
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
@@ -174,6 +176,8 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     // component gittikten sonra onExit'i (bazen ikinci kez) tetikliyordu.
     const finalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const currentNode = storyData[currentNodeId as keyof typeof storyData] as StoryNode;
+    // Web: çocuk karar verirken sıradaki sahnelerin görsel ve sesleri önceden iner (services/storyPreload.ts).
+    useStoryPreload(storyData, currentNodeId);
 
     useEffect(() => {
         // Background music is handled by SoundContext, no need to play it here
@@ -219,7 +223,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                 soundRef.current = null;
             }
             if (currentNode.audio) {
-                const { sound } = await Audio.Sound.createAsync(currentNode.audio, { shouldPlay: true }, onPlaybackStatusUpdate);
+                const { sound } = await Audio.Sound.createAsync(playableAudioSource(currentNode.audio), { shouldPlay: true }, onPlaybackStatusUpdate);
                 soundRef.current = sound;
                 await sound.setVolumeAsync(storyVolume);
             } else if (!currentNode.isFinal) {
@@ -237,7 +241,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
                 await soundRef.current.unloadAsync();
                 soundRef.current = null;
             }
-            const { sound } = await Audio.Sound.createAsync(currentNode.questionAudio, { shouldPlay: true });
+            const { sound } = await Audio.Sound.createAsync(playableAudioSource(currentNode.questionAudio), { shouldPlay: true });
             soundRef.current = sound;
             await sound.setVolumeAsync(storyVolume);
         } catch (e) {
@@ -260,7 +264,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
     const handleOptionSelect = async (opt: StoryOption) => {
         if (opt.audio) {
             try {
-                const { sound } = await Audio.Sound.createAsync(opt.audio);
+                const { sound } = await Audio.Sound.createAsync(playableAudioSource(opt.audio));
                 await sound.setRateAsync(0.8, false);
                 await sound.playAsync();
                 setTimeout(() => sound.unloadAsync(), 2000);

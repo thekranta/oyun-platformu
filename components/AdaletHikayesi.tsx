@@ -6,6 +6,8 @@ import { Animated, Image, StyleSheet, Text, TouchableOpacity, useWindowDimension
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { asset } from '../lib/assetMap';
+import { useStoryPreload } from '../hooks/useStoryPreload';
+import { playableAudioSource } from '../services/storyPreload';
 
 // =======================================
 // 📖 ADALET HİKAYESİ (s02) - İnteraktif Hikaye
@@ -191,6 +193,8 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const currentNode = storyData[currentNodeId as keyof typeof storyData] as StoryNode;
+    // Web: çocuk karar verirken sıradaki sahnelerin görsel ve sesleri önceden iner (services/storyPreload.ts).
+    useStoryPreload(storyData, currentNodeId);
 
     useEffect(() => {
         return () => {
@@ -242,7 +246,7 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
         }
 
         try {
-            const { sound } = await Audio.Sound.createAsync(audioSource, { shouldPlay: true });
+            const { sound } = await Audio.Sound.createAsync(playableAudioSource(audioSource), { shouldPlay: true });
             soundRef.current = sound;
             await sound.setVolumeAsync(storyVolume);
 

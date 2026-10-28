@@ -6,6 +6,8 @@ import { Animated, Image, StyleSheet, Text, TouchableOpacity, useWindowDimension
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { asset } from '../lib/assetMap';
+import { useStoryPreload } from '../hooks/useStoryPreload';
+import { playableAudioSource } from '../services/storyPreload';
 
 // STORY DATA (Text removed from UI, kept in data for reference if needed, but logic driven by ID)
 const storyData = {
@@ -164,6 +166,8 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
     const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
     const currentNode = storyData[currentNodeId as keyof typeof storyData] as StoryNode;
+    // Web: çocuk karar verirken sıradaki sahnelerin görsel ve sesleri önceden iner (services/storyPreload.ts).
+    useStoryPreload(storyData, currentNodeId);
 
     useEffect(() => {
         return () => {
@@ -217,7 +221,7 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
         }
 
         try {
-            const { sound } = await Audio.Sound.createAsync(audioSource, { shouldPlay: true });
+            const { sound } = await Audio.Sound.createAsync(playableAudioSource(audioSource), { shouldPlay: true });
             // Daha yeni bir playAudio araya girdiyse bu ses'i sahiplenme (orphan) ve dokun.
             if (gen !== playGenRef.current) {
                 await sound.unloadAsync();

@@ -13,9 +13,13 @@
 
 /** Bellekte tutulacak en çok klip (≈25 KB/klip → ≈4 MB). Aşılınca en eskisi (çalmıyorsa) bırakılır. */
 export const MAX_CLIPS = 160;
+/** Bellekte tutulacak en çok bayt: hikâye anlatımları (≈0,4 MB/dosya) klip sayısı sınırını tek başına yetersiz bırakır. */
+export const MAX_BYTES = 24 * 1024 * 1024;
 const CONCURRENCY = 2;
 
 const ready = new Map<string, string>();                        // klip adresi -> blob URL (ekleme sırası: eski → yeni)
+const sizes = new Map<string, number>();                        // klip adresi -> bayt
+let totalBytes = 0;
 const inflight = new Map<string, Promise<string | undefined>>();
 const queue: string[] = [];
 let active = 0;
@@ -39,13 +43,17 @@ function preloadAllowed(): boolean {
     return true;
 }
 
-function remember(uri: string, blobUrl: string): void {
+function remember(uri: string, blobUrl: string, bytes: number): void {
     ready.set(uri, blobUrl);
-    while (ready.size > MAX_CLIPS) {
+    sizes.set(uri, bytes);
+    totalBytes += bytes;
+    while (ready.size > MAX_CLIPS || totalBytes > MAX_BYTES) {
         let evicted = false;
         for (const [k, v] of ready) {
             if (v === inUseUrl) continue;
             ready.delete(k);
+            totalBytes -= sizes.get(k) ?? 0;
+            sizes.delete(k);
             try { URL.revokeObjectURL(v); } catch { /* yok say */ }
             evicted = true;
             break;
@@ -63,7 +71,7 @@ function fetchClip(uri: string): Promise<string | undefined> {
             if (!res.ok) return undefined;
             const buf = await res.arrayBuffer();
             const blobUrl = URL.createObjectURL(new Blob([buf], { type: 'audio/mpeg' }));
-            remember(uri, blobUrl);
+            remember(uri, blobUrl, buf.byteLength);
             return blobUrl;
         } catch {
             return undefined;
@@ -122,6 +130,8 @@ export function __resetWebClipCacheForTests(): void {
         try { URL.revokeObjectURL(v); } catch { /* yok say */ }
     }
     ready.clear();
+    sizes.clear();
+    totalBytes = 0;
     inflight.clear();
     queue.length = 0;
     active = 0;
