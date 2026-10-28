@@ -47,6 +47,10 @@ const shuffle = <T,>(arr: T[]): T[] => {
 
 interface Card { id: number; emoji: string; heavy: boolean }
 
+// İki şeyde "daha", üç ve üstünde "en" (test listesi 45-K2): iki kartlı turda "Hangisi daha ağır?", üç kartlıda "En ağır hangisi?".
+const askText = (cardCount: number) => (cardCount >= 3 ? 'En ağır hangisi?' : 'Hangisi daha ağır?');
+const askClip = (cardCount: number) => (cardCount >= 3 ? 'En ağır olanı bul!' : 'Daha ağır olanı bul!');
+
 // Aynı görseller arka arkaya gelmesin (docx #45): önceki turdaki nesneler mümkünse dışlanır.
 const buildRound = (diff: number, prev: string[]): Card[] => {
   const { n, ratio } = CFG_BY_DIFF[diff] ?? CFG_BY_DIFF[1];
@@ -77,7 +81,8 @@ interface Props {
 }
 
 export default function AkilliAgirHafif({ onGameEnd, onExit, childName }: Props) {
-  const { difficulty, recordLevel } = useAdaptiveDifficulty({ minDifficulty: 1, maxDifficulty: 5, checkpointEvery: 3 });
+  // startDifficulty 2: hatasız oynayan çocuk 3 seçeneği 7. turda görüyordu; şimdi 4. turda (test listesi 45-K1).
+  const { difficulty, recordLevel } = useAdaptiveDifficulty({ minDifficulty: 1, maxDifficulty: 5, startDifficulty: 2, checkpointEvery: 3 });
   const [gameReady, setGameReady] = useState(false);
   const [round, setRound] = useState(1);
   const [cards, setCards] = useState<Card[]>([]);
@@ -109,7 +114,7 @@ export default function AkilliAgirHafif({ onGameEnd, onExit, childName }: Props)
     setWrongId(null);
     levelStartRef.current = Date.now();
     levelErrorsRef.current = 0;
-    speak('En ağır olanı bul!', { instructions: HAPPY_VOICE });
+    speak(askClip(built.length), { instructions: HAPPY_VOICE });
   }, [round, gameReady]);
 
   const finish = (lastDiff: number) => {
@@ -161,7 +166,7 @@ export default function AkilliAgirHafif({ onGameEnd, onExit, childName }: Props)
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Hangisi en ağır? En ağır olana dokun!"
+          message="İki nesneden hangisi daha ağır? Ağır olana dokun!"
           childName={childName}
           countdownSeconds={5}
           onComplete={() => setGameReady(true)}
@@ -174,10 +179,10 @@ export default function AkilliAgirHafif({ onGameEnd, onExit, childName }: Props)
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>En ağır hangisi?</Text>
+      <Text style={styles.prompt}>{askText(cards.length)}</Text>
       <Text style={styles.scale}>⚖️</Text>
 
-      <ListenButton onPress={() => speak('En ağır olanı bul!', { instructions: HAPPY_VOICE })} color="#4E342E" style={{ marginTop: 12 }} />
+      <ListenButton onPress={() => speak(askClip(cards.length), { instructions: HAPPY_VOICE })} color="#4E342E" style={{ marginTop: 12 }} />
 
       <View style={[styles.cards, three && styles.cards3]}>
         {cards.map((card) => {

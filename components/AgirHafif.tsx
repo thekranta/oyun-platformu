@@ -78,7 +78,7 @@ export default function AgirHafif({ onGameEnd, onExit, childName }: Props) {
     setCards(built);
     setLocked(false);
     setWrongId(null);
-    speak('En ağır olanı bul!', { instructions: HAPPY_VOICE });
+    speak('Daha ağır olanı bul!', { instructions: HAPPY_VOICE });
   }, [round, gameReady]);
 
   const finish = () => {
@@ -136,10 +136,10 @@ export default function AgirHafif({ onGameEnd, onExit, childName }: Props) {
         <View style={{ width: 44 }} />
       </View>
 
-      <Text style={styles.prompt}>En ağır hangisi?</Text>
+      <Text style={styles.prompt}>Hangisi daha ağır?</Text>
       <Text style={styles.scale}>⚖️</Text>
 
-      <ListenButton onPress={() => speak('En ağır olanı bul!', { instructions: HAPPY_VOICE })} color="#4E342E" style={{ marginTop: 12 }} />
+      <ListenButton onPress={() => speak('Daha ağır olanı bul!', { instructions: HAPPY_VOICE })} color="#4E342E" style={{ marginTop: 12 }} />
 
       <View style={styles.cards}>
         {cards.map((card) => {

@@ -698,7 +698,6 @@ export const TTS: Record<string, number> = {
   'hangisi-daha-cok-erimis-dokun': require('../assets/sounds/tts/hangisi-daha-cok-erimis-dokun.mp3'),
   'hangisi-daha-cok': require('../assets/sounds/tts/hangisi-daha-cok.mp3'),
   'hangisi-daha-saglikli': require('../assets/sounds/tts/hangisi-daha-saglikli.mp3'),
-  'hangisi-en-agir-en-agir-olana-dokun': require('../assets/sounds/tts/hangisi-en-agir-en-agir-olana-dokun.mp3'),
   'hangisi-en-az': require('../assets/sounds/tts/hangisi-en-az.mp3'),
   'hangisi-en-cok': require('../assets/sounds/tts/hangisi-en-cok.mp3'),
   'hangisi-farkli-otekilere-benzemeyeni-bul': require('../assets/sounds/tts/hangisi-farkli-otekilere-benzemeyeni-bul.mp3'),
