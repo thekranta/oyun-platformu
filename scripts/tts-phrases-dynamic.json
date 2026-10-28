@@ -850,5 +850,29 @@
   {
     "text": "Doğru! Yatak Odasında. Aferin.",
     "game": "NeNerede"
+  },
+  {
+    "text": "Altı yıldız koy!",
+    "game": "OnlukCerceve"
+  },
+  {
+    "text": "Yedi yıldız koy!",
+    "game": "OnlukCerceve"
+  },
+  {
+    "text": "Sekiz yıldız koy!",
+    "game": "OnlukCerceve"
+  },
+  {
+    "text": "Dokuz yıldız koy!",
+    "game": "OnlukCerceve"
+  },
+  {
+    "text": "On yıldız koy!",
+    "game": "OnlukCerceve"
+  },
+  {
+    "text": "Daha ağır olanı bul!",
+    "games": ["AgirHafif", "AkilliAgirHafif"]
   }
 ]
