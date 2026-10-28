@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 
 import { SoundProvider } from '@/components/SoundContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { hideBootSplash } from '@/lib/bootSplash';
 import { initI18n } from '@/lib/i18n';
 
 export const unstable_settings = {
@@ -19,6 +20,11 @@ export default function RootLayout() {
   useEffect(() => {
     initI18n().then(() => setI18nReady(true));
   }, []);
+
+  // Web: ilk gerçek ekran çizilince açılış perdesini (public/index.html) kaldır; hazır olana kadar perde görünür kalır.
+  useEffect(() => {
+    if (i18nReady) hideBootSplash();
+  }, [i18nReady]);
 
   if (!i18nReady) return null;
 
