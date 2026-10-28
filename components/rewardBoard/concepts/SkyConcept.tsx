@@ -1,5 +1,5 @@
 import type { RewardConcept } from '../types';
-import SkyArt from './SkyArt';
+import { lazyArt } from './lazyArt';
 
 export const SkyConcept: RewardConcept = {
     id: 'gokyuzu',
@@ -11,5 +11,5 @@ export const SkyConcept: RewardConcept = {
         'rewardBoard.concepts.gokyuzu.stage3',
     ],
     accentColor: '#4FA8E0',
-    Art: SkyArt,
+    Art: lazyArt('SkyArt'),
 };

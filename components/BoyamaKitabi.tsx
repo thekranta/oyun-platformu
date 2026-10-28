@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, Ellipse, Polygon, Rect } from 'react-native-svg';
-import { captureRef } from 'react-native-view-shot';
+import { captureRef } from '../lib/captureRef';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';

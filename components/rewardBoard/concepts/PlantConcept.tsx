@@ -1,5 +1,5 @@
 import type { RewardConcept } from '../types';
-import PlantArt from './PlantArt';
+import { lazyArt } from './lazyArt';
 
 export const PlantConcept: RewardConcept = {
     id: 'bitki',
@@ -11,5 +11,5 @@ export const PlantConcept: RewardConcept = {
         'rewardBoard.concepts.bitki.stage3',
     ],
     accentColor: '#2e9e6b',
-    Art: PlantArt,
+    Art: lazyArt('PlantArt'),
 };
