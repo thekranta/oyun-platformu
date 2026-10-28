@@ -425,6 +425,7 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
       fruitWord="yıldız"
       oyunAdi="onluk-cerceve-2"
       targetRange={[6, 10]}
+      speakTarget
       introMessage="Söylenen sayı kadar yıldızı çerçeveye koy!"
     />
   ),

@@ -13,6 +13,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { targetPhrase } from '../lib/yildizCercevesiKlipleri';
 
 // EksikSayiBul.tsx'teki NUMBER_WORDS ile aynı desen — bu sayıların ses klipleri
 // (Bir..Dokuz + "10") o oyunun eklendiği turda zaten üretildi.
@@ -31,9 +32,10 @@ interface OnlukCerceveProps {
     oyunAdi?: string;                 // varyant oyun kimliği
     targetRange?: [number, number];   // verilirse tüm turlar bu aralıktan hedef seçer
     introMessage?: string;            // temalı varyant için giriş sesi metni
+    speakTarget?: boolean;            // true: her tur başında hedef sayı sesle söylenir ("Altı yıldız koy!")
 }
 
-export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', fruitWord = 'elma', oyunAdi = 'Onluk Çerçeve', targetRange, introMessage = 'Söylenen sayı kadar meyveyi çerçeveye koy!' }: OnlukCerceveProps) {
+export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', fruitWord = 'elma', oyunAdi = 'Onluk Çerçeve', targetRange, introMessage = 'Söylenen sayı kadar meyveyi çerçeveye koy!', speakTarget = false }: OnlukCerceveProps) {
     const [dimensions, setDimensions] = useState(Dimensions.get('window'));
 
     useEffect(() => {
@@ -107,6 +109,17 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
         timersRef.current.forEach(clearTimeout);
         if (!endedRef.current) stopSpeech();
     }, []);
+
+    // Tur başında hedef sayı sesle söylenir (yalnız speakTarget: Yıldız Çerçevesi, test listesi 15-K1): çocuk rakamı
+    // okuyamasa da kaç yıldız koyacağını duyar. Hedef her turda değiştiği için bu etki her turda çalışır; ilk tur
+    // giriş sayımı bitince (gameReady) başlar. Önceki turun 'Aferin!'i bitsin diye kısa bekleme var.
+    useEffect(() => {
+        if (!speakTarget || !gameReady) return;
+        const t = setTimeout(() => {
+            if (mountedRef.current) speak(targetPhrase(targetNumber, fruitWord), { instructions: HAPPY_VOICE });
+        }, 400);
+        return () => clearTimeout(t);
+    }, [targetNumber, gameReady]);
 
     const pulseCount = () => {
         Animated.sequence([
@@ -239,7 +252,7 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
                     <View style={styles.headerBtn} />
                 </View>
 
-                <ListenButton onPress={() => speak(introMessage, { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
+                <ListenButton onPress={() => speak(speakTarget ? targetPhrase(targetNumber, fruitWord) : introMessage, { instructions: HAPPY_VOICE })} color="#4CAF50" style={{ marginTop: 12, alignSelf: 'center' }} />
 
                 {/* Main */}
                 <View style={styles.mainArea}>
