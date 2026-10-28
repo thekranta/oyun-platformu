@@ -60,4 +60,5 @@ for (const { id, file } of items) {
     const stat = await fs.stat(out);
     console.log(`  ✓ ${id}: ${meta.width}x${meta.height} → ${(stat.size / 1024).toFixed(0)} KB (WebP), kaynak ${(buf.length / 1024).toFixed(0)} KB`);
 }
-console.log('Bitti. Sonraki: node scripts/gen-voices.mjs (anlatım metinleri) → gen-tts-assets.mjs');
+console.log('Bitti. Sonraki: node scripts/optimize-web-images.mjs (galeri önizlemesi + küçük sürüm; lib/paintingAssets.test.ts eksikse kırılır),');
+console.log('ayrıca components/minikMuze/paintingImages.ts + paintingSmall.web.ts haritalarına yeni tabloyu ekleyin; sonra node scripts/gen-voices.mjs (anlatım metinleri) → gen-tts-assets.mjs');

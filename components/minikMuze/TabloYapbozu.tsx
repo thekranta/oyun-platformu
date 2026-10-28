@@ -9,7 +9,7 @@ import { gridForLevel, hasNextLevel, isCorrectSlot, pieceCount, pieceRect, showH
 import { speak, speakThenWait, stopSpeech } from '../../services/speechService';
 import GameExitButton from '../GameExitButton';
 import ListenButton from '../ListenButton';
-import { PAINTING_IMAGES } from './paintingImages';
+import { paintingSource, usePreferSmallPaintings } from './paintingImages';
 import { useStageSize } from './useStageSize';
 
 // ============================================
@@ -76,7 +76,8 @@ export default function TabloYapbozu({ painting, onExit, onCompleted }: Props) {
 
     const g = gridForLevel(level);
     const n = pieceCount(g);
-    const source = PAINTING_IMAGES[painting.id];
+    const preferSmall = usePreferSmallPaintings();
+    const source = paintingSource(painting.id, preferSmall);
     const board = fitContain(stage.w - 16, stage.h - 16, painting.aspect);
     const seed = useMemo(() => Array.from(painting.id).reduce((a, c) => a + c.charCodeAt(0), 0) * 31 + round * 7 + level * 3 + 1, [painting.id, round, level]);
     const order = useMemo(() => shuffleOrder(n, seed), [n, seed]);

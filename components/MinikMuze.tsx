@@ -8,14 +8,15 @@ import { isPaintingOpenForTier, paintingTierName, sortPaintingsByTier } from '..
 import { focusTransform, fitContain } from '../lib/minikMuzeMath';
 import { openPricing } from '../lib/openPricing';
 import type { VeliTier } from '../lib/subscriptionTiers';
-import { consumeAudioBlocked, speak, speakThenWait, stopSpeech } from '../services/speechService';
+import { consumeAudioBlocked, preloadClips, speak, speakThenWait, stopSpeech, ttsSlug } from '../services/speechService';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import ListenButton from './ListenButton';
 import CreditsModal from './minikMuze/CreditsModal';
 import DetayAvi from './minikMuze/DetayAvi';
 import TabloYapbozu from './minikMuze/TabloYapbozu';
-import { PAINTING_IMAGES } from './minikMuze/paintingImages';
+import ProgressiveImage from './ProgressiveImage';
+import { PAINTING_THUMBS, paintingSource, usePreferSmallPaintings } from './minikMuze/paintingImages';
 
 // ============================================
 // 🏛️ MİNİK MÜZE — dünyaca ünlü tabloları tam ekranda göster, sade bir dille sesli anlat
@@ -46,6 +47,8 @@ interface Props {
 
 export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman' }: Props) {
     const { width: W, height: H } = useWindowDimensions();
+    // Web: küçük ekran / yavaş bağlantıda 1280 px'lik tablo sürümü (lib/paintingQuality.ts); galeri her zaman küçük önizleme kullanır.
+    const preferSmall = usePreferSmallPaintings();
     // Kısa yatay ekran (telefon yan): tablo solda, altyazı + düğmeler sağda; aksi hâlde tablo üstte, altyazı altta.
     const sideBySide = W > H && H < 620;
     const [gameReady, setGameReady] = useState(false);
@@ -134,6 +137,8 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
         if (!isPaintingOpenForTier(tier, p)) { setLockedPainting(p); return; }
         scaleV.setValue(1); txV.setValue(0); tyV.setValue(0);
         setSelected(p);
+        // Web: bu tablonun anlatım klipleri önceden iner (ilk klip bekleyen indirmeye katılır, çift istek olmaz).
+        preloadClips(p.segments.map((s) => ttsSlug(s.text)), { urgent: true });
         playSegment(p, 0);
     };
 
@@ -215,7 +220,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                     <YaraticiCizim
                         onGameEnd={onGameEnd}
                         onExit={() => setDrawingFor(null)}
-                        reference={{ source: PAINTING_IMAGES[drawingFor.id], title: drawingFor.title, artist: drawingFor.artist, aspect: drawingFor.aspect }}
+                        reference={{ source: paintingSource(drawingFor.id, preferSmall), title: drawingFor.title, artist: drawingFor.artist, aspect: drawingFor.aspect }}
                     />
                 </React.Suspense>
             </View>
@@ -252,7 +257,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                                 accessibilityLabel={locked ? `${p.title}, ${p.artist}, ${paintingTierName(p)} paketiyle açılır` : `${p.title}, ${p.artist}`}
                             >
                                 <View style={styles.thumbBox}>
-                                    <Image source={PAINTING_IMAGES[p.id]} style={[styles.thumb, locked && styles.thumbLocked]} resizeMode="contain" />
+                                    <Image source={PAINTING_THUMBS[p.id]} style={[styles.thumb, locked && styles.thumbLocked]} resizeMode="contain" />
                                     {locked && <View style={styles.lockBadge}><Ionicons name="lock-closed" size={22} color="#F4E7CF" /></View>}
                                 </View>
                                 <Text style={styles.frameTitle} numberOfLines={1}>{p.title}</Text>
@@ -315,7 +320,7 @@ export default function MinikMuze({ onGameEnd, onExit, childName, tier = 'orman'
                             { width: img.w, height: img.h, borderColor: selected.accent, transform: [{ translateX: txV }, { translateY: tyV }, { scale: scaleV }] },
                         ]}
                     >
-                        <Image source={PAINTING_IMAGES[selected.id]} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={`${selected.title} tablosu`} />
+                        <ProgressiveImage placeholder={PAINTING_THUMBS[selected.id]} source={paintingSource(selected.id, preferSmall)} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={`${selected.title} tablosu`} />
                     </Animated.View>
                 )}
             </View>

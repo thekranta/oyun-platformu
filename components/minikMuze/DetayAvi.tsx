@@ -8,7 +8,7 @@ import { fitContain } from '../../lib/minikMuzeMath';
 import { speak, speakThenWait, stopSpeech } from '../../services/speechService';
 import GameExitButton from '../GameExitButton';
 import ListenButton from '../ListenButton';
-import { PAINTING_IMAGES } from './paintingImages';
+import { paintingSource, usePreferSmallPaintings } from './paintingImages';
 import { useStageSize } from './useStageSize';
 
 // ============================================
@@ -32,6 +32,7 @@ interface Props {
 export default function DetayAvi({ painting, targets, onExit, onCompleted }: Props) {
     // İlk tahmin: ölçü (onLayout) gecikirse / hiç gelmezse görsel yine de çizilir; gerçek ölçü gelince düzelir.
     const win = useWindowDimensions();
+    const preferSmall = usePreferSmallPaintings();
     // Yatay ve kısa ekran (telefon yan): alt panel tablonun yanına geçer, tablo şerit kalmaz (MinikMuze ile aynı eşik).
     const sideBySide = win.width > win.height && win.height < 620;
     const { ref: stageRef, size: stage, onLayout: onStageLayout } = useStageSize(sideBySide
@@ -141,7 +142,7 @@ export default function DetayAvi({ painting, targets, onExit, onCompleted }: Pro
                 {img.w > 0 && (
                     // Mutlak konum: görsel kutusu sahnenin (flex) boyutunu belirlemez; sahne ölçüsü hep gerçek yerleşimden gelir.
                     <View style={{ position: 'absolute', left: (stage.w - img.w) / 2, top: (stage.h - img.h) / 2, width: img.w, height: img.h }}>
-                        <Image source={PAINTING_IMAGES[painting.id]} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={painting.title + ' tablosu'} />
+                        <Image source={paintingSource(painting.id, preferSmall)} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={painting.title + ' tablosu'} />
                         {foundRings.map((s, i) => <View key={'f' + i} pointerEvents="none" style={ringStyle(s, '#7CFF8A')} />)}
                         {hintSpot && (
                             <Animated.View
