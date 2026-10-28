@@ -1,4 +1,5 @@
-// Rakam Yazma 6-10: rakam izleme değerlendirmesi (saf mantık, render'dan bağımsız, test edilebilir).
+// Rakam Yazma (1-5 ve 6-10): rakam izleme değerlendirmesi (saf mantık, render'dan bağımsız, test edilebilir).
+// 1-5 oyununa da aynı kural uygulandı (test listesi 81-K1, 2026-10-29): eski kural 1-5'te hâlâ "sırasız yakınlık"tı.
 //
 // Eski kabul: "hedef noktaların %85'i çizimin herhangi bir noktasına ≥35 px yakın" (sıra yok, şekil yok) — karalama da rakamı
 // kapsıyordu (benzetimde 20/20 karalama ve 14/20 yanlış rakam kabul edildi) ve ekrandaki soluk rakam bir yazı tipi harfiydi,
@@ -38,7 +39,14 @@ const qbez = (x0: number, y0: number, x1: number, y1: number, x2: number, y2: nu
     return { x: u * u * x0 + 2 * u * t * x1 + t * t * x2, y: u * u * y0 + 2 * u * t * y1 + t * t * y2 };
   });
 
-/** Tek bir basamağın (0,1,6,7,8,9) parçaları — normalize 0-1 koordinat; cx/cy merkez, s ölçek. */
+/** Elips yayı: açılar derece (0° sağ, 90° aşağı, 270° yukarı; artan açı = saat yönü). */
+const arc = (cx: number, cy: number, rx: number, ry: number, a0: number, a1: number, n: number): Pt[] =>
+  Array.from({ length: n }, (_, i) => {
+    const a = ((a0 + ((a1 - a0) * i) / (n - 1)) * Math.PI) / 180;
+    return { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) };
+  });
+
+/** Tek bir basamağın (0-9; 2-5 yalnız tek başına rakam olarak) parçaları — normalize 0-1 koordinat; cx/cy merkez, s ölçek. */
 export function digitParts(d: number, cx: number, cy: number, s: number): DigitPart[] {
   switch (d) {
     case 0:
@@ -48,6 +56,43 @@ export function digitParts(d: number, cx: number, cy: number, s: number): DigitP
         { closed: false, points: seg(cx, cy - s * 0.85, cx, cy + s * 0.85, 20) },                        // gövde
         { closed: false, points: seg(cx, cy - s * 0.85, cx - s * 0.32, cy - s * 0.52, 4) },              // üst bayrak
       ];
+    case 2:
+      return [{
+        closed: false,
+        points: [
+          ...arc(cx, cy - s * 0.4, s * 0.48, s * 0.44, 195, 390, 14),                          // üst kavis: soldan yukarı, sağa, aşağı
+          ...seg(cx + s * 0.416, cy - s * 0.18, cx - s * 0.5, cy + s * 0.8, 14).slice(1),      // sol alta çapraz iniş
+          ...seg(cx - s * 0.5, cy + s * 0.8, cx + s * 0.55, cy + s * 0.8, 12).slice(1),        // taban
+        ],
+      }];
+    case 3:
+      return [{
+        closed: false,
+        points: [
+          ...arc(cx, cy - s * 0.42, s * 0.44, s * 0.4, 200, 450, 14),                          // üst kavis: ortaya kadar
+          ...arc(cx, cy + s * 0.42, s * 0.5, s * 0.44, 270, 520, 16).slice(1),                 // alt kavis: ortadan sağa, aşağı, sola
+        ],
+      }];
+    case 4:
+      return [
+        {
+          closed: false,
+          points: [
+            ...seg(cx + s * 0.2, cy - s * 0.85, cx - s * 0.5, cy + s * 0.25, 14),              // üstten sol alta çapraz
+            ...seg(cx - s * 0.5, cy + s * 0.25, cx + s * 0.55, cy + s * 0.25, 12).slice(1),    // yatay
+          ],
+        },
+        { closed: false, points: seg(cx + s * 0.2, cy - s * 0.85, cx + s * 0.2, cy + s * 0.85, 20) },   // dikey gövde
+      ];
+    case 5:
+      return [{
+        closed: false,
+        points: [
+          ...seg(cx + s * 0.45, cy - s * 0.8, cx - s * 0.35, cy - s * 0.8, 10),                // üst yatay (sağdan sola)
+          ...seg(cx - s * 0.35, cy - s * 0.8, cx - s * 0.38, cy - s * 0.02, 8).slice(1),       // sol dikey iniş
+          ...arc(cx - s * 0.02, cy + s * 0.4, s * 0.52, s * 0.48, 235, 510, 16),               // alt karın: sağa, aşağı, sola
+        ],
+      }];
     case 6:
       return [
         { closed: false, points: qbez(cx + s * 0.38, cy - s * 0.78, cx - s * 0.62, cy - s * 0.35, cx - s * 0.46, cy + s * 0.3, 14) },
@@ -76,9 +121,13 @@ export function digitParts(d: number, cx: number, cy: number, s: number): DigitP
   }
 }
 
-/** Bir sayının (6-10) parçaları; 10 iki basamaklı: "1" solda, "0" sağda. */
+/** Bir sayının (1-10) parçaları; 10 iki basamaklı: "1" solda, "0" sağda. Tek başına 1 tek vuruş: bayraktan başlayıp gövdeye iner. */
 export function numberParts(num: number): DigitPart[] {
   if (num >= 10) return [...digitParts(1, 0.34, 0.5, 0.24), ...digitParts(0, 0.66, 0.5, 0.24)];
+  if (num === 1) {
+    const cx = 0.5, cy = 0.5, s = 0.35;
+    return [{ closed: false, points: [...seg(cx - s * 0.32, cy - s * 0.52, cx, cy - s * 0.85, 5), ...seg(cx, cy - s * 0.85, cx, cy + s * 0.85, 20).slice(1)] }];
+  }
   return digitParts(num, 0.5, 0.5, 0.35);
 }
 

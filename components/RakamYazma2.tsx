@@ -9,7 +9,8 @@ import { speak, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
 import { createTracker, numberParts, scaleParts } from '../lib/rakamIzleme';
 
-// Rakam Yazma 6-10 — "Rakam Yazma" oyununun büyük sayılarla temalı varyantı.
+// Rakam Yazma 6-10 — "Rakam Yazma" oyununun büyük sayılarla temalı varyantı. Rakam Yazma (1-5) de bu bileşeni kullanır
+// (kayıtta firstNumber/lastNumber ve metin prop'ları verilir; test listesi 81-K1: aynı sıralı izleme kuralı).
 // Kabul (Oyun_Test_Listesi #81, 2026-10-25: "çizimin kabulü ile ilgili sorun var, farklı bir değerlendirme yapmalıyız"):
 // eskiden "hedef noktaların %85'ine herhangi bir sırayla değmek" yeterliydi (karalama da geçiyordu) ve ekrandaki soluk rakam bir
 // yazı tipi harfiydi, kabul edilen yol ise ona bağlı olmayan ideal noktalardı. Artık rehber = değerlendirilen yol (aynı noktalardan
@@ -29,12 +30,18 @@ interface Props {
         extraData?: { cizimVerisi?: string; zorlukSeviyesi?: number; kazanimOdagi?: string },
     ) => void;
     onExit?: () => void;
+    firstNumber?: number;                          // varsayılan 6 (Rakam Yazma 1-5: 1)
+    lastNumber?: number;                           // varsayılan 10 (Rakam Yazma 1-5: 5)
+    oyunAdi?: string;                              // onGameEnd'e giden oyun kimliği
+    title?: string;                                // başlık
+    introMessage?: string;                         // giriş sesi/metni
+    instruction?: (n: number) => string;           // rakam başına yönerge (ekranda ve Tekrar Dinle'de)
+    kazanimOdagi?: string;
+    zorlukSeviyesi?: number;
 }
 
 const MIN_STEP = 2;
 
-const FIRST_NUMBER = 6;
-const LAST_NUMBER = 10;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 
 const PEN_COLORS = [
@@ -46,9 +53,20 @@ const PEN_COLORS = [
     { color: '#F44336', name: 'Kırmızı' },
 ];
 
-export default function RakamYazma2({ onGameEnd, onExit }: Props) {
+export default function RakamYazma2({
+    onGameEnd,
+    onExit,
+    firstNumber = 6,
+    lastNumber = 10,
+    oyunAdi = 'rakam-yazma-2',
+    title = '✏️ Rakam Yazma 6-10',
+    introMessage = "6'dan 10'a rakamları parmağınla çiz!",
+    instruction = (n: number) => `${n} sayısının üzerini çiz!`,
+    kazanimOdagi = 'El-Göz Koordinasyonu ve Yazı Becerileri (6-10)',
+    zorlukSeviyesi = 2,
+}: Props) {
     const [canvasSize, setCanvasSize] = useState({ width: 300, height: 300 });
-    const [currentNumber, setCurrentNumber] = useState(FIRST_NUMBER);
+    const [currentNumber, setCurrentNumber] = useState(firstNumber);
     const [strokes, setStrokes] = useState<Stroke[]>([]);
     const [liveStroke, setLiveStroke] = useState<Stroke | null>(null);
     const liveStrokeRef = useRef<Stroke | null>(null);
@@ -124,17 +142,17 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
             Animated.timing(successAnim, { toValue: 0, duration: 300, useNativeDriver: false }),
         ]).start(() => {
             setShowSuccess(false);
-            if (currentNumber < LAST_NUMBER) {
+            if (currentNumber < lastNumber) {
                 resetForNextNumber(currentNumber + 1);
             } else {
                 const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
-                onGameEnd('rakam-yazma-2', duration, LAST_NUMBER - FIRST_NUMBER + 1, 0, undefined, {
-                    zorlukSeviyesi: 2,
-                    kazanimOdagi: 'El-Göz Koordinasyonu ve Yazı Becerileri (6-10)',
+                onGameEnd(oyunAdi, duration, lastNumber - firstNumber + 1, 0, undefined, {
+                    zorlukSeviyesi,
+                    kazanimOdagi,
                 });
             }
         });
-    }, [currentNumber, onGameEnd, resetForNextNumber, successAnim]);
+    }, [currentNumber, firstNumber, lastNumber, oyunAdi, zorlukSeviyesi, kazanimOdagi, onGameEnd, resetForNextNumber, successAnim]);
 
     // Çizim noktası ekle: iki nokta arası MIN_STEP px'te bir doldurulur, her nokta izleyiciye verilir.
     const addPoint = useCallback((x: number, y: number, color: string) => {
@@ -214,8 +232,8 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
         }),
     ).current;
 
-    const step = currentNumber - FIRST_NUMBER + 1;
-    const totalSteps = LAST_NUMBER - FIRST_NUMBER + 1;
+    const step = currentNumber - firstNumber + 1;
+    const totalSteps = lastNumber - firstNumber + 1;
     const trackWidth = radius * 1.1;
     const toPoints = (pts: Point[], closed: boolean) => (closed && pts.length ? [...pts, pts[0]] : pts).map((p) => `${p.x},${p.y}`).join(' ');
 
@@ -223,8 +241,8 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
         <DynamicBackground>
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <GameExitButton onPress={onExit ?? (() => {})} style={styles.exitBtn} />
-                    <Text style={styles.title}>✏️ Rakam Yazma 6-10</Text>
+                    <GameExitButton onPress={onExit ?? (() => {})} />
+                    <Text style={styles.title}>{title}</Text>
                     <View style={styles.progressBadge}>
                         <Text style={styles.progressText}>{step}/{totalSteps}</Text>
                     </View>
@@ -376,8 +394,8 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
                 <Text style={styles.progressLabel}>%{progress} tamamlandı</Text>
 
                 <View style={styles.footer}>
-                    <Text style={styles.infoText}>{currentNumber} sayısının üzerini çiz! ✨</Text>
-                    <ListenButton onPress={() => speak(`${currentNumber} sayısının üzerini çiz!`, { instructions: HAPPY_VOICE })} color="#1976D2" style={{ marginBottom: 12 }} />
+                    <Text style={styles.infoText}>{instruction(currentNumber)} ✨</Text>
+                    <ListenButton onPress={() => speak(instruction(currentNumber), { instructions: HAPPY_VOICE })} color="#1976D2" style={{ marginBottom: 12 }} />
                     <TouchableOpacity style={styles.clearBtn} onPress={clearCanvas}>
                         <Ionicons name="refresh" size={20} color="#fff" style={{ marginRight: 6 }} />
                         <Text style={styles.clearBtnText}>Temizle</Text>
@@ -388,7 +406,7 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
             {!gameReady && (
                 <CountdownOverlay
                     interaction="draw"
-                    message="6'dan 10'a rakamları parmağınla çiz!"
+                    message={introMessage}
                     countdownSeconds={5}
                     onComplete={() => setGameReady(true)}
                 />
@@ -399,21 +417,17 @@ export default function RakamYazma2({ onGameEnd, onExit }: Props) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
+    // Çıkış düğmesi başlık satırının İÇİNDE (eskiden mutlak konumdu ve dar telefonda başlığı ile renk paletini örtüyordu: test listesi 80-B1);
+    // sağ boşluk ana ekranın ses düğmesi için.
     header: {
         flexDirection: 'row',
         width: '100%',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        gap: 10,
         marginBottom: 10,
         paddingRight: 40,
     },
-    exitBtn: {
-        position: 'absolute',
-        top: 16,
-        left: 16,
-        zIndex: 20,
-    },
-    title: { fontSize: 22, fontWeight: 'bold', color: '#3e2723' },
+    title: { flex: 1, fontSize: 20, fontWeight: 'bold', color: '#3e2723', textAlign: 'center' },
     progressBadge: {
         backgroundColor: '#E3F2FD',
         paddingHorizontal: 12,

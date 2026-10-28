@@ -182,6 +182,82 @@ describe('rakam izleme: karalama ve yanlış rakam kabul EDİLMEZ (#81)', () => 
   });
 });
 
+// Rakam Yazma (1-5) de aynı kuralla değerlendirilir (test listesi 81-K1): eski kural 1-5'te "sırasız yakınlık"tı ve karalama geçiyordu.
+const DIGITS_1_5 = [1, 2, 3, 4, 5];
+
+describe('rakam izleme (1-5): doğru izleme kabul edilir', () => {
+  it('her rakam (1-5) ileri yönde, dalgalı ve kaymalı izlenince tamamlanır', () => {
+    DIGITS_1_5.forEach((n) => {
+      [[5, 5], [9, 10]].forEach(([sigma, shift], k) => {
+        for (let s = 1; s <= 6; s++) {
+          const ps = parts(n);
+          const tr = run(ps, honestStrokes(ps, seeded(n * 100 + k * 10 + s), sigma, shift, 'ileri'));
+          expect(tr.complete()).toBe(true);
+          expect(tr.progress()).toBeGreaterThanOrEqual(0.999);
+        }
+      });
+    });
+  });
+
+  it('ters yönde ve parmak kalkarak çizilen rakam da tamamlanır (9 px dalga + 10 px kayma: en az %95; ölçülen ~%98-99)', () => {
+    let ok = 0, total = 0;
+    DIGITS_1_5.forEach((n) => {
+      for (let s = 1; s <= 12; s++) {
+        const ps = parts(n);
+        total++;
+        if (run(ps, honestStrokes(ps, seeded(n * 1000 + s), 9, 10, s % 2 ? 'ters' : 'karisik')).complete()) ok++;
+      }
+    });
+    expect(ok / total).toBeGreaterThanOrEqual(0.95);
+  });
+
+  it('çok özensiz izleme (σ13 px dalga + 16 px kayma) en az %80 oranında tamamlanır', () => {
+    let ok = 0, total = 0;
+    DIGITS_1_5.forEach((n) => {
+      for (let s = 1; s <= 12; s++) {
+        const ps = parts(n);
+        total++;
+        if (run(ps, honestStrokes(ps, seeded(n * 7919 + s), 13, 16, s % 3 === 0 ? 'ileri' : 'karisik')).complete()) ok++;
+      }
+    });
+    expect(ok / total).toBeGreaterThanOrEqual(0.8);
+  });
+});
+
+describe('rakam izleme (1-5): karalama ve yanlış rakam kabul EDİLMEZ', () => {
+  it('zigzag, spiral ve rastgele yürüyüş hiçbir rakamı tamamlamaz', () => {
+    // "1" çok dar (≈34 px): kutusuna oturan zigzag gövdeyi izlemenin kendisi olur; karalama = rakamın etrafına taşan geniş zigzag.
+    const wideBox = (ps: DigitPart[]): DigitPart[] => {
+      const b = bbox(ps), cx = (b.x0 + b.x1) / 2, w = Math.max(b.x1 - b.x0, 150);
+      return [{ closed: false, points: [{ x: cx - w / 2, y: b.y0 }, { x: cx + w / 2, y: b.y1 }] }];
+    };
+    DIGITS_1_5.forEach((n) => {
+      const ps = parts(n);
+      const box = wideBox(ps);
+      const attempts: Pt[][] = [zigzag(box, 6), zigzag(box, 10), spiral(box), randomWalk(box, seeded(n), 250), randomWalk(box, seeded(n + 77), 600), spiral(ps), randomWalk(ps, seeded(n), 250), randomWalk(ps, seeded(n + 77), 600), zigzag(ps, 10)];
+      attempts.forEach((stroke) => {
+        expect(run(ps, [stroke]).complete()).toBe(false);
+      });
+    });
+  });
+
+  it('başka bir rakamın yolunu çizmek hedef rakamı tamamlamaz (1-5 arası)', () => {
+    DIGITS_1_5.forEach((n) => {
+      DIGITS_1_5.filter((m) => m !== n).forEach((m) => {
+        const target = parts(n);
+        const drawn = parts(m);
+        const tr = run(target, honestStrokes(drawn, seeded(n * 10 + m), 5, 5, 'ileri'));
+        expect(tr.complete()).toBe(false);
+      });
+    });
+  });
+
+  it('rakam parçaları: 1, 2, 3 ve 5 tek vuruş; 4 iki parça (çapraz+yatay, gövde); hiçbiri halka değil', () => {
+    expect(DIGITS_1_5.map((n) => numberParts(n).length)).toEqual([1, 1, 1, 2, 1]);
+    expect(DIGITS_1_5.every((n) => numberParts(n).every((p) => !p.closed))).toBe(true);
+  });
+});
+
 describe('rakam izleme: ilerleme ve sıfırlama', () => {
   it('ilerleme 0\'dan başlar, çizdikçe artar ve sıfırlanınca yine 0 olur', () => {
     const ps = parts(9);

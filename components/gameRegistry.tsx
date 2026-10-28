@@ -80,7 +80,6 @@ const MutfakDedektifi = lazyWithReload(() => import('./MutfakDedektifi'));
 const MuzikCalar = lazyWithReload(() => import('./MuzikCalar'));
 const OnlukCerceve = lazyWithReload(() => import('./OnlukCerceve'));
 const QuantityComparison = lazyWithReload(() => import('./QuantityComparison'));
-const RakamYazma = lazyWithReload(() => import('./RakamYazma'));
 const RakamYazma2 = lazyWithReload(() => import('./RakamYazma2'));
 const AkilliSayiAvi = lazyWithReload(() => import('./AkilliSayiAvi'));
 const AkilliOruntu = lazyWithReload(() => import('./AkilliOruntu'));
@@ -352,7 +351,21 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   ),
   'bunu-soyle': (c) => <BunuSoyle onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   kodlama: (c) => <KodlamaOyunu onGameEnd={c.onGameEnd} onExit={c.onExit} />,
-  'rakam-yazma': (c) => <RakamYazma onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  // Rakam Yazma (1-5) ve 6-10 aynı izleme bileşenini kullanır (test listesi 81-K1: sıralı izleme, karalama kabul edilmez).
+  'rakam-yazma': (c) => (
+    <RakamYazma2
+      onGameEnd={c.onGameEnd}
+      onExit={c.onExit}
+      firstNumber={1}
+      lastNumber={5}
+      oyunAdi="rakam-yazma"
+      title="✏️ Rakam Yazma"
+      introMessage="Rakamları parmağınla çiz!"
+      instruction={(n) => `${n}. rakamın üzerini çiz!`}
+      kazanimOdagi="El-Göz Koordinasyonu ve Yazı Becerileri"
+      zorlukSeviyesi={5}
+    />
+  ),
   'rakam-yazma-2': (c) => <RakamYazma2 onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'kutuyu-bul': (c) => <KutuyuBul onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'kutuyu-bul-2': (c) => (
