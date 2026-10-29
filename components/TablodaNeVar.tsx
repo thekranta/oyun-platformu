@@ -58,21 +58,23 @@ const PAINTING_TITLES: Record<PaintingId, string> = {
 };
 
 // ------------------------------------------------------------------
-// TABLO 1 — "Şehir Penceresi": kalın siyah çizgilerle bölünmüş 12 kare
-// 5 kırmızı, 2 mavi, 1 sarı, 4 beyaz. Hiç yuvarlak şekil YOK.
+// TABLO 1 — "Şehir Penceresi": kalın siyah çizgilerle bölünmüş 12 pencere
+// 5 kırmızı, 2 mavi, 1 sarı, 4 beyaz. 11 pencere KARE, sarı olan ÜÇGEN. Hiç yuvarlak şekil YOK.
+// ("Hangi şekil YOK?" sorusunun tek doğru cevabı Daire olsun diye üçgen tabloda ÇİZİLİDİR; eskiden
+// yalnız kareler vardı, Üçgen de tabloda olmadığı için iki doğru cevap çıkıyordu — test listesi 125 notu.)
 // ------------------------------------------------------------------
 const GRID_X = [28, 106, 184, 262];
 const GRID_Y = [28, 105.3, 182.7];
 const CELL_W = 70;
 const CELL_H = 69.3;
-const SEHIR_CELLS: { id: string; col: number; row: number; fill: string }[] = [
+const SEHIR_CELLS: { id: string; col: number; row: number; fill: string; shape?: 'ucgen' }[] = [
   { id: 'c0', col: 0, row: 0, fill: '#E53935' },
   { id: 'c1', col: 1, row: 0, fill: '#FAFAFA' },
   { id: 'c2', col: 2, row: 0, fill: '#1E88E5' },
   { id: 'c3', col: 3, row: 0, fill: '#E53935' },
   { id: 'c4', col: 0, row: 1, fill: '#FAFAFA' },
   { id: 'c5', col: 1, row: 1, fill: '#E53935' },
-  { id: 'c6', col: 2, row: 1, fill: '#FDD835' },
+  { id: 'c6', col: 2, row: 1, fill: '#FDD835', shape: 'ucgen' },
   { id: 'c7', col: 3, row: 1, fill: '#FAFAFA' },
   { id: 'c8', col: 0, row: 2, fill: '#E53935' },
   { id: 'c9', col: 1, row: 2, fill: '#1E88E5' },
@@ -279,9 +281,15 @@ function SehirPenceresi({ active }: { active: string | null }) {
   return (
     <>
       <Frame bg="#111111" />
-      {SEHIR_CELLS.map((c) => (
-        <Rect key={c.id} x={GRID_X[c.col]} y={GRID_Y[c.row]} width={CELL_W} height={CELL_H} fill={c.fill} />
-      ))}
+      {SEHIR_CELLS.map((c) => {
+        const x = GRID_X[c.col];
+        const y = GRID_Y[c.row];
+        return c.shape === 'ucgen' ? (
+          <Polygon key={c.id} points={`${x + CELL_W / 2},${y + 3} ${x + 3},${y + CELL_H - 3} ${x + CELL_W - 3},${y + CELL_H - 3}`} fill={c.fill} />
+        ) : (
+          <Rect key={c.id} x={x} y={y} width={CELL_W} height={CELL_H} fill={c.fill} />
+        );
+      })}
       {SEHIR_CELLS.filter((c) => c.id === active).map((c) => (
         <HiRect key={`hl-${c.id}`} x={GRID_X[c.col]} y={GRID_Y[c.row]} w={CELL_W} h={CELL_H} r={2} />
       ))}
