@@ -880,5 +880,55 @@
   {
     "text": "Rakamın izinden git!",
     "game": "RakamYazma2"
+  },
+  {
+    "text": "Birinci rakamın üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "1-rakamin-uzerini-ciz"
+  },
+  {
+    "text": "İkinci rakamın üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "2-rakamin-uzerini-ciz"
+  },
+  {
+    "text": "Üçüncü rakamın üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "3-rakamin-uzerini-ciz"
+  },
+  {
+    "text": "Dördüncü rakamın üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "4-rakamin-uzerini-ciz"
+  },
+  {
+    "text": "Beşinci rakamın üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "5-rakamin-uzerini-ciz"
+  },
+  {
+    "text": "Altı sayısının üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "6-sayisinin-uzerini-ciz"
+  },
+  {
+    "text": "Yedi sayısının üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "7-sayisinin-uzerini-ciz"
+  },
+  {
+    "text": "Sekiz sayısının üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "8-sayisinin-uzerini-ciz"
+  },
+  {
+    "text": "Dokuz sayısının üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "9-sayisinin-uzerini-ciz"
+  },
+  {
+    "text": "On sayısının üzerini çiz!",
+    "game": "RakamYazma2",
+    "slug": "10-sayisinin-uzerini-ciz"
   }
 ]
