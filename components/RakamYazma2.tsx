@@ -7,7 +7,7 @@ import DynamicBackground from './DynamicBackground';
 import GameExitButton from './GameExitButton';
 import { speak, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
-import { createTracker, numberParts, scaleParts } from '../lib/rakamIzleme';
+import { RETRY_SPEECH, createTracker, numberParts, scaleParts } from '../lib/rakamIzleme';
 
 // Rakam Yazma 6-10 — "Rakam Yazma" oyununun büyük sayılarla temalı varyantı. Rakam Yazma (1-5) de bu bileşeni kullanır
 // (kayıtta firstNumber/lastNumber ve metin prop'ları verilir; test listesi 81-K1: aynı sıralı izleme kuralı).
@@ -194,9 +194,10 @@ export default function RakamYazma2({
         if (tracker.complete()) {
             handleSuccess();
         } else if (tracker.shouldReset()) {
-            // Karalama (çok mürekkep ya da çoğu iz dışı): temizle, kısa bir "tekrar dene" göster.
+            // Karalama (çok mürekkep ya da çoğu iz dışı): temizle, kısa bir "tekrar dene" göster ve söyle (yazı + ses).
             clearCanvas();
             setShowRetry(true);
+            speak(RETRY_SPEECH, { instructions: HAPPY_VOICE });
             timersRef.current.push(setTimeout(() => setShowRetry(false), 1500));
         }
     }, [tracker, handleSuccess, clearCanvas]);

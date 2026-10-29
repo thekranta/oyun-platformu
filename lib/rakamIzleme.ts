@@ -20,6 +20,9 @@ export type Pt = { x: number; y: number };
 
 export interface DigitPart { points: Pt[]; closed: boolean }
 
+/** Karalama temizlenince söylenen ipucu: ekrandaki "Rakamın izinden git 🙂" yazısının sesi (klibi lib/ttsAssets.ts'te, lib/rakamYazmaKlipleri.test.ts korur). */
+export const RETRY_SPEECH = 'Rakamın izinden git!';
+
 const ring = (cx: number, cy: number, rx: number, ry: number, n: number): Pt[] =>
   Array.from({ length: n }, (_, i) => {
     const a = (i / n) * 2 * Math.PI;
