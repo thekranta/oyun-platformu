@@ -53,7 +53,9 @@ export default function CizimiCanlandir({ onGameEnd, onExit, childName }: Props)
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
 
   // Unmount'ta o an calan sesi durdur (bkz. OdaminKrokisi/RenkAtolyesi deseni)
-  useEffect(() => () => { stopSpeech(); }, []);
+  // Kaydet'ten sonra onGameEnd ekrani sonuca gecirir; bitis tebrigi (speak) bu gecista kesilmesin.
+  const endedRef = useRef(false);
+  useEffect(() => () => { if (!endedRef.current) stopSpeech(); }, []);
 
   useEffect(() => {
     if (playing) {
@@ -138,6 +140,7 @@ export default function CizimiCanlandir({ onGameEnd, onExit, childName }: Props)
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Resim olusturulamadi:', e); }
+    endedRef.current = true;
     speak('Çizimini kaydettim! Aferin.', { instructions: HAPPY_VOICE });
     onGameEnd('cizimi-canlandir', duration, totalPoints, 0, undefined, {
       cizimVerisi: JSON.stringify({ strokes: bundle }),

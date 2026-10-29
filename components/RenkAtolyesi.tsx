@@ -180,7 +180,8 @@ export default function RenkAtolyesi({ onGameEnd, onExit, childName }: Props) {
   useEffect(() => () => {
     isMountedRef.current = false;
     timersRef.current.forEach(clearTimeout);
-    stopSpeech();
+    // Poster kaydedilip oyun bittiyse (finishedRef) onGameEnd ekrani sonuca gecirir; bitis tebrigi kesilmesin.
+    if (!finishedRef.current) stopSpeech();
   }, []);
 
   // ---------- yardımcılar ----------

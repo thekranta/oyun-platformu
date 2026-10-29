@@ -45,7 +45,9 @@ export default function NoktaBoyama({ onGameEnd, onExit, childName }: Props) {
   const colorRef = useRef(color); colorRef.current = color;
   const sizeRef = useRef(size); sizeRef.current = size;
 
-  useEffect(() => () => { stopSpeech(); }, []);
+  // Kaydet'ten sonra onGameEnd ekrani sonuca gecirir; bitis tebrigi (speak) bu gecista kesilmesin.
+  const endedRef = useRef(false);
+  useEffect(() => () => { if (!endedRef.current) stopSpeech(); }, []);
 
   const addDot = (x: number, y: number, force = false) => {
     const last = lastRef.current;
@@ -86,6 +88,7 @@ export default function NoktaBoyama({ onGameEnd, onExit, childName }: Props) {
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Resim olusturulamadi:', e); }
+    endedRef.current = true;
     speak('Ne güzel noktalar! Aferin.', { instructions: HAPPY_VOICE });
     onGameEnd('nokta-boyama', duration, dots.length, 0, undefined, {
       cizimVerisi: JSON.stringify({ dots }),

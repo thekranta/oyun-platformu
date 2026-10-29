@@ -48,7 +48,9 @@ export default function YuzYap({ onGameEnd, onExit, childName }: Props) {
   const activeRef = useRef(active); activeRef.current = active;
   const sizeRef = useRef(size); sizeRef.current = size;
 
-  useEffect(() => () => { stopSpeech(); }, []);
+  // Kaydet'ten sonra onGameEnd ekrani sonuca gecirir; bitis tebrigi (speak) bu gecista kesilmesin.
+  const endedRef = useRef(false);
+  useEffect(() => () => { if (!endedRef.current) stopSpeech(); }, []);
 
   const place = (x: number, y: number) => {
     setPlaced((prev) => [...prev, { id: idRef.current++, emoji: activeRef.current, x, y, size: sizeRef.current }]);
@@ -80,6 +82,7 @@ export default function YuzYap({ onGameEnd, onExit, childName }: Props) {
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Resim olusturulamadi:', e); }
+    endedRef.current = true;
     speak('Ne komik bir yüz! Aferin.', { instructions: HAPPY_VOICE });
     onGameEnd('yuz-yap', duration, placed.length, 0, undefined, {
       cizimVerisi: JSON.stringify({ head: head.key, placed }),

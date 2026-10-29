@@ -186,7 +186,9 @@ export default function CizimSayfalari({ onGameEnd, onExit, childName }: Props) 
 
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
 
-  useEffect(() => () => { stopSpeech(); }, []);
+  // Kaydet'ten sonra onGameEnd ekrani sonuca gecirir; bitis tebrigi (speak) bu gecista kesilmesin.
+  const endedRef = useRef(false);
+  useEffect(() => () => { if (!endedRef.current) stopSpeech(); }, []);
 
   const addPoint = (x: number, y: number) => {
     const base = liveStrokeRef.current ?? {
@@ -268,6 +270,7 @@ export default function CizimSayfalari({ onGameEnd, onExit, childName }: Props) 
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Cizim resmi olusturulamadi:', e); }
+    endedRef.current = true;
     speak('Ne güzel çizdin! Aferin.', { instructions: HAPPY_VOICE });
     onGameEnd('cizim-sayfalari', duration, totalPoints, 0, undefined, {
       cizimVerisi: JSON.stringify({ tema: theme?.key, strokes: bundle }),

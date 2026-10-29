@@ -84,7 +84,9 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
   const canvasRef = useRef<View>(null);
   const startTimeRef = useRef(Date.now());
 
-  useEffect(() => () => { stopSpeech(); }, []);
+  // Kaydet'ten sonra onGameEnd ekrani sonuca gecirir; bitis tebrigi (speak) bu gecista kesilmesin.
+  const endedRef = useRef(false);
+  useEffect(() => () => { if (!endedRef.current) stopSpeech(); }, []);
 
   const paint = (id: string) => { setFills((prev) => ({ ...prev, [id]: color })); setSaved(false); };
   const clearAll = () => { setFills({}); setSaved(false); };
@@ -107,6 +109,7 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Resim olusturulamadi:', e); }
+    endedRef.current = true;
     speak('Çok güzel boyadın! Aferin.', { instructions: HAPPY_VOICE });
     onGameEnd('boyama-kitabi', duration, painted, 0, undefined, {
       cizimVerisi: JSON.stringify({ resim: PICTURES[picIdx].key, fills }),

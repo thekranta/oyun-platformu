@@ -48,7 +48,9 @@ export default function SimetriCizim({ onGameEnd, onExit, childName }: Props) {
   const colorRef = useRef(color); colorRef.current = color;
   const sizeRef = useRef(size); sizeRef.current = size;
 
-  useEffect(() => () => { stopSpeech(); }, []);
+  // Kaydet'ten sonra onGameEnd ekrani sonuca gecirir; bitis tebrigi (speak) bu gecista kesilmesin.
+  const endedRef = useRef(false);
+  useEffect(() => () => { if (!endedRef.current) stopSpeech(); }, []);
 
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
 
@@ -114,6 +116,7 @@ export default function SimetriCizim({ onGameEnd, onExit, childName }: Props) {
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Cizim resmi olusturulamadi:', e); }
+    endedRef.current = true;
     speak('Ne güzel bir simetri! Aferin.', { instructions: HAPPY_VOICE });
     onGameEnd('simetri-cizim', duration, totalPoints, 0, undefined, {
       cizimVerisi: JSON.stringify({ strokes: bundle }),
