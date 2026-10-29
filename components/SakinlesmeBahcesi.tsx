@@ -228,7 +228,7 @@ export default function SakinlesmeBahcesi({ onGameEnd, onExit, childName }: Prop
       {showConfetti && <ConfettiCannon count={120} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
-          message="Büyük duygular olur! Sakinleşmek için doğru yolu seç."
+          message="Kızınca, korkunca ya da üzülünce ne yapmalı? Sakinleşmek için doğru yolu seç."
           childName={childName}
           countdownSeconds={5}
           interaction="tap"
