@@ -1027,6 +1027,7 @@ export const TTS: Record<string, number> = {
   'pencere-sol-duvarda-yatagi-pencerenin-hemen-yanindaki-kareye-koyalim': require('../assets/sounds/tts/pencere-sol-duvarda-yatagi-pencerenin-hemen-yanindaki-kareye-koyalim.mp3'),
   'penguen-ucamaz-karda-paytak-paytak-yurur-gokyuzunde-suzulen-kus-kartaldir': require('../assets/sounds/tts/penguen-ucamaz-karda-paytak-paytak-yurur-gokyuzunde-suzulen-kus-kartaldir.mp3'),
   'polis-ne-kullanir': require('../assets/sounds/tts/polis-ne-kullanir.mp3'),
+  'rakamin-izinden-git': require('../assets/sounds/tts/rakamin-izinden-git.mp3'),
   'rakamlari-parmaginla-ciz': require('../assets/sounds/tts/rakamlari-parmaginla-ciz.mp3'),
   'rengarenk-bir-kum-resmi-aferin': require('../assets/sounds/tts/rengarenk-bir-kum-resmi-aferin.mp3'),
   'renk-oruntusunu-coz-ve-siradakini-bul': require('../assets/sounds/tts/renk-oruntusunu-coz-ve-siradakini-bul.mp3'),

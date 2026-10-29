@@ -874,5 +874,9 @@
   {
     "text": "Daha ağır olanı bul!",
     "games": ["AgirHafif", "AkilliAgirHafif"]
+  },
+  {
+    "text": "Rakamın izinden git!",
+    "game": "RakamYazma2"
   }
 ]
