@@ -846,7 +846,6 @@ export const TTS: Record<string, number> = {
   'kaplumbaga-yavas-yavas-ileri-yurur-yan-yan-yuruyen-hayvan-yengectir': require('../assets/sounds/tts/kaplumbaga-yavas-yavas-ileri-yurur-yan-yan-yuruyen-hayvan-yengectir.mp3'),
   'kaplumbagalar-cok-yavas-yurur-amca-acele-etmeden-sabirla-bekliyor': require('../assets/sounds/tts/kaplumbagalar-cok-yavas-yurur-amca-acele-etmeden-sabirla-bekliyor.mp3'),
   'kar-tanesi-cizelim-kesik-cizgileri-takip-et': require('../assets/sounds/tts/kar-tanesi-cizelim-kesik-cizgileri-takip-et.mp3'),
-  'karanlikta-bir-hayalet-gordu-sence-nasil-hissediyor': require('../assets/sounds/tts/karanlikta-bir-hayalet-gordu-sence-nasil-hissediyor.mp3'),
   'kardesin-dizini-incitti-sence-ne-yapmali': require('../assets/sounds/tts/kardesin-dizini-incitti-sence-ne-yapmali.mp3'),
   'kare-hangi-delige-girer': require('../assets/sounds/tts/kare-hangi-delige-girer.mp3'),
   'kare-nerede-vagonda-bul': require('../assets/sounds/tts/kare-nerede-vagonda-bul.mp3'),

@@ -39,7 +39,6 @@ const SITUATIONS: Situation[] = [
   { scene: '🎈🎠', text: 'Lunaparka gitti!', emotion: 'mutlu' },
   { scene: '🧸💔', text: 'Sevdiği oyuncağı kırıldı.', emotion: 'uzgun' },
   { scene: '🍦⬇️', text: 'Dondurması yere düştü.', emotion: 'uzgun' },
-  { scene: '👻🌑', text: 'Karanlıkta bir hayalet gördü!', emotion: 'korkmus' },
   { scene: '🐝😧', text: 'Bir arı peşine takıldı!', emotion: 'korkmus' },
   { scene: '⛈️😰', text: 'Gök gürledi, şimşek çaktı!', emotion: 'korkmus' },
   { scene: '🎁✨', text: 'Bir sürpriz hediye çıktı!', emotion: 'saskin' },
