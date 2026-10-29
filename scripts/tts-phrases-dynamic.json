@@ -288,12 +288,14 @@
     "game": "IlkHarf"
   },
   {
-    "text": "B ile başlayan resmi bul!",
-    "game": "IlkHarf"
+    "text": "Be ile başlayan resmi bul!",
+    "game": "IlkHarf",
+    "slug": "b-ile-baslayan-resmi-bul"
   },
   {
-    "text": "Ç ile başlayan resmi bul!",
-    "game": "IlkHarf"
+    "text": "Çe ile başlayan resmi bul!",
+    "game": "IlkHarf",
+    "slug": "c-ile-baslayan-resmi-bul"
   },
   {
     "text": "E ile başlayan resmi bul!",
@@ -305,16 +307,19 @@
     "slug": "k-ile-baslayan-resmi-bul"
   },
   {
-    "text": "M ile başlayan resmi bul!",
-    "game": "IlkHarf"
+    "text": "Me ile başlayan resmi bul!",
+    "game": "IlkHarf",
+    "slug": "m-ile-baslayan-resmi-bul"
   },
   {
-    "text": "P ile başlayan resmi bul!",
-    "game": "IlkHarf"
+    "text": "Pe ile başlayan resmi bul!",
+    "game": "IlkHarf",
+    "slug": "p-ile-baslayan-resmi-bul"
   },
   {
-    "text": "T ile başlayan resmi bul!",
-    "game": "IlkHarf"
+    "text": "Te ile başlayan resmi bul!",
+    "game": "IlkHarf",
+    "slug": "t-ile-baslayan-resmi-bul"
   },
   {
     "text": "Ye ile başlayan resmi bul!",
@@ -322,8 +327,9 @@
     "slug": "y-ile-baslayan-resmi-bul"
   },
   {
-    "text": "G ile başlayan resmi bul!",
-    "game": "IlkHarf"
+    "text": "Ge ile başlayan resmi bul!",
+    "game": "IlkHarf",
+    "slug": "g-ile-baslayan-resmi-bul"
   },
   {
     "text": "Aferin! Arı, A ile başlar.",
