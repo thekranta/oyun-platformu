@@ -12,7 +12,9 @@ import ListenButton from './ListenButton';
 // Bir harf gösterilir; çocuk O HARFLE BAŞLAYAN resmi bulur (A → Arı).
 // Gerçek okuryazarlık becerisi (harf-ses ilişkisi), "aynısını bul" DEĞİL.
 // Resimlerin altında YAZI yok (kullanıcı notu 2026-10-25: okuyarak değil, adını bilerek ilk sesi bulsun); ses harfin ADINI söyler
-// (Y 'ye', K 'ke': tek harf 'ı' / 'kiğ' diye okunuyordu; klip metinleri scripts/tts-phrases-dynamic.json'da, dosya adı ekran metninin slug'ı kalır).
+// (harf adı 'Xe' biçiminde söylenir: Y 'ye', K 'ke', M 'me', Ç 'çe', P 'pe', T 'te', G 'ge', B 'be'; tek harf TTS'te 'ı' / 'kiğ' / 'em' / 'çiğ'
+// diye okunuyordu (test listesi 84-D1: 'Em ile başlayan' → 'Me'). Klip metinleri scripts/tts-phrases-dynamic.json'da, dosya adı ekran metninin slug'ı kalır;
+// lib/ilkHarfKlipleri.test.ts harf adı kayıtlarını korur).
 // ============================================
 
 const { width: SCREEN_W } = Dimensions.get('window');

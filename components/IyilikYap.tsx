@@ -4,7 +4,7 @@ import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, Vie
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
-import { speak, stopSpeech } from '../services/speechService';
+import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
 
 // ============================================
@@ -65,12 +65,13 @@ export default function IyilikYap({ onGameEnd, onExit, childName }: Props) {
   const correctRef = useRef(0);
   const finishedRef = useRef(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const mountedRef = useRef(true);
   const bounce = useRef(new Animated.Value(1)).current;
   const shake = useRef(new Animated.Value(0)).current;
 
   const TOTAL_ROUNDS = SCENARIOS.length;
 
-  useEffect(() => () => { timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
+  useEffect(() => () => { mountedRef.current = false; timersRef.current.forEach(clearTimeout); stopSpeech(); }, []);
 
   useEffect(() => {
     if (!gameReady) return;
@@ -107,13 +108,14 @@ export default function IyilikYap({ onGameEnd, onExit, childName }: Props) {
       setLocked(true);
       correctRef.current += 1;
       setShowConfetti(true);
-      speak(`${opt.label}! Ne kadar naziksin.`, { instructions: MOTHER_VOICE });
-      const t = setTimeout(() => {
+      // Doğru-cevap klibi 2-2,8 sn sürüyor; eskiden sabit 1,6 sn sonra sonraki turun sorusu başlayıp onu yarıda kesiyordu
+      // (test listesi 107-D1). Şimdi klip bitince (en az 1,6 sn) ilerlenir.
+      speakThenWait(`${opt.label}! Ne kadar naziksin.`, 1600, { instructions: MOTHER_VOICE }).then(() => {
+        if (!mountedRef.current) return;
         setShowConfetti(false);
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);
         else finish();
-      }, 1600);
-      timersRef.current.push(t);
+      });
     } else {
       errorsRef.current += 1;
       setWrong(opt.emoji);
