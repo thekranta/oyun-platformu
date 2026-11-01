@@ -153,6 +153,23 @@ describe('hesap silme', () => {
     });
 });
 
+describe('kayıt onayları', () => {
+    it('akademik araştırma izni İSTEĞE BAĞLI (kayıt onsuz tamamlanır); zorunlu olan kullanım şartları + çocuk bilgisinin işlenmesi', () => {
+        const k = yorumsuz(oku('app/signup.tsx'));
+        expect(k).not.toMatch(/if \(!dataConsent\)/); // araştırma izni kayıt şartı değil
+        expect(k).toMatch(/if \(!termsAccepted\)/);
+        expect(k).toMatch(/const \[dataConsent, setDataConsent\] = useState\(false\)/); // araştırma izni varsayılan kapalı
+        expect(k).toMatch(/\(İsteğe bağlı\) Verilerimin akademik araştırma/);
+        expect(k).toMatch(/Kullanım Şartları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum/);
+    });
+
+    it('araştırma izni kullanım şartlarının kabulüyle karıştırılmaz (bilgilendirme metni isteğe bağlı olduğunu söyler)', () => {
+        const k = oku('app/signup.tsx');
+        expect(k).toMatch(/Bu onay tamamen isteğe bağlıdır/);
+        expect(k).not.toMatch(/platformun kullanım şartlarına onay verdiğinizi/);
+    });
+});
+
 describe('yeni ekranların metinleri iki dilde var', () => {
     const anahtarlar = (nesne: unknown, onek = ''): string[] =>
         Object.entries(nesne as Record<string, unknown>).flatMap(([k, v]) =>

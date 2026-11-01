@@ -42,6 +42,9 @@ export default function SignUp() {
     const [childAge, setChildAge] = useState('');
 
     // State
+    // Zorunlu onay: kullanım şartları + veli olarak çocuğun bilgilerinin hizmet için işlenmesi.
+    // İsteğe bağlı (varsayılan KAPALI): akademik araştırma izni. Kayıt, araştırma izni verilmeden de tamamlanır.
+    const [termsAccepted, setTermsAccepted] = useState(false);
     const [dataConsent, setDataConsent] = useState(false);
     const [showConsentModal, setShowConsentModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -81,8 +84,8 @@ export default function SignUp() {
             showToast('Çocuğun yaşı 36-72 ay arasında olmalıdır.', 'error');
             return false;
         }
-        if (!dataConsent) {
-            showToast('Lütfen veri kullanım iznini onaylayınız.', 'error');
+        if (!termsAccepted) {
+            showToast('Devam etmek için kullanım şartlarını ve gizlilik politikasını onaylayınız.', 'error');
             return false;
         }
         return true;
@@ -388,22 +391,21 @@ export default function SignUp() {
                             />
                         </View>
 
-                        {/* Data Consent */}
+                        {/* Zorunlu onay (şartlar + çocuk bilgisinin işlenmesi) ve isteğe bağlı araştırma izni */}
                         <View style={styles.consentSection}>
                             <TouchableOpacity
                                 style={styles.consentContainer}
-                                onPress={() => setDataConsent(!dataConsent)}
+                                onPress={() => setTermsAccepted(!termsAccepted)}
                                 activeOpacity={0.7}
+                                accessibilityRole="checkbox"
+                                accessibilityState={{ checked: termsAccepted }}
                             >
-                                <View style={[styles.checkbox, dataConsent && styles.checkboxChecked]}>
-                                    {dataConsent && <Ionicons name="checkmark" size={16} color="#fff" />}
+                                <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
+                                    {termsAccepted && <Ionicons name="checkmark" size={16} color="#fff" />}
                                 </View>
                                 <Text style={styles.consentText}>
-                                    Verilerimin akademik araştırma kapsamında anonim olarak kullanılmasına izin veriyorum.
+                                    Kullanım Şartları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum. Veli/vasi olarak çocuğuma ait bilgilerin (ad, yaş, oyun sonuçları) hizmetin sunulması için işlenmesine onay veriyorum. *
                                 </Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => setShowConsentModal(true)}>
-                                <Text style={styles.learnMoreLink}>Daha Fazla Öğren</Text>
                             </TouchableOpacity>
                             <View style={styles.legalLinksRow}>
                                 <TouchableOpacity onPress={openPrivacy}>
@@ -414,6 +416,23 @@ export default function SignUp() {
                                     <Text style={styles.legalLinkText}>Kullanım Şartları</Text>
                                 </TouchableOpacity>
                             </View>
+                            <TouchableOpacity
+                                style={[styles.consentContainer, { marginTop: 14 }]}
+                                onPress={() => setDataConsent(!dataConsent)}
+                                activeOpacity={0.7}
+                                accessibilityRole="checkbox"
+                                accessibilityState={{ checked: dataConsent }}
+                            >
+                                <View style={[styles.checkbox, dataConsent && styles.checkboxChecked]}>
+                                    {dataConsent && <Ionicons name="checkmark" size={16} color="#fff" />}
+                                </View>
+                                <Text style={styles.consentText}>
+                                    (İsteğe bağlı) Verilerimin akademik araştırma kapsamında anonim olarak kullanılmasına izin veriyorum.
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => setShowConsentModal(true)}>
+                                <Text style={styles.learnMoreLink}>Daha Fazla Öğren</Text>
+                            </TouchableOpacity>
                         </View>
 
                         {/* Submit Button */}
@@ -488,7 +507,7 @@ export default function SignUp() {
 
                             <Text style={styles.modalSectionTitle}>✅ Onayınızın Önemi</Text>
                             <Text style={styles.modalParagraph}>
-                                Kayıt ekranındaki kutucuğu işaretleyerek; yukarıdaki bilgilendirmeyi okuduğunuzu, verilerin akademik araştırma kapsamında kullanılmasını kabul ettiğinizi ve platformun kullanım şartlarına onay verdiğinizi beyan etmiş olursunuz.
+                                Bu onay tamamen isteğe bağlıdır: işaretlemezseniz de platformun tüm özelliklerini aynen kullanırsınız. Kutucuğu işaretleyerek yukarıdaki bilgilendirmeyi okuduğunuzu ve verilerin anonim olarak akademik araştırma kapsamında kullanılmasını kabul ettiğinizi beyan etmiş olursunuz. Onayınızı istediğiniz zaman geri çekebilirsiniz.
                             </Text>
 
                             <Text style={styles.modalSectionTitle}>📧 İletişim</Text>
