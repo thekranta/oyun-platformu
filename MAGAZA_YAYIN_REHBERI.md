@@ -120,8 +120,8 @@ npx eas-cli update --channel production --environment production --message "ne d
 ---
 
 ## 6. Açık kararlar ve riskler (sende)
-1. **Mağazada otomatik yenilenen abonelik, web'de tek seferlik paket.** Kodu abonelik olarak hazırladım (süreler aynı: 1/3/6/12 ay; Apple/Google'ın doğal modeli). Web'deki gibi "tek seferlik, süreli" satmak istersen iOS'ta *yenilenmeyen abonelik*, Google'da *ön ödemeli plan* gerekir; webhook bunu da işleyebilir (süreyi ürün kimliğinden hesaplar) ama RevenueCat iOS'ta bu ürünlerde bitiş vermediği için sınama gerekir.
-2. **Kayıtta "araştırma izni" zorunlu** (`app/signup.tsx`): onaylamadan kayıt olunamıyor. KVKK/GDPR'de rıza "serbest irade" olmalı; öneri: isteğe bağlı yap. (Senin kararın; dokunmadım.)
+1. **Mağazada otomatik yenilenen abonelik, web'de tek seferlik paket** (karar 2026-11-01: bu şekilde kalsın). Süreler aynı: 1/3/6/12 ay; Apple/Google'ın doğal modeli. İleride web'deki gibi "tek seferlik, süreli" satmak istersen iOS'ta *yenilenmeyen abonelik*, Google'da *ön ödemeli plan* gerekir; webhook bunu da işler (süreyi ürün kimliğinden hesaplar) ama RevenueCat iOS'ta bu ürünlerde bitiş vermediği için sınama gerekir.
+2. **Kayıt onayları (YAPILDI, 2026-11-01):** akademik araştırma izni artık **isteğe bağlı** (varsayılan kapalı); zorunlu olan tek kutu "Kullanım Şartları + Gizlilik Politikası + çocuğun bilgilerinin hizmet için işlenmesi". Araştırma izni kayıttan sonra uygulamadan geri çekilemiyor (veritabanı tetikleyicisi `data_consent` alanını kilitliyor, `add_owner_package_write.sql`); şimdilik geri çekme e-postayla. Uygulama içi bir "araştırma iznini geri çek" düğmesi istenirse küçük bir SQL fonksiyonu gerekir.
 3. **Android kenardan kenara** (API 36) gerçek cihazda görülmedi: İç testte bir Android 15/16 telefonda ana ekran, oyun çıkış düğmeleri ve alt kısım kontrol edilmeli (Play "ön başlatma raporu" da ekran görüntüsü verir).
 4. **iOS** için hiç derleme/cihaz denemesi yapılmadı; ilk TestFlight sürümünde ses, mikrofon izni ve giriş klavyesi kontrol edilmeli.
 5. **Satın alma testi**: iOS sandbox hesabı ve Google lisans test hesabıyla gerçek akış denenmeli (kodu cihazsız doğrulayamam).
