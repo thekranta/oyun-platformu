@@ -30,7 +30,8 @@ export { activeOgretmenTierFromCustomerInfo, activeVeliTierFromCustomerInfo } fr
 const IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY;
 const ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
 
-let configuredForUser: string | null = null;
+let configured = false;
+let currentUser: string | null = null;
 
 function currentApiKey(): string | undefined {
   if (Platform.OS === 'ios') return IOS_API_KEY;
@@ -46,12 +47,17 @@ export function isPurchasesAvailable(): boolean {
 /** appUserID olarak kullanıcının e-postasını kullanıyoruz — profiles/teachers tablolarındaki
  * mevcut arama anahtarı da e-posta (bkz. lib/owner/packageAssignment.ts), webhook tarafında
  * ek bir eşleme tablosuna gerek kalmıyor. */
-export function initPurchases(email: string): void {
+export async function initPurchases(email: string): Promise<void> {
   if (!isPurchasesAvailable() || !email) return;
-  if (configuredForUser === email) return;
-  const apiKey = currentApiKey()!;
-  Purchases.configure({ apiKey, appUserID: email });
-  configuredForUser = email;
+  if (currentUser === email) return;
+  if (!configured) {
+    Purchases.configure({ apiKey: currentApiKey()!, appUserID: email });
+    configured = true;
+  } else {
+    // Cihazda baska bir hesap girdiyse SDK yeniden kurulmaz: kullanici degistirilir (satin alma dogru hesaba yazilsin).
+    await Purchases.logIn(email);
+  }
+  currentUser = email;
 }
 
 export async function getVeliOffering(): Promise<PurchasesOffering | null> {

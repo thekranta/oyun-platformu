@@ -477,7 +477,7 @@ export function buildWeeklyReportHTML(r: WeeklyReportData, premium: boolean = tr
         <h3 class="locked-title">Detaylı Gelişim Analizi</h3>
         <p class="locked-desc">Çocuğunuzun Maarif kazanımlarına göre ayrıntılı analizini, gelişim profilini ve eve özel önerileri Filiz, Fidan ve Orman paketlerindeki detaylı raporda bulabilirsiniz.</p>
         <ul class="locked-list">${lockedList.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
-        <div class="locked-badge">Paketler: childhoodtech.com</div>
+        <div class="locked-badge">Paketler: Filiz · Fidan · Orman</div>
       </div>
     </section>`;
 

@@ -7,7 +7,6 @@ import {
     ActivityIndicator,
     Dimensions,
     KeyboardAvoidingView,
-    Linking,
     Modal,
     Platform,
     ScrollView,
@@ -19,14 +18,13 @@ import {
 } from 'react-native';
 
 import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, resendConfirmation } from '../lib/authFlow';
+import { LEGAL_URLS, openExternalLink } from '../lib/externalLink';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 
-const PRIVACY_URL = 'https://childhoodtech.com/gizlilik-politikasi.html';
-const TERMS_URL = 'https://childhoodtech.com/kullanim-sartlari.html';
-const openPrivacy = () => { Linking.openURL(PRIVACY_URL).catch(() => { }); };
-const openTerms = () => { Linking.openURL(TERMS_URL).catch(() => { }); };
+const openPrivacy = () => { openExternalLink(LEGAL_URLS.privacy); };
+const openTerms = () => { openExternalLink(LEGAL_URLS.terms); };
 
 export default function SignUp() {
     const router = useRouter();

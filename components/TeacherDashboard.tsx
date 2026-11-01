@@ -16,6 +16,7 @@ import {
     View
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { ensureAiConsent } from '../lib/aiConsentFlow';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { teacherView } from '../lib/aiAudience';
 import InAppNotice from './InAppNotice';
@@ -712,6 +713,8 @@ export default function TeacherDashboard({
                 await new Promise<void>((resolve) => setTimeout(resolve, 900));
                 text = demoSummary(studentScores as never);
             } else {
+                // Yapay zekâ izni (Apple 5.1.2(i)): öğrencinin yaşı ve oyun verisi OpenAI'a gideceği için izin gerekir.
+                if (!(await ensureAiConsent('report'))) return;
                 // Öğrencinin adı AI'ye gitmez (yalnız yaş + oyun verisi): bkz. lib/teacherSummary.ts
                 const prompt = buildTeacherSummaryPrompt(selectedStudent.child_age_months, studentScores);
                 text = await requestAiAnalysis(prompt, { temperature: 0.6, maxOutputTokens: 900 }, 'ogretmen_gelisim_ozeti');
@@ -1176,6 +1179,9 @@ export default function TeacherDashboard({
                     </View>
                 )}
 
+                <TouchableOpacity onPress={() => router.push('/gizlilik-ayarlari')} accessibilityRole="link" style={{ alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 16 }}>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#607D8B', textDecorationLine: 'underline' }}>{t('account.title')}</Text>
+                </TouchableOpacity>
                 <View style={{ height: 40 }} />
             </ScrollView>
 

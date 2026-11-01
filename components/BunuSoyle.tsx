@@ -8,6 +8,7 @@ import GameExitButton from './GameExitButton';
 import JuicyProgressBar from './JuicyProgressBar';
 import { asset } from '../lib/assetMap';
 import { apiUrl } from '../lib/apiBase';
+import { ensureAiConsent } from '../lib/aiConsentFlow';
 import { supabase } from '../lib/supabase';
 import { speak, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
@@ -43,6 +44,8 @@ interface StageResult {
 export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
     const [currentStage, setCurrentStage] = useState(0);
     const [gameReady, setGameReady] = useState(false);
+    // Ses izni (Apple 5.1.2(i)): cocugun ses kaydi OpenAI'a gonderildigi icin ebeveyn izni olmadan oyun baslamaz.
+    const [voiceConsentOk, setVoiceConsentOk] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [recordingStatus, setRecordingStatus] = useState('Kayıt Hazır');
     const [startTime] = useState(Date.now());
@@ -81,14 +84,28 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
 
     const currentItem = STAGES[currentStage];
 
+    // Ebeveyn ses izni: verilmezse menüye dönülür; mikrofon izni de bu onaydan SONRA istenir.
+    useEffect(() => {
+        let alive = true;
+        ensureAiConsent('voice').then((ok) => {
+            if (!alive) return;
+            if (ok) setVoiceConsentOk(true);
+            else onExit();
+        });
+        return () => { alive = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // İzin kontrolü
     useEffect(() => {
+        if (!voiceConsentOk) return;
         (async () => {
             if (!permissionResponse) {
                 await requestPermission();
             }
         })();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [voiceConsentOk]);
 
     // Unmount'ta bekleyen setTimeout'lari + o an calan sesi temizle
     useEffect(() => () => {
@@ -481,6 +498,15 @@ export default function BunuSoyle({ onGameEnd, onExit }: BunuSoyleProps) {
             });
         }
     };
+
+    if (!voiceConsentOk) {
+        // İzin ekranı açıkken oyun arayüzü (geri sayım dahil) başlamasın.
+        return (
+            <ImageBackground source={BACKGROUND_IMAGE} style={styles.bgContainer} resizeMode="cover">
+                <View style={styles.darkOverlay} />
+            </ImageBackground>
+        );
+    }
 
     return (
         <ImageBackground source={BACKGROUND_IMAGE} style={styles.bgContainer} resizeMode="cover">

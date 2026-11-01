@@ -20,6 +20,7 @@ import { asset } from '../../lib/assetMap';
 import { changeLanguage, SupportedLanguage } from '../../lib/i18n';
 import { supabase } from '../../lib/supabase';
 import { fetchClassGameTier, ClassGameTier } from '../../lib/classAccess';
+import { onPackageChanged } from '../../lib/packageSync';
 import { isRouteOpenForTier } from '../../lib/gameAccess';
 import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
@@ -320,6 +321,36 @@ export default function App() {
     return () => { cancelled = true; };
   }, []);
 
+  // Oturum başka yerden de kapanabilir (hesap silme, süre dolması, öğretmen/kurum paneli çıkışı): oda giriş ekranına dönsün.
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') sifirlaOturum();
+    });
+    return () => data.subscription.unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Ödeme ekranında paket değişince (satın alma / geri yükleme) paket veritabanından yeniden okunur.
+  useEffect(() => onPackageChanged(() => {
+    (async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const sessionEmail = data.session?.user?.email;
+        if (!sessionEmail) return;
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('subscription_tier, package_expires_at')
+          .eq('email', sessionEmail)
+          .limit(1);
+        if (!profiles || profiles.length === 0) return;
+        setSubscriptionTier((profiles[0].subscription_tier as VeliTier) ?? null);
+        setPackageExpiresAt(profiles[0].package_expires_at ?? null);
+      } catch {
+        // sessiz: bir sonraki girişte paket zaten yeniden okunur
+      }
+    })();
+  }), []);
+
   const oyunuBaslat = (oyunTipi: string) => {
     // Kilit yalnız çocuk odasında olursa "Sıradaki Günlük Oyun" gibi odayı atlayan yollar kilitli
     // oyunu açar; oyunu başlatan her yol paketi burada da kontrol eder.
@@ -367,9 +398,8 @@ export default function App() {
     sessizceAnalizEtVeKaydet(oyunAdi, sure, finalHamle, finalHata, algilananKelime, extraData);
   };
 
-  const cikisYap = () => {
-    // Açık çıkış: kalıcı oturumu da kapat ki yenilemede otomatik girilmesin.
-    supabase.auth.signOut().catch(() => { });
+  // Oturum bilgilerini sıfırlar ve giriş ekranına döner (açık çıkış, hesap silme ya da oturumun başka yerde kapanması).
+  const sifirlaOturum = () => {
     setAd('');
     setYas('');
     setEmail('');
@@ -381,6 +411,12 @@ export default function App() {
     setDailyPlanRoutes([]);
     setDailyPlanDate('');
     setAsama('giris');
+  };
+
+  const cikisYap = () => {
+    // Açık çıkış: kalıcı oturumu da kapat ki yenilemede otomatik girilmesin.
+    supabase.auth.signOut().catch(() => { });
+    sifirlaOturum();
   };
 
   const sessizceAnalizEtVeKaydet = async (

@@ -2,6 +2,7 @@
 // Basarisizlikta Error firlatir; cagiran taraf kendi hata davranisini secer.
 import { supabase } from '../lib/supabase';
 import { apiUrl } from '../lib/apiBase';
+import { AiConsentDeclinedError, hasAiConsent, isConsentExemptFeature } from '../lib/aiConsent';
 
 export async function requestAiAnalysis(
   prompt: string,
@@ -10,6 +11,9 @@ export async function requestAiAnalysis(
 ): Promise<string> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Oturum bulunamadı, lütfen tekrar giriş yapın.');
+
+  // Apple 5.1.2(i): çocuğun bilgisi ebeveyn izni olmadan yapay zekâ hizmetine gönderilmez (izin ekranı çağıran özellikte açılır).
+  if (!isConsentExemptFeature(feature) && !(await hasAiConsent('report'))) throw new AiConsentDeclinedError();
 
   const response = await fetch(apiUrl('/api/openai-analyze'), {
     method: 'POST',

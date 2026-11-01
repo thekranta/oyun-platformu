@@ -305,9 +305,9 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
             <Text style={styles.pkgText}>{pkg.expired ? t('toyRoom.packageExpired') : pkg.own === 'free' ? t('toyRoom.packageFree') : pkg.expiresAt ? t('toyRoom.packageValidUntil', { date: new Date(pkg.expiresAt).toLocaleDateString(i18n.language?.startsWith('en') ? 'en-GB' : 'tr-TR') }) : t('toyRoom.packageActive')}</Text>
             {pkg.viaClass && <Text style={styles.pkgText}>{t('toyRoom.packageViaClass', { tier: t(`veli.tier.${pkg.accessTier}`) })}</Text>}
           </View>
-          {pkg.isTop ? <Text style={styles.pkgTop}>{t('toyRoom.packageTop')}</Text> : <Pressable accessibilityRole="link" onPress={openPricing} style={styles.pkgButton}><Text style={styles.pkgButtonText}>{pkg.own === 'free' || pkg.expired ? t('toyRoom.lockedPrimary') : t('toyRoom.packageUpgrade')}</Text></Pressable>}
+          {pkg.isTop ? <Text style={styles.pkgTop}>{t('toyRoom.packageTop')}</Text> : <Pressable accessibilityRole="link" onPress={() => { setAdult(false); setLocked(null); openPricing(); }} style={styles.pkgButton}><Text style={styles.pkgButtonText}>{pkg.own === 'free' || pkg.expired ? t('toyRoom.lockedPrimary') : t('toyRoom.packageUpgrade')}</Text></Pressable>}
         </View>}
-        <View style={styles.adultActions}><Pressable onPress={() => setCalm(v => !v)} accessibilityRole="button" style={styles.adultButton}><Text>{calm ? t('toyRoom.animationsOn') : t('toyRoom.reduceMotion')}</Text></Pressable><Pressable accessibilityRole="button" onPress={onLogout} style={styles.adultButton}><Text>{t('toyRoom.logout')}</Text></Pressable></View>
+        <View style={styles.adultActions}><Pressable onPress={() => setCalm(v => !v)} accessibilityRole="button" style={styles.adultButton}><Text>{calm ? t('toyRoom.animationsOn') : t('toyRoom.reduceMotion')}</Text></Pressable><Pressable accessibilityRole="button" onPress={onLogout} style={styles.adultButton}><Text>{t('toyRoom.logout')}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => { setAdult(false); router.push('/gizlilik-ayarlari'); }} style={styles.adultButton}><Text>{t('toyRoom.accountPrivacy')}</Text></Pressable></View>
         <TextInput accessibilityLabel={t('toyRoom.searchLabel')} placeholder={t('toyRoom.searchPlaceholder')} value={query} onChangeText={setQuery} style={styles.search}/>
         <ScrollView keyboardShouldPersistTaps="handled">{filtered.map(g => {
           const required = requiredVeliTierForGame(g);
@@ -327,7 +327,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
           <Text style={styles.upsellTitle}>{t('toyRoom.lockedAlertTitle')}</Text>
           <Text style={styles.upsellText}>{t('toyRoom.lockedAlertMessage', { game: locked.game, tier: TIER_LABELS[locked.tier] })}</Text>
           {!!t(`toyRoom.lockedBenefit.${locked.tier}`, { defaultValue: '' }) && <Text style={styles.upsellBenefit}>{t(`toyRoom.lockedBenefit.${locked.tier}`, { defaultValue: '' })}</Text>}
-          <Pressable accessibilityRole="link" onPress={openPricing} style={styles.upsellPrimary}><Text style={styles.upsellPrimaryText}>{t('toyRoom.lockedPrimary')}</Text></Pressable>
+          <Pressable accessibilityRole="link" onPress={() => { setAdult(false); setLocked(null); openPricing(); }} style={styles.upsellPrimary}><Text style={styles.upsellPrimaryText}>{t('toyRoom.lockedPrimary')}</Text></Pressable>
           <Pressable accessibilityRole="button" onPress={() => setLocked(null)} style={styles.upsellSecondary}><Text style={styles.upsellSecondaryText}>{t('toyRoom.lockedClose')}</Text></Pressable>
         </Pressable>
       </Pressable>}

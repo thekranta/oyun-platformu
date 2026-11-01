@@ -17,7 +17,7 @@ export function isPurchasesAvailable(): boolean {
   return false;
 }
 
-export function initPurchases(_email: string): void {}
+export async function initPurchases(_email: string): Promise<void> {}
 
 export async function getVeliOffering(): Promise<PurchasesOffering | null> {
   return null;

@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { Linking, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { PAINTINGS, Painting } from '../../constants/minikMuze';
+import { openExternalLink } from '../../lib/externalLink';
 import { CREDITS_INTRO, commonsPageUrl } from '../../lib/minikMuzeCredits';
 
 // Minik Müze künye / kaynak ekranı: her tablonun ressamı, tarihi, müzesi, kaynağı ve lisansı (kamu malı).
@@ -35,7 +36,7 @@ export default function CreditsModal({ visible, onClose, only }: Props) {
                                 <Text style={styles.itemMeta}>{p.credit.museum}</Text>
                                 <Text style={styles.itemMeta}>{p.credit.source} · {p.credit.license}</Text>
                                 <TouchableOpacity
-                                    onPress={() => { Linking.openURL(commonsPageUrl(p.credit.commonsFile)).catch(() => { }); }}
+                                    onPress={() => { openExternalLink(commonsPageUrl(p.credit.commonsFile)); }}
                                     accessibilityRole="link"
                                     accessibilityLabel={p.title + ' kaynak sayfasını aç'}
                                 >

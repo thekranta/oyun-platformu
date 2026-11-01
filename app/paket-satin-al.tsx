@@ -1,16 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-    ActivityIndicator,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
-} from 'react-native';
-import type { PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Platform, View } from 'react-native';
+import type { PurchasesPackage } from 'react-native-purchases';
+import PaywallView, { type PaywallState } from '../components/PaywallView';
+import { openExternalLink } from '../lib/externalLink';
+import { emitPackageChanged, waitForTier } from '../lib/packageSync';
+import { requestParentGate } from '../lib/parentGate';
+import { sortPackages, type PaywallKind } from '../lib/paywall';
 import { supabase } from '../lib/supabase';
 import {
     activeOgretmenTierFromCustomerInfo,
@@ -23,36 +20,42 @@ import {
     restore,
 } from '../services/purchaseService';
 
-const COLORS = {
-    background: '#FFF9E6',
-    card: '#FFFFFF',
-    primary: '#1E88E5',
-    premium: '#9C27B0',
-    text: '#263238',
-    textLight: '#607D8B',
-    success: '#2E7D32',
-    error: '#C62828',
-    border: '#ECEFF1',
-};
-
-type Kind = 'veli' | 'ogretmen';
-
-type ScreenState =
-    | { phase: 'loading' }
-    | { phase: 'unavailable' }
-    | { phase: 'no-session' }
-    | { phase: 'ready'; offering: PurchasesOffering | null }
-    | { phase: 'error'; message: string };
-
+/**
+ * Paket satın alma (iOS/Android, RevenueCat). Çocuğun erişebildiği yerlerden (kilitli oyun uyarısı vb.) açılabildiği
+ * için mobilde ekrana girerken EBEVEYN KAPISI sorulur; geçilmezse geri dönülür. Web'de bu ekran kullanılmaz
+ * (web satışı childhoodtech.com'dadır) ve "kullanılamıyor" gösterir. Sunum: components/PaywallView.tsx.
+ */
 export default function PaketSatinAl() {
+    const { t } = useTranslation();
     const params = useLocalSearchParams<{ kind?: string }>();
-    const kind: Kind = params.kind === 'ogretmen' ? 'ogretmen' : 'veli';
+    const kind: PaywallKind = params.kind === 'ogretmen' ? 'ogretmen' : 'veli';
 
-    const [state, setState] = useState<ScreenState>({ phase: 'loading' });
+    const [gatePassed, setGatePassed] = useState(Platform.OS === 'web');
+    const [state, setState] = useState<PaywallState>({ phase: 'loading' });
     const [purchasingId, setPurchasingId] = useState<string | null>(null);
     const [restoring, setRestoring] = useState(false);
     const [banner, setBanner] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+    const rawPackages = useRef<PurchasesPackage[]>([]);
+    const emailRef = useRef<string | null>(null);
 
+    const leave = useCallback(() => {
+        if (router.canGoBack()) router.back();
+        else router.replace('/');
+    }, []);
+
+    // 1) Ebeveyn kapısı (mobil)
+    useEffect(() => {
+        if (Platform.OS === 'web') return;
+        let alive = true;
+        requestParentGate().then((ok) => {
+            if (!alive) return;
+            if (ok) setGatePassed(true);
+            else leave();
+        });
+        return () => { alive = false; };
+    }, [leave]);
+
+    // 2) Paketleri yükle
     const load = useCallback(async () => {
         if (!isPurchasesAvailable()) {
             setState({ phase: 'unavailable' });
@@ -64,163 +67,84 @@ export default function PaketSatinAl() {
             setState({ phase: 'no-session' });
             return;
         }
-        initPurchases(email);
+        emailRef.current = email;
         try {
+            await initPurchases(email);
             const offering = kind === 'ogretmen' ? await getOgretmenOffering() : await getVeliOffering();
-            setState({ phase: 'ready', offering });
-        } catch (e: any) {
-            setState({ phase: 'error', message: e?.message || 'Paketler yüklenemedi.' });
+            const packages = sortPackages(offering?.availablePackages ?? [], kind);
+            rawPackages.current = packages;
+            setState({ phase: 'ready', packages });
+        } catch (e: unknown) {
+            setState({ phase: 'error', message: e instanceof Error ? e.message : '' });
         }
     }, [kind]);
 
-    useEffect(() => { load(); }, [load]);
+    useEffect(() => {
+        if (gatePassed) load();
+    }, [gatePassed, load]);
 
-    const handlePurchase = async (pkg: PurchasesPackage) => {
+    const tierFrom = (info: Parameters<typeof activeVeliTierFromCustomerInfo>[0]) =>
+        kind === 'ogretmen' ? activeOgretmenTierFromCustomerInfo(info) : activeVeliTierFromCustomerInfo(info);
+
+    const tierName = (tier: string) => t(`${kind === 'ogretmen' ? 'teacher.tier' : 'veli.tier'}.${tier}`);
+
+    /** Veritabanı paketi webhook ile güncelleyince çocuk odası da yenilensin. */
+    const syncInBackground = (tier: string) => {
+        emitPackageChanged();
+        const email = emailRef.current;
+        if (email) waitForTier(kind, email, tier).then(() => emitPackageChanged());
+    };
+
+    const onPurchase = async (identifier: string) => {
+        const pkg = rawPackages.current.find((p) => p.identifier === identifier);
+        if (!pkg) return;
         setBanner(null);
-        setPurchasingId(pkg.identifier);
+        setPurchasingId(identifier);
         const result = await purchase(pkg);
         setPurchasingId(null);
         if (result.ok) {
-            const tier = kind === 'ogretmen'
-                ? activeOgretmenTierFromCustomerInfo(result.customerInfo)
-                : activeVeliTierFromCustomerInfo(result.customerInfo);
-            setBanner({ kind: 'success', text: tier ? `Satın alma tamamlandı! Paketiniz: ${tier}` : 'Satın alma tamamlandı! Paketiniz birkaç saniye içinde güncellenecek.' });
+            const tier = tierFrom(result.customerInfo);
+            setBanner({ kind: 'success', text: tier ? t('paywall.successWithTier', { tier: tierName(tier) }) : t('paywall.successPending') });
+            if (tier) syncInBackground(tier);
         } else if (!result.cancelled) {
-            setBanner({ kind: 'error', text: result.message || 'Satın alma sırasında bir hata oluştu.' });
+            setBanner({ kind: 'error', text: result.message || t('paywall.purchaseFailed') });
         }
     };
 
-    const handleRestore = async () => {
+    const onRestore = async () => {
         setBanner(null);
         setRestoring(true);
         try {
             const info = await restore();
+            if (!info) { setBanner({ kind: 'error', text: t('paywall.restoreFailed') }); return; }
+            const tier = tierFrom(info);
+            if (tier) {
+                setBanner({ kind: 'success', text: t('paywall.restoredWithTier', { tier: tierName(tier) }) });
+                syncInBackground(tier);
+            } else {
+                setBanner({ kind: 'error', text: t('paywall.restoreNone') });
+            }
+        } catch (e: unknown) {
+            setBanner({ kind: 'error', text: (e instanceof Error && e.message) || t('paywall.restoreFailed') });
+        } finally {
             setRestoring(false);
-            if (!info) { setBanner({ kind: 'error', text: 'Satın alımlar geri yüklenemedi.' }); return; }
-            const tier = kind === 'ogretmen' ? activeOgretmenTierFromCustomerInfo(info) : activeVeliTierFromCustomerInfo(info);
-            setBanner(tier
-                ? { kind: 'success', text: `Önceki satın alımınız bulundu: ${tier}` }
-                : { kind: 'error', text: 'Bu hesaba bağlı aktif bir satın alım bulunamadı.' });
-        } catch (e: any) {
-            setRestoring(false);
-            setBanner({ kind: 'error', text: e?.message || 'Satın alımlar geri yüklenemedi.' });
         }
     };
 
+    // Kapı geçilene kadar fiyatlar gösterilmez.
+    if (!gatePassed) return <View style={{ flex: 1, backgroundColor: '#FFF9E6' }} />;
+
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Geri dön">
-                    <Ionicons name="chevron-back" size={24} color={COLORS.text} />
-                </Pressable>
-                <Text style={styles.headerTitle}>Paket Satın Al</Text>
-                <View style={{ width: 40 }} />
-            </View>
-
-            <ScrollView contentContainerStyle={styles.content}>
-                {banner && (
-                    <View style={[styles.banner, banner.kind === 'success' ? styles.bannerSuccess : styles.bannerError]}>
-                        <Ionicons name={banner.kind === 'success' ? 'checkmark-circle' : 'alert-circle'} size={20} color={banner.kind === 'success' ? COLORS.success : COLORS.error} />
-                        <Text style={[styles.bannerText, { color: banner.kind === 'success' ? COLORS.success : COLORS.error }]}>{banner.text}</Text>
-                    </View>
-                )}
-
-                {state.phase === 'loading' && (
-                    <View style={styles.centerBox}>
-                        <ActivityIndicator size="large" color={COLORS.primary} />
-                    </View>
-                )}
-
-                {state.phase === 'unavailable' && (
-                    <View style={styles.centerBox}>
-                        <Ionicons name="time-outline" size={48} color={COLORS.textLight} />
-                        <Text style={styles.infoTitle}>Yakında burada!</Text>
-                        <Text style={styles.infoText}>Uygulama içi satın alma henüz aktif değil. Paketlerinizi şimdilik childhoodtech.com üzerinden inceleyebilirsiniz.</Text>
-                    </View>
-                )}
-
-                {state.phase === 'no-session' && (
-                    <View style={styles.centerBox}>
-                        <Ionicons name="lock-closed-outline" size={48} color={COLORS.textLight} />
-                        <Text style={styles.infoTitle}>Oturum bulunamadı</Text>
-                        <Text style={styles.infoText}>Paket satın almak için giriş yapmış olmanız gerekiyor.</Text>
-                    </View>
-                )}
-
-                {state.phase === 'error' && (
-                    <View style={styles.centerBox}>
-                        <Ionicons name="warning-outline" size={48} color={COLORS.error} />
-                        <Text style={styles.infoTitle}>Bir şeyler ters gitti</Text>
-                        <Text style={styles.infoText}>{state.message}</Text>
-                    </View>
-                )}
-
-                {state.phase === 'ready' && (
-                    <>
-                        {!state.offering || state.offering.availablePackages.length === 0 ? (
-                            <View style={styles.centerBox}>
-                                <Ionicons name="pricetag-outline" size={48} color={COLORS.textLight} />
-                                <Text style={styles.infoTitle}>Henüz paket tanımlı değil</Text>
-                                <Text style={styles.infoText}>Mağaza paketleri yakında eklenecek.</Text>
-                            </View>
-                        ) : (
-                            state.offering.availablePackages.map(pkg => (
-                                <View key={pkg.identifier} style={styles.packageCard}>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={styles.packageTitle}>{pkg.product.title}</Text>
-                                        <Text style={styles.packagePrice}>{pkg.product.priceString}</Text>
-                                    </View>
-                                    <Pressable
-                                        style={[styles.buyBtn, purchasingId === pkg.identifier && styles.buyBtnDisabled]}
-                                        disabled={purchasingId !== null}
-                                        onPress={() => handlePurchase(pkg)}
-                                        accessibilityRole="button"
-                                    >
-                                        {purchasingId === pkg.identifier
-                                            ? <ActivityIndicator size="small" color="#fff" />
-                                            : <Text style={styles.buyBtnText}>Satın Al</Text>}
-                                    </Pressable>
-                                </View>
-                            ))
-                        )}
-
-                        <Pressable style={styles.restoreBtn} onPress={handleRestore} disabled={restoring} accessibilityRole="button">
-                            {restoring
-                                ? <ActivityIndicator size="small" color={COLORS.primary} />
-                                : <Text style={styles.restoreBtnText}>Satın Alımları Geri Yükle</Text>}
-                        </Pressable>
-                    </>
-                )}
-            </ScrollView>
-        </View>
+        <PaywallView
+            kind={kind}
+            state={state}
+            banner={banner}
+            purchasingId={purchasingId}
+            restoring={restoring}
+            onBack={leave}
+            onPurchase={onPurchase}
+            onRestore={onRestore}
+            onOpenLink={(url) => { openExternalLink(url); }}
+        />
     );
 }
-
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: COLORS.background },
-    header: {
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 12, paddingTop: Platform.OS === 'ios' ? 56 : 36, paddingBottom: 12,
-    },
-    backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-    headerTitle: { fontSize: 18, fontWeight: '800', color: COLORS.text },
-    content: { padding: 16, gap: 14 },
-    centerBox: { alignItems: 'center', paddingVertical: 60, gap: 10, paddingHorizontal: 24 },
-    infoTitle: { fontSize: 17, fontWeight: '700', color: COLORS.text, marginTop: 4 },
-    infoText: { fontSize: 14, color: COLORS.textLight, textAlign: 'center', lineHeight: 20 },
-    banner: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 14, marginBottom: 4 },
-    bannerSuccess: { backgroundColor: '#E8F5E9' },
-    bannerError: { backgroundColor: '#FFEBEE' },
-    bannerText: { flex: 1, fontSize: 13, fontWeight: '600' },
-    packageCard: {
-        flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.card,
-        borderRadius: 18, padding: 16, gap: 12, borderWidth: 1, borderColor: COLORS.border,
-    },
-    packageTitle: { fontSize: 15, fontWeight: '700', color: COLORS.text },
-    packagePrice: { fontSize: 14, color: COLORS.textLight, marginTop: 2 },
-    buyBtn: { backgroundColor: COLORS.premium, paddingVertical: 10, paddingHorizontal: 18, borderRadius: 14, minWidth: 88, alignItems: 'center' },
-    buyBtnDisabled: { opacity: 0.7 },
-    buyBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
-    restoreBtn: { alignItems: 'center', paddingVertical: 14, marginTop: 6 },
-    restoreBtnText: { color: COLORS.primary, fontWeight: '700', fontSize: 14 },
-});

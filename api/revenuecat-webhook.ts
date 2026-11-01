@@ -11,6 +11,8 @@
  *     API > service_role key — RLS'i bypass eder, yalnızca sunucuda kullanılır).
  *  4) RevenueCat'te entitlement kimlikleri services/purchaseService.ts'teki ile
  *     AYNI olmalı: 'tohum' | 'filiz' | 'fidan' | 'orman' (veli), 'cinar' | 'mese' (öğretmen).
+ *  5) Ürün kimliği paket adını ve süreyi içermeli (ör. minizeka_filiz_3m): bkz. lib/paywall.ts, api/_lib/revenuecatExpiry.ts.
+ *     Yenilenmeyen (bitişsiz) satın almalarda bitiş ürün kimliğindeki süreden hesaplanır; süre belirlenemezse erişim VERİLMEZ.
  *
  * app_user_id olarak kullanıcının e-postası bekleniyor (services/purchaseService.ts
  * appUserID'yi e-posta olarak ayarlıyor) — bu, profiles/teachers tablolarındaki
@@ -18,6 +20,7 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { keepLongerExpiry, resolveGrantExpiry } from './_lib/revenuecatExpiry';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -68,9 +71,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (REVOKE_EVENTS.has(event.type)) {
     // Hangi tabloda (veli/öğretmen) olduğu event'ten belli değil — ikisinde de dene,
     // eşleşmeyen tarafta 0 satır güncellenir, zararsız.
+    // Yalnız bitişi bu mağaza aboneliğinden gelen (bitişi şimdi/öncesi) kayıtlar düşürülür: web'den alınmış daha uzun
+    // süre ya da elle atanmış süresiz paket (bitiş NULL) mağaza aboneliğinin bitmesiyle silinmez.
+    const cutoff = new Date((typeof event.expiration_at_ms === 'number' ? event.expiration_at_ms : Date.now()) + 60_000).toISOString();
     const [profileRes, teacherRes] = await Promise.all([
-      supabaseAdmin.from('profiles').update({ subscription_tier: 'free', package_expires_at: null }).eq('email', email).select('email'),
-      supabaseAdmin.from('teachers').update({ subscription_tier: 'free', package_expires_at: null }).eq('email', email).select('email'),
+      supabaseAdmin.from('profiles').update({ subscription_tier: 'free', package_expires_at: null }).eq('email', email).lte('package_expires_at', cutoff).select('email'),
+      supabaseAdmin.from('teachers').update({ subscription_tier: 'free', package_expires_at: null }).eq('email', email).lte('package_expires_at', cutoff).select('email'),
     ]);
     const downgraded = (profileRes.data?.length || 0) + (teacherRes.data?.length || 0);
     return res.status(200).json({ ok: true, downgraded: downgraded > 0 });
@@ -91,7 +97,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ ok: true, skipped: 'unknown_entitlement' });
   }
 
-  const expiresAt = event.expiration_at_ms ? new Date(event.expiration_at_ms).toISOString() : null;
+  const expiry = resolveGrantExpiry(event);
+  if (expiry.kind === 'unknown') {
+    // Bitiş belirlenemedi (ör. yenilenmeyen ürün kimliğinde süre yok): süresiz erişim vermektense reddet ve logla.
+    console.warn('revenuecat-webhook: bitiş zamanı belirlenemedi, erişim verilmedi; ürün:', event.product_id);
+    return res.status(200).json({ ok: true, skipped: 'unknown_expiry' });
+  }
+  let expiresAt: string | null = expiry.kind === 'at' ? expiry.expiresAt : null;
+  {
+    // Aynı pakette zaten daha uzun süre varsa (ör. web'den alınmış) kısaltma.
+    const { data: existing } = await supabaseAdmin.from(table).select('subscription_tier, package_expires_at').eq('email', email).limit(1);
+    if (existing && existing[0]?.subscription_tier === tier) expiresAt = keepLongerExpiry(existing[0].package_expires_at, expiresAt);
+  }
   const { data, error } = await supabaseAdmin
     .from(table)
     .update({ subscription_tier: tier, package_started_at: new Date().toISOString(), package_expires_at: expiresAt })

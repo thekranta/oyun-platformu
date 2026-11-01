@@ -20,6 +20,7 @@ import Svg, { Circle, Line, Polyline } from 'react-native-svg';
 import DevelopmentRadar from './DevelopmentRadar';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { ensureAiConsent } from '../lib/aiConsentFlow';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { ReportEngine } from '../services/ReportEngine';
 import { buildWeeklyReport, buildWeeklyReportHTML, ReportAudience } from '../services/weeklyReport';
@@ -53,7 +54,7 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
 
 // Cumulative AI Analysis Function - Sends last 12 games to AI for trend analysis
 // Generates DUAL structure: 1) Teacher/Academic section with Maarif codes, 2) Parent section with scaffolding
-const analyzeWithAI = async (childName: string, childAge: number, games: GameScore[]): Promise<string | null> => {
+const analyzeWithAI = async (_childName: string, childAge: number, games: GameScore[]): Promise<string | null> => {
     if (games.length === 0) return null;
 
     const last12Games = games.slice(0, 12);
@@ -75,7 +76,8 @@ const analyzeWithAI = async (childName: string, childAge: number, games: GameSco
     else gelisimselDonem = 'Okula Hazırlık Dönemi (60-72 ay)';
 
     const prompt = `Sen bir okul öncesi eğitim uzmanısın ve Türkiye Yüzyılı Maarif Modeli'ne hakimsin.
-${childName} (${childAge} aylık - ${gelisimselDonem}) isimli çocuğun son ${last12Games.length} oyunluk performans verilerini analiz et.
+${childAge} aylık (${gelisimselDonem}) bir çocuğun son ${last12Games.length} oyunluk performans verilerini analiz et.
+GİZLİLİK: Çocuğun adı sana verilmedi. Raporda hiçbir isim yazma ya da uydurma; çocuktan "çocuk", veliye seslenen bölümde "çocuğunuz" diye söz et.
 
 VERİLER (JSON):
 ${JSON.stringify(gamesData, null, 2)}
@@ -337,6 +339,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     // Handler for generating cumulative AI report
     const handleGenerateCumulativeReport = async () => {
         if (isAnalyzing || scores.length === 0) return;
+        // Yapay zekâ izni (Apple 5.1.2(i)): çocuğun yaşı ve oyun sonuçları OpenAI'a gideceği için ebeveyn izni gerekir.
+        if (!(await ensureAiConsent('report'))) return;
         setIsAnalyzing(true);
         try {
             const report = await analyzeWithAI(childName, childAge, scores);
@@ -1796,6 +1800,9 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         <Image source={asset('/images/icon.png')} style={styles.footerLogo} resizeMode="contain" />
                         <Text style={styles.footerText}>ChildhoodTech Akademi</Text>
                         <Text style={styles.footerSubtext}>{t('veli.footerSubtext')}</Text>
+                        <TouchableOpacity onPress={() => router.push('/gizlilik-ayarlari')} accessibilityRole="link" style={{ paddingVertical: 12, paddingHorizontal: 16, marginTop: 6 }}>
+                            <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.textLight, textDecorationLine: 'underline' }}>{t('account.title')}</Text>
+                        </TouchableOpacity>
                     </View>
                 </ScrollView>
                 {reportNotice && (
