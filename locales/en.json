@@ -702,5 +702,58 @@
     "restoredWithTier": "We found your earlier purchase: {{tier}}",
     "restoreNone": "No active purchase is linked to this account.",
     "restoreFailed": "Purchases could not be restored."
+  },
+  "board": {
+    "bannerTitle": "Board Mode",
+    "bannerSubtitle": "Show games on the classroom smart board: full screen, large and together with the class",
+    "title": "Board Mode",
+    "subtitle": "Pick a game and play it with the whole class. Results are not saved in this mode.",
+    "ageLabel": "Class age",
+    "age": "Age {{age}}",
+    "allAreas": "All",
+    "lockedNote": "“{{game}}” is unlocked with the {{tier}} plan.",
+    "backToPanel": "Teacher panel",
+    "fullscreen": "Full screen",
+    "exitFullscreen": "Exit full screen",
+    "needTeacherTitle": "Teacher sign-in required",
+    "needTeacherText": "Board Mode opens with a teacher account. Please sign in to the teacher panel first.",
+    "goLogin": "Go to teacher sign-in",
+    "webOnlyTitle": "Board Mode runs in the browser",
+    "webOnlyText": "On the classroom board computer, open oyun.childhoodtech.com/tahta.",
+    "errorTitle": "Could not connect",
+    "errorText": "Your account details could not be read. Check your internet connection and try again.",
+    "retry": "Try again",
+    "loading": "Getting ready…",
+    "stage": {
+      "games": "Games",
+      "restart": "Restart",
+      "curtain": "Curtain",
+      "zoomIn": "Larger",
+      "zoomOut": "Smaller",
+      "zoomLevel": "Zoom {{percent}}%",
+      "gameLoading": "Getting the game ready…"
+    },
+    "curtain": {
+      "title": "Let’s listen",
+      "hint": "Tap the screen to continue"
+    },
+    "confirm": {
+      "exitTitle": "Go back to the games?",
+      "exitYes": "Yes, back to games",
+      "restartTitle": "Restart this game?",
+      "restartYes": "Yes, restart",
+      "cancel": "Cancel"
+    },
+    "ended": {
+      "title": "Well done, class!",
+      "again": "Play again",
+      "other": "Another game",
+      "close": "Close"
+    },
+    "game": {
+      "unavailableTitle": "The game could not open",
+      "unavailableText": "This game is not in this plan or cannot be used on the board.",
+      "backToGames": "Back to games"
+    }
   }
 }

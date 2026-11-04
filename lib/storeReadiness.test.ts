@@ -175,7 +175,7 @@ describe('yeni ekranların metinleri iki dilde var', () => {
         Object.entries(nesne as Record<string, unknown>).flatMap(([k, v]) =>
             v && typeof v === 'object' && !Array.isArray(v) ? anahtarlar(v, `${onek}${k}.`) : [`${onek}${k}`]);
 
-    const AD_ALANLARI = ['parentGate', 'aiConsent', 'account', 'deleteAccount', 'paywall'] as const;
+    const AD_ALANLARI = ['parentGate', 'aiConsent', 'account', 'deleteAccount', 'paywall', 'board'] as const;
 
     it('TR ve EN aynı anahtarlara sahip', () => {
         for (const alan of AD_ALANLARI) {
@@ -186,7 +186,10 @@ describe('yeni ekranların metinleri iki dilde var', () => {
     });
 
     it('ekranlarda kullanılan t(...) anahtarlarının hepsi tanımlı', () => {
-        const dosyalar = ['components/ParentGateHost.tsx', 'components/PaywallView.tsx', 'app/ai-izni.tsx', 'app/gizlilik-ayarlari.tsx', 'app/hesap-sil.tsx', 'app/paket-satin-al.tsx'];
+        const dosyalar = [
+            'components/ParentGateHost.tsx', 'components/PaywallView.tsx', 'app/ai-izni.tsx', 'app/gizlilik-ayarlari.tsx', 'app/hesap-sil.tsx', 'app/paket-satin-al.tsx',
+            'components/board/BoardPicker.tsx', 'components/board/BoardStage.web.tsx', 'app/tahta.tsx', 'app/tahta-oyun.tsx',
+        ];
         const varOlan = new Set(anahtarlar(tr));
         // Dinamik anahtarların alabileceği değerler
         const genislet = (anahtar: string): string[] => {
@@ -198,7 +201,7 @@ describe('yeni ekranların metinleri iki dilde var', () => {
         const eksik: string[] = [];
         for (const yol of dosyalar) {
             const k = oku(yol);
-            const bulunan = [...k.matchAll(/\bt\(\s*[`'"]((?:parentGate|aiConsent|account|deleteAccount|paywall|toyRoom)\.[^`'"]+)[`'"]/g)].map((m) => m[1]);
+            const bulunan = [...k.matchAll(/\bt\(\s*[`'"]((?:parentGate|aiConsent|account|deleteAccount|paywall|toyRoom|board)\.[^`'"]+)[`'"]/g)].map((m) => m[1]);
             const haritadan = [...k.matchAll(/'((?:deleteAccount)\.[A-Za-z]+)'/g)].map((m) => m[1]);
             for (const a of [...bulunan, ...haritadan].flatMap(genislet)) {
                 if (!varOlan.has(a) && !(a === 'deleteAccount.willDelete')) eksik.push(`${yol}: ${a}`);

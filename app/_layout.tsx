@@ -58,6 +58,8 @@ export default function RootLayout() {
             <Stack.Screen name="ai-izni" options={{ headerShown: false }} />
             <Stack.Screen name="gizlilik-ayarlari" options={{ headerShown: false }} />
             <Stack.Screen name="hesap-sil" options={{ headerShown: false }} />
+            <Stack.Screen name="tahta" options={{ headerShown: false }} />
+            <Stack.Screen name="tahta-oyun" options={{ headerShown: false }} />
           </Stack>
         </AndroidInsetFrame>
         <StatusBar style="auto" />

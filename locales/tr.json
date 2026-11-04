@@ -696,5 +696,58 @@
     "restoredWithTier": "Önceki satın alımınız bulundu: {{tier}}",
     "restoreNone": "Bu hesaba bağlı aktif bir satın alım bulunamadı.",
     "restoreFailed": "Satın alımlar geri yüklenemedi."
+  },
+  "board": {
+    "bannerTitle": "Tahta Modu",
+    "bannerSubtitle": "Oyunları akıllı tahtaya yansıt: tam ekran, büyük ve sınıfla birlikte",
+    "title": "Tahta Modu",
+    "subtitle": "Oyunu seç, sınıfla birlikte oyna. Bu modda sonuçlar kaydedilmez.",
+    "ageLabel": "Sınıfın yaşı",
+    "age": "{{age}} yaş",
+    "allAreas": "Tümü",
+    "lockedNote": "“{{game}}” {{tier}} paketiyle açılır.",
+    "backToPanel": "Öğretmen paneli",
+    "fullscreen": "Tam ekran",
+    "exitFullscreen": "Tam ekrandan çık",
+    "needTeacherTitle": "Öğretmen girişi gerekli",
+    "needTeacherText": "Tahta Modu öğretmen hesabıyla açılır. Önce öğretmen paneline giriş yapın.",
+    "goLogin": "Öğretmen girişine git",
+    "webOnlyTitle": "Tahta Modu tarayıcıda çalışır",
+    "webOnlyText": "Sınıf tahtasındaki bilgisayarda oyun.childhoodtech.com/tahta adresini açın.",
+    "errorTitle": "Bağlanılamadı",
+    "errorText": "Hesap bilgisi okunamadı. İnternetinizi kontrol edip yeniden deneyin.",
+    "retry": "Yeniden dene",
+    "loading": "Hazırlanıyor…",
+    "stage": {
+      "games": "Oyunlar",
+      "restart": "Baştan",
+      "curtain": "Perde",
+      "zoomIn": "Büyüt",
+      "zoomOut": "Küçült",
+      "zoomLevel": "Büyütme %{{percent}}",
+      "gameLoading": "Oyun hazırlanıyor…"
+    },
+    "curtain": {
+      "title": "Dinleyelim",
+      "hint": "Devam etmek için ekrana dokunun"
+    },
+    "confirm": {
+      "exitTitle": "Oyunlara dönülsün mü?",
+      "exitYes": "Evet, oyunlara dön",
+      "restartTitle": "Oyun baştan başlasın mı?",
+      "restartYes": "Evet, baştan başla",
+      "cancel": "Vazgeç"
+    },
+    "ended": {
+      "title": "Aferin sınıfa!",
+      "again": "Tekrar oyna",
+      "other": "Başka oyun",
+      "close": "Kapat"
+    },
+    "game": {
+      "unavailableTitle": "Oyun açılamadı",
+      "unavailableText": "Bu oyun bu pakette yok ya da tahtada kullanılamıyor.",
+      "backToGames": "Oyunlara dön"
+    }
   }
 }

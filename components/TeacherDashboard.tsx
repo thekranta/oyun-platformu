@@ -801,6 +801,18 @@ export default function TeacherDashboard({
                     </View>
                 </View>
 
+                {/* Tahta Modu: oyunları sınıf tahtasına büyük ve tam ekran yansıtır (yalnız web; demo profilde yok). */}
+                {Platform.OS === 'web' && teacherId !== 'demo-teacher' && (
+                    <TouchableOpacity style={styles.boardBanner} onPress={() => router.push('/tahta')} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel={t('board.bannerTitle')}>
+                        <Text style={styles.boardBannerEmoji}>📺</Text>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.boardBannerTitle}>{t('board.bannerTitle')}</Text>
+                            <Text style={styles.boardBannerSubtitle}>{t('board.bannerSubtitle')}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={22} color="#8A5A00" />
+                    </TouchableOpacity>
+                )}
+
                 {/* Oyun Rehberi: oyunlar + Maarif kodu/metni; "evde şu oyunu oynayın" demek için */}
                 <TouchableOpacity style={styles.guideBanner} onPress={openGuide} activeOpacity={0.85} accessibilityRole="button" accessibilityLabel={t('teacher.guide.openTitle')}>
                     <Text style={styles.guideBannerEmoji}>📚</Text>
@@ -1391,6 +1403,13 @@ const styles = StyleSheet.create({
     premiumBannerText: { fontSize: 14, color: '#856404', fontWeight: '500' },
 
     // Oyun Rehberi giriş bandı
+    boardBanner: {
+        flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF4DE', padding: 16, borderRadius: 20,
+        marginBottom: 14, gap: 14, borderWidth: 2, borderColor: '#F6DCA8',
+    },
+    boardBannerEmoji: { fontSize: 32 },
+    boardBannerTitle: { fontSize: 17, fontWeight: '800', color: '#8A5A00' },
+    boardBannerSubtitle: { fontSize: 12.5, color: '#A97B2A', marginTop: 2, lineHeight: 17 },
     guideBanner: {
         flexDirection: 'row', alignItems: 'center', backgroundColor: '#EEF4FF', padding: 16, borderRadius: 20,
         marginBottom: 22, gap: 14, borderWidth: 2, borderColor: '#CFE0FA',
