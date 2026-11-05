@@ -3,6 +3,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import { BOARD_BAR_HEIGHT, boardMessage, boardPlayHref, readBoardMessage, virtualSize, zoomPercent, type ParentToBoardType } from '../../lib/boardMode';
+import type { BoardPlayer } from '../../lib/boardRoster';
+import PlayerSheet from './PlayerSheet';
 import type { BoardStageProps } from './types';
 
 /**
@@ -33,16 +35,20 @@ function BarButton({ icon, label, onPress, disabled, showLabel }: { icon: IconNa
 }
 
 export default function BoardStage({
-    game, ageMonths, zoom, canZoomIn, canZoomOut, onZoomIn, onZoomOut, onBackToGames, fullscreen, fullscreenSupported, onToggleFullscreen, dev,
+    game, ageMonths, zoom, canZoomIn, canZoomOut, onZoomIn, onZoomOut, onBackToGames, fullscreen, fullscreenSupported, onToggleFullscreen, picker, dev,
 }: BoardStageProps) {
     const { t } = useTranslation();
     const { width: windowWidth } = useWindowDimensions();
     const iframeRef = useRef<HTMLIFrameElement | null>(null);
+    // İleti dinleyicisi bir kez kurulur; güncel seçiciyi (hangi çocuk oynuyor) buradan okur.
+    const pickerRef = useRef(picker);
+    pickerRef.current = picker;
 
     const [size, setSize] = useState({ width: 0, height: 0 });
     const [ready, setReady] = useState(false);
     const [ended, setEnded] = useState(false);
     const [curtain, setCurtain] = useState(false);
+    const [sheet, setSheet] = useState(false);
     const [confirm, setConfirm] = useState<null | 'exit' | 'restart'>(null);
 
     const src = useMemo(() => boardPlayHref({ game: game.routeKey, ageMonths, dev }), [game.routeKey, ageMonths, dev]);
@@ -63,7 +69,12 @@ export default function BoardStage({
             if (event.origin !== window.location.origin || event.source !== iframeRef.current?.contentWindow) return;
             const type = readBoardMessage(event.data, ['ready', 'ended', 'exit'] as const);
             if (type === 'ready') setReady(true);
-            else if (type === 'ended') setEnded(true);
+            else if (type === 'ended') {
+                setEnded(true);
+                // Sıra kimdeyse onun bu oturumda oynadığı işaretlenir (sıra herkese gelsin).
+                const current = pickerRef.current.player;
+                if (current) pickerRef.current.onPlayed(current.id);
+            }
             // Oyunun kendi geri oku ya da hata ekrani çıkış isterse: öğretmen onaylasın (çocuk yanlışlıkla dokunabilir).
             else if (type === 'exit') setConfirm('exit');
         };
@@ -71,10 +82,20 @@ export default function BoardStage({
         return () => window.removeEventListener('message', onMessage);
     }, []);
 
+    // Onay kartı ya da perde açılınca "Sıra kimde?" penceresi kapanır (alt çubuk açıkken de çalışır; oyun çıkış isterse de):
+    // onay kartı pencerenin arkasında kalıp "hiçbir şey olmuyor" gibi görünmesin.
     useEffect(() => {
+        if (confirm || curtain) setSheet(false);
+    }, [confirm, curtain]);
+
+    // Oyun penceresi her (yeniden) yüklendiğinde (ilk açılış ya da çocuğun yaşı değişince): yükleniyor perdesi döner, bitiş kartı
+    // kalkar; "hazır" iletisi gelmezse perde bu süre sonra yine de kalkar.
+    useEffect(() => {
+        setReady(false);
+        setEnded(false);
         const id = setTimeout(() => setReady(true), LOAD_FALLBACK_MS);
         return () => clearTimeout(id);
-    }, []);
+    }, [src]);
 
     const restartNow = () => {
         setEnded(false);
@@ -85,6 +106,23 @@ export default function BoardStage({
     const openCurtain = () => {
         setCurtain(true);
         postToGame('silence');
+    };
+
+    // "Sıra kimde?": seçerken oyunun sesi kesilir. Çocuk değişince oyun onun yaşıyla baştan başlar: yaş aynıysa oyun
+    // yeniden başlatılır, farklıysa adres değiştiği için oyun penceresi yeni yaşla yeniden yüklenir.
+    const openSheet = () => {
+        postToGame('silence');
+        setConfirm(null);
+        setSheet(true);
+    };
+
+    const choose = (player: BoardPlayer | null) => {
+        setSheet(false);
+        if ((player?.id ?? null) === (picker.player?.id ?? null)) return;
+        setEnded(false);
+        const sameAge = picker.ageFor(player) === ageMonths;
+        picker.onPlayer(player);
+        if (sameAge) postToGame('restart');
     };
 
     const onStageLayout = (event: LayoutChangeEvent) => {
@@ -123,13 +161,18 @@ export default function BoardStage({
                     </View>
                 )}
 
-                {ended && !curtain && !confirm && (
+                {ended && !curtain && !confirm && !sheet && (
                     <View style={styles.endedSheet} accessibilityLiveRegion="polite">
-                        <Text style={styles.endedTitle}>{t('board.ended.title')} 🎉</Text>
+                        <Text style={styles.endedTitle}>{picker.player ? t('board.ended.titleNamed', { name: picker.player.name }) : t('board.ended.title')} 🎉</Text>
                         <View style={styles.endedRow}>
                             <Pressable onPress={restartNow} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
                                 <Text style={styles.bigBtnText}>↻  {t('board.ended.again')}</Text>
                             </Pressable>
+                            {picker.phase !== 'off' && (
+                                <Pressable onPress={openSheet} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
+                                    <Text style={styles.bigBtnText}>👤  {t('board.ended.next')}</Text>
+                                </Pressable>
+                            )}
                             <Pressable onPress={onBackToGames} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
                                 <Text style={styles.bigBtnText}>{t('board.ended.other')}</Text>
                             </Pressable>
@@ -162,11 +205,17 @@ export default function BoardStage({
                         </View>
                     </View>
                 )}
+
+                {sheet && <PlayerSheet picker={picker} onPick={choose} onClose={() => setSheet(false)} />}
             </View>
 
             <View style={styles.bar}>
                 <BarButton icon="grid" label={t('board.stage.games')} onPress={() => setConfirm('exit')} showLabel={showLabels} />
-                <Text style={styles.barTitle} numberOfLines={1}>{game.emoji}  {game.title}</Text>
+                {picker.phase !== 'off' && <BarButton icon="people" label={t('board.stage.whoseTurn')} onPress={openSheet} showLabel={showLabels} />}
+                <Text style={styles.barTitle} numberOfLines={1}>
+                    {picker.player && <Text style={styles.barPlayer}>👤 {picker.player.name}  ·  </Text>}
+                    {game.emoji}  {game.title}
+                </Text>
                 <BarButton icon="refresh" label={t('board.stage.restart')} onPress={() => setConfirm('restart')} showLabel={showLabels} />
                 <BarButton icon="eye-off" label={t('board.stage.curtain')} onPress={openCurtain} showLabel={showLabels} />
                 <BarButton icon="remove-circle" label={t('board.stage.zoomOut')} onPress={onZoomOut} disabled={!canZoomOut} showLabel={false} />
@@ -194,6 +243,7 @@ const styles = StyleSheet.create({
     barBtnPressed: { backgroundColor: '#455A64' },
     barBtnText: { color: '#FFFFFF', fontSize: 18, fontWeight: '800' },
     barTitle: { flex: 1, color: '#ECEFF1', fontSize: 20, fontWeight: '800', textAlign: 'center', paddingHorizontal: 8 },
+    barPlayer: { color: '#FFD54F' },
     zoomText: { color: '#CFD8DC', fontSize: 18, fontWeight: '800', minWidth: 62, textAlign: 'center' },
     loading: { alignItems: 'center', justifyContent: 'center', gap: 14, backgroundColor: '#263238' },
     loadingText: { color: '#FFFFFF', fontSize: 22, fontWeight: '700' },

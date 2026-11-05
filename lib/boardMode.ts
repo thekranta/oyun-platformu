@@ -229,19 +229,24 @@ export interface BoardPrefs {
     ageGroup: BoardAgeGroup;
     /** Otomatik büyütmeye göre adım sayısı (0 = otomatik; + daha büyük, − daha küçük). */
     zoomOffset: number;
+    /** Son seçilen sınıf (Meşe'de birden çok sınıf olabilir; tahtanın bilgisayarı hep aynı sınıfı açsın). */
+    classId: string | null;
 }
 
-export const DEFAULT_PREFS: BoardPrefs = { ageGroup: DEFAULT_AGE_GROUP, zoomOffset: 0 };
+export const DEFAULT_PREFS: BoardPrefs = { ageGroup: DEFAULT_AGE_GROUP, zoomOffset: 0, classId: null };
 const MAX_OFFSET = 12;
+const MAX_CLASS_ID_LENGTH = 64;
 
 export function parseBoardPrefs(raw: string | null | undefined): BoardPrefs {
     if (!raw) return DEFAULT_PREFS;
     try {
-        const value = JSON.parse(raw) as { ageGroup?: unknown; zoomOffset?: unknown };
+        const value = JSON.parse(raw) as { ageGroup?: unknown; zoomOffset?: unknown; classId?: unknown };
         const offset = typeof value.zoomOffset === 'number' && Number.isFinite(value.zoomOffset) ? Math.round(value.zoomOffset) : 0;
+        const classId = typeof value.classId === 'string' && value.classId.length > 0 && value.classId.length <= MAX_CLASS_ID_LENGTH ? value.classId : null;
         return {
             ageGroup: isAgeGroup(value.ageGroup) ? value.ageGroup : DEFAULT_AGE_GROUP,
             zoomOffset: Math.max(-MAX_OFFSET, Math.min(MAX_OFFSET, offset)),
+            classId,
         };
     } catch {
         return DEFAULT_PREFS;

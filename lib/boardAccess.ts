@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { boardGameTier } from './boardMode';
-import type { OgretmenTier, VeliTier } from './subscriptionTiers';
+import { getEffectiveOgretmenTier, getOgretmenFlags, type OgretmenTier, type VeliTier } from './subscriptionTiers';
 import { supabase } from './supabase';
 
 /**
@@ -15,7 +15,17 @@ export type BoardAccess =
     | { phase: 'web-only' }
     | { phase: 'no-teacher' }
     | { phase: 'error' }
-    | { phase: 'ready'; name: string; teacherTier: OgretmenTier; tier: VeliTier };
+    | {
+        phase: 'ready';
+        name: string;
+        teacherTier: OgretmenTier;
+        /** Oyun erişim düzeyi (paketten; süresi dolmuşsa ücretsiz). */
+        tier: VeliTier;
+        /** Öğretmenin kendi kullanıcı kimliği (kendi sınıflarını okumak için). */
+        userId: string;
+        /** "Sıra kimde?" (sınıf listesinden çocuk seçme) bu pakette açık mı? Geçerli (süresi dolmamış) Çınar/Meşe. */
+        students: boolean;
+    };
 
 interface ClientLike {
     auth: { getSession(): Promise<{ data: { session: { user: { id: string } } | null } }> };
@@ -35,11 +45,14 @@ export async function loadBoardAccess(client: ClientLike): Promise<BoardAccess> 
         if (error) return { phase: 'error' };
         if (!row) return { phase: 'no-teacher' };
         const teacherTier = (row.subscription_tier as OgretmenTier | null) ?? 'free';
+        const expiresAt = row.package_expires_at as string | null;
         return {
             phase: 'ready',
             name: String(row.name ?? ''),
             teacherTier,
-            tier: boardGameTier(teacherTier, row.package_expires_at as string | null),
+            tier: boardGameTier(teacherTier, expiresAt),
+            userId: user.id,
+            students: getOgretmenFlags(getEffectiveOgretmenTier(teacherTier, expiresAt)).canUseBoardStudents,
         };
     } catch {
         return { phase: 'error' };
@@ -47,7 +60,7 @@ export async function loadBoardAccess(client: ClientLike): Promise<BoardAccess> 
 }
 
 /** YALNIZ geliştirme (`__DEV__`) sürümünde `?dev=1` ile öğretmen oturumu olmadan önizleme için. Üretim paketinde çalışmaz. */
-export const DEV_BOARD_ACCESS: BoardAccess = { phase: 'ready', name: 'Deneme Öğretmen', teacherTier: 'mese', tier: 'fidan' };
+export const DEV_BOARD_ACCESS: BoardAccess = { phase: 'ready', name: 'Deneme Öğretmen', teacherTier: 'mese', tier: 'fidan', userId: 'dev-user', students: true };
 
 export function useBoardAccess(devBypass: boolean): { access: BoardAccess; retry: () => void } {
     const [access, setAccess] = useState<BoardAccess>({ phase: 'loading' });

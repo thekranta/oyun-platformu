@@ -213,6 +213,13 @@ describe('tahta modu kaynak değişmezleri', () => {
         for (const yasak of ['saveGameResult', 'services/gameResults', 'supabase.from', 'rest/v1']) expect(k).not.toContain(yasak);
         expect(k).toContain("email: ''");
         expect(k).toContain("onGameEnd: () => post('ended')");
+        // Çocuğun gerçek adı oyun penceresine (ve dolayısıyla konuşma/ses hizmetine) gitmez: oyun hep tarafsız adla açılır.
+        expect(k).toContain('ad: BOARD_CHILD_NAME');
+    });
+
+    it('seçilen çocuğun adı oyun penceresinin adresine girmez; adres yalnız oyun, yaş ve geliştirme bayrağı taşır', () => {
+        expect(oku('components/board/BoardStage.web.tsx')).toContain('boardPlayHref({ game: game.routeKey, ageMonths, dev })');
+        expect(boardPlayHref({ game: 'hafiza-2', ageMonths: 61 })).toBe('/tahta-oyun?g=hafiza-2&yas=61');
     });
 
     it('iletiler yalnız aynı kaynaktan ve beklenen pencereden kabul edilir (iki yönde)', () => {
@@ -275,14 +282,23 @@ describe('oyun penceresi adresi ve iletişim', () => {
 
 describe('parseBoardPrefs', () => {
     it('geçerli tercihi okur', () => {
-        expect(parseBoardPrefs(JSON.stringify({ ageGroup: 5, zoomOffset: 2 }))).toEqual({ ageGroup: 5, zoomOffset: 2 });
-        expect(parseBoardPrefs(JSON.stringify({ ageGroup: 5, zoomOffset: -1 }))).toEqual({ ageGroup: 5, zoomOffset: -1 });
+        expect(parseBoardPrefs(JSON.stringify({ ageGroup: 5, zoomOffset: 2 }))).toEqual({ ageGroup: 5, zoomOffset: 2, classId: null });
+        expect(parseBoardPrefs(JSON.stringify({ ageGroup: 5, zoomOffset: -1 }))).toEqual({ ageGroup: 5, zoomOffset: -1, classId: null });
     });
 
     it('bozuk/boş/yabancı değerde varsayılan', () => {
         expect(parseBoardPrefs(null)).toEqual(DEFAULT_PREFS);
         expect(parseBoardPrefs('bozuk{')).toEqual(DEFAULT_PREFS);
         expect(parseBoardPrefs(JSON.stringify({ ageGroup: 9, zoomOffset: 'x' }))).toEqual(DEFAULT_PREFS);
-        expect(parseBoardPrefs(JSON.stringify({ ageGroup: 3, zoomOffset: 99 }))).toEqual({ ageGroup: 3, zoomOffset: 12 });
+        expect(parseBoardPrefs(JSON.stringify({ ageGroup: 3, zoomOffset: 99 }))).toEqual({ ageGroup: 3, zoomOffset: 12, classId: null });
+    });
+
+    it('hatırlanan sınıf: geçerli metin korunur, eski kayıtta (sınıf alanı yok) ve bozuk değerde null olur', () => {
+        const id = '3f1c9a52-7b0e-4d0a-9d55-0a1b2c3d4e5f';
+        expect(parseBoardPrefs(JSON.stringify({ ageGroup: 4, zoomOffset: 0, classId: id })).classId).toBe(id);
+        expect(parseBoardPrefs(JSON.stringify({ ageGroup: 4, zoomOffset: 0 })).classId).toBeNull();
+        for (const bozuk of [5, '', null, {}, 'x'.repeat(65)]) {
+            expect(parseBoardPrefs(JSON.stringify({ ageGroup: 4, zoomOffset: 0, classId: bozuk })).classId).toBeNull();
+        }
     });
 });

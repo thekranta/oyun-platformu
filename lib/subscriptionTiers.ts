@@ -29,16 +29,18 @@ export interface OgretmenFeatureFlags {
     maxStudentsPerClass: number;
     /** Sınıf Bahçesi (davranış ödül panosu) — Çınar/Meşe (ücretli sınıf paketi) ile aynı sınır. */
     canUseRewardBoard: boolean;
+    /** Tahta Modu'nda sınıf listesinden çocuk seçmek ("Sıra kimde?") — Sınıf Bahçesi ile aynı sınır (Çınar/Meşe). */
+    canUseBoardStudents: boolean;
 }
 
 export const OGRETMEN_TIER_FLAGS: Record<OgretmenTier, OgretmenFeatureFlags> = {
-    free: { canSeeAiAnalysis: false, maxClasses: 1, maxStudentsPerClass: 10, canUseRewardBoard: false },
+    free: { canSeeAiAnalysis: false, maxClasses: 1, maxStudentsPerClass: 10, canUseRewardBoard: false, canUseBoardStudents: false },
     // Çınar = "Sınıf Paketi": childhoodtech.com'da "Tek bir sınıf için, 10 çocuğa
     // kadar profil" olarak satılıyor — yani sınırsız sınıf değil, TEK sınıf + o
     // sınıfta 10 öğrenci sınırı. maxClasses:Infinity bu vaadi bozup sınırsız sayıda
     // 10'luk sınıf açılmasına izin veriyordu.
-    cinar: { canSeeAiAnalysis: true, maxClasses: 1, maxStudentsPerClass: 10, canUseRewardBoard: true },
-    mese: { canSeeAiAnalysis: true, maxClasses: Infinity, maxStudentsPerClass: Infinity, canUseRewardBoard: true },
+    cinar: { canSeeAiAnalysis: true, maxClasses: 1, maxStudentsPerClass: 10, canUseRewardBoard: true, canUseBoardStudents: true },
+    mese: { canSeeAiAnalysis: true, maxClasses: Infinity, maxStudentsPerClass: Infinity, canUseRewardBoard: true, canUseBoardStudents: true },
 };
 
 function isExpired(expiresAt: string | null | undefined): boolean {

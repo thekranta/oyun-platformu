@@ -188,7 +188,7 @@ describe('yeni ekranların metinleri iki dilde var', () => {
     it('ekranlarda kullanılan t(...) anahtarlarının hepsi tanımlı', () => {
         const dosyalar = [
             'components/ParentGateHost.tsx', 'components/PaywallView.tsx', 'app/ai-izni.tsx', 'app/gizlilik-ayarlari.tsx', 'app/hesap-sil.tsx', 'app/paket-satin-al.tsx',
-            'components/board/BoardPicker.tsx', 'components/board/BoardStage.web.tsx', 'app/tahta.tsx', 'app/tahta-oyun.tsx',
+            'components/board/BoardPicker.tsx', 'components/board/BoardStage.web.tsx', 'components/board/PlayerSheet.tsx', 'app/tahta.tsx', 'app/tahta-oyun.tsx',
         ];
         const varOlan = new Set(anahtarlar(tr));
         // Dinamik anahtarların alabileceği değerler

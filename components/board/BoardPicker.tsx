@@ -4,10 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BOARD_AGE_GROUPS, boardAreas, filterByArea, teacherTierFor, type BoardAgeGroup, type BoardGame } from '../../lib/boardMode';
+import PlayerSheet, { useAgeText } from './PlayerSheet';
+import type { BoardPlayerPicker } from './types';
 
 /**
  * Tahta Modu oyun seçici. Bu ekran da tahtada görünür (büyütme katmanının DIŞINDA), bu yüzden yazı ve dokunma
  * hedefleri pencere genişliğine göre büyür: 1280 px = 1x, 1920 px = 1,5x (en çok 2x).
+ * Sınıf paketi öğretmeninde "Kim oynuyor?" düğmesi çıkar (components/board/PlayerSheet.tsx); çocuk seçiliyse oyun
+ * onun yaşına göre açılır ve yaş grubu çipleri yerine çocuğun yaşı gösterilir.
  */
 
 interface Props {
@@ -19,16 +23,20 @@ interface Props {
     fullscreen: boolean;
     fullscreenSupported: boolean;
     onToggleFullscreen: () => void;
+    picker: BoardPlayerPicker;
 }
 
 const NOTE_MS = 4000;
 
-export default function BoardPicker({ games, ageGroup, onAgeGroup, onPick, onClose, fullscreen, fullscreenSupported, onToggleFullscreen }: Props) {
+export default function BoardPicker({ games, ageGroup, onAgeGroup, onPick, onClose, fullscreen, fullscreenSupported, onToggleFullscreen, picker }: Props) {
     const { t } = useTranslation();
     const { width } = useWindowDimensions();
+    const ageText = useAgeText();
     const [area, setArea] = useState<string | null>(null);
     const [note, setNote] = useState<string | null>(null);
+    const [sheetOpen, setSheetOpen] = useState(false);
     const noteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const childAge = picker.player?.ageMonths ?? null;
 
     useEffect(() => () => { if (noteTimer.current) clearTimeout(noteTimer.current); }, []);
 
@@ -70,15 +78,31 @@ export default function BoardPicker({ games, ageGroup, onAgeGroup, onPick, onClo
             <ScrollView contentContainerStyle={{ paddingHorizontal: pad, paddingBottom: 60 * u }}>
                 <Text style={[styles.subtitle, { fontSize: 18 * u }]}>{t('board.subtitle')}</Text>
 
-                <View style={[styles.chipRow, { gap: 10 * u, marginTop: 14 * u }]}>
-                    <Text style={[styles.chipLabel, { fontSize: 17 * u }]}>{t('board.ageLabel')}</Text>
-                    {BOARD_AGE_GROUPS.map((group) => (
-                        <Pressable key={group} onPress={() => onAgeGroup(group)} accessibilityRole="button" accessibilityState={{ selected: group === ageGroup }}
-                            style={[styles.chip, { paddingHorizontal: 20 * u, paddingVertical: 10 * u }, group === ageGroup && styles.chipOn]}>
-                            <Text style={[styles.chipText, { fontSize: 18 * u }, group === ageGroup && styles.chipTextOn]}>{t('board.age', { age: group })}</Text>
+                {picker.phase !== 'off' && (
+                    <View style={[styles.chipRow, { gap: 10 * u, marginTop: 14 * u }]}>
+                        <Pressable onPress={() => setSheetOpen(true)} accessibilityRole="button" accessibilityLabel={t('board.picker.whoPlays')}
+                            style={[styles.playerPill, { paddingHorizontal: 22 * u, paddingVertical: 12 * u, gap: 10 * u }, picker.player && styles.playerPillOn]}>
+                            <Text style={{ fontSize: 24 * u }}>👤</Text>
+                            <Text style={[styles.playerPillText, { fontSize: 21 * u }, picker.player && styles.playerPillTextOn]}>
+                                {picker.player ? picker.player.name : t('board.picker.whoPlays')}
+                            </Text>
+                            {childAge != null && <Text style={[styles.playerPillAge, { fontSize: 16 * u }]}>{ageText(childAge)}</Text>}
+                            <Ionicons name="chevron-down" size={22 * u} color={picker.player ? '#FFFFFF' : '#584B40'} />
                         </Pressable>
-                    ))}
-                </View>
+                    </View>
+                )}
+
+                {childAge == null && (
+                    <View style={[styles.chipRow, { gap: 10 * u, marginTop: 14 * u }]}>
+                        <Text style={[styles.chipLabel, { fontSize: 17 * u }]}>{t('board.ageLabel')}</Text>
+                        {BOARD_AGE_GROUPS.map((group) => (
+                            <Pressable key={group} onPress={() => onAgeGroup(group)} accessibilityRole="button" accessibilityState={{ selected: group === ageGroup }}
+                                style={[styles.chip, { paddingHorizontal: 20 * u, paddingVertical: 10 * u }, group === ageGroup && styles.chipOn]}>
+                                <Text style={[styles.chipText, { fontSize: 18 * u }, group === ageGroup && styles.chipTextOn]}>{t('board.age', { age: group })}</Text>
+                            </Pressable>
+                        ))}
+                    </View>
+                )}
 
                 <View style={[styles.chipRow, { gap: 10 * u, marginTop: 12 * u, marginBottom: 16 * u }]}>
                     <Pressable onPress={() => setArea(null)} accessibilityRole="button" accessibilityState={{ selected: area === null }}
@@ -116,6 +140,14 @@ export default function BoardPicker({ games, ageGroup, onAgeGroup, onPick, onClo
                     <Text style={[styles.noteText, { fontSize: 18 * u }]}>{note}</Text>
                 </View>
             )}
+
+            {sheetOpen && (
+                <PlayerSheet
+                    picker={picker}
+                    onPick={(player) => { picker.onPlayer(player); setSheetOpen(false); }}
+                    onClose={() => setSheetOpen(false)}
+                />
+            )}
         </SafeAreaView>
     );
 }
@@ -128,6 +160,11 @@ const styles = StyleSheet.create({
     title: { color: '#584B40', fontWeight: '900' },
     subtitle: { color: '#756753', fontWeight: '600', textAlign: 'center' },
     chipRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' },
+    playerPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 999, borderWidth: 3, borderColor: '#3F7D72' },
+    playerPillOn: { backgroundColor: '#3F7D72' },
+    playerPillText: { color: '#3F342A', fontWeight: '900' },
+    playerPillTextOn: { color: '#FFFFFF' },
+    playerPillAge: { color: '#D9F0EA', fontWeight: '700' },
     chipLabel: { color: '#756753', fontWeight: '800' },
     chip: { backgroundColor: '#EFE7D9', borderRadius: 999 },
     chipOn: { backgroundColor: '#3F7D72' },

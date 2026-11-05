@@ -29,7 +29,7 @@ describe('loadBoardAccess', () => {
 
     it('öğretmen satırını KENDİ kullanıcı kimliğiyle okur ve paketten oyun düzeyini çıkarır', async () => {
         const { client, calls } = fakeClient({ session: { user: { id: 'u1' } }, row: { name: 'Ayşe', subscription_tier: 'cinar', package_expires_at: null } });
-        expect(await loadBoardAccess(client)).toEqual({ phase: 'ready', name: 'Ayşe', teacherTier: 'cinar', tier: 'filiz' });
+        expect(await loadBoardAccess(client)).toEqual({ phase: 'ready', name: 'Ayşe', teacherTier: 'cinar', tier: 'filiz', userId: 'u1', students: true });
         expect(calls).toContainEqual(['from', 'teachers', null]);
         expect(calls).toContainEqual(['eq', 'user_id', 'u1']);
     });
@@ -41,6 +41,17 @@ describe('loadBoardAccess', () => {
         expect(await loadBoardAccess(dolmus.client)).toMatchObject({ phase: 'ready', tier: 'free' });
         const bos = fakeClient({ session: { user: { id: 'u1' } }, row: { name: 'A', subscription_tier: null, package_expires_at: null } });
         expect(await loadBoardAccess(bos.client)).toMatchObject({ phase: 'ready', teacherTier: 'free', tier: 'free' });
+    });
+
+    it('çocuk seçimi ("Sıra kimde?") yalnız geçerli sınıf paketinde açık; ücretsiz ve süresi dolmuş pakette kapalı', async () => {
+        const kimlik = { user: { id: 'u1' } };
+        const ac = async (tier: string | null, expires: string | null) =>
+            loadBoardAccess(fakeClient({ session: kimlik, row: { name: 'A', subscription_tier: tier, package_expires_at: expires } }).client);
+        expect(await ac('cinar', null)).toMatchObject({ students: true });
+        expect(await ac('mese', '2999-01-01T00:00:00Z')).toMatchObject({ students: true });
+        expect(await ac('free', null)).toMatchObject({ students: false });
+        expect(await ac(null, null)).toMatchObject({ students: false });
+        expect(await ac('cinar', '2000-01-01T00:00:00Z')).toMatchObject({ students: false });
     });
 
     it('veritabanı hatası ya da ağ hatasında error (öğretmen yok DEĞİL: yeniden denenebilir)', async () => {

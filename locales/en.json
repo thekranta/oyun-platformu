@@ -731,7 +731,8 @@
       "zoomIn": "Larger",
       "zoomOut": "Smaller",
       "zoomLevel": "Zoom {{percent}}%",
-      "gameLoading": "Getting the game ready…"
+      "gameLoading": "Getting the game ready…",
+      "whoseTurn": "Whose turn?"
     },
     "curtain": {
       "title": "Let’s listen",
@@ -746,9 +747,29 @@
     },
     "ended": {
       "title": "Well done, class!",
+      "titleNamed": "Well done, {{name}}!",
       "again": "Play again",
+      "next": "Whose turn?",
       "other": "Another game",
       "close": "Close"
+    },
+    "picker": {
+      "whoPlays": "Who is playing?",
+      "title": "Whose turn?",
+      "guest": "Whole class",
+      "guestHint": "No names, all together",
+      "classFallback": "Class",
+      "loading": "Getting the class list ready…",
+      "error": "The class list could not be read. Check your internet connection and try again.",
+      "retry": "Try again",
+      "noClasses": "You have no class yet. Add one from the teacher panel.",
+      "empty": "No approved children in this class yet. They appear here after a parent approves.",
+      "excluded": "Not listed: {{n}} (waiting for parent approval, or the parent account has several children).",
+      "noSaveNote": "Results are not saved for now. The child’s age is applied to the game.",
+      "played": "Played",
+      "close": "Close",
+      "age": "{{years}} yr {{months}} mo",
+      "ageYears": "{{years}} yr"
     },
     "game": {
       "unavailableTitle": "The game could not open",

@@ -725,7 +725,8 @@
       "zoomIn": "Büyüt",
       "zoomOut": "Küçült",
       "zoomLevel": "Büyütme %{{percent}}",
-      "gameLoading": "Oyun hazırlanıyor…"
+      "gameLoading": "Oyun hazırlanıyor…",
+      "whoseTurn": "Sıra kimde?"
     },
     "curtain": {
       "title": "Dinleyelim",
@@ -740,9 +741,29 @@
     },
     "ended": {
       "title": "Aferin sınıfa!",
+      "titleNamed": "Aferin {{name}}!",
       "again": "Tekrar oyna",
+      "next": "Sıra kimde?",
       "other": "Başka oyun",
       "close": "Kapat"
+    },
+    "picker": {
+      "whoPlays": "Kim oynuyor?",
+      "title": "Sıra kimde?",
+      "guest": "Tüm sınıf",
+      "guestHint": "İsimsiz, hep birlikte",
+      "classFallback": "Sınıf",
+      "loading": "Sınıf listesi hazırlanıyor…",
+      "error": "Sınıf listesi okunamadı. İnternetinizi kontrol edip yeniden deneyin.",
+      "retry": "Yeniden dene",
+      "noClasses": "Henüz bir sınıfınız yok. Öğretmen panelinden sınıf ekleyin.",
+      "empty": "Bu sınıfta henüz onaylı çocuk yok. Veli onayından sonra burada görünür.",
+      "excluded": "Listede olmayan: {{n}} çocuk (veli onayı bekliyor ya da hesapta birden fazla çocuk var).",
+      "noSaveNote": "Şimdilik sonuç kaydedilmez. Çocuğun yaşı oyuna uygulanır.",
+      "played": "Oynadı",
+      "close": "Kapat",
+      "age": "{{years}} yaş {{months}} ay",
+      "ageYears": "{{years}} yaş"
     },
     "game": {
       "unavailableTitle": "Oyun açılamadı",

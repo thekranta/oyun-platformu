@@ -6,10 +6,10 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, Vi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BoardPicker from '../components/board/BoardPicker';
 import BoardStage from '../components/board/BoardStage';
+import type { BoardPlayerPicker } from '../components/board/types';
 import { GAME_RENDERERS } from '../components/gameRegistry';
 import { useBoardAccess } from '../lib/boardAccess';
 import {
-    ageGroupToMonths,
     autoZoom,
     buildBoardGames,
     DEFAULT_PREFS,
@@ -24,12 +24,15 @@ import {
     type BoardPrefs,
 } from '../lib/boardMode';
 import { fullscreenSupported, toggleFullscreen, useFullscreen } from '../lib/fullscreen';
+import { playerAgeMonths, useBoardRoster, type BoardPlayer } from '../lib/boardRoster';
 import { useWakeLock } from '../lib/screenWake';
 
 /**
  * TAHTA MODU: öğretmen, sınıf tahtasındaki bilgisayarda (oyun.childhoodtech.com/tahta) bir oyun seçer; oyun tahtayı
- * dolduracak şekilde büyütülmüş olarak çalışır ve alttaki kontrol çubuğundan yönetilir. v1: sonuç KAYDEDİLMEZ,
- * çocuk adı/puanı gösterilmez. Yalnız öğretmen hesabı (lib/boardAccess.ts). Tarayıcıda çalışır; native'de bilgi verir.
+ * dolduracak şekilde büyütülmüş olarak çalışır ve alttaki kontrol çubuğundan yönetilir. Sonuç KAYDEDİLMEZ, puan
+ * gösterilmez. Sınıf paketi öğretmeni "Sıra kimde?" ile sınıf listesinden çocuk seçebilir: tahtada yalnız ilk ad
+ * görünür, oyun çocuğun yaşıyla açılır (lib/boardRoster.ts). Yalnız öğretmen hesabı (lib/boardAccess.ts).
+ * Tarayıcıda çalışır; native'de bilgi verir.
  */
 
 const PREFS_KEY = 'board.prefs.v1';
@@ -79,10 +82,46 @@ export default function Tahta() {
 
     const games = useMemo(() => (access.phase === 'ready' ? buildBoardGames(GAME_RENDERERS, access.tier) : []), [access]);
 
+    // "Sıra kimde?": yalnız sınıf paketinde (access.students) ve tercihler okunduktan sonra (hatırlanan sınıf için) yüklenir.
+    const roster = useBoardRoster({
+        enabled: access.phase === 'ready' && access.students && prefsReady,
+        userId: access.phase === 'ready' ? access.userId : null,
+        dev,
+        preferredClassId: prefs.classId,
+    });
+    const [player, setPlayer] = useState<BoardPlayer | null>(null);
+    const [played, setPlayed] = useState<ReadonlySet<string>>(() => new Set());
+
+    // Seçili çocuk yeni listede yoksa (sınıf değişti, veli çıkarttı) seçim kalkar.
+    useEffect(() => {
+        if (player && roster.phase === 'ready' && !roster.players.some((p) => p.id === player.id)) setPlayer(null);
+    }, [player, roster.phase, roster.players]);
+
     const auto = autoZoom(width, height);
     const zoom = zoomWithOffset(auto, prefs.zoomOffset);
     const changeZoom = (direction: 1 | -1) => updatePrefs({ ...prefs, zoomOffset: offsetForZoom(auto, stepZoom(zoom, direction)) });
     const changeAge = (ageGroup: BoardAgeGroup) => updatePrefs({ ...prefs, ageGroup });
+    const changeClass = (classId: string) => {
+        roster.selectClass(classId);
+        setPlayer(null);
+        setPlayed(new Set());
+        updatePrefs({ ...prefs, classId });
+    };
+
+    const picker: BoardPlayerPicker = {
+        phase: roster.phase,
+        classes: roster.classes,
+        classId: roster.classId,
+        onClass: changeClass,
+        players: roster.players,
+        excluded: roster.excluded,
+        player,
+        played,
+        onPlayer: setPlayer,
+        onPlayed: (id) => setPlayed((prev) => (prev.has(id) ? prev : new Set(prev).add(id))),
+        onRetry: roster.retry,
+        ageFor: (p) => playerAgeMonths(p, prefs.ageGroup),
+    };
 
     const leave = () => {
         if (router.canGoBack()) router.back();
@@ -113,7 +152,7 @@ export default function Tahta() {
         return (
             <BoardStage
                 game={selected}
-                ageMonths={ageGroupToMonths(prefs.ageGroup)}
+                ageMonths={playerAgeMonths(player, prefs.ageGroup)}
                 zoom={zoom}
                 canZoomIn={zoom < ZOOM_MAX}
                 canZoomOut={zoom > ZOOM_MIN}
@@ -123,6 +162,7 @@ export default function Tahta() {
                 fullscreen={fullscreen}
                 fullscreenSupported={fullscreenSupported()}
                 onToggleFullscreen={toggleFullscreen}
+                picker={picker}
                 dev={dev}
             />
         );
@@ -138,6 +178,7 @@ export default function Tahta() {
             fullscreen={fullscreen}
             fullscreenSupported={fullscreenSupported()}
             onToggleFullscreen={toggleFullscreen}
+            picker={picker}
         />
     );
 }
