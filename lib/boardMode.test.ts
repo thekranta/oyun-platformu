@@ -7,6 +7,7 @@ import {
     BOARD_AGE_GROUPS,
     BOARD_BAR_HEIGHT,
     BOARD_EXCLUDED_ROUTES,
+    BOARD_RESULT_LIMITS,
     BOARD_TARGET_HEIGHT,
     BOARD_TARGET_WIDTH,
     boardAreas,
@@ -23,6 +24,9 @@ import {
     offsetForZoom,
     parseBoardPrefs,
     readBoardMessage,
+    readBoardResult,
+    resultFromGameEnd,
+    sanitizeBoardResult,
     stepZoom,
     teacherTierFor,
     virtualSize,
@@ -212,7 +216,9 @@ describe('tahta modu kaynak değişmezleri', () => {
         const k = oku('app/tahta-oyun.tsx');
         for (const yasak of ['saveGameResult', 'services/gameResults', 'supabase.from', 'rest/v1']) expect(k).not.toContain(yasak);
         expect(k).toContain("email: ''");
-        expect(k).toContain("onGameEnd: () => post('ended')");
+        // Sonuç üst sayfaya iletilir (kaydetme kararı ve çağrısı orada); çizim ve algılanan kelime taşınmaz.
+        expect(k).toContain("post('ended', resultFromGameEnd(oyunAdi, sure, hamle, hata, extra))");
+        expect(k).not.toMatch(/cizim/);
         // Çocuğun gerçek adı oyun penceresine (ve dolayısıyla konuşma/ses hizmetine) gitmez: oyun hep tarafsız adla açılır.
         expect(k).toContain('ad: BOARD_CHILD_NAME');
     });
@@ -228,7 +234,7 @@ describe('tahta modu kaynak değişmezleri', () => {
         expect(sahne).toContain('postMessage(boardMessage(type), window.location.origin)');
         const oyun = oku('app/tahta-oyun.tsx');
         expect(oyun).toContain('event.origin !== window.location.origin || event.source !== window.parent');
-        expect(oyun).toContain('postMessage(boardMessage(type), window.location.origin)');
+        expect(oyun).toContain('postMessage(boardMessage(type, result), window.location.origin)');
     });
 
     it('geliştirme önizlemesi (?dev=1) yalnız __DEV__ sürümünde çalışır; üretimde öğretmen oturumu şart', () => {
@@ -300,5 +306,82 @@ describe('parseBoardPrefs', () => {
         for (const bozuk of [5, '', null, {}, 'x'.repeat(65)]) {
             expect(parseBoardPrefs(JSON.stringify({ ageGroup: 4, zoomOffset: 0, classId: bozuk })).classId).toBeNull();
         }
+    });
+});
+
+describe('oyun sonucu (çocuğun dosyasına kayıt için)', () => {
+    const tam = {
+        oyunAdi: ' akilli-cikarma ', sure: 30.4, hamle: 10, hata: 2, correct: 8, zorluk: 2, kazanim: ' MAB.1 ', deneme: 1,
+        distanceEffect: 0.12345, responseTime: 1234.5678, cognitiveSpeed: 71.3, visualAttention: null, roundHistory: '[{"tur":1}]',
+    };
+
+    it('geçerli sonucu süzer: ad kırpılır, sayılar yuvarlanır, ondalıklar 3 basamağa iner', () => {
+        expect(sanitizeBoardResult(tam)).toEqual({
+            oyunAdi: 'akilli-cikarma', sure: 30, hamle: 10, hata: 2, correct: 8, zorluk: 2, kazanim: 'MAB.1', deneme: 1,
+            distanceEffect: 0.123, responseTime: 1234.568, cognitiveSpeed: 71.3, visualAttention: null, roundHistory: '[{"tur":1}]',
+        });
+    });
+
+    it('oyun adı: boş, 60 karakterden uzun ya da denetim karakterli ise sonuç YOK (kayıt önerilmez); eski biçimli adlar geçer', () => {
+        expect(sanitizeBoardResult({ ...tam, oyunAdi: '' })).toBeNull();
+        expect(sanitizeBoardResult({ ...tam, oyunAdi: '   ' })).toBeNull();
+        expect(sanitizeBoardResult({ ...tam, oyunAdi: 'a'.repeat(61) })).toBeNull();
+        expect(sanitizeBoardResult({ ...tam, oyunAdi: 'akilli\ncikarma' })).toBeNull();
+        expect(sanitizeBoardResult({ ...tam, oyunAdi: 7 })).toBeNull();
+        expect(sanitizeBoardResult(null)).toBeNull();
+        expect(sanitizeBoardResult('x')).toBeNull();
+        for (const ad of ['Kodlama Oyunu', 'Sayı Komşuları', 'Yapboz - Kedi', 'a'.repeat(60)]) {
+            expect(sanitizeBoardResult({ ...tam, oyunAdi: ad })?.oyunAdi).toBe(ad);
+        }
+    });
+
+    it('sayılar sınırlara çekilir; zorunlu sayılar bozuksa 0, isteğe bağlılar boş olur', () => {
+        const r = sanitizeBoardResult({ ...tam, sure: -5, hamle: 99999, hata: 'x', correct: 5000, zorluk: -1, deneme: Number.NaN })!;
+        expect([r.sure, r.hamle, r.hata, r.correct, r.zorluk, r.deneme]).toEqual([0, BOARD_RESULT_LIMITS.hamle, 0, BOARD_RESULT_LIMITS.correct, 0, null]);
+        const bos = sanitizeBoardResult({ oyunAdi: 'x' })!;
+        expect([bos.sure, bos.hamle, bos.hata, bos.correct, bos.zorluk, bos.kazanim, bos.deneme, bos.roundHistory]).toEqual([0, 0, 0, null, null, null, null, null]);
+        expect(sanitizeBoardResult({ ...tam, distanceEffect: 1e9 })!.distanceEffect).toBeNull();
+    });
+
+    it('kazanım 120 karakterde kesilir; boşsa null', () => {
+        expect(sanitizeBoardResult({ ...tam, kazanim: 'k'.repeat(200) })!.kazanim).toHaveLength(BOARD_RESULT_LIMITS.kazanim);
+        expect(sanitizeBoardResult({ ...tam, kazanim: '  ' })!.kazanim).toBeNull();
+        expect(sanitizeBoardResult({ ...tam, kazanim: 5 })!.kazanim).toBeNull();
+    });
+
+    it('tur geçmişi: JSON metni olduğu gibi, nesne metne çevrilir, bozuk/aşırı uzun olanlar düşer', () => {
+        expect(sanitizeBoardResult({ ...tam, roundHistory: [{ a: 1 }] })!.roundHistory).toBe('[{"a":1}]');
+        expect(sanitizeBoardResult({ ...tam, roundHistory: 'bozuk{' })!.roundHistory).toBeNull();
+        expect(sanitizeBoardResult({ ...tam, roundHistory: '["' + 'a'.repeat(BOARD_RESULT_LIMITS.history) + '"]' })!.roundHistory).toBeNull();
+        expect(sanitizeBoardResult({ ...tam, roundHistory: undefined })!.roundHistory).toBeNull();
+    });
+
+    it('onGameEnd çağrısından sonuç kurar: ek verinin adları eşlenir, çizim ve algılanan kelime TAŞINMAZ', () => {
+        const r = resultFromGameEnd('akilli-miktar', 42, 9, 1, {
+            zorlukSeviyesi: 3, kazanimOdagi: 'MAB.3', denemeNo: 2, distance_effect: 0.5, response_time: 800, round_history: [{ t: 1 }],
+            correct_answers: 7, cognitive_speed_score: 55, visual_attention_score: 12,
+            cizimVerisi: '{"strokes":[]}', cizimResimBase64: 'AAAA',
+        } as never)!;
+        expect(r).toEqual({
+            oyunAdi: 'akilli-miktar', sure: 42, hamle: 9, hata: 1, correct: 7, zorluk: 3, kazanim: 'MAB.3', deneme: 2,
+            distanceEffect: 0.5, responseTime: 800, cognitiveSpeed: 55, visualAttention: 12, roundHistory: '[{"t":1}]',
+        });
+        expect(JSON.stringify(r)).not.toMatch(/cizim|strokes|AAAA/);
+        expect(resultFromGameEnd('x', 1, 1, 1)).toMatchObject({ oyunAdi: 'x', correct: null, roundHistory: null });
+        expect(resultFromGameEnd('', 1, 1, 1)).toBeNull();
+    });
+
+    it('iletiyle taşınır ve karşı tarafta süzülerek okunur; yabancı kaynak ya da sonuçsuz ileti boş döner', () => {
+        const r = sanitizeBoardResult(tam)!;
+        const m = boardMessage('ended', r);
+        expect(m).toEqual({ source: 'minizeka-board', type: 'ended', result: r });
+        expect(readBoardMessage(m, ['ended'] as const)).toBe('ended');
+        expect(readBoardResult(m)).toEqual(r);
+        expect(readBoardResult(boardMessage('ended'))).toBeNull();
+        expect(readBoardResult(boardMessage('ended', null))).toBeNull();
+        expect('result' in boardMessage('ready')).toBe(false);
+        expect(readBoardResult({ source: 'baska', type: 'ended', result: r })).toBeNull();
+        expect(readBoardResult({ source: 'minizeka-board', type: 'ended', result: { ...r, oyunAdi: '' } })).toBeNull();
+        expect(readBoardResult({ source: 'minizeka-board', type: 'ended', result: { ...r, hamle: -1 } })!.hamle).toBe(0);
     });
 });

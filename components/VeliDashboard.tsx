@@ -25,6 +25,7 @@ import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { ReportEngine } from '../services/ReportEngine';
 import { buildWeeklyReport, buildWeeklyReportHTML, ReportAudience } from '../services/weeklyReport';
 import { parentView } from '../lib/aiAudience';
+import { aiBoardNote, isBoardSource, ortamField } from '../lib/boardSource';
 import { getGameDisplay } from '../lib/gameDisplay';
 import { supabase } from '../lib/supabase';
 import { fetchMyClassInstitutions } from '../lib/institutionApi';
@@ -66,6 +67,7 @@ const analyzeWithAI = async (_childName: string, childAge: number, games: GameSc
         hata_sayisi: g.hata_sayisi,
         sure_saniye: g.sure || Math.round((g.response_time || 0) / 1000),
         bilisselHiz: g.cognitive_speed_score || 0,
+        ...ortamField(g.kaynak),   // yalnız sınıf tahtasında oynananlarda var (bkz. lib/boardSource.ts)
     }));
 
     // Gelişimsel dönem belirleme
@@ -82,7 +84,7 @@ GİZLİLİK: Çocuğun adı sana verilmedi. Raporda hiçbir isim yazma ya da uyd
 VERİLER (JSON):
 ${JSON.stringify(gamesData, null, 2)}
 
-GÖREV: Aşağıdaki iki bölümlü yapıda rapor oluştur.
+${aiBoardNote(last12Games)}GÖREV: Aşağıdaki iki bölümlü yapıda rapor oluştur.
 
 ## BÖLÜM 1: MAARİF MODELİ PEDAGOJİK ANALİZ
 
@@ -182,6 +184,8 @@ interface GameScore {
     sure: number;
     visual_attention_score: number | null;  // Sihirli Tuval specific - Görsel Dikkat Skoru
     onay_durumu?: 'beklemede' | 'onaylandi' | 'reddedildi';  // Multi-expert approval status
+    /** 'tahta' = sınıf tahtasında, öğretmen eşliğinde oynandı ve çocuğun dosyasına öğretmen kaydetti (lib/boardSource.ts). */
+    kaynak?: string | null;
 }
 
 // Pastel color palette - soft and child-friendly
@@ -880,6 +884,11 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                         <Text style={styles.timelineGameName}>{gameInfo.name}</Text>
                         <Text style={styles.timelineDate}>{gameDate}</Text>
                     </View>
+                    {isBoardSource(game.kaynak) && (
+                        <View style={styles.timelineClassBadge}>
+                            <Text style={styles.timelineClassBadgeText}>🏫 {t('veli.classTag')}</Text>
+                        </View>
+                    )}
                     {game.yapay_zeka_yorumu && (
                         <View style={styles.timelineAIBadge}>
                             <Text style={styles.timelineAIBadgeText}>AI</Text>
@@ -2735,6 +2744,19 @@ const styles = StyleSheet.create({
         fontSize: 10,
         fontWeight: 'bold',
         color: '#fff',
+    },
+    // Sınıf tahtasında (öğretmen eşliğinde) oynanan oyunun etiketi
+    timelineClassBadge: {
+        backgroundColor: COLORS.mint,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        borderRadius: 10,
+        marginRight: 6,
+    },
+    timelineClassBadgeText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#1B5E54',
     },
 
     // Timeline sidebar

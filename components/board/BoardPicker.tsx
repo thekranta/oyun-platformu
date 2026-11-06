@@ -76,7 +76,7 @@ export default function BoardPicker({ games, ageGroup, onAgeGroup, onPick, onClo
             </View>
 
             <ScrollView contentContainerStyle={{ paddingHorizontal: pad, paddingBottom: 60 * u }}>
-                <Text style={[styles.subtitle, { fontSize: 18 * u }]}>{t('board.subtitle')}</Text>
+                <Text style={[styles.subtitle, { fontSize: 18 * u }]}>{picker.canSave ? t('board.subtitleSave') : t('board.subtitle')}</Text>
 
                 {picker.phase !== 'off' && (
                     <View style={[styles.chipRow, { gap: 10 * u, marginTop: 14 * u }]}>

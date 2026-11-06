@@ -17,6 +17,7 @@ import UndoStrip from '../components/admin/UndoStrip';
 import { getMaarif } from '../constants/maarifMap';
 import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
 import { apiUrl } from '../lib/apiBase';
+import { AI_BOARD_SINGLE_NOTE, isBoardSource } from '../lib/boardSource';
 import { PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
 import { supabase } from '../lib/supabase';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
@@ -33,6 +34,21 @@ const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
 const getAuthToken = async () => {
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token || SUPABASE_KEY || '';
+};
+
+// Kaydın kaynağı ('tahta' = sınıf tahtasında, öğretmen eşliğinde oynandı). EN İYİ ÇABA: kaynak sütunu yoksa (SQL henüz
+// çalışmadıysa) ya da okunamazsa null döner ve yapay zekâ istemi değişmeden gider; kuyruk sorgusuna dokunulmaz.
+const fetchScoreSource = async (id: number): Promise<string | null> => {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/oyun_skorlari?id=eq.${id}&select=kaynak`, {
+      headers: { apikey: SUPABASE_KEY || '', Authorization: `Bearer ${await getAuthToken()}` },
+    });
+    if (!res.ok) return null;
+    const rows = await res.json();
+    return Array.isArray(rows) && rows[0] && typeof rows[0].kaynak === 'string' ? rows[0].kaynak : null;
+  } catch {
+    return null;
+  }
 };
 
 const PAGE_SIZE = 25;
@@ -614,6 +630,9 @@ Saygılarımızla,
 ChildhoodTech Ekibi
         `;
       }
+
+      // Tahta kaydıysa istemin başına ortam notu (kanıt değil, bağlam): bkz. lib/boardSource.ts
+      if (isBoardSource(await fetchScoreSource(score.id))) prompt = AI_BOARD_SINGLE_NOTE + prompt;
 
       let aiComment: string;
       try {

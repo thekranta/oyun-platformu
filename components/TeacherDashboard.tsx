@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { ensureAiConsent } from '../lib/aiConsentFlow';
+import { isBoardSource } from '../lib/boardSource';
 import { requestAiAnalysis } from '../services/aiAnalysisClient';
 import { teacherView } from '../lib/aiAudience';
 import InAppNotice from './InAppNotice';
@@ -115,6 +116,8 @@ interface GameScore {
     correct_answers?: number | null;
     cizim_verisi?: unknown;
     yapay_zeka_yorumu?: string;
+    /** 'tahta' = sınıf tahtasında oynandı ve öğretmen kaydetti (lib/boardSource.ts). */
+    kaynak?: string | null;
 }
 
 const CLASS_EMOJIS = ['🌸', '🌺', '🌻', '🌷', '🌹', '🍀', '🦋', '🐝', '🌈', '⭐'];
@@ -402,6 +405,7 @@ export default function TeacherDashboard({
                 correct_answers: r.correct_answers,
                 cizim_verisi: r.cizim_verisi,
                 yapay_zeka_yorumu: r.ai_akademik ?? undefined,
+                kaynak: r.kaynak ?? undefined,
             })));
             return;
         }
@@ -1049,7 +1053,7 @@ export default function TeacherDashboard({
                             studentScores.map((score) => (
                                 <View key={score.id} style={styles.scoreCard}>
                                     <View style={styles.scoreHeader}>
-                                        <Text style={styles.scoreGame}>{getOyunAdi(score.oyun_turu)}</Text>
+                                        <Text style={styles.scoreGame}>{getOyunAdi(score.oyun_turu)}{isBoardSource(score.kaynak) ? `  ·  🏫 ${t('teacher.boardTag')}` : ''}</Text>
                                         <Text style={styles.scoreDate}>
                                             {new Date(score.created_at).toLocaleDateString('tr-TR')}
                                         </Text>

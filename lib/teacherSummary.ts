@@ -1,4 +1,5 @@
 import { getMaarif } from '../constants/maarifMap';
+import { aiBoardNote, ortamField } from './boardSource';
 
 // Öğretmen paneli "Gelişim Özeti": tek bir oyunu değil, öğrencinin SON 12 oyununu birlikte yorumlar
 // (velideki toplu rapor ile aynı pencere; bkz. components/VeliDashboard.tsx analyzeWithAI).
@@ -14,6 +15,8 @@ export interface SummaryGame {
     hata_sayisi: number;
     sure?: number | null;
     correct_answers?: number | null;
+    /** 'tahta' = sınıf tahtasında, öğretmen eşliğinde oynandı (lib/boardSource.ts); boş = çocuğun kendi oyunu. */
+    kaynak?: string | null;
 }
 
 /** En yeni başta gelen kayıtlardan özet penceresini (son 12) alır. */
@@ -59,6 +62,7 @@ export function buildTeacherSummaryPrompt(ageMonths: number | null | undefined, 
             hamle_sayisi: g.hamle_sayisi,
             sure_saniye: g.sure ?? null,
             dogru_cevap: g.correct_answers ?? null,
+            ...ortamField(g.kaynak),
         };
     });
     const codes = Array.from(new Set(data.map((d) => d.maarif_cikti).filter(Boolean)));
@@ -68,6 +72,7 @@ export function buildTeacherSummaryPrompt(ageMonths: number | null | undefined, 
         + 'Bir sınıf öğretmenine, öğrencisinin son ' + data.length + ' oyununa dayanan kısa bir GELİŞİM ÖZETİ yaz.\n'
         + 'Öğrencinin adı verilmedi; "öğrenci" de. Yaş: ' + age + ' (' + developmentalPeriod(ageMonths) + ').\n\n'
         + 'VERİLER (eskiden yeniye, JSON):\n' + JSON.stringify(data, null, 2) + '\n\n'
+        + aiBoardNote(games)
         + 'KURALLAR:\n'
         + '- Yalnız şu Maarif çıktı kodlarını kullanabilirsin: ' + (codes.length ? codes.join(', ') : '(yok)') + '. Başka kod UYDURMA.\n'
         + '- Tek bir oyundan değil, oyunlar arası EĞİLİMDEN söz et (ilk oyunlardan son oyunlara değişim). Veri azsa bunu açıkça belirt.\n'

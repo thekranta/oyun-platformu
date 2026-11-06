@@ -2,7 +2,8 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
-import { BOARD_BAR_HEIGHT, boardMessage, boardPlayHref, readBoardMessage, virtualSize, zoomPercent, type ParentToBoardType } from '../../lib/boardMode';
+import { BOARD_BAR_HEIGHT, boardMessage, boardPlayHref, readBoardMessage, readBoardResult, virtualSize, zoomPercent, type BoardResult, type ParentToBoardType } from '../../lib/boardMode';
+import type { SaveOutcome } from '../../lib/boardResults';
 import type { BoardPlayer } from '../../lib/boardRoster';
 import PlayerSheet from './PlayerSheet';
 import type { BoardStageProps } from './types';
@@ -50,6 +51,11 @@ export default function BoardStage({
     const [curtain, setCurtain] = useState(false);
     const [sheet, setSheet] = useState(false);
     const [confirm, setConfirm] = useState<null | 'exit' | 'restart'>(null);
+    // Bitişte kaydedilmeyi bekleyen sonuç: KİM İÇİN olduğu bitiş anında sabitlenir (sonradan seçilen çocuk değil).
+    const [pending, setPending] = useState<{ playerId: string; playerName: string; result: BoardResult } | null>(null);
+    const [saveState, setSaveState] = useState<'idle' | 'saving' | 'skipped' | SaveOutcome>('idle');
+    const mounted = useRef(true);
+    useEffect(() => () => { mounted.current = false; }, []);
 
     const src = useMemo(() => boardPlayHref({ game: game.routeKey, ageMonths, dev }), [game.routeKey, ageMonths, dev]);
     const virtual = virtualSize(size.width, size.height, zoom);
@@ -72,8 +78,12 @@ export default function BoardStage({
             else if (type === 'ended') {
                 setEnded(true);
                 // Sıra kimdeyse onun bu oturumda oynadığı işaretlenir (sıra herkese gelsin).
-                const current = pickerRef.current.player;
-                if (current) pickerRef.current.onPlayed(current.id);
+                const { player, canSave, onPlayed } = pickerRef.current;
+                if (player) onPlayed(player.id);
+                // Çocuk seçiliyse ve kayıt açıksa sonuç "kaydedilsin mi?" sorusuna alınır (OTOMATİK KAYDEDİLMEZ).
+                const result = readBoardResult(event.data);
+                setPending(player && canSave && result ? { playerId: player.id, playerName: player.name, result } : null);
+                setSaveState('idle');
             }
             // Oyunun kendi geri oku ya da hata ekrani çıkış isterse: öğretmen onaylasın (çocuk yanlışlıkla dokunabilir).
             else if (type === 'exit') setConfirm('exit');
@@ -93,15 +103,42 @@ export default function BoardStage({
     useEffect(() => {
         setReady(false);
         setEnded(false);
+        setPending(null);
         const id = setTimeout(() => setReady(true), LOAD_FALLBACK_MS);
         return () => clearTimeout(id);
     }, [src]);
 
     const restartNow = () => {
         setEnded(false);
+        setPending(null);
         setConfirm(null);
         postToGame('restart');
     };
+
+    // Öğretmen onayladıysa sonuç, bitiş anındaki çocuğun dosyasına kaydedilir. Hata olursa yeniden denenebilir.
+    const save = async () => {
+        if (!pending || saveState === 'saving') return;
+        setSaveState('saving');
+        let outcome: SaveOutcome = 'error';
+        try {
+            outcome = await pickerRef.current.onSave(pending.playerId, pending.result);
+        } catch {
+            outcome = 'error';
+        }
+        if (mounted.current) setSaveState(outcome);
+    };
+
+    // Kayıt sorusu açıkken (henüz karar verilmedi / hata) gezinme düğmeleri gizlenir: sonuç yanlışlıkla kaybolmasın.
+    const asking = !!pending && (saveState === 'idle' || saveState === 'saving' || saveState === 'error');
+    const saveLine = ((): string | null => {
+        if (!pending || saveState === 'skipped') return null;
+        if (saveState === 'idle' || saveState === 'saving') return t('board.ended.saveQuestion', { name: pending.playerName });
+        if (saveState === 'saved') return `✓ ${t('board.ended.saved')}`;
+        if (saveState === 'error') return t('board.ended.errorText');
+        if (saveState === 'denied') return t('board.ended.deniedText');
+        if (saveState === 'limit') return t('board.ended.limitText');
+        return t('board.ended.unavailableText');
+    })();
 
     const openCurtain = () => {
         setCurtain(true);
@@ -120,6 +157,7 @@ export default function BoardStage({
         setSheet(false);
         if ((player?.id ?? null) === (picker.player?.id ?? null)) return;
         setEnded(false);
+        setPending(null);
         const sameAge = picker.ageFor(player) === ageMonths;
         picker.onPlayer(player);
         if (sameAge) postToGame('restart');
@@ -164,22 +202,38 @@ export default function BoardStage({
                 {ended && !curtain && !confirm && !sheet && (
                     <View style={styles.endedSheet} accessibilityLiveRegion="polite">
                         <Text style={styles.endedTitle}>{picker.player ? t('board.ended.titleNamed', { name: picker.player.name }) : t('board.ended.title')} 🎉</Text>
-                        <View style={styles.endedRow}>
-                            <Pressable onPress={restartNow} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
-                                <Text style={styles.bigBtnText}>↻  {t('board.ended.again')}</Text>
-                            </Pressable>
-                            {picker.phase !== 'off' && (
-                                <Pressable onPress={openSheet} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
-                                    <Text style={styles.bigBtnText}>👤  {t('board.ended.next')}</Text>
+                        {saveLine !== null && <Text style={[styles.endedText, saveState === 'saved' && styles.endedTextOk]}>{saveLine}</Text>}
+                        {asking ? (
+                            <View style={styles.endedRow}>
+                                <Pressable onPress={save} disabled={saveState === 'saving'} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary, saveState === 'saving' && styles.bigBtnDisabled]}>
+                                    <Text style={styles.bigBtnText}>
+                                        {saveState === 'saving' ? t('board.ended.saving') : saveState === 'error' ? `↻  ${t('board.ended.retry')}` : `✓  ${t('board.ended.save')}`}
+                                    </Text>
                                 </Pressable>
-                            )}
-                            <Pressable onPress={onBackToGames} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
-                                <Text style={styles.bigBtnText}>{t('board.ended.other')}</Text>
-                            </Pressable>
-                            <Pressable onPress={() => setEnded(false)} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnGhost]}>
-                                <Text style={styles.bigBtnText}>{t('board.ended.close')}</Text>
-                            </Pressable>
-                        </View>
+                                {saveState !== 'saving' && (
+                                    <Pressable onPress={() => setSaveState('skipped')} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnGhost]}>
+                                        <Text style={styles.bigBtnText}>{t('board.ended.skip')}</Text>
+                                    </Pressable>
+                                )}
+                            </View>
+                        ) : (
+                            <View style={styles.endedRow}>
+                                <Pressable onPress={restartNow} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
+                                    <Text style={styles.bigBtnText}>↻  {t('board.ended.again')}</Text>
+                                </Pressable>
+                                {picker.phase !== 'off' && (
+                                    <Pressable onPress={openSheet} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
+                                        <Text style={styles.bigBtnText}>👤  {t('board.ended.next')}</Text>
+                                    </Pressable>
+                                )}
+                                <Pressable onPress={onBackToGames} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnPrimary]}>
+                                    <Text style={styles.bigBtnText}>{t('board.ended.other')}</Text>
+                                </Pressable>
+                                <Pressable onPress={() => setEnded(false)} accessibilityRole="button" style={[styles.bigBtn, styles.bigBtnGhost]}>
+                                    <Text style={styles.bigBtnText}>{t('board.ended.close')}</Text>
+                                </Pressable>
+                            </View>
+                        )}
                     </View>
                 )}
 
@@ -249,11 +303,14 @@ const styles = StyleSheet.create({
     loadingText: { color: '#FFFFFF', fontSize: 22, fontWeight: '700' },
     endedSheet: { position: 'absolute', bottom: 24, alignSelf: 'center', alignItems: 'center', gap: 14, backgroundColor: 'rgba(38,50,56,0.94)', borderRadius: 28, paddingVertical: 20, paddingHorizontal: 28 },
     endedTitle: { color: '#FFFFFF', fontSize: 30, fontWeight: '900' },
+    endedText: { color: '#ECEFF1', fontSize: 24, fontWeight: '700', textAlign: 'center', maxWidth: 760 },
+    endedTextOk: { color: '#A5D6A7' },
     endedRow: { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center' },
     bigBtn: { minHeight: 64, paddingHorizontal: 28, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
     bigBtnPrimary: { backgroundColor: '#3F7D72' },
     bigBtnGhost: { backgroundColor: '#546E7A' },
     bigBtnDanger: { backgroundColor: '#B3392B' },
+    bigBtnDisabled: { opacity: 0.5 },
     bigBtnNeutral: { backgroundColor: '#546E7A' },
     bigBtnText: { color: '#FFFFFF', fontSize: 22, fontWeight: '800' },
     curtain: { backgroundColor: '#1E3A5F', alignItems: 'center', justifyContent: 'center', gap: 18 },

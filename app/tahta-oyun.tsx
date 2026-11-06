@@ -11,6 +11,8 @@ import {
     boardMessage,
     parseBoardPlayParams,
     readBoardMessage,
+    resultFromGameEnd,
+    type BoardResult,
     type BoardToParentType,
 } from '../lib/boardMode';
 import { isRouteOpenForTier } from '../lib/gameAccess';
@@ -18,9 +20,10 @@ import { stopSpeech } from '../services/speechService';
 
 /**
  * Tahta Modu OYUN PENCERESİ: app/tahta.tsx içindeki iframe bu sayfayı açar (aynı kaynak; oturum ve ses kilidi paylaşılır).
- * Seçilen oyunu çocuk oturumu OLMADAN çalıştırır: sonuç kaydedilmez (onGameEnd yalnız üst sayfaya haber verir),
- * çocuk adı/e-posta yok. Erişim, adresteki bir parametreye değil ÖĞRETMENİN paketine göre denetlenir.
- * Üst sayfa ile iletişim: lib/boardMode.ts (ready / ended / exit; silence / restart).
+ * Seçilen oyunu çocuk oturumu OLMADAN çalıştırır: bu pencere HİÇBİR ŞEY KAYDETMEZ (onGameEnd sonucu yalnız üst sayfaya
+ * iletir; kaydetme kararı ve çağrısı üst sayfadadır: öğretmen "Elif için kaydedilsin mi?" diye onaylarsa), çocuk adı/e-posta yok.
+ * Erişim, adresteki bir parametreye değil ÖĞRETMENİN paketine göre denetlenir.
+ * Üst sayfa ile iletişim: lib/boardMode.ts (ready / ended + sonuç / exit; silence / restart).
  */
 
 function ReadyPing({ onReady }: { onReady: () => void }) {
@@ -44,9 +47,9 @@ export default function TahtaOyun() {
     const { access } = useBoardAccess(dev);
     const [run, setRun] = useState(0);
 
-    const post = useCallback((type: BoardToParentType) => {
+    const post = useCallback((type: BoardToParentType, result?: BoardResult | null) => {
         try {
-            if (typeof window !== 'undefined' && window.parent) window.parent.postMessage(boardMessage(type), window.location.origin);
+            if (typeof window !== 'undefined' && window.parent) window.parent.postMessage(boardMessage(type, result), window.location.origin);
         } catch {
             // üst sayfa yok (sayfa doğrudan açıldı)
         }
@@ -108,7 +111,7 @@ export default function TahtaOyun() {
             <GameErrorBoundary key={`${game}-${run}`} gameName={game} onExit={leave}>
                 <React.Suspense fallback={<Spinner />}>
                     {render({
-                        onGameEnd: () => post('ended'),
+                        onGameEnd: (oyunAdi, sure, hamle, hata, _kelime, extra) => post('ended', resultFromGameEnd(oyunAdi, sure, hamle, hata, extra)),
                         onExit: leave,
                         ad: BOARD_CHILD_NAME,
                         yas: String(ageMonths),

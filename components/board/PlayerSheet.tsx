@@ -7,7 +7,8 @@ import type { BoardPlayerPicker } from './types';
 /**
  * "Sıra kimde?" penceresi: sınıf (Meşe'de birden çok olabilir) ve büyük isim kartları. Tahtada görünür; yazı ve dokunma
  * hedefleri pencere genişliğine göre büyür (1280 px = 1x, 1920 px = 1,5x, en çok 2x). Tahtada yalnız ilk ad görünür.
- * Bu sürümde sonuç kaydedilmez: seçilen çocuğun yaşı oyuna uygulanır, kimin sırası olduğu tahtada gösterilir.
+ * Seçilen çocuğun yaşı oyuna uygulanır, kimin sırası olduğu tahtada gösterilir. Kayıt açıksa (sınıf paketi + sunucu
+ * fonksiyonu) oyun bitince "kaydedilsin mi?" sorulur (BoardStage); kaydedilen çocuğun kartında "✓ Kaydedildi" yazar.
  */
 
 interface Props {
@@ -96,11 +97,12 @@ export default function PlayerSheet({ picker, onPick, onClose }: Props) {
                                 {picker.players.map((p) => {
                                     const on = picker.player?.id === p.id;
                                     const done = picker.played.has(p.id);
+                                    const kept = picker.saved.has(p.id);
                                     return (
                                         <Pressable key={p.id} onPress={() => onPick(p)} accessibilityRole="button" accessibilityLabel={p.name} accessibilityState={{ selected: on }}
                                             style={[styles.card, { width: cardWidth, minHeight: 84 * u, borderRadius: 20 * u }, on && styles.cardOn]}>
                                             <Text style={[styles.cardName, { fontSize: 26 * u }, on && styles.cardNameOn]} numberOfLines={1}>{p.name}</Text>
-                                            {done && <Text style={[styles.cardHint, { fontSize: 14 * u }, on && styles.cardHintOn]}>✓ {t('board.picker.played')}</Text>}
+                                            {(kept || done) && <Text style={[styles.cardHint, { fontSize: 14 * u }, on && styles.cardHintOn]}>✓ {kept ? t('board.picker.savedMark') : t('board.picker.played')}</Text>}
                                         </Pressable>
                                     );
                                 })}
@@ -112,7 +114,7 @@ export default function PlayerSheet({ picker, onPick, onClose }: Props) {
                 </ScrollView>
 
                 {picker.phase === 'ready' && picker.excluded > 0 && <Text style={[styles.note, { fontSize: 15 * u }]}>{t('board.picker.excluded', { n: picker.excluded })}</Text>}
-                <Text style={[styles.note, { fontSize: 15 * u }]}>{t('board.picker.noSaveNote')}</Text>
+                <Text style={[styles.note, { fontSize: 15 * u }]}>{picker.canSave ? t('board.picker.saveNote') : t('board.picker.noSaveNote')}</Text>
             </View>
         </View>
     );

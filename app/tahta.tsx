@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,17 +22,21 @@ import {
     type BoardAgeGroup,
     type BoardGame,
     type BoardPrefs,
+    type BoardResult,
 } from '../lib/boardMode';
+import { devSaveOutcome, saveBoardResult, type SaveOutcome } from '../lib/boardResults';
 import { fullscreenSupported, toggleFullscreen, useFullscreen } from '../lib/fullscreen';
 import { playerAgeMonths, useBoardRoster, type BoardPlayer } from '../lib/boardRoster';
 import { useWakeLock } from '../lib/screenWake';
+import { supabase } from '../lib/supabase';
 
 /**
  * TAHTA MODU: öğretmen, sınıf tahtasındaki bilgisayarda (oyun.childhoodtech.com/tahta) bir oyun seçer; oyun tahtayı
- * dolduracak şekilde büyütülmüş olarak çalışır ve alttaki kontrol çubuğundan yönetilir. Sonuç KAYDEDİLMEZ, puan
- * gösterilmez. Sınıf paketi öğretmeni "Sıra kimde?" ile sınıf listesinden çocuk seçebilir: tahtada yalnız ilk ad
- * görünür, oyun çocuğun yaşıyla açılır (lib/boardRoster.ts). Yalnız öğretmen hesabı (lib/boardAccess.ts).
- * Tarayıcıda çalışır; native'de bilgi verir.
+ * dolduracak şekilde büyütülmüş olarak çalışır ve alttaki kontrol çubuğundan yönetilir. Puan gösterilmez. Sınıf paketi
+ * öğretmeni "Sıra kimde?" ile sınıf listesinden çocuk seçebilir: tahtada yalnız ilk ad görünür, oyun çocuğun yaşıyla açılır
+ * (lib/boardRoster.ts) ve oyun bitince öğretmen onaylarsa sonuç çocuğun dosyasına "sınıfta" etiketiyle kaydedilir
+ * (lib/boardResults.ts); çocuk seçilmediyse (ya da ücretsiz pakette) hiçbir şey kaydedilmez. Yalnız öğretmen hesabı
+ * (lib/boardAccess.ts). Tarayıcıda çalışır; native'de bilgi verir.
  */
 
 const PREFS_KEY = 'board.prefs.v1';
@@ -91,6 +95,26 @@ export default function Tahta() {
     });
     const [player, setPlayer] = useState<BoardPlayer | null>(null);
     const [played, setPlayed] = useState<ReadonlySet<string>>(() => new Set());
+    const [saved, setSaved] = useState<ReadonlySet<string>>(() => new Set());
+    // Sunucu fonksiyonu yoksa (SQL henüz çalışmadıysa) ilk denemede anlaşılır; oturum boyunca kayıt sorusu bırakılır.
+    const [saveUnavailable, setSaveUnavailable] = useState(false);
+    const devAttempts = useRef<Record<string, number>>({});
+
+    // Sonucu çocuğun dosyasına kaydeder (öğretmen BoardStage'de onayladıktan sonra). ?dev=1: sahte sınıf, sunucuya YAZILMAZ.
+    const save = useCallback(async (playerId: string, result: BoardResult): Promise<SaveOutcome> => {
+        let outcome: SaveOutcome;
+        if (__DEV__ && dev) {
+            const attempt = devAttempts.current[playerId] ?? 0;
+            devAttempts.current[playerId] = attempt + 1;
+            await new Promise((resolve) => setTimeout(resolve, 500));
+            outcome = devSaveOutcome(playerId, attempt);
+        } else {
+            outcome = await saveBoardResult(supabase, playerId, result);
+        }
+        if (outcome === 'saved') setSaved((prev) => new Set(prev).add(playerId));
+        if (outcome === 'unavailable') setSaveUnavailable(true);
+        return outcome;
+    }, [dev]);
 
     // Seçili çocuk yeni listede yoksa (sınıf değişti, veli çıkarttı) seçim kalkar.
     useEffect(() => {
@@ -105,6 +129,7 @@ export default function Tahta() {
         roster.selectClass(classId);
         setPlayer(null);
         setPlayed(new Set());
+        setSaved(new Set());
         updatePrefs({ ...prefs, classId });
     };
 
@@ -121,6 +146,9 @@ export default function Tahta() {
         onPlayed: (id) => setPlayed((prev) => (prev.has(id) ? prev : new Set(prev).add(id))),
         onRetry: roster.retry,
         ageFor: (p) => playerAgeMonths(p, prefs.ageGroup),
+        canSave: roster.phase !== 'off' && !saveUnavailable,
+        saved,
+        onSave: save,
     };
 
     const leave = () => {

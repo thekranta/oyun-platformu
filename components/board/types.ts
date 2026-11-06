@@ -1,4 +1,5 @@
-import type { BoardGame } from '../../lib/boardMode';
+import type { BoardGame, BoardResult } from '../../lib/boardMode';
+import type { SaveOutcome } from '../../lib/boardResults';
 import type { BoardClass, BoardPlayer, BoardRosterPhase } from '../../lib/boardRoster';
 
 /**
@@ -22,6 +23,12 @@ export interface BoardPlayerPicker {
     onRetry: () => void;
     /** Çocuğa göre oyun yaşı (ay): çocuğun yaşı yoksa sınıfın yaş grubu. */
     ageFor: (player: BoardPlayer | null) => number;
+    /** Oyun bitince "Kaydedilsin mi?" sorulur mu? Sınıf paketinde ve sunucu fonksiyonu varken açık. */
+    canSave: boolean;
+    /** Bu oturumda sonucu çocuğun dosyasına kaydedilenler. */
+    saved: ReadonlySet<string>;
+    /** Sonucu çocuğun dosyasına kaydeder (öğretmen onayından sonra çağrılır). */
+    onSave: (playerId: string, result: BoardResult) => Promise<SaveOutcome>;
 }
 
 /** Tahta sahnesi (oyun penceresi + alt kontrol çubuğu) bileşeninin props'ları; web ve yedek (native) dosya aynı yüzeyi paylaşır. */
