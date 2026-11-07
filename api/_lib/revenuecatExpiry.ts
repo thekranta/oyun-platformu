@@ -65,3 +65,26 @@ export function keepLongerExpiry(existing: string | null | undefined, incoming: 
     if (!existing) return incoming;
     return Date.parse(existing) > Date.parse(incoming) ? existing : incoming;
 }
+
+const TIER_RANK: Record<string, number> = { free: 0, tohum: 1, filiz: 2, fidan: 3, orman: 4, cinar: 1, mese: 2 };
+
+/**
+ * Gelen (düşük) mağaza paketi, hesapta hâlâ geçerli olan DAHA YÜKSEK bir paketi ezmesin diye.
+ * Örn. web'den Fidan almış, ayrıca mağazada Tohum'u yenileyen kullanıcı Fidan'dan Tohum'a düşürülmemeli.
+ * Mevcut paket süresiz (bitiş yok) ya da bitişi gelecekte ise ve sırası yeni paketten büyükse true.
+ * (Tablo başına çağrılır: veli ve öğretmen paketleri ayrı tablolarda, karıştırılmaz.)
+ */
+export function wouldDowngradeActivePackage(
+    existingTier: unknown,
+    existingExpiresAt: unknown,
+    newTier: string,
+    now: Date = new Date(),
+): boolean {
+    if (typeof existingTier !== 'string') return false;
+    const oldRank = TIER_RANK[existingTier] ?? 0;
+    const newRank = TIER_RANK[newTier] ?? 0;
+    if (oldRank <= newRank) return false;
+    if (existingExpiresAt === null || existingExpiresAt === undefined || existingExpiresAt === '') return true;
+    const t = new Date(existingExpiresAt as string).getTime();
+    return Number.isFinite(t) && t > now.getTime();
+}

@@ -20,7 +20,8 @@
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { keepLongerExpiry, resolveGrantExpiry } from './_lib/revenuecatExpiry';
+import { timingSafeEqual } from 'crypto';
+import { keepLongerExpiry, resolveGrantExpiry, wouldDowngradeActivePackage } from './_lib/revenuecatExpiry';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -39,6 +40,14 @@ const GRANT_EVENTS = new Set([
 // kullanıcı erişime devam eder, bu yüzden burada işlenmiyor, yalnızca EXPIRATION'da düşürüyoruz).
 const REVOKE_EVENTS = new Set(['EXPIRATION']);
 
+/** Sır karşılaştırması sabit sürede (zamanlama farkından tahmin edilmesin). */
+function secretMatches(provided: unknown, secret: string): boolean {
+  if (!secret || typeof provided !== 'string') return false;
+  const a = Buffer.from(provided);
+  const b = Buffer.from(secret);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 function highestTier(entitlementIds: string[], order: string[]): string | null {
   for (const tier of order) {
     if (entitlementIds.includes(tier)) return tier;
@@ -51,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!WEBHOOK_SECRET || req.headers.authorization !== WEBHOOK_SECRET) {
+  if (!secretMatches(req.headers.authorization, WEBHOOK_SECRET)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
@@ -114,6 +123,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Aynı pakette zaten daha uzun süre varsa (ör. web'den alınmış) kısaltma.
     const { data: existing } = await supabaseAdmin.from(table).select('subscription_tier, package_expires_at').eq('email', email).limit(1);
     if (existing && existing[0]?.subscription_tier === tier) expiresAt = keepLongerExpiry(existing[0].package_expires_at, expiresAt);
+    // Hesapta hâlâ geçerli DAHA YÜKSEK bir paket varsa (ör. web'den Fidan) düşük mağaza paketi onu ezmez.
+    if (existing && wouldDowngradeActivePackage(existing[0]?.subscription_tier, existing[0]?.package_expires_at, tier)) {
+      console.warn(`revenuecat-webhook: ${email} icin gecerli daha yuksek paket (${existing[0]?.subscription_tier}) korundu; gelen: ${tier}`);
+      return res.status(200).json({ ok: true, skipped: 'higher_active_package' });
+    }
   }
   const { data, error } = await supabaseAdmin
     .from(table)
@@ -123,7 +137,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (error) {
     console.error('revenuecat-webhook: güncelleme hatası', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'update_failed' });
   }
   if (!data || data.length === 0) {
     console.warn(`revenuecat-webhook: ${email} için ${table} tablosunda satır bulunamadı`);

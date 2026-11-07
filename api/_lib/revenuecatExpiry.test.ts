@@ -60,3 +60,23 @@ describe('keepLongerExpiry', () => {
         expect(keepLongerExpiry('2027-06-01T00:00:00.000Z', null)).toBeNull();
     });
 });
+
+import { wouldDowngradeActivePackage } from './revenuecatExpiry';
+
+describe('wouldDowngradeActivePackage', () => {
+    const now = new Date('2026-11-08T00:00:00Z');
+    it('geçerli yüksek paketi düşük mağaza paketi ezmez', () => {
+        expect(wouldDowngradeActivePackage('fidan', '2027-01-01T00:00:00Z', 'tohum', now)).toBe(true);
+        expect(wouldDowngradeActivePackage('orman', null, 'filiz', now)).toBe(true);
+        expect(wouldDowngradeActivePackage('mese', '2027-01-01T00:00:00Z', 'cinar', now)).toBe(true);
+    });
+    it('süresi dolmuş yüksek paket ezilebilir', () => {
+        expect(wouldDowngradeActivePackage('fidan', '2026-10-01T00:00:00Z', 'tohum', now)).toBe(false);
+    });
+    it('aynı ya da daha yüksek yeni paket serbest; ücretsiz ve bilinmeyen güvenli', () => {
+        expect(wouldDowngradeActivePackage('tohum', '2027-01-01T00:00:00Z', 'tohum', now)).toBe(false);
+        expect(wouldDowngradeActivePackage('tohum', '2027-01-01T00:00:00Z', 'fidan', now)).toBe(false);
+        expect(wouldDowngradeActivePackage('free', null, 'tohum', now)).toBe(false);
+        expect(wouldDowngradeActivePackage(undefined, null, 'tohum', now)).toBe(false);
+    });
+});
