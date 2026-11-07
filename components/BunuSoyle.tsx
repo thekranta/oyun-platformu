@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
+// SDK 54: readAsStringAsync yalniz 'legacy' girisinde (yeni API File sinifi); gameResults.ts ile ayni yol.
+import * as FileSystem from 'expo-file-system/legacy';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Image, ImageBackground, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
