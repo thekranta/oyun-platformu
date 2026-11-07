@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAiConsent, isScopeGranted, setAiConsent, type AiConsent, type AiConsentScope } from '../lib/aiConsent';
-import { LEGAL_URLS, openExternalLink, subscriptionManagementUrl } from '../lib/externalLink';
+import { legalUrl, openExternalLink, subscriptionManagementUrl } from '../lib/externalLink';
 import { requestParentGate } from '../lib/parentGate';
 
 /**
@@ -96,11 +96,11 @@ export default function GizlilikAyarlari() {
 
                     <View style={styles.block}>
                         <Text style={styles.sectionTitle}>{t('account.legalSection')}</Text>
-                        <Pressable onPress={() => { openExternalLink(LEGAL_URLS.privacy); }} accessibilityRole="link" style={styles.linkRow}>
+                        <Pressable onPress={() => { openExternalLink(legalUrl('privacy')); }} accessibilityRole="link" style={styles.linkRow}>
                             <Text style={styles.link}>{t('account.privacy')}</Text>
                             <Ionicons name="open-outline" size={16} color="#3F7D72" />
                         </Pressable>
-                        <Pressable onPress={() => { openExternalLink(LEGAL_URLS.terms); }} accessibilityRole="link" style={styles.linkRow}>
+                        <Pressable onPress={() => { openExternalLink(legalUrl('terms')); }} accessibilityRole="link" style={styles.linkRow}>
                             <Text style={styles.link}>{t('account.terms')}</Text>
                             <Ionicons name="open-outline" size={16} color="#3F7D72" />
                         </Pressable>

@@ -6,7 +6,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { setAiConsent, type AiConsentScope } from '../lib/aiConsent';
 import { finishAiConsentFlow } from '../lib/aiConsentFlow';
-import { LEGAL_URLS, openExternalLink } from '../lib/externalLink';
+import { legalUrl, openExternalLink } from '../lib/externalLink';
 import { requestParentGate } from '../lib/parentGate';
 
 /**
@@ -80,7 +80,7 @@ export default function AiIzni() {
                     ))}
                     <Text style={styles.note}>{t('aiConsent.providerNote')}</Text>
                     <Text style={styles.note}>{t('aiConsent.withdrawNote')}</Text>
-                    <Pressable onPress={() => { openExternalLink(LEGAL_URLS.privacy); }} accessibilityRole="link" style={styles.linkBtn}>
+                    <Pressable onPress={() => { openExternalLink(legalUrl('privacy')); }} accessibilityRole="link" style={styles.linkBtn}>
                         <Text style={styles.link}>{t('aiConsent.privacyLink')}</Text>
                     </Pressable>
                     {error && <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text>}

@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -512,6 +513,10 @@ export default function InstitutionDashboard({ institution, source, onClose, onS
                 ) : (
                     <View style={loading ? { opacity: 0.55 } : undefined} pointerEvents={loading ? 'none' : 'auto'}>{content}</View>
                 )}
+                {/* Hesap ve gizlilik: hesap silme yolu her panelden ulaşılabilir olmalı (Apple 5.1.1(v) / Google hesap silme). */}
+                <TouchableOpacity onPress={() => router.push('/gizlilik-ayarlari')} accessibilityRole="link" style={{ alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 16 }}>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: C.muted, textDecorationLine: 'underline' }}>{t('account.title')}</Text>
+                </TouchableOpacity>
             </ScrollView>
 
             {/* Sınıf ayrıntısı */}

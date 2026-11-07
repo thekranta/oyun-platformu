@@ -3,7 +3,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LEGAL_URLS, subscriptionManagementUrl } from '../lib/externalLink';
+import { legalUrl, subscriptionManagementUrl } from '../lib/externalLink';
 import { isRecurring, periodKey, tierFromProductId, type PackageLike, type PaywallKind } from '../lib/paywall';
 
 /**
@@ -118,9 +118,9 @@ export default function PaywallView({ kind, state, banner, purchasingId, restori
 
                         <Text style={styles.legal}>{Platform.OS === 'ios' ? t('paywall.legalIos') : t('paywall.legalAndroid')}</Text>
                         <View style={styles.linkRow}>
-                            <Pressable onPress={() => onOpenLink(LEGAL_URLS.terms)} accessibilityRole="link"><Text style={styles.link}>{t('paywall.terms')}</Text></Pressable>
+                            <Pressable onPress={() => onOpenLink(legalUrl('terms'))} accessibilityRole="link"><Text style={styles.link}>{t('paywall.terms')}</Text></Pressable>
                             <Text style={styles.linkDot}>·</Text>
-                            <Pressable onPress={() => onOpenLink(LEGAL_URLS.privacy)} accessibilityRole="link"><Text style={styles.link}>{t('paywall.privacy')}</Text></Pressable>
+                            <Pressable onPress={() => onOpenLink(legalUrl('privacy'))} accessibilityRole="link"><Text style={styles.link}>{t('paywall.privacy')}</Text></Pressable>
                             {manageUrl && (
                                 <>
                                     <Text style={styles.linkDot}>·</Text>
