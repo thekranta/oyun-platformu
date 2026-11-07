@@ -606,11 +606,11 @@
     "report": {
       "heading": "AI permission for the progress report",
       "what": "Your child’s age (in months) and results of recent games (such as time and number of mistakes). Name and contact details are not sent.",
-      "who": "The service that writes the report: OpenAI (USA).",
+      "who": "The service that writes the report: Anthropic (Claude, USA).",
       "why": "Only to write you a progress summary and ideas for activities at home.",
       "kept": "We do not store what was sent separately; only the written report is saved to your account."
     },
-    "providerNote": "OpenAI states that data sent through its API is not used to train its models by default.",
+    "providerNote": "OpenAI and Anthropic state that data sent through their APIs is not used to train their models by default.",
     "withdrawNote": "You can withdraw this permission at any time under “Account & privacy”.",
     "privacyLink": "Privacy Policy",
     "allow": "I allow it",
@@ -627,7 +627,7 @@
     "voiceTitle": "Speech recognition (Say This! game)",
     "voiceDesc": "A recording of the word your child says is sent to OpenAI.",
     "reportTitle": "Progress report comments",
-    "reportDesc": "Your child’s age and game results are sent to OpenAI (the name is not sent).",
+    "reportDesc": "Your child’s age and game results are sent to Anthropic (Claude) (the name is not sent).",
     "on": "On",
     "off": "Off",
     "turnOn": "Turn on",

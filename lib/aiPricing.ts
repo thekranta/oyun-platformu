@@ -3,13 +3,21 @@
 // Gercek fatura API'si DEGIL (bkz. plan "Kapsam disi") -- token/karakter/saniye sayisindan
 // hesaplanan bir yaklasimdir, kurus kurusuna dogru olmasi beklenmez.
 
-// $ / 1M token (OpenAI Chat Completions, girdi ve cikti ayri fiyatlanir).
+// $ / 1M token (ESKI OpenAI sohbet fiyati; artik yalniz gecmis kayitlar icin, bkz. Claude tablosu asagida).
 const OPENAI_CHAT_PRICING_PER_1M: Record<string, { input: number; output: number }> = {
   'gpt-4o-mini': { input: 0.15, output: 0.60 },
 };
 // Bilinmeyen/yeni bir model gelirse en pahali bilinen orana dus (sessizce 0 gosterip
 // maliyeti gizlemektense fazla tahmin etmek daha guvenli).
 const OPENAI_CHAT_FALLBACK = { input: 0.15, output: 0.60 };
+
+// $ / 1M token (Anthropic Claude). YAKLASIK; Anthropic fiyat sayfasina karsi periyodik kontrol edin.
+// Bilinmeyen model icin Sonnet sinifi (en pahali kullandigimiz) orana dusulur.
+const CLAUDE_PRICING_PER_1M: Record<string, { input: number; output: number }> = {
+  'claude-sonnet-5-5': { input: 3, output: 15 },
+  'claude-haiku-5-5': { input: 1, output: 5 },
+};
+const CLAUDE_FALLBACK = { input: 3, output: 15 };
 
 // $ / karakter (OpenAI TTS, gpt-4o-mini-tts ve tts-1 arasinda fallback var).
 const TTS_PRICING_PER_CHAR: Record<string, number> = {
@@ -24,6 +32,11 @@ const WHISPER_PRICE_PER_SECOND = 0.0001;
 export function estimateOpenAiChatCostUsd(model: string, promptTokens: number, completionTokens: number): number {
   const rate = OPENAI_CHAT_PRICING_PER_1M[model] || OPENAI_CHAT_FALLBACK;
   return (promptTokens / 1_000_000) * rate.input + (completionTokens / 1_000_000) * rate.output;
+}
+
+export function estimateClaudeCostUsd(model: string, inputTokens: number, outputTokens: number): number {
+  const rate = CLAUDE_PRICING_PER_1M[model] || CLAUDE_FALLBACK;
+  return (inputTokens / 1_000_000) * rate.input + (outputTokens / 1_000_000) * rate.output;
 }
 
 export function estimateTtsCostUsd(model: string, charCount: number): number {

@@ -600,11 +600,11 @@
     "report": {
       "heading": "Gelişim raporu için yapay zekâ izni",
       "what": "Çocuğunuzun yaşı (ay olarak) ve son oyunlarının sonuçları (süre, hata sayısı gibi). Adı ve iletişim bilgileri gönderilmez.",
-      "who": "Raporu yazan hizmet: OpenAI (ABD).",
+      "who": "Raporu yazan hizmet: Anthropic (Claude, ABD).",
       "why": "Yalnızca size gelişim yorumu ve evde yapılabilecek etkinlik önerileri yazmak için.",
       "kept": "Gönderilen bilgiyi bizde ayrıca saklamayız; yalnızca yazılan rapor hesabınıza kaydedilir."
     },
-    "providerNote": "OpenAI, API üzerinden gönderilen veriyi varsayılan olarak model eğitimi için kullanmadığını belirtir.",
+    "providerNote": "OpenAI ve Anthropic, API üzerinden gönderilen veriyi varsayılan olarak model eğitimi için kullanmadığını belirtir.",
     "withdrawNote": "İzni istediğiniz zaman “Hesap ve gizlilik” bölümünden geri alabilirsiniz.",
     "privacyLink": "Gizlilik Politikası",
     "allow": "İzin veriyorum",
@@ -621,7 +621,7 @@
     "voiceTitle": "Konuşma tanıma (Bunu Söyle! oyunu)",
     "voiceDesc": "Çocuğunuzun söylediği kelimenin ses kaydı OpenAI’a gönderilir.",
     "reportTitle": "Gelişim raporu yorumu",
-    "reportDesc": "Çocuğunuzun yaşı ve oyun sonuçları OpenAI’a gönderilir (ad gönderilmez).",
+    "reportDesc": "Çocuğunuzun yaşı ve oyun sonuçları Anthropic’e (Claude) gönderilir (ad gönderilmez).",
     "on": "Açık",
     "off": "Kapalı",
     "turnOn": "Aç",

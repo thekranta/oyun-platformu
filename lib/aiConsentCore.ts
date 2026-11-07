@@ -5,7 +5,7 @@
  * Apple App Review 5.1.2(i): kişisel veri üçüncü taraf yapay zekâ hizmetine gönderilmeden ÖNCE açık izin alınmalı.
  * İki ayrı kapsam (biri verilince ötekisi verilmiş sayılmaz):
  *   'voice'  — Bunu Söyle! oyununda çocuğun ses kaydı konuşmayı yazıya çevirmek için OpenAI'a gider.
- *   'report' — Gelişim raporu: çocuğun yaşı ve oyun sonuçları yorum yazdırmak için OpenAI'a gider (ad GİTMEZ).
+ *   'report' — Gelişim raporu: çocuğun yaşı ve oyun sonuçları yorum yazdırmak için Anthropic'e (Claude) gider (ad GİTMEZ).
  * İzin metni değişince AI_CONSENT_VERSION artırılır: eski sürümde verilmiş izin geçersiz sayılır ve yeniden sorulur.
  */
 

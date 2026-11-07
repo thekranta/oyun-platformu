@@ -342,7 +342,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     // Handler for generating cumulative AI report
     const handleGenerateCumulativeReport = async () => {
         if (isAnalyzing || scores.length === 0) return;
-        // Yapay zekâ izni (Apple 5.1.2(i)): çocuğun yaşı ve oyun sonuçları OpenAI'a gideceği için ebeveyn izni gerekir.
+        // Yapay zekâ izni (Apple 5.1.2(i)): çocuğun yaşı ve oyun sonuçları Anthropic'e (Claude) gideceği için ebeveyn izni gerekir.
         if (!(await ensureAiConsent('report'))) return;
         setIsAnalyzing(true);
         try {
@@ -1490,7 +1490,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                             </TouchableOpacity>
                                         )}
                                         <Text style={{ color: '#888', fontSize: 11, marginTop: 8, textAlign: 'center' }}>
-                                            OpenAI GPT-4o mini
+                                            Claude (Anthropic)
                                         </Text>
                                     </>
                                 )}
