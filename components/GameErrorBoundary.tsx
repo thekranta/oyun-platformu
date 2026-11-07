@@ -1,5 +1,6 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import i18n from '../lib/i18n';
 
 interface Props {
     children: React.ReactNode;
@@ -41,13 +42,10 @@ export default class GameErrorBoundary extends React.Component<Props, State> {
             <View style={styles.container}>
                 <View style={styles.card}>
                     <Text style={styles.emoji}>😅</Text>
-                    <Text style={styles.title}>Bir şeyler ters gitti</Text>
-                    <Text style={styles.subtitle}>
-                        Bu oyun beklenmedik şekilde durdu. Menüye dönüp başka bir oyun seçebilir
-                        veya tekrar deneyebilirsin.
-                    </Text>
+                    <Text style={styles.title}>{i18n.t('gameError.title')}</Text>
+                    <Text style={styles.subtitle}>{i18n.t('gameError.text')}</Text>
                     <TouchableOpacity style={styles.button} onPress={this.props.onExit} activeOpacity={0.85}>
-                        <Text style={styles.buttonText}>🏠 Menüye Dön</Text>
+                        <Text style={styles.buttonText}>{i18n.t('gameError.button')}</Text>
                     </TouchableOpacity>
                     {__DEV__ && !!this.state.message && (
                         <Text style={styles.debug}>{this.state.message}</Text>

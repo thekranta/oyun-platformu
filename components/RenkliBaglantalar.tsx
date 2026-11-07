@@ -496,15 +496,7 @@ export default function RenkliBaglantalar({ onGameEnd, onExit, childName = 'Tuna
                 </View>
             </View>
 
-            {/* Hata sayaci (Puan bilgisi kaldirildi: cocuga rekabetci bir sayisal
-                puan gosterilmemeli — skor veli raporu icin state/extraData'da
-                korunuyor, sadece ekrana basilmiyor) */}
-            <View style={styles.scoreContainer}>
-                <View style={styles.scoreBox}>
-                    <Text style={styles.scoreLabel}>Hata</Text>
-                    <Text style={[styles.scoreValue, { color: '#FF6B6B' }]}>{errors}</Text>
-                </View>
-            </View>
+            {/* Sayaç yok: çocuğa Hata/Puan gösterilmez (kullanıcı kuralı); hata sayısı onGameEnd/extraData ile veli raporuna gider. */}
 
             {/* Confetti */}
             {showConfetti && (
@@ -646,29 +638,6 @@ const styles = StyleSheet.create({
         height: '28%',
         borderRadius: 100,
         backgroundColor: 'rgba(255,255,255,0.5)',
-    },
-    scoreContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 25,
-        paddingVertical: 20,
-    },
-    scoreBox: {
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        paddingHorizontal: 28,
-        paddingVertical: 14,
-        borderRadius: 18,
-    },
-    scoreLabel: {
-        fontSize: 13,
-        color: '#AAA',
-        marginBottom: 4,
-    },
-    scoreValue: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        color: '#FFF',
     },
     completeOverlay: {
         position: 'absolute',

@@ -20,6 +20,7 @@ import InAppNotice from '../components/InAppNotice';
 import TeacherDashboard from '../components/TeacherDashboard';
 import { supabase } from '../lib/supabase';
 import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, ensureTeacherFromMetadata, isEmailNotConfirmed, needsEmailConfirmation, PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
+import { LEGAL_URLS, openExternalLink } from '../lib/externalLink';
 import { rememberResetReturn } from '../lib/resetReturn';
 import { OgretmenTier } from '../lib/subscriptionTiers';
 
@@ -49,6 +50,7 @@ export default function TeacherDashboardPage() {
     const [regPassword, setRegPassword] = useState('');
     const [regSchool, setRegSchool] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
+    const [regTerms, setRegTerms] = useState(false);
 
     // Demo profili
     const useDemoProfile = () => {
@@ -68,6 +70,7 @@ export default function TeacherDashboardPage() {
         if (!regEmail.trim()) { setNotice(t('teacherAuth.needEmail')); return; }
         if (!regEmail.includes('@')) { setNotice(t('teacherAuth.validEmail')); return; }
         if (regPassword.trim().length < 6) { setNotice(t('teacherAuth.shortPassword')); return; }
+        if (!regTerms) { setNotice(t('teacherAuth.needTerms')); return; }
 
         setIsRegistering(true);
         try {
@@ -78,7 +81,7 @@ export default function TeacherDashboardPage() {
                 options: {
                     emailRedirectTo: EMAIL_CONFIRM_REDIRECT,
                     // E-posta doğrulaması açıksa öğretmen satırı şimdi yazılamaz; ilk girişte bu bilgilerden oluşturulur.
-                    data: { teacher_signup: true, teacher_name: regName.trim(), school_name: regSchool.trim() || null },
+                    data: { teacher_signup: true, teacher_name: regName.trim(), school_name: regSchool.trim() || null, terms_accepted_at: new Date().toISOString() },
                 },
             });
 
@@ -116,6 +119,7 @@ export default function TeacherDashboardPage() {
                 setRegEmail('');
                 setRegPassword('');
                 setRegSchool('');
+                setRegTerms(false);
             }
         } catch (error) {
             console.error('Kayıt hatası:', error);
@@ -411,6 +415,24 @@ export default function TeacherDashboardPage() {
                             </View>
 
                             <TouchableOpacity
+                                style={styles.termsRow}
+                                onPress={() => setRegTerms(!regTerms)}
+                                activeOpacity={0.8}
+                                accessibilityRole="checkbox"
+                                accessibilityState={{ checked: regTerms }}
+                            >
+                                <View style={[styles.checkbox, regTerms && styles.checkboxChecked]}>
+                                    {regTerms && <Ionicons name="checkmark" size={16} color="#fff" />}
+                                </View>
+                                <Text style={styles.termsText}>
+                                    {t('teacherAuth.termsLabel')}{' '}
+                                    <Text style={styles.termsLink} onPress={() => { openExternalLink(LEGAL_URLS.terms); }}>{t('teacherAuth.termsLink')}</Text>
+                                    {' · '}
+                                    <Text style={styles.termsLink} onPress={() => { openExternalLink(LEGAL_URLS.privacy); }}>{t('teacherAuth.privacyLink')}</Text>
+                                </Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
                                 style={[styles.loginButton, isRegistering && styles.loginButtonDisabled]}
                                 onPress={handleRegister}
                                 disabled={isRegistering}
@@ -423,7 +445,7 @@ export default function TeacherDashboardPage() {
                             </TouchableOpacity>
 
                             <Text style={styles.registerNote}>
-                                {t('teacherAuth.regNote')}
+                                {t(Platform.OS === 'web' ? 'teacherAuth.regNote' : 'teacherAuth.regNoteMobile')}
                             </Text>
                         </View>
                     </View>
@@ -435,6 +457,11 @@ export default function TeacherDashboardPage() {
 }
 
 const styles = StyleSheet.create({
+    termsRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 14 },
+    checkbox: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#3F7D72', alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+    checkboxChecked: { backgroundColor: '#3F7D72' },
+    termsText: { flex: 1, fontSize: 13, color: '#546E7A', lineHeight: 19 },
+    termsLink: { color: '#1E88E5', textDecorationLine: 'underline', fontWeight: '600' },
     container: {
         flex: 1,
     },

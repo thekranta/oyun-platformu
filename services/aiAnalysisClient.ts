@@ -26,6 +26,10 @@ export async function requestAiAnalysis(
 
   const data = await response.json().catch(() => ({} as { text?: string; error?: string }));
 
+  // Sunucu izni ayrıca denetler (api/_lib/aiAccess.ts): hesaptaki izin eksikse (ör. izin yalnız cihaza yazılabilmişse)
+  // bilinçli red gibi ele alınır; çağıran özellik izin ekranını yeniden açar.
+  if (response.status === 403 && (data as { error?: string })?.error === 'consent_required') throw new AiConsentDeclinedError();
+
   if (!response.ok || !data?.text) {
     throw new Error(data?.error || `AI analiz hatası (${response.status})`);
   }

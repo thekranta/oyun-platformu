@@ -430,7 +430,7 @@ MDB/MSB/MÇB/MHB/MYB (Müzik), SNAB (Sanat)
 Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
 
 ## VERİLER:
-- Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
+- Öğrenci: ${yasAy} aylık çocuk (${gelisimselDonem}). GİZLİLİK: Çocuğun adı sana verilmedi; raporda hiçbir isim yazma ya da uydurma, veli bölümünde "çocuğunuz" de.
 - Oyun: ${oyunAdiTR}
 - Seçilen Yol: ${secilenYol}
 - Süre: ${sure} saniye
@@ -463,7 +463,7 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır, il
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin oyundaki seçimlerini samimi ama profesyonel bir dille açıkla.]
+[Çocuğunuzun oyundaki seçimlerini samimi ama profesyonel bir dille açıkla.]
 
 **Evde İskele Kurma Önerileri:**
 - Hikaye okuma sırasında "Sen olsaydın ne yapardın?" soruları
@@ -479,7 +479,7 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 Bu oyun bir "Görsel Dikkat ve Sembolik Eşleme" görevidir, sadece boyama değil!
 
 ## VERİLER:
-- Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
+- Öğrenci: ${yasAy} aylık çocuk (${gelisimselDonem}). GİZLİLİK: Çocuğun adı sana verilmedi; raporda hiçbir isim yazma ya da uydurma, veli bölümünde "çocuğunuz" de.
 - Oyun: Sihirli Tuval: Sayılarla Boyama
 - Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
@@ -516,7 +516,7 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır]' :
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin görsel tarama ve sembol eşleme becerisini samimi bir dille açıkla.]
+[Çocuğunuzun görsel tarama ve sembol eşleme becerisini samimi bir dille açıkla.]
 
 **Evde İskele Kurma Önerileri:**
 - Dergilerden sayı bulma ve boyama oyunları
@@ -531,7 +531,7 @@ ChildhoodTech Ekibi
 Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
 
 ## VERİLER:
-- Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
+- Öğrenci: ${yasAy} aylık çocuk (${gelisimselDonem}). GİZLİLİK: Çocuğun adı sana verilmedi; raporda hiçbir isim yazma ya da uydurma, veli bölümünde "çocuğunuz" de.
 - Oyun: Uzay Blokları
 - Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
@@ -566,7 +566,7 @@ ${gelisimGecmisi ? '\n**Gelişim Seyri:** [Önceki oyunlarla karşılaştır]' :
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin parça-bütün ilişkisi kurma ve uzamsal düşünme becerisini samimi bir dille açıkla.]
+[Çocuğunuzun parça-bütün ilişkisi kurma ve uzamsal düşünme becerisini samimi bir dille açıkla.]
 
 **Evde İskele Kurma Önerileri:**
 - Lego veya blok oyunlarıyla şekil oluşturma
@@ -581,7 +581,7 @@ ChildhoodTech Ekibi
 Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danışmanısın.
 
 ## VERİLER:
-- Öğrenci: ${score.ogrenci_adi} (${yasAy} Ay - ${gelisimselDonem})
+- Öğrenci: ${yasAy} aylık çocuk (${gelisimselDonem}). GİZLİLİK: Çocuğun adı sana verilmedi; raporda hiçbir isim yazma ya da uydurma, veli bölümünde "çocuğunuz" de.
 - Oyun: ${oyunAdiTR} | Zorluk: ${zorluk}
 - Süre: ${sure} sn | Hamle: ${score.hamle_sayisi} | Hata: ${hata}
 - Performans Eğilimi: ${performansEgilimi}
@@ -619,7 +619,7 @@ ${zorluk >= 4 ? '\n**İskele Kurma Önerisi:** [Yüksek zorluk için somutlaşt�
 
 Değerli Velimiz,
 
-[${score.ogrenci_adi}'nin performansını samimi ama profesyonel bir dille açıkla.]
+[Çocuğunuzun performansını samimi ama profesyonel bir dille açıkla.]
 
 **Evde İskele Kurma Önerileri:**
 - Oyundaki beceriyi destekleyen günlük aktiviteler öner

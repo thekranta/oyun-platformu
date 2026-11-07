@@ -259,7 +259,7 @@ export default function SignUp() {
                             <Text style={styles.titleEmoji}>🌟</Text>
                             <Text style={styles.title}>Kayıt Ol</Text>
                         </View>
-                        <Text style={styles.subtitle}>Bulutların Üzerinde Akademi'ye hoş geldiniz!</Text>
+                        <Text style={styles.subtitle}>MiniZeka'ya hoş geldiniz!</Text>
 
                         {/* Parent Section */}
                         <View style={styles.sectionHeader}>

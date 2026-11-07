@@ -509,7 +509,7 @@ export default function TeacherDashboard({
         const name = newClassName.trim();
         if (!name || savingClass) return;
         if (classes.length >= flags.maxClasses) {
-            setNotice(t('teacher.classLimitMessage'));
+            setNotice(t(Platform.OS === 'web' ? 'teacher.classLimitMessage' : 'teacher.classLimitMessageMobile'));
             return;
         }
 
@@ -597,7 +597,7 @@ export default function TeacherDashboard({
             return;
         }
         if (students.length >= flags.maxStudentsPerClass) {
-            setNotice(t('teacher.studentLimitMessage'));
+            setNotice(t(Platform.OS === 'web' ? 'teacher.studentLimitMessage' : 'teacher.studentLimitMessageMobile'));
             return;
         }
 
@@ -645,7 +645,7 @@ export default function TeacherDashboard({
             const body: any = await response.json().catch(() => ({}));
             const msg = String(body?.message || '') + ' ' + String(body?.details || '');
             if (msg.includes('class_enroll_blocked')) setNotice(t('teacher.enrollBlocked'));
-            else if (msg.includes('class_student_limit')) setNotice(t('teacher.studentLimitMessage'));
+            else if (msg.includes('class_student_limit')) setNotice(t(Platform.OS === 'web' ? 'teacher.studentLimitMessage' : 'teacher.studentLimitMessageMobile'));
             else if (msg.includes('invalid_email') || msg.includes('class_students_email_format')) setNotice(t('teacher.invalidEmail'));
             else if (response.status === 409 || msg.includes('duplicate key')) setNotice(t('teacher.alreadyInClass'));
             else setNotice(t('teacher.addFailed'));
@@ -703,7 +703,7 @@ export default function TeacherDashboard({
     const generateSummary = async () => {
         if (!selectedStudent || summaryLoading) return;
         if (!flags.canSeeAiAnalysis) {
-            setNotice(t('teacher.aiPremiumOnlyMessage'));
+            setNotice(t(Platform.OS === 'web' ? 'teacher.aiPremiumOnlyMessage' : 'teacher.aiPremiumOnlyMessageMobile'));
             return;
         }
         if (studentScores.length < SUMMARY_MIN_GAMES) return;

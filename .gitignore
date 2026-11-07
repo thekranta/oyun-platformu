@@ -48,3 +48,6 @@ app-example
 # Claude Code arac yapilandirmasi ve gecici calisma dosyalari — kisisel/lokal
 .claude/
 scratchpad/
+
+.vercel
+.env*

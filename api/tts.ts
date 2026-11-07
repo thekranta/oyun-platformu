@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
@@ -33,12 +33,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const authed = await requireUser(req, res);
     if (!authed) return;
 
-    const {
-        text,
-        voice = 'coral',  // Warm female voice
-        speed = 0.85,    // 0.25 to 4.0
-        instructions = 'Speak in a warm, friendly, caring female voice suitable for preschool children. Keep the tone gentle and encouraging.'
-    } = req.body;
+    const body = req.body && typeof req.body === 'object' ? (req.body as Record<string, unknown>) : {};
+    const text = body.text;
+    // Girdi sinirlari: ses adi listeden, hiz sayi, yonerge kisa serbest metin (uzun/keyfi yonerge = ucretli genel TTS vekili).
+    const ALLOWED_VOICES = ['coral', 'shimmer', 'nova', 'sage', 'ballad', 'alloy', 'echo', 'fable', 'onyx'];
+    const DEFAULT_INSTRUCTIONS = 'Speak in a warm, friendly, caring female voice suitable for preschool children. Keep the tone gentle and encouraging.';
+    const voice = typeof body.voice === 'string' && ALLOWED_VOICES.includes(body.voice) ? body.voice : 'coral';
+    const speed = typeof body.speed === 'number' && Number.isFinite(body.speed) ? body.speed : 0.85;
+    const instructions = typeof body.instructions === 'string' && body.instructions.length <= 400 ? body.instructions : DEFAULT_INSTRUCTIONS;
 
     if (!text || typeof text !== 'string') {
         return res.status(400).json({ error: 'Text is required' });
@@ -116,9 +118,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(lastStatus).json({ error: 'TTS generation failed', details: lastDetail });
     } catch (error: any) {
         console.error('TTS Error:', error);
-        return res.status(500).json({
-            error: 'Failed to generate speech',
-            details: error.message
-        });
+        return res.status(500).json({ error: 'Failed to generate speech' });
     }
 }

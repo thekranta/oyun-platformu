@@ -586,7 +586,7 @@ export default function App() {
                   oyunuBaslat(nextDailyRoute);
                 }}
               >
-                <Text style={styles.butonYazi}>Siradaki Gunluk Oyun</Text>
+                <Text style={styles.butonYazi}>Sıradaki Günlük Oyun</Text>
               </TouchableOpacity>
             )}
 

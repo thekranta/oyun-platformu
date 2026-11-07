@@ -219,6 +219,11 @@
     "regSchool": "Okul Adı (opsiyonel)",
     "regButton": "Kayıt Ol",
     "regNote": "Kayıt olduktan sonra Ücretsiz plana dahil olursunuz. Çınar (Sınıf) ve Meşe (Kurumsal) paketleri için childhoodtech.com adresini ziyaret edin.",
+    "regNoteMobile": "Kayıt olduktan sonra Ücretsiz plana dahil olursunuz. Sınıf paketlerini uygulama içindeki Paketler ekranından inceleyebilirsiniz.",
+    "termsLabel": "Kullanım Şartları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum. Öğrencilerime ait bilgileri yalnızca eğitim amacıyla ve veli onayı çerçevesinde kullanacağım. *",
+    "termsLink": "Kullanım Şartları",
+    "privacyLink": "Gizlilik Politikası",
+    "needTerms": "Devam etmek için Kullanım Şartları'nı ve Gizlilik Politikası'nı kabul etmelisiniz.",
     "needName": "Lütfen adınızı girin.",
     "needEmail": "Lütfen e-posta adresinizi girin.",
     "validEmail": "Geçerli bir e-posta adresi girin.",
@@ -376,17 +381,20 @@
     "addButton": "➕ Ekle",
     "premiumRequiredTitle": "Paket Sınırı",
     "classLimitMessage": "Bu paket tek bir sınıf içindir. Birden fazla sınıf için Meşe Kurumsal Paket'i inceleyin (childhoodtech.com).",
+    "classLimitMessageMobile": "Bu paket tek bir sınıf içindir. Birden fazla sınıf için Meşe Kurumsal Paket'i uygulama içindeki Paketler ekranından inceleyebilirsiniz.",
     "deleteClassTitle": "Sınıfı Sil",
     "deleteClassMessage": "\"{{name}}\" sınıfını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
     "delete": "Sil",
     "errorTitle": "Hata",
     "studentNotFoundMessage": "Bu email ile kayıtlı öğrenci bulunamadı.",
     "studentLimitMessage": "Bu pakette sınıfa en fazla 10 öğrenci ekleyebilirsiniz. Sınırsız öğrenci için Meşe Kurumsal Paket'i inceleyin (childhoodtech.com).",
+    "studentLimitMessageMobile": "Bu pakette sınıfa en fazla 10 öğrenci ekleyebilirsiniz. Sınırsız öğrenci için Meşe Kurumsal Paket'i Paketler ekranından inceleyebilirsiniz.",
     "removeStudentTitle": "Öğrenciyi Çıkar",
     "removeStudentMessage": "\"{{name}}\" adlı öğrenciyi sınıftan çıkarmak istediğinize emin misiniz?",
     "remove": "Çıkar",
     "premiumFeatureTitle": "Paket Özelliği",
     "aiPremiumOnlyMessage": "AI Analizi Çınar (Sınıf) ve Meşe (Kurumsal) paketlerinde kullanılabilir. Paketler: childhoodtech.com",
+    "aiPremiumOnlyMessageMobile": "AI Analizi Çınar (Sınıf) ve Meşe (Kurumsal) paketlerinde kullanılabilir. Paketleri uygulama içindeki Paketler ekranından inceleyebilirsiniz.",
     "ageYearsMonths": "{{years}} yaş {{months}} ay",
     "ageYearsOnly": "{{years}} yaş",
     "games": {
@@ -785,5 +793,10 @@
       "unavailableText": "Bu oyun bu pakette yok ya da tahtada kullanılamıyor.",
       "backToGames": "Oyunlara dön"
     }
+  },
+  "gameError": {
+    "title": "Bir şeyler ters gitti",
+    "text": "Bu oyun beklenmedik şekilde durdu. Menüye dönüp başka bir oyun seçebilir veya tekrar deneyebilirsin.",
+    "button": "🏠 Menüye Dön"
   }
 }

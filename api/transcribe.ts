@@ -5,6 +5,7 @@
  * POST /api/transcribe
  */
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { enforceAiAccess } from './_lib/aiAccess';
 import { requireUser } from './_lib/auth';
 import { logAiUsage } from './_lib/aiUsageLog';
 import { estimateWhisperCostUsd } from '../lib/aiPricing';
@@ -26,6 +27,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const authed = await requireUser(req, res);
   if (!authed) return;
+  // Cocugun ses kaydi: ebeveynin 'voice' izni sunucuda da denetlenir (istemcideki izin ekranina ek).
+  if (!(await enforceAiAccess(res, authed, 'bunusoyle_transkript', 'voice'))) return;
 
   const { audioBase64, mimeType } = req.body || {};
   if (!audioBase64 || typeof audioBase64 !== 'string') {
@@ -89,6 +92,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   } catch (error: any) {
     console.error('Transcribe error:', error);
-    return res.status(500).json({ error: 'Failed to transcribe audio', details: error.message });
+    return res.status(500).json({ error: 'Failed to transcribe audio' });
   }
 }

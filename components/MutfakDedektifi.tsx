@@ -573,8 +573,6 @@ export default function MutfakDedektifi({ onGameEnd, onExit, childName = 'Şefim
                         <Text style={styles.completeText}>Tüm seviyeleri tamamladın!</Text>
                         <View style={styles.completeStats}>
                             <Text style={styles.completeStatText}>⭐ Seviye: {level}</Text>
-                            <Text style={styles.completeStatText}>✅ Doğru: {moves - totalErrors}</Text>
-                            <Text style={styles.completeStatText}>⚠️ Hata: {totalErrors}</Text>
                         </View>
                     </View>
                 )}

@@ -6,7 +6,7 @@
  *   - Çocuğun bilgisi ebeveyn izni olmadan üçüncü taraf yapay zekâya gitmez (Apple 5.1.2(i)).
  *   - Hesap oluşturan uygulama hesap silmeyi uygulama içinde sunar (Apple 5.1.1(v), Google Hesap Silme Politikası).
  */
-import { readdirSync, readFileSync, statSync } from 'fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { join, relative } from 'path';
 import en from '../locales/en.json';
 import tr from '../locales/tr.json';
@@ -252,5 +252,56 @@ describe('uygulama yapılandırması (app.json / eas.json)', () => {
         const png = readFileSync(join(ROOT, 'assets/images/icon.png'));
         expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1024, 1024]);
         expect(png[25]).toBe(2); // 2 = RGB (alfa yok); 6 = RGBA olurdu
+    });
+});
+
+describe('mağaza denetimi 2026-11-07: kaçan noktalar', () => {
+    const duzlestir = (nesne: unknown, onek = ''): [string, string][] =>
+        Object.entries(nesne as Record<string, unknown>).flatMap(([k, v]) =>
+            v && typeof v === 'object' && !Array.isArray(v) ? duzlestir(v, onek + k + '.') : [[onek + k, String(v)] as [string, string]]);
+    const oku2 = (yol: string) => readFileSync(join(__dirname, '..', yol), 'utf8');
+
+    it('Apple 3.1.1: web satış sitesine yönlendiren her metin yalnız web’de gösterilir (mobil varyantı var ve kodda Platform ayrımıyla seçilir)', () => {
+        // Web'e özgü ya da satış içermeyen istisnalar: hesap silme yardım e-postası, tahta adresi, e-posta yer tutucuları.
+        const IZINLI = new Set(['deleteAccount.help', 'board.webOnlyText', 'teacher.emailPlaceholder', 'institution.login.emailPlaceholder']);
+        const kod = ['components/TeacherDashboard.tsx', 'app/teacher-dashboard.tsx', 'components/VeliDashboard.tsx', 'components/ToyRoom.tsx', 'app/signup.tsx', 'app/veli-dashboard.tsx']
+            .map((yol) => ({ yol, metin: oku2(yol) }));
+        for (const dil of [tr, en] as const) {
+            const duz = Object.fromEntries(duzlestir(dil));
+            for (const [anahtar, deger] of duzlestir(dil)) {
+                if (!/childhoodtech\.com|#pricing/i.test(deger) || IZINLI.has(anahtar)) continue;
+                if (anahtar.endsWith('Mobile')) throw new Error('mobil varyant web adresi içermemeli: ' + anahtar);
+                expect({ anahtar, mobil: duz[anahtar + 'Mobile'] }).toEqual({ anahtar, mobil: expect.any(String) });
+                for (const { yol, metin } of kod) {
+                    metin.split(/\r?\n/).forEach((satir, i) => {
+                        if (satir.includes("t('" + anahtar + "')") && !satir.includes("Platform.OS === 'web'")) {
+                            throw new Error(yol + ':' + (i + 1) + ' web adresli metin Platform ayrımı olmadan gösteriliyor: ' + anahtar);
+                        }
+                    });
+                }
+            }
+        }
+    });
+
+    it('yönetici (uzman) yapay zekâ istemleri çocuğun adını içermez', () => {
+        const k = oku2('app/admin.tsx');
+        expect(k).not.toContain('Öğrenci: ${score.ogrenci_adi}');
+        expect(k).not.toContain("${score.ogrenci_adi}'nin");
+        expect((k.match(/GİZLİLİK: Çocuğun adı sana verilmedi/g) || []).length).toBeGreaterThanOrEqual(4);
+    });
+
+    it('öğretmen kaydı da Kullanım Şartları + Gizlilik onayı ister ve kabul anını yazar', () => {
+        const k = oku2('app/teacher-dashboard.tsx');
+        expect(k).toContain("if (!regTerms) { setNotice(t('teacherAuth.needTerms')); return; }");
+        expect(k).toContain('terms_accepted_at: new Date().toISOString()');
+        expect(k).toContain('openExternalLink(LEGAL_URLS.terms)');
+        expect(k).toContain('openExternalLink(LEGAL_URLS.privacy)');
+    });
+
+    it('ücretli yapay zekâ uçları izni SUNUCUDA da denetler (istemciye güvenilmez); kimliksiz Google TTS vekili kaldırıldı', () => {
+        expect(oku2('api/openai-analyze.ts')).toContain("enforceAiAccess(res, authed, feature, 'text')");
+        expect(oku2('api/transcribe.ts')).toContain("enforceAiAccess(res, authed, 'bunusoyle_transkript', 'voice')");
+        expect(oku2('api/_lib/aiAccess.ts')).toContain('decideAiAccess(');
+        expect(existsSync(join(__dirname, '..', 'api', 'text-to-speech.ts'))).toBe(false);
     });
 });

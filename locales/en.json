@@ -219,6 +219,11 @@
     "regSchool": "School name (optional)",
     "regButton": "Sign up",
     "regNote": "After signing up you are on the Free plan. For the Çınar (Classroom) and Meşe (Institution) plans, visit childhoodtech.com.",
+    "regNoteMobile": "After signing up you are on the Free plan. You can review the classroom plans on the Plans screen inside the app.",
+    "termsLabel": "I have read and accept the Terms of Use and the Privacy Policy. I will use my students’ information only for educational purposes and within the parents’ consent. *",
+    "termsLink": "Terms of Use",
+    "privacyLink": "Privacy Policy",
+    "needTerms": "To continue, please accept the Terms of Use and the Privacy Policy.",
     "needName": "Please enter your name.",
     "needEmail": "Please enter your email address.",
     "validEmail": "Enter a valid email address.",
@@ -376,17 +381,20 @@
     "addButton": "➕ Add",
     "premiumRequiredTitle": "Plan Limit",
     "classLimitMessage": "This plan covers a single class. For multiple classes, see the Meşe Institution plan (childhoodtech.com).",
+    "classLimitMessageMobile": "This plan covers a single class. For multiple classes, review the Meşe Institution plan on the Plans screen inside the app.",
     "deleteClassTitle": "Delete Class",
     "deleteClassMessage": "Are you sure you want to delete the class \"{{name}}\"? This action cannot be undone.",
     "delete": "Delete",
     "errorTitle": "Error",
     "studentNotFoundMessage": "No student registered with this email was found.",
     "studentLimitMessage": "This plan allows at most 10 students per class. For unlimited students, see the Meşe Institution plan (childhoodtech.com).",
+    "studentLimitMessageMobile": "This plan allows at most 10 students per class. For unlimited students, review the Meşe Institution plan on the Plans screen.",
     "removeStudentTitle": "Remove Student",
     "removeStudentMessage": "Are you sure you want to remove \"{{name}}\" from the class?",
     "remove": "Remove",
     "premiumFeatureTitle": "Plan Feature",
     "aiPremiumOnlyMessage": "AI Analysis is available in the Çınar (Classroom) and Meşe (Institution) plans. Plans: childhoodtech.com",
+    "aiPremiumOnlyMessageMobile": "AI Analysis is available in the Çınar (Classroom) and Meşe (Institution) plans. You can review the plans on the Plans screen inside the app.",
     "ageYearsMonths": "{{years}}y {{months}}m",
     "ageYearsOnly": "{{years}}y",
     "games": {
@@ -791,5 +799,10 @@
       "unavailableText": "This game is not in this plan or cannot be used on the board.",
       "backToGames": "Back to games"
     }
+  },
+  "gameError": {
+    "title": "Something went wrong",
+    "text": "This game stopped unexpectedly. You can go back to the menu and pick another game, or try again.",
+    "button": "🏠 Back to menu"
   }
 }

@@ -603,7 +603,7 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
                         <Text style={styles.completeText}>Harika bir astronot oldun!</Text>
                         <View style={styles.statsRow}>
                             <View style={styles.statBox}>
-                                <Text style={styles.statLabel}>Doğru</Text>
+                                <Text style={styles.statLabel}>⭐</Text>{/* çocuğa yazılı sayaç yok: yalnız olumlu sayı + ikon (kullanıcı kuralı) */}
                                 <Text style={[styles.statValue, { color: '#4CAF50' }]}>{correctAnswers}</Text>
                             </View>
                         </View>
