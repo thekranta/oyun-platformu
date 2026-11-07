@@ -48,6 +48,8 @@ Bu belge iki yarıdan oluşur: kodda **yapılanlar** ve **hesaplarla ilgili seni
 3. **Offering'ler**: `veli` (Tohum/Filiz/Fidan/Orman ürünleri) ve `ogretmen` (Çınar). Kimlikleri aynen böyle yaz; kod bunları arar.
 4. Webhook: URL `https://oyun.childhoodtech.com/api/revenuecat-webhook`, *Authorization header* = `REVENUECAT_WEBHOOK_SECRET` değeri.
 
+- **Sandbox (test) satın almaları** üretimde paket açmaz (webhook `environment: SANDBOX` olaylarını yok sayar). TestFlight / lisans test hesabıyla akışı denerken Vercel'e geçici olarak `REVENUECAT_ALLOW_SANDBOX=1` ekle, yayından önce kaldır.
+
 ### 2.4 Ürünler ve fiyatlar
 **Ürün kimliği kuralı** (iOS ve Android'de aynı; paket adı + süre içermeli, ödeme ekranı ve webhook bunu okur):
 

@@ -160,7 +160,7 @@
       "classInvites": {
         "title": "Class invitations",
         "unknownTeacher": "Unknown sender",
-        "intro": "A teacher wants to add your child to their class. If you approve, the teacher can see your child's name, age, game history and drawings. The teacher can also save the results of games played on the classroom board to your child's record; they appear in your dashboard with an “In class” label. You can leave at any time.",
+        "intro": "A teacher wants to add your child to their class. If you approve, the teacher can see your child's name, age, game history and drawings. The teacher can also save the results of games played on the classroom board to your child's record; they appear in your dashboard with an “In class” label. The teacher may request a short AI-assisted development summary based on your child's age and game results; your child's name is not sent. You can leave at any time.",
         "institutionNote": "This class belongs to {{name}}. The institution manager can see your child's name, age and a summary of play activity, but not drawings, AI comments or your contact details.",
         "className": "Class: {{name}}",
         "pendingBadge": "Waiting for your approval",

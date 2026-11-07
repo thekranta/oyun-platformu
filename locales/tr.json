@@ -160,7 +160,7 @@
       "classInvites": {
         "title": "Sınıf davetleri",
         "unknownTeacher": "Bilinmeyen gönderen",
-        "intro": "Bir öğretmen çocuğunuzu sınıfına eklemek istiyor. Onaylarsanız öğretmen çocuğunuzun adını, yaşını, oyun geçmişini ve çizimlerini görebilir. Öğretmen, sınıf tahtasında oynatılan oyunların sonucunu da çocuğunuzun dosyasına kaydedebilir; bu sonuçlar panelinizde “Sınıfta” etiketiyle görünür. İstediğiniz zaman çıkabilirsiniz.",
+        "intro": "Bir öğretmen çocuğunuzu sınıfına eklemek istiyor. Onaylarsanız öğretmen çocuğunuzun adını, yaşını, oyun geçmişini ve çizimlerini görebilir. Öğretmen, sınıf tahtasında oynatılan oyunların sonucunu da çocuğunuzun dosyasına kaydedebilir; bu sonuçlar panelinizde “Sınıfta” etiketiyle görünür. Öğretmen, çocuğunuzun adı gönderilmeden, yaşı ve oyun sonuçlarıyla yapay zekâ destekli kısa bir gelişim özeti alabilir. İstediğiniz zaman çıkabilirsiniz.",
         "institutionNote": "Bu sınıf {{name}} kurumuna bağlı. Kurum yöneticisi çocuğunuzun adını, yaşını ve oyun etkinliğinin özetini görebilir; çizimlerinizi, yapay zekâ yorumlarını ve iletişim bilgilerinizi göremez.",
         "className": "Sınıf: {{name}}",
         "pendingBadge": "Onayınız bekleniyor",

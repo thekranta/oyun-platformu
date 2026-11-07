@@ -64,6 +64,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Invalid payload' });
   }
 
+  // Test (sandbox) satin alimlari uretimde paket ACMAZ: iOS sandbox hesabi olan herkes sandbox satin alma yapabilir ve
+  // bu olaylar da webhook'a gelir. Magaza oncesi denemelerde Vercel'de REVENUECAT_ALLOW_SANDBOX=1 ile acilir, yayin oncesi kaldirilir.
+  if (event.environment === 'SANDBOX' && process.env.REVENUECAT_ALLOW_SANDBOX !== '1') {
+    return res.status(200).json({ ok: true, ignored: 'sandbox' });
+  }
+
   const email = event.app_user_id;
   const entitlementIds: string[] = Array.isArray(event.entitlement_ids) ? event.entitlement_ids : [];
   const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
