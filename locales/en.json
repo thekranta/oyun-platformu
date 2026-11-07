@@ -189,6 +189,7 @@
     "analysisFailedMessage": "The analysis could not be created. Please try again.",
     "errorTitle": "❌ Error",
     "errorGeneric": "Something went wrong.",
+    "webOnlyFeature": "This feature is available only in the web browser.",
     "infoTitle": "Info",
     "pdfWebOnlyMessage": "The report/PDF output is available in the web version. On mobile, you can track progress from the panel.",
     "pdfNeedsGamesMessage": "A few games need to be played before a report can be created.",

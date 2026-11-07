@@ -189,6 +189,7 @@
     "analysisFailedMessage": "Analiz oluşturulamadı. Lütfen tekrar deneyin.",
     "errorTitle": "❌ Hata",
     "errorGeneric": "Bir sorun oluştu.",
+    "webOnlyFeature": "Bu özellik yalnız web tarayıcısında kullanılabilir.",
     "infoTitle": "Bilgi",
     "pdfWebOnlyMessage": "Rapor çıktısı/PDF web sürümünde kullanılabilir. Mobil cihazda gelişimi panelden takip edebilirsiniz.",
     "pdfNeedsGamesMessage": "Rapor oluşturmak için önce birkaç oyun oynanmalıdır.",

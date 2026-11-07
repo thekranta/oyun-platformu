@@ -14,8 +14,8 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY
   || process.env.EXPO_PUBLIC_OPENAI_API_KEY
   || process.env.EXPO_PUBLIC_SPEECH_API_KEY;
 
-// ~2 dakikalik webm/opus konusma icin fazlasiyla yeterli; asiri buyuk govdeyi reddeder.
-const MAX_BASE64_LENGTH = 8 * 1024 * 1024;
+// Vercel sunucusuz govde siniri 4,5 MB: daha buyugu zaten uca ulasmaz. ~1 dakikalik webm/opus icin yeterli.
+const MAX_BASE64_LENGTH = 4 * 1024 * 1024;
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');

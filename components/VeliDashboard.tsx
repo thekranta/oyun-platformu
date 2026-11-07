@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
-    Alert,
     Animated,
     Dimensions,
     Image,
@@ -324,7 +323,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     const [generatingPDF, setGeneratingPDF] = useState(false);
     // Öğretmen özeti ayrı bayrak: yüklenirken çark kendi kartında görünsün (veli PDF kartı çökmesin).
     const [generatingTeacher, setGeneratingTeacher] = useState(false);
-    // react-native-web'de Alert.alert boş işlemdir; web'de rapor uyarıları bu sayfa içi karta düşer.
+    // Tüm uyarılar bu sayfa içi karta düşer (native Alert kullanılmaz: kullanıcı kuralı; web'de zaten boş işlemdi).
     const [reportNotice, setReportNotice] = useState<string | null>(null);
     useEffect(() => {
         if (!reportNotice) return;
@@ -380,13 +379,13 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     }
                 }
 
-                Alert.alert(t('veli.analysisCompleteTitle'), t('veli.analysisCompleteMessage'));
+                setReportNotice(t('veli.analysisCompleteMessage'));
             } else {
-                Alert.alert(t('veli.analysisFailedTitle'), t('veli.analysisFailedMessage'));
+                setReportNotice(t('veli.analysisFailedMessage'));
             }
         } catch (error) {
             console.error('Cumulative analysis error:', error);
-            Alert.alert(t('veli.errorTitle'), t('veli.errorGeneric'));
+            setReportNotice(t('veli.errorGeneric'));
         } finally {
             setIsAnalyzing(false);
         }
@@ -647,10 +646,8 @@ export default function VeliDashboard({ childName, childAge, email, subscription
         if (generatingPDF || generatingTeacher) return;
         setReportNotice(null);
         const setBusy = audience === 'teacher' ? setGeneratingTeacher : setGeneratingPDF;
-        const notify = (title: string, message: string) => {
-            if (Platform.OS === 'web') setReportNotice(message);
-            else Alert.alert(title, message);
-        };
+        // Uygulama içi kart (kullanıcı kuralı: native Alert yok); başlık karta girmez.
+        const notify = (_title: string, message: string) => setReportNotice(message);
         if (scores.length === 0) {
             notify(t('veli.infoTitle'), t('veli.pdfNeedsGamesMessage'));
             return;
@@ -696,7 +693,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
     // Generate shareable achievement image (1080x1080 square for social media)
     const handleGenerateShareImage = async () => {
         if (Platform.OS !== 'web') {
-            Alert.alert('Bilgi', 'Bu ozellik sadece web uzerinde kullanilabilir.');
+            setReportNotice(t('veli.webOnlyFeature'));
             return;
         }
 
@@ -783,7 +780,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
 
         } catch (error) {
             console.error('Share image error:', error);
-            Alert.alert('Hata', 'Gorsel olusturulurken bir hata olustu.');
+            setReportNotice(t('veli.errorGeneric'));
         }
     };
 
@@ -1669,7 +1666,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                                                 <TouchableOpacity
                                                     style={styles.analyzeButton}
                                                     onPress={() => {
-                                                        Alert.alert(t('veli.analysisRequestedTitle'), t('veli.analysisRequestedMessage'));
+                                                        setReportNotice(t('veli.analysisRequestedMessage'));
                                                     }}
                                                 >
                                                     <Ionicons name="sparkles" size={16} color="#fff" />

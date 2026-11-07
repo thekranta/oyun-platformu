@@ -1,4 +1,5 @@
 import DynamicBackground from '@/components/DynamicBackground';
+import InAppNotice from '@/components/InAppNotice';
 import VeliDashboard from '@/components/VeliDashboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -8,7 +9,6 @@ import { supabase } from '../lib/supabase';
 import { VeliTier } from '../lib/subscriptionTiers';
 import {
     ActivityIndicator,
-    Alert,
     Dimensions,
     KeyboardAvoidingView,
     Platform,
@@ -19,28 +19,6 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-
-// Web-compatible alert function
-const showAlert = (title: string, message: string, buttons?: Array<{ text: string, onPress?: () => void, style?: 'cancel' | 'default' | 'destructive' }>) => {
-    if (Platform.OS === 'web') {
-        if (buttons && buttons.length > 1) {
-            // Two buttons: use confirm dialog
-            // First button (cancel) = Cancel button, Second button = OK button
-            const cancelButton = buttons.find(b => b.style === 'cancel');
-            const actionButton = buttons.find(b => b.style !== 'cancel');
-            const result = window.confirm(`${title}\n\n${message}\n\n[OK = ${actionButton?.text || 'Yes'}, Cancel = ${cancelButton?.text || 'Cancel'}]`);
-            if (result && actionButton?.onPress) {
-                actionButton.onPress();
-            }
-            // If result is false (Cancel clicked), do nothing
-        } else {
-            // Single button or no buttons: just show alert
-            window.alert(`${title}\n\n${message}`);
-        }
-    } else {
-        Alert.alert(title, message, buttons);
-    }
-};
 
 interface ProfileData {
     email: string;
@@ -53,6 +31,7 @@ interface ProfileData {
 
 export default function VeliDashboardPage() {
     const router = useRouter();
+    const [notice, setNotice] = useState<string | null>(null);   // uygulama içi kart (native Alert yok)
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -78,21 +57,14 @@ export default function VeliDashboardPage() {
             .eq('email', emailValue)
             .limit(1);
         if (error) {
-            showAlert('Hata', `Profil yüklenemedi: ${error.message}`);
+            setNotice(`Profil yüklenemedi: ${error.message}`);
             return false;
         }
         if (data && data.length > 0) {
             setProfile(data[0] as ProfileData);
             return true;
         }
-        showAlert(
-            'Kayıt Bulunamadı',
-            'Bu hesaba bağlı profil bulunamadı.\n\nÖnce ana ekrandan "Kayıt Ol" ile kayıt olun veya Demo ile devam edin.',
-            [
-                { text: 'Kapat', style: 'cancel' },
-                { text: 'Demo Giriş', onPress: useDemoProfile }
-            ]
-        );
+        setNotice('Bu hesaba bağlı profil bulunamadı. Önce ana ekrandan "Kayıt Ol" ile kayıt olun ya da Demo ile devam edin.');
         return false;
     };
 
@@ -112,7 +84,7 @@ export default function VeliDashboardPage() {
 
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) {
-            showAlert('Hata', 'Lütfen e-posta ve şifrenizi girin');
+            setNotice('Lütfen e-posta ve şifrenizi girin');
             return;
         }
 
@@ -125,11 +97,11 @@ export default function VeliDashboardPage() {
             });
             if (error) {
                 if (isEmailNotConfirmed(error)) {
-                    showAlert('E-posta doğrulanmamış', AUTH_MESSAGES.notConfirmed);
+                    setNotice(AUTH_MESSAGES.notConfirmed);
                 } else if (error.message.includes('Invalid login credentials')) {
-                    showAlert('Hata', 'Hatalı e-posta veya şifre.');
+                    setNotice('Hatalı e-posta veya şifre.');
                 } else {
-                    showAlert('Hata', `Giriş başarısız: ${error.message}`);
+                    setNotice(`Giriş başarısız: ${error.message}`);
                 }
                 return;
             }
@@ -137,7 +109,7 @@ export default function VeliDashboardPage() {
             await ensureProfileFromMetadata(signIn?.user);
             await loadProfile(emailValue);
         } catch (error) {
-            showAlert('Hata', `Giriş sırasında bir hata oluştu: ${error}`);
+            setNotice(`Giriş sırasında bir hata oluştu: ${error}`);
         } finally {
             setLoading(false);
         }
@@ -145,7 +117,7 @@ export default function VeliDashboardPage() {
 
     const handleForgotPassword = async () => {
         if (!email.trim()) {
-            showAlert('Hata', 'Şifre sıfırlama bağlantısı için önce e-postanızı girin');
+            setNotice('Şifre sıfırlama bağlantısı için önce e-postanızı girin');
             return;
         }
         try {
@@ -153,9 +125,9 @@ export default function VeliDashboardPage() {
                 redirectTo: PASSWORD_RESET_REDIRECT,
             });
             if (error) throw error;
-            showAlert('Gönderildi', 'Şifre sıfırlama bağlantısı e-postanıza gönderildi.');
+            setNotice('Şifre sıfırlama bağlantısı e-postanıza gönderildi.');
         } catch (error: any) {
-            showAlert('Hata', error.message || 'Bağlantı gönderilemedi.');
+            setNotice(error.message || 'Bağlantı gönderilemedi.');
         }
     };
 
@@ -180,6 +152,7 @@ export default function VeliDashboardPage() {
 
     return (
         <DynamicBackground>
+            <InAppNotice message={notice} onDismiss={() => setNotice(null)} />
             <KeyboardAvoidingView
                 style={styles.container}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}

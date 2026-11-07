@@ -23,7 +23,12 @@ function getBearerToken(req: VercelRequest): string | null {
  */
 export async function getAuthedUser(req: VercelRequest) {
   const token = getBearerToken(req);
-  if (!token || !SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    // Kurulum hatasi (ortam degiskeni yok): 401 yaniltir; gunluge yaz ki Vercel loglarinda hemen gorulsun.
+    console.error('api/_lib/auth: EXPO_PUBLIC_SUPABASE_URL/KEY sunucu ortaminda tanimli degil');
+    return null;
+  }
+  if (!token) return null;
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },

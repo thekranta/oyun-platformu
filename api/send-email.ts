@@ -25,8 +25,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { email, subject, message, gameDetails } = req.body || {};
 
-  if (!email || typeof email !== 'string') {
-    return res.status(400).json({ error: 'Email is required' });
+  if (!email || typeof email !== 'string' || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim()) || email.length > 254) {
+    return res.status(400).json({ error: 'Valid email is required' });
   }
 
   try {
@@ -84,6 +84,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: true, message: 'Email sent successfully' });
   } catch (error: any) {
     console.error('Email sending error:', error);
-    return res.status(500).json({ error: 'Failed to send email', details: error.message });
+    return res.status(500).json({ error: 'Failed to send email' });
   }
 }
