@@ -18,10 +18,10 @@ export const EMAIL_CONFIRM_REDIRECT = 'https://oyun.childhoodtech.com';
 
 /**
  * Şifre sıfırlama bağlantısının döneceği adres (Supabase > Authentication > URL Configuration izin listesinde olmalı).
- * Marka alanına (oyun.childhoodtech.com/reset-password) geçmek için önce o adresi izin listesine ekleyin, sonra BURADAN değiştirin:
+ * Adres değişecekse önce yeni adresi izin listesine ekleyin, sonra BURADAN değiştirin:
  * tek yer burasıdır (tüm girişler bunu kullanır).
  */
-export const PASSWORD_RESET_REDIRECT = 'https://oyun-platformu.vercel.app/reset-password';
+export const PASSWORD_RESET_REDIRECT = 'https://oyun.childhoodtech.com/reset-password'; // Supabase izin listesine eklendi (2026-11-08)
 
 export const AUTH_MESSAGES = {
     notConfirmed: 'E-posta adresinizi doğrulamanız gerekiyor. Gelen kutunuzdaki (ya da spam klasöründeki) bağlantıya dokunup tekrar giriş yapın.',
