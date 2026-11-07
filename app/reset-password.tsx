@@ -4,6 +4,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { useRouter } from 'expo-router';
 import { takeResetReturn } from '../lib/resetReturn';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Dimensions,
@@ -40,6 +41,7 @@ if (typeof window !== 'undefined') {
 
 export default function ResetPassword() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -71,7 +73,7 @@ export default function ResetPassword() {
 
                     if (error) {
                         console.error('Session error:', error);
-                        showToast('Oturum doğrulanamadı. Lütfen şifre sıfırlama bağlantısını tekrar isteyin.', 'error');
+                        showToast(t('resetPassword.sessionError'), 'error');
                         setSessionValid(false);
                     } else {
                         setSessionValid(true);
@@ -82,7 +84,7 @@ export default function ResetPassword() {
                     if (session) {
                         setSessionValid(true);
                     } else {
-                        showToast('Geçersiz veya süresi dolmuş bağlantı. Lütfen tekrar şifre sıfırlama bağlantısı isteyin.', 'error');
+                        showToast(t('resetPassword.invalidLinkToast'), 'error');
                         setSessionValid(false);
                     }
                 }
@@ -95,12 +97,12 @@ export default function ResetPassword() {
 
     const handleResetPassword = async () => {
         if (newPassword.trim().length < 6) {
-            showToast('Şifre en az 6 karakter olmalıdır.', 'error');
+            showToast(t('resetPassword.shortPassword'), 'error');
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            showToast('Şifreler eşleşmiyor.', 'error');
+            showToast(t('resetPassword.mismatch'), 'error');
             return;
         }
 
@@ -114,7 +116,7 @@ export default function ResetPassword() {
                 throw error;
             }
 
-            showToast('Şifreniz başarıyla güncellendi!', 'success');
+            showToast(t('resetPassword.success'), 'success');
 
             // Redirect to login after a short delay
             setTimeout(() => {
@@ -122,7 +124,7 @@ export default function ResetPassword() {
             }, 2000);
         } catch (error: any) {
             console.error('Password reset error:', error);
-            showToast('Şifre güncellenirken bir hata oluştu: ' + error.message, 'error');
+            showToast(t('resetPassword.updateFailed', { detail: error.message }), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -137,7 +139,7 @@ export default function ResetPassword() {
                 <View style={styles.merkezContainer}>
                     <View style={[styles.card, styles.glassCard, { width: isMobile ? '90%' : undefined, maxWidth: 420 }]}>
                         <ActivityIndicator size="large" color="#6366F1" />
-                        <Text style={styles.loadingText}>Oturum doğrulanıyor...</Text>
+                        <Text style={styles.loadingText}>{t('resetPassword.checking')}</Text>
                     </View>
                 </View>
             </DynamicBackground>
@@ -150,16 +152,14 @@ export default function ResetPassword() {
                 <View style={styles.merkezContainer}>
                     <View style={[styles.card, styles.glassCard, { width: isMobile ? '90%' : undefined, maxWidth: 420 }]}>
                         <Text style={styles.errorEmoji}>⚠️</Text>
-                        <Text style={styles.errorTitle}>Geçersiz Bağlantı</Text>
-                        <Text style={styles.errorText}>
-                            Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş.
-                        </Text>
+                        <Text style={styles.errorTitle}>{t('resetPassword.invalidTitle')}</Text>
+                        <Text style={styles.errorText}>{t('resetPassword.invalidText')}</Text>
                         <TouchableOpacity
                             style={styles.gradientButton}
                             onPress={() => router.replace(takeResetReturn() as '/')}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.gradientButtonText}>Giriş Sayfasına Dön</Text>
+                            <Text style={styles.gradientButtonText}>{t('resetPassword.backToLogin')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -180,9 +180,9 @@ export default function ResetPassword() {
                     {/* Title with Icon */}
                     <View style={styles.titleContainer}>
                         <Text style={styles.titleEmoji}>🔐</Text>
-                        <Text style={styles.girisBaslik}>Yeni Şifre Belirle</Text>
+                        <Text style={styles.girisBaslik}>{t('resetPassword.title')}</Text>
                     </View>
-                    <Text style={styles.welcomeSubtitle}>Yeni şifrenizi giriniz</Text>
+                    <Text style={styles.welcomeSubtitle}>{t('resetPassword.subtitle')}</Text>
 
                     {/* New Password Input */}
                     <View collapsable={false} style={[
@@ -192,7 +192,7 @@ export default function ResetPassword() {
                         <Text style={styles.inputIcon}>🔒</Text>
                         <TextInput
                             style={styles.inputModern}
-                            placeholder="Yeni Şifre"
+                            placeholder={t('resetPassword.newPasswordPlaceholder')}
                             placeholderTextColor="#9E9E9E"
                             value={newPassword}
                             onChangeText={setNewPassword}
@@ -210,7 +210,7 @@ export default function ResetPassword() {
                         <Text style={styles.inputIcon}>🔒</Text>
                         <TextInput
                             style={styles.inputModern}
-                            placeholder="Yeni Şifre (Tekrar)"
+                            placeholder={t('resetPassword.confirmPlaceholder')}
                             placeholderTextColor="#9E9E9E"
                             value={confirmPassword}
                             onChangeText={setConfirmPassword}
@@ -226,13 +226,13 @@ export default function ResetPassword() {
                             styles.requirementText,
                             newPassword.length >= 6 && styles.requirementMet
                         ]}>
-                            {newPassword.length >= 6 ? '✅' : '○'} En az 6 karakter
+                            {newPassword.length >= 6 ? '✅' : '○'} {t('resetPassword.reqMinLength')}
                         </Text>
                         <Text style={[
                             styles.requirementText,
                             newPassword === confirmPassword && newPassword.length > 0 && styles.requirementMet
                         ]}>
-                            {newPassword === confirmPassword && newPassword.length > 0 ? '✅' : '○'} Şifreler eşleşiyor
+                            {newPassword === confirmPassword && newPassword.length > 0 ? '✅' : '○'} {t('resetPassword.reqMatch')}
                         </Text>
                     </View>
 
@@ -249,10 +249,10 @@ export default function ResetPassword() {
                         {isLoading ? (
                             <View style={styles.buttonContent}>
                                 <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
-                                <Text style={styles.gradientButtonText}>Güncelleniyor...</Text>
+                                <Text style={styles.gradientButtonText}>{t('resetPassword.updating')}</Text>
                             </View>
                         ) : (
-                            <Text style={styles.gradientButtonText}>Şifreyi Güncelle ✨</Text>
+                            <Text style={styles.gradientButtonText}>{t('resetPassword.submit')}</Text>
                         )}
                     </TouchableOpacity>
 
@@ -261,7 +261,7 @@ export default function ResetPassword() {
                         style={styles.backLink}
                         onPress={() => router.replace(takeResetReturn() as '/')}
                     >
-                        <Text style={styles.backLinkText}>← Giriş Sayfasına Dön</Text>
+                        <Text style={styles.backLinkText}>{t('resetPassword.backToLoginArrow')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>

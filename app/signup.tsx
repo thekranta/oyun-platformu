@@ -3,6 +3,7 @@ import Toast from '@/components/Toast';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     ActivityIndicator,
     Dimensions,
@@ -17,7 +18,7 @@ import {
     View,
 } from 'react-native';
 
-import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, resendConfirmation } from '../lib/authFlow';
+import { EMAIL_CONFIRM_REDIRECT, resendConfirmation } from '../lib/authFlow';
 import { LEGAL_URLS, openExternalLink } from '../lib/externalLink';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -28,6 +29,7 @@ const openTerms = () => { openExternalLink(LEGAL_URLS.terms); };
 
 export default function SignUp() {
     const router = useRouter();
+    const { t } = useTranslation();
     const windowWidth = Dimensions.get('window').width;
     const isMobile = windowWidth < 768;
 
@@ -60,32 +62,32 @@ export default function SignUp() {
     // Validation
     const validateForm = (): boolean => {
         if (!parentName.trim()) {
-            showToast('Lütfen ebeveyn adını giriniz.', 'error');
+            showToast(t('signup.errors.needParentName'), 'error');
             return false;
         }
         if (!email.trim()) {
-            showToast('Lütfen e-posta adresini giriniz.', 'error');
+            showToast(t('signup.errors.needEmail'), 'error');
             return false;
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            showToast('Geçerli bir e-posta adresi giriniz.', 'error');
+            showToast(t('signup.errors.validEmail'), 'error');
             return false;
         }
         if (password.length < 6) {
-            showToast('Şifre en az 6 karakter olmalıdır.', 'error');
+            showToast(t('signup.errors.shortPassword'), 'error');
             return false;
         }
         if (!childName.trim()) {
-            showToast('Lütfen çocuğun adını giriniz.', 'error');
+            showToast(t('signup.errors.needChildName'), 'error');
             return false;
         }
         const age = parseInt(childAge);
         if (!childAge || isNaN(age) || age < 36 || age > 72) {
-            showToast('Çocuğun yaşı 36-72 ay arasında olmalıdır.', 'error');
+            showToast(t('signup.errors.ageRange'), 'error');
             return false;
         }
         if (!termsAccepted) {
-            showToast('Devam etmek için kullanım şartlarını ve gizlilik politikasını onaylayınız.', 'error');
+            showToast(t('signup.errors.needTerms'), 'error');
             return false;
         }
         return true;
@@ -126,21 +128,21 @@ export default function SignUp() {
                 if (authData.msg?.includes('already registered') ||
                     authData.error_description?.includes('already registered') ||
                     authData.message?.includes('already registered')) {
-                    throw new Error('Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın veya farklı bir e-posta kullanın.');
+                    throw new Error(t('signup.errors.alreadyRegistered'));
                 }
 
                 // Check for invalid email format
                 if (authData.msg?.includes('invalid') || authData.error_description?.includes('invalid')) {
-                    throw new Error('Geçersiz e-posta formatı. Lütfen kontrol edin.');
+                    throw new Error(t('signup.errors.invalidEmailFormat'));
                 }
 
                 // Check for weak password
                 if (authData.msg?.includes('password') || authData.error_description?.includes('password')) {
-                    throw new Error('Şifre çok zayıf. Lütfen daha güçlü bir şifre seçin.');
+                    throw new Error(t('signup.errors.weakPassword'));
                 }
 
                 // Generic error
-                throw new Error(authData.msg || authData.error_description || authData.message || 'Kayıt işlemi başarısız oldu. Lütfen tekrar deneyin.');
+                throw new Error(authData.msg || authData.error_description || authData.message || t('signup.errors.signupFailed'));
             }
 
             // E-posta doğrulaması açık: hesap oluştu ama oturum yok → kullanıcıya bağlantıyı onaylamasını söyle.
@@ -191,7 +193,7 @@ export default function SignUp() {
             }
 
             // 3. Show success message with child's name
-            showToast(`🎉 Hoş geldin ${childName.trim()}! Kayıt başarılı.`, 'success');
+            showToast(t('signup.success', { name: childName.trim() }), 'success');
 
             // 4. Redirect to game selection after short delay
             setTimeout(() => {
@@ -200,7 +202,7 @@ export default function SignUp() {
 
         } catch (error: any) {
             console.error('Kayıt hatası:', error);
-            showToast(error.message || 'Kayıt sırasında beklenmedik bir hata oluştu.', 'error');
+            showToast(error.message || t('signup.errors.unexpected'), 'error');
         } finally {
             setIsLoading(false);
         }
@@ -215,21 +217,21 @@ export default function SignUp() {
                 <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
                     <View style={[styles.card, styles.glassCard, { width: isMobile ? '95%' : 450, maxWidth: 500, alignItems: 'center' }]}>
                         <Text style={styles.titleEmoji}>✉️</Text>
-                        <Text style={styles.title}>E-postanı doğrula</Text>
+                        <Text style={styles.title}>{t('signup.confirm.title')}</Text>
                         <Text style={[styles.subtitle, { textAlign: 'center' }]}>{awaitingEmail}</Text>
-                        <Text style={styles.confirmText}>{AUTH_MESSAGES.confirmSent}</Text>
+                        <Text style={styles.confirmText}>{t('signup.confirm.sent')}</Text>
                         <TouchableOpacity
                             style={styles.confirmBtn}
                             onPress={async () => {
                                 const ok = await resendConfirmation(awaitingEmail);
-                                showToast(ok ? AUTH_MESSAGES.resendOk : AUTH_MESSAGES.resendFail, ok ? 'success' : 'error');
+                                showToast(ok ? t('signup.confirm.resendOk') : t('signup.confirm.resendFail'), ok ? 'success' : 'error');
                             }}
                             accessibilityRole="button"
                         >
-                            <Text style={styles.confirmBtnText}>Doğrulama e-postasını tekrar gönder</Text>
+                            <Text style={styles.confirmBtnText}>{t('signup.confirm.resend')}</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.confirmLink} onPress={() => router.replace('/(tabs)')} accessibilityRole="button">
-                            <Text style={styles.confirmLinkText}>Girişe dön</Text>
+                            <Text style={styles.confirmLinkText}>{t('signup.confirm.backToLogin')}</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -257,14 +259,14 @@ export default function SignUp() {
                         {/* Header */}
                         <View style={styles.headerContainer}>
                             <Text style={styles.titleEmoji}>🌟</Text>
-                            <Text style={styles.title}>Kayıt Ol</Text>
+                            <Text style={styles.title}>{t('signup.title')}</Text>
                         </View>
-                        <Text style={styles.subtitle}>MiniZeka'ya hoş geldiniz!</Text>
+                        <Text style={styles.subtitle}>{t('signup.subtitle')}</Text>
 
                         {/* Parent Section */}
                         <View style={styles.sectionHeader}>
                             <Ionicons name="person" size={20} color="#1565C0" />
-                            <Text style={styles.sectionTitle}>Ebeveyn Bilgileri</Text>
+                            <Text style={styles.sectionTitle}>{t('signup.parentSection')}</Text>
                         </View>
 
                         {/* Parent Name */}
@@ -275,7 +277,7 @@ export default function SignUp() {
                             <Text style={styles.inputIcon}>👤</Text>
                             <TextInput
                                 style={styles.inputModern}
-                                placeholder="Ad Soyad *"
+                                placeholder={t('signup.parentNamePlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={parentName}
                                 onChangeText={setParentName}
@@ -292,7 +294,7 @@ export default function SignUp() {
                             <Text style={styles.inputIcon}>✉️</Text>
                             <TextInput
                                 style={styles.inputModern}
-                                placeholder="E-posta *"
+                                placeholder={t('signup.emailPlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={email}
                                 onChangeText={setEmail}
@@ -311,7 +313,7 @@ export default function SignUp() {
                             <Text style={styles.inputIcon}>🔒</Text>
                             <TextInput
                                 style={[styles.inputModern, { flex: 1 }]}
-                                placeholder="Şifre (min. 6 karakter) *"
+                                placeholder={t('signup.passwordPlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={password}
                                 onChangeText={setPassword}
@@ -331,7 +333,7 @@ export default function SignUp() {
                         {/* Child Section */}
                         <View style={[styles.sectionHeader, { marginTop: 20 }]}>
                             <Ionicons name="happy" size={20} color="#1565C0" />
-                            <Text style={styles.sectionTitle}>Çocuk Bilgileri</Text>
+                            <Text style={styles.sectionTitle}>{t('signup.childSection')}</Text>
                         </View>
 
                         {/* Child Name */}
@@ -342,7 +344,7 @@ export default function SignUp() {
                             <Text style={styles.inputIcon}>👶</Text>
                             <TextInput
                                 style={styles.inputModern}
-                                placeholder="Çocuğun Adı *"
+                                placeholder={t('signup.childNamePlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={childName}
                                 onChangeText={setChildName}
@@ -352,7 +354,7 @@ export default function SignUp() {
                         </View>
 
                         {/* Child Age */}
-                        <Text style={styles.fieldLabel}>Yaş (Ay) *</Text>
+                        <Text style={styles.fieldLabel}>{t('signup.ageLabel')}</Text>
                         <View style={styles.agePickerContainer}>
                             {ageOptions.map((age) => (
                                 <TouchableOpacity
@@ -372,7 +374,7 @@ export default function SignUp() {
                                 </TouchableOpacity>
                             ))}
                         </View>
-                        <Text style={styles.ageHint}>veya</Text>
+                        <Text style={styles.ageHint}>{t('signup.ageOr')}</Text>
                         <View collapsable={false} style={[
                             styles.inputContainer,
                             focusedInput === 'childAge' && styles.inputContainerFocused,
@@ -381,7 +383,7 @@ export default function SignUp() {
                             <Text style={styles.inputIcon}>📅</Text>
                             <TextInput
                                 style={styles.inputModern}
-                                placeholder="Yaş girin (36-72 ay)"
+                                placeholder={t('signup.agePlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={childAge}
                                 onChangeText={setChildAge}
@@ -403,17 +405,15 @@ export default function SignUp() {
                                 <View style={[styles.checkbox, termsAccepted && styles.checkboxChecked]}>
                                     {termsAccepted && <Ionicons name="checkmark" size={16} color="#fff" />}
                                 </View>
-                                <Text style={styles.consentText}>
-                                    Kullanım Şartları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum. Veli/vasi olarak çocuğuma ait bilgilerin (ad, yaş, oyun sonuçları) hizmetin sunulması için işlenmesine onay veriyorum. *
-                                </Text>
+                                <Text style={styles.consentText}>{t('signup.termsLabel')}</Text>
                             </TouchableOpacity>
                             <View style={styles.legalLinksRow}>
                                 <TouchableOpacity onPress={openPrivacy}>
-                                    <Text style={styles.legalLinkText}>Gizlilik Politikası</Text>
+                                    <Text style={styles.legalLinkText}>{t('signup.privacyLink')}</Text>
                                 </TouchableOpacity>
                                 <Text style={styles.legalLinkDivider}>·</Text>
                                 <TouchableOpacity onPress={openTerms}>
-                                    <Text style={styles.legalLinkText}>Kullanım Şartları</Text>
+                                    <Text style={styles.legalLinkText}>{t('signup.termsLink')}</Text>
                                 </TouchableOpacity>
                             </View>
                             <TouchableOpacity
@@ -426,12 +426,10 @@ export default function SignUp() {
                                 <View style={[styles.checkbox, dataConsent && styles.checkboxChecked]}>
                                     {dataConsent && <Ionicons name="checkmark" size={16} color="#fff" />}
                                 </View>
-                                <Text style={styles.consentText}>
-                                    (İsteğe bağlı) Verilerimin akademik araştırma kapsamında anonim olarak kullanılmasına izin veriyorum.
-                                </Text>
+                                <Text style={styles.consentText}>{t('signup.researchLabel')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => setShowConsentModal(true)}>
-                                <Text style={styles.learnMoreLink}>Daha Fazla Öğren</Text>
+                                <Text style={styles.learnMoreLink}>{t('signup.learnMore')}</Text>
                             </TouchableOpacity>
                         </View>
 
@@ -445,10 +443,10 @@ export default function SignUp() {
                             {isLoading ? (
                                 <View style={styles.buttonContent}>
                                     <ActivityIndicator size="small" color="#FFFFFF" style={{ marginRight: 10 }} />
-                                    <Text style={styles.submitButtonText}>Kayıt Yapılıyor...</Text>
+                                    <Text style={styles.submitButtonText}>{t('signup.submitting')}</Text>
                                 </View>
                             ) : (
-                                <Text style={styles.submitButtonText}>Kayıt Ol ✨</Text>
+                                <Text style={styles.submitButtonText}>{t('signup.submit')}</Text>
                             )}
                         </TouchableOpacity>
 
@@ -458,10 +456,10 @@ export default function SignUp() {
                             onPress={() => router.back()}
                         >
                             <Ionicons name="arrow-back" size={18} color="#1976D2" />
-                            <Text style={styles.backLinkText}>Giriş ekranına dön</Text>
+                            <Text style={styles.backLinkText}>{t('signup.backToLogin')}</Text>
                         </TouchableOpacity>
 
-                        <Text style={styles.requiredNote}>* Zorunlu alanlar</Text>
+                        <Text style={styles.requiredNote}>{t('signup.requiredNote')}</Text>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -482,47 +480,47 @@ export default function SignUp() {
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { width: isMobile ? '95%' : 550 }]}>
                         <ScrollView showsVerticalScrollIndicator={false}>
-                            <Text style={styles.modalTitle}>📋 BİLGİLENDİRİLMİŞ GÖNÜLLÜ OLUR FORMU</Text>
-                            <Text style={styles.modalSubtitle}>(Aydınlatılmış Onam)</Text>
+                            <Text style={styles.modalTitle}>{t('signup.modal.title')}</Text>
+                            <Text style={styles.modalSubtitle}>{t('signup.modal.subtitle')}</Text>
 
                             <Text style={styles.modalParagraph}>
-                                <Text style={styles.modalBold}>Değerli Ebeveyn,</Text>{"\n\n"}
-                                Bu platform, okul öncesi dönemdeki çocukların bilişsel, matematiksel ve sosyal-duygusal becerilerini oyun temelli bir ortamda analiz etmek amacıyla geliştirilmiş akademik tabanlı bir eğitim teknolojisi projesidir. Çocuğunuzun platform üzerindeki etkileşimleri, bir yapay zeka modeli tarafından Milli Eğitim Bakanlığı "Türkiye Yüzyılı Maarif Modeli" göstergeleri doğrultusunda değerlendirilmektedir.
+                                <Text style={styles.modalBold}>{t('signup.modal.greeting')}</Text>{"\n\n"}
+                                {t('signup.modal.intro')}
                             </Text>
 
-                            <Text style={styles.modalSectionTitle}>📊 Verilerin Kullanım Amacı</Text>
+                            <Text style={styles.modalSectionTitle}>{t('signup.modal.purposeTitle')}</Text>
                             <Text style={styles.modalParagraph}>
-                                Platform üzerinden toplanan oyun verileri (tamamlama süresi, hata sayısı, çözümleme stratejileri vb.) şu amaçlarla kullanılacaktır:{"\n\n"}
-                                • Çocuğun gelişimsel seyrini takip ederek ebeveyne pedagojik geri bildirim sunmak.{"\n"}
-                                • Yapay zeka modelinin eğitimsel analiz doğruluğunu ölçmek.{"\n"}
-                                • Elde edilen anonim verileri bilimsel makale, bildiri ve akademik yayınlarda istatistiksel veri olarak kullanmak.
+                                {t('signup.modal.purposeIntro')}{"\n\n"}
+                                {t('signup.modal.purpose1')}{"\n"}
+                                {t('signup.modal.purpose2')}{"\n"}
+                                {t('signup.modal.purpose3')}
                             </Text>
 
-                            <Text style={styles.modalSectionTitle}>🔒 Gizlilik ve Güvenlik</Text>
+                            <Text style={styles.modalSectionTitle}>{t('signup.modal.privacyTitle')}</Text>
                             <Text style={styles.modalParagraph}>
-                                <Text style={styles.modalBold}>Anonimleştirme:</Text> Çocuğunuzun gerçek ismi ve sizin iletişim bilgileriniz akademik yayınlarda kesinlikle kullanılmayacaktır. Veriler, "Öğrenci A", "44 Aylık Katılımcı" gibi anonim kodlarla raporlanacaktır.{"\n\n"}
-                                <Text style={styles.modalBold}>Veri Koruma:</Text> Toplanan veriler güvenli bulut sunucularında (Supabase) saklanmakta ve üçüncü şahıslarla ticari amaçla paylaşılmamaktadır.{"\n\n"}
-                                <Text style={styles.modalBold}>Gönüllülük Esası:</Text> Bu çalışmaya katılım tamamen gönüllülük esasına dayanır. İstediğiniz zaman kaydınızı silme ve verilerinizin kullanım onayını geri çekme hakkına sahipsiniz.
+                                <Text style={styles.modalBold}>{t('signup.modal.anonLabel')}</Text> {t('signup.modal.anonText')}{"\n\n"}
+                                <Text style={styles.modalBold}>{t('signup.modal.protectLabel')}</Text> {t('signup.modal.protectText')}{"\n\n"}
+                                <Text style={styles.modalBold}>{t('signup.modal.voluntaryLabel')}</Text> {t('signup.modal.voluntaryText')}
                             </Text>
 
-                            <Text style={styles.modalSectionTitle}>✅ Onayınızın Önemi</Text>
+                            <Text style={styles.modalSectionTitle}>{t('signup.modal.consentTitle')}</Text>
                             <Text style={styles.modalParagraph}>
-                                Bu onay tamamen isteğe bağlıdır: işaretlemezseniz de platformun tüm özelliklerini aynen kullanırsınız. Kutucuğu işaretleyerek yukarıdaki bilgilendirmeyi okuduğunuzu ve verilerin anonim olarak akademik araştırma kapsamında kullanılmasını kabul ettiğinizi beyan etmiş olursunuz. Onayınızı istediğiniz zaman geri çekebilirsiniz.
+                                {t('signup.modal.consentText')}
                             </Text>
 
-                            <Text style={styles.modalSectionTitle}>📧 İletişim</Text>
+                            <Text style={styles.modalSectionTitle}>{t('signup.modal.contactTitle')}</Text>
                             <Text style={styles.modalParagraph}>
-                                Araştırma süreci veya verilerin kullanımıyla ilgili her türlü sorunuz için ChildhoodTech Ekibi ve ilgili araştırmacılarla e-posta yoluyla iletişime geçebilirsiniz.
+                                {t('signup.modal.contactText')}
                             </Text>
 
-                            <Text style={styles.modalSectionTitle}>📄 Resmi Metinler</Text>
+                            <Text style={styles.modalSectionTitle}>{t('signup.modal.legalTitle')}</Text>
                             <View style={[styles.legalLinksRow, { marginLeft: 0 }]}>
                                 <TouchableOpacity onPress={openPrivacy}>
-                                    <Text style={styles.legalLinkText}>Gizlilik Politikası</Text>
+                                    <Text style={styles.legalLinkText}>{t('signup.privacyLink')}</Text>
                                 </TouchableOpacity>
                                 <Text style={styles.legalLinkDivider}>·</Text>
                                 <TouchableOpacity onPress={openTerms}>
-                                    <Text style={styles.legalLinkText}>Kullanım Şartları</Text>
+                                    <Text style={styles.legalLinkText}>{t('signup.termsLink')}</Text>
                                 </TouchableOpacity>
                             </View>
 
@@ -530,7 +528,7 @@ export default function SignUp() {
                                 style={styles.modalCloseButton}
                                 onPress={() => setShowConsentModal(false)}
                             >
-                                <Text style={styles.modalCloseButtonText}>Kapat</Text>
+                                <Text style={styles.modalCloseButtonText}>{t('signup.modal.close')}</Text>
                             </TouchableOpacity>
                         </ScrollView>
                     </View>

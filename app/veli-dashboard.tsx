@@ -4,7 +4,8 @@ import VeliDashboard from '@/components/VeliDashboard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { AUTH_MESSAGES, ensureProfileFromMetadata, isEmailNotConfirmed, PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
+import { useTranslation } from 'react-i18next';
+import { ensureProfileFromMetadata, isEmailNotConfirmed, PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
 import { supabase } from '../lib/supabase';
 import { VeliTier } from '../lib/subscriptionTiers';
 import {
@@ -31,6 +32,7 @@ interface ProfileData {
 
 export default function VeliDashboardPage() {
     const router = useRouter();
+    const { t } = useTranslation();
     const [notice, setNotice] = useState<string | null>(null);   // uygulama içi kart (native Alert yok)
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -41,8 +43,8 @@ export default function VeliDashboardPage() {
     const useDemoProfile = () => {
         setProfile({
             email: 'demo@test.com',
-            parent_name: 'Demo Veli',
-            child_name: 'Demo Çocuk',
+            parent_name: t('veliAuth.demoParent'),
+            child_name: t('veliAuth.demoChild'),
             child_age_months: 60,
             subscription_tier: 'orman',
             package_expires_at: null,
@@ -57,14 +59,14 @@ export default function VeliDashboardPage() {
             .eq('email', emailValue)
             .limit(1);
         if (error) {
-            setNotice(`Profil yüklenemedi: ${error.message}`);
+            setNotice(t('veliAuth.profileLoadFailed'));
             return false;
         }
         if (data && data.length > 0) {
             setProfile(data[0] as ProfileData);
             return true;
         }
-        setNotice('Bu hesaba bağlı profil bulunamadı. Önce ana ekrandan "Kayıt Ol" ile kayıt olun ya da Demo ile devam edin.');
+        setNotice(t('veliAuth.noProfile'));
         return false;
     };
 
@@ -84,7 +86,7 @@ export default function VeliDashboardPage() {
 
     const handleLogin = async () => {
         if (!email.trim() || !password.trim()) {
-            setNotice('Lütfen e-posta ve şifrenizi girin');
+            setNotice(t('veliAuth.needLogin'));
             return;
         }
 
@@ -97,11 +99,11 @@ export default function VeliDashboardPage() {
             });
             if (error) {
                 if (isEmailNotConfirmed(error)) {
-                    setNotice(AUTH_MESSAGES.notConfirmed);
+                    setNotice(t('veliAuth.notConfirmed'));
                 } else if (error.message.includes('Invalid login credentials')) {
-                    setNotice('Hatalı e-posta veya şifre.');
+                    setNotice(t('veliAuth.wrongCredentials'));
                 } else {
-                    setNotice(`Giriş başarısız: ${error.message}`);
+                    setNotice(t('veliAuth.loginFailed'));
                 }
                 return;
             }
@@ -109,7 +111,7 @@ export default function VeliDashboardPage() {
             await ensureProfileFromMetadata(signIn?.user);
             await loadProfile(emailValue);
         } catch (error) {
-            setNotice(`Giriş sırasında bir hata oluştu: ${error}`);
+            setNotice(t('veliAuth.networkError'));
         } finally {
             setLoading(false);
         }
@@ -117,7 +119,7 @@ export default function VeliDashboardPage() {
 
     const handleForgotPassword = async () => {
         if (!email.trim()) {
-            setNotice('Şifre sıfırlama bağlantısı için önce e-postanızı girin');
+            setNotice(t('veliAuth.resetNeedEmail'));
             return;
         }
         try {
@@ -125,9 +127,9 @@ export default function VeliDashboardPage() {
                 redirectTo: PASSWORD_RESET_REDIRECT,
             });
             if (error) throw error;
-            setNotice('Şifre sıfırlama bağlantısı e-postanıza gönderildi.');
-        } catch (error: any) {
-            setNotice(error.message || 'Bağlantı gönderilemedi.');
+            setNotice(t('veliAuth.resetSent'));
+        } catch {
+            setNotice(t('veliAuth.resetFailed'));
         }
     };
 
@@ -177,10 +179,8 @@ export default function VeliDashboardPage() {
                     {/* Header */}
                     <View style={[styles.header, isLandscape && styles.headerLandscape]}>
                         <Text style={[styles.emoji, isSmallScreen && { fontSize: 40 }]}>👨‍👩‍👧</Text>
-                        <Text style={[styles.title, isSmallScreen && { fontSize: 22 }]}>Veli Paneli</Text>
-                        <Text style={styles.subtitle}>
-                            Çocuğunuzun gelişimini takip edin
-                        </Text>
+                        <Text style={[styles.title, isSmallScreen && { fontSize: 22 }]}>{t('veliAuth.title')}</Text>
+                        <Text style={styles.subtitle}>{t('veliAuth.subtitle')}</Text>
                     </View>
 
                     {/* Login Card */}
@@ -189,16 +189,14 @@ export default function VeliDashboardPage() {
                         isLandscape && styles.cardLandscape,
                         { maxWidth: isLandscape ? 400 : undefined }
                     ]}>
-                        <Text style={styles.cardTitle}>Giriş Yapın</Text>
-                        <Text style={styles.cardSubtitle}>
-                            Kayıt olurken kullandığınız e-posta ve şifrenizle giriş yapın
-                        </Text>
+                        <Text style={styles.cardTitle}>{t('veliAuth.cardTitle')}</Text>
+                        <Text style={styles.cardSubtitle}>{t('veliAuth.cardSubtitle')}</Text>
 
                         <View style={styles.inputContainer}>
                             <Ionicons name="mail-outline" size={20} color="#607D8B" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Email adresiniz"
+                                placeholder={t('veliAuth.emailPlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={email}
                                 onChangeText={setEmail}
@@ -212,7 +210,7 @@ export default function VeliDashboardPage() {
                             <Ionicons name="lock-closed-outline" size={20} color="#607D8B" style={styles.inputIcon} />
                             <TextInput
                                 style={styles.input}
-                                placeholder="Şifreniz"
+                                placeholder={t('veliAuth.passwordPlaceholder')}
                                 placeholderTextColor="#9E9E9E"
                                 value={password}
                                 onChangeText={setPassword}
@@ -233,7 +231,7 @@ export default function VeliDashboardPage() {
                                     <ActivityIndicator color="#fff" />
                                 ) : (
                                     <>
-                                        <Text style={styles.loginButtonText}>Giriş Yap</Text>
+                                        <Text style={styles.loginButtonText}>{t('veliAuth.login')}</Text>
                                         <Ionicons name="arrow-forward" size={20} color="#fff" />
                                     </>
                                 )}
@@ -245,21 +243,19 @@ export default function VeliDashboardPage() {
                                 onPress={useDemoProfile}
                             >
                                 <Ionicons name="flash" size={18} color="#4CAF50" />
-                                <Text style={styles.demoButtonText}>Demo</Text>
+                                <Text style={styles.demoButtonText}>{t('veliAuth.demo')}</Text>
                             </TouchableOpacity>
                         </View>
 
                         <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotLink}>
-                            <Text style={styles.forgotLinkText}>Şifremi unuttum</Text>
+                            <Text style={styles.forgotLinkText}>{t('veliAuth.forgot')}</Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Info */}
                     <View style={styles.info}>
                         <Ionicons name="information-circle-outline" size={16} color="#607D8B" />
-                        <Text style={styles.infoText}>
-                            Hesabınız yok mu? Ana ekrandan kayıt olabilirsiniz.
-                        </Text>
+                        <Text style={styles.infoText}>{t('veliAuth.noAccount')}</Text>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>

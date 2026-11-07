@@ -159,14 +159,24 @@ describe('kayıt onayları', () => {
         expect(k).not.toMatch(/if \(!dataConsent\)/); // araştırma izni kayıt şartı değil
         expect(k).toMatch(/if \(!termsAccepted\)/);
         expect(k).toMatch(/const \[dataConsent, setDataConsent\] = useState\(false\)/); // araştırma izni varsayılan kapalı
-        expect(k).toMatch(/\(İsteğe bağlı\) Verilerimin akademik araştırma/);
-        expect(k).toMatch(/Kullanım Şartları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum/);
+        // Onay cümleleri i18n'de: ekran anahtarı kullanır, metin tr.json'da (EN eşliği 'yeni ekranların metinleri' testinde)
+        expect(k).toMatch(/setDataConsent\(!dataConsent\)[\s\S]*?t\('signup\.researchLabel'\)/);
+        expect(k).toMatch(/setTermsAccepted\(!termsAccepted\)[\s\S]*?t\('signup\.termsLabel'\)/);
+        const s = (tr as unknown as { signup: Record<string, string> }).signup;
+        expect(s.researchLabel).toMatch(/^\(İsteğe bağlı\) Verilerimin akademik araştırma/);
+        expect(s.termsLabel).toMatch(/Kullanım Şartları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum/);
+        expect(s.termsLabel).toMatch(/Veli\/vasi olarak/);
+        const sEn = (en as unknown as { signup: Record<string, string> }).signup;
+        expect(sEn.researchLabel).toMatch(/^\(Optional\)/);
     });
 
     it('araştırma izni kullanım şartlarının kabulüyle karıştırılmaz (bilgilendirme metni isteğe bağlı olduğunu söyler)', () => {
         const k = oku('app/signup.tsx');
-        expect(k).toMatch(/Bu onay tamamen isteğe bağlıdır/);
-        expect(k).not.toMatch(/platformun kullanım şartlarına onay verdiğinizi/);
+        expect(k).toMatch(/t\('signup\.modal\.consentText'\)/);
+        const m = (tr as unknown as { signup: { modal: Record<string, string> } }).signup.modal;
+        expect(m.consentText).toMatch(/Bu onay tamamen isteğe bağlıdır/);
+        expect(m.consentText).not.toMatch(/platformun kullanım şartlarına onay verdiğinizi/);
+        expect((en as unknown as { signup: { modal: Record<string, string> } }).signup.modal.consentText).toMatch(/entirely optional/);
     });
 });
 
@@ -175,7 +185,7 @@ describe('yeni ekranların metinleri iki dilde var', () => {
         Object.entries(nesne as Record<string, unknown>).flatMap(([k, v]) =>
             v && typeof v === 'object' && !Array.isArray(v) ? anahtarlar(v, `${onek}${k}.`) : [`${onek}${k}`]);
 
-    const AD_ALANLARI = ['parentGate', 'aiConsent', 'account', 'deleteAccount', 'paywall', 'board'] as const;
+    const AD_ALANLARI = ['parentGate', 'aiConsent', 'account', 'deleteAccount', 'paywall', 'board', 'signup', 'veliAuth', 'resetPassword'] as const;
 
     it('TR ve EN aynı anahtarlara sahip', () => {
         for (const alan of AD_ALANLARI) {
@@ -189,6 +199,7 @@ describe('yeni ekranların metinleri iki dilde var', () => {
         const dosyalar = [
             'components/ParentGateHost.tsx', 'components/PaywallView.tsx', 'app/ai-izni.tsx', 'app/gizlilik-ayarlari.tsx', 'app/hesap-sil.tsx', 'app/paket-satin-al.tsx',
             'components/board/BoardPicker.tsx', 'components/board/BoardStage.web.tsx', 'components/board/PlayerSheet.tsx', 'app/tahta.tsx', 'app/tahta-oyun.tsx',
+            'app/signup.tsx', 'app/veli-dashboard.tsx', 'app/reset-password.tsx',
         ];
         const varOlan = new Set(anahtarlar(tr));
         // Dinamik anahtarların alabileceği değerler
