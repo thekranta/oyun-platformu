@@ -14,7 +14,7 @@ Uygulama gerçekleri (cevapların dayanağı): reklam yok, analitik/çökme SDK'
 | Telefon ekran görüntüleri (en az 2, en çok 8) | **Sende:** APK'yı telefona kurup 4–6 ekran al (bkz. Bölüm 6) |
 | Mağaza metinleri (TR/EN) | **Hazır:** Bölüm 5 |
 | Data safety, içerik derecelendirme, hedef kitle cevapları | **Hazır:** Bölüm 2–4 |
-| Gizlilik politikası sayfası | **Sende, ENGEL:** canlı sayfada hâlâ `[eklenecek]` yer tutucuları var, OpenAI/Claude/RevenueCat anlatılmıyor. Play bu sayfayı açıp bakar. `pazarlama/gizlilik-guncelleme-ai.html` yapıştırılacak + ticari unvan/adres doldurulacak |
+| Gizlilik politikası sayfası | **Sende, ENGEL:** canlı sayfada hâlâ `[eklenecek]` yer tutucuları var, OpenAI/Claude/RevenueCat anlatılmıyor. Play bu sayfayı açıp bakar. `pazarlama/gizlilik-guncelleme-ai.html` yapıştırılacak. Şirket yok: "Ticari unvan/Adres" satırları doldurulmaz, kaldırılıp gerçek kişi + e-posta yazılır (dosyada hazır) |
 | Güncel üretim AAB | **Yenilenmeli:** son üretim AAB (sürüm kodu 2) 168 commit eski; `expo-updates`, izin engelleri, ebeveyn kapısı yok. Hesap onaylanınca (ya da önce) yeniden derle, bkz. Bölüm 7 |
 | Demo hesaplar (veli + öğretmen) | **Sende:** parolayı bana yazma |
 | 12 test kullanıcısı | **Sende:** Bölüm 8 (14 günlük sayaç ilk testçi katıldığında değil, 12 kişi olduğunda işler; erken topla) |
