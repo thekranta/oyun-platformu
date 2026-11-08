@@ -71,6 +71,7 @@ Bu belge iki yarıdan oluşur: kodda **yapılanlar** ve **hesaplarla ilgili seni
 - Gizlilik politikasına **Bölüm 4'teki ek metni** ekle (OpenAI, RevenueCat, ses, hesap silme; şu an politikada yok ve "çocuklardan doğrudan veri toplamaz" cümlesi sesle çelişiyor).
 - **Apple App Privacy** (taslak, kendin doğrula): Toplanan — İletişim bilgisi (e-posta, ad), Kullanıcı içeriği (çizimler, ses: yalnız işlenir, saklanmaz), Kullanım verisi (oyun sonuçları), Tanımlayıcılar (hesap kimliği). Hepsi "kullanıcıya bağlı", amaç "uygulama işlevselliği"; **izleme yok**, reklam yok.
 - **Google Data safety** (taslak): Kişisel bilgi (ad, e-posta), Uygulama etkinliği (oyun sonuçları), Ses dosyaları (konuşma tanıma, kalıcı değil). Şifreli aktarım: evet. **Silme talebi**: evet (uygulama içi + `https://oyun.childhoodtech.com/hesap-sil`).
+  - **Güncel ve tam cevaplar `PLAY_CONSOLE_CEVAPLARI.md` içinde** (AI raporu artık Claude/Anthropic, ses OpenAI; analitik/reklam yok). Bu satır eski taslaktır.
 - Google **hedef kitle**: 3–5 ve 6–8 yaş seçilirse Aile Politikası uygulanır (mikrofon verisi hassas sayılır; Data safety'de belirtilmesi şart). IARC anketi: şiddet/satın alma yok → 3+.
 
 ### 2.6 İnceleme notları (Apple "App Review Information" ve Google'da aynısı)
