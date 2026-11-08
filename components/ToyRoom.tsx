@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Animated, Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
 import { isGameLocked, pinnedLocks, roomGames } from '@/lib/toyRoomSelection';
 import { useStageSize } from '@/components/minikMuze/useStageSize';
@@ -13,7 +13,7 @@ import { GAME_RENDERERS } from '@/components/gameRegistry';
 import { requiredVeliTierForGame, summarizePackage, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
 
 type Props = { name: string; muted: boolean; round: number; onShuffle: () => void; onMute: () => void; onGame: (route: string) => void; onLogout: () => void; subscriptionTier?: VeliTier; /** Velinin KENDİ kayıtlı paketi (süre kontrolü burada yapılır) + bitiş tarihi — yetişkin menüsünde "Paketiniz" kartı için. */ ownTier?: VeliTier | null; packageExpiresAt?: string | null };
-type ToyKind = 'puzzle' | 'paint' | 'animal' | 'drum' | 'blocks' | 'train' | 'crayons' | 'rabbit' | 'xylophone' | 'rings' | 'gift' | 'bear';
+type ToyKind = 'puzzle' | 'paint' | 'animal' | 'drum' | 'blocks' | 'train' | 'crayons' | 'rabbit' | 'xylophone' | 'rings' | 'gift' | 'bear' | 'bee';
 const native = Platform.OS !== 'web';
 const allPlayable = GAME_CATALOG.filter(g => !!GAME_RENDERERS[g.routeKey]);
 const TIER_LABELS: Record<VeliTier, string> = { free: 'Ücretsiz', tohum: 'Tohum', filiz: 'Filiz', fidan: 'Fidan', orman: 'Orman' };
@@ -150,6 +150,19 @@ function ToyArt({ kind }: { kind: ToyKind }) {
       <Path d="M99 59C23 61 61 2 99 52C131 3 176 52 105 59" fill="none" stroke="#F7D58D" strokeWidth="14" strokeLinecap="round"/>
       <Path d="M143 22L146 12M158 32L169 29M35 42L27 36" stroke="#E5B553" strokeWidth="4" strokeLinecap="round"/>
     </G>}
+    {kind === 'bee' && <G>
+      <Ellipse cx="78" cy="60" rx="26" ry="34" rotation="-30" origin="78,60" fill="#DFEEE8" stroke="#B7D5CF" strokeWidth="3"/>
+      <Ellipse cx="126" cy="60" rx="26" ry="34" rotation="30" origin="126,60" fill="#EAF3EE" stroke="#B7D5CF" strokeWidth="3"/>
+      <Path d="M56 107L36 114L57 121" fill="#82664E"/>
+      <Ellipse cx="100" cy="108" rx="54" ry="40" fill="#EDC66C"/>
+      <Path d="M78 73Q61 108 78 143M103 69Q88 108 103 147" stroke="#96734F" strokeWidth="13" fill="none"/>
+      <Circle cx="137" cy="98" r="31" fill="#F6D789"/>
+      <Path d="M123 72L116 53M146 69L155 50" stroke="#82664E" strokeWidth="4" strokeLinecap="round"/>
+      <Circle cx="115" cy="51" r="5" fill="#82664E"/><Circle cx="156" cy="48" r="5" fill="#82664E"/>
+      <Circle cx="128" cy="94" r="3.5" fill="#584638"/><Circle cx="148" cy="94" r="3.5" fill="#584638"/>
+      <Path d="M130 106Q138 115 147 105" stroke="#584638" strokeWidth="3" fill="none" strokeLinecap="round"/>
+      <Ellipse cx="119" cy="104" rx="6" ry="4" fill="#E6A38B"/><Ellipse cx="156" cy="104" rx="6" ry="4" fill="#E6A38B"/>
+    </G>}
     {kind === 'bear' && <G>
       <Ellipse cx="101" cy="126" rx="40" ry="39" fill="#BF8C64"/><Ellipse cx="101" cy="130" rx="27" ry="29" fill="#E4BA8E"/>
       <Circle cx="67" cy="42" r="19" fill="#BF8C64"/><Circle cx="136" cy="42" r="19" fill="#BF8C64"/><Circle cx="67" cy="42" r="11" fill="#E4BA8E"/><Circle cx="136" cy="42" r="11" fill="#E4BA8E"/>
@@ -238,6 +251,10 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   const sceneWidth = portrait ? 400 : 1000;
   const sceneHeight = portrait ? 800 : 600;
   const scale = Math.min(bounds.width / sceneWidth, bounds.height / sceneHeight);
+  // Fit interactive content, but extend the scenery to every viewport edge.
+  // Unlike cover scaling, this never crops toys or distorts their proportions.
+  const extraX = scale > 0 ? Math.max(0, (bounds.width / scale - sceneWidth) / 2) : 0;
+  const extraY = scale > 0 ? Math.max(0, (bounds.height / scale - sceneHeight) / 2) : 0;
   const positions = portrait
     ? [{ x: 25, y: 180 }, { x: 235, y: 180 }, { x: 25, y: 345 }, { x: 235, y: 345 }]
     : [{ x: 95, y: 145 }, { x: 413, y: 112 }, { x: 725, y: 145 }, { x: 620, y: 350 }];
@@ -249,18 +266,21 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   const filtered = allPlayable.filter(g => title(g).toLocaleLowerCase('tr').includes(query.toLocaleLowerCase('tr')));
   return <View ref={rootRef} style={styles.root} onLayout={onRootLayout}>
     {bounds.width > 0 && <View style={{ position: 'absolute', width: sceneWidth, height: sceneHeight, left: (bounds.width - sceneWidth) / 2, top: (bounds.height - sceneHeight) / 2, transform: [{ scale }] }}>
-      <Svg width={sceneWidth} height={sceneHeight} style={StyleSheet.absoluteFill} viewBox={`0 0 ${sceneWidth} ${sceneHeight}`} pointerEvents="none">
+      <Svg width={sceneWidth + extraX * 2} height={sceneHeight + extraY * 2} style={{ position: 'absolute', left: -extraX, top: -extraY }} viewBox={`${-extraX} ${-extraY} ${sceneWidth + extraX * 2} ${sceneHeight + extraY * 2}`} pointerEvents="none">
         <Defs><LinearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><Stop stopColor="#FFF8EB"/><Stop offset="1" stopColor="#F4E8D6"/></LinearGradient></Defs>
-        <Rect width={sceneWidth} height={sceneHeight} fill="url(#wall)"/>
-        <Rect y={portrait ? 303 : 282} width={sceneWidth} height={sceneHeight} fill="#EAD3B6"/>
-        <Path d={`M0 ${portrait ? 303 : 282}H${sceneWidth}`} stroke="#D7B897" strokeWidth="7"/>
+        <Rect x={-extraX} y={-extraY} width={sceneWidth + extraX * 2} height={sceneHeight + extraY * 2} fill="url(#wall)"/>
+        <Rect x={-extraX} y={portrait ? 303 : 282} width={sceneWidth + extraX * 2} height={sceneHeight + extraY} fill="#EAD3B6"/>
+        <Path d={`M${-extraX} ${portrait ? 303 : 282}H${sceneWidth + extraX}`} stroke="#D7B897" strokeWidth="7"/>
         {[0.15, 0.37, 0.62, 0.86].map(x => <Path key={x} d={`M${sceneWidth * x} ${portrait ? 308 : 288}L${sceneWidth * (x * 1.3 - 0.15)} ${sceneHeight}`} stroke="#D6B794" strokeWidth="2" opacity="0.5"/>)}
         <Ellipse cx={sceneWidth / 2} cy={portrait ? 455 : 435} rx={sceneWidth * 0.44} ry={portrait ? 173 : 145} fill="#AFCAC0"/>
         <Ellipse cx={sceneWidth / 2} cy={portrait ? 455 : 435} rx={sceneWidth * 0.42} ry={portrait ? 164 : 134} fill="none" stroke="#DFE7D1" strokeWidth="3" strokeDasharray="3 7"/>
         <G opacity="0.8" transform={portrait ? 'translate(163 155) scale(0.5)' : 'translate(72 68)'}>
           <Rect width="148" height="115" rx="50" fill="#E6CEAA"/><Rect x="8" y="8" width="132" height="99" rx="43" fill="#C8E3E0"/>
-          <Circle cx="104" cy="34" r="17" fill="#F9D585"/><Path d="M12 86Q45 43 78 86T137 78V102H12" fill="#A5C3A4"/>
-          <Path d="M74 9V106M8 62H139" stroke="#FFF3DD" strokeWidth="7"/>
+          <Defs><ClipPath id="toy-room-window"><Rect x="8" y="8" width="132" height="99" rx="43"/></ClipPath></Defs>
+          <G clipPath="url(#toy-room-window)">
+            <Circle cx="104" cy="34" r="17" fill="#F9D585"/><Path d="M8 86Q45 43 78 86T140 78V107H8Z" fill="#A5C3A4"/>
+            <Path d="M74 9V107M8 62H140" stroke="#FFF3DD" strokeWidth="7"/>
+          </G>
         </G>
         {!portrait && <G transform="translate(802 65)"><Path d="M0 0V85M78 0V65" stroke="#DCCCB5" strokeWidth="2"/><Path d="M0 67L6 79L19 82L8 91L10 105L0 98L-12 104L-9 90L-20 81L-6 78Z" fill="#E5BA65"/><Circle cx="78" cy="73" r="14" fill="#B6A6C9"/></G>}
       </Svg>
@@ -276,7 +296,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
         <Plaything kind="drum" label={t('toyRoom.musicBox')} color="#AA7940" size={toySize} moving={moving} locked={musicLocked} onPress={() => { if (music) openGame(music); }}/>
       </View>
       <View style={{ position: 'absolute', left: portrait ? 235 : 410, top: portrait ? 510 : 350 }}>
-        <Plaything kind="bear" label={t('toyRoom.valuesStories')} color="#8666A1" size={toySize} moving={moving} locked={storiesLocked} onPress={() => setStoriesOpen(true)}/>
+        <Plaything kind="bee" label={t('toyRoom.valuesStories')} color="#8666A1" size={toySize} moving={moving} locked={storiesLocked} onPress={() => setStoriesOpen(true)}/>
       </View>
       <View style={{ position: 'absolute', left: portrait ? 134 : 825, top: portrait ? 665 : 415 }}>
         <Plaything kind="gift" label={t('toyRoom.moreToys')} color="#9A5B4B" moving={moving} size={portrait ? 100 : 140} onPress={onShuffle}/>
