@@ -142,7 +142,9 @@ export default function SignUp() {
                 }
 
                 // Generic error
-                throw new Error(authData.msg || authData.error_description || authData.message || t('signup.errors.signupFailed'));
+                // Ham sunucu metni (Supabase, İngilizce) kullanıcıya gösterilmez; ayrıntı yalnız geliştirici günlüğüne.
+                console.warn('Kayıt hatası:', authData.msg || authData.error_description || authData.message);
+                throw new Error(t('signup.errors.signupFailed'));
             }
 
             // E-posta doğrulaması açık: hesap oluştu ama oturum yok → kullanıcıya bağlantıyı onaylamasını söyle.
