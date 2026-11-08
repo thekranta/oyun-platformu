@@ -1,0 +1,41 @@
+# EAS Build arsivi kurallari. .easignore varsa EAS .gitignore'u OKUMAZ:
+# bu yuzden .gitignore'daki her sey asagiya da kopyalandi.
+
+# --- .gitignore ile ayni ---
+node_modules/
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.vercel-build-done
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+.metro-health-check*
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
+*.pem
+.env*
+.claude/
+scratchpad/
+.vercel
+app-example
+/ios
+/android
+*.tsbuildinfo
+
+# --- Derleme icin gereksiz (yalniz yerel/belge/web sunucusu) ---
+.tmp-room-export/
+exports/
+store/
+pazarlama/
+supabase_migrations/
+.vscode/
+*.md
+raw_curriculum.txt
