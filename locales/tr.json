@@ -575,6 +575,12 @@
     "wd5": "Cum",
     "wd6": "Cmt"
   },
+  "updateGate": {
+    "title": "Yeni sürüm gerekli",
+    "body": "MiniZeka'nın bu sürümü artık desteklenmiyor. Oyunlara devam etmek için uygulamayı mağazadan güncelleyin.",
+    "button": "Güncelle",
+    "hint": "Bu düğme için bir yetişkinin soruyu cevaplaması gerekir."
+  },
   "parentGate": {
     "title": "Yetişkin kapısı",
     "body": "Devam etmek için bir yetişkin bu soruyu cevaplamalı.",

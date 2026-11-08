@@ -581,6 +581,12 @@
     "wd5": "Fri",
     "wd6": "Sat"
   },
+  "updateGate": {
+    "title": "A new version is needed",
+    "body": "This version of MiniZeka is no longer supported. Please update the app from the store to keep playing.",
+    "button": "Update",
+    "hint": "A grown-up needs to answer a question to use this button."
+  },
   "parentGate": {
     "title": "Grown-ups only",
     "body": "A grown-up needs to answer this question to continue.",

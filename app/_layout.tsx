@@ -8,6 +8,7 @@ import '@/lib/reanimatedInit';
 
 import ParentGateHost from '@/components/ParentGateHost';
 import { SoundProvider } from '@/components/SoundContext';
+import UpdateGate from '@/components/UpdateGate';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { hideBootSplash } from '@/lib/bootSplash';
 import { initI18n } from '@/lib/i18n';
@@ -46,6 +47,7 @@ export default function RootLayout() {
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <SoundProvider>
         <AndroidInsetFrame>
+          <UpdateGate>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="signup" options={{ headerShown: false }} />
@@ -61,6 +63,7 @@ export default function RootLayout() {
             <Stack.Screen name="tahta" options={{ headerShown: false }} />
             <Stack.Screen name="tahta-oyun" options={{ headerShown: false }} />
           </Stack>
+          </UpdateGate>
         </AndroidInsetFrame>
         <StatusBar style="auto" />
         <ParentGateHost />
