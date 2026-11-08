@@ -1,4 +1,5 @@
 import ToyRoom from '@/components/ToyRoom';
+import WelcomeLogin from '@/components/WelcomeLogin';
 import DynamicBackground from '@/components/DynamicBackground';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import GameErrorBoundary from '@/components/GameErrorBoundary';
@@ -24,6 +25,10 @@ import { onPackageChanged } from '../../lib/packageSync';
 import { isRouteOpenForTier } from '../../lib/gameAccess';
 import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
+
+// Set false to restore the previous web welcome screen and its background.
+const WELCOME_REDESIGN_ENABLED = true;
+const LoginBackground = Platform.OS === 'web' && WELCOME_REDESIGN_ENABLED ? View : DynamicBackground;
 
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
@@ -78,6 +83,12 @@ const GirisFormu = React.memo(function GirisFormu({
   const submit = () => onLogin(emailRef.current.trim(), passwordRef.current);
 
   const keyboardOpen = kbHeight > 0;
+
+  // Rollback: set this flag to false to restore the unchanged original web form.
+  if (Platform.OS === 'web' && WELCOME_REDESIGN_ENABLED) return <WelcomeLogin
+    isLoggingIn={isLoggingIn} initialEmail={initialEmail} onLogin={onLogin} onForgot={onForgot}
+    onSignup={onSignup} onAdmin={onAdmin} onVeli={onVeli} onOgretmen={onOgretmen} onKurum={onKurum}
+  />;
 
   return (
     // KeyboardAvoidingView KULLANILMIYOR: davranisi platform/edge-to-edge'e gore
@@ -493,7 +504,7 @@ export default function App() {
     const isMobile = windowWidth < 768;
 
     return (
-      <DynamicBackground>
+      <LoginBackground style={{ flex: 1 }}>
         <GirisFormu
           isMobile={isMobile}
           isLoggingIn={isLoggingIn}
@@ -518,7 +529,7 @@ export default function App() {
             setShowRegistration(true) kod tabaninda hic cagrilmiyordu (olu kod). Kayit akisi
             router.push('/signup') uzerinden yurur. Android'de Modal ayri bir pencere actigi
             icin agacta durmalari IME davranisi acisindan da gereksiz bir degiskendi. */}
-      </DynamicBackground>
+      </LoginBackground>
     );
   }
 
