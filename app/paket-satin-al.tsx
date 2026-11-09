@@ -75,7 +75,9 @@ export default function PaketSatinAl() {
             rawPackages.current = packages;
             setState({ phase: 'ready', packages });
         } catch (e: unknown) {
-            setState({ phase: 'error', message: e instanceof Error ? e.message : '' });
+            // Mağaza/SDK hata metni İngilizce ve teknik olabilir: kullanıcıya yerelleştirilmiş genel mesaj gösterilir.
+            console.warn('[paywall] paketler yüklenemedi', e instanceof Error ? e.message : e);
+            setState({ phase: 'error', message: '' });
         }
     }, [kind]);
 
@@ -107,7 +109,8 @@ export default function PaketSatinAl() {
             setBanner({ kind: 'success', text: tier ? t('paywall.successWithTier', { tier: tierName(tier) }) : t('paywall.successPending') });
             if (tier) syncInBackground(tier);
         } else if (!result.cancelled) {
-            setBanner({ kind: 'error', text: result.message || t('paywall.purchaseFailed') });
+            if (result.message) console.warn('[paywall] satın alma hatası', result.message);
+            setBanner({ kind: 'error', text: t('paywall.purchaseFailed') });
         }
     };
 
@@ -125,7 +128,8 @@ export default function PaketSatinAl() {
                 setBanner({ kind: 'error', text: t('paywall.restoreNone') });
             }
         } catch (e: unknown) {
-            setBanner({ kind: 'error', text: (e instanceof Error && e.message) || t('paywall.restoreFailed') });
+            console.warn('[paywall] geri yükleme hatası', e instanceof Error ? e.message : e);
+            setBanner({ kind: 'error', text: t('paywall.restoreFailed') });
         } finally {
             setRestoring(false);
         }
