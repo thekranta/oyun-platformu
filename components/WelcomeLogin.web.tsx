@@ -19,7 +19,7 @@ export default function WelcomeLogin(p: Props) {
   return <main className="mz-welcome">
     <style>{css}</style>
     <header className="mz-header">
-      <div className="mz-brand"><span className="mz-brand-mark"><Image source={asset('/branding/mascot/el-sallar.webp')} accessibilityLabel="MiniZeka logosu" style={{ width: '100%', height: '100%' }} resizeMode="contain"/></span><span>MiniZeka<small>{en ? 'LITTLE DISCOVERIES, BIG SMILES' : 'KÜÇÜK KEŞİFLER, KOCAMAN GÜLÜMSEMELER'}</small></span></div>
+      <div className="mz-brand"><span className="mz-brand-mark"><Image source={asset('/branding/mascot/el-sallar.webp')} accessibilityLabel="Bilimo logosu" style={{ width: '100%', height: '100%' }} resizeMode="contain"/></span><span>Bilimo<small>{en ? 'LITTLE DISCOVERIES, BIG SMILES' : 'KÜÇÜK KEŞİFLER, KOCAMAN GÜLÜMSEMELER'}</small></span></div>
       <nav aria-label={en ? 'Language' : 'Dil seçimi'}>{(['tr','en'] as const).map(lang => <button key={lang} type="button" aria-pressed={i18n.language.startsWith(lang)} onClick={() => changeLanguage(lang)}>{lang.toUpperCase()}</button>)}</nav>
     </header>
     <div className="mz-layout">
@@ -48,7 +48,7 @@ export default function WelcomeLogin(p: Props) {
       </section>
       <section className="mz-door" aria-labelledby="mz-login-title">
         <span className="mz-door-star" aria-hidden="true">✦</span>
-        <span className="mz-eyebrow">{en ? 'WELCOME TO MINIZEKA' : 'MİNİZEKA’YA HOŞ GELDİN'}</span>
+        <span className="mz-eyebrow">{en ? 'WELCOME TO BILIMO' : 'BİLİMO’YA HOŞ GELDİN'}</span>
         <h2 id="mz-login-title">{en ? 'Ready to explore?' : 'Keşfe hazır mısın?'}</h2>
         <p className="mz-form-note">{en ? 'Sign in with a grown-up. Then let the play begin!' : 'Bir büyüğünle giriş yap, oyunlar başlasın!'}</p>
         <form onSubmit={e => {e.preventDefault(); if (!p.isLoggingIn) p.onLogin(email.current?.value.trim() || '', password.current?.value || '');}}>
@@ -58,7 +58,7 @@ export default function WelcomeLogin(p: Props) {
           <input id="mz-password" ref={password} type="password" autoComplete="current-password" placeholder={en ? 'Your password' : 'Şifreniz'} required/>
           <button className="mz-primary" type="submit" disabled={p.isLoggingIn}>{p.isLoggingIn ? t('login.loggingIn') : en ? 'Sign in & start playing' : 'Giriş yap, oyuna katıl'} <span aria-hidden="true">→</span></button>
         </form>
-        <div className="mz-signup"><span>{en ? 'New to MiniZeka?' : 'MiniZeka’ya yeni mi geldiniz?'}</span><button type="button" onClick={p.onSignup}>{en ? 'Create an account' : 'Hesap oluştur'} <span aria-hidden="true">↗</span></button></div>
+        <div className="mz-signup"><span>{en ? 'New to Bilimo?' : 'Bilimo’ya yeni mi geldiniz?'}</span><button type="button" onClick={p.onSignup}>{en ? 'Create an account' : 'Hesap oluştur'} <span aria-hidden="true">↗</span></button></div>
         <div className="mz-adults"><span>{en ? 'GROWN-UP ENTRANCES' : 'YETİŞKİN GİRİŞLERİ'}</span><div>{[[en ? 'Parent panel' : 'Veli paneli',p.onVeli],[en ? 'Teacher login' : 'Öğretmen girişi',p.onOgretmen],[en ? 'Institution login' : 'Kurum girişi',p.onKurum],[en ? 'Specialist login' : 'Uzman girişi',p.onAdmin]].map(([label, action]) => <button key={label as string} type="button" onClick={action as () => void}>{label as string}<span aria-hidden="true">↗</span></button>)}</div></div>
       </section>
     </div>

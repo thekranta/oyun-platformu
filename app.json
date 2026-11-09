@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "MiniZeka",
+    "name": "Bilimo",
     "slug": "oyun-projesi",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -72,7 +72,7 @@
       [
         "expo-av",
         {
-          "microphonePermission": "MiniZeka uses the microphone in the “Say This!” game to hear the word your child says. The recording is sent for speech recognition only with a parent’s permission and is not stored."
+          "microphonePermission": "Bilimo uses the microphone in the “Say This!” game to hear the word your child says. The recording is sent for speech recognition only with a parent’s permission and is not stored."
         }
       ],
       "expo-localization",

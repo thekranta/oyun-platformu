@@ -1,5 +1,5 @@
 {
   "ios": {
-    "NSMicrophoneUsageDescription": "MiniZeka, “Bunu Söyle!” oyununda çocuğunuzun söylediği kelimeyi anlamak için mikrofonu kullanır. Ses kaydı yalnızca ebeveyn izniyle konuşma tanıma için gönderilir ve saklanmaz."
+    "NSMicrophoneUsageDescription": "Bilimo, “Bunu Söyle!” oyununda çocuğunuzun söylediği kelimeyi anlamak için mikrofonu kullanır. Ses kaydı yalnızca ebeveyn izniyle konuşma tanıma için gönderilir ve saklanmaz."
   }
 }

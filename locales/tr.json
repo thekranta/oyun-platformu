@@ -1,6 +1,6 @@
 {
   "login": {
-    "title": "MiniZeka",
+    "title": "Bilimo",
     "welcome": "Hoş geldin, küçük kaşif! 🌟",
     "emailPlaceholder": "E-posta Adresi",
     "passwordPlaceholder": "Şifre",
@@ -577,7 +577,7 @@
   },
   "updateGate": {
     "title": "Yeni sürüm gerekli",
-    "body": "MiniZeka'nın bu sürümü artık desteklenmiyor. Oyunlara devam etmek için uygulamayı mağazadan güncelleyin.",
+    "body": "Bilimo'nun bu sürümü artık desteklenmiyor. Oyunlara devam etmek için uygulamayı mağazadan güncelleyin.",
     "button": "Güncelle",
     "hint": "Bu düğme için bir yetişkinin soruyu cevaplaması gerekir."
   },
@@ -643,8 +643,8 @@
     "deleteButton": "Hesabımı sil"
   },
   "deleteAccount": {
-    "title": "MiniZeka: hesabı ve verileri sil",
-    "intro": "Bu işlem MiniZeka hesabınızı ve ona bağlı tüm bilgileri kalıcı olarak siler. Geri alınamaz.",
+    "title": "Bilimo: hesabı ve verileri sil",
+    "intro": "Bu işlem Bilimo hesabınızı ve ona bağlı tüm bilgileri kalıcı olarak siler. Geri alınamaz.",
     "willDeleteTitle": "Silinecekler",
     "willDelete": [
       "Giriş bilgileriniz (e-posta ve şifre)",
@@ -808,7 +808,7 @@
   },
   "signup": {
     "title": "Kayıt Ol",
-    "subtitle": "MiniZeka'ya hoş geldiniz!",
+    "subtitle": "Bilimo'ya hoş geldiniz!",
     "parentSection": "Ebeveyn Bilgileri",
     "childSection": "Çocuk Bilgileri",
     "parentNamePlaceholder": "Ad Soyad *",

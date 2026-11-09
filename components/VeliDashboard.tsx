@@ -1804,7 +1804,7 @@ export default function VeliDashboard({ childName, childAge, email, subscription
                     {/* Footer */}
                     <View style={styles.footer}>
                         <Image source={asset('/images/icon.png')} style={styles.footerLogo} resizeMode="contain" />
-                        <Text style={styles.footerText}>MiniZeka · ChildhoodTech</Text>
+                        <Text style={styles.footerText}>Bilimo · ChildhoodTech</Text>
                         <Text style={styles.footerSubtext}>{t('veli.footerSubtext')}</Text>
                         <TouchableOpacity onPress={() => router.push('/gizlilik-ayarlari')} accessibilityRole="link" style={{ paddingVertical: 12, paddingHorizontal: 16, marginTop: 6 }}>
                             <Text style={{ fontSize: 13, fontWeight: '700', color: COLORS.textLight, textDecorationLine: 'underline' }}>{t('account.title')}</Text>

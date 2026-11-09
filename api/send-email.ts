@@ -53,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const safeAiComment = escapeHtml(details.aiComment).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
 
     const mailOptions = {
-      from: '"MiniZeka" <admin@childhoodtech.com>',
+      from: '"Bilimo" <admin@childhoodtech.com>',
       to: email,
       subject: subject || 'Oyun Raporu',
       html: `

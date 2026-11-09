@@ -1,6 +1,6 @@
 {
   "login": {
-    "title": "MiniZeka",
+    "title": "Bilimo",
     "welcome": "Welcome, little explorer! 🌟",
     "emailPlaceholder": "Email Address",
     "passwordPlaceholder": "Password",
@@ -583,7 +583,7 @@
   },
   "updateGate": {
     "title": "A new version is needed",
-    "body": "This version of MiniZeka is no longer supported. Please update the app from the store to keep playing.",
+    "body": "This version of Bilimo is no longer supported. Please update the app from the store to keep playing.",
     "button": "Update",
     "hint": "A grown-up needs to answer a question to use this button."
   },
@@ -649,8 +649,8 @@
     "deleteButton": "Delete my account"
   },
   "deleteAccount": {
-    "title": "MiniZeka: delete account and data",
-    "intro": "This permanently deletes your MiniZeka account and all information linked to it. It cannot be undone.",
+    "title": "Bilimo: delete account and data",
+    "intro": "This permanently deletes your Bilimo account and all information linked to it. It cannot be undone.",
     "willDeleteTitle": "What will be deleted",
     "willDelete": [
       "Your sign-in details (email and password)",
@@ -814,7 +814,7 @@
   },
   "signup": {
     "title": "Sign Up",
-    "subtitle": "Welcome to MiniZeka!",
+    "subtitle": "Welcome to Bilimo!",
     "parentSection": "Parent Details",
     "childSection": "Child Details",
     "parentNamePlaceholder": "Full name *",

@@ -6,7 +6,7 @@ import type { OgretmenTier, VeliTier } from './subscriptionTiers';
  * (`product.priceString`: ülke para birimiyle yerelleştirilmiş), kodda fiyat tutulmaz (bkz. PRICING.md).
  *
  * ÜRÜN KİMLİĞİ KURALI (App Store Connect / Play Console): ürün kimliği paketin adını içermeli, ör.
- *   minizeka_filiz_monthly, minizeka_fidan_yearly, minizeka_cinar_monthly
+ *   bilimo_filiz_monthly, bilimo_fidan_yearly, bilimo_cinar_monthly
  * Ekran bu adı kimlikte arar; bulamazsa mağazadaki ürün başlığını gösterir.
  */
 

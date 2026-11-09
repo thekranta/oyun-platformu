@@ -1,4 +1,4 @@
-# Google Play Console — hazır cevap kâğıdı (MiniZeka)
+# Google Play Console — hazır cevap kâğıdı (Bilimo)
 
 Son güncelleme: 2026-11-08. Hesap onayı gelince uygulamayı oluştururken bu kâğıttan kopyala. `(doğrula)` işaretli yerleri kendin bir kez gözden geçir; mağaza formlarındaki beyanın sorumluluğu hesap sahibindedir.
 
@@ -23,7 +23,7 @@ Uygulama gerçekleri (cevapların dayanağı): reklam yok, analitik/çökme SDK'
 
 ## 1. Uygulamayı oluştururken
 
-- Ad: **MiniZeka** · Varsayılan dil: **Türkçe (tr-TR)** · Uygulama (oyun değil) · **Ücretsiz** (içinde satın alma var)
+- Ad: **Bilimo** · Varsayılan dil: **Türkçe (tr-TR)** · Uygulama (oyun değil) · **Ücretsiz** (içinde satın alma var)
 - Paket adı: `com.oyunprojesi.app`
 - Kategori: **Eğitim** · Etiketler: Eğitim, Çocuklar, Okul öncesi (doğrula, listede ne varsa)
 - İletişim e-postası: admin@childhoodtech.com (doğrula) · Web sitesi: https://childhoodtech.com
@@ -83,7 +83,7 @@ Toplanmayanlar: konum, kişiler, fotoğraf/video (kamera yok), takvim, sağlık,
 **Tam açıklama (TR):**
 
 ```
-MiniZeka, okul öncesi çocuklar (3–6 yaş) için hazırlanmış, ebeveyn ve öğretmenle birlikte kullanılan oyunla öğrenme uygulamasıdır.
+Bilimo, okul öncesi çocuklar (3–6 yaş) için hazırlanmış, ebeveyn ve öğretmenle birlikte kullanılan oyunla öğrenme uygulamasıdır.
 
 Çocuk oynarken sayıları, harfleri, renkleri, şekilleri, örüntüleri, müziği ve çevresini keşfeder. Oyunlar kısa, renkli ve sesli yönergelidir; çocuk okuma bilmeden de oynayabilir.
 
@@ -117,7 +117,7 @@ Kullanım şartları: https://childhoodtech.com/kullanim-sartlari.html
 
 Not: "Yüzü aşkın oyun" yerine yayın günü katalogdaki gerçek sayıyı yaz (şu an 137). Hangi oyunların ücretsiz olduğunu mağazaya yazmadan önce `constants/gameCatalog.ts` ile kontrol et.
 
-**Release notes (ilk sürüm):** `MiniZeka'nın ilk sürümü: yüzü aşkın oyun, sesli yönergeler, veli paneli ve öğretmen sınıf araçları.`
+**Release notes (ilk sürüm):** `Bilimo'nun ilk sürümü: yüzü aşkın oyun, sesli yönergeler, veli paneli ve öğretmen sınıf araçları.`
 
 **İngilizce liste (isteğe bağlı):** Uygulama arayüzü TR/EN ama **oyun sesleri yalnız Türkçe**. İngilizce liste açacaksan bunu ilk satırda belirt ("Voice guidance is in Turkish"); aksi hâlde EN kullanıcılar yanlış beklentiyle düşük puan verir. Önerim: ilk sürümde yalnız Türkçe.
 
@@ -152,6 +152,6 @@ Bireysel hesapta üretime çıkmak için en az **12 kişi aynı anda katılmış
 
 Testçilere gönderilecek mesaj:
 
-> Merhaba! MiniZeka adlı çocuk öğrenme oyunlarının Google Play kapalı testine davetlisin. 1) Bu bağlantıya tıkla ve "Test kullanıcısı ol"u seç: [bağlantı]. 2) Play Store'dan uygulamayı indir. 3) 14 gün boyunca kurulu bırak, ara sıra aç. Sorun ya da fikrin olursa bana yaz. Teşekkürler!
+> Merhaba! Bilimo adlı çocuk öğrenme oyunlarının Google Play kapalı testine davetlisin. 1) Bu bağlantıya tıkla ve "Test kullanıcısı ol"u seç: [bağlantı]. 2) Play Store'dan uygulamayı indir. 3) 14 gün boyunca kurulu bırak, ara sıra aç. Sorun ya da fikrin olursa bana yaz. Teşekkürler!
 
 Test sonunda Play "üretim erişimi" başvurusunda test sürecini sorar (geri bildirim, yapılan düzeltmeler). Kısa bir not tut: kim ne bildirdi, ne düzelttin.

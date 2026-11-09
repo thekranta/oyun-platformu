@@ -28,7 +28,7 @@ const bg = `
   <rect width="${W}" height="${H}" fill="url(#g)"/>
   <circle cx="860" cy="250" r="230" fill="#FFFFFF" fill-opacity="0.18"/>
   <circle cx="120" cy="470" r="150" fill="#FFFFFF" fill-opacity="0.10"/>
-  <text x="64" y="215" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="104" fill="#FFFFFF">MiniZeka</text>
+  <text x="64" y="215" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="104" fill="#FFFFFF">Bilimo</text>
   <text x="68" y="285" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="38" fill="#FAF2E4">3–6 yaş için oyunla öğrenme</text>
   <text x="68" y="336" font-family="Arial, Helvetica, sans-serif" font-size="28" fill="#FAF2E4" fill-opacity="0.95">Sayılar, harfler, renkler, müzik ve daha fazlası</text>
 </svg>`;

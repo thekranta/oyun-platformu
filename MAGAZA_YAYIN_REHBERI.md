@@ -29,7 +29,7 @@ Bu belge iki yarıdan oluşur: kodda **yapılanlar** ve **hesaplarla ilgili seni
 ## 2. Senin yapacakların (sırayla)
 
 ### 2.1 Hesaplar
-- **Apple Developer Program** (bireysel): yasal adın mağazada satıcı adı olarak görünür. App Store Connect'te yeni uygulama: Bundle ID `com.oyunprojesi.app`, ad "MiniZeka", kategori **Eğitim**, yaş derecelendirmesi **4+**. **"Kids" kategorisini seçme** (öneri): o kategori üçüncü tarafa kişisel veri göndermeyi yasaklar; çocuğun sesi OpenAI'a gittiği için sorun çıkarır. Yasal sözleşmelerde *Paid Applications* sözleşmesi + vergi + banka bilgisi tamamlanmadan satın alma çalışmaz.
+- **Apple Developer Program** (bireysel): yasal adın mağazada satıcı adı olarak görünür. App Store Connect'te yeni uygulama: Bundle ID `com.oyunprojesi.app`, ad "Bilimo", kategori **Eğitim**, yaş derecelendirmesi **4+**. **"Kids" kategorisini seçme** (öneri): o kategori üçüncü tarafa kişisel veri göndermeyi yasaklar; çocuğun sesi OpenAI'a gittiği için sorun çıkarır. Yasal sözleşmelerde *Paid Applications* sözleşmesi + vergi + banka bilgisi tamamlanmadan satın alma çalışmaz.
 - **Google Play Console** (bireysel): paket adı `com.oyunprojesi.app`. Bireysel hesapta üretime çıkmadan önce **kapalı testte en az 12 test kullanıcısı, 14 gün kesintisiz** gerekir (bunu başlatmak en uzun bekleme süresi). Ödeme profili + vergi formu.
 - **Apple Small Business Program** başvurusu (komisyon %30 yerine %15). Google'da abonelikte %15 zaten geçerli.
 
@@ -55,11 +55,11 @@ Bu belge iki yarıdan oluşur: kodda **yapılanlar** ve **hesaplarla ilgili seni
 
 | Paket | Ürün kimliği | Süre | Web fiyatı (TR / EN) | Mağaza hedefi (web ÷ 0,85) |
 |---|---|---|---|---|
-| Tohum | `minizeka_tohum_monthly` | 1 ay | ₺399 / $9.99 | ≈ ₺470 / $11.75 |
-| Filiz | `minizeka_filiz_3m` | 3 ay | ₺999 / $24.99 | ≈ ₺1.175 / $29.40 |
-| Fidan | `minizeka_fidan_6m` | 6 ay | ₺1.749 / $44.99 | ≈ ₺2.060 / $52.90 |
-| Orman | `minizeka_orman_yearly` | 12 ay | ₺2.899 / $69.99 | ≈ ₺3.410 / $82.30 |
-| Çınar (sınıf) | `minizeka_cinar_monthly` | 1 ay | ₺2.799 / $74.99 | **₺3.299** (karar verildi, bkz. `PRICING.md`) / ≈ $88 |
+| Tohum | `bilimo_tohum_monthly` | 1 ay | ₺399 / $9.99 | ≈ ₺470 / $11.75 |
+| Filiz | `bilimo_filiz_3m` | 3 ay | ₺999 / $24.99 | ≈ ₺1.175 / $29.40 |
+| Fidan | `bilimo_fidan_6m` | 6 ay | ₺1.749 / $44.99 | ≈ ₺2.060 / $52.90 |
+| Orman | `bilimo_orman_yearly` | 12 ay | ₺2.899 / $69.99 | ≈ ₺3.410 / $82.30 |
+| Çınar (sınıf) | `bilimo_cinar_monthly` | 1 ay | ₺2.799 / $74.99 | **₺3.299** (karar verildi, bkz. `PRICING.md`) / ≈ $88 |
 
 - Mağaza fiyatı web'den ~%15 yüksek tutulur: komisyon payı kadar, böylece web "bir tık" ucuz kalır ve net gelir eşitlenir. Tabloda en yakın **üst fiyat basamağını** seç (Apple fiyatları sabit basamaklıdır).
 - **Küresel**: temel fiyatı **USD**'de gir, Apple/Google'ın otomatik ülke dönüşümünü kullan; **TRY'yi elle** ayarla. Fiyatlar kodda tutulmaz, ödeme ekranı mağazanın verdiği yerel fiyatı gösterir.
@@ -77,7 +77,7 @@ Bu belge iki yarıdan oluşur: kodda **yapılanlar** ve **hesaplarla ilgili seni
 ### 2.6 İnceleme notları (Apple "App Review Information" ve Google'da aynısı)
 Aşağıdaki metni İngilizce yapıştır; demo veli hesabı ve demo öğretmen hesabını sen oluştur (parolayı bana yazma):
 
-> MiniZeka is a game-based learning app for preschoolers (ages 3–6), used through a parent's account. Parental gate: a multiplication question appears before the purchase screen, external links and AI permission. In-app purchases: Tohum/Filiz/Fidan/Orman (parent) and Çınar (teacher class plan); the same plans are sold on our website, and the app does not link to it. Account deletion: Parent menu (long-press the gear icon) → Account & privacy → Delete my account. Microphone: only in the "Say This!" game, only after a parent grants permission; the recording is sent for speech recognition and not stored. The progress report is written by an AI service only after parental permission; the child's name is not sent. Demo accounts: parent …, teacher … .
+> Bilimo is a game-based learning app for preschoolers (ages 3–6), used through a parent's account. Parental gate: a multiplication question appears before the purchase screen, external links and AI permission. In-app purchases: Tohum/Filiz/Fidan/Orman (parent) and Çınar (teacher class plan); the same plans are sold on our website, and the app does not link to it. Account deletion: Parent menu (long-press the gear icon) → Account & privacy → Delete my account. Microphone: only in the "Say This!" game, only after a parent grants permission; the recording is sent for speech recognition and not stored. The progress report is written by an AI service only after parental permission; the child's name is not sent. Demo accounts: parent …, teacher … .
 
 ### 2.7 Mağaza sayfası
 Ad, kısa/uzun açıklama, anahtar sözcükler, ekran görüntüleri (iPhone 6,7"/6,5"; Android telefon), öne çıkan görsel (1024×500), destek e-postası/bağlantısı. İstersen metinleri ve ekran görüntüsü planını ben hazırlarım.
@@ -97,7 +97,7 @@ Uygulama içi metinler TR/EN (yeni ekranlar dahil); oyun içi **sesler yalnız T
 - **Apple / Google** — Mağaza ödemeleri; kart bilgisi bize ulaşmaz.
 - **Vercel Inc.** — Web uygulamasının ve sunucu işlevlerinin barındırılması.
 
-**"Çocuklara Ait Verilerin İşlenmesi"** bölümünde "MiniZeka, doğrudan çocuklardan veri toplamaz" cümlesini şöyle düzelt: *"Çocuğun sesi yalnızca 'Bunu Söyle!' oyununda, ebeveynin izniyle, kelimeyi anlamak için kullanılır ve saklanmaz."*
+**"Çocuklara Ait Verilerin İşlenmesi"** bölümünde "Bilimo, doğrudan çocuklardan veri toplamaz" cümlesini şöyle düzelt: *"Çocuğun sesi yalnızca 'Bunu Söyle!' oyununda, ebeveynin izniyle, kelimeyi anlamak için kullanılır ve saklanmaz."*
 
 **Yeni bölüm — Hesap ve verilerin silinmesi:** Uygulamada *Hesap ve gizlilik → Hesabımı sil* ya da `https://oyun.childhoodtech.com/hesap-sil` adresinden hesabınızı ve tüm verilerinizi (profil, çocuk bilgileri, oyun sonuçları, çizimler, sınıf kayıtları) kalıcı olarak silebilirsiniz. Giriş yapamıyorsanız admin@childhoodtech.com adresine yazabilirsiniz. Mağaza aboneliği hesap silmekle iptal olmaz; mağazanızdan ayrıca iptal edilmelidir. Yasal saklama yükümlülüğü bulunan kayıtlar mevzuatın gerektirdiği süre saklanır.
 

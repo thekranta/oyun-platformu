@@ -131,7 +131,7 @@ describe('public/index.html komut dosyası (sahte DOM ile)', () => {
 
     it('dil: kayıtlı seçim önceliklidir; yoksa cihaz dili İngilizceyse EN, aksi halde TR; depolama engelliyse cihaz dili', () => {
         run({ stored: 'en', language: 'tr-TR' });
-        expect(els['boot-title'].textContent).toBe('MiniZeka');
+        expect(els['boot-title'].textContent).toBe('Bilimo');
         expect(els['boot-msg'].textContent).toBe('Loading…');
         expect(els['boot-msg'].textContent).toBe('Loading…');
         run({ stored: 'tr', language: 'en-US' });

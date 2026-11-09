@@ -11,7 +11,7 @@
  *     API > service_role key — RLS'i bypass eder, yalnızca sunucuda kullanılır).
  *  4) RevenueCat'te entitlement kimlikleri services/purchaseService.ts'teki ile
  *     AYNI olmalı: 'tohum' | 'filiz' | 'fidan' | 'orman' (veli), 'cinar' | 'mese' (öğretmen).
- *  5) Ürün kimliği paket adını ve süreyi içermeli (ör. minizeka_filiz_3m): bkz. lib/paywall.ts, api/_lib/revenuecatExpiry.ts.
+ *  5) Ürün kimliği paket adını ve süreyi içermeli (ör. bilimo_filiz_3m): bkz. lib/paywall.ts, api/_lib/revenuecatExpiry.ts.
  *     Yenilenmeyen (bitişsiz) satın almalarda bitiş ürün kimliğindeki süreden hesaplanır; süre belirlenemezse erişim VERİLMEZ.
  *
  * app_user_id olarak kullanıcının e-postası bekleniyor (services/purchaseService.ts
