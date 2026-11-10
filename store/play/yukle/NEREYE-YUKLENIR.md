@@ -9,7 +9,7 @@ Play Console → Mağaza girişi → Ana mağaza girişi → Görsel öğeler
 | **Telefon ekran görüntüleri** (zorunlu) | `telefon/` | 7 | 1080×1920. Dosya adı sırasıyla yükle (01 → 07) |
 | Tablet, 7 inç | `tablet/` | 5 | İsteğe bağlı. Aynı dosyalar 7" ve 10" alanına yüklenebilir |
 | Tablet, 10 inç | `tablet/` | 5 | İsteğe bağlı |
-| Masaüstü | `masaustu/` | 3 | İsteğe bağlı. 1920×1080 |
+| Masaüstü | `masaustu/` | 6 | İsteğe bağlı. 1920×1080 (Play 4–8 görsel ister) |
 | Android XR | (boş bırak) | - | Uygulama XR için değil |
 
 Tüm ekran görüntüleri demo hesaptan alındı (çocuk adı "Demo", gerçek e-posta görünmez).
