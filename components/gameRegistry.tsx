@@ -1,4 +1,6 @@
 import React from 'react';
+import { Platform } from 'react-native';
+import { MOBILE_DISABLED_ROUTES } from '../lib/platformGames';
 import { GameResultExtraData } from '../services/gameResults';
 import { lazyWithReload } from '../lib/lazyWithReload';
 import type { VeliTier } from '../lib/subscriptionTiers';
@@ -589,3 +591,9 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
   'spor-gunu': (c) => <SporGunu onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
   'hayvan-jimnastigi': (c) => <HayvanJimnastigi onGameEnd={c.onGameEnd} onExit={c.onExit} childName={c.ad} />,
 };
+
+// Mağaza sürümlerinde (iOS/Android) kapalı oyunlar kayıttan çıkarılır: çocuk odası, yetişkin menüsü ve günlük oyun
+// seçimi yalnız kayıttaki oyunları sunar. Gerekçe ve geri açma adımları: lib/platformGames.ts.
+if (Platform.OS !== 'web') {
+  for (const routeKey of MOBILE_DISABLED_ROUTES) delete GAME_RENDERERS[routeKey];
+}

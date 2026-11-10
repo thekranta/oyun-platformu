@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAiConsent, isScopeGranted, setAiConsent, type AiConsent, type AiConsentScope } from '../lib/aiConsent';
 import { legalUrl, openExternalLink, subscriptionManagementUrl } from '../lib/externalLink';
 import { requestParentGate } from '../lib/parentGate';
+import { isRouteDisabledOnPlatform } from '../lib/platformGames';
 
 /**
  * "Hesap ve gizlilik": yapay zekâ izinlerini yönetme (verme/geri alma), yasal metinler, mağaza aboneliğini
@@ -42,10 +43,11 @@ export default function GizlilikAyarlari() {
 
     const manageUrl = subscriptionManagementUrl();
 
+    // Ses izni yalnız ses oyununun açık olduğu yerde gösterilir (mobilde oyun kapalı: lib/platformGames.ts).
     const aiRows: { scope: AiConsentScope; title: string; desc: string }[] = [
-        { scope: 'voice', title: t('account.voiceTitle'), desc: t('account.voiceDesc') },
-        { scope: 'report', title: t('account.reportTitle'), desc: t('account.reportDesc') },
-    ];
+        { scope: 'voice' as AiConsentScope, title: t('account.voiceTitle'), desc: t('account.voiceDesc') },
+        { scope: 'report' as AiConsentScope, title: t('account.reportTitle'), desc: t('account.reportDesc') },
+    ].filter((row) => row.scope !== 'voice' || !isRouteDisabledOnPlatform('bunu-soyle', Platform.OS));
 
     return (
         <SafeAreaView style={styles.root}>

@@ -231,9 +231,10 @@ describe('uygulama yapılandırması (app.json / eas.json)', () => {
         expect(app.ios.config.usesNonExemptEncryption).toBe(false);
     });
 
-    it('Android: gereksiz depolama/üst pencere izinleri engelli, yalnız mikrofon var; yedekleme kapalı', () => {
-        expect(app.android.permissions).toEqual(['android.permission.RECORD_AUDIO', 'android.permission.MODIFY_AUDIO_SETTINGS']);
+    it('Android: depolama/üst pencere/MİKROFON izinleri engelli (ses oyunu mobilde kapalı); yedekleme kapalı', () => {
+        expect(app.android.permissions).toEqual(['android.permission.MODIFY_AUDIO_SETTINGS']);
         expect(app.android.blockedPermissions).toEqual(expect.arrayContaining([
+            'android.permission.RECORD_AUDIO', // çocuk sesi mobilde toplanmaz (lib/platformGames.ts); geri açılırsa bu test ve Data safety güncellenir
             'android.permission.READ_EXTERNAL_STORAGE',
             'android.permission.WRITE_EXTERNAL_STORAGE',
             'android.permission.SYSTEM_ALERT_WINDOW',
@@ -242,13 +243,15 @@ describe('uygulama yapılandırması (app.json / eas.json)', () => {
         expect(app.android.allowBackup).toBe(false);
     });
 
-    it('mikrofon açıklaması çocuğun sesinin ne için kullanıldığını söyler (İngilizce taban + Türkçe)', () => {
+    it('mobilde mikrofon izni hiçbir platformda istenmez; ses oyunu mağaza sürümlerinde kayıttan çıkarılır', () => {
         const plugin = app.plugins.find((p: unknown) => Array.isArray(p) && p[0] === 'expo-av');
-        expect(plugin[1].microphonePermission).toMatch(/microphone[\s\S]*speech recognition[\s\S]*not stored/i);
+        expect(plugin[1].microphonePermission).toBe(false); // iOS NSMicrophoneUsageDescription ve Android RECORD_AUDIO eklenmez
+        // Yerelleştirme dosyası ileride geri açmak için durur; tırnak kuralı korunur (InfoPlist.strings kaçış yapmaz).
         const trLocale = JSON.parse(oku('assets/native-locales/tr.json'));
-        expect(trLocale.ios.NSMicrophoneUsageDescription).toMatch(/mikrofon[\s\S]*saklanmaz/);
-        expect(trLocale.ios.NSMicrophoneUsageDescription).not.toMatch(/"/); // InfoPlist.strings tırnaklarda kaçış yapmaz
+        expect(trLocale.ios.NSMicrophoneUsageDescription).not.toMatch(/"/);
         expect(app.locales.tr).toBe('./assets/native-locales/tr.json');
+        const kayit = yorumsuz(oku('components/gameRegistry.tsx'));
+        expect(kayit).toMatch(/Platform\.OS !== 'web'[\s\S]*delete GAME_RENDERERS\[routeKey\]/);
     });
 
     it('anlık güncelleme (expo-updates) kurulu: çalışma sürümü uygulama sürümüne bağlı, kanallar tanımlı', () => {
