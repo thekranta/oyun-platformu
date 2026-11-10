@@ -2,7 +2,7 @@
 
 Son güncelleme: 2026-11-08. Hesap onayı gelince uygulamayı oluştururken bu kâğıttan kopyala. `(doğrula)` işaretli yerleri kendin bir kez gözden geçir; mağaza formlarındaki beyanın sorumluluğu hesap sahibindedir.
 
-Uygulama gerçekleri (cevapların dayanağı): reklam yok, analitik/çökme SDK'sı yok, tek üçüncü taraf SDK `react-native-purchases` (RevenueCat), izinler yalnız mikrofon + ses ayarı, reklam kimliği (AD_ID) engelli, hesabı **veli/öğretmen** açar (çocuk kendi hesabını açmaz), çocuğa puan/hata/zorluk sayacı gösterilmez.
+Uygulama gerçekleri (cevapların dayanağı): reklam yok, analitik/çökme SDK'sı yok, tek üçüncü taraf SDK `react-native-purchases` (RevenueCat), izinler yalnız ses ayarı (MODIFY_AUDIO_SETTINGS); MİKROFON YOK: "Bunu Söyle!" mobilde kapalı (lib/platformGames.ts, 2026-11-10 kararı: çocuk sesi → OpenAI riski), çocuğun sesi mobilde hiç toplanmaz, reklam kimliği (AD_ID) engelli, hesabı **veli/öğretmen** açar (çocuk kendi hesabını açmaz), çocuğa puan/hata/zorluk sayacı gösterilmez.
 
 ---
 
@@ -67,8 +67,8 @@ Kategori: **Referans, haber veya eğitim**. Şiddet, korku, cinsellik, kumar, uy
 | Kullanıcı kimlikleri | Evet | Zorunlu | Uygulama işlevi, hesap yönetimi | Hesap kimliği (RevenueCat'e de iletilir) |
 | Diğer bilgiler | Evet | Zorunlu | Uygulama işlevi | Çocuğun yaşı (ay) |
 | Uygulama etkileşimleri | Evet | Zorunlu | Uygulama işlevi | Oyun sonuçları (veli raporu için) |
-| Diğer kullanıcı içeriği | Evet | İsteğe bağlı | Uygulama işlevi | Çocuğun çizimleri / söylediği kelime (yazıya çevrilmiş hâli) |
-| Ses kayıtları | Evet | **İsteğe bağlı** (yalnız "Bunu Söyle!" + veli izni) | Uygulama işlevi | Konuşma tanımaya gönderilir, kalıcı saklanmaz. Anlık işleme sayılıp beyan dışı bırakılabilir ama Aile + mikrofon nedeniyle **beyan etmeni öneririm** |
+| Diğer kullanıcı içeriği | Evet | İsteğe bağlı | Uygulama işlevi | Çocuğun çizimleri (mobilde söylenen kelime yok: ses oyunu kapalı) |
+| Ses kayıtları | **HAYIR, toplanmıyor** | - | - | Mobil sürümde mikrofon izni ve ses oyunu yok. Ses oyunu geri açılırsa (OpenAI ZDR ya da cihaz içi tanıma çözülünce) bu satır "Evet, isteğe bağlı" olarak yeniden eklenir ve RECORD_AUDIO geri konur |
 | Satın alma geçmişi | Evet | İsteğe bağlı | Uygulama işlevi | Abonelik kaydı (RevenueCat) |
 
 Toplanmayanlar: konum, kişiler, fotoğraf/video (kamera yok), takvim, sağlık, finansal kart bilgisi, web gezinme, cihaz kimlikleri/reklam kimliği, çökme günlüğü, tanılama.
@@ -105,7 +105,7 @@ GÜVENLİK VE GİZLİLİK
 • Reklam yok, çocuğa yönelik izleme yok
 • Çocuğa puan, hata sayacı veya yarış baskısı gösterilmez
 • Satın alma, dış bağlantı ve yapay zekâ destekli rapor izni ebeveyn kapısının arkasındadır
-• Mikrofon yalnızca "Bunu Söyle!" oyununda ve ebeveyn izniyle kullanılır; kayıt saklanmaz
+• Mobil uygulama mikrofon, kamera, konum veya kişi listesi izni istemez
 • Hesabınızı ve tüm verilerinizi uygulamadan istediğiniz zaman silebilirsiniz
 
 ABONELİK
