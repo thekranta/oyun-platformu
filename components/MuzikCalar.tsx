@@ -65,16 +65,16 @@ export interface Song {
 export const SONGS: Song[] = [
     {
         id: '1',
-        title: 'ChildhoodTech Şarkısı V1',
-        artist: 'Web Sitemiz İçin',
+        title: 'Bilimo Şarkısı 1',
+        artist: 'Bilimo',
         source: asset('/sounds/songs/CHILDHOODTECH_SARKISI_V1.mp3'),
         coverColor: '#FFD54F', // Sarı
         icon: 'musical-notes',
     },
     {
         id: '2',
-        title: 'ChildhoodTech Şarkısı V2',
-        artist: 'Tanıtım Müziği',
+        title: 'Bilimo Şarkısı 2',
+        artist: 'Bilimo',
         source: asset('/sounds/songs/CHILDHOODTECH_SARKISI_V2.mp3'),
         coverColor: '#4ECDC4', // Turkuaz
         icon: 'planet',
