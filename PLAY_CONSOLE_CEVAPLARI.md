@@ -80,7 +80,7 @@ Toplanmayanlar: konum, kişiler, fotoğraf/video (kamera yok), takvim, sağlık,
 **Kısa açıklama (en çok 80 karakter):**
 `3–6 yaş için oyunla öğrenme: sayılar, harfler, renkler, müzik ve daha fazlası`
 
-**Tam açıklama (TR):**
+**Tam açıklama (TR):** GÜNCEL METİN `store/play/tam-aciklama-tr.txt` dosyasındadır (2026-11-10: uyarlanır zorluk, uzman paneli onayı, öğretmen/tahta/Sınıf Bahçesi/kurum eklendi). Aşağıdaki blok eski kısa taslaktır, kullanma.
 
 ```
 Bilimo, okul öncesi çocuklar (3–6 yaş) için hazırlanmış, ebeveyn ve öğretmenle birlikte kullanılan oyunla öğrenme uygulamasıdır.
@@ -88,7 +88,7 @@ Bilimo, okul öncesi çocuklar (3–6 yaş) için hazırlanmış, ebeveyn ve ö�
 Çocuk oynarken sayıları, harfleri, renkleri, şekilleri, örüntüleri, müziği ve çevresini keşfeder. Oyunlar kısa, renkli ve sesli yönergelidir; çocuk okuma bilmeden de oynayabilir.
 
 NELER VAR?
-• Yüzü aşkın oyun: sayı ve işlem, harf ve ses, renk ve şekil, hafıza, örüntü, fen ve doğa, sanat ve müzik
+• 150'den fazla oyun: sayı ve işlem, harf ve ses, renk ve şekil, hafıza, örüntü, fen ve doğa, sanat ve müzik
 • Sesli yönergeler: her oyun çocuğa Türkçe olarak anlatılır
 • Etkileşimli değer hikâyeleri
 • Minik Müze: ünlü tablolarla keşif oyunları
@@ -109,13 +109,13 @@ GÜVENLİK VE GİZLİLİK
 • Hesabınızı ve tüm verilerinizi uygulamadan istediğiniz zaman silebilirsiniz
 
 ABONELİK
-Temel oyunlar ücretsizdir. Tohum, Filiz, Fidan ve Orman paketleri ek oyunlara ve veli raporlarına erişim sağlar; Çınar paketi sınıf kullanımı içindir. Abonelikler otomatik yenilenir; Google Play hesabınızdan istediğiniz zaman iptal edebilirsiniz.
+10 oyun ücretsizdir. Tohum, Filiz, Fidan ve Orman paketleri ek oyunlara ve veli raporlarına erişim sağlar; Çınar paketi sınıf kullanımı içindir. Abonelikler otomatik yenilenir; Google Play hesabınızdan istediğiniz zaman iptal edebilirsiniz.
 
 Gizlilik politikası: https://childhoodtech.com/gizlilik-politikasi.html
 Kullanım şartları: https://childhoodtech.com/kullanim-sartlari.html
 ```
 
-Not: "Yüzü aşkın oyun" yerine yayın günü katalogdaki gerçek sayıyı yaz (şu an 137). Hangi oyunların ücretsiz olduğunu mağazaya yazmadan önce `constants/gameCatalog.ts` ile kontrol et.
+Not: Katalogda 162 oyun var (mobilde ses oyunu kapalı: 161), bu yüzden metinde "150'den fazla" yazıyor. Ücretsiz oyun sayısı `lib/subscriptionTiers.ts` içindeki `FREE_GAME_IDS` (10 oyun) ile eşleşmeli; ikisi değişirse metni güncelle.
 
 **Release notes (ilk sürüm):** `Bilimo'nun ilk sürümü: yüzü aşkın oyun, sesli yönergeler, veli paneli ve öğretmen sınıf araçları.`
 
