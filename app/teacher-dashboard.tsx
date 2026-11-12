@@ -19,7 +19,7 @@ import DynamicBackground from '../components/DynamicBackground';
 import InAppNotice from '../components/InAppNotice';
 import TeacherDashboard from '../components/TeacherDashboard';
 import { supabase } from '../lib/supabase';
-import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, ensureTeacherFromMetadata, isEmailNotConfirmed, needsEmailConfirmation, PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
+import { AUTH_MESSAGES, EMAIL_CONFIRM_REDIRECT, ensureTeacherFromMetadata, isEmailNotConfirmed, isEmailRateLimited, isExistingAccountResponse, needsEmailConfirmation, PASSWORD_RESET_REDIRECT } from '../lib/authFlow';
 import { LEGAL_URLS, openExternalLink } from '../lib/externalLink';
 import { rememberResetReturn } from '../lib/resetReturn';
 import { OgretmenTier } from '../lib/subscriptionTiers';
@@ -88,7 +88,14 @@ export default function TeacherDashboardPage() {
             if (authError || !authData.user) {
                 // Ham (İngilizce) sunucu mesajı kullanıcıya gösterilmez.
                 const raw = String(authError?.message || '').toLowerCase();
-                setNotice(raw.includes('already') || raw.includes('registered') ? t('teacherAuth.alreadyRegistered') : t('teacherAuth.signupFailed'));
+                if (isEmailRateLimited(authError)) setNotice(t('teacherAuth.emailRateLimited'));
+                else setNotice(raw.includes('already') || raw.includes('registered') ? t('teacherAuth.alreadyRegistered') : t('teacherAuth.signupFailed'));
+                return;
+            }
+
+            // E-posta zaten kayıtlı (örn. veli olarak): Supabase hata yerine boş identities'li sahte kullanıcı döner, mail GÖNDERMEZ.
+            if (isExistingAccountResponse(authData.user)) {
+                setNotice(t('teacherAuth.alreadyRegistered'));
                 return;
             }
 

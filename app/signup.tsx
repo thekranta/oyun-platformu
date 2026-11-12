@@ -18,7 +18,7 @@ import {
     View,
 } from 'react-native';
 
-import { EMAIL_CONFIRM_REDIRECT, resendConfirmation } from '../lib/authFlow';
+import { EMAIL_CONFIRM_REDIRECT, isEmailRateLimited, isExistingAccountResponse, resendConfirmation } from '../lib/authFlow';
 import { LEGAL_URLS, openExternalLink } from '../lib/externalLink';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -124,6 +124,11 @@ export default function SignUp() {
 
             // Handle specific error cases
             if (!authResponse.ok) {
+                // E-posta/istek sınırı aşıldı (Supabase 429): "başarısız" yerine ne yapılacağını söyle
+                if (isEmailRateLimited(authData, authResponse.status)) {
+                    throw new Error(t('signup.errors.emailRateLimited'));
+                }
+
                 // Check for duplicate email
                 if (authData.msg?.includes('already registered') ||
                     authData.error_description?.includes('already registered') ||
@@ -145,6 +150,11 @@ export default function SignUp() {
                 // Ham sunucu metni (Supabase, İngilizce) kullanıcıya gösterilmez; ayrıntı yalnız geliştirici günlüğüne.
                 console.warn('Kayıt hatası:', authData.msg || authData.error_description || authData.message);
                 throw new Error(t('signup.errors.signupFailed'));
+            }
+
+            // E-posta zaten kayıtlı: Supabase hata yerine boş identities'li sahte kullanıcı döner ve mail GÖNDERMEZ.
+            if (isExistingAccountResponse(authData.user ?? authData)) {
+                throw new Error(t('signup.errors.alreadyRegistered'));
             }
 
             // E-posta doğrulaması açık: hesap oluştu ama oturum yok → kullanıcıya bağlantıyı onaylamasını söyle.

@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js';
 import {
-    EMAIL_CONFIRM_REDIRECT, ensureProfileFromMetadata, ensureTeacherFromMetadata, isEmailNotConfirmed, needsEmailConfirmation, resendConfirmation,
+    EMAIL_CONFIRM_REDIRECT, ensureProfileFromMetadata, ensureTeacherFromMetadata, isEmailNotConfirmed, isEmailRateLimited, isExistingAccountResponse, needsEmailConfirmation, resendConfirmation,
 } from './authFlow';
 
 // supabase istemcisi sahte: zincirleme sorgu (select→eq→limit) ve insert çağrıları izlenir.
@@ -43,6 +43,34 @@ describe('isEmailNotConfirmed / needsEmailConfirmation', () => {
         expect(needsEmailConfirmation({ user: { id: 'x' }, session: { access_token: 't' } })).toBe(false);   // doğrulama kapalı: eski akış
         expect(needsEmailConfirmation({ user: null, session: null })).toBe(false);
         expect(needsEmailConfirmation(null)).toBe(false);
+    });
+});
+
+describe('isExistingAccountResponse (kayıtlı e-posta: Supabase sahte kullanıcı döner, mail göndermez)', () => {
+    it('identities boş dizi → zaten kayıtlı', () => {
+        expect(isExistingAccountResponse({ id: 'x', identities: [] })).toBe(true);
+    });
+    it('yeni hesapta identities dolu; alan yoksa/null ise kayıtlı SAYILMAZ', () => {
+        expect(isExistingAccountResponse({ id: 'x', identities: [{ provider: 'email' }] })).toBe(false);
+        expect(isExistingAccountResponse({ id: 'x' })).toBe(false);
+        expect(isExistingAccountResponse(null)).toBe(false);
+        expect(isExistingAccountResponse(undefined)).toBe(false);
+    });
+});
+
+describe('isEmailRateLimited', () => {
+    it('429, Supabase kodları ve ileti biçimlerini tanır', () => {
+        expect(isEmailRateLimited(null, 429)).toBe(true);
+        expect(isEmailRateLimited({ status: 429 })).toBe(true);
+        expect(isEmailRateLimited({ code: 'over_email_send_rate_limit' })).toBe(true);
+        expect(isEmailRateLimited({ error_code: 'over_request_rate_limit' })).toBe(true);
+        expect(isEmailRateLimited({ message: 'email rate limit exceeded' })).toBe(true);
+        expect(isEmailRateLimited({ msg: 'Too many requests' })).toBe(true);
+    });
+    it('diğer hatalar sınır sayılmaz', () => {
+        expect(isEmailRateLimited({ message: 'User already registered', status: 422 })).toBe(false);
+        expect(isEmailRateLimited(null)).toBe(false);
+        expect(isEmailRateLimited(undefined, 200)).toBe(false);
     });
 });
 

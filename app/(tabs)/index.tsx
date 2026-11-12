@@ -26,9 +26,9 @@ import { isRouteOpenForTier } from '../../lib/gameAccess';
 import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
 
-// Set false to restore the previous web welcome screen and its background.
+// Set false to restore the previous welcome screen and its background (web + mobil aynı tasarımı kullanır).
 const WELCOME_REDESIGN_ENABLED = true;
-const LoginBackground = Platform.OS === 'web' && WELCOME_REDESIGN_ENABLED ? View : DynamicBackground;
+const LoginBackground = WELCOME_REDESIGN_ENABLED ? View : DynamicBackground;
 
 /**
  * Giris formu — KONTROLSUZ (uncontrolled) girdiler + izole bilesen.
@@ -84,8 +84,9 @@ const GirisFormu = React.memo(function GirisFormu({
 
   const keyboardOpen = kbHeight > 0;
 
-  // Rollback: set this flag to false to restore the unchanged original web form.
-  if (Platform.OS === 'web' && WELCOME_REDESIGN_ENABLED) return <WelcomeLogin
+  // Rollback: set this flag to false to restore the unchanged original (eski mobil) form.
+  // Web: WelcomeLogin.web.tsx, mobil: WelcomeLogin.tsx → WelcomeLoginNative.tsx (aynı tasarım).
+  if (WELCOME_REDESIGN_ENABLED) return <WelcomeLogin
     isLoggingIn={isLoggingIn} initialEmail={initialEmail} onLogin={onLogin} onForgot={onForgot}
     onSignup={onSignup} onAdmin={onAdmin} onVeli={onVeli} onOgretmen={onOgretmen} onKurum={onKurum}
   />;

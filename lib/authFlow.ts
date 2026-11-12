@@ -43,6 +43,27 @@ export function needsEmailConfirmation(data: { user?: unknown; session?: unknown
     return !!data && !!data.user && !data.session;
 }
 
+/**
+ * signUp yanıtı: bu e-posta ZATEN kayıtlı (doğrulanmış hesap).
+ * "Confirm email" açıkken Supabase hesap sızdırmamak için hata DÖNDÜRMEZ: sahte bir kullanıcı döner
+ * (identities = [] ), e-posta GÖNDERİLMEZ. Yakalanmazsa kullanıcıya "bağlantı gönderdik" denir ve mail hiç gelmez.
+ * Aynı hesap sistemi veli ve öğretmen için ortak olduğundan, veli olarak kayıtlı biri öğretmen kaydında da buna düşer.
+ */
+export function isExistingAccountResponse(user: unknown): boolean {
+    const identities = (user as { identities?: unknown } | null | undefined)?.identities;
+    return Array.isArray(identities) && identities.length === 0;
+}
+
+type RateLimitLike = { status?: number; code?: string; error_code?: string; message?: string; msg?: string } | null | undefined;
+
+/** Hata "e-posta/istek sınırı aşıldı" mı? (Supabase: 429, over_email_send_rate_limit / over_request_rate_limit) */
+export function isEmailRateLimited(err: RateLimitLike, httpStatus?: number): boolean {
+    if (httpStatus === 429 || err?.status === 429) return true;
+    const code = err?.code || err?.error_code || '';
+    if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit') return true;
+    return /rate limit|too many requests/i.test(err?.message || err?.msg || '');
+}
+
 /** Doğrulama e-postasını yeniden gönder. true = istek kabul edildi. */
 export async function resendConfirmation(email: string): Promise<boolean> {
     try {

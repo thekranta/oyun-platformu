@@ -229,7 +229,8 @@
     "needEmail": "Lütfen e-posta adresinizi girin.",
     "validEmail": "Geçerli bir e-posta adresi girin.",
     "shortPassword": "Şifre en az 6 karakter olmalıdır.",
-    "alreadyRegistered": "Bu e-posta adresiyle zaten bir hesap var. Giriş yapmayı deneyin.",
+    "alreadyRegistered": "Bu e-posta adresiyle zaten bir hesap var. Veli olarak kayıt olduysanız aynı e-posta öğretmen kaydı için kullanılamaz. Giriş yapın ya da farklı bir e-posta kullanın.",
+    "emailRateLimited": "Çok fazla deneme yapıldı. Lütfen birkaç dakika bekleyip tekrar deneyin.",
     "signupFailed": "Kayıt tamamlanamadı. Lütfen bilgilerinizi kontrol edip tekrar deneyin.",
     "profileFailed": "Hesap oluşturuldu ancak profil kaydedilemedi. Lütfen giriş yapmayı deneyin ya da bizimle iletişime geçin.",
     "signupDone": "Kayıt tamamlandı! Artık giriş yapabilirsiniz.",
@@ -839,6 +840,7 @@
       "alreadyRegistered": "Bu e-posta adresi zaten kayıtlı. Lütfen giriş yapın veya farklı bir e-posta kullanın.",
       "invalidEmailFormat": "Geçersiz e-posta formatı. Lütfen kontrol edin.",
       "weakPassword": "Şifre çok zayıf. Lütfen daha güçlü bir şifre seçin.",
+      "emailRateLimited": "Çok fazla deneme yapıldı. Lütfen birkaç dakika bekleyip tekrar deneyin.",
       "signupFailed": "Kayıt işlemi başarısız oldu. Lütfen tekrar deneyin.",
       "unexpected": "Kayıt sırasında beklenmedik bir hata oluştu."
     },

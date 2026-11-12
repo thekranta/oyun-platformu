@@ -229,7 +229,8 @@
     "needEmail": "Please enter your email address.",
     "validEmail": "Enter a valid email address.",
     "shortPassword": "The password must be at least 6 characters.",
-    "alreadyRegistered": "An account with this email already exists. Try signing in.",
+    "alreadyRegistered": "An account with this email already exists. If you signed up as a parent, the same email cannot be used for a teacher account. Sign in or use a different email.",
+    "emailRateLimited": "Too many attempts. Please wait a few minutes and try again.",
     "signupFailed": "Sign-up could not be completed. Please check your details and try again.",
     "profileFailed": "The account was created but the profile could not be saved. Please try signing in or contact us.",
     "signupDone": "Sign-up complete! You can now sign in.",
@@ -845,6 +846,7 @@
       "alreadyRegistered": "This email address is already registered. Please log in or use a different email.",
       "invalidEmailFormat": "Invalid email format. Please check it.",
       "weakPassword": "This password is too weak. Please choose a stronger one.",
+      "emailRateLimited": "Too many attempts. Please wait a few minutes and try again.",
       "signupFailed": "Sign-up failed. Please try again.",
       "unexpected": "An unexpected error occurred during sign-up."
     },
