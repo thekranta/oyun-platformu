@@ -128,9 +128,12 @@ export default function YuzYap({ onGameEnd, onExit, childName }: Props) {
 
       <View ref={canvasRef} style={styles.canvas} {...panResponder.panHandlers}>
         <View style={[styles.head, { backgroundColor: head.color }]} pointerEvents="none" />
-        {placed.map((p) => (
-          <Text key={p.id} style={{ position: 'absolute', left: p.x - p.size / 2, top: p.y - p.size / 2, fontSize: p.size }}>{p.emoji}</Text>
-        ))}
+        {/* Parçalar pointerEvents="none" kabında: dokunuş hedefi HEP tuval (Android'de locationX/Y parçaya göre gelirse yeni parça sol üste atlar). */}
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          {placed.map((p) => (
+            <Text key={p.id} style={{ position: 'absolute', left: p.x - p.size / 2, top: p.y - p.size / 2, fontSize: p.size }}>{p.emoji}</Text>
+          ))}
+        </View>
       </View>
 
       {/* Parçalar */}

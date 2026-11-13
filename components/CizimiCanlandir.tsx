@@ -191,7 +191,7 @@ export default function CizimiCanlandir({ onGameEnd, onExit, childName }: Props)
         {...panResponder.panHandlers}
       >
         {canvas.w > 0 && (
-          <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ rotate }, { translateY }] }]}>
+          <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, { transform: [{ rotate }, { translateY }] }]}>
             <Svg width={canvas.w} height={canvas.h} pointerEvents="none">
               {allStrokes.filter((s): s is Stroke => Boolean(s && s.points)).map((s, i) => (
                 <Path key={i} d={toPath(s.points)} stroke={s.color} strokeWidth={s.size} fill="none" strokeLinecap="round" strokeLinejoin="round" />

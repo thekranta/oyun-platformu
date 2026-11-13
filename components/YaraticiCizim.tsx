@@ -455,7 +455,11 @@ export default function YaraticiCizim({ onGameEnd, onExit, reference }: Props) {
               />
             ))}
           </Svg>
-          {placedShapes.map((shape, i) => renderShape(shape, i))}
+          {/* Konan şekiller tek bir pointerEvents="none" kabında: dokunuş hedefi HEP tuval olur. Aksi halde (Android) mevcut bir
+              şeklin üstüne basınca nativeEvent.locationX/Y o şekle göre gelir ve çizim/yeni şekil sol üst köşeye atlar. */}
+          <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            {placedShapes.map((shape, i) => renderShape(shape, i))}
+          </View>
         </View>
 
         {/* Floating toolbar */}

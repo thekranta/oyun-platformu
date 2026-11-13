@@ -1,11 +1,12 @@
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, PanResponder, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
 import JuicyProgressBar from './JuicyProgressBar';
 import { asset } from '../lib/assetMap';
+import { fitRow, useFitScale } from '../lib/fitLayout';
 import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
 
@@ -35,9 +36,12 @@ interface EksikSayiBulProps {
 type DropZone = { x: number; y: number; width: number; height: number };
 
 const DEFAULT_NUMBERS = [1, 2, 3, 4, 5];
-const { width } = Dimensions.get('window');
-const CARD_SIZE = width > 600 ? 96 : 72;
-const OPTION_SIZE = width > 600 ? 90 : 68;
+// Kart boyutları ekran genişliğinden/yüksekliğinden türetilir (lib/fitLayout.ts): kısa/dar telefonlarda seçenekler
+// ekrandan taşıp oyunu kilitlemesin. Tablet için üst sınırlar:
+const CARD_BASE_WIDE = 96;
+const CARD_BASE = 72;
+const OPTION_BASE_WIDE = 90;
+const OPTION_BASE = 68;
 const PLATFORM_LOGO = asset('/images/icon.png');
 
 const shuffle = (items: number[]) => {
@@ -57,12 +61,14 @@ const DraggableOption = ({
   dropZone,
   onDrop,
   onTap,
+  size,
 }: {
   value: number;
   disabled: boolean;
   dropZone: DropZone | null;
   onDrop: (value: number) => void;
   onTap: (value: number) => void;
+  size: number;
 }) => {
   const pan = useRef(new Animated.ValueXY()).current;
   const [isDragging, setIsDragging] = useState(false);
@@ -119,12 +125,13 @@ const DraggableOption = ({
     <Animated.View
       style={[
         styles.optionCard,
+        { width: size, height: size, borderRadius: size / 2 },
         isDragging && styles.optionDragging,
         { transform: pan.getTranslateTransform() },
       ]}
       {...panResponder.panHandlers}
     >
-      <Text style={styles.optionText} selectable={false}>
+      <Text style={[styles.optionText, { fontSize: Math.round(size * 0.47) }]} selectable={false}>
         {value}
       </Text>
     </Animated.View>
@@ -133,6 +140,16 @@ const DraggableOption = ({
 
 export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMBERS, oyunAdi = 'eksik-sayi-bul' }: EksikSayiBulProps) {
   const TOTAL_STAGES = numbers.length;
+  const { width: winW } = useWindowDimensions();
+  const { scale, onContainerLayout, onContentLayout } = useFitScale();
+  const S = (v: number) => Math.max(1, Math.round(v * scale));
+  const wide = winW > 600;
+  // Alan iç genişlikleri: kapsayıcı yan boşluğu 16+16, alan iç boşluğu 2×S(18), kenarlık 2×2.
+  const areaPad = S(18);
+  const innerW = winW - 32 - 2 * areaPad - 4;
+  const seqFit = fitRow(innerW, numbers.length, S(12), Math.round((wide ? CARD_BASE_WIDE : CARD_BASE) * Math.max(scale, 0.8)));
+  const optFit = fitRow(innerW, numbers.length, S(8), Math.round((wide ? OPTION_BASE_WIDE : OPTION_BASE) * Math.max(scale, 0.8)));
+  const cardSize = seqFit.size;
   const [currentStage, setCurrentStage] = useState(0);
   const [moves, setMoves] = useState(0);
   const [errors, setErrors] = useState(0);
@@ -259,13 +276,15 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
           fadeOut={true}
         />
       )}
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Image source={PLATFORM_LOGO} style={styles.logo} resizeMode="contain" />
+      {/* Dış kap kullanılabilir alanı ölçer; iç kap doğal yüksekliğini bildirir: taşarsa boşluk/yazı ölçeği küçülür. */}
+      <View style={{ flex: 1 }} onLayout={onContainerLayout}>
+      <View style={[styles.container, { paddingTop: S(36), gap: S(18) }]} onLayout={onContentLayout}>
+        <View style={[styles.header, { gap: S(12) }]}>
+          <Image source={PLATFORM_LOGO} style={[styles.logo, { width: S(64), height: S(64) }]} resizeMode="contain" />
           {/* flex: 1 → dar ekranda (320-360 px) altyazı ekran dışına taşmak yerine ikinci satıra sarılır */}
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Eksik Sayıyı Bul</Text>
-            <Text style={styles.subtitle}>{numbers[0]}-{numbers[numbers.length - 1]} arasında eksik sayıyı sürükle bırak.</Text>
+            <Text style={[styles.title, { fontSize: S(22) }]}>Eksik Sayıyı Bul</Text>
+            <Text style={[styles.subtitle, { marginTop: S(4) }]}>{numbers[0]}-{numbers[numbers.length - 1]} arasında eksik sayıyı sürükle bırak.</Text>
           </View>
         </View>
 
@@ -278,20 +297,20 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
           </View>
         </View>
 
-        <View style={styles.sequenceArea}>
-          <Text style={styles.sectionLabel}>Dizi</Text>
-          <View style={styles.sequenceRow}>
+        <View style={[styles.sequenceArea, { padding: areaPad }]}>
+          <Text style={[styles.sectionLabel, { marginBottom: S(12) }]}>Dizi</Text>
+          <View style={[styles.sequenceRow, { gap: S(12) }]}>
             {sequence.map((value, index) => {
               const isMissing = value === null;
               if (!isMissing) {
                 return (
                   <TouchableOpacity
                     key={`seq-${index}`}
-                    style={styles.sequenceCard}
+                    style={[styles.sequenceCard, { width: cardSize, height: cardSize, borderRadius: Math.round(cardSize * 0.3) }]}
                     onPress={() => speak(NUMBER_WORDS[value as number] ?? String(value))}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.sequenceText} selectable={false}>
+                    <Text style={[styles.sequenceText, { fontSize: Math.round(cardSize * 0.47) }]} selectable={false}>
                       {value}
                     </Text>
                   </TouchableOpacity>
@@ -304,13 +323,14 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
                   onLayout={measureDropZone}
                   style={[
                     styles.sequenceCard,
+                    { width: cardSize, height: cardSize, borderRadius: Math.round(cardSize * 0.3) },
                     styles.missingCard,
                     feedback === 'correct' && styles.missingCorrect,
                     feedback === 'wrong' && styles.missingWrong,
                     { transform: [{ scale: correctScale }, { scale: pulseScale }, { translateX: wrongShake }] },
                   ]}
                 >
-                  <Text style={styles.missingText} selectable={false}>
+                  <Text style={[styles.missingText, { fontSize: Math.round(cardSize * 0.58) }]} selectable={false}>
                     {placedNumber ?? '?'}
                   </Text>
                 </Animated.View>
@@ -319,9 +339,9 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
           </View>
         </View>
 
-        <View style={styles.optionsArea}>
-          <Text style={styles.sectionLabel}>Seçenekler</Text>
-          <View style={styles.optionsGrid}>
+        <View style={[styles.optionsArea, { padding: areaPad, marginTop: S(6) }]}>
+          <Text style={[styles.sectionLabel, { marginBottom: S(12) }]}>Seçenekler</Text>
+          <View style={[styles.optionsGrid, { gap: S(8) }]}>
             {options.map(option => {
               if (placedNumber === missingNumber && option === missingNumber) return null;
               return (
@@ -332,12 +352,14 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
                   dropZone={dropZone}
                   onDrop={handleDrop}
                   onTap={speakValue}
+                  size={optFit.size}
                 />
               );
             })}
           </View>
-          <Text style={styles.helperText}>Eksik kutuyu tamamlamak için sayıyı sürükle bırak.</Text>
+          <Text style={[styles.helperText, { marginTop: S(10) }]}>Eksik kutuyu tamamlamak için sayıyı sürükle bırak.</Text>
         </View>
+      </View>
       </View>
 
       {!gameReady && (
@@ -353,8 +375,8 @@ export default function EksikSayiBul({ onGameEnd, onExit, numbers = DEFAULT_NUMB
 }
 
 const styles = StyleSheet.create({
+  // flex:1 YOK: iç kap doğal yüksekliğini bildirir (lib/fitLayout.ts useFitScale); üstte hizalı, eskisiyle aynı görünüm.
   container: {
-    flex: 1,
     paddingHorizontal: 16,
     paddingTop: 36,
     gap: 18,
@@ -429,8 +451,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sequenceCard: {
-    width: CARD_SIZE,
-    height: CARD_SIZE,
+    width: CARD_BASE,   // gerçek boyut düzen anında satır içi verilir (fitRow)
+    height: CARD_BASE,
     borderRadius: 22,
     backgroundColor: '#fff3c4',
     borderWidth: 2,
@@ -490,9 +512,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   optionCard: {
-    width: OPTION_SIZE,
-    height: OPTION_SIZE,
-    borderRadius: OPTION_SIZE / 2,
+    width: OPTION_BASE,   // gerçek boyut DraggableOption'a prop olarak gelir
+    height: OPTION_BASE,
+    borderRadius: OPTION_BASE / 2,
     backgroundColor: '#e3f2fd',
     borderWidth: 3,
     borderColor: '#2196f3',

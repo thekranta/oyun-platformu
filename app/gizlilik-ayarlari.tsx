@@ -120,6 +120,15 @@ export default function GizlilikAyarlari() {
                     )}
 
                     <View style={styles.block}>
+                        <Text style={styles.sectionTitle}>{t('account.reportSection')}</Text>
+                        <Text style={styles.body}>{t('account.reportDesc')}</Text>
+                        <Pressable onPress={() => router.push('/sorun-bildir')} accessibilityRole="button" style={styles.linkRow}>
+                            <Text style={styles.link}>{t('account.reportButton')}</Text>
+                            <Ionicons name="chevron-forward" size={16} color="#3F7D72" />
+                        </Pressable>
+                    </View>
+
+                    <View style={styles.block}>
                         <Text style={styles.sectionTitle}>{t('account.deleteSection')}</Text>
                         <Text style={styles.body}>{t('account.deleteDesc')}</Text>
                         <Pressable onPress={() => router.push('/hesap-sil')} accessibilityRole="button" style={styles.danger}>

@@ -185,7 +185,7 @@ describe('yeni ekranların metinleri iki dilde var', () => {
         Object.entries(nesne as Record<string, unknown>).flatMap(([k, v]) =>
             v && typeof v === 'object' && !Array.isArray(v) ? anahtarlar(v, `${onek}${k}.`) : [`${onek}${k}`]);
 
-    const AD_ALANLARI = ['parentGate', 'aiConsent', 'account', 'deleteAccount', 'paywall', 'board', 'signup', 'veliAuth', 'resetPassword'] as const;
+    const AD_ALANLARI = ['parentGate', 'aiConsent', 'account', 'deleteAccount', 'paywall', 'board', 'signup', 'veliAuth', 'resetPassword', 'bugReport'] as const;
 
     it('TR ve EN aynı anahtarlara sahip', () => {
         for (const alan of AD_ALANLARI) {
@@ -199,7 +199,7 @@ describe('yeni ekranların metinleri iki dilde var', () => {
         const dosyalar = [
             'components/ParentGateHost.tsx', 'components/PaywallView.tsx', 'app/ai-izni.tsx', 'app/gizlilik-ayarlari.tsx', 'app/hesap-sil.tsx', 'app/paket-satin-al.tsx',
             'components/board/BoardPicker.tsx', 'components/board/BoardStage.web.tsx', 'components/board/PlayerSheet.tsx', 'app/tahta.tsx', 'app/tahta-oyun.tsx',
-            'app/signup.tsx', 'app/veli-dashboard.tsx', 'app/reset-password.tsx',
+            'app/signup.tsx', 'app/veli-dashboard.tsx', 'app/reset-password.tsx', 'app/sorun-bildir.tsx',
         ];
         const varOlan = new Set(anahtarlar(tr));
         // Dinamik anahtarların alabileceği değerler
@@ -212,7 +212,7 @@ describe('yeni ekranların metinleri iki dilde var', () => {
         const eksik: string[] = [];
         for (const yol of dosyalar) {
             const k = oku(yol);
-            const bulunan = [...k.matchAll(/\bt\(\s*[`'"]((?:parentGate|aiConsent|account|deleteAccount|paywall|toyRoom|board)\.[^`'"]+)[`'"]/g)].map((m) => m[1]);
+            const bulunan = [...k.matchAll(/\bt\(\s*[`'"]((?:parentGate|aiConsent|account|deleteAccount|paywall|toyRoom|board|bugReport)\.[^`'"]+)[`'"]/g)].map((m) => m[1]);
             const haritadan = [...k.matchAll(/'((?:deleteAccount)\.[A-Za-z]+)'/g)].map((m) => m[1]);
             for (const a of [...bulunan, ...haritadan].flatMap(genislet)) {
                 if (!varOlan.has(a) && !(a === 'deleteAccount.willDelete')) eksik.push(`${yol}: ${a}`);
@@ -317,5 +317,30 @@ describe('mağaza denetimi 2026-11-07: kaçan noktalar', () => {
         expect(oku2('api/transcribe.ts')).toContain("enforceAiAccess(res, authed, 'bunusoyle_transkript', 'voice')");
         expect(oku2('api/_lib/aiAccess.ts')).toContain('decideAiAccess(');
         expect(existsSync(join(__dirname, '..', 'api', 'text-to-speech.ts'))).toBe(false);
+    });
+});
+
+describe('sorun bildir (hata raporu)', () => {
+    it('yetişkin menüsünden ve "Hesap ve gizlilik"ten açılır; rota kayıtlı', () => {
+        expect(oku('components/ToyRoom.tsx')).toContain("router.push('/sorun-bildir')");
+        expect(oku('app/gizlilik-ayarlari.tsx')).toContain("router.push('/sorun-bildir')");
+        expect(oku('app/_layout.tsx')).toContain('name="sorun-bildir"');
+    });
+
+    it('tablo YALNIZ eklemeye açık: okuma/güncelleme/silme politikası ve izni yok (çocuk uygulaması: veri sızmaz)', () => {
+        const sql = yorumsuz(oku('supabase_migrations/add_bug_reports.sql'));
+        expect(sql).toMatch(/enable row level security/i);
+        expect(sql).toMatch(/for insert to anon, authenticated/i);
+        expect(sql).toMatch(/grant insert on table public.bug_reports to anon, authenticated/i);
+        expect(sql).not.toMatch(/for (select|update|delete|all)/i);
+        expect(sql).not.toMatch(/grant (select|update|delete|all)/i);
+        // çocuk adı / e-posta / kullanıcı kimliği sütunu yok
+        expect(sql).not.toMatch(/child_name|email|user_id|parent_name/i);
+    });
+
+    it('istemci yalnız cihaz/sürüm/ekran/hata alanları gönderir ve yanıt gövdesi istemez (return=minimal)', () => {
+        const k = oku('services/bugReports.ts');
+        expect(k).toContain("Prefer: 'return=minimal'");
+        expect(yorumsuz(k)).not.toMatch(/child_name|auth.getSession|user_id|.email/);
     });
 });

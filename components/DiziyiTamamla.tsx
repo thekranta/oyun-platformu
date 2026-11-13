@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Image, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
@@ -100,6 +100,9 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
     const currentPattern = patterns[currentStage];
     // Uzun diziler (6'dan fazla kutu, '?' dahil) telefonda 3 satıra inip ekrandan taşıyordu: kutular küçülür, ~5 kutu/satır sığar.
     const compactSequence = currentPattern.sequence.length + 1 > 6;
+    // Seçenek düğmesi boyutu ekran genişliğinden türetilir: dar telefonda (360 dp) 3 seçenek 2+1 satıra bölünüp alt satır
+    // ekranın altına taşıyordu; ≥ 64 dp (dokunma) korunarak tek satıra sığdırılır.
+    const { width: winW } = useWindowDimensions();
 
     const shuffledOptions = React.useMemo(() => {
         const options = [...currentPattern.options];
@@ -262,6 +265,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                 <Text style={styles.sectionLabel}>Seçenekler</Text>
                 <View style={styles.optionsContainer}>
                     {shuffledOptions.map((option, index) => {
+                        const optSize = Math.max(64, Math.min(90, Math.floor((winW - 60 - shuffledOptions.length * 24) / shuffledOptions.length)));
                         const isSelected = selectedOption === option;
                         const isSelectedCorrect = isSelected && isCorrect;
                         const isSelectedWrong = isSelected && !isCorrect && !stageCompleted;
@@ -282,13 +286,14 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                                 <TouchableOpacity
                                     style={[
                                         styles.optionButton,
+                                        { width: optSize, height: optSize },
                                         isSelectedCorrect && styles.optionCorrect,
                                         isSelectedWrong && styles.optionWrong,
                                     ]}
                                     onPress={() => handleOptionPress(option)}
                                     disabled={stageCompleted}
                                 >
-                                    <Image source={SHAPES[option]} style={styles.optionImage} />
+                                    <Image source={SHAPES[option]} style={[styles.optionImage, { width: Math.round(optSize * 0.78), height: Math.round(optSize * 0.78) }]} />
                                 </TouchableOpacity>
                             </Animated.View>
                         );

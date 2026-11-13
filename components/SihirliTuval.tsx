@@ -427,8 +427,9 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
         outputRange: [0, 0.4],
     });
 
-    const svgWidth = isWeb ? 340 : Math.min(screenW - 40, screenH * 0.45);
-    const svgHeight = isWeb ? 340 : Math.min(screenW - 40, screenH * 0.45);
+    // Web'de de ekran yüksekliğine bağlı (kısa telefon tarayıcısında palet taşıp son renkler görünmüyordu).
+    const svgWidth = isWeb ? Math.min(340, screenW - 40, screenH * 0.42) : Math.min(screenW - 40, screenH * 0.45);
+    const svgHeight = svgWidth;
 
     return (
         <View style={styles.container}>

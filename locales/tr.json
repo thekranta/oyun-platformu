@@ -58,7 +58,8 @@
     "packageViaClass": "Sınıf paketiniz sayesinde {{tier}} düzeyindeki oyunlar da açık.",
     "packageUpgrade": "Paketi Yükselt",
     "packageTop": "En kapsamlı pakettesiniz 🎉",
-    "accountPrivacy": "Hesap ve gizlilik"
+    "accountPrivacy": "Hesap ve gizlilik",
+    "reportProblem": "Sorun bildir"
   },
   "veli": {
     "loading": "Veriler yükleniyor...",
@@ -641,7 +642,10 @@
     "subscriptionNote": "Hesabı silmek mağaza aboneliğini iptal etmez. Aboneliği mağazadan ayrıca iptal edin.",
     "deleteSection": "Hesabı sil",
     "deleteDesc": "Hesabınızı ve çocuğunuza ait tüm bilgileri kalıcı olarak silin.",
-    "deleteButton": "Hesabımı sil"
+    "deleteButton": "Hesabımı sil",
+    "reportSection": "Sorun bildir",
+    "reportDesc": "Uygulamada bir hata mı gördünüz? Bize bildirin; cihaz bilgisi otomatik eklenir.",
+    "reportButton": "Sorun bildir"
   },
   "deleteAccount": {
     "title": "Bilimo: hesabı ve verileri sil",
@@ -921,5 +925,23 @@
     "updateFailed": "Şifre güncellenirken bir hata oluştu: {{detail}}",
     "updating": "Güncelleniyor...",
     "submit": "Şifreyi Güncelle ✨"
+  },
+  "bugReport": {
+    "title": "Sorun bildir",
+    "back": "Geri",
+    "intro": "Uygulamada bir şey beklediğiniz gibi çalışmadıysa kısaca yazın. Telefon modeli, sürüm ve son hata bilgisi otomatik eklenir.",
+    "gameLabel": "Hangi oyun veya ekran?",
+    "gamePlaceholder": "Örn. Sayı Avı",
+    "noteLabel": "Ne oldu?",
+    "notePlaceholder": "Örn. 3. soruda yeşil kutuya dokununca ekran dondu.",
+    "privacy": "Lütfen çocuğun adını veya kişisel bilgi yazmayın.",
+    "autoInfo": "Otomatik eklenecek: {{info}}",
+    "submit": "Gönder",
+    "tooShort": "Lütfen ne olduğunu birkaç kelimeyle yazın.",
+    "failed": "Gönderilemedi. Lütfen tekrar deneyin.",
+    "thanksTitle": "Teşekkürler!",
+    "thanksSent": "Bildiriminiz bize ulaştı. İncelemeye alacağız.",
+    "thanksQueued": "İnternet bağlantısı yok gibi görünüyor. Bildiriminiz kaydedildi, bağlantı gelince otomatik gönderilecek.",
+    "done": "Tamam"
   }
 }

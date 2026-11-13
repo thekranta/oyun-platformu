@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { asset } from '@/lib/assetMap';
@@ -59,7 +59,8 @@ function WelcomeLoginNative(p: WelcomeLoginProps) {
   return (
     <View style={s.root}>
       <ScrollView
-        contentContainerStyle={{ paddingTop: Math.max(insets.top, 12) + 6, paddingBottom: 20 + kbHeight, paddingHorizontal: 16 }}
+        // Android'de kök çerçeve (app/_layout.tsx AndroidInsetFrame) üst/alt çubuk boşluğunu zaten bırakır; yalnız iOS'ta inset ekle (çift boşluk olmasın).
+        contentContainerStyle={{ paddingTop: Math.max(Platform.OS === 'ios' ? insets.top : 0, 12) + 6, paddingBottom: 20 + kbHeight, paddingHorizontal: 16 }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="none"
         showsVerticalScrollIndicator={false}

@@ -58,7 +58,8 @@
     "packageViaClass": "Thanks to your class plan, {{tier}}-level games are unlocked too.",
     "packageUpgrade": "Upgrade plan",
     "packageTop": "You are on the top plan 🎉",
-    "accountPrivacy": "Account & privacy"
+    "accountPrivacy": "Account & privacy",
+    "reportProblem": "Report a problem"
   },
   "veli": {
     "loading": "Loading data...",
@@ -647,7 +648,10 @@
     "subscriptionNote": "Deleting your account does not cancel a store subscription. Please cancel it in the store as well.",
     "deleteSection": "Delete account",
     "deleteDesc": "Permanently delete your account and all information about your child.",
-    "deleteButton": "Delete my account"
+    "deleteButton": "Delete my account",
+    "reportSection": "Report a problem",
+    "reportDesc": "Did something go wrong in the app? Tell us; device details are added automatically.",
+    "reportButton": "Report a problem"
   },
   "deleteAccount": {
     "title": "Bilimo: delete account and data",
@@ -927,5 +931,23 @@
     "updateFailed": "The password could not be updated: {{detail}}",
     "updating": "Updating...",
     "submit": "Update Password ✨"
+  },
+  "bugReport": {
+    "title": "Report a problem",
+    "back": "Back",
+    "intro": "If something did not work as expected, describe it briefly. Your phone model, app version and the latest error details are added automatically.",
+    "gameLabel": "Which game or screen?",
+    "gamePlaceholder": "e.g. Number Hunt",
+    "noteLabel": "What happened?",
+    "notePlaceholder": "e.g. The screen froze when I tapped the green box on question 3.",
+    "privacy": "Please do not include the child’s name or any personal details.",
+    "autoInfo": "Added automatically: {{info}}",
+    "submit": "Send",
+    "tooShort": "Please describe what happened in a few words.",
+    "failed": "Could not be sent. Please try again.",
+    "thanksTitle": "Thank you!",
+    "thanksSent": "Your report reached us. We will look into it.",
+    "thanksQueued": "You seem to be offline. Your report is saved and will be sent automatically when you reconnect.",
+    "done": "Done"
   }
 }

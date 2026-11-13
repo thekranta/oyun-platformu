@@ -136,9 +136,12 @@ export default function DamgaSanati({ onGameEnd, onExit, childName }: Props) {
       <ListenButton onPress={() => speak('Bir damga seç, tuvale dokun ve resmini süsle!', { instructions: HAPPY_VOICE })} color="#00838F" style={{ marginTop: 12 }} />
 
       <View ref={canvasRef} style={[styles.canvas, { backgroundColor: bg.color }]} {...panResponder.panHandlers}>
-        {stamps.map((s) => (
-          <Text key={s.id} style={{ position: 'absolute', left: s.x - s.size / 2, top: s.y - s.size / 2, fontSize: s.size }}>{s.emoji}</Text>
-        ))}
+        {/* Damgalar pointerEvents="none" kabında: dokunuş hedefi HEP tuval (Android'de locationX/Y damgaya göre gelirse yeni damga sol üste atlar). */}
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          {stamps.map((s) => (
+            <Text key={s.id} style={{ position: 'absolute', left: s.x - s.size / 2, top: s.y - s.size / 2, fontSize: s.size }}>{s.emoji}</Text>
+          ))}
+        </View>
       </View>
 
       {/* Damgalar */}

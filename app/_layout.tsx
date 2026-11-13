@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Platform, View } from 'react-native';
@@ -11,7 +11,12 @@ import { SoundProvider } from '@/components/SoundContext';
 import UpdateGate from '@/components/UpdateGate';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { hideBootSplash } from '@/lib/bootSplash';
+import { setDiagnosticContext } from '@/lib/diagnostics';
 import { initI18n } from '@/lib/i18n';
+import { flushPendingBugReports, installGlobalErrorCapture } from '@/services/bugReports';
+
+// Yakalanmamış JS hatalarını izle (yerelde otomatik rapor, webde yalnız bellek); modül yüklenirken bir kez.
+installGlobalErrorCapture();
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -31,10 +36,18 @@ function AndroidInsetFrame({ children }: { children: ReactNode }) {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [i18nReady, setI18nReady] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     initI18n().then(() => setI18nReady(true));
+    // Önceki oturumdan kalan (çevrimdışı/çökme anında kuyruğa alınan) hata raporlarını göndermeyi dene.
+    flushPendingBugReports();
   }, []);
+
+  // "Sorun bildir" raporuna son ekran bilgisi: bildirim ekranının kendisi bağlam sayılmaz.
+  useEffect(() => {
+    if (pathname && pathname !== '/sorun-bildir') setDiagnosticContext({ route: pathname });
+  }, [pathname]);
 
   // Web: ilk gerçek ekran çizilince açılış perdesini (public/index.html) kaldır; hazır olana kadar perde görünür kalır.
   useEffect(() => {
@@ -60,6 +73,7 @@ export default function RootLayout() {
             <Stack.Screen name="ai-izni" options={{ headerShown: false }} />
             <Stack.Screen name="gizlilik-ayarlari" options={{ headerShown: false }} />
             <Stack.Screen name="hesap-sil" options={{ headerShown: false }} />
+            <Stack.Screen name="sorun-bildir" options={{ headerShown: false }} />
             <Stack.Screen name="tahta" options={{ headerShown: false }} />
             <Stack.Screen name="tahta-oyun" options={{ headerShown: false }} />
           </Stack>

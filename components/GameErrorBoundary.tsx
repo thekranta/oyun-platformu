@@ -1,6 +1,7 @@
 import React from 'react';
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import i18n from '../lib/i18n';
+import { reportCaughtError } from '../services/bugReports';
 
 interface Props {
     children: React.ReactNode;
@@ -33,6 +34,8 @@ export default class GameErrorBoundary extends React.Component<Props, State> {
     componentDidCatch(error: Error, info: React.ErrorInfo) {
         // Geliştirme/izleme için logla (kullanıcıya gösterilmez)
         console.error(`🎮 Oyun hatası${this.props.gameName ? ` (${this.props.gameName})` : ''}:`, error, info?.componentStack);
+        // Otomatik hata raporu (cihaz/sürüm bilgisiyle; çocuk verisi yok). Asla fırlatmaz. bkz. services/bugReports.ts
+        reportCaughtError('oyun', error, this.props.gameName);
     }
 
     render() {

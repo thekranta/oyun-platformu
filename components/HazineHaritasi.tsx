@@ -1,6 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Platform, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { useFitScale } from '../lib/fitLayout';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
@@ -15,7 +16,6 @@ import ListenButton from './ListenButton';
 // dokunur -> 💎 belirir. Kopyalanacak "aynısı" yok; mekânsal akıl yürütme. Görsel.
 // ============================================
 
-const { width: SCREEN_W } = Dimensions.get('window');
 const USE_NATIVE = Platform.OS !== 'web';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const TOTAL_ROUNDS = 8;
@@ -84,9 +84,18 @@ const ROUNDS: Round[] = [
 ];
 
 const GAP = 10;
-const BOARD_W = Math.min(SCREEN_W - 40, 340);
-const CELL = Math.floor((BOARD_W - GAP * 2) / 3);
-const EMOJI = Math.round(CELL * 0.52);
+const BOARD_BORDER = 3;
+/**
+ * 3×3 tahta hücresi: genişlikten türetilir, yükseklik yetmezse (kısa telefon) `scale` ile küçülür (lib/fitLayout.ts).
+ * RN'de width kenarlık + iç boşluğu İÇERİR: eskiden bunlar hesaba katılmadığından 3. hücre sığmıyor, tahta 2 sütuna
+ * kırılıp 5 satır oluyordu ("hemen sağında/altında" ipuçları bozuluyor, alt kareler ekrandan taşıyordu).
+ */
+const cellSize = (screenW: number, scale: number) => {
+  const outer = Math.min(screenW - 40, 340);
+  const inner = outer - 2 * GAP - 2 * BOARD_BORDER;
+  return Math.floor(((inner - 2 * GAP) / 3) * scale);
+};
+const boardWidth = (cell: number) => cell * 3 + 2 * GAP + 2 * GAP + 2 * BOARD_BORDER;
 
 interface Props {
   onGameEnd: (
@@ -102,6 +111,10 @@ interface Props {
 }
 
 export default function HazineHaritasi({ onGameEnd, onExit, childName }: Props) {
+  const { width: SCREEN_W } = useWindowDimensions();
+  const { scale, onContainerLayout, onContentLayout } = useFitScale();
+  const CELL = cellSize(SCREEN_W, scale);
+  const EMOJI = Math.round(CELL * 0.52);
   const [gameReady, setGameReady] = useState(false);
   const [round, setRound] = useState(1);
   const [found, setFound] = useState(false);
@@ -174,7 +187,7 @@ export default function HazineHaritasi({ onGameEnd, onExit, childName }: Props) 
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={onContainerLayout}>
       {showConfetti && <ConfettiCannon count={110} origin={{ x: SCREEN_W / 2, y: 0 }} fadeOut />}
       {!gameReady && (
         <CountdownOverlay
@@ -186,6 +199,8 @@ export default function HazineHaritasi({ onGameEnd, onExit, childName }: Props) 
         />
       )}
 
+      {/* İç kap doğal yüksekliğini bildirir: içerik taşarsa tahta küçülür (kaydırma yok, tüm kareler görünür kalmalı). */}
+      <View style={styles.content} onLayout={onContentLayout}>
       <View style={styles.header}>
         <GameExitButton onPress={onExit ?? (() => {})} />
         <View style={styles.roundBadge}><Text style={styles.roundText}>🗺️ {round}/{TOTAL_ROUNDS}</Text></View>
@@ -201,7 +216,7 @@ export default function HazineHaritasi({ onGameEnd, onExit, childName }: Props) 
 
       <ListenButton onPress={() => speak(current.clue, { instructions: HAPPY_VOICE })} color="#8D6E63" style={{ marginTop: 12 }} />
 
-      <Animated.View style={[styles.board, { transform: [{ scale: boardScale }] }]}>
+      <Animated.View style={[styles.board, { width: boardWidth(CELL), marginTop: Math.round(20 * scale), transform: [{ scale: boardScale }] }]}>
         {current.cells.map((cell, idx) => {
           const isLandmark = cell !== '';
           const isFound = found && idx === current.answer;
@@ -211,6 +226,7 @@ export default function HazineHaritasi({ onGameEnd, onExit, childName }: Props) 
               <TouchableOpacity
                 style={[
                   styles.cell,
+                  { width: CELL, height: CELL },
                   isLandmark ? styles.landmarkCell : styles.dirtCell,
                   isFound && styles.foundCell,
                   isWrong && styles.wrongCell,
@@ -220,9 +236,9 @@ export default function HazineHaritasi({ onGameEnd, onExit, childName }: Props) 
                 activeOpacity={0.85}
               >
                 {isFound ? (
-                  <Animated.Text style={[styles.cellEmoji, { transform: [{ scale: gemPop }] }]}>💎</Animated.Text>
+                  <Animated.Text style={[{ fontSize: EMOJI }, { transform: [{ scale: gemPop }] }]}>💎</Animated.Text>
                 ) : isLandmark ? (
-                  <Text style={styles.cellEmoji}>{cell}</Text>
+                  <Text style={{ fontSize: EMOJI }}>{cell}</Text>
                 ) : null}
               </TouchableOpacity>
             </Animated.View>
@@ -231,29 +247,30 @@ export default function HazineHaritasi({ onGameEnd, onExit, childName }: Props) 
       </Animated.View>
 
       {found && <Text style={styles.foundText}>🎉 Hazineyi buldun!</Text>}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5EAD3', alignItems: 'center', justifyContent: 'center' },
+  content: { width: '100%', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingHorizontal: 16, paddingTop: 44, paddingBottom: 8 },
   roundBadge: { backgroundColor: '#fff', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 999, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   roundText: { fontSize: 15, fontWeight: '900', color: '#5D4037' },
 
   prompt: { fontSize: 20, fontWeight: '800', color: '#5D4037', marginTop: 6 },
 
-  clueCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#FFF8E7', borderWidth: 2, borderColor: '#E0C08A', borderRadius: 18, paddingVertical: 12, paddingHorizontal: 16, marginTop: 12, maxWidth: BOARD_W, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 4 },
+  clueCard: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#FFF8E7', borderWidth: 2, borderColor: '#E0C08A', borderRadius: 18, paddingVertical: 12, paddingHorizontal: 16, marginTop: 12, maxWidth: 340, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 6, elevation: 4 },
   clueIcon: { fontSize: 26 },
   clueText: { flex: 1, fontSize: 17, fontWeight: '800', color: '#6D4C41' },
 
-  board: { width: CELL * 3 + GAP * 2, flexDirection: 'row', flexWrap: 'wrap', gap: GAP, marginTop: 20, padding: GAP, backgroundColor: '#C9A063', borderRadius: 22, borderWidth: 3, borderColor: '#A67C48', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 },
-  cell: { width: CELL, height: CELL, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  board: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP, marginTop: 20, padding: GAP, backgroundColor: '#C9A063', borderRadius: 22, borderWidth: BOARD_BORDER, borderColor: '#A67C48', shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 },
+  cell: { borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   dirtCell: { backgroundColor: '#D8B584', borderWidth: 2, borderColor: '#C0954F' },
   landmarkCell: { backgroundColor: '#BFE3A6', borderWidth: 2, borderColor: '#8FBF6E' },
   foundCell: { backgroundColor: '#FFF3C4', borderWidth: 3, borderColor: '#F4C430' },
   wrongCell: { backgroundColor: '#F3C6C6', borderColor: '#E57373' },
-  cellEmoji: { fontSize: EMOJI },
 
   foundText: { fontSize: 22, fontWeight: '900', color: '#2E7D32', marginTop: 18 },
 });
