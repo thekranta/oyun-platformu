@@ -113,3 +113,22 @@ describe('yeni emoji yedek resim kapsamı', () => {
         expect([...new Set(missing)]).toEqual([]);
     });
 });
+
+/** Metro yönlendirmesi: Android paketinde `Text` → lib/EmojiText.tsx (ilk deneme olan çalışma zamanı yaması cihazda etki etmemişti). */
+describe('Android Text yönlendirmesi (metro.config.js)', () => {
+    const metro = fs.readFileSync(path.join(ROOT, 'metro.config.js'), 'utf8');
+
+    it('yalnız android için Libraries/Text/Text → lib/EmojiText.tsx; kendi içindeki özgün Text yönlenmez', () => {
+        expect(metro).toMatch(/platform === 'android'/);
+        expect(metro).toContain('Libraries[\\\\/]Text[\\\\/]Text\\.js$');
+        expect(metro).toMatch(/path\.resolve\(__dirname, 'lib', 'EmojiText\.tsx'\)/);
+        expect(metro).toMatch(/context\.originModulePath !== EMOJI_TEXT/);
+    });
+
+    it('sarmalayıcı özgün Text\'i alır, varsayılan dışa aktarır ve yalnız API < 35\'te çalışır', () => {
+        const src = fs.readFileSync(path.join(ROOT, 'lib', 'EmojiText.tsx'), 'utf8');
+        expect(src).toMatch(/require\('react-native\/Libraries\/Text\/Text'\)\.default/);
+        expect(src).toMatch(/export default EmojiAwareText/);
+        expect(src).toMatch(/shouldUseEmojiImages\(Platform\.OS, Platform\.Version\)/);
+    });
+});

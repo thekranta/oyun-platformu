@@ -2,7 +2,7 @@
 
 Android 14 ve altında (API < 35), cihazın emoji yazı tipi **Emoji 12 ve sonrası** emojileri bilmeyebilir; bilmeyen emoji kutu (□) ya da
 yarım kesik çıkar (Android 9 BlueStacks taramasında 48 farklı emoji, ~40 dosya). Bu klasördeki WebP'ler o emojilerin Noto Emoji
-resimleridir; `lib/emojiFallback.ts` + `lib/emojiFallbackInstall.native.ts` Android'de `Text` içindeki bu emojileri satır içi resimle değiştirir.
+resimleridir; `lib/emojiFallback.ts` + `lib/EmojiText.tsx` (Android paketinde `Text`in yerine geçer: `metro.config.js` yönlendirmesi) `Text` içindeki bu emojileri satır içi resimle değiştirir.
 
 - Dosya adı: emojinin kod noktaları (FE0F hariç) onaltılık, ZWJ dizilerinde `_` ile (örn. `1f43b_200d_2744.webp`).
 - Kaynak: Google Noto Emoji (https://github.com/googlefonts/noto-emoji) — resimler Apache License 2.0, yazı tipi SIL OFL 1.1.

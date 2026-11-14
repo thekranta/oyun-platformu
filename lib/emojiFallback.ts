@@ -9,7 +9,7 @@ import { EMOJI_IMAGES } from './emojiFallbackAssets';
  * Çaldı'da marakas 🪇 … (48 farklı emoji, ~40 dosya). Çocuk cevabı göremediği için oyun oynanamaz hale gelir.
  *
  * ÇÖZÜM: Android API < 35 cihazlarda, bu emojiler `Text` içinde Noto Emoji resmiyle (assets/emoji, 128 px WebP) satır içi değiştirilir.
- * `Text` bileşeni tek yerden yamalanır (lib/emojiFallbackInstall.native.ts) → oyun dosyalarına dokunmak gerekmez. Yeni bir yeni-emoji
+ * `Text` bileşeni Android paketinde tek yerden değiştirilir (metro.config.js → lib/EmojiText.tsx) → oyun dosyalarına dokunmak gerekmez. Yeni bir yeni-emoji
  * eklenirse lib/emojiFallback.test.ts kaynakları tarar ve yedek resim eksikse testi düşürür.
  */
 
