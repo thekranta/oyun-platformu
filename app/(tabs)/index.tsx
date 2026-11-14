@@ -9,7 +9,7 @@ import Toast from '@/components/Toast';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Dimensions, Image, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, BackHandler, Dimensions, Image, Keyboard, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import {
   createDailyGamePlan,
   getTodayKey,
@@ -501,6 +501,18 @@ export default function App() {
       ensureDailyPlan();
     }
   }, [asama, ensureDailyPlan]);
+
+  // Android geri tuşu / geri hareketi: oyun ve sonuç ekranları bu rotanın DURUMU (gezinme geçmişi yok); eskiden geri tuşu oyundayken
+  // uygulamayı komple kapatıyordu (2026-11-14 taraması). Şimdi oyundan/sonuçtan ODAYA döner; odada ve girişte sistem davranışı (çıkış).
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (asama === 'menu' || asama === 'giris') return false;
+      setAsama('menu');
+      return true;
+    });
+    return () => sub.remove();
+  }, [asama]);
 
   // === EKRANLAR ===
   if (asama === 'giris') {
