@@ -5,6 +5,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Platform, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import '@/lib/reanimatedInit';
+import '@/lib/emojiFallbackInstall';   // eski Android'de yeni emojiler (kutu/yarım çıkanlar) için yedek resim: yalnız Android API < 35
 
 import ParentGateHost from '@/components/ParentGateHost';
 import { SoundProvider } from '@/components/SoundContext';
