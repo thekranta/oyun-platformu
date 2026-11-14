@@ -38,3 +38,22 @@ describe('QuantityComparison sahnesi içerikle büyür', () => {
         expect(block).not.toMatch(/\bflex: 1/);
     });
 });
+
+describe('küçük ekran (360x640 dp) ek düzeltmeleri', () => {
+    it('Diziyi Tamamla: içerik (üst bardan sonrası) ScrollView içinde; geri sayım/konfeti dışarıda', () => {
+        const src = read('components/DiziyiTamamla.tsx');
+        const scroll = src.indexOf('<ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}');
+        expect(scroll).toBeGreaterThan(src.indexOf('<CountdownOverlay'));
+        expect(scroll).toBeGreaterThan(src.indexOf('<ConfettiCannon'));
+        expect(scroll).toBeLessThan(src.indexOf('styles.topBar'));
+        expect(src).toContain('</ScrollView>');
+    });
+
+    it('Onluk Çerçeve: hücre boyutu ızgara alanının genişliğiyle sınırlı', () => {
+        expect(read('components/OnlukCerceve.tsx')).toContain('(containerWidth * 0.5 - 28) / 5.5');
+    });
+
+    it('Sihirli Tuval: kısa ekranda (< 660 dp) tuval küçülür', () => {
+        expect(read('components/SihirliTuval.tsx')).toContain('screenH * (screenH < 660 ? 0.36 : 0.45)');
+    });
+});

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
@@ -227,6 +227,8 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                 />
             )}
 
+            {/* Kısa telefonda (360x640 dp) içerik taşıp seçenek paneli alttan kesiliyordu: içerik kayar (dokunma oyunu; kısaysa eskisi gibi) */}
+            <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false} overScrollMode="never" bounces={false}>
             {/* Üst Bar: Başlık ve Ses */}
             <View style={styles.topBar}>
                 <GameExitButton onPress={onLogout} />
@@ -301,6 +303,7 @@ export default function DiziyiTamamla({ onGameEnd, onLogout, patterns = DEFAULT_
                 </View>
                 </View>
             </View>
+            </ScrollView>
 
         </View>
     );

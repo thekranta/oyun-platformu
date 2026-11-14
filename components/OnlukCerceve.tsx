@@ -55,7 +55,8 @@ export default function OnlukCerceve({ onGameEnd, onExit, fruitEmoji = '🍎', f
     const containerHeight = containerWidth * (isPortrait ? 0.7 : 9 / 16);
 
     // Dynamic sizing
-    const CELL_SIZE = containerHeight * (isPortrait ? 0.14 : 0.12);
+    // Izgara alanı genişliğin yarısı (flex 0.5): 5 hücre + boşluk ona sığmalı (360 dp'de hücreler taşıp hedef kartının üstüne biniyordu).
+    const CELL_SIZE = Math.min(containerHeight * (isPortrait ? 0.14 : 0.12), (containerWidth * 0.5 - 28) / 5.5);
     const APPLE_SIZE = CELL_SIZE * 0.8;
     const BASKET_APPLE_SIZE = containerHeight * 0.18;
 

@@ -428,7 +428,8 @@ export default function SihirliTuval({ onGameEnd, onExit, childName = 'Küçük 
     });
 
     // Web'de de ekran yüksekliğine bağlı (kısa telefon tarayıcısında palet taşıp son renkler görünmüyordu).
-    const svgWidth = isWeb ? Math.min(340, screenW - 40, screenH * 0.42) : Math.min(screenW - 40, screenH * 0.45);
+    // Kısa telefonda (≤ ~660 dp, örn. 360x640) tuval küçülür: aksi halde alttaki renk paleti ikinci satırdan kesiliyordu (2026-11-14 küçük ekran taraması).
+    const svgWidth = isWeb ? Math.min(340, screenW - 40, screenH * 0.42) : Math.min(screenW - 40, screenH * (screenH < 660 ? 0.36 : 0.45));
     const svgHeight = svgWidth;
 
     return (
