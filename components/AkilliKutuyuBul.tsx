@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import ScrollIfNeeded from './ScrollIfNeeded';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
@@ -240,7 +241,7 @@ export default function AkilliKutuyuBul({ onGameEnd, onExit, childName }: Props)
 
     return (
         <DynamicBackground>
-            <View style={styles.container}>
+            <ScrollIfNeeded contentStyle={styles.container}>
                 <GameExitButton onPress={onExit ?? (() => {})} style={{ position: 'absolute', top: 16, left: 16, zIndex: 20 }} />
 
                 <View style={styles.progressBarContainer}>
@@ -277,7 +278,7 @@ export default function AkilliKutuyuBul({ onGameEnd, onExit, childName }: Props)
                         <Text style={[styles.feedbackText, isPortrait && styles.feedbackTextSmall]}>🎉</Text>
                     </Animated.View>
                 )}
-            </View>
+            </ScrollIfNeeded>
 
             {!gameReady && (
                 <CountdownOverlay

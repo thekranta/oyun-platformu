@@ -11,7 +11,7 @@ import * as path from 'path';
 const read = (rel: string) => fs.readFileSync(path.resolve(__dirname, '..', rel), 'utf8');
 
 describe('ScrollIfNeeded kullanan dokunma oyunları', () => {
-    it.each(['DunyaBayraklari', 'DunyaSelamlari', 'KulturEslestirme', 'BayrakBoya'])('%s: içerik ScrollIfNeeded içinde', (name) => {
+    it.each(['DunyaBayraklari', 'DunyaSelamlari', 'KulturEslestirme', 'BayrakBoya', 'KutuyuBul', 'AkilliKutuyuBul'])('%s: içerik ScrollIfNeeded içinde', (name) => {
         const src = read(`components/${name}.tsx`);
         expect(src).toContain("import ScrollIfNeeded from './ScrollIfNeeded';");
         expect(src).toContain('<ScrollIfNeeded contentStyle={styles.container}>');

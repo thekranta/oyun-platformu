@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import ScrollIfNeeded from './ScrollIfNeeded';
 import GameExitButton from './GameExitButton';
 import { useSound } from './SoundContext';
 import { speak } from '../services/speechService';
@@ -276,7 +277,7 @@ export default function KutuyuBul({ onGameEnd, onExit, questions = QUESTIONS, oy
 
     return (
         <DynamicBackground>
-            <View style={styles.container}>
+            <ScrollIfNeeded contentStyle={styles.container}>
                 {/* Exit button */}
                 <GameExitButton
                     onPress={onExit ?? (() => {})}
@@ -355,7 +356,7 @@ export default function KutuyuBul({ onGameEnd, onExit, questions = QUESTIONS, oy
                         </Text>
                     </Animated.View>
                 )}
-            </View>
+            </ScrollIfNeeded>
 
             {!gameReady && (
                 <CountdownOverlay
