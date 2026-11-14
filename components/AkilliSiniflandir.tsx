@@ -88,17 +88,22 @@ function DraggableItem({ emoji, disabled, bump, onStart, onMove, onEnd }: {
         }),
     ).current;
 
+    // İKİ KATMAN: `bump` YEREL sürücüyle (useNativeDriver: true), `pan` JS sürücüyle (sürükleme + yaylanma) oynar. İkisi AYNI
+    // Animated.View'da olursa ilk yerel animasyondan sonra `pan` da "native'e taşınır" ve springBack şu hatayı verir:
+    // "Attempting to run JS driven animation on animated node that has been moved to native" (telefonda 2. soruda çökme; web'de görünmez).
     return (
-        <Animated.View
-            {...responder.panHandlers}
-            style={[
-                styles.itemCard,
-                dragging && styles.itemCardDragging,
-                { transform: [{ scale: bump }, ...pan.getTranslateTransform(), { scale: dragging ? 1.1 : 1 }] },
-                WEB_NO_SCROLL,
-            ]}
-        >
-            <Text style={styles.itemEmoji} selectable={false}>{emoji}</Text>
+        <Animated.View style={{ width: 150, height: 150, transform: [{ scale: bump }] }}>
+            <Animated.View
+                {...responder.panHandlers}
+                style={[
+                    styles.itemCard,
+                    dragging && styles.itemCardDragging,
+                    { transform: [...pan.getTranslateTransform(), { scale: dragging ? 1.1 : 1 }] },
+                    WEB_NO_SCROLL,
+                ]}
+            >
+                <Text style={styles.itemEmoji} selectable={false}>{emoji}</Text>
+            </Animated.View>
         </Animated.View>
     );
 }
