@@ -276,7 +276,8 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
         <StoryScene scene={node.scene} />
 
         {/* Anlatim metni balonu - ses gelmese de ne oldugu anlasilsin */}
-        {node.narration ? (
+        {/* Başlangıç katmanı (Hikayeyi Dinle) açıkken balonu GİZLE: katmanla üst üste binip yazıyı karıştırıyordu (küçük ekran taraması) */}
+        {node.narration && started ? (
           <View style={styles.caption}>
             <Text style={styles.captionText}>{node.narration}</Text>
           </View>

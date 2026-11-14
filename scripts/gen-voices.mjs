@@ -152,6 +152,9 @@ async function main() {
     // Akıllı Hafıza temalı varyant girişleri + rakam+ek (1'den, 6'dan) bozuk okunduğu için sözcükle söyletilen klipler (2026-10-23)
     const WAVE9 = join(__dirname, 'tts-phrases-wave9.json');
     if (existsSync(WAVE9)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE9, 'utf8')));
+    // 2026-11-14 Android taraması: Dünya Selamları (24 'selam + ülke' cümlesi) ve Duyularımız (8 soru) klipsizdi (sessiz geçiliyordu)
+    const WAVE10 = join(__dirname, 'tts-phrases-wave10.json');
+    if (existsSync(WAVE10)) phrases = phrases.concat(JSON.parse(readFileSync(WAVE10, 'utf8')));
     if (onlySlugs.length) phrases = phrases.filter((p) => onlySlugs.includes(p.slug));
     if (limit != null) phrases = phrases.slice(0, limit);
   }

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Svg, { Circle, Ellipse, Polygon, Rect } from 'react-native-svg';
 import { captureRef } from '../lib/captureRef';
 import CountdownOverlay from './CountdownOverlay';
@@ -136,6 +136,8 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
         />
       )}
 
+      {/* Kısa telefonda (360x640 dp) içerik taşıp alttaki seçenek satırı kesiliyordu: içerik kayar (dokunma oyunu; kısaysa eskisi gibi) */}
+      <ScrollView style={{ flex: 1, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center' }} showsVerticalScrollIndicator={false} overScrollMode="never" bounces={false}>
       <View style={styles.header}>
         <GameExitButton onPress={onExit ?? (() => {})} />
         <Text style={styles.title}>🎨 Boyama Kitabı</Text>
@@ -173,6 +175,7 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
           </TouchableOpacity>
         ))}
       </View>
+      </ScrollView>
     </View>
   );
 }

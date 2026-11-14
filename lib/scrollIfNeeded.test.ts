@@ -59,12 +59,24 @@ describe('küçük ekran (360x640 dp) ek düzeltmeleri', () => {
 });
 
 describe('seçenek satırı alttan kesilen dokunma oyunları: içerik kayar', () => {
-    it.each(['KafiyeBahcesi', 'SonraNeOlur', 'MinikMarket', 'ResimdeNeOluyor', 'IzDedektifi', 'MevsimBahcesi', 'ManzaraKasifi', 'SakinlesmeBahcesi', 'HangiCalgiCaldi', 'MuzikDuruncaDon', 'KucukAnlatici', 'SanatGozlugu', 'OdaminKrokisi'])('%s: başlıktan kök kapanışa kadar ScrollView, geri sayım dışarıda', (name) => {
+    it.each(['KafiyeBahcesi', 'SonraNeOlur', 'MinikMarket', 'ResimdeNeOluyor', 'IzDedektifi', 'MevsimBahcesi', 'ManzaraKasifi', 'SakinlesmeBahcesi', 'HangiCalgiCaldi', 'MuzikDuruncaDon', 'KucukAnlatici', 'SanatGozlugu', 'OdaminKrokisi', 'BoyamaKitabi'])('%s: başlıktan kök kapanışa kadar ScrollView, geri sayım dışarıda', (name) => {
         const src = read(`components/${name}.tsx`);
         const scroll = src.indexOf("<ScrollView style={{ flex: 1, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center'");
         expect(scroll).toBeGreaterThan(src.indexOf('<CountdownOverlay'));
         expect(scroll).toBeLessThan(src.indexOf('<View style={styles.header}>'));
         expect(src).toContain('</ScrollView>');
         expect(src).toMatch(/import \{[^}]*\bScrollView\b[^}]*\} from 'react-native';/);
+    });
+});
+
+describe('küçük ekran: başlık/katman çakışmaları', () => {
+    it('Ceviz Macerası: başlık çıkış düğmesinin altına iner (marginTop 56)', () => {
+        expect(read('components/CevizMacera.tsx')).toMatch(/header: \{[^}]*marginTop: 56/);
+    });
+
+    it('Küçük Kalpler: başlangıç katmanı (Hikayeyi Dinle) açıkken anlatım balonu gizli', () => {
+        const src = read('components/SevgiHikayesi.tsx');
+        expect(src).toContain('{node.narration && started ? (');
+        expect(src).not.toContain('{node.narration ? (');
     });
 });

@@ -429,7 +429,7 @@ export default function CevizMacera({ onExit, userId, userEmail, userAge }: Cevi
 
 const styles = StyleSheet.create({
     mainContainer: { flex: 1, width: '100%', alignItems: 'center', paddingTop: 20 },
-    header: { width: '90%', maxWidth: 800, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#5D4037', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, marginBottom: 20, borderWidth: 2, borderColor: '#8D6E63', elevation: 5, zIndex: 100 },
+    header: { width: '90%', maxWidth: 800, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#5D4037', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 20, marginTop: 56, marginBottom: 20, borderWidth: 2, borderColor: '#8D6E63', elevation: 5, zIndex: 100 },   // marginTop 56: sol üstteki çıkış düğmesi başlığın üstüne binmesin
     headerTitle: { color: '#FFF', fontSize: 24, fontWeight: 'bold', letterSpacing: 1 },
     volumeControl: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 25, paddingHorizontal: 10 },
     contentContainer: { flex: 1, width: '100%', alignItems: 'center', justifyContent: 'center' },
