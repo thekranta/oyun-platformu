@@ -59,7 +59,7 @@ describe('küçük ekran (360x640 dp) ek düzeltmeleri', () => {
 });
 
 describe('seçenek satırı alttan kesilen dokunma oyunları: içerik kayar', () => {
-    it.each(['KafiyeBahcesi', 'SonraNeOlur', 'MinikMarket', 'ResimdeNeOluyor', 'IzDedektifi'])('%s: başlıktan kök kapanışa kadar ScrollView, geri sayım dışarıda', (name) => {
+    it.each(['KafiyeBahcesi', 'SonraNeOlur', 'MinikMarket', 'ResimdeNeOluyor', 'IzDedektifi', 'MevsimBahcesi', 'ManzaraKasifi', 'SakinlesmeBahcesi', 'HangiCalgiCaldi', 'MuzikDuruncaDon', 'KucukAnlatici', 'SanatGozlugu', 'OdaminKrokisi'])('%s: başlıktan kök kapanışa kadar ScrollView, geri sayım dışarıda', (name) => {
         const src = read(`components/${name}.tsx`);
         const scroll = src.indexOf("<ScrollView style={{ flex: 1, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center'");
         expect(scroll).toBeGreaterThan(src.indexOf('<CountdownOverlay'));

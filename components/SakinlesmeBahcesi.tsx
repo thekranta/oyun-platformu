@@ -1,6 +1,6 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
@@ -236,6 +236,8 @@ export default function SakinlesmeBahcesi({ onGameEnd, onExit, childName }: Prop
         />
       )}
 
+      {/* Kısa telefonda (360x640 dp) içerik taşıp alttaki seçenek satırı kesiliyordu: içerik kayar (dokunma oyunu; kısaysa eskisi gibi) */}
+      <ScrollView style={{ flex: 1, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }} showsVerticalScrollIndicator={false} overScrollMode="never" bounces={false}>
       <View style={styles.header}>
         <GameExitButton onPress={onExit ?? (() => {})} />
         <View style={styles.roundBadge}><Text style={styles.roundText}>🫧 {round}/{TOTAL_ROUNDS}</Text></View>
@@ -279,6 +281,7 @@ export default function SakinlesmeBahcesi({ onGameEnd, onExit, childName }: Prop
           })}
         </View>
       </View>
+      </ScrollView>
     </View>
   );
 }

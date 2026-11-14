@@ -1,7 +1,7 @@
 
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Easing, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Easing, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { asset } from '../lib/assetMap';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
@@ -313,6 +313,8 @@ export default function MuzikDuruncaDon({ onGameEnd, onExit, childName }: Props)
         />
       )}
 
+      {/* Kısa telefonda (360x640 dp) içerik taşıp alttaki seçenek satırı kesiliyordu: içerik kayar (dokunma oyunu; kısaysa eskisi gibi) */}
+      <ScrollView style={{ flex: 1, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center' }} showsVerticalScrollIndicator={false} overScrollMode="never" bounces={false}>
       <View style={styles.header}>
         <GameExitButton onPress={onExit ?? (() => {})} />
         <View style={styles.roundBadge}>
@@ -364,6 +366,7 @@ export default function MuzikDuruncaDon({ onGameEnd, onExit, childName }: Props)
           </View>
         )}
       </View>
+      </ScrollView>
     </View>
   );
 }
