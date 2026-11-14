@@ -394,6 +394,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: '4%',
+        paddingLeft: 62,   // sol üstteki çıkış düğmesi tur rozetinin üstüne binmesin
         paddingVertical: '2%',
         backgroundColor: '#FAFAFA',
         borderBottomWidth: 1,
