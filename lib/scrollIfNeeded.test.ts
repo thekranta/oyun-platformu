@@ -57,3 +57,14 @@ describe('küçük ekran (360x640 dp) ek düzeltmeleri', () => {
         expect(read('components/SihirliTuval.tsx')).toContain('screenH * (screenH < 660 ? 0.36 : 0.45)');
     });
 });
+
+describe('seçenek satırı alttan kesilen dokunma oyunları: içerik kayar', () => {
+    it.each(['KafiyeBahcesi', 'SonraNeOlur', 'MinikMarket', 'ResimdeNeOluyor', 'IzDedektifi'])('%s: başlıktan kök kapanışa kadar ScrollView, geri sayım dışarıda', (name) => {
+        const src = read(`components/${name}.tsx`);
+        const scroll = src.indexOf("<ScrollView style={{ flex: 1, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 1, alignItems: 'center'");
+        expect(scroll).toBeGreaterThan(src.indexOf('<CountdownOverlay'));
+        expect(scroll).toBeLessThan(src.indexOf('<View style={styles.header}>'));
+        expect(src).toContain('</ScrollView>');
+        expect(src).toMatch(/import \{[^}]*\bScrollView\b[^}]*\} from 'react-native';/);
+    });
+});
