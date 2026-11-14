@@ -317,6 +317,9 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
     <Modal visible={adult} transparent animationType="fade" onRequestClose={() => setAdult(false)}>
       <View style={styles.overlay}><View style={styles.adult} accessibilityViewIsModal>
         <View style={styles.adultHeader}><Text style={styles.adultTitle}>{t('toyRoom.adultTitle')}</Text><Pressable accessibilityRole="button" accessibilityLabel={t('toyRoom.backToRoom')} onPress={() => setAdult(false)} style={styles.control}><Text style={styles.controlText}>✕</Text></Pressable></View>
+        {/* Başlık sabit, altındaki HER ŞEY tek ScrollView'da: eskiden yalnız oyun listesi kayıyor ve sabit bölümlerden artan yüksekliği alıyordu;
+            küçük telefonda (360x640 dp) liste 0 px, 411x686 dp'de tek satırdı → ebeveyn oyun listesine ulaşamıyordu. */}
+        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator>
         <Text style={styles.adultNote}>{t('toyRoom.adultNote')}</Text>
         {pkg && <View style={styles.pkgCard} accessibilityLabel={t('toyRoom.packageTitle')}>
           <View style={{ flex: 1 }}>
@@ -329,7 +332,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
         </View>}
         <View style={styles.adultActions}><Pressable onPress={() => setCalm(v => !v)} accessibilityRole="button" style={styles.adultButton}><Text>{calm ? t('toyRoom.animationsOn') : t('toyRoom.reduceMotion')}</Text></Pressable><Pressable accessibilityRole="button" onPress={onLogout} style={styles.adultButton}><Text>{t('toyRoom.logout')}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => { setAdult(false); router.push('/gizlilik-ayarlari'); }} style={styles.adultButton}><Text>{t('toyRoom.accountPrivacy')}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => { setAdult(false); router.push('/sorun-bildir'); }} style={styles.adultButton}><Text>{t('toyRoom.reportProblem')}</Text></Pressable></View>
         <TextInput accessibilityLabel={t('toyRoom.searchLabel')} placeholder={t('toyRoom.searchPlaceholder')} value={query} onChangeText={setQuery} style={styles.search}/>
-        <ScrollView keyboardShouldPersistTaps="handled">{filtered.map(g => {
+        {filtered.map(g => {
           const required = requiredVeliTierForGame(g);
           const isLocked = subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, required);
           return <Pressable key={g.id} accessibilityRole="button" onPress={() => {
@@ -339,7 +342,8 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
             <Text style={[styles.gameText, isLocked && styles.gameTextLocked]}>{isLocked ? '🔒' : (GAME_EMOJI[g.id] || '🧩')}  {title(g)}</Text>
             <Text style={isLocked ? styles.lockedHint : undefined}>{isLocked ? t('toyRoom.lockedHint', { tier: TIER_LABELS[required] }) : '▶'}</Text>
           </Pressable>;
-        })}{!filtered.length && <Text style={styles.adultNote}>{t('toyRoom.noGamesFound')}</Text>}</ScrollView>
+        })}{!filtered.length && <Text style={styles.adultNote}>{t('toyRoom.noGamesFound')}</Text>}
+        </ScrollView>
       </View>
       {locked && <Pressable accessibilityLabel={t('toyRoom.lockedClose')} onPress={() => setLocked(null)} style={styles.upsellBackdrop}>
         <Pressable accessibilityViewIsModal onPress={() => {}} style={styles.upsellCard}>
