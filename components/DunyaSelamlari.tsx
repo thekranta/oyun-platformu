@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import ScrollIfNeeded from './ScrollIfNeeded';
 import GameExitButton from './GameExitButton';
 import { Flag, FLAGS } from './WorldFlag';
 import { speak, stopSpeech } from '../services/speechService';
@@ -101,7 +102,7 @@ export default function DunyaSelamlari({ onGameEnd, onExit, childName = 'Küçü
 
     return (
         <DynamicBackground>
-            <View style={styles.container}>
+            <ScrollIfNeeded contentStyle={styles.container}>
                 <View style={styles.header}>
                     <GameExitButton
                         onPress={onExit ?? (() => {})}
@@ -155,7 +156,7 @@ export default function DunyaSelamlari({ onGameEnd, onExit, childName = 'Küçü
                 <Text style={styles.hint}>
                     {allDone ? 'Dünyayı selamladın! 🌏' : 'Bu selamı veren ülkenin bayrağına dokun'}
                 </Text>
-            </View>
+            </ScrollIfNeeded>
 
             {!gameReady && (
                 <CountdownOverlay

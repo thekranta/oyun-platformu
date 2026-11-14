@@ -3,6 +3,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import ScrollIfNeeded from './ScrollIfNeeded';
 import GameExitButton from './GameExitButton';
 import { Flag, FLAGS, FlagSpec } from './WorldFlag';
 import { speak, stopSpeech } from '../services/speechService';
@@ -106,7 +107,7 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
 
     return (
         <DynamicBackground>
-            <View style={styles.container}>
+            <ScrollIfNeeded contentStyle={styles.container}>
                 <View style={styles.header}>
                     <GameExitButton
                         onPress={onExit ?? (() => {})}
@@ -162,7 +163,7 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
                 <Text style={styles.hint}>
                     {allDone ? 'Dünyayı gezdin! 🌏' : 'Yukarıdaki bayrağın aynısına dokun — acele yok'}
                 </Text>
-            </View>
+            </ScrollIfNeeded>
 
             {!gameReady && (
                 <CountdownOverlay
@@ -179,7 +180,7 @@ export default function DunyaBayraklari({ onGameEnd, onExit, childName = 'Küç�
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16, alignItems: 'center', justifyContent: 'center' },
-    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+    header: { flexDirection: 'row', width: '100%', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, paddingLeft: 52 },   // sol 52: sol üstteki çıkış düğmesinin altında kalmasın
     title: { fontSize: 19, fontWeight: 'bold', color: '#263238' },
     countBadge: { backgroundColor: 'rgba(255,255,255,0.85)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
     countText: { fontSize: 14, fontWeight: 'bold', color: '#00796B' },

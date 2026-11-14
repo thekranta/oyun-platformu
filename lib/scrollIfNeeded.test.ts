@@ -1,0 +1,40 @@
+import * as fs from 'fs';
+import * as path from 'path';
+
+/**
+ * Küçük/kısa telefonda (360x640 dp) tek ekran oyunların içeriği taşıyordu (2026-11-14 küçük ekran taraması):
+ *  - Dünya Bayrakları / Selamları / Yapıları-Yiyecekleri (KulturEslestirme) / Bayrak Boya: `container {flex:1, justifyContent:'center'}`,
+ *    içerik uzayınca üst ve alttan kesiliyor, alt satırlara dokunulamıyordu → `ScrollIfNeeded` (kısaysa eskisi gibi ortalı, uzunsa kayar).
+ *  - Miktar/Deniz Avcısı (QuantityComparison): sahne SABİT `height` idi; meyveler satıra sarınca içerik taşıp sayı rozetini kesiyordu →
+ *    `minHeight` + `comparisonArea.flexGrow`.
+ */
+const read = (rel: string) => fs.readFileSync(path.resolve(__dirname, '..', rel), 'utf8');
+
+describe('ScrollIfNeeded kullanan dokunma oyunları', () => {
+    it.each(['DunyaBayraklari', 'DunyaSelamlari', 'KulturEslestirme', 'BayrakBoya'])('%s: içerik ScrollIfNeeded içinde', (name) => {
+        const src = read(`components/${name}.tsx`);
+        expect(src).toContain("import ScrollIfNeeded from './ScrollIfNeeded';");
+        expect(src).toContain('<ScrollIfNeeded contentStyle={styles.container}>');
+        expect(src).toContain('</ScrollIfNeeded>');
+        expect(src).not.toContain('<View style={styles.container}>');
+    });
+
+    it('sarmalayıcı: flex:1 → flexGrow:1 (kısa içerik ortalı kalır, uzun içerik kayar)', () => {
+        const src = read('components/ScrollIfNeeded.tsx');
+        expect(src).toMatch(/const \{ flex: _flex, \.\.\.rest \}/);
+        expect(src).toMatch(/\[rest, \{ flexGrow: 1 \}\]/);
+    });
+});
+
+describe('QuantityComparison sahnesi içerikle büyür', () => {
+    const src = read('components/QuantityComparison.tsx');
+    it('sahne sabit height değil minHeight', () => {
+        expect(src).toMatch(/styles\.stageContainer, \{ width: containerWidth, minHeight: containerHeight \}/);
+        expect(src).not.toMatch(/styles\.stageContainer, \{ width: containerWidth, height: containerHeight \}/);
+    });
+    it('karşılaştırma alanı flex:1 değil flexGrow:1', () => {
+        const block = src.slice(src.indexOf('comparisonArea: {'), src.indexOf('sideArea: {'));
+        expect(block).toMatch(/flexGrow: 1/);
+        expect(block).not.toMatch(/\bflex: 1/);
+    });
+});

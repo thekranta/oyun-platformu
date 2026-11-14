@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import CountdownOverlay from './CountdownOverlay';
 import DynamicBackground from './DynamicBackground';
+import ScrollIfNeeded from './ScrollIfNeeded';
 import ListenButton from './ListenButton';
 import { speak } from '../services/speechService';
 
@@ -151,7 +152,7 @@ export default function KulturEslestirme({ onGameEnd, onExit, childName = 'Küç
     return (
         // Çıkış düğmesini DynamicBackground ekran köşesine koyar (diğer oyunlarla aynı yer); başlık satırı onun sağında başlar.
         <DynamicBackground onExit={onExit}>
-            <View style={styles.container}>
+            <ScrollIfNeeded contentStyle={styles.container}>
                 <View style={styles.header}>
                     <Text style={styles.title}>{title}</Text>
                     <View style={styles.countBadge}>
@@ -203,7 +204,7 @@ export default function KulturEslestirme({ onGameEnd, onExit, childName = 'Küç
                 <Text style={styles.hint}>
                     {allDone ? 'Dünyayı keşfettin! 🌏' : 'Yukarıdakinin aynısına dokun — acele yok'}
                 </Text>
-            </View>
+            </ScrollIfNeeded>
 
             {!gameReady && (
                 <CountdownOverlay

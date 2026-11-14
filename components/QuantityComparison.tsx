@@ -282,7 +282,8 @@ export default function QuantityComparison({ onGameEnd, onExit, childName = 'Ço
             {showConfetti && <ConfettiCannon count={80} origin={{ x: screenWidth / 2, y: 0 }} fadeOut />}
 
             {/* Professional White Stage */}
-            <View style={[styles.stageContainer, { width: containerWidth, height: containerHeight }]}>
+            {/* minHeight (sabit height DEĞİL): dar telefonda (360 dp) meyveler 2-3 satıra sarınca içerik sahneden taşıp sayı rozetini kesiyordu */}
+            <View style={[styles.stageContainer, { width: containerWidth, minHeight: containerHeight }]}>
                 {/* Header */}
                 <View style={styles.header}>
                     <View style={styles.roundBadge}>
@@ -425,7 +426,7 @@ const styles = StyleSheet.create({
     },
 
     comparisonArea: {
-        flex: 1,
+        flexGrow: 1,
         flexDirection: 'row',
         paddingHorizontal: '3%',
         paddingBottom: '2%',
