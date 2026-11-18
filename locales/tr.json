@@ -715,6 +715,7 @@
     "purchaseFailed": "Satın alma sırasında bir hata oluştu.",
     "successWithTier": "Satın alma tamamlandı! Paketiniz: {{tier}}",
     "successPending": "Satın alma tamamlandı! Paketiniz birkaç saniye içinde güncellenecek.",
+    "purchaseDelayed": "Satın alma alındı; paketiniz birkaç dakika içinde açılır. Açılmazsa “Satın alımları geri yükle”ye dokunun.",
     "restoredWithTier": "Önceki satın alımınız bulundu: {{tier}}",
     "restoreNone": "Bu hesaba bağlı aktif bir satın alım bulunamadı.",
     "restoreFailed": "Satın alımlar geri yüklenemedi."

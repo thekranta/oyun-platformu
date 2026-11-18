@@ -1,4 +1,4 @@
-import { isRecurring, periodKey, sortPackages, tierFromProductId, type PackageLike } from './paywall';
+import { isRecurring, periodKey, revenueCatKeyMatchesPlatform, sortPackages, tierFromProductId, type PackageLike } from './paywall';
 
 const pkg = (productId: string, packageType?: string, subscriptionPeriod?: string): PackageLike => ({
     identifier: productId,
@@ -79,5 +79,21 @@ describe('isRecurring', () => {
         expect(isRecurring(pkg('a', 'LIFETIME'))).toBe(false);
         expect(isRecurring(pkg('a', 'MONTHLY'))).toBe(true);
         expect(isRecurring(pkg('a'))).toBe(true);
+    });
+});
+
+describe('revenueCatKeyMatchesPlatform', () => {
+    it('iOS yalnız appl_, Android yalnız goog_ anahtarını kabul eder', () => {
+        expect(revenueCatKeyMatchesPlatform('ios', 'appl_abc')).toBe(true);
+        expect(revenueCatKeyMatchesPlatform('android', 'goog_abc')).toBe(true);
+        expect(revenueCatKeyMatchesPlatform('android', 'appl_abc')).toBe(false);
+        expect(revenueCatKeyMatchesPlatform('ios', 'goog_abc')).toBe(false);
+    });
+
+    it('gizli/eksik anahtar ve web reddedilir', () => {
+        expect(revenueCatKeyMatchesPlatform('android', 'sk_abc')).toBe(false);
+        expect(revenueCatKeyMatchesPlatform('ios', '')).toBe(false);
+        expect(revenueCatKeyMatchesPlatform('ios', undefined)).toBe(false);
+        expect(revenueCatKeyMatchesPlatform('web', 'appl_abc')).toBe(false);
     });
 });

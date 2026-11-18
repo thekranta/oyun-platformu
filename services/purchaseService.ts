@@ -22,6 +22,7 @@ import Purchases, {
   PurchasesOffering,
   PurchasesPackage,
 } from 'react-native-purchases';
+import { revenueCatKeyMatchesPlatform } from '../lib/paywall';
 
 // NOT: web paketine bu dosya GİRMEZ — Metro web'de purchaseService.web.ts'i seçer (react-native-purchases
 // tarayıcıda ~1,2 MB tutuyordu). Buraya dışa aktarım ekleyince web dosyasına da ekle; parity testi sınar.
@@ -33,13 +34,23 @@ const ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
 let configured = false;
 let currentUser: string | null = null;
 
+let warnedBadKey = false;
+
+/** Bu platformun anahtarı; biçimi platforma uymuyorsa (iOS 'appl_', Android 'goog_') undefined — SDK başlatılmaz. */
 function currentApiKey(): string | undefined {
-  if (Platform.OS === 'ios') return IOS_API_KEY;
-  if (Platform.OS === 'android') return ANDROID_API_KEY;
-  return undefined;
+  const key = Platform.OS === 'ios' ? IOS_API_KEY : Platform.OS === 'android' ? ANDROID_API_KEY : undefined;
+  if (!key) return undefined;
+  if (!revenueCatKeyMatchesPlatform(Platform.OS, key)) {
+    if (__DEV__ && !warnedBadKey) {
+      warnedBadKey = true;
+      console.warn(`[purchase] RevenueCat anahtarı ${Platform.OS} için geçersiz biçimde (iOS 'appl_', Android 'goog_' ile başlamalı); satın alma kapalı.`);
+    }
+    return undefined;
+  }
+  return key;
 }
 
-/** API anahtarı tanımlı mı (RevenueCat kurulumu tamamlandı mı) — web'de her zaman false. */
+/** API anahtarı tanımlı ve platforma uygun mu (RevenueCat kurulumu tamamlandı mı) — web'de her zaman false. */
 export function isPurchasesAvailable(): boolean {
   return Platform.OS !== 'web' && !!currentApiKey();
 }

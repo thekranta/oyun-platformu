@@ -71,7 +71,10 @@ export function useAuth({
    * event objesi gecirebilir; bu yuzden yalnizca string arg kabul edilir.
    */
   const girisYap = async (emailArg?: unknown, passwordArg?: unknown) => {
-    const loginEmail = (typeof emailArg === 'string' ? emailArg : email).trim();
+    // E-posta KÜÇÜK HARFE çevrilir: profiles/oyun_skorlari RLS'i `email = auth.email()` ile karşılaştırır ve
+    // kayıtlar küçük harfli yazılır (app/signup.tsx). 'Ayse@Gmail.com' yazan/otomatik dolduran veli profilini
+    // bulamıyor, çocuk odası isimsiz + ücretsiz açılıyor, sonuçlar RLS'e takılıyordu.
+    const loginEmail = (typeof emailArg === 'string' ? emailArg : email).trim().toLowerCase();
     const loginPassword = typeof passwordArg === 'string' ? passwordArg : password;
 
     if (loginEmail === '' || loginPassword.trim() === '') {
@@ -98,15 +101,17 @@ export function useAuth({
       }
 
       if (data.user) {
+        // Sunucunun kanonik adresi (RLS'in `auth.email()` ile gördüğü değer) varsa o; yoksa normalleştirilmiş girdi.
+        const canonicalEmail = data.user.email || loginEmail;
         // Form kendi state'ini tuttugu icin App'teki email'i burada senkronla
         // (oyun sonuclari bu email ile kaydediliyor).
-        setEmail(loginEmail);
+        setEmail(canonicalEmail);
 
         // Profil bilgisini çek
         const fetchProfile = () => supabase
           .from('profiles')
           .select('child_name, child_age_months, subscription_tier, package_expires_at')
-          .eq('email', loginEmail)
+          .eq('email', canonicalEmail)
           .single();
         let { data: profiles } = await fetchProfile();
         if (!profiles && (await ensureProfileFromMetadata(data.user))) {
@@ -138,7 +143,7 @@ export function useAuth({
   };
 
   const sifremiUnuttum = async (emailArg?: unknown) => {
-    const resetEmail = (typeof emailArg === 'string' ? emailArg : email).trim();
+    const resetEmail = (typeof emailArg === 'string' ? emailArg : email).trim().toLowerCase();
     if (resetEmail === '') {
       showToast('Lütfen şifre sıfırlama bağlantısı için e-postanızı giriniz.', 'error');
       return;

@@ -721,6 +721,7 @@
     "purchaseFailed": "Something went wrong with the purchase.",
     "successWithTier": "Purchase complete! Your plan: {{tier}}",
     "successPending": "Purchase complete! Your plan will update in a few seconds.",
+    "purchaseDelayed": "Purchase received; your plan will open within a few minutes. If it doesn't, tap “Restore purchases”.",
     "restoredWithTier": "We found your earlier purchase: {{tier}}",
     "restoreNone": "No active purchase is linked to this account.",
     "restoreFailed": "Purchases could not be restored."

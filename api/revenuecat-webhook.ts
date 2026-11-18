@@ -55,6 +55,21 @@ function highestTier(entitlementIds: string[], order: string[]): string | null {
   return null;
 }
 
+/** Bitiş zamanları aynı an mı? Veritabanı ISO metni farklı biçimde döndürebilir (+00:00 / Z), anlık değer kıyaslanır. */
+function sameInstant(a: string | null | undefined, b: string | null): boolean {
+  if (a == null || b == null) return a == null && b == null;
+  return Date.parse(a) === Date.parse(b);
+}
+
+/** Güncellemeden dönen HER satırda paket ve bitiş gerçekten yazılan değer mi? */
+export function rowsMatch(
+  rows: ReadonlyArray<{ subscription_tier?: string | null; package_expires_at?: string | null }>,
+  tier: string,
+  expiresAt: string | null,
+): boolean {
+  return rows.every((r) => r.subscription_tier === tier && sameInstant(r.package_expires_at, expiresAt));
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -74,7 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Test (sandbox) satin alimlari uretimde paket ACMAZ: iOS sandbox hesabi olan herkes sandbox satin alma yapabilir ve
-  // bu olaylar da webhook'a gelir. Magaza oncesi denemelerde Vercel'de REVENUECAT_ALLOW_SANDBOX=1 ile acilir, yayin oncesi kaldirilir.
+  // bu olaylar da webhook'a gelir. Magaza oncesi denemelerde Vercel'de REVENUECAT_ALLOW_SANDBOX=1 ile acilir. Apple/Google incelemecileri sandbox'ta satin alir: bayrak magaza INCELEMESI BITENE KADAR acik kalir, onaydan sonra kaldirilir.
   if (event.environment === 'SANDBOX' && process.env.REVENUECAT_ALLOW_SANDBOX !== '1') {
     return res.status(200).json({ ok: true, ignored: 'sandbox' });
   }
@@ -90,11 +105,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // süre ya da elle atanmış süresiz paket (bitiş NULL) mağaza aboneliğinin bitmesiyle silinmez.
     const cutoff = new Date((typeof event.expiration_at_ms === 'number' ? event.expiration_at_ms : Date.now()) + 60_000).toISOString();
     const [profileRes, teacherRes] = await Promise.all([
-      supabaseAdmin.from('profiles').update({ subscription_tier: 'free', package_expires_at: null }).eq('email', email).lte('package_expires_at', cutoff).select('email'),
-      supabaseAdmin.from('teachers').update({ subscription_tier: 'free', package_expires_at: null }).eq('email', email).lte('package_expires_at', cutoff).select('email'),
+      supabaseAdmin.from('profiles').update({ subscription_tier: 'free', package_expires_at: null }).eq('email', email).lte('package_expires_at', cutoff).select('email, subscription_tier, package_expires_at'),
+      supabaseAdmin.from('teachers').update({ subscription_tier: 'free', package_expires_at: null }).eq('email', email).lte('package_expires_at', cutoff).select('email, subscription_tier, package_expires_at'),
     ]);
-    const downgraded = (profileRes.data?.length || 0) + (teacherRes.data?.length || 0);
-    return res.status(200).json({ ok: true, downgraded: downgraded > 0 });
+    if (profileRes.error || teacherRes.error) {
+      console.error('revenuecat-webhook: süre-doldu sıfırlaması hatası', profileRes.error || teacherRes.error);
+      return res.status(500).json({ error: 'update_failed' });
+    }
+    const rows = [...(profileRes.data || []), ...(teacherRes.data || [])];
+    // Satır dönmesi yazının tuttuğunu GÖSTERMEZ: veritabanı tetikleyicisi (lock_tier_columns) değeri eski haline
+    // zorlarsa da satır döner. Geri dönen değere bakılır; tutmuyorsa sessizce "ok" denmez (RevenueCat yeniden dener).
+    if (!rowsMatch(rows, 'free', null)) {
+      console.error(`revenuecat-webhook: ${email} icin sure-doldu sifirlamasi veritabanina YANSIMADI (lock_tier_columns service_role istisnasi eksik olabilir: fix_lock_tier_service_role.sql)`, rows);
+      return res.status(500).json({ error: 'tier_not_applied' });
+    }
+    return res.status(200).json({ ok: true, downgraded: rows.length > 0 });
   }
 
   if (!GRANT_EVENTS.has(event.type)) {
@@ -133,7 +158,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .from(table)
     .update({ subscription_tier: tier, package_started_at: new Date().toISOString(), package_expires_at: expiresAt })
     .eq('email', email)
-    .select('email');
+    .select('email, subscription_tier, package_expires_at');
 
   if (error) {
     console.error('revenuecat-webhook: güncelleme hatası', error);
@@ -142,6 +167,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!data || data.length === 0) {
     console.warn(`revenuecat-webhook: ${email} için ${table} tablosunda satır bulunamadı`);
     return res.status(200).json({ ok: true, skipped: 'no_matching_row' });
+  }
+  // Geri okunan değer yazılanla aynı mı? Tetikleyici paketi eski haline zorladıysa satır yine döner ama paket
+  // açılmamıştır: para ödeyen kullanıcı ücretsiz kalmasın diye 5xx dönülür, RevenueCat olayı yeniden gönderir.
+  if (!rowsMatch(data, tier, expiresAt)) {
+    console.error(`revenuecat-webhook: ${email} icin ${table}.${tier} veritabanina YANSIMADI (lock_tier_columns service_role istisnasi eksik olabilir: fix_lock_tier_service_role.sql)`, data);
+    return res.status(500).json({ error: 'tier_not_applied' });
   }
   return res.status(200).json({ ok: true, table, tier });
 }

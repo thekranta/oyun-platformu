@@ -145,8 +145,10 @@ export default function TeacherDashboardPage() {
         setLoading(true);
         try {
             // 1. Supabase Auth ile giris
+            // E-posta küçük harfe çevrilir (kayıtlı hesaplar küçük harfli). Öğretmen satırı e-postayla DEĞİL
+            // user_id ile okunur (aşağıda); kayıt satırındaki harf büyüklüğü girişi etkilemez.
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                email: email.trim(),
+                email: email.trim().toLowerCase(),
                 password,
             });
 
@@ -200,7 +202,7 @@ export default function TeacherDashboardPage() {
         }
         try {
             rememberResetReturn('/teacher-dashboard');
-            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
                 redirectTo: PASSWORD_RESET_REDIRECT,
             });
             if (error) throw error;

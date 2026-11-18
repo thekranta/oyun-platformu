@@ -97,6 +97,27 @@ export default function PaketSatinAl() {
         if (email) waitForTier(kind, email, tier).then(() => emitPackageChanged());
     };
 
+    // Son satın almanın sırası: eski bir bekleme yeni satın almanın mesajını ezmesin.
+    const purchaseSeq = useRef(0);
+
+    /**
+     * Mağaza "ödendi" dese de paket ancak webhook veritabanına yazınca açılır. Bu yüzden "tamamlandı, paketiniz: X"
+     * yalnız veritabanında paket görülünce söylenir; bekleme süresi dolarsa "başarılı" DENMEZ, satın almanın alındığı
+     * ve paketin birkaç dakikada açılacağı (açılmazsa geri yükle) anlatılır.
+     */
+    const confirmPurchasedTier = (tier: string) => {
+        const seq = ++purchaseSeq.current;
+        emitPackageChanged();
+        const email = emailRef.current;
+        if (!email) { setBanner({ kind: 'error', text: t('paywall.purchaseDelayed') }); return; }
+        waitForTier(kind, email, tier).then((pkg) => {
+            emitPackageChanged();
+            if (seq !== purchaseSeq.current) return;
+            if (pkg?.tier === tier) setBanner({ kind: 'success', text: t('paywall.successWithTier', { tier: tierName(tier) }) });
+            else setBanner({ kind: 'error', text: t('paywall.purchaseDelayed') });
+        });
+    };
+
     const onPurchase = async (identifier: string) => {
         const pkg = rawPackages.current.find((p) => p.identifier === identifier);
         if (!pkg) return;
@@ -106,8 +127,9 @@ export default function PaketSatinAl() {
         setPurchasingId(null);
         if (result.ok) {
             const tier = tierFrom(result.customerInfo);
-            setBanner({ kind: 'success', text: tier ? t('paywall.successWithTier', { tier: tierName(tier) }) : t('paywall.successPending') });
-            if (tier) syncInBackground(tier);
+            // Veritabanı onayı gelene kadar "birkaç saniye içinde güncellenecek" (kesin başarı değil).
+            setBanner({ kind: 'success', text: t('paywall.successPending') });
+            if (tier) confirmPurchasedTier(tier);
         } else if (!result.cancelled) {
             if (result.message) console.warn('[paywall] satın alma hatası', result.message);
             setBanner({ kind: 'error', text: t('paywall.purchaseFailed') });

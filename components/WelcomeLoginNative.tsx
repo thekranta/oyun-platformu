@@ -47,7 +47,9 @@ function WelcomeLoginNative(p: WelcomeLoginProps) {
   }, []);
 
   const keyboardOpen = kbHeight > 0;
-  const submit = () => { if (!p.isLoggingIn) p.onLogin(emailRef.current.trim(), passwordRef.current); };
+  // E-posta küçük harfe çevrilir (RLS `email = auth.email()`; kayıtlar küçük harfli): 'Ayse@Gmail.com' da profilini bulur.
+  const normEmail = () => emailRef.current.trim().toLowerCase();
+  const submit = () => { if (!p.isLoggingIn) p.onLogin(normEmail(), passwordRef.current); };
 
   const adults: { label: string; onPress: () => void; bg: string; line: string; ink: string }[] = [
     { label: en ? 'Parent panel' : 'Veli paneli', onPress: p.onVeli, bg: '#eef3e9', line: '#d8e3d7', ink: '#415e50' },
@@ -131,7 +133,7 @@ function WelcomeLoginNative(p: WelcomeLoginProps) {
 
             <View style={s.labelRow}>
               <Text style={[s.label, s.labelInRow]}>{en ? 'Password' : 'Şifre'}</Text>
-              <TouchableOpacity onPress={() => p.onForgot(emailRef.current.trim())} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <TouchableOpacity onPress={() => p.onForgot(normEmail())} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Text style={s.forgot}>{t('login.forgotPassword')}</Text>
               </TouchableOpacity>
             </View>
@@ -216,8 +218,10 @@ const s = StyleSheet.create({
   langText: { fontSize: 13, fontWeight: '700', color: '#64796e' },
   langTextActive: { color: C.ink },
 
-  hero: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: 96, marginTop: 6, marginBottom: 6, overflow: 'hidden' },
-  heroHidden: { height: 0, marginTop: 0, marginBottom: 0 },
+  // minHeight (sabit height değil): büyük yazı tipinde başlık 96 dp'yi aşınca kesilmesin, karşılama büyüsün.
+  // overflow:hidden klavye açıkken yüksekliği 0'a indirmek için kalır.
+  hero: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 96, marginTop: 6, marginBottom: 6, overflow: 'hidden' },
+  heroHidden: { height: 0, minHeight: 0, marginTop: 0, marginBottom: 0 },
   heroText: { flex: 1, paddingRight: 8 },
   headline: { fontSize: 27, fontWeight: '800', letterSpacing: -1, lineHeight: 33, color: C.ink },
   headlineEm: { color: C.coral },

@@ -96,3 +96,15 @@ export function sortPackages<T extends PackageLike>(packages: readonly T[], kind
 export function isRecurring(pkg: PackageLike): boolean {
     return periodKey(pkg) !== 'lifetime';
 }
+
+/**
+ * RevenueCat genel SDK anahtarı bu platforma mı ait? iOS anahtarı `appl_`, Android anahtarı `goog_` ile başlar.
+ * Yanlış/karışık anahtarla (ör. Android derlemesine iOS anahtarı ya da gizli `sk_` anahtarı) SDK kurulursa satın alma
+ * ekranı paket bulamaz ya da hata verir; bu durumda SDK hiç başlatılmaz, ekran "kullanılamıyor" der.
+ */
+export function revenueCatKeyMatchesPlatform(os: string, key: string | null | undefined): boolean {
+    if (!key) return false;
+    if (os === 'ios') return key.startsWith('appl_');
+    if (os === 'android') return key.startsWith('goog_');
+    return false;
+}

@@ -92,7 +92,8 @@ export default function VeliDashboardPage() {
 
         setLoading(true);
         try {
-            const emailValue = email.trim();
+            // Küçük harf: profiles RLS'i `email = auth.email()` ile karşılaştırır, kayıtlar küçük harfli (signup.tsx).
+            const emailValue = email.trim().toLowerCase();
             const { data: signIn, error } = await supabase.auth.signInWithPassword({
                 email: emailValue,
                 password,
@@ -109,7 +110,8 @@ export default function VeliDashboardPage() {
             }
             // Kayıt, e-posta doğrulamasından önce yapıldıysa profil ilk girişte oluşturulur.
             await ensureProfileFromMetadata(signIn?.user);
-            await loadProfile(emailValue);
+            // Profil, sunucunun kanonik adresiyle aranır (yoksa normalleştirilmiş girdiyle).
+            await loadProfile(signIn?.user?.email || emailValue);
         } catch (error) {
             setNotice(t('veliAuth.networkError'));
         } finally {
@@ -123,7 +125,7 @@ export default function VeliDashboardPage() {
             return;
         }
         try {
-            const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+            const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
                 redirectTo: PASSWORD_RESET_REDIRECT,
             });
             if (error) throw error;
