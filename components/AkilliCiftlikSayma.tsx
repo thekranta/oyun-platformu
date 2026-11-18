@@ -7,6 +7,7 @@ import GameExitButton from './GameExitButton';
 import { useAdaptiveDifficulty } from '../lib/useAdaptiveDifficulty';
 import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { buildNumberOptions } from '../lib/answerOptions';
 
 // ============================================
 // 📈 AKILLI ÇİFTLİK SAYMA — "Çiftlikte Sayalım"ın UYARLANIR (adaptif) zorluk
@@ -29,23 +30,13 @@ const RANGE_BY_DIFF: Record<number, number> = {
   1: 3, 2: 4, 3: 5, 4: 7, 5: 9,
 };
 
-const buildOptions = (correct: number, cap: number): number[] => {
-  const set = new Set<number>([correct]);
-  let d = 1;
-  while (set.size < 3) {
-    if (correct - d >= 1) set.add(correct - d);
-    if (set.size < 3 && correct + d <= cap) set.add(correct + d);
-    d++;
-    if (d > cap) break;
-  }
-  return Array.from(set).sort((a, b) => a - b);
-};
-
 function buildRound(diff: number): { animal: string; count: number; options: number[] } {
   const cap = RANGE_BY_DIFF[diff] || 5;
   const count = 1 + Math.floor(Math.random() * cap);
   const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-  return { animal, count, options: buildOptions(count, cap) };
+  // Seçenekler tur kurulurken BİR KEZ, karışık sırada üretilir (küçükten büyüğe sıralamak doğru cevabı ~%70 ortadaki
+  // düğmeye koyuyordu). Aralık zorluğun azami sayısı (cap) olarak kalır: çeldiriciler yine cevaba en yakın sayılardır.
+  return { animal, count, options: buildNumberOptions(count, { min: 1, max: cap }) };
 }
 
 interface Props {

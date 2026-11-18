@@ -19,7 +19,9 @@ const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher.
 const TOTAL_ROUNDS = 10;
 
 const FLOATS = ['🍎', '🍂', '🦆', '🏀', '🚤', '🧽', '🪵', '🛟', '🍊', '🪶'];
-const SINKS = ['🪨', '🔑', '🥄', '🔩', '⚓', '🍶', '🪙', '🔨', '🧱'];
+// 🍶 (şişe) çıkarıldı: boş şişe yüzer, "yüzer" diyen bilgili çocuk hata sayılıyordu. Yerine açıkça batan,
+// Emoji 1.0 bir demir alet (🔧) kondu (diğer batanlarla tutarlı: anahtar, somun, çekiç). Belirsiz (içi boş/hava dolu) nesne girmez.
+const SINKS = ['🪨', '🔑', '🥄', '🔩', '⚓', '🔧', '🪙', '🔨', '🧱'];
 
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 

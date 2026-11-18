@@ -28,24 +28,68 @@ interface Props {
 }
 
 type StripeFlag = Extract<FlagSpec, { render: 'v' | 'h' }>;
-const STRIPE_FLAGS = FLAGS.filter((f): f is StripeFlag => f.render === 'v' || f.render === 'h');
+export const STRIPE_FLAGS = FLAGS.filter((f): f is StripeFlag => f.render === 'v' || f.render === 'h');
 const ROUNDS = 6;
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
-const EXTRA_COLORS = ['#000000', '#ffffff', '#0055A4', '#EF4135', '#FCD116', '#009246', '#7E57C2', '#FF9800'];
+export const EXTRA_COLORS = ['#000000', '#ffffff', '#0055A4', '#EF4135', '#FCD116', '#009246', '#7E57C2', '#FF9800'];
 
-const shuffle = <T,>(arr: T[]): T[] => {
+// Boyama başarısı BİREBİR hex eşitliğiyle ölçülür (fills[i] === spec.colors[i]). Palete katılan ek renk
+// bayrağın kendi renginin neredeyse aynısıysa (#009246 / İtalya #008C45, #EF4135 / Avusturya #ED2939)
+// çocuk "doğru" rengi seçip bayrağı bitiremez, üstelik hata sayılırdı. Yakın tonu "aynı say" yolu
+// kırmızı/turuncu gibi gerçekten yanlış renkleri doğru sayma riski taşır; bu yüzden ek renkler
+// bayrak renklerinden gözle AYIRT EDİLİR uzaklıkta seçilir ve eşitlik birebir kalır.
+// Uzaklık CIE Lab ΔE76 (algısal): 45 ve üstü "açıkça başka renk". 45'te mevcut 19 çizgili bayrağın hepsinde
+// havuz ihtiyaçtan en az 1 renk fazla kalıyor (ölçüm: lib/icerikDuzeltmeleriB.test.ts).
+export const MIN_EXTRA_DISTANCE = 45;
+
+const hexToRgb = (hex: string): [number, number, number] => {
+    let h = hex.replace('#', '');
+    if (h.length === 3) h = h.split('').map(ch => ch + ch).join('');
+    return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+};
+
+// sRGB -> CIE Lab (D65). Küçük ve bağımlılıksız; yalnız renk uzaklığı için.
+const hexToLab = (hex: string): [number, number, number] => {
+    const [r, g, b] = hexToRgb(hex).map(v => {
+        const c = v / 255;
+        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    });
+    const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    const x = f((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047);
+    const y = f(0.2126 * r + 0.7152 * g + 0.0722 * b);
+    const z = f((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883);
+    return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
+};
+
+export function colorDistance(a: string, b: string): number {
+    const [l1, a1, b1] = hexToLab(a);
+    const [l2, a2, b2] = hexToLab(b);
+    return Math.hypot(l1 - l2, a1 - a2, b1 - b2);
+}
+
+const shuffle = <T,>(arr: T[], rng: () => number = Math.random): T[] => {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
+        const j = Math.floor(rng() * (i + 1));
         [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
 };
 
-function buildPalette(colors: string[]): string[] {
+// Palet = bayrağın kendi renkleri + ek renkler (toplam en az 5 düğme). Ek renkler yalnız bayrak
+// renklerinin hepsinden MIN_EXTRA_DISTANCE kadar uzak olanlardan seçilir. Havuz yetmezse (çok renkli yeni
+// bir bayrak eklenirse) palet boyutu sabit kalsın diye en uzaktan başlayarak doldurulur; birebir aynı
+// renk ASLA eklenmez (aynı anahtarlı çift düğme olurdu). Sonsuz döngü yok: tek geçişli süzme + sıralama.
+export function buildPalette(colors: string[], rng: () => number = Math.random): string[] {
     const uniq = Array.from(new Set(colors));
-    const extras = shuffle(EXTRA_COLORS.filter(c => !uniq.includes(c))).slice(0, Math.max(1, 5 - uniq.length));
-    return shuffle(Array.from(new Set([...uniq, ...extras])));
+    const taken = new Set(uniq.map(c => c.toLowerCase()));
+    const scored = EXTRA_COLORS
+        .filter(c => !taken.has(c.toLowerCase()))
+        .map(c => ({ c, d: Math.min(...uniq.map(u => colorDistance(c, u))) }));
+    const far = shuffle(scored.filter(s => s.d >= MIN_EXTRA_DISTANCE), rng).map(s => s.c);
+    const near = scored.filter(s => s.d < MIN_EXTRA_DISTANCE).sort((x, y) => y.d - x.d).map(s => s.c);
+    const extras = [...far, ...near].slice(0, Math.max(1, 5 - uniq.length));
+    return shuffle([...uniq, ...extras], rng);
 }
 
 export default function BayrakBoya({ onGameEnd, onExit, childName = 'Küçük Kaşif' }: Props) {
@@ -54,8 +98,11 @@ export default function BayrakBoya({ onGameEnd, onExit, childName = 'Küçük Ka
     const [round, setRound] = useState(0);
     const spec = flags[round];
     const [fills, setFills] = useState<(string | null)[]>(() => spec.colors.map(() => null));
-    const [palette, setPalette] = useState<string[]>(() => buildPalette(spec.colors));
-    const [selected, setSelected] = useState<string>(() => buildPalette(spec.colors)[0]);
+    // Palet ve ilk seçili renk TEK paletten gelir: eskiden iki ayrı buildPalette çağrısı vardı, ilk seçili renk
+    // (ek renkse) ekrandaki paletin dışında kalabiliyordu.
+    const [initialPalette] = useState<string[]>(() => buildPalette(spec.colors));
+    const [palette, setPalette] = useState<string[]>(initialPalette);
+    const [selected, setSelected] = useState<string>(initialPalette[0]);
     const [solved, setSolved] = useState(false);
     const [gameReady, setGameReady] = useState(false);
 

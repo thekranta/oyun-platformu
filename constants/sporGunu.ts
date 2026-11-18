@@ -35,6 +35,17 @@ export const HEARTBEAT: Record<Intensity, 'kalp-yavas' | 'kalp-hizli'> = {
   hizli: 'kalp-hizli',
 };
 
+/**
+ * Bir turda sunulacak etkinlikler. Neden-sonuç turunda ("Kalbin neden hızlı attı?") yalnız kalbi gerçekten
+ * hızlandıran (HEARTBEAT = kalp-hizli) hareketler sunulur: hafif yürüyüşte kalp YAVAŞ çalıyordu, hemen ardından
+ * "neden hızlı attı?" diye sormak çocuğa kendi duyduğuyla çelişen bir soru soruyordu. Beden turlarında (puansız,
+ * öznel kartlar) üç yoğunluk da sunulur. Karar HEARTBEAT eşlemesinden türer: eşleme değişirse bu da onunla gider.
+ */
+export function activitiesFor(place: Place | null, reason: boolean): Activity[] {
+  if (!place) return [];
+  return ACTIVITIES.filter((a) => a.place === place && (!reason || HEARTBEAT[a.intensity] === 'kalp-hizli'));
+}
+
 export interface BodyCard { id: string; emoji: string; say: string }
 
 /** "Bedenin ne dedi?" — öznel, doğru/yanlış yok (PDF 48-60 ay: yoruldum, kalbim hızlı atıyor, terledim). */

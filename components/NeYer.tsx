@@ -17,12 +17,22 @@ const USE_NATIVE = Platform.OS !== 'web';
 const HAPPY_VOICE = 'Speak in Turkish like a cheerful, loving preschool teacher. Warm and encouraging.';
 const TOTAL_ROUNDS = 8;
 
-const PAIRS = [
-  { a: '🐰', f: '🥕' }, { a: '🐵', f: '🍌' }, { a: '🐱', f: '🐟' }, { a: '🐶', f: '🦴' },
-  { a: '🐻', f: '🍯' }, { a: '🐭', f: '🧀' }, { a: '🐴', f: '🌾' }, { a: '🐼', f: '🎋' },
-  { a: '🐨', f: '🍃' }, { a: '🐷', f: '🌽' },
+// `wrong`: o hayvan için KESİN YANLIŞ, elle seçilmiş çeldirici havuzu. Çeldirici eskiden 9 yiyecekten rastgele
+// geliyordu; bu yüzden geçerli yiyecek de çıkabiliyordu (at -> havuç/mısır, tavşan -> yaprak, fare -> mısır/buğday,
+// maymun -> havuç/mısır, domuz -> havuç/muz) ve bilgili çocuk "hata" sayılıyordu. Havuza yalnız o hayvanın
+// bilinen yiyecekleri arasında OLMAYAN öğeler girer; her havuzda en az 2 öğe vardır (lib/icerikDuzeltmeleriA.test.ts).
+const PAIRS: { a: string; f: string; wrong: string[] }[] = [
+  { a: '🐰', f: '🥕', wrong: ['🐟', '🦴', '🧀', '🍯'] },
+  { a: '🐵', f: '🍌', wrong: ['🐟', '🦴', '🧀'] },
+  { a: '🐱', f: '🐟', wrong: ['🥕', '🍌', '🎋', '🍯'] },
+  { a: '🐶', f: '🦴', wrong: ['🎋', '🍃'] },
+  { a: '🐻', f: '🍯', wrong: ['🧀', '🦴'] },
+  { a: '🐭', f: '🧀', wrong: ['🐟', '🦴', '🎋'] },
+  { a: '🐴', f: '🌾', wrong: ['🐟', '🦴', '🧀', '🎋'] },
+  { a: '🐼', f: '🎋', wrong: ['🐟', '🦴', '🧀'] },
+  { a: '🐨', f: '🍃', wrong: ['🐟', '🦴', '🧀', '🥕', '🍌'] },
+  { a: '🐷', f: '🌽', wrong: ['🎋', '🦴'] },
 ];
-const ALL_FOODS = PAIRS.map((p) => p.f);
 
 const shuffle = <T,>(arr: T[]): T[] => {
   const a = [...arr];
@@ -67,7 +77,8 @@ export default function NeYer({ onGameEnd, onExit, childName }: Props) {
     const pool = PAIRS.filter((x) => x.a !== prevRef.current);
     const cur = pool[Math.floor(Math.random() * pool.length)];
     prevRef.current = cur.a;
-    const distract = shuffle(ALL_FOODS.filter((f) => f !== cur.f)).slice(0, 2);
+    // Çeldiriciler yalnız bu hayvanın kesin yanlış havuzundan (yeniden çekme döngüsü yok; havuz kısaysa seçenek azalır, geçerli yiyecek asla karışmaz).
+    const distract = shuffle(cur.wrong).slice(0, 2);
     setPair(cur);
     setOptions(shuffle([cur.f, ...distract]));
     setLocked(false);

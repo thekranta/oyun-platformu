@@ -2,7 +2,7 @@ import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Easing, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { ACTIVITIES, BODY_CARDS, HEARTBEAT, REASON_CARDS, ROUND_PLAN, SPOR_KLIPLER as K, type Activity, type Intensity, type Place } from '../constants/sporGunu';
+import { activitiesFor, BODY_CARDS, HEARTBEAT, REASON_CARDS, ROUND_PLAN, SPOR_KLIPLER as K, type Activity, type Intensity, type Place } from '../constants/sporGunu';
 import { asset } from '../lib/assetMap';
 import { useRoundGame, type RoundGameEnd } from '../lib/useRoundGame';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
@@ -293,7 +293,8 @@ export default function SporGunu({ onGameEnd, onExit, childName }: Props) {
   };
 
   const cardW = Math.min(112, Math.floor((Math.min(SCREEN_W, 440) - 24 - 24) / 3));
-  const list = ACTIVITIES.filter((a) => a.place === place);
+  // Neden-sonuç turunda hafif yürüyüş sunulmaz (kalp yavaş çalar, ardından "neden hızlı attı?" çelişir).
+  const list = activitiesFor(place, plan.reason);
   const bounceY = bounceAnim.interpolate({ inputRange: [0, 1], outputRange: [0, activity?.intensity === 'hafif' ? -10 : activity?.intensity === 'orta' ? -24 : -34] });
   const barW = progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 

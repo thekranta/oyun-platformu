@@ -6,6 +6,7 @@ import CountdownOverlay from './CountdownOverlay';
 import GameExitButton from './GameExitButton';
 import { speak, speakThenWait } from '../services/speechService';
 import ListenButton from './ListenButton';
+import { buildNumberOptions } from '../lib/answerOptions';
 
 // ============================================
 // 🐔 ÇİFTLİKTE SAYALIM - Sayma & sayı-nicelik (Matematik/MAB.1)
@@ -20,18 +21,6 @@ const TOTAL_ROUNDS = 8;
 const ANIMALS = ['🐔', '🐑', '🐄', '🐷', '🐰', '🐤', '🐥'];
 
 const maxCount = (round: number) => (round <= 3 ? 3 : round <= 6 ? 4 : 5);
-
-const buildOptions = (correct: number, cap: number): number[] => {
-  const set = new Set<number>([correct]);
-  let d = 1;
-  while (set.size < 3) {
-    if (correct - d >= 1) set.add(correct - d);
-    if (set.size < 3 && correct + d <= cap) set.add(correct + d);
-    d++;
-    if (d > cap) break;
-  }
-  return Array.from(set).sort((a, b) => a - b);
-};
 
 interface Props {
   onGameEnd: (
@@ -74,7 +63,9 @@ export default function CiftlikteSayalim({ onGameEnd, onExit, childName }: Props
     const c = 1 + Math.floor(Math.random() * cap);
     setAnimal(ANIMALS[Math.floor(Math.random() * ANIMALS.length)]);
     setCount(c);
-    setOptions(buildOptions(c, cap));
+    // Seçenekler tur başında BİR KEZ, karışık sırada üretilir (küçükten büyüğe sıralamak doğru cevabı ~%45 ortadaki
+    // düğmeye koyuyordu). Aralık turun azami sayısı (cap) olarak kalır: çeldiriciler yine cevaba en yakın sayılardır.
+    setOptions(buildNumberOptions(c, { min: 1, max: cap }));
     setLocked(false);
     setWrong(null);
     penBounce.setValue(0.85);

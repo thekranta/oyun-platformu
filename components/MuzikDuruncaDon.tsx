@@ -28,6 +28,9 @@ const DANCE_MIN_MS = 3000;
 const DANCE_RANGE_MS = 3000;
 // Müzik durduktan sonra çocuğun DON'a basması için tanınan süre.
 const FREEZE_WINDOW_MS = 3500;
+// Aynı turda üst üste bu kadar donma penceresi boş geçerse (çocuk DON'a hiç basmadı) tur sonsuza dek tekrar etmez:
+// sıradaki tura geçilir (son turdaysa oyun biter). Eskiden her kaçırmada aynı tur yeniden başlıyor ve hata +1 oluyordu.
+const MAX_FREEZE_MISSES = 3;
 
 // Canlı, neşeli şarkılardan oluşan havuz (MuzikCalar'daki mevcut varlıklar).
 const SONG_POOL = [
@@ -88,6 +91,8 @@ export default function MuzikDuruncaDon({ onGameEnd, onExit, childName }: Props)
   const finishedRef = useRef(false);
   const isMountedRef = useRef(true);
   const lockRef = useRef(false); // doğru cevap işlenirken çift dokunuşu engeller
+  const missesRef = useRef(0); // bu turda üst üste boş geçen donma penceresi sayısı (tur değişince sıfırlanır)
+  const roundErrorRef = useRef(false); // bu tur için hata zaten sayıldı mı (hata tur başına en çok 1)
 
   // Zamanlayıcılar + ses referansları (unmount'ta hepsi temizlenir)
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -251,10 +256,38 @@ export default function MuzikDuruncaDon({ onGameEnd, onExit, childName }: Props)
     });
   };
 
-  // Donma penceresi doldu (dokunulmadı) → nazik uyarı + aynı turu tekrar.
+  // Hata tur başına en çok bir kez sayılır (kaçırılan pencere + erken dokunuş dahil): rapor "kaç turda zorlandı"yı gösterir,
+  // uzaklaşan/anlamayan çocuğun hata sayısı tekrarla şişmez.
+  const countRoundError = () => {
+    if (roundErrorRef.current) return;
+    roundErrorRef.current = true;
+    errorsRef.current += 1;
+  };
+
+  // Sıradaki tura geçerken tur başına sayaçlar sıfırlanır (aynı turu yeniden denemede SIFIRLANMAZ).
+  const resetRoundCounters = () => {
+    missesRef.current = 0;
+    roundErrorRef.current = false;
+  };
+
+  // Donma penceresi doldu (dokunulmadı) → nazik uyarı + aynı turu tekrar; MAX_FREEZE_MISSES'e varınca sıradaki tura geç.
   const handleFreezeTimeout = () => {
     if (lockRef.current) return;
-    errorsRef.current += 1; // hedef beceri gerçekleşmedi (rapor için)
+    countRoundError(); // hedef beceri gerçekleşmedi (rapor için) - tur başına en çok 1
+    missesRef.current += 1;
+    if (missesRef.current >= MAX_FREEZE_MISSES) {
+      lockRef.current = true; // geçiş sürerken DON'a basış ilerlemeyi bozmasın (sıradaki tur efekti kilidi açar)
+      if (round >= TOTAL_ROUNDS) {
+        // Son turda çocuk hiç donmadı: oyunu bitir (yeni cümle söylenmez; "tekrar deneyelim" demek bitişle çelişirdi,
+        // ve bitişte konuşma unmount'ta kesilirdi). finish() tek seferliktir (finishedRef).
+        finish();
+        return;
+      }
+      resetRoundCounters();
+      speak('Müzik durunca donmalıyız! Tekrar deneyelim.', { instructions: HAPPY_VOICE });
+      setRound((r) => r + 1); // doğru cevap yok sayılmaz; yalnız tur ilerler
+      return;
+    }
     speak('Müzik durunca donmalıyız! Tekrar deneyelim.', { instructions: HAPPY_VOICE });
     setRoundNonce((n) => n + 1); // aynı tur, yeni deneme
   };
@@ -277,13 +310,14 @@ export default function MuzikDuruncaDon({ onGameEnd, onExit, childName }: Props)
         if (!isMountedRef.current) return;
         setShowConfetti(false);
         lockRef.current = false;
+        resetRoundCounters();
         if (round < TOTAL_ROUNDS) setRound((r) => r + 1);
         else finish();
       });
     } else if (phase === 'dancing') {
       // Müzik hâlâ çalıyor: erken dokunuş → nazik uyarı, ilerleme yok.
       movesRef.current += 1;
-      errorsRef.current += 1;
+      countRoundError(); // tur başına en çok 1 hata (çocuk art arda dokunsa da şişmez)
       shakeButton();
       speak('Müzik daha çalıyor, durmasını bekle!', { instructions: HAPPY_VOICE });
     }

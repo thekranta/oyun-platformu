@@ -7,6 +7,7 @@ import GameExitButton from './GameExitButton';
 import { speak, speakThenWait, stopSpeech } from '../services/speechService';
 import ListenButton from './ListenButton';
 import { buildKacOlduRounds, KAC_OLDU_ROUNDS } from '../lib/kacOlduRounds';
+import { buildNumberOptions } from '../lib/answerOptions';
 
 // ============================================
 // ➕ KAÇ OLDU? - 5'e kadar toplama (Matematik/MAB.1)
@@ -28,18 +29,6 @@ const shuffleObjects = (): string[] => {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-};
-
-const buildOptions = (correct: number): number[] => {
-  const set = new Set<number>([correct]);
-  let d = 1;
-  while (set.size < 3) {
-    if (correct - d >= 1) set.add(correct - d);
-    if (set.size < 3 && correct + d <= 5) set.add(correct + d);
-    d++;
-    if (d > 5) break;
-  }
-  return Array.from(set).sort((a, b) => a - b);
 };
 
 interface Props {
@@ -88,7 +77,9 @@ export default function KacOldu({ onGameEnd, onExit, childName }: Props) {
     setA(r.a);
     setB(r.b);
     setObj(objectsRef.current[(round - 1) % objectsRef.current.length]);
-    setOptions(buildOptions(r.total));
+    // Seçenekler tur başında BİR KEZ, karışık sırada üretilir (küçükten büyüğe sıralamak doğru cevabı 8 turun 6'sında
+    // ortadaki düğmeye koyuyordu: saymadan ortaya basılabiliyordu). Aynı üç sayı (cevaba en yakınlar), yalnız dizilişi rastgele.
+    setOptions(buildNumberOptions(r.total, { min: 1, max: 5 }));
     setLocked(false);
     setWrong(null);
     pop.setValue(0.85);
