@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { asset } from '../lib/assetMap';
@@ -156,6 +156,32 @@ type StoryNode = {
     next?: string;
 };
 
+// Final sahnesi: anlatım bitince konfeti, FINAL_KONFETI_MS sonra sonuç kaydı (onGameEnd → sonuç ekranı).
+// Eskiden onGameEnd final düğüme GİRER GİRMEZ çağrılıyordu; ana ekran hemen sonuç ekranına geçtiği için
+// final anlatımı (s02_final_narr.mp3) ve görseli hiç oynamıyordu.
+const FINAL_KONFETI_MS = 2600;
+// Güvenlik süresi: ses yüklenip bitiş olayı hiç gelmezse (web otomatik oynatma engeli, bozuk ağ) çocuk finalde
+// takılı kalmasın. Final klibi 16,3 sn + yükleme payı + konfeti süresi → 30 sn. Normal akışta endedRef sayesinde no-op.
+const FINAL_GUVENLIK_MS = 30000;
+const SECIM_BOSLUK = 20;
+
+/**
+ * Seçim kartının kenarı (dp): iki kart, kenar boşluklarıyla birlikte seçim alanına sığsın.
+ * Eskiden sabit 250 dp idi: dikeyde 2 × (250 + 2×20) = 580 dp sütun; 360x640 telefonda alan ≈ 332x448 dp
+ * (kapsayıcı overflow:'hidden') → kartlar ortadan kırpılıyordu.
+ *  - dikey: 2 × (k + 40) ≤ alanH ve k + 40 ≤ alanW  → 360x640: (448 − 80) / 2 = 184 dp; 411x686: (494 − 80) / 2 = 207 dp
+ *  - yatay: 2 × (k + 40) ≤ alanW ve k + 40 ≤ alanH
+ * Alt sınır 100 dp: daha küçük alanda kart okunur kalsın, taşanı seçim alanındaki ScrollView kaydırır.
+ */
+export function secimKartBoyutu(alanW: number, alanH: number, enBuyuk: number, dikey: boolean): number {
+    if (!(alanW > 0) || !(alanH > 0)) return enBuyuk; // alan henüz ölçülmedi
+    const dis = SECIM_BOSLUK * 2;
+    const sinir = dikey
+        ? Math.min(alanW - dis, (alanH - 2 * dis) / 2)
+        : Math.min((alanW - 2 * dis) / 2, alanH - dis);
+    return Math.max(100, Math.floor(Math.min(enBuyuk, sinir)));
+}
+
 interface AdaletHikayesiProps {
     onExit: () => void;
     onGameEnd?: (
@@ -178,11 +204,26 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
 
     const [currentNodeId, setCurrentNodeId] = useState<string>('intro');
     const [phase, setPhase] = useState<'narrative' | 'choice'>('narrative');
-    const [path, setPath] = useState<string[]>(['intro']); // Track user path
+    // Yol ref'te tutulur: sonuç kaydı zamanlayıcıdan / ses geri çağrısından yapılıyor, state o render'ın
+    // kapanışında bayat kalırdı. Ekranda gösterilmediği için state'e gerek yok.
+    const pathRef = useRef<string[]>(['intro']);
 
     const [startTime] = useState<number>(Date.now());
-    const [isLogging, setIsLogging] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    // Seçim alanının ölçüsü (overlayContainer onLayout) → kart boyutu buna göre hesaplanır.
+    const [secimAlani, setSecimAlani] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+
+    // Bitiş bayrakları (memory: onGameEnd oyunu bitirir; tek kez, en sonda). isLogging state'i zamanlayıcı
+    // kapanışında bayat kaldığı için çift çağrıya karşı yetersizdi.
+    const endedRef = useRef(false);
+    const finalReachedRef = useRef(false);
+    const mountedRef = useRef(true);
+    // Düğüm başına seçim kilidi: aynı karede iki dokunuş (iki parmak) yola iki seçim yazıyor,
+    // secilen_yol ve hamle sayısı AI analizine bozuk gidiyordu. Yeni düğüme geçince açılır.
+    const choiceLockRef = useRef(false);
+    // Üst üste playAudio çağrılarında eski sesin sahipsiz kalıp çalmasını / eski geri çağrının yanlış düğüme
+    // gitmesini engelleyen nesil sayacı (AileSepetiMacerasi ile aynı desen).
+    const playGenRef = useRef(0);
 
     // Audio State
     const [storyVolume, setStoryVolume] = useState(1.0);
@@ -197,7 +238,10 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
     useStoryPreload(storyData, currentNodeId);
 
     useEffect(() => {
+        mountedRef.current = true;
         return () => {
+            mountedRef.current = false; // çıkıştan sonra geç onGameEnd / onExit çağrılmasın
+            playGenRef.current++; // yüklenmekte olan sesi ve bekleyen geri çağrıları geçersiz kıl
             stopAudio();
             // eslint-disable-next-line react-hooks/exhaustive-deps
             timersRef.current.forEach(clearTimeout);
@@ -212,6 +256,7 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
 
     // On Node Change
     useEffect(() => {
+        choiceLockRef.current = false; // yeni düğüm: seçim kilidi açılır
         setPhase('narrative');
         setShowConfetti(false);
         fadeAnim.setValue(0);
@@ -222,44 +267,77 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
             playAudio(currentNode.audio, 'narrative');
         }
 
-        if (currentNode?.isFinal && !isLogging) {
-            logGameResult();
+        // Final: kayıt burada DEĞİL, anlatım bittikten sonra (onAudioFinish → finishStory).
+        // Bitiş olayı hiç gelmezse güvenlik zamanlayıcısı yine tam bir kez kaydeder.
+        if (currentNode?.isFinal) {
+            finalReachedRef.current = true;
+            timersRef.current.push(setTimeout(finishStory, FINAL_GUVENLIK_MS));
         }
     }, [currentNodeId]);
 
     const stopAudio = async () => {
         if (soundRef.current) {
-            try {
-                await soundRef.current.stopAsync();
-                await soundRef.current.unloadAsync();
-            } catch (e) { }
+            const s = soundRef.current;
             soundRef.current = null;
+            try {
+                await s.stopAsync();
+                await s.unloadAsync();
+            } catch (e) { }
         }
     };
 
     const playAudio = async (audioSource: any, type: 'narrative' | 'question') => {
+        // Nesil await'ten ÖNCE alınır: stopAudio beklenirken bileşen kapanır ya da yeni çağrı gelirse
+        // bu çağrı güncelliğini yitirir ve ses oluşturmaz.
+        const gen = ++playGenRef.current;
         await stopAudio();
+        if (gen !== playGenRef.current) return;
         if (!audioSource) {
             // Ses dosyası yoksa otomatik ilerleme
-            timersRef.current.push(setTimeout(() => onAudioFinish(type), 1000));
+            timersRef.current.push(setTimeout(() => { if (gen === playGenRef.current) onAudioFinish(type); }, 1000));
             return;
         }
 
         try {
             const { sound } = await Audio.Sound.createAsync(playableAudioSource(audioSource), { shouldPlay: true });
+            // Yükleme sürerken yeni ses istendi ya da çıkıldıysa bu ses sahipsiz kalıp çalmasın.
+            if (gen !== playGenRef.current) {
+                sound.unloadAsync().catch(() => { });
+                return;
+            }
             soundRef.current = sound;
             await sound.setVolumeAsync(storyVolume);
 
             sound.setOnPlaybackStatusUpdate((status) => {
-                if (status.isLoaded && status.didJustFinish) {
+                if (status.isLoaded && status.didJustFinish && gen === playGenRef.current) {
                     onAudioFinish(type);
                 }
             });
         } catch (e) {
             console.log('Audio playback error:', e);
             // Ses yüklenemezse otomatik ilerleme
-            timersRef.current.push(setTimeout(() => onAudioFinish(type), 1000));
+            timersRef.current.push(setTimeout(() => { if (gen === playGenRef.current) onAudioFinish(type); }, 1000));
         }
+    };
+
+    // Hikâyeyi bitir: onGameEnd TEK KEZ ve en sonda (sonuç ekranı); onGameEnd yoksa menüye dön.
+    // Eskiden final anlatımı bitince ayrıca onExit de çağrılıyordu; ikisi art arda çalışınca ekran
+    // sonuç <-> menü arasında sıçrardı. Bileşen kapandıktan sonra (çıkış) hiçbir şey çağrılmaz.
+    const finishStory = () => {
+        if (endedRef.current || !mountedRef.current) return;
+        endedRef.current = true;
+        if (onGameEnd) logGameResult();
+        else onExit();
+    };
+
+    // Çıkış düğmesi: final sahnesine ulaşıldıysa hikâye tamamlanmıştır; sonuç kaybolmasın diye çıkış
+    // kaydı tam bir kez yapar (finishStory). Finalden önce çıkılırsa eskisi gibi menüye döner.
+    const handleExit = () => {
+        if (finalReachedRef.current && !endedRef.current && onGameEnd) {
+            finishStory();
+            return;
+        }
+        onExit();
     };
 
     const onAudioFinish = async (type: 'narrative' | 'question') => {
@@ -272,21 +350,24 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
             } else if (currentNode.next) {
                 setCurrentNodeId(currentNode.next);
             } else if (currentNode.isFinal) {
-                timersRef.current.push(setTimeout(() => {
-                    setShowConfetti(true);
-                    timersRef.current.push(setTimeout(onExit, 4000));
-                }, 2000));
+                // Final anlatımı bitti: konfeti, sonra sonuç kaydı (tek kez; onExit AYRICA çağrılmaz).
+                setShowConfetti(true);
+                timersRef.current.push(setTimeout(finishStory, FINAL_KONFETI_MS));
             }
         }
     };
 
     const handleOptionSelect = (opt: StoryOption) => {
-        setPath(prev => [...prev, opt.next]);
+        if (choiceLockRef.current) return; // aynı düğümde ikinci dokunuş yok sayılır
+        choiceLockRef.current = true;
+        pathRef.current = [...pathRef.current, opt.next];
+        // Seçenekler, düğüm efekti çalışana kadar bir kare daha görünmesin (yeni düğümün seçenekleri dahil).
+        setPhase('narrative');
         setCurrentNodeId(opt.next);
     };
 
     const logGameResult = async () => {
-        setIsLogging(true);
+        const path = pathRef.current;
         const endTime = Date.now();
         const durationSeconds = Math.floor((endTime - startTime) / 1000);
         const pathString = path.join(' -> ');
@@ -327,31 +408,37 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
         }
     };
 
+    // Kart kenarı seçim alanına göre hesaplanır (bkz. secimKartBoyutu); kare kart + resizeMode contain → resim orantılı.
+    const kartBoyutu = secimKartBoyutu(secimAlani.w, secimAlani.h, isMobile ? 250 : 350, isPortrait);
+
     const renderChoices = () => (
         <View style={styles.choicesContainer}>
-            <View style={[styles.optionsRow, {
-                flexDirection: isPortrait ? 'column' : 'row',
-            }]}>
-                {currentNode.options?.map((opt) => (
-                    <TouchableOpacity
-                        key={opt.id}
-                        style={[styles.largeOptionButton, {
-                            width: isMobile ? 250 : 350,
-                            height: isMobile ? 250 : 350,
-                            margin: 20
-                        }]}
-                        onPress={() => handleOptionSelect(opt)}
-                        activeOpacity={0.8}
-                    >
-                        <Image source={opt.image} style={styles.largeOptionImage} resizeMode="contain" />
-                    </TouchableOpacity>
-                ))}
-            </View>
+            {/* Yedek: alan alt sınırın da altındaysa kırpılmak yerine kayar; kısa içerik ortalı kalır. */}
+            <ScrollView style={{ flex: 1, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <View style={[styles.optionsRow, {
+                    flexDirection: isPortrait ? 'column' : 'row',
+                }]}>
+                    {currentNode.options?.map((opt) => (
+                        <TouchableOpacity
+                            key={opt.id}
+                            style={[styles.largeOptionButton, {
+                                width: kartBoyutu,
+                                height: kartBoyutu,
+                                margin: SECIM_BOSLUK
+                            }]}
+                            onPress={() => handleOptionSelect(opt)}
+                            activeOpacity={0.8}
+                        >
+                            <Image source={opt.image} style={styles.largeOptionImage} resizeMode="contain" />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </ScrollView>
         </View>
     );
 
     return (
-        <DynamicBackground onExit={onExit}>
+        <DynamicBackground onExit={handleExit}>
             <View style={styles.mainContainer}>
                 {/* Header - Minimal, just volume */}
                 <View style={styles.header}>
@@ -381,7 +468,13 @@ export default function AdaletHikayesi({ onExit, onGameEnd, userId, userEmail, u
                         blurRadius={phase === 'choice' ? 3 : 0}
                     />
 
-                    <View style={styles.overlayContainer}>
+                    <View
+                        style={styles.overlayContainer}
+                        onLayout={(e) => {
+                            const { width: w, height: h } = e.nativeEvent.layout;
+                            setSecimAlani((a) => (a.w === w && a.h === h ? a : { w, h }));
+                        }}
+                    >
                         {phase === 'choice' && renderChoices()}
                     </View>
 

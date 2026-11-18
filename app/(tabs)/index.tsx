@@ -26,6 +26,8 @@ import { onPackageChanged } from '../../lib/packageSync';
 import { isRouteOpenForTier } from '../../lib/gameAccess';
 import { combineGameTier, getEffectiveOgretmenTier, getEffectiveVeliTier, VeliTier } from '../../lib/subscriptionTiers';
 import { flushPendingResults, GameResultExtraData, saveGameResult } from '../../services/gameResults';
+import { stopSpeech } from '../../services/speechService';
+import ScrollIfNeeded from '@/components/ScrollIfNeeded';
 
 // Set false to restore the previous welcome screen and its background (web + mobil aynı tasarımı kullanır).
 const WELCOME_REDESIGN_ENABLED = true;
@@ -428,6 +430,14 @@ export default function App() {
     setAsama('giris');
   };
 
+  // Oyundan ODAYA çıkış (çıkış düğmesi, hata sınırının 'Menüye Dön'ü): çalan yönerge/'Aferin' menüde okunmaya devam
+  // ediyordu (~41 oyunun unmount'unda stopSpeech yok, 2026-11-18 denetimi); burada merkezi olarak kesilir.
+  // oyunuBitir'e (onGameEnd -> sonuç) KOYMA: bitiş tebriği sonuç ekranında sürmeli (lib/bitisTebrigiKurali.test.ts).
+  const oyundanCik = () => {
+    stopSpeech();
+    setAsama('menu');
+  };
+
   const cikisYap = () => {
     // Açık çıkış: kalıcı oturumu da kapat ki yenilemede otomatik girilmesin.
     supabase.auth.signOut().catch(() => { });
@@ -464,8 +474,9 @@ export default function App() {
   // render olsa bile (ör. toast) form yeniden render edilip yazi kaybolmasin.
   const authActionsRef = useRef({ girisYap, sifremiUnuttum });
   authActionsRef.current = { girisYap, sifremiUnuttum };
-  const handleLogin = useCallback((mail: string, pass: string) => { authActionsRef.current.girisYap(mail, pass); }, []);
-  const handleForgot = useCallback((mail: string) => { authActionsRef.current.sifremiUnuttum(mail); }, []);
+  // E-posta büyük harf/boşlukla yazılsa da aynı hesaba gitsin (mobil klavye ilk harfi büyütür): iki form da buradan geçer.
+  const handleLogin = useCallback((mail: string, pass: string) => { authActionsRef.current.girisYap(mail.trim().toLowerCase(), pass); }, []);
+  const handleForgot = useCallback((mail: string) => { authActionsRef.current.sifremiUnuttum(mail.trim().toLowerCase()); }, []);
   const handleSignup = useCallback(() => router.push('/signup'), [router]);
   const handleAdmin = useCallback(() => router.push('/admin'), [router]);
   const handleVeli = useCallback(() => router.push('/veli-dashboard'), [router]);
@@ -508,6 +519,7 @@ export default function App() {
     if (Platform.OS !== 'android') return;
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       if (asama === 'menu' || asama === 'giris') return false;
+      stopSpeech();   // oyundan/sonuçtan odaya çıkışta konuşma menüye taşmasın (bkz. oyundanCik)
       setAsama('menu');
       return true;
     });
@@ -571,7 +583,7 @@ export default function App() {
     // ErrorBoundary: bir oyun çökerse tüm uygulama yerine sadece o oyun düşer,
     // çocuk "Menüye Dön" ile devam eder. key={asama} => her oyuna taze sınır.
     return (
-      <GameErrorBoundary key={asama} gameName={asama} onExit={() => setAsama('menu')}>
+      <GameErrorBoundary key={asama} gameName={asama} onExit={oyundanCik}>
         <React.Suspense
           fallback={
             <View style={styles.merkezContainer}>
@@ -581,7 +593,7 @@ export default function App() {
         >
           {gameRenderer({
             onGameEnd: oyunuBitir,
-            onExit: () => setAsama('menu'),
+            onExit: oyundanCik,
             ad,
             yas,
             email,
@@ -598,7 +610,8 @@ export default function App() {
   if (asama === 'sonuc') {
     return (
       <DynamicBackground>
-        <View style={styles.merkezContainer}>
+        {/* Kısa içerik eskisi gibi ortada; küçük ekranda (360x640) ya da büyük yazı tipinde alttaki düğmeler kesilmesin diye kayar. */}
+        <ScrollIfNeeded contentStyle={styles.merkezContainer}>
           <View style={styles.card}>
             <Text style={{ fontSize: 80, textAlign: 'center' }}>🎉</Text>
             <Text style={styles.sonucBaslik}>AFERİN SANA!</Text>
@@ -625,7 +638,7 @@ export default function App() {
               <Text style={styles.butonYazi}>Oturumu Kapat 🚪</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </ScrollIfNeeded>
       </DynamicBackground>
     );
   }

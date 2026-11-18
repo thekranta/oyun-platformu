@@ -54,9 +54,41 @@ export function splitEmojiParts(text: string): EmojiPart[] | null {
     return parts;
 }
 
-/** Satır içi emoji resminin kenarı: yazı boyutu × 1,15 (Noto emoji ~1,17 em genişliğinde çizilir). */
-export function emojiImageSize(fontSize: number, allowFontScaling = true): number {
-    const scaled = fontSize * (allowFontScaling ? PixelRatio.getFontScale() : 1);
+/**
+ * Android'de her `Text`e verilen varsayılan yazı büyütme sınırı (RN `maxFontSizeMultiplier`). Sistem yazı tipi "en büyük"
+ * olan ebeveynlerde (ölçek 1,5-2) sabit boyutlu kartlar (AgirHafif kart 140 / emoji 84 gibi ~70 oyun), ToyRoom başlığı ve
+ * kaydırmasız kartlar taşıyordu; 1,3 hâlâ okunur büyütme sağlar ama düzeni bozmaz. Metni yine de büyütmek isteyen bir Text
+ * kendi `maxFontSizeMultiplier`ını verir (0 = sınırsız); `allowFontScaling={false}` olana dokunulmaz.
+ */
+export const DEFAULT_MAX_FONT_SIZE_MULTIPLIER = 1.3;
+
+/**
+ * `Text` özelliklerine varsayılan büyütme sınırını ekler. Gelen nesneye DOKUNMAZ (dondurulmuş olabilir): gerekiyorsa kopya döner,
+ * gerekmiyorsa aynı nesneyi (sıcak yol: gereksiz ayırma yok). `ref` React 19'da sıradan özellik olduğu için yayılımla korunur.
+ */
+export function withFontScaleCap<P extends Record<string, unknown>>(props: P): P {
+    if (props.allowFontScaling === false) return props;           // büyümeyen yazıya sınır gerekmez
+    if (props.maxFontSizeMultiplier != null) return props;        // açıkça verilmiş (0 = sınırsız dahil) → saygı göster
+    return { ...props, maxFontSizeMultiplier: DEFAULT_MAX_FONT_SIZE_MULTIPLIER };
+}
+
+/**
+ * Yazıya fiilen uygulanan sistem yazı ölçeği: RN anlamıyla `maxFontSizeMultiplier >= 1` ise ölçek bu değeri aşamaz; verilmemiş,
+ * 0 (sınırsız) ya da geçersizse sistem ölçeği olduğu gibi kalır.
+ */
+export function effectiveFontScale(systemScale: number, maxFontSizeMultiplier?: unknown): number {
+    return typeof maxFontSizeMultiplier === 'number' && maxFontSizeMultiplier >= 1
+        ? Math.min(systemScale, maxFontSizeMultiplier)
+        : systemScale;
+}
+
+/**
+ * Satır içi emoji resminin kenarı: yazı boyutu × 1,15 (Noto emoji ~1,17 em genişliğinde çizilir).
+ * `maxFontScale`: yazının büyütme sınırı; resim yazıdan büyük çıkmasın diye sistem ölçeği bu sınırla kırpılır (yazı 1,3'te
+ * kalırken sistem ölçeği 1,5 ise sınırsız çarpmak emojiyi olması gerekenden yaklaşık %15 büyük çizerdi).
+ */
+export function emojiImageSize(fontSize: number, allowFontScaling = true, maxFontScale?: number): number {
+    const scaled = fontSize * (allowFontScaling ? effectiveFontScale(PixelRatio.getFontScale(), maxFontScale) : 1);
     return Math.round(scaled * 1.15);
 }
 

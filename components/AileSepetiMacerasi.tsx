@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { Audio } from 'expo-av';
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
+import { Animated, Image, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import DynamicBackground from './DynamicBackground';
 import { asset } from '../lib/assetMap';
@@ -126,6 +126,33 @@ type StoryNode = {
     next?: string;
 };
 
+// Final sahnesi: anlatım bitince konfeti, FINAL_KONFETI_MS sonra sonuç kaydı (onGameEnd → sonuç ekranı).
+// Eskiden onGameEnd final düğüme GİRER GİRMEZ çağrılıyordu; ana ekran hemen sonuç ekranına geçtiği için
+// final anlatımı (s02_final_narr.mp3) ve görseli hiç oynamıyordu.
+const FINAL_KONFETI_MS = 2600;
+// Güvenlik süresi: ses yüklenip bitiş olayı hiç gelmezse (web otomatik oynatma engeli, bozuk ağ) çocuk finalde
+// takılı kalmasın. Final klibi 9,9 sn + yükleme payı + konfeti süresi → 30 sn. Normal akışta endedRef sayesinde no-op.
+const FINAL_GUVENLIK_MS = 30000;
+const SECIM_BOSLUK = 20;
+
+/**
+ * Seçim kartının kenarı (dp): iki kart, kenar boşluklarıyla birlikte seçim alanına sığsın.
+ * Eskiden sabit 250 dp idi: dikeyde 2 × (250 + 2×20) = 580 dp sütun; 360x640 telefonda alan ≈ 332x448 dp
+ * (kapsayıcı overflow:'hidden') → kartlar ortadan kırpılıyordu.
+ *  - dikey: 2 × (k + 40) ≤ alanH ve k + 40 ≤ alanW  → 360x640: (448 − 80) / 2 = 184 dp; 411x686: (494 − 80) / 2 = 207 dp
+ *  - yatay: 2 × (k + 40) ≤ alanW ve k + 40 ≤ alanH
+ * Alt sınır 100 dp: daha küçük alanda kart okunur kalsın, taşanı seçim alanındaki ScrollView kaydırır.
+ * (AdaletHikayesi'nde aynısı var; birini ötekine import etmek iki hikâyenin tembel parçalarını birleştirirdi.)
+ */
+export function secimKartBoyutu(alanW: number, alanH: number, enBuyuk: number, dikey: boolean): number {
+    if (!(alanW > 0) || !(alanH > 0)) return enBuyuk; // alan henüz ölçülmedi
+    const dis = SECIM_BOSLUK * 2;
+    const sinir = dikey
+        ? Math.min(alanW - dis, (alanH - 2 * dis) / 2)
+        : Math.min((alanW - 2 * dis) / 2, alanH - dis);
+    return Math.max(100, Math.floor(Math.min(enBuyuk, sinir)));
+}
+
 interface AileSepetiMacerasiProps {
     onExit: () => void;
     onGameEnd?: (
@@ -148,11 +175,23 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
 
     const [currentNodeId, setCurrentNodeId] = useState<string>('intro');
     const [phase, setPhase] = useState<'narrative' | 'choice'>('narrative');
-    const [path, setPath] = useState<string[]>(['intro']); // Track user path
+    // Yol ref'te tutulur: sonuç kaydı zamanlayıcıdan / ses geri çağrısından yapılıyor, state o render'ın
+    // kapanışında bayat kalırdı. Ekranda gösterilmediği için state'e gerek yok.
+    const pathRef = useRef<string[]>(['intro']);
 
     const [startTime] = useState<number>(Date.now());
-    const [isLogging, setIsLogging] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
+    // Seçim alanının ölçüsü (overlayContainer onLayout) → kart boyutu buna göre hesaplanır.
+    const [secimAlani, setSecimAlani] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+
+    // Bitiş bayrakları (memory: onGameEnd oyunu bitirir; tek kez, en sonda). isLogging state'i zamanlayıcı
+    // kapanışında bayat kaldığı için çift çağrıya karşı yetersizdi.
+    const endedRef = useRef(false);
+    const finalReachedRef = useRef(false);
+    const mountedRef = useRef(true);
+    // Düğüm başına seçim kilidi: aynı karede iki dokunuş (iki parmak) yola iki seçim yazıyor,
+    // secilen_yol ve hamle sayısı AI analizine bozuk gidiyordu. Yeni düğüme geçince açılır.
+    const choiceLockRef = useRef(false);
 
     // Audio State
     const [storyVolume, setStoryVolume] = useState(1.0);
@@ -170,7 +209,9 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
     useStoryPreload(storyData, currentNodeId);
 
     useEffect(() => {
+        mountedRef.current = true;
         return () => {
+            mountedRef.current = false; // çıkıştan sonra geç onGameEnd / onExit çağrılmasın
             // eslint-disable-next-line react-hooks/exhaustive-deps
             playGenRef.current++; // bekleyen ses callback'lerini gecersiz kil
             stopAudio();
@@ -187,6 +228,7 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
 
     // On Node Change
     useEffect(() => {
+        choiceLockRef.current = false; // yeni düğüm: seçim kilidi açılır
         setPhase('narrative');
         setShowConfetti(false);
         fadeAnim.setValue(0);
@@ -195,25 +237,32 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
         // Auto-play narrator
         playAudio(currentNode.audio, 'narrative');
 
-        if (currentNode.isFinal && !isLogging) {
-            logGameResult();
+        // Final: kayıt burada DEĞİL, anlatım bittikten sonra (onAudioFinish → finishStory).
+        // Bitiş olayı hiç gelmezse güvenlik zamanlayıcısı yine tam bir kez kaydeder.
+        if (currentNode.isFinal) {
+            finalReachedRef.current = true;
+            timersRef.current.push(setTimeout(finishStory, FINAL_GUVENLIK_MS));
         }
     }, [currentNodeId]);
 
     const stopAudio = async () => {
         if (soundRef.current) {
-            try {
-                await soundRef.current.stopAsync();
-                await soundRef.current.unloadAsync();
-            } catch (e) { }
+            const s = soundRef.current;
             soundRef.current = null;
+            try {
+                await s.stopAsync();
+                await s.unloadAsync();
+            } catch (e) { }
         }
     };
 
     const playAudio = async (audioSource: any, type: 'narrative' | 'question') => {
-        await stopAudio();
         // Bu cagrinin nesli; daha yeni bir playAudio gelirse bu callback gecersiz olur.
+        // Nesil await'ten ÖNCE alınır: eskiden stopAudio beklenirken bileşen kapanırsa (unmount nesli artırır)
+        // bu çağrı sonradan yeni nesli alıp sesi çıkıştan sonra da çalabiliyordu.
         const gen = ++playGenRef.current;
+        await stopAudio();
+        if (gen !== playGenRef.current) return;
         if (!audioSource) {
             // Ses yoksa hikayeyi kilitleme: anlatida ilerlemeyi tetikle.
             onAudioFinish(type);
@@ -254,23 +303,45 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
                 // Linear flow -> Go to next scene (auto)
                 setCurrentNodeId(currentNode.next);
             } else if (currentNode.isFinal) {
-                // Final scene finished -> Wait 2s then Confetti + Exit
-                timersRef.current.push(setTimeout(() => {
-                    setShowConfetti(true);
-                    timersRef.current.push(setTimeout(onExit, 4000)); // Wait for confetti to fall a bit
-                }, 2000));
+                // Final anlatımı bitti: konfeti, sonra sonuç kaydı (tek kez; onExit AYRICA çağrılmaz).
+                setShowConfetti(true);
+                timersRef.current.push(setTimeout(finishStory, FINAL_KONFETI_MS));
             }
         }
         // If type === 'question', do nothing. Wait for user input.
     };
 
+    // Hikâyeyi bitir: onGameEnd TEK KEZ ve en sonda (sonuç ekranı); onGameEnd yoksa menüye dön.
+    // Eskiden final anlatımı bitince ayrıca onExit de çağrılıyordu; ikisi art arda çalışınca ekran
+    // sonuç <-> menü arasında sıçrardı. Bileşen kapandıktan sonra (çıkış) hiçbir şey çağrılmaz.
+    const finishStory = () => {
+        if (endedRef.current || !mountedRef.current) return;
+        endedRef.current = true;
+        if (onGameEnd) logGameResult();
+        else onExit();
+    };
+
+    // Çıkış düğmesi: final sahnesine ulaşıldıysa hikâye tamamlanmıştır; sonuç kaybolmasın diye çıkış
+    // kaydı tam bir kez yapar (finishStory). Finalden önce çıkılırsa eskisi gibi menüye döner.
+    const handleExit = () => {
+        if (finalReachedRef.current && !endedRef.current && onGameEnd) {
+            finishStory();
+            return;
+        }
+        onExit();
+    };
+
     const handleOptionSelect = (opt: StoryOption) => {
-        setPath(prev => [...prev, opt.next]); // Track path
+        if (choiceLockRef.current) return; // aynı düğümde ikinci dokunuş yok sayılır
+        choiceLockRef.current = true;
+        pathRef.current = [...pathRef.current, opt.next]; // Track path
+        // Seçenekler, düğüm efekti çalışana kadar bir kare daha görünmesin (yeni düğümün seçenekleri dahil).
+        setPhase('narrative');
         setCurrentNodeId(opt.next);
     };
 
     const logGameResult = async () => {
-        setIsLogging(true);
+        const path = pathRef.current;
         const endTime = Date.now();
         const durationSeconds = Math.floor((endTime - startTime) / 1000);
 
@@ -297,31 +368,37 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
         }
     };
 
+    // Kart kenarı seçim alanına göre hesaplanır (bkz. secimKartBoyutu); kare kart + resizeMode contain → resim orantılı.
+    const kartBoyutu = secimKartBoyutu(secimAlani.w, secimAlani.h, isMobile ? 250 : 350, isPortrait);
+
     const renderChoices = () => (
         <View style={styles.choicesContainer}>
-            <View style={[styles.optionsRow, {
-                flexDirection: isPortrait ? 'column' : 'row',
-            }]}>
-                {currentNode.options?.map((opt) => (
-                    <TouchableOpacity
-                        key={opt.id}
-                        style={[styles.largeOptionButton, {
-                            width: isMobile ? 250 : 350,
-                            height: isMobile ? 250 : 350,
-                            margin: 20
-                        }]}
-                        onPress={() => handleOptionSelect(opt)}
-                        activeOpacity={0.8}
-                    >
-                        <Image source={opt.image} style={styles.largeOptionImage} resizeMode="contain" />
-                    </TouchableOpacity>
-                ))}
-            </View>
+            {/* Yedek: alan alt sınırın da altındaysa kırpılmak yerine kayar; kısa içerik ortalı kalır. */}
+            <ScrollView style={{ flex: 1, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <View style={[styles.optionsRow, {
+                    flexDirection: isPortrait ? 'column' : 'row',
+                }]}>
+                    {currentNode.options?.map((opt) => (
+                        <TouchableOpacity
+                            key={opt.id}
+                            style={[styles.largeOptionButton, {
+                                width: kartBoyutu,
+                                height: kartBoyutu,
+                                margin: SECIM_BOSLUK
+                            }]}
+                            onPress={() => handleOptionSelect(opt)}
+                            activeOpacity={0.8}
+                        >
+                            <Image source={opt.image} style={styles.largeOptionImage} resizeMode="contain" />
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            </ScrollView>
         </View>
     );
 
     return (
-        <DynamicBackground onExit={onExit}>
+        <DynamicBackground onExit={handleExit}>
             <View style={styles.mainContainer}>
                 {/* Header - Minimal, just volume */}
                 <View style={styles.header}>
@@ -352,7 +429,13 @@ export default function AileSepetiMacerasi({ onExit, onGameEnd, userId, userEmai
                     />
 
                     {/* Only show choices logic, no text overlay */}
-                    <View style={styles.overlayContainer}>
+                    <View
+                        style={styles.overlayContainer}
+                        onLayout={(e) => {
+                            const { width: w, height: h } = e.nativeEvent.layout;
+                            setSecimAlani((a) => (a.w === w && a.h === h ? a : { w, h }));
+                        }}
+                    >
                         {phase === 'choice' && renderChoices()}
                     </View>
 

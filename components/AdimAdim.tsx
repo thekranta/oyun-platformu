@@ -72,6 +72,14 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
   const colorRef = useRef(color); colorRef.current = color;
   const sizeRef = useRef(size); sizeRef.current = size;
 
+  // Kaydet çift dokunuşu: save, yakalama (await) bitmeden ikinci kez başlarsa onGameEnd iki kez çağrılır (çift skor satırı, görsel yükleme, AI analizi, tebrik).
+  // Kilit REF'tir (state gecikmeli). onGameEnd oyunu bitirir (sonuç ekranı, bileşen sökülür): kaydedilince kilit AÇILMAZ. saving yalnız düğmeyi soluklaştırır.
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
+  // Yakalama sürerken çıkış/geri yapılırsa geç gelen onGameEnd menüden 'sonuç' ekranına atardı: sökülünce hiçbir şey çağırma.
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   const pic = PICTURES[picIdx];
   const stepText = pic.steps[cur].text;
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
@@ -123,6 +131,12 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
 
   const save = async () => {
     const bundle = liveStrokeRef.current ? [...strokes, liveStrokeRef.current] : strokes;
+    // Boş çizim kaydedilmez (diğer çizim oyunlarındaki disabled={!hasContent} ile aynı kural).
+    if (bundle.length === 0) return;
+    // Kilit: ilk await'ten ÖNCE (ref anında kapanır; savingRef notuna bak).
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
     const totalPoints = bundle.reduce((s, st) => s + st.points.length, 0);
     let base64: string | undefined;
@@ -138,6 +152,8 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Resim olusturulamadi:', e); }
+    // Yakalama sürerken çıkıldıysa ne tebrik ne onGameEnd (geç onGameEnd menüden 'sonuç'a atar); bayrak da kalkmaz.
+    if (!mountedRef.current) { savingRef.current = false; return; }
     speak(`Bir ${pic.name.toLowerCase()} çizdin! Aferin.`, { instructions: HAPPY_VOICE });
     onGameEnd('adim-adim', duration, totalPoints, 0, undefined, {
       cizimVerisi: JSON.stringify({ resim: pic.key, strokes: bundle }),
@@ -151,6 +167,8 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
 
   const isLast = cur >= pic.steps.length - 1;
   const hasContent = strokes.length > 0 || !!liveStroke;
+  // Son adımdaki 'Bitti': boş çizimde ya da kaydederken basılamaz (Sonraki Adım serbest kalır).
+  const doneBlocked = isLast && (!hasContent || saving);
 
   return (
     <View style={styles.container}>
@@ -207,8 +225,9 @@ export default function AdimAdim({ onGameEnd, onExit, childName }: Props) {
       </View>
 
       <TouchableOpacity
-        style={[styles.nextBtn, isLast && styles.doneBtn, saved && styles.savedBtn]}
+        style={[styles.nextBtn, isLast && styles.doneBtn, saved && styles.savedBtn, doneBlocked && !saved && styles.nextBtnOff]}
         onPress={() => { if (isLast) save(); else setCur((c) => c + 1); }}
+        disabled={doneBlocked}
         activeOpacity={0.85}
       >
         <Ionicons name={isLast ? (saved ? 'checkmark-circle' : 'save') : 'arrow-forward'} size={22} color="#fff" />
@@ -245,6 +264,7 @@ const styles = StyleSheet.create({
   nextBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#00ACC1', paddingVertical: 11, paddingHorizontal: 26, borderRadius: 24, marginTop: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 1, elevation: 4 },
   doneBtn: { backgroundColor: '#43A047' },
   savedBtn: { backgroundColor: '#2E7D32' },
+  nextBtnOff: { opacity: 0.5 },
   nextText: { color: '#fff', fontSize: 16, fontWeight: '900' },
   palette: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 9, paddingVertical: 10, paddingHorizontal: 12, maxWidth: 520 },
   swatch: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(0,0,0,0.12)', elevation: 3 },

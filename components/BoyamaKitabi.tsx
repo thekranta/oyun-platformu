@@ -88,6 +88,14 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
   const endedRef = useRef(false);
   useEffect(() => () => { if (!endedRef.current) stopSpeech(); }, []);
 
+  // Kaydet çift dokunuşu: save, yakalama (await) bitmeden ikinci kez başlarsa onGameEnd iki kez çağrılır (çift skor satırı, görsel yükleme, AI analizi, tebrik).
+  // Kilit REF'tir (state gecikmeli). onGameEnd oyunu bitirir (sonuç ekranı, bileşen sökülür): kaydedilince kilit AÇILMAZ. saving yalnız düğmeyi soluklaştırır.
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
+  // Yakalama sürerken çıkış/geri yapılırsa geç gelen onGameEnd menüden 'sonuç' ekranına atardı: sökülünce hiçbir şey çağırma.
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   const paint = (id: string) => { setFills((prev) => ({ ...prev, [id]: color })); setSaved(false); };
   const clearAll = () => { setFills({}); setSaved(false); };
   const changePicture = (i: number) => { setPicIdx(i); setFills({}); setSaved(false); startTimeRef.current = Date.now(); };
@@ -95,6 +103,10 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
   const save = async () => {
     const painted = Object.keys(fills).length;
     if (painted === 0) return;
+    // Kilit: ilk await'ten ÖNCE (ref anında kapanır; savingRef notuna bak).
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
     let base64: string | undefined;
     try {
@@ -109,6 +121,8 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Resim olusturulamadi:', e); }
+    // Yakalama sürerken çıkıldıysa ne tebrik ne onGameEnd (geç onGameEnd menüden 'sonuç'a atar); bayrak da kalkmaz.
+    if (!mountedRef.current) { savingRef.current = false; return; }
     endedRef.current = true;
     speak('Çok güzel boyadın! Aferin.', { instructions: HAPPY_VOICE });
     onGameEnd('boyama-kitabi', duration, painted, 0, undefined, {
@@ -145,7 +159,7 @@ export default function BoyamaKitabi({ onGameEnd, onExit, childName }: Props) {
           <TouchableOpacity style={styles.smallBtn} onPress={clearAll} disabled={!painted} activeOpacity={0.8}>
             <Ionicons name="trash-outline" size={20} color={painted ? '#e53935' : '#ccc'} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.smallBtn, styles.saveBtn, saved && styles.savedBtn]} onPress={save} disabled={!painted} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.smallBtn, styles.saveBtn, saved && styles.savedBtn, saving && !saved && styles.savingBtn]} onPress={save} disabled={!painted || saving} activeOpacity={0.8}>
             <Ionicons name={saved ? 'checkmark' : 'save'} size={20} color={saved ? '#fff' : painted ? '#43A047' : '#ccc'} />
           </TouchableOpacity>
         </View>
@@ -188,6 +202,7 @@ const styles = StyleSheet.create({
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },
   savedBtn: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
+  savingBtn: { opacity: 0.5 },
 
   picRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, paddingVertical: 8 },
   picBtn: { width: 52, height: 52, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'transparent', elevation: 2 },

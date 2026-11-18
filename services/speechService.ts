@@ -19,6 +19,7 @@ import { Platform } from 'react-native';
 import { TTS } from '../lib/ttsAssets';
 import { supabase } from '../lib/supabase';
 import { apiUrl } from '../lib/apiBase';
+import { withTimeout } from '../lib/withTimeout';
 import { beginSpeech, resetSpeech } from './speechActivity';
 import { markClipInUse, pendingClip, preloadClipUris, readyClipUrl } from './webClipCache';
 
@@ -65,6 +66,30 @@ let currentTtsSound: ExpoAudio.Sound | null = null;
 // oynatılabiliyordu ve currentTtsSound yalnızca sonuncuyu izlediği için stopSpeech()
 // öbürünü hiç durduramıyordu (oyundan çıksan bile "öksüz" ses çalmaya devam ediyordu).
 let ttsRequestId = 0;
+
+// stopSpeech() de ttsRequestId'yi artırır: yüklemesi stopSpeech'ten SONRA biten klip (createAsync / web indirme
+// beklemesi) artık çalmaz (eskiden oyundan çıkınca 'Aferin' menüde çalıyordu, 2026-11-18 denetimi).
+// AMA "yeni speak() ezdi" ile "stopSpeech() iptal etti" farklı ele alınır: ezilen çağrı eskisi gibi HEMEN çözülür
+// (yenisi sürüyor), durdurulan çağrının sözü ise eski üst zaman aşımına (8 sn) kadar AÇIK kalır. Aksi halde
+// `await speak(a); speak(b)` zincirinde çıkışta durdurulan a anında çözülür ve b menüde çalardı (sızıntı).
+// stopEpoch bu ayrımı sağlar: çağrı başındaki değer değiştiyse çağrı stopSpeech ile iptal edilmiştir.
+let stopEpoch = 0;
+let lastStopAt = 0;
+const STOPPED_HOLD_MS = 8000;
+
+// Durdurulan çağrının sözünü, stopSpeech anından itibaren en geç STOPPED_HOLD_MS sonra çözer
+// (web'de eskiden de durdurulan çağrı webPending.rearm(8000) ile 8 sn'de çözülüyordu).
+function holdAfterStop(): Promise<void> {
+    const ms = Math.max(0, lastStopAt + STOPPED_HOLD_MS - Date.now());
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Canlı TTS (getSession + /api/tts) için üst sınır: ağ takılırsa await speak() hiç çözülmüyordu
+// (ör. SevgiHikayesi'nde seçenekler hiç gelmiyordu). Süre dolunca sessizce (konuşmasız) devam edilir.
+const LIVE_TTS_TIMEOUT_MS = 10000;
+// Canlı sesin yüklenmesi / çalması için üst sınırlar (süre bilinmiyorsa 20 sn; biliniyorsa süre + 4 sn).
+const LIVE_LOAD_TIMEOUT_MS = 8000;
+const LIVE_PLAY_FALLBACK_MS = 20000;
 
 // Şu an çalan canlı-proxy sesi (web, HTMLAudioElement) — hazır-MP3'ten AYRI bir oynatma
 // yolu olduğu için currentTtsSound'a dahil değildi; stopSpeech() bunu da durdurabilsin
@@ -168,9 +193,12 @@ async function resolveWebUri(src: number): Promise<string | undefined> {
 
 async function playBundledWeb(src: number): Promise<void> {
     const myId = ++ttsRequestId;
+    const myEpoch = stopEpoch;
     // Onceki bekleyen cagri yeni klip tarafindan ezilir; eskiden oldugu gibi en gec 8 sn'de cozulur.
     webPending?.rearm(8000);
     const uri = clipUri(src) ?? await resolveWebUri(src);
+    // stopSpeech yukleme sirasinda geldiyse: klibi baslatma, ama sozu hemen cozme (sıradaki konusma sizmasin).
+    if (myEpoch !== stopEpoch) { await holdAfterStop(); return; }
     if (!uri || myId !== ttsRequestId) return;
 
     // Onceden indirilmis klip bellekten (blob) calinir: aga dokunmaz, aninda baslar. Su an iniyorsa ayni dosyayi
@@ -183,6 +211,7 @@ async function playBundledWeb(src: number): Promise<void> {
                 pending,
                 new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), PENDING_CLIP_WAIT_MS)),
             ]);
+            if (myEpoch !== stopEpoch) { await holdAfterStop(); return; }
             if (myId !== ttsRequestId) return;
         }
     }
@@ -256,6 +285,7 @@ async function playBundled(src: number): Promise<void> {
     if (IS_WEB) return playBundledWeb(src);
 
     const myRequestId = ++ttsRequestId;
+    const myEpoch = stopEpoch;
 
     // Tarayıcı otomatik-oynatma engeli, ağ/decode hatası, sekme arka plana alınması
     // gibi nedenlerle expo-av'ın ASENKRON ADIMLARINDAN HERHANGİ BİRİ (createAsync'in
@@ -288,7 +318,19 @@ async function playBundled(src: number): Promise<void> {
                 await currentTtsSound.unloadAsync().catch(() => { });
                 currentTtsSound = null;
             }
+            // Önceki sesi boşaltırken stopSpeech geldiyse yüklemeye hiç başlama (shouldPlay:true kısa bir ses kaçırabilir);
+            // söz üst zaman aşımına (8 sn) kadar açık kalır — durdurulan çağrı anında çözülmez (bkz. stopEpoch).
+            if (myEpoch !== stopEpoch) {
+                await overallTimeout;
+                return;
+            }
             const { sound, status: loadedStatus } = await ExpoAudio.Sound.createAsync(src, { shouldPlay: true, volume: 1.0 });
+            if (!timedOut && myEpoch !== stopEpoch) {
+                // Yükleme sürerken stopSpeech (ör. oyundan çıkış) geldi: geç yüklenen klip ÇALMAZ, söz üst zaman aşımında çözülür.
+                sound.unloadAsync().catch(() => { });
+                await overallTimeout;
+                return;
+            }
             if (timedOut || myRequestId !== ttsRequestId) {
                 // Üst zaman aşımı zaten devam etmişse YA DA biz yüklenirken daha yeni bir
                 // speak() çağrısı başlamışsa: bu geç gelen sesi sessizce boşalt, çalma.
@@ -350,30 +392,38 @@ export async function generateSpeech(
     try {
         // Call secure server-side API route (OpenAI TTS) — kimliksiz kotu-niyetli
         // trafiği engellemek icin gecerli bir Supabase oturumu gerekiyor.
-        const { data: { session } } = await supabase.auth.getSession();
-        const response = await fetch(apiUrl('/api/tts'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
-            },
-            body: JSON.stringify({
-                text,
-                voice,
-                speed,
-                instructions
-            }),
-        });
+        // Ağ adımlarının TAMAMI (oturum + istek + yanıt gövdesi) tek üst sınırla yarışır: takılırsa withTimeout reddeder,
+        // aşağıdaki catch { success:false } döner ve speak() sessizce çözülür (seçenekleri bekleyen oyun kilitlenmez).
+        const net = await withTimeout((async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            const response = await fetch(apiUrl('/api/tts'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {}),
+                },
+                body: JSON.stringify({
+                    text,
+                    voice,
+                    speed,
+                    instructions
+                }),
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                return { ok: false as const, error: (errorData.error as string | undefined) || `API Error: ${response.status}` };
+            }
+            return { ok: true as const, data: await response.json() };
+        })(), LIVE_TTS_TIMEOUT_MS);
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+        if (!net.ok) {
             return {
                 success: false,
-                error: errorData.error || `API Error: ${response.status}`
+                error: net.error
             };
         }
 
-        const data = await response.json();
+        const data = net.data;
 
         if (!data.audioContent) {
             return {
@@ -453,7 +503,15 @@ async function speakInner(
     }
 
     // 2) Hazır MP3 yoksa canlı proxy (şu an anahtar yok → sessiz)
+    const myEpoch = stopEpoch;
     const result = await generateSpeech(text, options);
+
+    // Üretim sürerken stopSpeech (ör. oyundan çıkış) geldiyse: geç gelen canlı sesi ÇALMA; söz hazır klip yoluyla
+    // aynı biçimde en geç 8 sn'de çözülür (anında çözülürse sıradaki konuşma menüde çalabilirdi).
+    if (myEpoch !== stopEpoch) {
+        await holdAfterStop();
+        return;
+    }
 
     if (result.success && result.audioUrl) {
         if (Platform.OS === 'web') {
@@ -465,19 +523,36 @@ async function speakInner(
             return new Promise((resolve) => {
                 const audio = new Audio(result.audioUrl);
                 currentLiveAudio = audio;
+                let done = false;
+                let timer: ReturnType<typeof setTimeout> | undefined;
                 const clear = () => {
                     if (currentLiveAudio === audio) currentLiveAudio = null;
                 };
-                audio.onended = () => { clear(); resolve(); };
-                audio.onerror = () => {
-                    console.warn('🔊 TTS: Audio oynatma hatasi (sessiz gecildi)');
+                const finish = () => {
+                    if (done) return;
+                    done = true;
+                    if (timer) clearTimeout(timer);
                     clear();
                     resolve();
                 };
+                // stopSpeech sesi pause() eder ve 'ended' hiç gelmez: üst sınır olmadan söz sonsuza kadar açık kalıyordu.
+                const arm = (ms: number) => {
+                    if (done) return;
+                    if (timer) clearTimeout(timer);
+                    timer = setTimeout(finish, ms);
+                };
+                arm(LIVE_PLAY_FALLBACK_MS);
+                audio.onloadedmetadata = () => {
+                    if (Number.isFinite(audio.duration) && audio.duration > 0) arm(audio.duration * 1000 + 4000);
+                };
+                audio.onended = () => finish();
+                audio.onerror = () => {
+                    console.warn('🔊 TTS: Audio oynatma hatasi (sessiz gecildi)');
+                    finish();
+                };
                 audio.play().catch(() => {
                     console.warn('🔊 TTS: Audio play basarisiz (sessiz gecildi)');
-                    clear();
-                    resolve();
+                    finish();
                 });
             });
         }
@@ -489,15 +564,36 @@ async function speakInner(
                 await currentTtsSound.unloadAsync().catch(() => { });
                 currentTtsSound = null;
             }
-            const { sound } = await ExpoAudio.Sound.createAsync({ uri: result.audioUrl }, { shouldPlay: true, volume: 1.0 });
+            // createAsync takılırsa da söz çözülsün (hazır klip yolundaki 8 sn yükleme sınırının aynısı);
+            // süre dolduktan sonra geç yüklenen ses çalmadan boşaltılır.
+            const loading = ExpoAudio.Sound.createAsync({ uri: result.audioUrl }, { shouldPlay: true, volume: 1.0 });
+            let loaded: Awaited<typeof loading>;
+            try {
+                loaded = await withTimeout(loading, LIVE_LOAD_TIMEOUT_MS);
+            } catch {
+                loading.then(({ sound: late }) => late.unloadAsync().catch(() => { })).catch(() => { });
+                console.warn('🔊 TTS: canlı ses yüklenemedi (zaman aşımı, sessiz geçildi)');
+                return;
+            }
+            const { sound, status: loadedStatus } = loaded;
+            if (myEpoch !== stopEpoch) {
+                sound.unloadAsync().catch(() => { });
+                await holdAfterStop();
+                return;
+            }
             currentTtsSound = sound;
+            const durationMs = loadedStatus.isLoaded && Number.isFinite(loadedStatus.durationMillis) ? (loadedStatus.durationMillis as number) : 0;
             await new Promise<void>((resolve) => {
+                // stopSpeech sesi boşaltınca 'bitti' olayı gelmez: üst sınır olmadan söz hiç çözülmüyordu.
+                const timer = setTimeout(resolve, durationMs > 0 ? durationMs + 4000 : LIVE_PLAY_FALLBACK_MS);
                 sound.setOnPlaybackStatusUpdate((status) => {
                     if (status.isLoaded && status.didJustFinish) {
                         sound.unloadAsync().catch(() => { });
                         if (currentTtsSound === sound) currentTtsSound = null;
+                        clearTimeout(timer);
                         resolve();
                     } else if (!status.isLoaded && (status as any).error) {
+                        clearTimeout(timer);
                         resolve();
                     }
                 });
@@ -528,11 +624,19 @@ export async function speakThenWait(text: string, minMs = 1200, options: SpeechO
  * Stop any currently playing speech (hazır MP3 + eski tarayıcı speechSynthesis).
  */
 export function stopSpeech(): void {
+    // Yüklemesi henüz bitmemiş çağrılar artık BAŞLAMAZ (createAsync / web indirme dönüşü sayaçlara bakar).
+    // stopEpoch "durduruldu"yu "yeni çağrı ezdi"den ayırır: durdurulan çağrının sözü 8 sn'ye kadar açık kalır.
+    ttsRequestId++;
+    stopEpoch++;
+    lastStopAt = Date.now();
     if (webAudio && webBusy) {
         webAudio.pause();
         webBusy = false;
         webPending?.rearm(8000);   // eskisi gibi: durdurulan cagri en gec 8 sn'de cozulur
     }
+    // ttsRequestId arttığı için çalan çağrının finish()'i mine() false görür ve klibi "kullanımda"dan düşüremez;
+    // blob önbellekte kilitli kalmasın diye burada bırakılır.
+    if (IS_WEB) markClipInUse(undefined);
     if (currentTtsSound) {
         const s = currentTtsSound;
         currentTtsSound = null;

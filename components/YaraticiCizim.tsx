@@ -96,6 +96,14 @@ export default function YaraticiCizim({ onGameEnd, onExit, reference }: Props) {
   // Unmount'ta o an calan sesi durdur (bkz. OdaminKrokisi/RenkAtolyesi deseni)
   useEffect(() => () => { stopSpeech(); }, []);
 
+  // Kaydet çift dokunuşu: save, yakalama (await) bitmeden ikinci kez başlarsa onGameEnd iki kez çağrılır (çift skor satırı, görsel yükleme, AI analizi, tebrik).
+  // Kilit REF'tir (state gecikmeli). onGameEnd oyunu bitirir (sonuç ekranı, bileşen sökülür): kaydedilince kilit AÇILMAZ. saving yalnız düğmeyi soluklaştırır.
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
+  // Yakalama sürerken çıkış/geri yapılırsa geç gelen onGameEnd menüden 'sonuç' ekranına atardı: sökülünce hiçbir şey çağırma.
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   const colorPickerAnim = useRef(new Animated.Value(0)).current;
   const sizePickerAnim = useRef(new Animated.Value(0)).current;
   const shapePickerAnim = useRef(new Animated.Value(0)).current;
@@ -269,6 +277,10 @@ export default function YaraticiCizim({ onGameEnd, onExit, reference }: Props) {
   const saveDrawing = async () => {
     const bundle = liveStrokeRef.current ? [...strokes, liveStrokeRef.current] : strokes;
     if (bundle.length === 0 && placedShapes.length === 0) return;
+    // Kilit: ilk await'ten ÖNCE (ref anında kapanır; savingRef notuna bak).
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
 
     Animated.sequence([
       Animated.timing(saveAnim, { toValue: 1.3, duration: 150, useNativeDriver: true }),
@@ -299,6 +311,8 @@ export default function YaraticiCizim({ onGameEnd, onExit, reference }: Props) {
     } catch (error) {
       console.warn('Cizim resmi olusturulamadi:', error);
     }
+    // Yakalama sürerken çıkıldıysa ne tebrik ne onGameEnd (geç onGameEnd menüden 'sonuç'a atar); bayrak da kalkmaz.
+    if (!mountedRef.current) { savingRef.current = false; return; }
     onGameEnd('yaratici-cizim', duration, totalPoints, 0, undefined, {
       cizimVerisi: serialized,
       cizimResimBase64,
@@ -526,9 +540,9 @@ export default function YaraticiCizim({ onGameEnd, onExit, reference }: Props) {
           {/* Save */}
           <Animated.View style={{ transform: [{ scale: saveAnim }] }}>
             <TouchableOpacity
-              style={[styles.toolBtn, styles.saveBtn, saved && styles.savedBtn]}
+              style={[styles.toolBtn, styles.saveBtn, saved && styles.savedBtn, saving && !saved && styles.savingBtn]}
               onPress={saveDrawing}
-              disabled={!hasContent}
+              disabled={!hasContent || saving}
             >
               <Ionicons name={saved ? 'checkmark-circle' : 'save'} size={22} color={saved ? '#fff' : hasContent ? '#4CAF50' : '#ccc'} />
             </TouchableOpacity>
@@ -676,6 +690,7 @@ const styles = StyleSheet.create({
   divider: { width: 2, height: 24, backgroundColor: '#e0e0e0', marginHorizontal: 2, borderRadius: 1 },
   saveBtn: { borderColor: '#4CAF50' },
   savedBtn: { backgroundColor: '#4CAF50', borderColor: '#2E7D32' },
+  savingBtn: { opacity: 0.5 },
   pickerPopup: {
     position: 'absolute', bottom: 80, backgroundColor: 'rgba(255,255,255,0.98)', borderRadius: 18,
     padding: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 6, elevation: 10, zIndex: 50,

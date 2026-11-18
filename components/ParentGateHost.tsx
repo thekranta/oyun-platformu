@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
     createGateChallenge,
     GATE_MAX_WRONG,
@@ -94,34 +94,42 @@ export default function ParentGateHost() {
     return (
         <Modal visible={visible} transparent animationType="fade" onRequestClose={() => finish(false)}>
             <View style={styles.overlay}>
+                {/* Kart ekran yüksekliğiyle sınırlı (maxHeight %100): sistem yazısı büyük ya da ekran kısa (yatay telefon) iken
+                    soru/seçenekler KAYDIRILIR; "Vazgeç" düğmesi kaydırma alanının dışında sabit kalır, her zaman erişilebilir. */}
                 <View style={styles.card} accessibilityViewIsModal>
-                    <Text style={styles.icon}>🔐</Text>
-                    <Text style={styles.title} accessibilityRole="header">{t('parentGate.title')}</Text>
-                    <Text style={styles.body}>{t('parentGate.body')}</Text>
-                    <Text style={styles.question} accessibilityLabel={t('parentGate.questionLabel', { a: challenge.a, b: challenge.b })}>
-                        {challenge.a} × {challenge.b} = ?
-                    </Text>
-                    <View style={styles.options}>
-                        {challenge.options.map((value) => (
-                            <Pressable
-                                key={value}
-                                accessibilityRole="button"
-                                accessibilityState={{ disabled: locked }}
-                                disabled={locked}
-                                onPress={() => pick(value)}
-                                style={[styles.option, locked && styles.optionLocked]}
-                            >
-                                <Text style={[styles.optionText, locked && styles.optionTextLocked]}>{value}</Text>
-                            </Pressable>
-                        ))}
-                    </View>
-                    {locked ? (
-                        <Text style={styles.warn} accessibilityLiveRegion="polite">
-                            {t('parentGate.locked', { seconds: Math.ceil(remainingMs / 1000) })}
+                    <ScrollView
+                        style={styles.scroll}
+                        contentContainerStyle={styles.scrollContent}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        <Text style={styles.icon}>🔐</Text>
+                        <Text style={styles.title} accessibilityRole="header">{t('parentGate.title')}</Text>
+                        <Text style={styles.body}>{t('parentGate.body')}</Text>
+                        <Text style={styles.question} accessibilityLabel={t('parentGate.questionLabel', { a: challenge.a, b: challenge.b })}>
+                            {challenge.a} × {challenge.b} = ?
                         </Text>
-                    ) : showWrong ? (
-                        <Text style={styles.warn} accessibilityLiveRegion="polite">{t('parentGate.wrong')}</Text>
-                    ) : null}
+                        <View style={styles.options}>
+                            {challenge.options.map((value) => (
+                                <Pressable
+                                    key={value}
+                                    accessibilityRole="button"
+                                    accessibilityState={{ disabled: locked }}
+                                    disabled={locked}
+                                    onPress={() => pick(value)}
+                                    style={[styles.option, locked && styles.optionLocked]}
+                                >
+                                    <Text style={[styles.optionText, locked && styles.optionTextLocked]}>{value}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                        {locked ? (
+                            <Text style={styles.warn} accessibilityLiveRegion="polite">
+                                {t('parentGate.locked', { seconds: Math.ceil(remainingMs / 1000) })}
+                            </Text>
+                        ) : showWrong ? (
+                            <Text style={styles.warn} accessibilityLiveRegion="polite">{t('parentGate.wrong')}</Text>
+                        ) : null}
+                    </ScrollView>
                     <Pressable accessibilityRole="button" onPress={() => finish(false)} style={styles.cancel}>
                         <Text style={styles.cancelText}>{t('parentGate.cancel')}</Text>
                     </Pressable>
@@ -133,7 +141,11 @@ export default function ParentGateHost() {
 
 const styles = StyleSheet.create({
     overlay: { flex: 1, backgroundColor: '#2B2317CC', justifyContent: 'center', alignItems: 'center', padding: 24 },
-    card: { backgroundColor: '#FFFCF5', borderRadius: 26, paddingVertical: 26, paddingHorizontal: 22, width: '100%', maxWidth: 380, alignItems: 'center' },
+    // maxHeight '100%': üst katman (overlay) padding'i düşülmüş yüksekliğin tamamı; kart bundan uzayamaz, içerik kaydırılır.
+    card: { backgroundColor: '#FFFCF5', borderRadius: 26, paddingVertical: 26, paddingHorizontal: 22, width: '100%', maxWidth: 380, maxHeight: '100%', alignItems: 'center' },
+    // flexShrink 1: içerik sığmazsa kaydırma alanı küçülür (Vazgeç düğmesi yerinde kalır); sığıyorsa içerik kadar yer kaplar.
+    scroll: { alignSelf: 'stretch', flexGrow: 0, flexShrink: 1 },
+    scrollContent: { alignItems: 'center' },
     icon: { fontSize: 38 },
     title: { fontSize: 22, fontWeight: '800', color: '#584B40', marginTop: 6, textAlign: 'center' },
     body: { fontSize: 14, color: '#756753', lineHeight: 21, marginTop: 8, textAlign: 'center' },

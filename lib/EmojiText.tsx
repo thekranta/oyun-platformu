@@ -1,6 +1,6 @@
 import React from 'react';
 import { Platform } from 'react-native';
-import { emojiImageSize, fontSizeOf, replaceEmojiChildren, shouldUseEmojiImages } from './emojiFallback';
+import { emojiImageSize, fontSizeOf, replaceEmojiChildren, shouldUseEmojiImages, withFontScaleCap } from './emojiFallback';
 
 /**
  * ANDROID'DE `Text` YERİNE GEÇEN SARMALAYICI (metro.config.js: Android paketinde `react-native/Libraries/Text/Text` bu dosyaya yönlenir;
@@ -11,6 +11,12 @@ import { emojiImageSize, fontSizeOf, replaceEmojiChildren, shouldUseEmojiImages 
  * etki etmedi. Derleme zamanı yönlendirmesi belirleyicidir: `react-native`in `Text` getter'ı, `Animated.Text` ve RN'in kendi bileşenleri dahil
  * HER `Text` kullanımı bu bileşenden geçer.
  *
+ * İKİ AYRI İŞ (ikisi de bu tek noktadan):
+ *  1. Yazı büyütme sınırı: `maxFontSizeMultiplier` verilmemiş her `Text`e varsayılan 1,3 (lib/emojiFallback.ts → DEFAULT_MAX_FONT_SIZE_MULTIPLIER).
+ *     Bu, `ACTIVE` kapısının DIŞINDA ve TÜM Android cihazlarda geçerlidir (API 35+ dahil): sistem yazı tipi büyük olan ebeveynlerde
+ *     sabit boyutlu kartlar taşmasın. iOS ve web özgün `Text`i kullandığı için bu yoldan geçmez (sınırları ayrıdır).
+ *  2. Emoji yedek resmi: yalnız `ACTIVE` (Android API < 35) iken.
+ *
  * Hata olursa uygulamayı düşürmez: dönüştürme başarısızsa özgün `Text` çizilir.
  */
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -20,21 +26,24 @@ const ACTIVE = shouldUseEmojiImages(Platform.OS, Platform.Version);
 let announced = false;
 
 function EmojiAwareText(props: Record<string, unknown>) {
+    // Sınır ACTIVE'den bağımsız: gelen props nesnesi değişmez, gerekirse kopya (maxFontSizeMultiplier eklenmiş) döner.
+    const capped = withFontScaleCap(props);
     if (ACTIVE) {
         try {
-            const children = props.children as React.ReactNode;
+            const children = capped.children as React.ReactNode;
             if (typeof children === 'string' || Array.isArray(children)) {
-                const next = replaceEmojiChildren(children, emojiImageSize(fontSizeOf(props.style), props.allowFontScaling !== false));
+                // Resim boyutu, yazıya fiilen uygulanan (sınırlı) ölçekle hesaplanır; yoksa emoji çevresindeki yazıdan büyük çıkar.
+                const next = replaceEmojiChildren(children, emojiImageSize(fontSizeOf(capped.style), capped.allowFontScaling !== false, capped.maxFontSizeMultiplier as number | undefined));
                 if (next) {
                     if (!announced) { announced = true; console.log('[emojiFallback] yeni emoji yedek resimle çiziliyor (Android API ' + String(Platform.Version) + ')'); }
-                    return React.createElement(OriginalText, props, ...next);
+                    return React.createElement(OriginalText, capped, ...next);
                 }
             }
         } catch {
             // dönüştürme başarısızsa özgün Text'e düş
         }
     }
-    return React.createElement(OriginalText, props);
+    return React.createElement(OriginalText, capped);
 }
 EmojiAwareText.displayName = 'Text';
 Object.keys(OriginalText).forEach((k) => {

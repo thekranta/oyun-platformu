@@ -79,7 +79,9 @@ export default function RootLayout() {
           </Stack>
           </UpdateGate>
         </AndroidInsetFrame>
-        <StatusBar style="auto" />
+        {/* Uygulama her zaman AÇIK temalı (sabit krem zemin, bkz. AndroidInsetFrame): "auto" koyu temalı telefonda simgeleri
+            açık renge çevirip krem zeminde okunmaz yapıyordu. Simgeler her zaman koyu. */}
+        <StatusBar style="dark" />
         <ParentGateHost />
       </SoundProvider>
     </ThemeProvider>

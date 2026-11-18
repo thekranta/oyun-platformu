@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import Svg, { Circle, Defs, Ellipse, G, Line, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import GameExitButton from './GameExitButton';
@@ -205,6 +205,16 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
 
   const finishedRef = useRef(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // Düğüm başına seçim kilidi: phase bir sonraki efektte değiştiği için aynı karede iki dokunuş (iki parmak)
+  // yola iki temsil yazıyor, secilen_yol / hamle sayısı AI analizine bozuk gidiyordu. Yeni düğümde açılır.
+  const choiceLockRef = useRef(false);
+
+  // Seçim kartları TEK SATIRA sığsın: eskiden sabit 200 dp genişlik → ≈450 dp'ye kadar telefonlarda iki kart
+  // alt alta düşüyor (2 × 150 + 16 + 32 = 348 dp), 360x640'ta alt alan ≈ 327 dp olduğundan ortalanmış sütun
+  // yukarıda sahne altyazısına biniyor, aşağıda taşıyordu. Alt alan genişliği = min(%92 pencere, 520):
+  // 360 dp → (331 − 16) / 2 = 157 dp; 411 dp → (378 − 16) / 2 = 181 dp; geniş ekranda 200 dp (eskisi gibi).
+  const { width: winW } = useWindowDimensions();
+  const choiceW = Math.min(200, Math.floor((Math.min(winW * 0.92, 520) - 16) / 2));
 
   const node = STORY[nodeId];
 
@@ -229,6 +239,7 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
   useEffect(() => {
     if (!started) return;
     let active = true;
+    choiceLockRef.current = false; // yeni düğüm: seçim kilidi açılır
     setPhase('narrating');
     (async () => {
       await speak(node.narration, { instructions: MOTHER_VOICE });
@@ -258,6 +269,9 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
   }, []);
 
   const handleChoice = (opt: StoryOption) => {
+    if (choiceLockRef.current) return; // aynı düğümde ikinci dokunuş yok sayılır
+    choiceLockRef.current = true;
+    setPhase('narrating'); // seçenekler efekt çalışana kadar bir kare daha görünmesin
     setPath((p) => [...p, opt.temsil]);
     setNodeId(opt.next);
   };
@@ -302,14 +316,17 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
 
       <View style={styles.bottom}>
         {phase === 'choice' && node.options ? (
-          <View style={styles.choices}>
-            {node.options.map((opt) => (
-              <TouchableOpacity key={opt.id} style={styles.choiceBtn} onPress={() => handleChoice(opt)} activeOpacity={0.85}>
-                <Text style={styles.choiceEmoji}>{opt.emoji}</Text>
-                <Text style={styles.choiceLabel}>{opt.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          // Yedek: çok kısa ekranda kartlar altyazıya binmek/taşmak yerine kayar; kısa içerik ortalı kalır.
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+            <View style={styles.choices}>
+              {node.options.map((opt) => (
+                <TouchableOpacity key={opt.id} style={[styles.choiceBtn, { width: choiceW }]} onPress={() => handleChoice(opt)} activeOpacity={0.85}>
+                  <Text style={styles.choiceEmoji}>{opt.emoji}</Text>
+                  <Text style={styles.choiceLabel}>{opt.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
         ) : started ? (
           <TouchableOpacity
             style={styles.replayBtn}

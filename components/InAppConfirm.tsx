@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export interface InAppConfirmState {
     title: string;
@@ -26,9 +26,13 @@ export default function InAppConfirm({ state, onClose }: Props) {
             <View style={styles.overlay}>
                 <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} accessibilityLabel={state?.cancelLabel} />
                 {state && (
+                    // Kart ekran yüksekliğiyle sınırlı (maxHeight %100): büyük sistem yazısında uzun ileti KAYDIRILIR; yanıt düğmeleri
+                    // kaydırma alanının dışında sabit kalır, her zaman erişilebilir.
                     <View style={styles.card} accessibilityViewIsModal accessibilityRole="alert">
-                        <Text style={styles.title}>{state.title}</Text>
-                        <Text style={styles.message}>{state.message}</Text>
+                        <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
+                            <Text style={styles.title}>{state.title}</Text>
+                            <Text style={styles.message}>{state.message}</Text>
+                        </ScrollView>
                         <View style={styles.row}>
                             <TouchableOpacity style={[styles.btn, styles.cancel]} onPress={onClose} accessibilityRole="button">
                                 <Text style={styles.cancelText}>{state.cancelLabel}</Text>
@@ -51,9 +55,12 @@ export default function InAppConfirm({ state, onClose }: Props) {
 const styles = StyleSheet.create({
     overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', padding: 24 },
     card: {
-        width: '100%', maxWidth: 380, backgroundColor: '#fff', borderRadius: 22, padding: 20,
+        // maxHeight '100%': overlay padding'i düşülmüş yüksekliğin tamamı; kart bundan uzayamaz, ileti kaydırılır.
+        width: '100%', maxWidth: 380, maxHeight: '100%', backgroundColor: '#fff', borderRadius: 22, padding: 20,
         ...Platform.select({ web: { boxShadow: '0 10px 30px rgba(0,0,0,0.25)' }, default: { elevation: 8 } }),
     },
+    // flexShrink 1: ileti sığmazsa kaydırma alanı küçülür (düğmeler yerinde kalır); sığıyorsa içerik kadar yer kaplar.
+    scroll: { flexGrow: 0, flexShrink: 1 },
     title: { fontSize: 18, fontWeight: '800', color: '#333' },
     message: { fontSize: 14.5, lineHeight: 21, color: '#555', marginTop: 8 },
     row: { flexDirection: 'row', gap: 10, marginTop: 18 },

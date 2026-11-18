@@ -1,8 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import React from 'react';
+import { PixelRatio } from 'react-native';
 import { EMOJI_IMAGES } from './emojiFallbackAssets';
-import { emojiImageSize, emojiKey, replaceEmojiChildren, shouldUseEmojiImages, splitEmojiParts } from './emojiFallback';
+import { DEFAULT_MAX_FONT_SIZE_MULTIPLIER, emojiImageSize, emojiKey, replaceEmojiChildren, shouldUseEmojiImages, splitEmojiParts } from './emojiFallback';
 import { NEW_EMOJI_SEQUENCES, NEW_EMOJI_SINGLE } from './emojiNewCodepoints';
 
 const ROOT = path.resolve(__dirname, '..');
@@ -81,6 +82,17 @@ describe('replaceEmojiChildren', () => {
         expect(emojiImageSize(40, false)).toBe(46);
         expect(emojiImageSize(90, false)).toBe(103);   // 90 × 1,15 = 103,49… → 103
     });
+
+    it('emojiImageSize: sistem yazı ölçeği, yazının büyütme sınırıyla kırpılır (resim yazıdan büyük çıkmaz)', () => {
+        const spy = jest.spyOn(PixelRatio, 'getFontScale').mockReturnValue(1.5);
+        try {
+            expect(emojiImageSize(40, true)).toBe(69);          // sınır verilmezse eski davranış: 40 × 1,5 × 1,15
+            expect(emojiImageSize(40, true, DEFAULT_MAX_FONT_SIZE_MULTIPLIER)).toBe(60);   // 40 × 1,3 × 1,15 = 59,8
+            expect(emojiImageSize(40, false, DEFAULT_MAX_FONT_SIZE_MULTIPLIER)).toBe(46);  // ölçek kapalı: sınır önemsiz
+        } finally {
+            spy.mockRestore();
+        }
+    });
 });
 
 /** Koruma: kaynakta Emoji 12+ bir emoji varsa yedek resmi OLMALI; yoksa eski Android'de kutu çıkar. */
@@ -130,5 +142,14 @@ describe('Android Text yönlendirmesi (metro.config.js)', () => {
         expect(src).toMatch(/require\('react-native\/Libraries\/Text\/Text'\)\.default/);
         expect(src).toMatch(/export default EmojiAwareText/);
         expect(src).toMatch(/shouldUseEmojiImages\(Platform\.OS, Platform\.Version\)/);
+    });
+
+    it('yazı büyütme sınırı (1,3) emoji yedeği kapısının DIŞINDA: API 35+ Android\'de de her Text sınırlanır', () => {
+        const src = fs.readFileSync(path.join(ROOT, 'lib', 'EmojiText.tsx'), 'utf8');
+        const sinir = src.indexOf('withFontScaleCap(props)');
+        expect(sinir).toBeGreaterThan(-1);
+        expect(sinir).toBeLessThan(src.indexOf('if (ACTIVE)'));
+        expect(DEFAULT_MAX_FONT_SIZE_MULTIPLIER).toBe(1.3);
+        // Ayrıntılı davranış testleri: lib/fontScaleCap.test.ts
     });
 });

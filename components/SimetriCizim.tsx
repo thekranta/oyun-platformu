@@ -52,6 +52,14 @@ export default function SimetriCizim({ onGameEnd, onExit, childName }: Props) {
   const endedRef = useRef(false);
   useEffect(() => () => { if (!endedRef.current) stopSpeech(); }, []);
 
+  // Kaydet çift dokunuşu: save, yakalama (await) bitmeden ikinci kez başlarsa onGameEnd iki kez çağrılır (çift skor satırı, görsel yükleme, AI analizi, tebrik).
+  // Kilit REF'tir (state gecikmeli). onGameEnd oyunu bitirir (sonuç ekranı, bileşen sökülür): kaydedilince kilit AÇILMAZ. saving yalnız düğmeyi soluklaştırır.
+  const savingRef = useRef(false);
+  const [saving, setSaving] = useState(false);
+  // Yakalama sürerken çıkış/geri yapılırsa geç gelen onGameEnd menüden 'sonuç' ekranına atardı: sökülünce hiçbir şey çağırma.
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
+
   const allStrokes = useMemo(() => (liveStroke ? [...strokes, liveStroke] : strokes), [strokes, liveStroke]);
 
   const addPoint = (x: number, y: number) => {
@@ -101,6 +109,10 @@ export default function SimetriCizim({ onGameEnd, onExit, childName }: Props) {
   const saveDrawing = async () => {
     const bundle = liveStrokeRef.current ? [...strokes, liveStrokeRef.current] : strokes;
     if (bundle.length === 0) return;
+    // Kilit: ilk await'ten ÖNCE (ref anında kapanır; savingRef notuna bak).
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
     const totalPoints = bundle.reduce((s, st) => s + st.points.length, 0);
     let base64: string | undefined;
@@ -116,6 +128,8 @@ export default function SimetriCizim({ onGameEnd, onExit, childName }: Props) {
         if (data) base64 = data.includes(',') ? data.split(',')[1] : data;
       }
     } catch (e) { console.warn('Cizim resmi olusturulamadi:', e); }
+    // Yakalama sürerken çıkıldıysa ne tebrik ne onGameEnd (geç onGameEnd menüden 'sonuç'a atar); bayrak da kalkmaz.
+    if (!mountedRef.current) { savingRef.current = false; return; }
     endedRef.current = true;
     speak('Ne güzel bir simetri! Aferin.', { instructions: HAPPY_VOICE });
     onGameEnd('simetri-cizim', duration, totalPoints, 0, undefined, {
@@ -152,7 +166,7 @@ export default function SimetriCizim({ onGameEnd, onExit, childName }: Props) {
           <TouchableOpacity style={styles.smallBtn} onPress={clearCanvas} disabled={!hasContent} activeOpacity={0.8}>
             <Ionicons name="trash-outline" size={20} color={hasContent ? '#e53935' : '#ccc'} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.smallBtn, styles.saveBtn, saved && styles.savedBtn]} onPress={saveDrawing} disabled={!hasContent} activeOpacity={0.8}>
+          <TouchableOpacity style={[styles.smallBtn, styles.saveBtn, saved && styles.savedBtn, saving && !saved && styles.savingBtn]} onPress={saveDrawing} disabled={!hasContent || saving} activeOpacity={0.8}>
             <Ionicons name={saved ? 'checkmark' : 'save'} size={20} color={saved ? '#fff' : hasContent ? '#43A047' : '#ccc'} />
           </TouchableOpacity>
         </View>
@@ -206,6 +220,7 @@ const styles = StyleSheet.create({
   smallBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 2, elevation: 2 },
   saveBtn: { borderWidth: 2, borderColor: '#43A047' },
   savedBtn: { backgroundColor: '#43A047', borderColor: '#2E7D32' },
+  savingBtn: { opacity: 0.5 },
   hint: { fontSize: 15, fontWeight: '700', color: '#7E57C2', marginVertical: 6 },
   canvas: { flex: 1, width: '94%', backgroundColor: CANVAS_BG, borderRadius: 20, borderWidth: 3, borderColor: '#D1C4E9', overflow: 'hidden' },
   palette: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: 10, paddingVertical: 12, paddingHorizontal: 12, maxWidth: 520 },

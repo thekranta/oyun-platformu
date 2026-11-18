@@ -7,7 +7,7 @@ import {
     Text,
     View,
 } from 'react-native';
-import { speak } from '../services/speechService';
+import { speak, stopSpeech } from '../services/speechService';
 
 const { width } = Dimensions.get('window');
 
@@ -104,11 +104,15 @@ export default function CountdownOverlay({
     const audioDoneRef = useRef(false);
     const countdownDoneRef = useRef(false);
     const finishedRef = useRef(false);
+    // Bileşen söküldü mü (oyundan çıkış, oyun yeniden kuruldu...): yönerge sözü (en geç 8 sn) ya da kapanış animasyonu
+    // söküldükten SONRA biterse onComplete() çağrılmamalı; yoksa oyun menüdeyken ilk sorusunu okutuyordu (2026-11-18 denetimi).
+    const mountedRef = useRef(true);
 
     const tryFinish = () => {
-        if (finishedRef.current || !audioDoneRef.current || !countdownDoneRef.current) return;
+        if (!mountedRef.current || finishedRef.current || !audioDoneRef.current || !countdownDoneRef.current) return;
         finishedRef.current = true;
         Animated.timing(fadeAnim, { toValue: 0, duration: 300, useNativeDriver: true }).start(() => {
+            if (!mountedRef.current) return;
             setIsVisible(false);
             onComplete();
         });
@@ -142,6 +146,16 @@ export default function CountdownOverlay({
             tryFinish();
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Söküm: yalnız overlay BİTMEDEN sökülürse (geri sayım sırasında çıkış) yönerge kesilir. Normal bitişte onComplete()
+    // içinde oyun ilk cümlesini söyler ve overlay ondan SONRA sökülür: koşulsuz stopSpeech o cümleyi keserdi.
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            if (!finishedRef.current) stopSpeech();
+        };
     }, []);
 
     // 5→1 geri sayım ( sesle eş zamanlı çalışır)
