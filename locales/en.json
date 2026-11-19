@@ -950,5 +950,118 @@
     "thanksSent": "Your report reached us. We will look into it.",
     "thanksQueued": "You seem to be offline. Your report is saved and will be sent automatically when you reconnect.",
     "done": "Done"
+  },
+  "webOdeme": {
+    "baslik": "Buy a package",
+    "altBaslik": "Choose a package for your child. Payment is one-time and does not renew automatically.",
+    "geri": "Back",
+    "paket": {
+      "tohum": "Tohum",
+      "filiz": "Filiz",
+      "fidan": "Fidan",
+      "orman": "Orman"
+    },
+    "sure": {
+      "ay1": "1 month",
+      "ay3": "3 months",
+      "ay6": "6 months",
+      "ay12": "12 months"
+    },
+    "secili": "Selected",
+    "sec": "Select",
+    "tekSefer": "One-time payment",
+    "form": {
+      "baslik": "Billing and contact details",
+      "aciklama": "These details are passed to the payment provider only to take the payment and issue the invoice.",
+      "ad": "First name",
+      "soyad": "Last name",
+      "telefon": "Mobile phone",
+      "telefonIpucu": "05xx xxx xx xx",
+      "tckn": "Turkish ID number (optional)",
+      "tcknIpucu": "11-digit ID number",
+      "adres": "Address",
+      "adresIpucu": "Neighbourhood, street, building and flat no.",
+      "sehir": "City"
+    },
+    "formHata": {
+      "ad": {
+        "bos": "Enter your first name.",
+        "gecersiz": "Enter your full first name."
+      },
+      "soyad": {
+        "bos": "Enter your last name.",
+        "gecersiz": "Enter your full last name."
+      },
+      "telefon": {
+        "bos": "Enter your mobile phone number.",
+        "gecersiz": "Enter the mobile number as 05xx xxx xx xx."
+      },
+      "tckn": {
+        "bos": "Enter your ID number.",
+        "gecersiz": "The ID number does not look valid. Check the 11 digits or leave it empty."
+      },
+      "adres": {
+        "bos": "Enter your address.",
+        "gecersiz": "Please write the address in a little more detail (neighbourhood, street, building no.)."
+      },
+      "sehir": {
+        "bos": "Enter your city.",
+        "gecersiz": "Enter the full city name."
+      }
+    },
+    "sozlesmeHazirDegil": "Payment is closed for now: our sales agreement page is being prepared. We do not take payment until you can read the agreement; please check back later.",
+    "paketSecilmedi": "Please select a package first.",
+    "onay": {
+      "bas": "I have read and accept:",
+      "mesafeliSatis": "the Preliminary Information and Distance Sales Agreement",
+      "kullanimSartlari": "the Terms of Service",
+      "gizlilik": "the Privacy Policy",
+      "gerekli": "You need to accept the agreement and terms to continue."
+    },
+    "odemeyeGec": "Continue to payment",
+    "odemeyeGecTutar": "Continue to payment: {{tutar}}",
+    "yonlendiriliyor": "Taking you to the payment page…",
+    "guven": "Payment is handled securely by iyzico; your card details are not stored by us.",
+    "giris": {
+      "baslik": "Please sign in first",
+      "metin": "You need to sign in with your parent account so the package can be added to it.",
+      "dugme": "Sign in"
+    },
+    "hata": {
+      "giris_gerekli": "We could not find your session. Please sign in and try again.",
+      "gecersiz_paket": "The package you chose is not valid. Please refresh the page and choose again.",
+      "gecersiz_alici": "Something is missing or wrong in your details. Please check the fields and try again.",
+      "daha_yuksek_paket_var": "Your account already has an active package higher than this one. You do not need to buy a new one.",
+      "profil_yok": "No parent profile was found for this email. Please make sure you have signed up in the app first.",
+      "odeme_yapilandirilmadi": "Payment is not available right now. Please try again later.",
+      "saglayici_hatasi": "We could not reach the payment provider right now. Your card has not been charged; please try again shortly.",
+      "cok_istek": "Too many attempts. Please wait a few minutes and try again.",
+      "ag_hatasi": "Could not connect. Please check your internet and try again.",
+      "genel": "Something went wrong. Please try again."
+    },
+    "sonuc": {
+      "yukleniyorBaslik": "Checking your payment",
+      "yukleniyorMetin": "This can take a few seconds. Please do not close this page.",
+      "basariliBaslik": "Thank you, your payment was received!",
+      "basariliPaket": "Your package: {{paket}}",
+      "basariliBitis": "Valid until {{tarih}}",
+      "basariliNot": "Your package has been added to your account. Refresh the child room to unlock all the games.",
+      "cocukOdasi": "Back to the child room",
+      "basarisizBaslik": "Payment could not be completed",
+      "basarisizMetin": "The payment was not approved, so your package was not opened. You can check your card details and try again, or use another card. However, if money was taken from your card or account, please write to us before paying again so we can check together: {{email}}",
+      "tekrarDene": "Try again",
+      "atamaBaslik": "Your payment was received",
+      "atamaMetin": "Your payment was received and your package will open within a few minutes. If it does not, write to us: {{email}}",
+      "bekliyorBaslik": "Your payment is awaiting approval",
+      "bekliyorMetin": "We have not yet heard back from the payment provider. Your package opens by itself once it is approved. If it does not, write to us: {{email}}",
+      "hataBaslik": "We could not get the result right now",
+      "hataMetin": "If your payment went through, your package opens within a few minutes. You can refresh and check again; if the problem continues, write to us: {{email}}",
+      "yenile": "Check again",
+      "siparisYokBaslik": "Order not found",
+      "siparisYokMetin": "No order appears in this link. You can look at the packages again.",
+      "girisBaslik": "Sign in to see the result",
+      "girisMetin": "Only the account that made the payment can see the order status. Please sign in with the same account.",
+      "girisDugme": "Sign in"
+    }
   }
 }

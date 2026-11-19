@@ -944,5 +944,118 @@
     "thanksSent": "Bildiriminiz bize ulaştı. İncelemeye alacağız.",
     "thanksQueued": "İnternet bağlantısı yok gibi görünüyor. Bildiriminiz kaydedildi, bağlantı gelince otomatik gönderilecek.",
     "done": "Tamam"
+  },
+  "webOdeme": {
+    "baslik": "Paket satın al",
+    "altBaslik": "Çocuğunuz için bir paket seçin. Ödeme tek seferliktir, kendiliğinden yenilenmez.",
+    "geri": "Geri",
+    "paket": {
+      "tohum": "Tohum",
+      "filiz": "Filiz",
+      "fidan": "Fidan",
+      "orman": "Orman"
+    },
+    "sure": {
+      "ay1": "1 ay",
+      "ay3": "3 ay",
+      "ay6": "6 ay",
+      "ay12": "12 ay"
+    },
+    "secili": "Seçildi",
+    "sec": "Seç",
+    "tekSefer": "Tek seferlik ödeme",
+    "form": {
+      "baslik": "Fatura ve iletişim bilgileri",
+      "aciklama": "Bu bilgiler yalnızca ödemenin yapılması ve faturanın düzenlenmesi için ödeme kuruluşuna iletilir.",
+      "ad": "Ad",
+      "soyad": "Soyad",
+      "telefon": "Cep telefonu",
+      "telefonIpucu": "05xx xxx xx xx",
+      "tckn": "T.C. kimlik no (isteğe bağlı)",
+      "tcknIpucu": "11 haneli kimlik numarası",
+      "adres": "Adres",
+      "adresIpucu": "Mahalle, cadde, bina ve daire no",
+      "sehir": "Şehir"
+    },
+    "formHata": {
+      "ad": {
+        "bos": "Adınızı yazın.",
+        "gecersiz": "Adınızı eksiksiz yazın."
+      },
+      "soyad": {
+        "bos": "Soyadınızı yazın.",
+        "gecersiz": "Soyadınızı eksiksiz yazın."
+      },
+      "telefon": {
+        "bos": "Cep telefonunuzu yazın.",
+        "gecersiz": "Cep telefonunu 05xx xxx xx xx biçiminde yazın."
+      },
+      "tckn": {
+        "bos": "T.C. kimlik numarasını yazın.",
+        "gecersiz": "T.C. kimlik numarası geçerli görünmüyor. 11 haneyi kontrol edin ya da boş bırakın."
+      },
+      "adres": {
+        "bos": "Adresinizi yazın.",
+        "gecersiz": "Adresi biraz daha ayrıntılı yazın (mahalle, cadde, bina no)."
+      },
+      "sehir": {
+        "bos": "Şehrinizi yazın.",
+        "gecersiz": "Şehir adını eksiksiz yazın."
+      }
+    },
+    "sozlesmeHazirDegil": "Ödeme şu an kapalı: satış sözleşmesi sayfamız hazırlanıyor. Sözleşmeyi okuyamadan ödeme almıyoruz; lütfen daha sonra yeniden uğrayın.",
+    "paketSecilmedi": "Önce bir paket seçin.",
+    "onay": {
+      "bas": "Okudum ve kabul ediyorum:",
+      "mesafeliSatis": "Ön Bilgilendirme ve Mesafeli Satış Sözleşmesi",
+      "kullanimSartlari": "Kullanım Şartları",
+      "gizlilik": "Gizlilik Politikası",
+      "gerekli": "Devam etmek için sözleşme ve şartları kabul etmeniz gerekiyor."
+    },
+    "odemeyeGec": "Ödemeye geç",
+    "odemeyeGecTutar": "Ödemeye geç: {{tutar}}",
+    "yonlendiriliyor": "Ödeme sayfasına yönlendiriliyorsunuz…",
+    "guven": "Ödeme İyzico güvencesiyle alınır; kart bilgileriniz bizde saklanmaz.",
+    "giris": {
+      "baslik": "Önce giriş yapın",
+      "metin": "Paketin hesabınıza tanımlanabilmesi için veli hesabınızla giriş yapmanız gerekiyor.",
+      "dugme": "Giriş yap"
+    },
+    "hata": {
+      "giris_gerekli": "Oturumunuz bulunamadı. Lütfen giriş yapıp yeniden deneyin.",
+      "gecersiz_paket": "Seçtiğiniz paket geçerli değil. Lütfen sayfayı yenileyip yeniden seçin.",
+      "gecersiz_alici": "Bilgilerinizde bir eksik ya da hata var. Alanları kontrol edip yeniden deneyin.",
+      "daha_yuksek_paket_var": "Hesabınızda bu paketten daha yüksek, süresi devam eden bir paket var. Yeni bir paket almanıza gerek yok.",
+      "profil_yok": "Bu e-posta için bir veli profili bulunamadı. Önce uygulamadan kayıt olduğunuzdan emin olun.",
+      "odeme_yapilandirilmadi": "Ödeme hizmeti şu an kullanılamıyor. Lütfen daha sonra yeniden deneyin.",
+      "saglayici_hatasi": "Ödeme kuruluşuna şu an ulaşılamadı. Kartınızdan para çekilmedi; lütfen biraz sonra yeniden deneyin.",
+      "cok_istek": "Çok fazla deneme yapıldı. Lütfen birkaç dakika bekleyip yeniden deneyin.",
+      "ag_hatasi": "Bağlantı kurulamadı. İnternetinizi kontrol edip yeniden deneyin.",
+      "genel": "Bir şeyler ters gitti. Lütfen yeniden deneyin."
+    },
+    "sonuc": {
+      "yukleniyorBaslik": "Ödemeniz kontrol ediliyor",
+      "yukleniyorMetin": "Birkaç saniye sürebilir. Lütfen bu sayfayı kapatmayın.",
+      "basariliBaslik": "Teşekkürler, ödemeniz alındı!",
+      "basariliPaket": "Paketiniz: {{paket}}",
+      "basariliBitis": "Geçerlilik: {{tarih}} tarihine kadar",
+      "basariliNot": "Paketiniz hesabınıza tanımlandı. Çocuk odasını yenilediğinizde tüm oyunlar açılır.",
+      "cocukOdasi": "Çocuk odasına dön",
+      "basarisizBaslik": "Ödeme tamamlanamadı",
+      "basarisizMetin": "Ödeme onaylanmadı, bu nedenle paketiniz açılmadı. Kart bilgilerinizi kontrol edip yeniden deneyebilir ya da başka bir kart kullanabilirsiniz. Ancak kartınızdan veya hesabınızdan tutar düştüyse yeniden ödeme yapmadan önce bize yazın, birlikte kontrol edelim: {{email}}",
+      "tekrarDene": "Tekrar dene",
+      "atamaBaslik": "Ödemeniz alındı",
+      "atamaMetin": "Ödemeniz alındı, paketiniz birkaç dakika içinde açılacak. Açılmazsa bize yazın: {{email}}",
+      "bekliyorBaslik": "Ödemeniz onay bekliyor",
+      "bekliyorMetin": "Ödeme kuruluşundan henüz yanıt gelmedi. Onaylanınca paketiniz kendiliğinden açılır. Açılmazsa bize yazın: {{email}}",
+      "hataBaslik": "Sonucu şu an alamadık",
+      "hataMetin": "Ödemeniz tamamlandıysa paketiniz birkaç dakika içinde açılır. Sayfayı yenileyip yeniden bakabilirsiniz; sorun sürerse bize yazın: {{email}}",
+      "yenile": "Yeniden kontrol et",
+      "siparisYokBaslik": "Sipariş bulunamadı",
+      "siparisYokMetin": "Bu bağlantıda bir sipariş görünmüyor. Paketleri yeniden inceleyebilirsiniz.",
+      "girisBaslik": "Sonucu görmek için giriş yapın",
+      "girisMetin": "Siparişinizin durumunu yalnızca ödemeyi yapan hesap görebilir. Aynı hesapla giriş yapın.",
+      "girisDugme": "Giriş yap"
+    }
   }
 }
