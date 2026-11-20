@@ -447,7 +447,7 @@ export default function OdaminKrokisi({ onGameEnd, onExit, childName }: Props) {
     const durationSeconds = Math.floor((Date.now() - startRef.current) / 1000);
     onGameEnd('odamin-krokisi', durationSeconds, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Sosyal: Mekânsal Temsil Oluşturabilme — kroki üretme ve okuma (SAB.17)',
+      kazanimOdagi: 'Sosyal: Mekânsal Temsil Oluşturabilme — kroki üretme ve okuma (SAB.13)',
       correct_answers: correctRef.current,
     });
   };

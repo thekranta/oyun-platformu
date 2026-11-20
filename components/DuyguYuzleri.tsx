@@ -130,7 +130,7 @@ export default function DuyguYuzleri({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('duygu-yuzleri', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Sosyal-Duygusal Gelişim: Duyguları Tanıma (SAB)',
+      kazanimOdagi: 'Sosyal-Duygusal Gelişim: Başkalarının Duygularını Anlama (SDB.5)',
       correct_answers: correctRef.current,
     });
   };

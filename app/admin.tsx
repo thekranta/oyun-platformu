@@ -14,6 +14,7 @@ import QueueRow from '../components/admin/QueueRow';
 import ReviewHeader from '../components/admin/ReviewHeader';
 import { C, F, S } from '../components/admin/theme';
 import UndoStrip from '../components/admin/UndoStrip';
+import { MAARIF_CIKTILAR_2026 } from '../constants/maarifCurriculum2026';
 import { getMaarif } from '../constants/maarifMap';
 import { getGameDisplay, normalizeOyunTuru } from '../lib/gameDisplay';
 import { apiUrl } from '../lib/apiBase';
@@ -324,6 +325,9 @@ export default function AdminPanel() {
     try {
       const oyunBilgisi = getMaarif(normalizeOyunTuru(score.oyun_turu));
       const oyunAdiTR = oyunBilgisi.displayName || score.oyun_turu;
+      // Resmi olmayan (platform içi SDB) kodlar rapora KOD olarak yazılmaz: öğretmen panelindeki kural (lib/maarifInfo.ts) ile aynı.
+      const ciktiResmi = !!MAARIF_CIKTILAR_2026[oyunBilgisi.cikti]?.resmi;
+      const ciktiEtiketi = ciktiResmi ? oyunBilgisi.cikti : `${oyunBilgisi.alan} alan becerisi`;
       const yasAy = score.ogrenci_yasi;
       let gelisimselDonem = '';
       if (yasAy < 36) gelisimselDonem = 'Erken Çocukluk (24-36 ay)';
@@ -419,7 +423,7 @@ Yapay zeka olarak bu verileri kıyasla ve "Gelişim Seyri" analizi yap.
 FAB (Fen), MAB (Matematik), HSAB (Hareket/Sağlık), SAB (Sosyal),
 TADB (Dinleme/İzleme), TAKB (Konuşma), TAEOB (Erken Okuryazarlık), TAOB (Okuma),
 MDB/MSB/MÇB/MHB/MYB (Müzik), SNAB (Sanat)
-⚠️ BU KODLAR DIŞINDA KOD KULLANMA! SDB veya başka kod UYDURMA!`;
+⚠️ BU KODLAR DIŞINDA KOD KULLANMA, kod UYDURMA! Sosyal-Duygusal alandaki oyunlarda kod yazma; yalnızca yukarıda verilen beceri adını kullan.`;
 
       if (oyunBilgisi.isValueStory) {
         // NOT (bilinen, şemasız-faz dokunmuyor): değer-hikayesi oyunları seçilen yolu
@@ -437,7 +441,7 @@ Sen, Türkiye Yüzyılı Maarif Modeli'ne hakim bir Okul Öncesi Eğitim Danış
 ${gelisimBolumu}
 ## MAARİF MODELİ REFERANSI:
 - Alan: ${oyunBilgisi.alan} | Süreç: ${oyunBilgisi.surec}
-- Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
+- Öğrenme Çıktısı: ${ciktiEtiketi} - ${oyunBilgisi.ciktiAciklama}
 - Değer: ${oyunBilgisi.deger || 'Belirtilmemiş'}
 ${GECERLI_KODLAR}
 
@@ -450,7 +454,7 @@ ${GECERLI_KODLAR}
 
 **MAARİF MODELİ PEDAGOJİK ANALİZ**
 
-**Öğrenme Çıktısı:** ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
+**Öğrenme Çıktısı:** ${ciktiEtiketi} - ${oyunBilgisi.ciktiAciklama}
 
 **Süreç Analizi:** [Çocuğun "${oyunBilgisi.surec}" sürecindeki performansını veriyle açıkla]
 
@@ -589,7 +593,7 @@ ${toplamTur > 0 ? `- Tur Bilgisi: ${mevcutTur}/${toplamTur}` : ''}
 ${gelisimBolumu}${scaffoldingNotu}${teknikHataNotu}${turAnaliziNotu}
 ## MAARİF MODELİ REFERANSI:
 - Alan: ${oyunBilgisi.alan} | Süreç: ${oyunBilgisi.surec}
-- Öğrenme Çıktısı: ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
+- Öğrenme Çıktısı: ${ciktiEtiketi} - ${oyunBilgisi.ciktiAciklama}
 ${GECERLI_KODLAR}
 
 ## DEĞERLENDİRME KURALLARI:
@@ -605,7 +609,7 @@ ${GECERLI_KODLAR}
 
 **MAARİF MODELİ PEDAGOJİK ANALİZ**
 
-**Öğrenme Çıktısı:** ${oyunBilgisi.cikti} - ${oyunBilgisi.ciktiAciklama}
+**Öğrenme Çıktısı:** ${ciktiEtiketi} - ${oyunBilgisi.ciktiAciklama}
 
 **Süreç Analizi:** [Çocuğun "${oyunBilgisi.surec}" sürecindeki performansını ${score.hamle_sayisi} hamle ve ${hata} hata verisiyle açıkla]
 

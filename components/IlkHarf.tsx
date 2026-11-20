@@ -128,7 +128,7 @@ export default function IlkHarf({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('ilk-harf', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Türkçe: Erken Okuryazarlık - Harf-Ses İlişkisi / İlk Ses Farkındalığı (TAEOB.6)',
+      kazanimOdagi: 'Türkçe: Erken Okuryazarlık - Harf-Ses İlişkisi / İlk Ses Farkındalığı (TAEOB.2)',
       correct_answers: correctRef.current,
     });
   };

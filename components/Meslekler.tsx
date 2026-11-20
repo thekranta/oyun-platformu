@@ -90,7 +90,7 @@ export default function Meslekler({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('meslekler', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Sosyal: Meslekleri Tanıma - Meslek ve Araç İlişkisi (SAB.3)',
+      kazanimOdagi: 'Sosyal: Meslekleri Tanıma - Meslek ve Araç İlişkisi (SAB.14)',
       correct_answers: correctRef.current,
     });
   };

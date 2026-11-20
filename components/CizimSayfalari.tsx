@@ -291,7 +291,7 @@ export default function CizimSayfalari({ onGameEnd, onExit, childName }: Props) 
       cizimResimBase64: base64,
       cizimResimFormat: 'png',
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Sanat / Erken Okuryazarlık: Yazma Öncesi Çizgi Çalışması (TAEOB.6)',
+      kazanimOdagi: 'Sanat / Erken Okuryazarlık: Yazma Öncesi Çizgi Çalışması (SNAB.4)',
     });
     setSaved(true);
   };

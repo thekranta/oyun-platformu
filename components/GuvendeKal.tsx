@@ -90,7 +90,7 @@ export default function GuvendeKal({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('guvende-kal', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Hareket/Sağlık: Tehlike ve Kazalardan Korunma - Güvenli Davranış (HSAB.10)',
+      kazanimOdagi: 'Hareket/Sağlık: Tehlike ve Kazalardan Korunma - Güvenli Davranış (HSAB.9)',
       correct_answers: correctRef.current,
     });
   };

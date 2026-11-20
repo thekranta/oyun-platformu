@@ -167,7 +167,7 @@ export default function KucukAnlatici({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('kucuk-anlatici', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Türkçe: Konuşma Sürecini Yönetme — Sözlü Anlatım (TAKB.1)',
+      kazanimOdagi: 'Türkçe: Konuşma Sürecinin İçeriğini Oluşturma — Olayları Sıralama ve Anlatma (TAKB.2)',
       correct_answers: correctRef.current,
     });
   };

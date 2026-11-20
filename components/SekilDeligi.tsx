@@ -109,7 +109,7 @@ export default function SekilDeligi({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('sekil-deligi', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Matematik: Geometrik Şekli Özelliğine Göre Eşleme (MAB.2)',
+      kazanimOdagi: 'Matematik: Geometrik Şekli Özelliğine Göre Eşleme (MAB.9)',
       correct_answers: correctRef.current,
     });
   };

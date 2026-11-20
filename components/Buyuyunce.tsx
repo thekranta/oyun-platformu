@@ -86,7 +86,7 @@ export default function Buyuyunce({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('buyuyunce', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Fen: Canlıların Büyüme ve Değişimini Gözlemleme (yaşam döngüsü) (FAB.1)',
+      kazanimOdagi: 'Fen: Canlıların Büyüme ve Değişimini Gözlemleme (yaşam döngüsü) (FAB.3)',
       correct_answers: correctRef.current,
     });
   };

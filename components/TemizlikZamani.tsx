@@ -87,7 +87,7 @@ export default function TemizlikZamani({ onGameEnd, onExit, childName }: Props) 
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('temizlik-zamani', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Hareket/Sağlık: Temizlik ve Düzen - Uygun Aracı Seçme (HSAB.9)',
+      kazanimOdagi: 'Hareket/Sağlık: Temizlik ve Düzen - Uygun Aracı Seçme (HSAB.8)',
       correct_answers: correctRef.current,
     });
   };

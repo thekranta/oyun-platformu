@@ -508,7 +508,7 @@ export default function SesNasil({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('ses-nasil', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Müzik: Müziksel Özellikleri Ayırt Edebilme — tempo, gürlük, ses kalınlığı, ezgi yönü (MDB.4)',
+      kazanimOdagi: 'Müzik: Müziksel Özellikleri Ayırt Edebilme — tempo, gürlük, ses kalınlığı, ezgi yönü (MDB.3)',
       correct_answers: correctRef.current,
     });
   };

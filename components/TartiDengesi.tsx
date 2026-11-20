@@ -203,7 +203,7 @@ export default function TartiDengesi({ onGameEnd, onExit, childName = 'Çocuk' }
                 if (round < 10) setRound(r => r + 1);
                 else {
                     const d = Math.floor((Date.now() - startTime) / 1000);
-                    onGameEnd('Tartı Dengesi', d, 10, mistakes, undefined, { zorlukSeviyesi: 1, kazanimOdagi: 'MAB.1 Sayısal Denge' });
+                    onGameEnd('Tartı Dengesi', d, 10, mistakes, undefined, { zorlukSeviyesi: 1, kazanimOdagi: 'MAB.10 Terazide Sayı Sembolü Eşleme' });
                 }
             }, 1500));
         } else if (val > targetNumber) {

@@ -407,7 +407,7 @@ export default function DavulUstasi({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('davul-ustasi', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Müzik: Ritim Çalışmalarına Katılabilme — işitsel ritim tekrarı (MÇB.4)',
+      kazanimOdagi: 'Müzik: Ritim Çalışmalarına Katılabilme — işitsel ritim tekrarı (MÇB.2)',
       correct_answers: correctRef.current,
       round_history: historyRef.current,
     });

@@ -88,7 +88,7 @@ export default function HavaKiyafet({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('hava-kiyafet', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Fen: Hava Olaylarını Günlük Yaşamla İlişkilendirme - Uygun Kıyafeti Seçme (FAB.1)',
+      kazanimOdagi: 'Fen: Hava Olaylarını Günlük Yaşamla İlişkilendirme - Uygun Kıyafeti Seçme (FAB.3)',
       correct_answers: correctRef.current,
     });
   };

@@ -90,7 +90,7 @@ export default function EsitPaylastir({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('esit-paylastir', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Matematik: Eşit Paylaşım / Eşit Gruplara Ayırma (bölmeye giriş) (MAB.4)',
+      kazanimOdagi: 'Matematik: Eşit Paylaşım / Eşit Gruplara Ayırma (bölmeye giriş) (MAB.5)',
       correct_answers: correctRef.current,
     });
   };

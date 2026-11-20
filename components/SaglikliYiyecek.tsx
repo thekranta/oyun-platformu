@@ -75,7 +75,7 @@ export default function SaglikliYiyecek({ onGameEnd, onExit, childName }: Props)
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('saglikli-yiyecek', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Hareket/Sağlık: Sağlıklı Beslenme - Sağlıklı Yiyeceği Seçme (HSAB.7)',
+      kazanimOdagi: 'Hareket/Sağlık: Sağlıklı Beslenme - Sağlıklı Yiyeceği Seçme (HSAB.6)',
       correct_answers: correctRef.current,
     });
   };

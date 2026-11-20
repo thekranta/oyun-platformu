@@ -83,7 +83,7 @@ export default function AyniFarkli({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('ayni-farkli', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Matematik: Görselleri Karşılaştırma, Aynı/Farklı Ayırt Etme (MAB.3)',
+      kazanimOdagi: 'Fen: Benzer ve Farklı Olanı Ayırt Etme (FAB.2)',
       correct_answers: correctRef.current,
     });
   };

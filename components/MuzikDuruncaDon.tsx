@@ -251,7 +251,7 @@ export default function MuzikDuruncaDon({ onGameEnd, onExit, childName }: Props)
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('muzik-durunca-don', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Müzik: Müzik ve Ritimle Hareket — Dur/Don (MHB.3)',
+      kazanimOdagi: 'Müzik: Müzik ve Ritimle Hareket — Dur/Don (MHB.2)',
       correct_answers: correctRef.current,
     });
   };

@@ -105,7 +105,7 @@ export default function MinikMarket({ onGameEnd, onExit, childName }: Props) {
     const duration = Math.floor((Date.now() - startTime) / 1000);
     onGameEnd('minik-market', duration, movesRef.current, errorsRef.current, undefined, {
       zorlukSeviyesi: 1,
-      kazanimOdagi: 'Sosyal: Para/Ekonomi — İhtiyaçlar İçin Gelir Gerekir (SAB.22)',
+      kazanimOdagi: 'Matematik: Alışveriş Bağlamında Sayma ve Nicelik Eşleme (MAB.1)',
       correct_answers: correctRef.current,
     });
   };

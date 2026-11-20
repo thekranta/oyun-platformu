@@ -5,9 +5,9 @@ import { RADAR_COLORS, radarColorFor } from './radarColors';
 describe('getMaarifInfo', () => {
     it('resmi kodlu oyunda kod ve Maarif belgesindeki resmi metin gelir', () => {
         const m = getMaarifInfo('siralama');
-        expect(m.code).toBe('MAB.4');
+        expect(m.code).toBe('MAB.1');
         expect(m.official).toBe(true);
-        expect(m.text).toBe('Karşılaştırmaya ve tahmine dayalı çıkarım yapabilme');
+        expect(m.text).toBe('Sayıları farklı durumlarda doğru kullanabilme');
         expect(m.alan).toBe('Matematik');
     });
 

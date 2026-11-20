@@ -149,7 +149,7 @@ export default function BayrakBoya({ onGameEnd, onExit, childName = 'Küçük Ka
                     const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
                     onGameEnd('bayrak-boya', duration, movesRef.current, errorsRef.current, undefined, {
                         zorlukSeviyesi: 1,
-                        kazanimOdagi: 'TAEOB.6 Boyama + kültürel farkındalık (bayraklar)',
+                        kazanimOdagi: 'SNAB.4 Boyama + kültürel farkındalık (bayraklar)',
                     });
                 } else {
                     const nr = round + 1;

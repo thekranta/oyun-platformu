@@ -106,7 +106,7 @@ export default function AkilliEksikSayi({ onGameEnd, onExit, childName = 'Küç�
             const duration = Math.round((Date.now() - startTimeRef.current) / 1000);
             onGameEnd('akilli-eksik-sayi', duration, totalMovesRef.current, totalErrorsRef.current, undefined, {
                 zorlukSeviyesi: solvedInDiff,
-                kazanimOdagi: 'MAB.5 Eksik parçayı bulma / sayı dizisi (uyarlanır zorluk)',
+                kazanimOdagi: 'MAB.1 Eksik sayıyı bulma / sayı dizisi (uyarlanır zorluk)',
             });
             return;
         }

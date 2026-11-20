@@ -226,7 +226,7 @@ export default function SevgiHikayesi({ onExit, onGameEnd }: Props) {
       cizimVerisi: JSON.stringify({
         secilen_yol: path.join(' -> '),
         temsiller: path,
-        maarif_kazanim: 'SAB - Sosyal Alan Becerileri: Sevgiyi ifade etme, empati kurma, yardımlaşma',
+        maarif_kazanim: 'Sosyal-Duygusal Gelişim: Sevgiyi ifade etme, empati kurma, yardımlaşma',
         analiz_ipucu:
           'Çocuğun iki seçimi sevgi-ifade tarzını temsil eder. 1. seçim: duygusal-teselli (empatik yakınlık) ya da neselendirme (olumlu duygu paylaşımı). 2. seçim: paylasma (cömertlik) ya da isbirligi (birlikte problem çözme). Tüm yollar olumlu sonuçlanır; amaç doğru/yanlış değil, çocuğun tercih ettiği prososyal stili SAB kazanımları çerçevesinde yorumlamaktır.',
         oyun_turu_aciklama: 'İnteraktif Değer Hikayesi - Sevgi',
