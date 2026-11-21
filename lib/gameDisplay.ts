@@ -49,7 +49,7 @@ const GAME_EMOJI: Record<string, string> = {
     // Yeni oyunlar (Türkçe / Fen)
     'kafiye-bahcesi': '🌸', 'harf-vagonlari': '🚂', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
     // Yeni oyunlar (Sosyal / Matematik)
-    'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊', 'minik-anketci': '📋',
+    'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊', 'minik-anketci': '📋', 'en-dinle-dokun': '👂', 'en-konusan-ciftler': '🗣️', 'en-boya': '🎨', 'en-ogretmen-der-ki': '🙌', 'en-sayalim': '🔢',
     // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
     'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'deney-atolyesi': '🔬', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
     // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)

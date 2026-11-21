@@ -194,7 +194,7 @@ export default function AdminPanel() {
   const maarif = secili ? getMaarif(normalizeOyunTuru(secili.oyun_turu)) : null;
   const analiz = useMemo(() => ayristirAnaliz(secili?.yapay_zeka_yorumu), [secili?.yapay_zeka_yorumu]);
   const bayraklar = useMemo(() => {
-    if (!maarif) return [];
+    if (!maarif || maarif.ek) return [];
     return hesaplaBayraklar({ analiz, beklenenKod: maarif.cikti, gelisimGecmisiVarMi: sonUcKiyas.length > 0, gercekSure: secili?.sure });
   }, [analiz, maarif, sonUcKiyas.length, secili?.sure]);
 
@@ -321,6 +321,7 @@ export default function AdminPanel() {
   const [analizIsleniyor, setAnalizIsleniyor] = useState(false);
   const analyzeGame = async (score: KuyrukKaydi & { algilanan_kelime?: string }) => {
     if (score.oyun_turu === 'yaratici-cizim') { alert('Yaratıcı çizim için yapay zeka yorumu oluşturulmaz.'); return; }
+    if (getMaarif(normalizeOyunTuru(score.oyun_turu)).ek) { alert('Maarif programı dışı ek etkinlik (İngilizce) için Maarif analizi üretilmez.'); return; }
     setAnalizIsleniyor(true);
     try {
       const oyunBilgisi = getMaarif(normalizeOyunTuru(score.oyun_turu));

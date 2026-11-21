@@ -194,4 +194,9 @@ export const GAME_CATALOG: GameCatalogItem[] = [
 
   { id: 'yaratici-cizim', title: 'Yaratici Cizim', status: 'creative', domain: 'Sanat', skillFocus: 'Yaratici ifade', routeKey: 'yaratici-cizim', forestCategory: 'renk-cayiri' },
   { id: 'muzik-calar', title: 'Muzik Calar', status: 'music', domain: 'Muzik', skillFocus: 'Sarki ve ritim', routeKey: 'muzik-calar', forestCategory: 'ritim-kelebegi' },
+  { id: 'en-dinle-dokun', title: 'Ingilizce Dinle ve Dokun', status: 'secondary', domain: 'Dil', skillFocus: 'Ingilizce dinleme (ek etkinlik, uyarlanir zorluk)', routeKey: 'en-dinle-dokun', adaptive: true, forestCategory: 'ingilizce-kosesi' },
+  { id: 'en-konusan-ciftler', title: 'Ingilizce Konusan Ciftler', status: 'secondary', domain: 'Dil', skillFocus: 'Ingilizce hayvan adlari (ek etkinlik, hafiza)', routeKey: 'en-konusan-ciftler', forestCategory: 'ingilizce-kosesi' },
+  { id: 'en-boya', title: 'Ingilizce Boya', status: 'secondary', domain: 'Dil', skillFocus: 'Ingilizce renk yonergesi (ek etkinlik)', routeKey: 'en-boya', forestCategory: 'ingilizce-kosesi' },
+  { id: 'en-ogretmen-der-ki', title: 'Ingilizce Ogretmen Der Ki', status: 'secondary', domain: 'Dil', skillFocus: 'Ingilizce hareket yonergesi (ek etkinlik)', routeKey: 'en-ogretmen-der-ki', forestCategory: 'ingilizce-kosesi' },
+  { id: 'en-sayalim', title: 'Ingilizce Sayalim', status: 'secondary', domain: 'Dil', skillFocus: 'Ingilizce sayma 1-10 (ek etkinlik)', routeKey: 'en-sayalim', forestCategory: 'ingilizce-kosesi' },
 ];

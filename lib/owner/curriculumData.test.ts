@@ -19,7 +19,9 @@ describe('Maarif 2026 kod sözlüğü', () => {
     });
 
     it('her oyunun Maarif kodu sözlükte var ve oyunun alanı kodun alanıyla uyuşur', () => {
+        // Ek etkinlikler (ek: true, ör. İngilizce) Maarif dışıdır: kod taşımazlar (constants/maarifMap.test.ts ve lib/ekEtkinlik.test.ts korur).
         const kotu = Object.entries(MAARIF_MAP)
+            .filter(([, e]) => !e.ek)
             .filter(([, e]) => !MAARIF_CIKTILAR_2026[e.cikti] || MAARIF_CIKTILAR_2026[e.cikti].alan !== e.alan)
             .map(([k, e]) => `${k}: ${e.alan} / ${e.cikti}`);
         expect(kotu).toEqual([]);

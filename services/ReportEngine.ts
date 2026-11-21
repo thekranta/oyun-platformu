@@ -455,6 +455,7 @@ export class ReportEngine {
         const codes: string[] = [];
         for (const type of new Set(games.map(g => g.oyun_turu))) {
             const m = getMaarif(normalize(type));
+            if (m.ek) continue;   // Maarif dışı ek etkinlik: kod listesine girmez
             const label = `${m.cikti} — ${m.surec} (${m.alan})`;
             if (!seen.has(label)) {
                 seen.add(label);

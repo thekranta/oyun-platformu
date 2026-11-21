@@ -365,6 +365,7 @@
     "radarTitle": "Development Radar Chart",
     "radarHint": "Based on the last {{count}} games",
     "maarifLabel": "Maarif Model learning outcome",
+    "ekLabel": "Extra activity (outside the Maarif programme)",
     "summaryDisclaimer": "Prepared with AI; it does not replace an expert assessment.",
     "pedagogicalAnalysisTitle": "🎓 Pedagogical Analysis",
     "errorDistributionTitle": "📊 Error Distribution Analysis",

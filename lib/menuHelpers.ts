@@ -140,6 +140,11 @@ export const GAME_CARD_META: Record<string, { color: string; icon: keyof typeof 
   'minik-market': { color: '#43A047', icon: 'cart', displayTitle: 'Minik Market', subtitle: 'Alışveriş yap' },
   'hazine-haritasi': { color: '#8D6E63', icon: 'map', displayTitle: 'Hazine Haritası', subtitle: 'Haritayı takip et' },
   'minik-anketci': { color: '#00897B', icon: 'people', displayTitle: 'Minik Anketçi', subtitle: 'Sor, say, yorumla' },
+  'en-dinle-dokun': { color: '#3949AB', icon: 'headset', displayTitle: 'İngilizce: Dinle ve Dokun', subtitle: 'Duy ve resmi bul' },
+  'en-konusan-ciftler': { color: '#00ACC1', icon: 'chatbubble-ellipses', displayTitle: 'İngilizce: Konuşan Çiftler', subtitle: 'Kartlar konuşuyor' },
+  'en-boya': { color: '#D81B60', icon: 'color-palette', displayTitle: 'İngilizce: Boya', subtitle: 'Dinle ve boya' },
+  'en-ogretmen-der-ki': { color: '#F4511E', icon: 'accessibility', displayTitle: 'İngilizce: Öğretmen Der Ki', subtitle: 'Karakterle birlikte yap' },
+  'en-sayalim': { color: '#7CB342', icon: 'calculator', displayTitle: 'İngilizce: Sayalım', subtitle: 'İngilizce say' },
   'grafik-ustasi': { color: '#1E88E5', icon: 'bar-chart', displayTitle: 'Grafik Ustası', subtitle: 'Grafiği oku' },
   'resimde-ne-oluyor': { color: '#3949AB', icon: 'image', displayTitle: 'Resimde Ne Oluyor?', subtitle: 'Resimden anlam' },
   'deney-atolyesi': { color: '#2E7D32', icon: 'flask', displayTitle: 'Deney Atölyesi', subtitle: 'Dene, gözle, yaz' },
@@ -204,7 +209,7 @@ export const GAME_EMOJI: Record<string, string> = {
   // Yeni oyunlar (Türkçe / Fen)
   'kafiye-bahcesi': '🌸', 'harf-vagonlari': '🚂', 'resimde-ne-ters': '🖼️', 'sonra-ne-olur': '🔮',
   // Yeni oyunlar (Sosyal / Matematik)
-  'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊', 'minik-anketci': '📋',
+  'minik-market': '🛒', 'hazine-haritasi': '🗺️', 'grafik-ustasi': '📊', 'minik-anketci': '📋', 'en-dinle-dokun': '👂', 'en-konusan-ciftler': '🗣️', 'en-boya': '🎨', 'en-ogretmen-der-ki': '🙌', 'en-sayalim': '🔢',
   // Yeni oyunlar (Türkçe / Fen / Sosyal - tap)
   'resimde-ne-oluyor': '🔎', 'iz-dedektifi': '🐾', 'deney-atolyesi': '🔬', 'mevsim-bahcesi': '🍂', 'manzara-kasifi': '🏔️',
   // Yeni oyunlar (Müzik / Sosyal-duygusal / Dil - tap)

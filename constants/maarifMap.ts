@@ -37,6 +37,8 @@ export interface MaarifEntry {
   deger?: string;             // Değer temalı oyunlar için (Adalet, Sevgi ...)
   isValueStory?: boolean;     // Seçim-tabanlı değer hikayesi mi (özel analiz dalı)
   badgeAlan?: string;         // Panel rozetinde gösterilecek dostça alan etiketi (yoksa `alan`)
+  /** true = Maarif programında KARŞILIĞI OLMAYAN ek etkinlik (ör. İngilizce). `cikti` boştur; hiçbir yerde Maarif kodu/kazanımı iddia edilmez. */
+  ek?: boolean;
 }
 
 // Bilinmeyen oyunlar için varsayılan (en genel bilişsel beceri)
@@ -242,6 +244,14 @@ export const MAARIF_MAP: Record<string, MaarifEntry> = {
   'spor-gunu': { displayName: 'Spor Günü', alan: 'Hareket ve Sağlık', surec: 'Aktif Yaşam İçin Motor Beceriler', cikti: 'HSAB.7', ciktiAciklama: 'İç ve dış mekânda fiziksel aktivitelere katılabilme; mekân ve hareketi seçer, hareket eder, kalp atışını dinleyerek bedensel değişimi (kalbim hızlı atıyor) fark eder ve hareket-beden değişimi neden-sonuç ilişkisini kurar', badgeAlan: 'Hareket ve Sağlık' },
   'hayvan-jimnastigi': { displayName: 'Hayvan Jimnastiği', alan: 'Hareket ve Sağlık', surec: 'Aktif Yaşam İçin Motor Beceriler', cikti: 'HSAB.1', ciktiAciklama: 'Farklı çevre ve fiziksel etkinliklerde temel hareket becerilerini sergileyebilme; hayvan hareketlerini (zıplama, ağır adım, tek ayakta denge, yan yürüme) tanıyıp taklit eder', badgeAlan: 'Sağlık' },
   // Müzik Kutusu (muzik-calar): 40+ şarkıyı seçip dinleme; skor kaydı tutmaz (onGameEnd yok) ama öğretmen rehberinde görünür.
+  // ---------- EK ETKİNLİKLER (Maarif programı DIŞI) ----------
+  // 2026 okul öncesi programında yabancı dil çıktısı yoktur; bu yüzden bu oyunlara Maarif kodu ATANMAZ (cikti boş, ek: true).
+  // Panel/rapor/AI analizi bu oyunları Maarif kazanımı gibi göstermemelidir (bkz. isEkEtkinlik + lib/ekEtkinlik.test.ts).
+  'en-dinle-dokun': { displayName: 'İngilizce: Dinle ve Dokun', alan: 'İngilizce', surec: 'Ek etkinlik (Maarif dışı)', cikti: '', ek: true, ciktiAciklama: 'Maarif programında karşılığı olmayan ek etkinlik: İngilizce söylenen sözcüğü dinleyip doğru resmi seçer (performansa göre uyarlanır zorluk)', badgeAlan: 'İngilizce (ek)' },
+  'en-konusan-ciftler': { displayName: 'İngilizce: Konuşan Çiftler', alan: 'İngilizce', surec: 'Ek etkinlik (Maarif dışı)', cikti: '', ek: true, ciktiAciklama: 'Maarif programında karşılığı olmayan ek etkinlik: kartlar çevrilince İngilizce adı söylenen resim çiftlerini eşleştirir', badgeAlan: 'İngilizce (ek)' },
+  'en-boya': { displayName: 'İngilizce: Boya', alan: 'İngilizce', surec: 'Ek etkinlik (Maarif dışı)', cikti: '', ek: true, ciktiAciklama: 'Maarif programında karşılığı olmayan ek etkinlik: İngilizce söylenen renk ve nesne yönergesini dinleyip resmi boyar', badgeAlan: 'İngilizce (ek)' },
+  'en-ogretmen-der-ki': { displayName: 'İngilizce: Öğretmen Der Ki', alan: 'İngilizce', surec: 'Ek etkinlik (Maarif dışı)', cikti: '', ek: true, ciktiAciklama: 'Maarif programında karşılığı olmayan ek etkinlik: İngilizce hareket yönergesini (zıpla, alkışla, otur) dinleyip karakterle birlikte yapar', badgeAlan: 'İngilizce (ek)' },
+  'en-sayalim': { displayName: 'İngilizce: Sayalım', alan: 'İngilizce', surec: 'Ek etkinlik (Maarif dışı)', cikti: '', ek: true, ciktiAciklama: 'Maarif programında karşılığı olmayan ek etkinlik: nesnelere dokunarak bir ile on arasında İngilizce sayar', badgeAlan: 'İngilizce (ek)' },
   'muzik-calar': { displayName: 'Müzik Kutusu', alan: 'Müzik', surec: 'Müziksel Dinleme', cikti: 'MDB.1', ciktiAciklama: 'Çeşitli müzik eserlerini dinleyebilme; değerler, matematik ve fen temalı çocuk şarkıları arasından seçip dinler', badgeAlan: 'Müzik' },
 };
 
@@ -262,6 +272,11 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
   if (uydurma.length) {
     console.warn('⚠️ maarifMap: 2026 belgesinde OLMAYAN (uydurma) Maarif kodu:', uydurma);
   }
+}
+
+/** Maarif programı DIŞINDAKİ ek etkinlik mi (ör. İngilizce)? Bu oyunlara Maarif kodu/kazanımı iddiası yapılmaz. */
+export function isEkEtkinlik(oyunTuru: string): boolean {
+  return getMaarif(oyunTuru).ek === true;
 }
 
 export function getMaarif(oyunTuru: string): MaarifEntry {

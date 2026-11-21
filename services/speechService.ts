@@ -30,6 +30,11 @@ export interface SpeechOptions {
     voice?: 'alloy' | 'ash' | 'ballad' | 'coral' | 'echo' | 'fable' | 'nova' | 'onyx' | 'sage' | 'shimmer' | 'verse' | 'marin' | 'cedar';
     speed?: number; // 0.25 to 4.0 (default: child-friendly slower pace)
     instructions?: string; // Optional TTS style instructions
+    /**
+     * 'en' = İNGİLİZCE hedef sözcük/cümle: hazır klip `eng-<slug>` adıyla aranır (Türkçe kliplerle ad çakışması olmaz; ör. "top").
+     * Klip yoksa Türkçe canlı sese DÜŞMEZ (yanlış telaffuz öğretilmesin): sessiz geçer. Bkz. enClipSlug, lib/ingilizceKelimeler.ts.
+     */
+    lang?: 'en';
 }
 
 export interface SpeechResult {
@@ -54,6 +59,11 @@ export function ttsSlug(text: string): string {
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
+}
+
+/** İngilizce klip anahtarı: 'apple' → 'eng-apple' (assets/sounds/tts/eng-apple.mp3). 'en-' KULLANILMAZ: Türkçe 'En uzun' gibi klipler 'en-' ile başlar. */
+export function enClipSlug(text: string): string {
+    return 'eng-' + ttsSlug(text);
 }
 
 // Şu an çalan hazır-MP3 sesi; yenisi gelince durdurulup boşaltılır (üst üste binmesin).
@@ -496,9 +506,14 @@ async function speakInner(
     options: SpeechOptions = {}
 ): Promise<void> {
     // 1) HAZIR MP3 var mı?
-    const bundled = TTS[ttsSlug(text)];
+    const bundled = TTS[options.lang === 'en' ? enClipSlug(text) : ttsSlug(text)];
     if (bundled != null) {
         await playBundled(bundled);
+        return;
+    }
+    // İngilizce klip yoksa Türkçe canlı sese/proxy'ye düşme: yanlış dilde, yanlış telaffuzla okunur.
+    if (options.lang === 'en') {
+        if (typeof __DEV__ !== 'undefined' && __DEV__) console.warn('[speech] İngilizce klip yok:', enClipSlug(text));
         return;
     }
 

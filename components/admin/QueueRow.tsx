@@ -16,7 +16,7 @@ interface Props {
 function QueueRowBase({ kayit, secili, benimAdim, onPress }: Props) {
   const gd = getGameDisplay(kayit.oyun_turu);
   const maarif = getMaarif(normalizeOyunTuru(kayit.oyun_turu));
-  const kod = maarif.cikti;
+  const kod = maarif.cikti || 'EK';
   const durum = esikDurumu(kayit.uzman_oylamalari, 3);
   const oySayisi = durum.tur === 'beklemede' ? durum.toplamOy : durum.tur === 'kilitli'
     ? Object.keys(kayit.uzman_oylamalari || {}).length : 3;

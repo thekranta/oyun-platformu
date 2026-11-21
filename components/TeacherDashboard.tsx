@@ -1063,7 +1063,7 @@ export default function TeacherDashboard({
                                         const m = getMaarifInfo(score.oyun_turu);
                                         return (
                                             <View style={styles.maarifBox}>
-                                                <Text style={styles.maarifLabel}>{t('teacher.maarifLabel')}</Text>
+                                                <Text style={styles.maarifLabel}>{m.ek ? t('teacher.ekLabel') : t('teacher.maarifLabel')}</Text>
                                                 <View style={styles.maarifTop}>
                                                     {m.code && <View style={styles.maarifCodeChip}><Text style={styles.maarifCodeText}>{m.code}</Text></View>}
                                                     <Text style={styles.maarifAlan}>{m.alan + ' · ' + m.surec}</Text>

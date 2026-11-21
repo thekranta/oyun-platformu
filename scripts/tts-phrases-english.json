@@ -1,0 +1,532 @@
+[
+ {
+  "text": "red",
+  "slug": "eng-red",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "blue",
+  "slug": "eng-blue",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "yellow",
+  "slug": "eng-yellow",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "green",
+  "slug": "eng-green",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "orange",
+  "slug": "eng-orange",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "purple",
+  "slug": "eng-purple",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "pink",
+  "slug": "eng-pink",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "brown",
+  "slug": "eng-brown",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "cat",
+  "slug": "eng-cat",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "dog",
+  "slug": "eng-dog",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "bird",
+  "slug": "eng-bird",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "fish",
+  "slug": "eng-fish",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "rabbit",
+  "slug": "eng-rabbit",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "cow",
+  "slug": "eng-cow",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "horse",
+  "slug": "eng-horse",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "duck",
+  "slug": "eng-duck",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "pig",
+  "slug": "eng-pig",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "sheep",
+  "slug": "eng-sheep",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "apple",
+  "slug": "eng-apple",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "banana",
+  "slug": "eng-banana",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "orange",
+  "slug": "eng-orange",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "grapes",
+  "slug": "eng-grapes",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "strawberry",
+  "slug": "eng-strawberry",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "watermelon",
+  "slug": "eng-watermelon",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "lemon",
+  "slug": "eng-lemon",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "pear",
+  "slug": "eng-pear",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "Good job!",
+  "slug": "eng-good-job",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "Great!",
+  "slug": "eng-great",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "Well done!",
+  "slug": "eng-well-done",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "Yes!",
+  "slug": "eng-yes",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "Wow!",
+  "slug": "eng-wow",
+  "game": "en-dinle-dokun"
+ },
+ {
+  "text": "cat",
+  "slug": "eng-cat",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "dog",
+  "slug": "eng-dog",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "bird",
+  "slug": "eng-bird",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "fish",
+  "slug": "eng-fish",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "rabbit",
+  "slug": "eng-rabbit",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "cow",
+  "slug": "eng-cow",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "horse",
+  "slug": "eng-horse",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "duck",
+  "slug": "eng-duck",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "pig",
+  "slug": "eng-pig",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "sheep",
+  "slug": "eng-sheep",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "Good job!",
+  "slug": "eng-good-job",
+  "game": "en-konusan-ciftler"
+ },
+ {
+  "text": "Paint the apple red.",
+  "slug": "eng-paint-the-apple-red",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the apple green.",
+  "slug": "eng-paint-the-apple-green",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the apple yellow.",
+  "slug": "eng-paint-the-apple-yellow",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the ball red.",
+  "slug": "eng-paint-the-ball-red",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the ball blue.",
+  "slug": "eng-paint-the-ball-blue",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the ball yellow.",
+  "slug": "eng-paint-the-ball-yellow",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the sun yellow.",
+  "slug": "eng-paint-the-sun-yellow",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the sun orange.",
+  "slug": "eng-paint-the-sun-orange",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the sun red.",
+  "slug": "eng-paint-the-sun-red",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the flower pink.",
+  "slug": "eng-paint-the-flower-pink",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the flower purple.",
+  "slug": "eng-paint-the-flower-purple",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the flower yellow.",
+  "slug": "eng-paint-the-flower-yellow",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the leaf green.",
+  "slug": "eng-paint-the-leaf-green",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the leaf yellow.",
+  "slug": "eng-paint-the-leaf-yellow",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the leaf brown.",
+  "slug": "eng-paint-the-leaf-brown",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the fish blue.",
+  "slug": "eng-paint-the-fish-blue",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the fish orange.",
+  "slug": "eng-paint-the-fish-orange",
+  "game": "en-boya"
+ },
+ {
+  "text": "Paint the fish yellow.",
+  "slug": "eng-paint-the-fish-yellow",
+  "game": "en-boya"
+ },
+ {
+  "text": "red",
+  "slug": "eng-red",
+  "game": "en-boya"
+ },
+ {
+  "text": "blue",
+  "slug": "eng-blue",
+  "game": "en-boya"
+ },
+ {
+  "text": "yellow",
+  "slug": "eng-yellow",
+  "game": "en-boya"
+ },
+ {
+  "text": "green",
+  "slug": "eng-green",
+  "game": "en-boya"
+ },
+ {
+  "text": "orange",
+  "slug": "eng-orange",
+  "game": "en-boya"
+ },
+ {
+  "text": "purple",
+  "slug": "eng-purple",
+  "game": "en-boya"
+ },
+ {
+  "text": "pink",
+  "slug": "eng-pink",
+  "game": "en-boya"
+ },
+ {
+  "text": "brown",
+  "slug": "eng-brown",
+  "game": "en-boya"
+ },
+ {
+  "text": "Good job!",
+  "slug": "eng-good-job",
+  "game": "en-boya"
+ },
+ {
+  "text": "Great!",
+  "slug": "eng-great",
+  "game": "en-boya"
+ },
+ {
+  "text": "Well done!",
+  "slug": "eng-well-done",
+  "game": "en-boya"
+ },
+ {
+  "text": "Yes!",
+  "slug": "eng-yes",
+  "game": "en-boya"
+ },
+ {
+  "text": "Wow!",
+  "slug": "eng-wow",
+  "game": "en-boya"
+ },
+ {
+  "text": "Teacher says, clap!",
+  "slug": "eng-teacher-says-clap",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Teacher says, wave!",
+  "slug": "eng-teacher-says-wave",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Teacher says, jump!",
+  "slug": "eng-teacher-says-jump",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Teacher says, run!",
+  "slug": "eng-teacher-says-run",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Teacher says, dance!",
+  "slug": "eng-teacher-says-dance",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Teacher says, sleep!",
+  "slug": "eng-teacher-says-sleep",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Clap!",
+  "slug": "eng-clap",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Wave!",
+  "slug": "eng-wave",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Jump!",
+  "slug": "eng-jump",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Run!",
+  "slug": "eng-run",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Dance!",
+  "slug": "eng-dance",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Sleep!",
+  "slug": "eng-sleep",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Good job!",
+  "slug": "eng-good-job",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Great!",
+  "slug": "eng-great",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Well done!",
+  "slug": "eng-well-done",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Yes!",
+  "slug": "eng-yes",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "Wow!",
+  "slug": "eng-wow",
+  "game": "en-ogretmen-der-ki"
+ },
+ {
+  "text": "one",
+  "slug": "eng-one",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "two",
+  "slug": "eng-two",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "three",
+  "slug": "eng-three",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "four",
+  "slug": "eng-four",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "five",
+  "slug": "eng-five",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "six",
+  "slug": "eng-six",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "seven",
+  "slug": "eng-seven",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "eight",
+  "slug": "eng-eight",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "nine",
+  "slug": "eng-nine",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "ten",
+  "slug": "eng-ten",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "How many?",
+  "slug": "eng-how-many",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "Good job!",
+  "slug": "eng-good-job",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "Great!",
+  "slug": "eng-great",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "Well done!",
+  "slug": "eng-well-done",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "Yes!",
+  "slug": "eng-yes",
+  "game": "en-sayalim"
+ },
+ {
+  "text": "Wow!",
+  "slug": "eng-wow",
+  "game": "en-sayalim"
+ }
+]

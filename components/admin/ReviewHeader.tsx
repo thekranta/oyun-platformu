@@ -29,7 +29,7 @@ export default function ReviewHeader({ kayit, navIndex, navTotal, onPrev, onNext
       <View style={st.idcol}>
         <View style={st.titleRow}>
           <Text style={st.gname}>{gd.emoji} {gd.name}</Text>
-          <Text style={[st.badge, { backgroundColor: codeColor(maarif.cikti) }]}>{maarif.cikti}</Text>
+          <Text style={[st.badge, { backgroundColor: codeColor(maarif.cikti) }]}>{maarif.cikti || 'EK'}</Text>
           <Text style={st.alan}>{maarif.alan}</Text>
         </View>
         <View style={st.metaRow}>

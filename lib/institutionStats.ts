@@ -166,7 +166,8 @@ export const groupByArea = (rows: GameTypeRow[]): AreaShare[] => {
     let total = 0;
     for (const r of rows) {
         // Haritada OLMAYAN oyun "Matematik" sayılmaz (getMaarif varsayılanı Matematik'tir); dürüstçe "Diğer" altında toplanır.
-        const alan = MAARIF_MAP[r.oyunTuru]?.alan || 'Diğer';
+        const entry = MAARIF_MAP[r.oyunTuru];
+        const alan = entry?.ek ? 'İngilizce (ek)' : entry?.alan || 'Diğer';
         by.set(alan, (by.get(alan) ?? 0) + r.gameCount);
         total += r.gameCount;
     }

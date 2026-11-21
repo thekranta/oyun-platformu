@@ -7,6 +7,11 @@ import type { VeliTier } from '../lib/subscriptionTiers';
 import { asset } from '../lib/assetMap';
 
 const AdaletHikayesi = lazyWithReload(() => import('./AdaletHikayesi'));
+const EnglishBoya = lazyWithReload(() => import('./EnglishBoya'));
+const EnglishDinleDokun = lazyWithReload(() => import('./EnglishDinleDokun'));
+const EnglishKonusanCiftler = lazyWithReload(() => import('./EnglishKonusanCiftler'));
+const EnglishOgretmenDerKi = lazyWithReload(() => import('./EnglishOgretmenDerKi'));
+const EnglishSayalim = lazyWithReload(() => import('./EnglishSayalim'));
 const AileSepetiMacerasi = lazyWithReload(() => import('./AileSepetiMacerasi'));
 const AyiAilesi = lazyWithReload(() => import('./AyiAilesi'));
 const AyniFarkli = lazyWithReload(() => import('./AyniFarkli'));
@@ -454,6 +459,12 @@ export const GAME_RENDERERS: Record<string, (ctx: GameRenderContext) => React.Re
     <SevgiHikayesi onExit={c.onExit} onGameEnd={c.onGameEnd} userId={c.ad} userEmail={c.email} userAge={parseInt(c.yas)} />
   ),
   'yaratici-cizim': (c) => <YaraticiCizim onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  // İngilizce ek etkinlikler (Maarif dışı; bkz. constants/ingilizceKelimeler.ts)
+  'en-dinle-dokun': (c) => <EnglishDinleDokun onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'en-konusan-ciftler': (c) => <EnglishKonusanCiftler onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'en-boya': (c) => <EnglishBoya onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'en-ogretmen-der-ki': (c) => <EnglishOgretmenDerKi onGameEnd={c.onGameEnd} onExit={c.onExit} />,
+  'en-sayalim': (c) => <EnglishSayalim onGameEnd={c.onGameEnd} onExit={c.onExit} />,
   'muzik-calar': (c) => <MuzikCalar onExit={c.onExit} initialSongIndex={c.selectedSongIndex} />,
   'sihirli-siseler': (c) => (
     <SihirliSiseler

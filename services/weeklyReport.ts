@@ -229,6 +229,7 @@ export function buildWeeklyReport(
     const areaMap = new Map<string, { count: number; codes: Set<string> }>();
     source.forEach(g => {
         const m = getMaarif(normalizeOyunTuru(g.oyun_turu));
+        if (m.ek) return;   // Maarif dışı ek etkinlik (İngilizce): Maarif gelişim alanı olarak sayılmaz
         const area = m.badgeAlan || m.alan || 'Genel';
         if (!areaMap.has(area)) areaMap.set(area, { count: 0, codes: new Set() });
         const entry = areaMap.get(area)!;

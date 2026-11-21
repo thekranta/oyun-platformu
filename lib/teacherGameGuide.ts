@@ -122,6 +122,7 @@ export function buildGuide(plays?: Record<string, number> | null, catalog: GameC
     for (const g of catalog) {
         const entry = MAARIF_MAP[g.id] ?? MAARIF_MAP[g.routeKey];
         if (!entry) continue;                       // test: katalogda Maarif kaydı olmayan oyun kalmamalı
+        if (entry.ek) continue;                     // Maarif dışı ek etkinlik (İngilizce): rehberde kazanım gibi listelenmez
         const tracked = !UNTRACKED_GAMES.has(g.id);
         const game: GuideGame = {
             id: g.id,

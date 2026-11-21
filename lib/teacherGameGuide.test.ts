@@ -1,13 +1,17 @@
 import { GAME_CATALOG } from '../constants/gameCatalog';
 import { MAARIF_CIKTILAR_2026 } from '../constants/maarifCurriculum2026';
 import { MAARIF_MAP } from '../constants/maarifMap';
+
 import { ALAN_ORDER, alanSummary, buildClassGuide, buildGuide, classAlanSummary, countPlays, filterGuide, guideAlanlar, missingCount, stripOfficial, UNTRACKED_GAMES } from './teacherGameGuide';
+
+// Ek etkinlikler (ek: true, ör. İngilizce) Maarif dışıdır: rehberde (Maarif kodu → oyun) yer almaz (lib/ekEtkinlik.test.ts).
+const MAARIF_OYUNLARI = GAME_CATALOG.filter(g => !(MAARIF_MAP[g.id] ?? MAARIF_MAP[g.routeKey])?.ek);
 
 describe('öğretmen oyun rehberi: her oyun listede', () => {
     it('katalogdaki HER oyunun geçerli bir Maarif kaydı var (yeni oyun eklerken maarifMap unutulmasın)', () => {
         const eksik = GAME_CATALOG.filter(g => {
             const e = MAARIF_MAP[g.id] ?? MAARIF_MAP[g.routeKey];
-            return !e || !MAARIF_CIKTILAR_2026[e.cikti];
+            return !e || (!e.ek && !MAARIF_CIKTILAR_2026[e.cikti]);
         }).map(g => g.id);
         expect(eksik).toEqual([]);
     });
@@ -16,7 +20,7 @@ describe('öğretmen oyun rehberi: her oyun listede', () => {
         const guide = buildGuide();
         const ids = guide.flatMap(c => c.games.map(g => g.id));
         expect(new Set(ids).size).toBe(ids.length);
-        expect([...ids].sort()).toEqual(GAME_CATALOG.map(g => g.id).sort());
+        expect([...ids].sort()).toEqual(MAARIF_OYUNLARI.map(g => g.id).sort());
         for (const c of guide) for (const g of c.games) expect(g.name.trim()).not.toBe('');
     });
 
@@ -136,7 +140,7 @@ describe('alan özeti (grafik verisi)', () => {
         const sum = alanSummary(guide);
         expect(sum.map(s => s.alan)).toEqual(guideAlanlar(guide));
         expect(sum.reduce((n, s) => n + s.kod, 0)).toBe(guide.length);
-        expect(sum.reduce((n, s) => n + s.oyun, 0)).toBe(GAME_CATALOG.length);
+        expect(sum.reduce((n, s) => n + s.oyun, 0)).toBe(MAARIF_OYUNLARI.length);
         for (const s of sum) { expect(s.izlenebilir).toBeNull(); expect(s.oynanan).toBeNull(); expect(s.eksik).toBeNull(); }
     });
 

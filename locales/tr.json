@@ -365,6 +365,7 @@
     "radarTitle": "Gelişim Radar Grafiği",
     "radarHint": "Son {{count}} oyuna göre",
     "maarifLabel": "Maarif Modeli kazanımı",
+    "ekLabel": "Ek etkinlik (Maarif programı dışı)",
     "summaryDisclaimer": "Yapay zekâ ile hazırlanmıştır; uzman değerlendirmesi yerine geçmez.",
     "pedagogicalAnalysisTitle": "🎓 Pedagojik Analiz",
     "errorDistributionTitle": "📊 Hata Dağılımı Analizi",

@@ -13,10 +13,15 @@ export interface MaarifInfo {
     text: string;
     /** Metin Maarif belgesinden mi (true), yoksa platformun kendi açıklamasından mı (false). */
     official: boolean;
+    /** true = Maarif programı DIŞI ek etkinlik (ör. İngilizce): kod ve kazanım iddiası yoktur. */
+    ek: boolean;
 }
 
 export function getMaarifInfo(oyunTuru: string): MaarifInfo {
     const entry = getMaarif(oyunTuru);
+    if (entry.ek) {
+        return { code: null, alan: entry.alan, surec: entry.surec, text: entry.ciktiAciklama, official: false, ek: true };
+    }
     const curr = MAARIF_CIKTILAR_2026[entry.cikti];
     const isOfficialCode = !!curr && curr.resmi;
     return {
@@ -25,5 +30,6 @@ export function getMaarifInfo(oyunTuru: string): MaarifInfo {
         surec: entry.surec,
         text: curr ? curr.aciklama : entry.ciktiAciklama,
         official: !!curr,
+        ek: false,
     };
 }
