@@ -9,6 +9,7 @@ import { GAME_CATALOG, GameCatalogItem } from '@/constants/gameCatalog';
 import { isGameLocked, pinnedLocks, roomGames } from '@/lib/toyRoomSelection';
 import { useStageSize } from '@/components/minikMuze/useStageSize';
 import { GAME_CARD_META, GAME_EMOJI } from '@/lib/menuHelpers';
+import { MAARIF_MAP } from '@/constants/maarifMap';
 import { GAME_RENDERERS } from '@/components/gameRegistry';
 import { requiredVeliTierForGame, summarizePackage, veliTierMeetsMinimum, VeliTier } from '@/lib/subscriptionTiers';
 
@@ -36,6 +37,33 @@ const kinds: ToyKind[] = ['puzzle', 'paint', 'animal', 'blocks'];
 const alternateKinds: ToyKind[] = ['train', 'crayons', 'rabbit', 'rings'];
 const colors = ['#507C72', '#AD594F', '#8666A1', '#AA7940', '#487C9C'];
 const title = (game: GameCatalogItem) => GAME_CARD_META[game.id]?.displayTitle || game.title;
+
+// Yetişkin menüsündeki oyun kütüphanesi süzgeci: velinin tanıdığı kısa alan adları (ek etkinlik = İngilizce).
+const AREA_CHIPS = ['matematik', 'turkce', 'fen', 'sosyal', 'sanat', 'muzik', 'hareket', 'duygu', 'ingilizce'] as const;
+type AreaChip = typeof AREA_CHIPS[number];
+const AREA_OF_ALAN: Record<string, AreaChip> = {
+  'Matematik': 'matematik', 'Türkçe': 'turkce', 'Fen': 'fen', 'Sosyal': 'sosyal', 'Sanat': 'sanat', 'Müzik': 'muzik',
+  'Hareket ve Sağlık': 'hareket', 'Sosyal-Duygusal': 'duygu', 'İngilizce': 'ingilizce',
+};
+const areaOf = (game: GameCatalogItem): AreaChip | null => {
+  const entry = MAARIF_MAP[game.id] ?? MAARIF_MAP[game.routeKey];
+  return entry ? AREA_OF_ALAN[entry.alan] ?? null : null;
+};
+
+function AdultSectionTitle({ text, hint }: { text: string; hint?: string }) {
+  return <View style={styles.sectionRow} accessibilityRole="header"><Text style={styles.sectionTitle}>{text}</Text>{!!hint && <Text style={styles.sectionHint}>{hint}</Text>}</View>;
+}
+
+function AdultRow({ icon, label, hint, onPress, primary, subdued, trailing }: { icon: keyof typeof Ionicons.glyphMap; label: string; hint?: string; onPress: () => void; primary?: boolean; subdued?: boolean; trailing?: string }) {
+  return <Pressable accessibilityRole="button" accessibilityLabel={hint ? `${label}. ${hint}` : label} onPress={onPress} style={[styles.adultRow, primary && styles.adultRowPrimary, subdued && styles.adultRowSubdued]}>
+    <View style={[styles.adultRowIcon, primary && styles.adultRowIconPrimary]}><Ionicons name={icon} size={20} color={primary ? '#fff' : '#6B5A4A'} /></View>
+    <View style={{ flex: 1 }}>
+      <Text style={[styles.adultRowLabel, primary && styles.adultRowLabelPrimary]}>{label}</Text>
+      {!!hint && <Text style={styles.adultRowHint}>{hint}</Text>}
+    </View>
+    {trailing ? <Text style={styles.adultRowState}>{trailing}</Text> : <Ionicons name="chevron-forward" size={18} color={primary ? '#507C72' : '#A99B84'} />}
+  </Pressable>;
+}
 
 /** Original vector toys: scalable on phones and tablets, no remote artwork. */
 function ToyArt({ kind }: { kind: ToyKind }) {
@@ -238,6 +266,7 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   const [locked, setLocked] = useState<{ game: string; tier: VeliTier } | null>(null);
   useEffect(() => { if (!adult) setLocked(null); }, [adult]);
   const [query, setQuery] = useState('');
+  const [area, setArea] = useState<AreaChip | null>(null);
   const [calm, setCalm] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(true);
   useEffect(() => {
@@ -263,7 +292,8 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
   // Yetişkin arama TÜM kataloğu gösterir (tier'a göre gizlemez) — kilitli oyunlar
   // 🔒 ile işaretlenip hangi paketle açıldığı söylenir, böylece veli neyin kilitli
   // olduğunu görüp paket yükseltmeyi değerlendirebilir.
-  const filtered = allPlayable.filter(g => title(g).toLocaleLowerCase('tr').includes(query.toLocaleLowerCase('tr')));
+  const filtered = allPlayable.filter(g => title(g).toLocaleLowerCase('tr').includes(query.toLocaleLowerCase('tr')) && (area === null || areaOf(g) === area));
+  const areaChips = AREA_CHIPS.filter(a => allPlayable.some(g => areaOf(g) === a));
   return <View ref={rootRef} style={styles.root} onLayout={onRootLayout}>
     {bounds.width > 0 && <View style={{ position: 'absolute', width: sceneWidth, height: sceneHeight, left: (bounds.width - sceneWidth) / 2, top: (bounds.height - sceneHeight) / 2, transform: [{ scale }] }}>
       <Svg width={sceneWidth + extraX * 2} height={sceneHeight + extraY * 2} style={{ position: 'absolute', left: -extraX, top: -extraY }} viewBox={`${-extraX} ${-extraY} ${sceneWidth + extraX * 2} ${sceneHeight + extraY * 2}`} pointerEvents="none">
@@ -330,16 +360,30 @@ export default function ToyRoom({ name, muted, round, onShuffle, onMute, onGame,
           </View>
           {pkg.isTop ? <Text style={styles.pkgTop}>{t('toyRoom.packageTop')}</Text> : <Pressable accessibilityRole="link" onPress={() => { setAdult(false); setLocked(null); openPricing(); }} style={styles.pkgButton}><Text style={styles.pkgButtonText}>{pkg.own === 'free' || pkg.expired ? t('toyRoom.lockedPrimary') : t('toyRoom.packageUpgrade')}</Text></Pressable>}
         </View>}
-        <View style={styles.adultActions}><Pressable onPress={() => setCalm(v => !v)} accessibilityRole="button" style={styles.adultButton}><Text>{calm ? t('toyRoom.animationsOn') : t('toyRoom.reduceMotion')}</Text></Pressable><Pressable accessibilityRole="button" onPress={onLogout} style={styles.adultButton}><Text>{t('toyRoom.logout')}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => { setAdult(false); router.push('/gizlilik-ayarlari'); }} style={styles.adultButton}><Text>{t('toyRoom.accountPrivacy')}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => { setAdult(false); router.push('/sorun-bildir'); }} style={styles.adultButton}><Text>{t('toyRoom.reportProblem')}</Text></Pressable></View>
+        <AdultSectionTitle text={t('toyRoom.sectionAccount')} />
+        <AdultRow primary icon="stats-chart" label={t('toyRoom.parentPanel')} hint={t('toyRoom.parentPanelHint')} onPress={() => { setAdult(false); router.push('/veli-dashboard'); }} />
+        <AdultRow icon="shield-checkmark-outline" label={t('toyRoom.accountPrivacy')} hint={t('toyRoom.accountPrivacyHint')} onPress={() => { setAdult(false); router.push('/gizlilik-ayarlari'); }} />
+        <AdultRow icon="chatbubble-ellipses-outline" label={t('toyRoom.reportProblem')} hint={t('toyRoom.reportProblemHint')} onPress={() => { setAdult(false); router.push('/sorun-bildir'); }} />
+        <AdultRow icon="pulse-outline" label={t('toyRoom.reduceMotion')} hint={t('toyRoom.reduceMotionHint')} trailing={calm ? t('toyRoom.switchOn') : t('toyRoom.switchOff')} onPress={() => setCalm(v => !v)} />
+        <AdultRow subdued icon="log-out-outline" label={t('toyRoom.logout')} onPress={onLogout} />
+        <AdultSectionTitle text={t('toyRoom.sectionLibrary')} hint={t('toyRoom.libraryCount', { count: filtered.length })} />
         <TextInput accessibilityLabel={t('toyRoom.searchLabel')} placeholder={t('toyRoom.searchPlaceholder')} value={query} onChangeText={setQuery} style={styles.search}/>
+        {/* Etiketler satıra sarılır (kaydırmasız): tüm alanlar tek bakışta görünür ve iç içe ScrollView oluşmaz (lib/toyRoomAdultMenu.test.ts). */}
+        <View style={styles.chipRow}>
+          {[null, ...areaChips].map(a => <Pressable key={a ?? 'all'} accessibilityRole="button" accessibilityState={{ selected: area === a }} onPress={() => setArea(a)} style={[styles.chip, area === a && styles.chipOn]}><Text style={[styles.chipText, area === a && styles.chipTextOn]}>{a === null ? t('toyRoom.chipAll') : t(`toyRoom.area.${a}`)}</Text></Pressable>)}
+        </View>
         {filtered.map(g => {
           const required = requiredVeliTierForGame(g);
           const isLocked = subscriptionTier !== undefined && !veliTierMeetsMinimum(subscriptionTier, required);
+          const sub = GAME_CARD_META[g.id]?.subtitle;
           return <Pressable key={g.id} accessibilityRole="button" onPress={() => {
             if (isLocked) { setLocked({ game: title(g), tier: required }); return; }
             setAdult(false); onGame(g.routeKey);
           }} style={[styles.gameRow, isLocked && styles.gameRowLocked]}>
-            <Text style={[styles.gameText, isLocked && styles.gameTextLocked]}>{isLocked ? '🔒' : (GAME_EMOJI[g.id] || '🧩')}  {title(g)}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.gameText, isLocked && styles.gameTextLocked]}>{isLocked ? '🔒' : (GAME_EMOJI[g.id] || '🧩')}  {title(g)}</Text>
+              {!!sub && <Text style={styles.gameSub}>{sub}</Text>}
+            </View>
             <Text style={isLocked ? styles.lockedHint : undefined}>{isLocked ? t('toyRoom.lockedHint', { tier: TIER_LABELS[required] }) : '▶'}</Text>
           </Pressable>;
         })}{!filtered.length && <Text style={styles.adultNote}>{t('toyRoom.noGamesFound')}</Text>}
@@ -384,4 +428,22 @@ const styles = StyleSheet.create({
   upsellPrimaryText: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
   upsellSecondary: { alignSelf: 'stretch', paddingVertical: 12, marginTop: 6, alignItems: 'center' },
   upsellSecondaryText: { color: '#756753', fontSize: 15, fontWeight: '700' },
+  sectionRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 20, marginBottom: 10 },
+  sectionTitle: { fontSize: 11, fontWeight: '800', letterSpacing: 1.2, color: '#A27D59', textTransform: 'uppercase' },
+  sectionHint: { fontSize: 12, color: '#8A7A63', fontWeight: '700' },
+  adultRow: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#F6EFE2', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 14, marginBottom: 8, minHeight: 56 },
+  adultRowPrimary: { backgroundColor: '#E5EFE9', borderWidth: 1, borderColor: '#C6DCCF' },
+  adultRowSubdued: { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#E2D6C3', marginTop: 4 },
+  adultRowIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: '#EADFCB', alignItems: 'center', justifyContent: 'center' },
+  adultRowIconPrimary: { backgroundColor: '#507C72' },
+  adultRowLabel: { fontSize: 15, fontWeight: '800', color: '#584B40' },
+  adultRowLabelPrimary: { color: '#2F5A50' },
+  adultRowHint: { fontSize: 12.5, color: '#756753', lineHeight: 17, marginTop: 1 },
+  adultRowState: { fontSize: 12, fontWeight: '800', color: '#507C72', backgroundColor: '#E5EFE9', borderRadius: 10, paddingVertical: 4, paddingHorizontal: 10, overflow: 'hidden' },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 8 },
+  chip: { paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999, backgroundColor: '#F1E9DA', borderWidth: 1, borderColor: '#E6DBC6', minHeight: 40, justifyContent: 'center' },
+  chipOn: { backgroundColor: '#507C72', borderColor: '#507C72' },
+  chipText: { fontSize: 13.5, fontWeight: '700', color: '#6B5A4A' },
+  chipTextOn: { color: '#fff' },
+  gameSub: { fontSize: 12, color: '#8A7A63', marginTop: 2, marginLeft: 26 },
 });
