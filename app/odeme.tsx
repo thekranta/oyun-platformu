@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Stack, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { legalUrl, openExternalLink } from '../lib/externalLink';
 import { supabase } from '../lib/supabase';
@@ -249,6 +249,13 @@ function OdemeWeb() {
                                 <Ionicons name="lock-closed" size={14} color="#8A7A63" />
                                 <Text style={styles.trust}>{t('webOdeme.guven')}</Text>
                             </View>
+                            {/* iyzico ödeme kuruluşu şartı: "iyzico ile Öde", Visa ve Mastercard logoları (resmi logo paketi, değiştirilmeden). */}
+                            <Image
+                                source={require('../assets/images/iyzico-logo-band-colored.png')}
+                                style={styles.payLogos}
+                                resizeMode="contain"
+                                accessibilityLabel={t('webOdeme.logoAlt')}
+                            />
                         </View>
                     </View>
                 </ScrollView>
@@ -299,4 +306,5 @@ const styles = StyleSheet.create({
     disabled: { opacity: 0.7 },
     trustRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 },
     trust: { flex: 1, fontSize: 12, color: '#8A7A63', lineHeight: 18, textAlign: 'center' },
+    payLogos: { width: 280, height: 21, alignSelf: 'center', marginTop: 12 },
 });

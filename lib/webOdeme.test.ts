@@ -416,10 +416,10 @@ describe('rotalar yalnız web (Apple 3.1.1) — kaynak koruması', () => {
         for (const yol of ['app/odeme.tsx', 'app/odeme-sonuc.tsx', 'lib/webOdeme.ts']) expect(oku(yol)).not.toMatch(/SERVICE_ROLE|IYZICO_(API|SECRET)/);
     });
 
-    it('"KDV dahil" ekrana yazılmaz ([DOĞRULA]: mali müşavir onayına kadar)', () => {
-        expect(JSON.stringify((tr as Record<string, unknown>).webOdeme)).not.toMatch(/KDV|VAT|tax/i);
-        expect(JSON.stringify((en as Record<string, unknown>).webOdeme)).not.toMatch(/KDV|VAT|\btax\b/i);
-        expect(oku('lib/webOdeme.ts')).toContain('[DOĞRULA]');
+    it('"KDV dahil" ekranda yazar (kullanıcı kararı 2026-11-23; oran/mükellefiyet mali müşavirce teyit edilecek)', () => {
+        expect(JSON.stringify((tr as Record<string, unknown>).webOdeme)).toContain('KDV dahil');
+        expect(JSON.stringify((en as Record<string, unknown>).webOdeme)).toContain('VAT included');
+        expect(oku('lib/webOdeme.ts')).toContain('KDV DAHİLDİR');
     });
 
     it('sözleşme adresi boşsa ilgili bağlantı gizlenir (kayıtlı sabit + koşullu çizim)', () => {

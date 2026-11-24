@@ -21,7 +21,7 @@ export interface WebPaketBilgi {
     fiyat: number;
 }
 
-// [DOĞRULA] Fiyatların KDV dahil olduğu varsayımı mali müşavir onayına bağlı; onaylanana kadar ekrana "KDV dahil" YAZILMAZ.
+// Fiyatlar KDV DAHİLDİR (kullanıcı kararı 2026-11-23; oran ve mükellefiyet mali müşavirce teyit edilecek). Ekranda "KDV dahil" yazılır.
 export const WEB_PAKET_LISTESI: readonly WebPaketBilgi[] = [
     { id: 'tohum', sureAy: 1, fiyat: 399 },
     { id: 'filiz', sureAy: 3, fiyat: 999 },
@@ -41,7 +41,7 @@ export const DESTEK_EPOSTA = 'admin@childhoodtech.com';
  * TODO: Sözleşme sayfası yayına girince https adresini buraya yazın. Boşken ÖDEME KAPALIDIR (sozlesmeHazirMi): veli
  * okuyamadığı sözleşmeyi onaylamasın; ekranda bunu açıklayan bir not görünür.
  */
-export const MESAFELI_SATIS_URL = '';
+export const MESAFELI_SATIS_URL = 'https://childhoodtech.com/mesafeli-satis-sozlesmesi.html';
 
 /** 1749 → "₺1.749" (tr) / "₺1,749" (en). Intl'e bağlı değil: sunucu/tarayıcı farkı olmaz. */
 export function fiyatMetni(fiyat: number, dil: string = 'tr'): string {

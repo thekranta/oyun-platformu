@@ -982,7 +982,7 @@
     },
     "secili": "Selected",
     "sec": "Select",
-    "tekSefer": "One-time payment",
+    "tekSefer": "One-time payment · VAT included",
     "form": {
       "baslik": "Billing and contact details",
       "aciklama": "These details are passed to the payment provider only to take the payment and issue the invoice.",
@@ -1035,6 +1035,7 @@
     "odemeyeGecTutar": "Continue to payment: {{tutar}}",
     "yonlendiriliyor": "Taking you to the payment page…",
     "guven": "Payment is handled securely by iyzico; your card details are not stored by us.",
+    "logoAlt": "Pay with iyzico, Mastercard, Visa, American Express, Troy",
     "giris": {
       "baslik": "Please sign in first",
       "metin": "You need to sign in with your parent account so the package can be added to it.",

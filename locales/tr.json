@@ -976,7 +976,7 @@
     },
     "secili": "Seçildi",
     "sec": "Seç",
-    "tekSefer": "Tek seferlik ödeme",
+    "tekSefer": "Tek seferlik ödeme · KDV dahil",
     "form": {
       "baslik": "Fatura ve iletişim bilgileri",
       "aciklama": "Bu bilgiler yalnızca ödemenin yapılması ve faturanın düzenlenmesi için ödeme kuruluşuna iletilir.",
@@ -1029,6 +1029,7 @@
     "odemeyeGecTutar": "Ödemeye geç: {{tutar}}",
     "yonlendiriliyor": "Ödeme sayfasına yönlendiriliyorsunuz…",
     "guven": "Ödeme İyzico güvencesiyle alınır; kart bilgileriniz bizde saklanmaz.",
+    "logoAlt": "iyzico ile Öde, Mastercard, Visa, American Express, Troy",
     "giris": {
       "baslik": "Önce giriş yapın",
       "metin": "Paketin hesabınıza tanımlanabilmesi için veli hesabınızla giriş yapmanız gerekiyor.",
