@@ -299,6 +299,16 @@ describe('POST /api/iyzico-donus', () => {
     expect(m.markFailed).toHaveBeenCalledWith({ admin: true }, SIPARIS, neden);
   });
 
+  it('banka reddi (status=failure, 10xxx): sipariş kapanır, veli "başarısız" sayfasına gider, kod kaydedilir', async () => {
+    fetchKur(iyziYanit(RETRIEVE_PATH, { status: 'failure', errorCode: '10012', errorGroup: 'INVALID_TRANSACTION', errorMessage: 'Teknik hata' }));
+    const res = makeRes();
+    await donus(postDonus(`token=${TOKEN}`), res);
+    expect(konum(res).searchParams.get('durum')).toBe('basarisiz');
+    expect(konum(res).searchParams.get('siparis')).toBe(SIPARIS);
+    expect(m.markPaidAndGrant).not.toHaveBeenCalled();
+    expect(m.markFailed).toHaveBeenCalledWith({ admin: true }, SIPARIS, 'odeme_basarisiz_10012/INVALID_TRANSACTION');
+  });
+
   it('gövdedeki tutar/durum alanlarına güvenilmez', async () => {
     fetchKur(iyziYanit(RETRIEVE_PATH, retrieve({ paymentStatus: 'FAILURE' })));
     const res = makeRes();
@@ -330,7 +340,7 @@ describe('POST /api/iyzico-donus', () => {
   });
 
   it.each([
-    ['geçici sorgu hatası', { status: 'failure', errorCode: '10051' }],
+    ['geçici sorgu hatası (sistem kodu)', { status: 'failure', errorCode: '1' }],
     ['ödeme kimliği yok', null],
   ])('kesin olmayan red (%s): sipariş kapatılmaz, beklemede sayfasına gider', async (_ad, d) => {
     fetchKur(iyziYanit(RETRIEVE_PATH, d ?? retrieve({ paymentId: '' })));

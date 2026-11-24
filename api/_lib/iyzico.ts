@@ -285,13 +285,24 @@ export type BekleNedeni = 'dolandiricilik_inceleme' | 'imza_dogrulanamadi' | 'is
 
 export type Degerlendirme =
   | { tip: 'onay'; paymentId: string; paidKurus: number; ham: Record<string, unknown> }
-  | { tip: 'red'; neden: RedNedeni }
+  | { tip: 'red'; neden: RedNedeni; /** İyzico hata kodu/grubu (yalnız güvenli karakterler); kayda ve loga yazılır. */ ayrinti?: string }
   | { tip: 'bekle'; neden: BekleNedeni };
 
 /**
+ * İyzico hata yanıtından yalnız KOD ve GRUP alınır ("10051/NOT_SUFFICIENT_FUNDS"). errorMessage ASLA alınmaz: İyzico
+ * metne alıcının e-postası gibi kişisel veri koyabilir. Beklenmedik biçimde olan alan atılır.
+ */
+export function hataKodu(data: IyzicoYanit): string {
+  const kod = /^\d{1,6}$/.test(String(data?.errorCode ?? '')) ? String(data.errorCode) : '';
+  const grup = /^[A-Z0-9_]{1,50}$/.test(String(data?.errorGroup ?? '')) ? String(data.errorGroup) : '';
+  return [kod, grup].filter(Boolean).join('/');
+}
+
+/**
  * Ödeme kesinleşmiş olarak başarısız sayılabilir mi? Geri dönüşte de durum sorgusunda da YALNIZ bunlar siparişi
- * "basarisiz" yapar. Geri kalanlar (sorgu_basarisiz: İyzico'nun geçici status=failure yanıtı, odeme_durumu_yok,
- * odeme_kimligi_yok) beklemede kalır ve durum sorgusu yeniden dener. NEDEN: para çekilmiş ama sorgu o an hata
+ * "basarisiz" yapar. Geri kalanlar (sorgu_basarisiz: banka kodu taşımayan status=failure yanıtı, yani sistem/kimlik
+ * hatası; odeme_durumu_yok, odeme_kimligi_yok) beklemede kalır ve durum sorgusu yeniden dener. Banka kodlu (10xxx)
+ * status=failure yanıtı geçici değil, bankanın reddidir: evaluateRetrieve onu 'odeme_basarisiz' yapar. NEDEN: para çekilmiş ama sorgu o an hata
  * vermişse sipariş kalıcı "başarısız" görünür, sonuç ekranı "Tekrar dene" sunar ve veli ikinci kez öderdi; ayrıca
  * veli henüz ödeme sayfasındayken sorgu "ödeme yok" diyebilir.
  */
@@ -306,7 +317,13 @@ const KESIN_RED = new Set<RedNedeni>([
  */
 export function evaluateRetrieve(order: DogrulanacakSiparis, data: IyzicoYanit, cfg: Pick<IyzicoConfig, 'secretKey' | 'imzaDogrula'>): Degerlendirme {
   if (data.status !== 'success') {
-    if (String(data.errorCode) === '50000') return { tip: 'bekle', neden: 'istek_limiti' };
+    const kod = String(data.errorCode ?? '');
+    if (kod === '50000') return { tip: 'bekle', neden: 'istek_limiti' };
+    // İyzico belgesi: banka hata kodları 10000 ile başlar (10051 yetersiz bakiye, 10005 işlem onaylanmadı, ...). Bu kodla
+    // dönen sorgu "geçici sistem hatası" DEĞİL, bu ödeme denemesinin bankada reddedildiğidir: sipariş kesin başarısız
+    // olur ve veli "tekrar dene" görür. Aksi halde reddedilen kartta sonuç ekranı sonsuza dek "onay bekliyor" der.
+    // Yanlış sınıflansa bile zarar sınırlıdır: sonradan doğrulanmış başarılı ödeme 'basarisiz' siparişi de açar.
+    if (/^10\d{3}$/.test(kod)) return { tip: 'red', neden: 'odeme_basarisiz', ayrinti: hataKodu(data) || undefined };
     return { tip: 'red', neden: 'sorgu_basarisiz' };
   }
   if (data.paymentStatus == null || data.paymentStatus === '') return { tip: 'red', neden: 'odeme_durumu_yok' };
@@ -381,7 +398,7 @@ export async function dogrulaVeIsle(admin: any, cfg: IyzicoConfig, order: Dogrul
     return { durum: 'odendi', paket: r.paket, bitis: r.bitis };
   }
   if (d.tip === 'bekle') {
-    console.warn('iyzico: siparis beklemede', order.id, d.neden);
+    console.warn('iyzico: siparis beklemede', order.id, d.neden, hataKodu(data));
     // İstek limiti yeni bilgi taşımaz: başarısız sipariş başarısız kalır. Diğer "bekle"ler (fraud incelemesi, imza)
     // ödemenin var olduğunu gösterir; o zaman veli "beklemede" görsün, yeniden ödemeye yönlendirilmesin.
     if (order.durum === 'basarisiz' && d.neden === 'istek_limiti') return { durum: 'basarisiz' };
@@ -390,15 +407,15 @@ export async function dogrulaVeIsle(admin: any, cfg: IyzicoConfig, order: Dogrul
   if (order.durum === 'basarisiz') return { durum: 'basarisiz' };
   if (KESIN_RED.has(d.neden)) {
     // tutar/sipariş uyuşmazlığında para çekilmiş olabilir: neden kayda geçer, sahip panelinden iade edilir.
-    console.warn('iyzico: siparis basarisiz', order.id, d.neden);
+    console.warn('iyzico: siparis basarisiz', order.id, d.neden, hataKodu(data));
     try {
-      await markFailed(admin, order.id, d.neden);
+      await markFailed(admin, order.id, d.ayrinti ? `${d.neden}_${d.ayrinti}` : d.neden);
     } catch {
       console.error('iyzico: basarisiz durumu yazilamadi', order.id);
       return { durum: 'beklemede' };
     }
     return { durum: 'basarisiz' };
   }
-  console.warn('iyzico: kesin olmayan red, siparis beklemede', order.id, d.neden);
+  console.warn('iyzico: kesin olmayan red, siparis beklemede', order.id, d.neden, hataKodu(data));
   return { durum: 'beklemede' };
 }

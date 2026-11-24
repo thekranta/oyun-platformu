@@ -3,7 +3,7 @@ jest.mock('./webSiparis', () => ({ markPaidAndGrant: jest.fn(), markFailed: jest
 import {
   buildAuthHeaders, evaluateRetrieve, getIyzicoConfig, getSiteUrl, iyziPost, isIyzicoPaymentUrl, IyzicoError,
   normalizePriceForSignature, verifyInitSignature, verifyRetrieveSignature, dogrulaVeIsle, INIT_PATH,
-  sandboxDenemeIzni, hizSinirlayici,
+  sandboxDenemeIzni, hizSinirlayici, hataKodu,
 } from './iyzico';
 import { kurusToIyzicoPrice, iyzicoPriceToKurus, isWebPaket, WEB_PAKETLER } from './webPaketler';
 import { markFailed, markPaidAndGrant } from './webSiparis';
@@ -186,9 +186,23 @@ describe('evaluateRetrieve', () => {
   ])('%s -> red', (_ad, degisim, neden) => {
     expect(evaluateRetrieve(ORDER, imzali({ ...BASARILI(), ...degisim }), cfg)).toEqual({ tip: 'red', neden });
   });
-  it('sorgu başarısız -> red; istek limiti -> bekle', () => {
-    expect(evaluateRetrieve(ORDER, { status: 'failure', errorCode: '10051' }, cfg)).toEqual({ tip: 'red', neden: 'sorgu_basarisiz' });
+  it('sorgu başarısız: banka kodu (10xxx) kesin red; sistem/bilinmeyen kod kesin olmayan red; istek limiti bekle', () => {
+    // Banka reddi (iyzico belgesi: banka hata kodları 10000 ile başlar): kesin başarısız, kod ve grup kaydedilir.
+    expect(evaluateRetrieve(ORDER, { status: 'failure', errorCode: '10051', errorGroup: 'NOT_SUFFICIENT_FUNDS' }, cfg))
+      .toEqual({ tip: 'red', neden: 'odeme_basarisiz', ayrinti: '10051/NOT_SUFFICIENT_FUNDS' });
+    expect(evaluateRetrieve(ORDER, { status: 'failure', errorCode: 10012 }, cfg))
+      .toEqual({ tip: 'red', neden: 'odeme_basarisiz', ayrinti: '10012' });
+    // Sistem hatası, imza/kimlik hatası, kodsuz yanıt: geçici olabilir, sipariş kapatılmaz.
+    for (const errorCode of ['1', '2', '1000', '5002', undefined]) {
+      expect(evaluateRetrieve(ORDER, { status: 'failure', errorCode }, cfg)).toEqual({ tip: 'red', neden: 'sorgu_basarisiz' });
+    }
     expect(evaluateRetrieve(ORDER, { status: 'failure', errorCode: '50000' }, cfg)).toEqual({ tip: 'bekle', neden: 'istek_limiti' });
+  });
+  it('hataKodu yalnız güvenli kod ve grubu alır; errorMessage asla', () => {
+    expect(hataKodu({ errorCode: '10051', errorGroup: 'NOT_SUFFICIENT_FUNDS', errorMessage: 'ayse@ornek.com' })).toBe('10051/NOT_SUFFICIENT_FUNDS');
+    expect(hataKodu({ errorCode: '10005' })).toBe('10005');
+    expect(hataKodu({ errorCode: 'ayse@ornek.com', errorGroup: 'ayse@ornek.com' })).toBe('');
+    expect(hataKodu({})).toBe('');
   });
   it('fraudStatus 0 -> bekle (paket açılmaz)', () => {
     expect(evaluateRetrieve(ORDER, imzali({ ...BASARILI(), fraudStatus: 0 }), cfg)).toEqual({ tip: 'bekle', neden: 'dolandiricilik_inceleme' });
@@ -214,7 +228,7 @@ describe('dogrulaVeIsle', () => {
     expect((markPaidAndGrant as jest.Mock).mock.calls[0][1]).toMatchObject({ id: ORDER.id, iyzicoPaymentId: '19831123', paidKurus: 39900 });
   });
   it.each([
-    ['geçici sorgu hatası (sorgu_basarisiz)', { status: 'failure', errorCode: '10051' }],
+    ['geçici sorgu hatası (sorgu_basarisiz)', { status: 'failure', errorCode: '1' }],
     ['ödeme durumu yok', { status: 'success', token: ORDER.token, conversationId: ORDER.id }],
     ['ödeme kimliği yok', null],
   ])('kesin olmayan red (%s): sipariş KAPATILMAZ, beklemede kalır', async (_ad, d) => {
@@ -227,6 +241,14 @@ describe('dogrulaVeIsle', () => {
     yanit(imzali({ ...BASARILI(), paymentStatus: 'FAILURE' }));
     expect(await dogrulaVeIsle({}, cfg, ORDER)).toEqual({ durum: 'basarisiz' });
     expect(markFailed).toHaveBeenCalledWith({}, ORDER.id, 'odeme_basarisiz');
+  });
+  it('banka reddi (10xxx): sipariş kapanır, kod kaydedilir, e-posta içeren mesaj kaydedilmez', async () => {
+    yanit({ status: 'failure', errorCode: '10051', errorGroup: 'NOT_SUFFICIENT_FUNDS', errorMessage: 'Kart ayse@ornek.com' });
+    expect(await dogrulaVeIsle({}, cfg, ORDER)).toEqual({ durum: 'basarisiz' });
+    expect(markFailed).toHaveBeenCalledTimes(1);
+    expect(markFailed).toHaveBeenCalledWith({}, ORDER.id, 'odeme_basarisiz_10051/NOT_SUFFICIENT_FUNDS');
+    expect(JSON.stringify((markFailed as jest.Mock).mock.calls)).not.toContain('ayse@ornek.com');
+    expect(markPaidAndGrant).not.toHaveBeenCalled();
   });
   it('sağlayıcıya ulaşılamazsa beklemede; hiçbir şey yazılmaz', async () => {
     global.fetch = jest.fn(async () => { throw new Error('x'); }) as any;
